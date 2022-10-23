@@ -5,6 +5,7 @@
 #pragma warning(disable : 4251)
 
 #include <unordered_map>
+#include <immintrin.h>
 #include <string_view>
 #include <concepts>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <array>
 #include <deque>
 #include <map>
 
@@ -33,19 +35,48 @@
 	#endif
 #else
 	#define Jsonifier_Dll
-inline uint64_t ntohll(uint64_t x) {
-	uint8_t data[8]{};
-	std::copy(&(x), &(x) + sizeof(x), data);
-	uint64_t jsonValue{};
-	for (uint32_t y = 0; y < sizeof(uint64_t); ++y) {
-		jsonValue |= static_cast<uint64_t>(data[y]) << 8 * (sizeof(uint64_t) - y - 1);
-	}
-	return jsonValue;
-}
 	#include <arpa/inet.h>
 #endif
 
 namespace Jsonifier {
+
+	template<typename ReturnType> void reverseByteOrder(ReturnType& net) {
+		switch (sizeof(ReturnType)) {
+			case 1: {
+				return;
+			}
+			case 2: {
+				__m256i value{ _mm256_set1_epi16(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
+				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				net = *reinterpret_cast<uint16_t*>(&result);
+				return;
+			}
+			case 4: {
+				__m256i value{ _mm256_set1_epi32(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
+				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				net = *reinterpret_cast<uint32_t*>(&result);
+				return;
+			}
+			case 8: {
+				__m256i value{ _mm256_set1_epi64x(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
+				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				net = *reinterpret_cast<uint64_t*>(&result);
+				return;
+			}
+		}
+		return;
+	}
+
+	template<typename ReturnType> void storeBits(char* to, ReturnType num) {
+		const uint8_t byteSize{ 8 };
+		reverseByteOrder<ReturnType>(num);
+		for (uint32_t x = 0; x < sizeof(ReturnType); ++x) {
+			to[x] = static_cast<uint8_t>(num >> (byteSize * x));
+		}
+	}
 
 	template<typename TimeType> class StopWatch {
 	  public:
@@ -91,32 +122,6 @@ namespace Jsonifier {
 		std::atomic_uint64_t startTime{ 0 };
 	};
 
-	template<typename ReturnType> ReturnType reverseByteOrder(const ReturnType net) {
-		switch (sizeof(ReturnType)) {
-			case 1: {
-				return net;
-			}
-			case 2: {
-				return ntohs(static_cast<int16_t>(net));
-			}
-			case 4: {
-				return ntohl(static_cast<uint32_t>(net));
-			}
-			case 8: {
-				return ntohll(static_cast<uint64_t>(net));
-			}
-		}
-		return ReturnType{};
-	}
-
-	template<typename ReturnType> void storeBits(std::string& to, ReturnType num) {
-		const uint8_t byteSize{ 8 };
-		ReturnType newValue = reverseByteOrder<ReturnType>(num);
-		for (uint32_t x = 0; x < sizeof(ReturnType); ++x) {
-			to.push_back(static_cast<uint8_t>(newValue >> (byteSize * x)));
-		}
-	}
-
 	constexpr uint8_t formatVersion{ 131 };
 
 	enum class EtfType : uint8_t {
@@ -125,9 +130,11 @@ namespace Jsonifier {
 		Integer_Ext = 98,
 		Atom_Ext = 100,
 		Nil_Ext = 106,
+		String_Ext = 107,
 		List_Ext = 108,
 		Binary_Ext = 109,
 		Small_Big_Ext = 110,
+		Small_Atom_Ext = 115,
 		Map_Ext = 116,
 	};
 
@@ -280,7 +287,7 @@ namespace Jsonifier {
 
 		template<IsEnum T> Jsonifier& operator=(T data) noexcept {
 			this->jsonValue.numberUint = static_cast<uint64_t>(data);
-			this->typeValue = JsonType::Uint64;
+			this->type = JsonType::Uint64;
 			return *this;
 		}
 
@@ -351,7 +358,7 @@ namespace Jsonifier {
 		Jsonifier(bool data) noexcept;
 
 		Jsonifier& operator=(JsonType TypeNew) noexcept;
-		Jsonifier(JsonType typeValue) noexcept;
+		Jsonifier(JsonType type) noexcept;
 
 		Jsonifier& operator=(std::nullptr_t) noexcept;
 		Jsonifier(std::nullptr_t data) noexcept;
@@ -360,17 +367,23 @@ namespace Jsonifier {
 
 		Jsonifier& operator[](uint64_t index);
 
-		template<typename T> T& get();
+		template<typename T> const T& getValue() const {
+			return T{};
+		}
 
-		JsonType type() noexcept;
+		template<typename T> T& getValue() {
+			return T{};
+		}
+
+		JsonType getType() noexcept;
 
 		void emplaceBack(Jsonifier&& data) noexcept;
 		void emplaceBack(Jsonifier& data) noexcept;
 
 		~Jsonifier() noexcept;
 
-	  private:
-		JsonType typeValue{ JsonType::Null };
+	  protected:
+		JsonType type{ JsonType::Null };
 		JsonValue jsonValue{};
 		std::string string{};
 
@@ -417,7 +430,7 @@ namespace Jsonifier {
 
 		void writeCharacter(const char Char);
 
-		void appendBinaryExt(const std::string& bytes, uint32_t sizeNew);
+		void appendBinaryExt(const std::string& bytes, const uint32_t sizeNew);
 
 		void appendUnsignedLongLong(const uint64_t value);
 
@@ -445,4 +458,60 @@ namespace Jsonifier {
 
 		friend bool operator==(const Jsonifier& lhs, const Jsonifier& rhs);
 	};
+
+	template<> inline const Jsonifier::ObjectType& Jsonifier::getValue() const {
+		return *this->jsonValue.object;
+	}
+
+	template<> inline const Jsonifier::ArrayType& Jsonifier::getValue() const {
+		return *this->jsonValue.array;
+	}
+
+	template<> inline const Jsonifier::StringType& Jsonifier::getValue() const {
+		return *this->jsonValue.string;
+	}
+
+	template<> inline const Jsonifier::FloatType& Jsonifier::getValue() const {
+		return this->jsonValue.numberDouble;
+	}
+
+	template<> inline const Jsonifier::UintType& Jsonifier::getValue() const {
+		return this->jsonValue.numberUint;
+	}
+
+	template<> inline const Jsonifier::IntType& Jsonifier::getValue() const {
+		return this->jsonValue.numberInt;
+	}
+
+	template<> inline const Jsonifier::BoolType& Jsonifier::getValue() const {
+		return this->jsonValue.boolean;
+	}
+
+	template<> inline Jsonifier::ObjectType& Jsonifier::getValue() {
+		return *this->jsonValue.object;
+	}
+
+	template<> inline Jsonifier::ArrayType& Jsonifier::getValue() {
+		return *this->jsonValue.array;
+	}
+
+	template<> inline Jsonifier::StringType& Jsonifier::getValue() {
+		return *this->jsonValue.string;
+	}
+
+	template<> inline Jsonifier::FloatType& Jsonifier::getValue() {
+		return this->jsonValue.numberDouble;
+	}
+
+	template<> inline Jsonifier::UintType& Jsonifier::getValue() {
+		return this->jsonValue.numberUint;
+	}
+
+	template<> inline Jsonifier::IntType& Jsonifier::getValue() {
+		return this->jsonValue.numberInt;
+	}
+
+	template<> inline Jsonifier::BoolType& Jsonifier::getValue() {
+		return this->jsonValue.boolean;
+	}
 };
