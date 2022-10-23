@@ -123,11 +123,11 @@ namespace Jsonifier {
 		New_Float_Ext = 70,
 		Small_Integer_Ext = 97,
 		Integer_Ext = 98,
+		Atom_Ext = 100,
 		Nil_Ext = 106,
 		List_Ext = 108,
 		Binary_Ext = 109,
 		Small_Big_Ext = 110,
-		Small_Atom_Ext = 115,
 		Map_Ext = 116,
 	};
 
