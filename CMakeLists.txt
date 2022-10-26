@@ -16,7 +16,6 @@ project(
 
 if (UNIX)
 	set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
-	set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -O1")
 endif()
 
 if (WIN32)
@@ -67,12 +66,11 @@ endif()
 
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
-file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
+file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
 target_compile_options(
 	"${PROJECT_NAME}" PUBLIC
 	"$<$<PLATFORM_ID:Windows>:/MP>"
-	"$<$<PLATFORM_ID:Linux>:-fpermissive>"
 	"$<$<PLATFORM_ID:Linux>:-mavx2>"
 	"$<$<PLATFORM_ID:Linux>:-mavx>"
 )
@@ -87,9 +85,8 @@ set_target_properties(
 
 target_include_directories(
 	"${PROJECT_NAME}" PUBLIC
-	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_SOURCE_DIR}/Include/>"
-	PRIVATE
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
+	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/>"
+	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier>"
 )
 
 if (WIN32)
