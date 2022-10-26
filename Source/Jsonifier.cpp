@@ -512,7 +512,9 @@ namespace Jsonifier {
 
 	void Jsonifier::writeJsonFloat(const FloatType x) {
 		auto floatValue = std::to_string(x);
-		this->writeString(floatValue.data(), floatValue.size());
+		auto size = this->string.size();
+		this->string.resize(this->string.size() + sizeof(FloatType));
+		storeBits<FloatType>(this->string.data() + size, *reinterpret_cast<FloatType*>(floatValue.data()), false);
 	}
 
 	void Jsonifier::writeJsonBool(const BoolType jsonValueNew) {
@@ -640,7 +642,7 @@ namespace Jsonifier {
 
 	void Jsonifier::appendBinaryExt(const std::string& bytes, uint32_t sizeNew) {
 		char newBuffer[5]{ static_cast<int8_t>(EtfType::Binary_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
+		storeBits(newBuffer + 1, sizeNew, true);
 		this->writeString(newBuffer, std::size(newBuffer));
 		this->writeString(bytes.data(), bytes.size());
 	}
@@ -661,7 +663,7 @@ namespace Jsonifier {
 	void Jsonifier::appendNewFloatExt(const double FloatValue) {
 		char newBuffer[9]{ static_cast<unsigned char>(EtfType::New_Float_Ext) };
 		const void* punner{ &FloatValue };
-		storeBits(newBuffer + 1, *static_cast<const uint64_t*>(punner));
+		storeBits(newBuffer + 1, *static_cast<const uint64_t*>(punner), true);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
@@ -672,19 +674,19 @@ namespace Jsonifier {
 
 	void Jsonifier::appendIntegerExt(const uint32_t value) {
 		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Integer_Ext) };
-		storeBits(newBuffer + 1, value);
+		storeBits(newBuffer + 1, value, true);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
 	void Jsonifier::appendListHeader(const uint32_t sizeNew) {
 		char newBuffer[5]{ static_cast<uint8_t>(EtfType::List_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
+		storeBits(newBuffer + 1, sizeNew, true);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
 	void Jsonifier::appendMapHeader(const uint32_t sizeNew) {
 		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Map_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
+		storeBits(newBuffer + 1, sizeNew, true);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
