@@ -27,7 +27,7 @@
 	#else
 		#define Jsonifier_Dll __declspec(dllimport)
 	#endif
-		#ifdef max 
+	#ifdef max
 		#undef max
 	#endif
 	#ifdef min
