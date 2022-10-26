@@ -59,7 +59,7 @@ rapidjson::StringBuffer stringBuffer = dataTwo;
 stopWatch.resetTimer();
 for (uint32_t x = 0; x < 50; ++x) {			
 	stopWatch.resetTimer();
-	for (uint32_t x = 0; x < 1024*128 ; ++x) {
+	for (uint32_t x = 0; x < 1024 * 128 ; ++x) {
 		dataTwo.intents = x;
 		stringBuffer = dataTwo;
 		std::string string{ stringBuffer.GetString() };
