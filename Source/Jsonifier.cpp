@@ -1,4 +1,4 @@
-#include "../Include/Jsonifier.hpp"
+#include "Jsonifier.hpp"
 
 namespace Jsonifier {
 
