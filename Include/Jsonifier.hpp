@@ -40,48 +40,41 @@
 
 namespace Jsonifier {
 
-	template<typename ReturnType> void storeBits(char* to, ReturnType& valueNew, bool reverse) {
+	template<typename ReturnType> void reverseByteOrder(ReturnType& net) {
 		switch (sizeof(ReturnType)) {
 			case 1: {
 				return;
 			}
 			case 2: {
-				__m256i value{ _mm256_set1_epi16(valueNew) };
-				__m256i indexes{};
-				if (reverse) {
-					indexes = _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1);
-				} else {
-					indexes = _mm256_set_epi8(1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0);
-				}
+				__m256i value{ _mm256_set1_epi16(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
 				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-				*reinterpret_cast<uint16_t*>(to) = *reinterpret_cast<uint16_t*>(&result);
+				net = *reinterpret_cast<uint16_t*>(&result);
 				return;
 			}
 			case 4: {
-				__m256i value{ _mm256_set1_epi32(valueNew) };
-				__m256i indexes{};
-				if (reverse) {
-					indexes = _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3);
-				} else {
-					indexes = _mm256_set_epi8(3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0);
-				}
+				__m256i value{ _mm256_set1_epi32(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
 				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-				*reinterpret_cast<uint32_t*>(to) = *reinterpret_cast<uint32_t*>(&result);
+				net = *reinterpret_cast<uint32_t*>(&result);
 				return;
 			}
 			case 8: {
-				__m256i value{ _mm256_set1_epi64x(valueNew) };
-				__m256i indexes{};
-				if (reverse) {
-					indexes = _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7);
-				} else {
-					indexes = _mm256_set_epi8(7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0, 7, 6, 5, 4, 3, 2, 1, 0);
-					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-					*reinterpret_cast<uint64_t*>(to) = *reinterpret_cast<uint64_t*>(&result);
-					return;
-				}
-			}
+				__m256i value{ _mm256_set1_epi64x(net) };
+				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
+				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				net = *reinterpret_cast<uint64_t*>(&result);
 				return;
+			}
+		}
+		return;
+	}
+
+	template<typename ReturnType> void storeBits(char* to, ReturnType num) {
+		const uint8_t byteSize{ 8 };
+		reverseByteOrder<ReturnType>(num);
+		for (uint32_t x = 0; x < sizeof(ReturnType); ++x) {
+			to[x] = static_cast<uint8_t>(num >> (byteSize * x));
 		}
 	}
 
@@ -408,11 +401,9 @@ namespace Jsonifier {
 
 		template<typename NumberType,
 			std::enable_if_t<std::is_integral<NumberType>::value || std::is_same<NumberType, uint64_t>::value || std::is_same<NumberType, int64_t>::value, int> = 0>
-		void writeJsonInt(NumberType integer) {
-			auto integerNew= std::to_string(integer);
-			auto size = this->string.size();
-			this->string.resize(this->string.size() + sizeof(integer));
-			storeBits<NumberType>(this->string.data() + size, *reinterpret_cast<NumberType*>(integerNew.data()), false);
+		void writeJsonInt(NumberType Int) {
+			auto IntNew = std::to_string(Int);
+			this->writeString(IntNew.data(), IntNew.size());
 		}
 
 		void writeJsonBool(const BoolType ValueNew);
