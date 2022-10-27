@@ -46,24 +46,24 @@ namespace Jsonifier {
 				return;
 			}
 			case 2: {
-				__m128i value{ _mm_set_epi8(net, net, net, net, net, net, net, net, net, net, net, net, net, net, net, net) };
-				__m128i indexes{ _mm_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
-				__m128i result{ _mm_shuffle_epi8(value, indexes) };
-				net = *reinterpret_cast<uint16_t*>(&result);
+				__m512i value{ _mm512_set1_epi16(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+					0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint16_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 			case 4: {
-				__m128i value{ _mm_set_epi32(net, net, net, net) };
-				__m128i indexes{ _mm_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
-				__m128i result{ _mm_shuffle_epi8(value, indexes) };
-				net = *reinterpret_cast<uint32_t*>(&result);
+				__m512i value{ _mm512_set1_epi32(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+					0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint32_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 			case 8: {
-				__m128i value{ _mm_set_epi64x(net, net) };
-				__m128i indexes{ _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
-				__m128i result{ _mm_shuffle_epi8(value, indexes) };
-				net = *reinterpret_cast<uint64_t*>(&result);
+				__m512i value{ _mm512_set1_epi64(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3,
+					4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint64_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 		}
