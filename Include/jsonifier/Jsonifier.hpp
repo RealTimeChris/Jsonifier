@@ -46,23 +46,23 @@ namespace Jsonifier {
 				return;
 			}
 			case 2: {
-				__m256i value{ _mm256_set1_epi16(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
-				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				__m128i value{ _mm_set_epi8(net, net, net, net, net, net, net, net, net, net, net, net, net, net, net, net) };
+				__m128i indexes{ _mm_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
+				__m128i result{ _mm_shuffle_epi8(value, indexes) };
 				net = *reinterpret_cast<uint16_t*>(&result);
 				return;
 			}
 			case 4: {
-				__m256i value{ _mm256_set1_epi32(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
-				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				__m128i value{ _mm_set_epi32(net, net, net, net) };
+				__m128i indexes{ _mm_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
+				__m128i result{ _mm_shuffle_epi8(value, indexes) };
 				net = *reinterpret_cast<uint32_t*>(&result);
 				return;
 			}
 			case 8: {
-				__m256i value{ _mm256_set1_epi64x(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
-				__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+				__m128i value{ _mm_set_epi64x(net, net) };
+				__m128i indexes{ _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
+				__m128i result{ _mm_shuffle_epi8(value, indexes) };
 				net = *reinterpret_cast<uint64_t*>(&result);
 				return;
 			}
