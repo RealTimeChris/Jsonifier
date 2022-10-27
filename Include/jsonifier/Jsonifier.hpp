@@ -17,7 +17,6 @@
 #include <array>
 #include <deque>
 #include <map>
-#include <assert.h>
 
 #ifdef _WIN32
 	#pragma comment(lib, "Ws2_32.lib")
@@ -41,44 +40,30 @@
 
 namespace Jsonifier {
 
-	void copyData256(char* dst, const char* src, int64_t size) {
-		int64_t  originalSize{ size };
-		int64_t index{};
-		while (size) {
-			_mm256_store_si256(reinterpret_cast<__m256i*>(dst + index), _mm256_lddqu_si256(reinterpret_cast<const __m256i*>(src + index)));
-			src += 32;
-			dst += 32;
-			size -= 32;
-			index += 32;
-		}
-	}
-
-	struct SerializationPayload {
-		void* startingPtr{};
-		size_t byteCount{};
-	};
-
 	template<typename ReturnType> void reverseByteOrder(ReturnType& net) {
 		switch (sizeof(ReturnType)) {
 			case 1: {
 				return;
 			}
 			case 2: {
-				__m256i value{ _mm256_set1_epi16(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
-				*reinterpret_cast<__m256i*>(reinterpret_cast<uint16_t*>(&net)) = _mm256_shuffle_epi8(value, indexes);
+				__m512i value{ _mm512_set1_epi16(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+					0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint16_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 			case 4: {
-				__m256i value{ _mm256_set1_epi32(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
-				*reinterpret_cast<__m256i*>(reinterpret_cast<uint32_t*>(&net)) = _mm256_shuffle_epi8(value, indexes);
+				__m512i value{ _mm512_set1_epi32(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+					0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint32_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 			case 8: {
-				__m256i value{ _mm256_set1_epi64x(net) };
-				__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
-				*reinterpret_cast<__m256i*>(reinterpret_cast<uint64_t*>(&net)) = _mm256_shuffle_epi8(value, indexes);
+				__m512i value{ _mm512_set1_epi64(net) };
+				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3,
+					4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
+				*reinterpret_cast<__m512i*>(reinterpret_cast<uint64_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
 				return;
 			}
 		}
@@ -109,20 +94,17 @@ namespace Jsonifier {
 
 		StopWatch(TimeType maxNumberOfMsNew) {
 			this->maxNumberOfMs.store(maxNumberOfMsNew.count());
-			this->startTime.store(
-				static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
+			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
 		}
 
 		uint64_t totalTimePassed() {
-			uint64_t currentTime =
-				static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
+			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
 			uint64_t elapsedTime = currentTime - this->startTime.load();
 			return elapsedTime;
 		}
 
 		bool hasTimePassed() {
-			uint64_t currentTime =
-				static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
+			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
 			uint64_t elapsedTime = currentTime - this->startTime.load();
 			if (elapsedTime >= this->maxNumberOfMs.load()) {
 				return true;
@@ -132,8 +114,7 @@ namespace Jsonifier {
 		}
 
 		void resetTimer() {
-			this->startTime.store(
-				static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
+			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
 		}
 
 	  protected:
@@ -230,9 +211,7 @@ namespace Jsonifier {
 			BoolType boolean;
 		};
 
-		Jsonifier(std::string* payloadsNew) noexcept {
-			this->payloadsPtr = payloadsNew;
-		};
+		Jsonifier() noexcept = default;
 
 		template<IsConvertibleToJsonifier OTy> Jsonifier& operator=(std::vector<OTy>&& data) noexcept {
 			this->setValue(JsonType::Array);
@@ -261,8 +240,7 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Jsonifier& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
-				this->jsonValue.object->emplace(key, Jsonifier{ &this->payloads });
-				this->jsonValue.object[key] = value;
+				(*this->jsonValue.object)[key] = std::move(value);
 			}
 			return *this;
 		}
@@ -286,8 +264,7 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Jsonifier& operator=(std::map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
-				this->jsonValue.object->emplace(key, Jsonifier{ &this->payloads });
-				this->jsonValue.object[key] = value;
+				(*this->jsonValue.object)[key] = std::move(value);
 			}
 			return *this;
 		}
@@ -299,8 +276,7 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Jsonifier& operator=(std::map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
-				this->jsonValue.object->emplace(key, Jsonifier{ &this->payloads });
-				this->jsonValue.object[key] = value;
+				(*this->jsonValue.object)[key] = value;
 			}
 			return *this;
 		}
@@ -319,12 +295,6 @@ namespace Jsonifier {
 			*this = data;
 		}
 
-		uint8_t getNextValue();
-
-		void addSerializationPayload(void* ptr, size_t length);
-
-		void updateString(std::string* string);
-
 		Jsonifier& operator=(Jsonifier&& data) noexcept;
 
 		Jsonifier(Jsonifier&& data) noexcept;
@@ -333,45 +303,65 @@ namespace Jsonifier {
 
 		Jsonifier(const Jsonifier& data) noexcept;
 
+		operator std::string&&() noexcept;
+
 		operator std::string() noexcept;
 
 		void refreshString(JsonifierSerializeType OpCode);
 
 		Jsonifier& operator=(EnumConverter&& data) noexcept;
+		Jsonifier(EnumConverter&& data) noexcept;
 
 		Jsonifier& operator=(const EnumConverter& data) noexcept;
+		Jsonifier(const EnumConverter& data) noexcept;
 
 		Jsonifier& operator=(std::string&& data) noexcept;
+		Jsonifier(std::string&& data) noexcept;
 
 		Jsonifier& operator=(const std::string& data) noexcept;
+		Jsonifier(const std::string& data) noexcept;
 
 		Jsonifier& operator=(const char* data) noexcept;
+		Jsonifier(const char* data) noexcept;
 
 		Jsonifier& operator=(double data) noexcept;
+		Jsonifier(double data) noexcept;
 
 		Jsonifier& operator=(float data) noexcept;
+		Jsonifier(float data) noexcept;
 
 		Jsonifier& operator=(uint64_t data) noexcept;
+		Jsonifier(uint64_t data) noexcept;
 
 		Jsonifier& operator=(uint32_t data) noexcept;
+		Jsonifier(uint32_t data) noexcept;
 
 		Jsonifier& operator=(uint16_t data) noexcept;
+		Jsonifier(uint16_t data) noexcept;
 
 		Jsonifier& operator=(uint8_t data) noexcept;
+		Jsonifier(uint8_t data) noexcept;
 
 		Jsonifier& operator=(int64_t data) noexcept;
+		Jsonifier(int64_t data) noexcept;
 
 		Jsonifier& operator=(int32_t data) noexcept;
+		Jsonifier(int32_t data) noexcept;
 
 		Jsonifier& operator=(int16_t data) noexcept;
+		Jsonifier(int16_t data) noexcept;
 
 		Jsonifier& operator=(int8_t data) noexcept;
+		Jsonifier(int8_t data) noexcept;
 
 		Jsonifier& operator=(bool data) noexcept;
+		Jsonifier(bool data) noexcept;
 
 		Jsonifier& operator=(JsonType TypeNew) noexcept;
+		Jsonifier(JsonType type) noexcept;
 
 		Jsonifier& operator=(std::nullptr_t) noexcept;
+		Jsonifier(std::nullptr_t data) noexcept;
 
 		Jsonifier& operator[](typename ObjectType::key_type key);
 
@@ -393,11 +383,9 @@ namespace Jsonifier {
 		~Jsonifier() noexcept;
 
 	  protected:
-		std::string* payloadsPtr{};
-		std::vector<SerializationPayload> payloads{};
-		alignas(32) JsonValue jsonValue{};
-		alignas(32) std::string string{};
 		JsonType type{ JsonType::Null };
+		JsonValue jsonValue{};
+		std::string string{};
 
 		void serializeJsonToEtfString(const Jsonifier* dataToParse);
 
@@ -412,9 +400,7 @@ namespace Jsonifier {
 		void writeJsonFloat(const FloatType x);
 
 		template<typename NumberType,
-			std::enable_if_t<
-				std::is_integral<NumberType>::value || std::is_same<NumberType, uint64_t>::value || std::is_same<NumberType, int64_t>::value, int> =
-				0>
+			std::enable_if_t<std::is_integral<NumberType>::value || std::is_same<NumberType, uint64_t>::value || std::is_same<NumberType, int64_t>::value, int> = 0>
 		void writeJsonInt(NumberType Int) {
 			auto IntNew = std::to_string(Int);
 			this->writeString(IntNew.data(), IntNew.size());
@@ -424,11 +410,11 @@ namespace Jsonifier {
 
 		void writeJsonNull();
 
-		void writeEtfObject(ObjectType& jsonData);
+		void writeEtfObject(const ObjectType& jsonData);
 
 		void writeEtfArray(const ArrayType& jsonData);
 
-		void writeEtfString(StringType& jsonData);
+		void writeEtfString(const StringType& jsonData);
 
 		void writeEtfUint(const UintType jsonData);
 
@@ -440,11 +426,11 @@ namespace Jsonifier {
 
 		void writeEtfNull();
 
-		void writeString(char* data, std::size_t length);
+		void writeString(const char* data, std::size_t length);
 
-		void writeCharacter(char Char);
+		void writeCharacter(const char Char);
 
-		void appendBinaryExt(std::string& bytes, const uint32_t sizeNew);
+		void appendBinaryExt(const std::string& bytes, const uint32_t sizeNew);
 
 		void appendUnsignedLongLong(const uint64_t value);
 
