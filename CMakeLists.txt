@@ -59,7 +59,6 @@ file(GLOB SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
 
 if (WIN32)
 	add_library("${PROJECT_NAME}" SHARED "${SOURCES}" "${PRODUCT_INFO}")
-	add_library(dll_main SHARED "${CMAKE_CURRENT_SOURCE_DIR}/Source/DllMain.cpp")
 elseif (UNIX)
 	add_library("${PROJECT_NAME}" STATIC "${SOURCES}")
 endif()
@@ -70,9 +69,10 @@ file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifi
 
 target_compile_options(
 	"${PROJECT_NAME}" PUBLIC
+	"$<$<PLATFORM_ID:Windows>:/arch:AVX2>"
+	"$<$<PLATFORM_ID:Windows>:/fp:fast>"
 	"$<$<PLATFORM_ID:Windows>:/MP>"
 	"$<$<PLATFORM_ID:Linux>:-mavx2>"
-	"$<$<PLATFORM_ID:Linux>:-mavx>"
 )
 
 set_target_properties(
@@ -88,13 +88,6 @@ target_include_directories(
 	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/>"
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier>"
 )
-
-if (WIN32)
-	target_compile_features(
-		dll_main PUBLIC
-		"$<$<PLATFORM_ID:Windows>:cxx_std_20>"
-	)
-endif()
 
 target_compile_features(
 	"${PROJECT_NAME}" PUBLIC
