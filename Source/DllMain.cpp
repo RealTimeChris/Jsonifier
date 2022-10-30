@@ -2,23 +2,21 @@
 
 #include <Windows.h>
 
-bool __stdcall DllMain(void*, unsigned long fdwReason, void*) {
+bool WINAPI DllMain(HINSTANCE hinstDLL, unsigned long fdwReason, void* lpvReserved) {
 	switch (fdwReason) {
 		case DLL_PROCESS_ATTACH: {
-			[[fallthrough]];
+			break;
 		}
 		case DLL_THREAD_ATTACH: {
-			[[fallthrough]];
+			break;
 		}
 		case DLL_THREAD_DETACH: {
-			[[fallthrough]];
+			break;
 		}
 		case DLL_PROCESS_DETACH: {
-			[[fallthrough]];
-		}
-		default: {
-			return TRUE;
+			break;
 		}
 	}
+	return TRUE;
 }
 #endif
