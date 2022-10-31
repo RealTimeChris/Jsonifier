@@ -41,33 +41,38 @@
 namespace Jsonifier {
 
 	template<typename ReturnType> void reverseByteOrder(ReturnType& net) {
-		switch (sizeof(ReturnType)) {
-			case 1: {
-				return;
-			}
-			case 2: {
-				__m512i value{ _mm512_set1_epi16(net) };
-				__m512i indexes{ _mm512_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
-					0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1) };
-				*reinterpret_cast<__m512i*>(reinterpret_cast<uint16_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
-				return;
-			}
-			case 4: {
-				__m512i value{ _mm512_set1_epi32(net) };
-				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
-					0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3) };
-				*reinterpret_cast<__m512i*>(reinterpret_cast<uint32_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
-				return;
-			}
-			case 8: {
-				__m512i value{ _mm512_set1_epi64(net) };
-				__m512i indexes{ _mm512_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3,
-					4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7) };
-				*reinterpret_cast<__m512i*>(reinterpret_cast<uint64_t*>(&net)) = _mm512_shuffle_epi8(value, indexes);
-				return;
+		if (std::endian::native == std::endian::big) {
+		} else {
+			switch (sizeof(ReturnType)) {
+				case 1: {
+					return;
+				}
+				case 2: {
+					__m256i value{ _mm256_set1_epi16(net) };
+					__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
+						1) };
+					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+					net = *reinterpret_cast<uint16_t*>(&result);
+					return;
+				}
+				case 4: {
+					__m256i value{ _mm256_set1_epi32(net) };
+					__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2,
+						3) };
+					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+					net = *reinterpret_cast<uint32_t*>(&result);
+					return;
+				}
+				case 8: {
+					__m256i value{ _mm256_set1_epi64x(net) };
+					__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6,
+						7) };
+					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
+					net = *reinterpret_cast<uint64_t*>(&result);
+					return;
+				}
 			}
 		}
-		return;
 	}
 
 	template<typename ReturnType> void storeBits(char* to, ReturnType num) {
