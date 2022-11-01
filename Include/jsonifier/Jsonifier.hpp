@@ -40,10 +40,10 @@
 
 namespace Jsonifier {
 
-	template<typename ReturnType> void reverseByteOrder(ReturnType& net) {
+	template<typename RTy> void reverseByteOrder(RTy& net) {
 		if (std::endian::native == std::endian::big) {
 		} else {
-			switch (sizeof(ReturnType)) {
+			switch (sizeof(RTy)) {
 				case 1: {
 					return;
 				}
@@ -75,41 +75,41 @@ namespace Jsonifier {
 		}
 	}
 
-	template<typename ReturnType> void storeBits(char* to, ReturnType num) {
+	template<typename RTy> void storeBits(char* to, RTy num) {
 		const uint8_t byteSize{ 8 };
-		reverseByteOrder<ReturnType>(num);
-		for (uint32_t x = 0; x < sizeof(ReturnType); ++x) {
+		reverseByteOrder<RTy>(num);
+		for (uint32_t x = 0; x < sizeof(RTy); ++x) {
 			to[x] = static_cast<uint8_t>(num >> (byteSize * x));
 		}
 	}
 
-	template<typename TimeType> class StopWatch {
+	template<typename TTy> class StopWatch {
 	  public:
 		StopWatch() = delete;
 
-		StopWatch<TimeType>& operator=(const StopWatch<TimeType>& data) {
+		StopWatch<TTy>& operator=(const StopWatch<TTy>& data) {
 			this->maxNumberOfMs.store(data.maxNumberOfMs.load());
 			this->startTime.store(data.startTime.load());
 			return *this;
 		}
 
-		StopWatch(const StopWatch<TimeType>& data) {
+		StopWatch(const StopWatch<TTy>& data) {
 			*this = data;
 		}
 
-		StopWatch(TimeType maxNumberOfMsNew) {
+		StopWatch(TTy maxNumberOfMsNew) {
 			this->maxNumberOfMs.store(maxNumberOfMsNew.count());
-			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
+			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TTy>(std::chrono::system_clock::now().time_since_epoch()).count()));
 		}
 
 		uint64_t totalTimePassed() {
-			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
+			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TTy>(std::chrono::system_clock::now().time_since_epoch()).count());
 			uint64_t elapsedTime = currentTime - this->startTime.load();
 			return elapsedTime;
 		}
 
 		bool hasTimePassed() {
-			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count());
+			uint64_t currentTime = static_cast<uint64_t>(std::chrono::duration_cast<TTy>(std::chrono::system_clock::now().time_since_epoch()).count());
 			uint64_t elapsedTime = currentTime - this->startTime.load();
 			if (elapsedTime >= this->maxNumberOfMs.load()) {
 				return true;
@@ -119,7 +119,7 @@ namespace Jsonifier {
 		}
 
 		void resetTimer() {
-			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TimeType>(std::chrono::system_clock::now().time_since_epoch()).count()));
+			this->startTime.store(static_cast<uint64_t>(std::chrono::duration_cast<TTy>(std::chrono::system_clock::now().time_since_epoch()).count()));
 		}
 
 	  protected:
@@ -143,8 +143,8 @@ namespace Jsonifier {
 		Map_Ext = 116,
 	};
 
-	template<typename T>
-	concept IsEnum = std::is_enum<T>::value;
+	template<typename Ty>
+	concept IsEnum = std::is_enum<Ty>::value;
 
 	struct Jsonifier_Dll EnumConverter {
 		template<IsEnum EnumType> EnumConverter& operator=(std::vector<EnumType> data) {
@@ -185,8 +185,8 @@ namespace Jsonifier {
 
 	class Jsonifier;
 
-	template<typename T>
-	concept IsConvertibleToJsonifier = std::convertible_to<T, Jsonifier>;
+	template<typename Ty>
+	concept IsConvertibleToJsonifier = std::convertible_to<Ty, Jsonifier>;
 
 	class Jsonifier_Dll Jsonifier {
 	  public:
@@ -290,13 +290,13 @@ namespace Jsonifier {
 			*this = data;
 		};
 
-		template<IsEnum T> Jsonifier& operator=(T data) noexcept {
+		template<IsEnum Ty> Jsonifier& operator=(Ty data) noexcept {
 			this->jsonValue.numberUint = static_cast<uint64_t>(data);
 			this->type = JsonType::Uint64;
 			return *this;
 		}
 
-		template<IsEnum T> Jsonifier(T data) noexcept {
+		template<IsEnum Ty> Jsonifier(Ty data) noexcept {
 			*this = data;
 		}
 
@@ -372,12 +372,12 @@ namespace Jsonifier {
 
 		Jsonifier& operator[](uint64_t index);
 
-		template<typename T> const T& getValue() const {
-			return T{};
+		template<typename Ty> const Ty& getValue() const {
+			return Ty{};
 		}
 
-		template<typename T> T& getValue() {
-			return T{};
+		template<typename Ty> Ty& getValue() {
+			return Ty{};
 		}
 
 		JsonType getType() noexcept;
