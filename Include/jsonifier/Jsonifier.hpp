@@ -41,8 +41,7 @@
 namespace Jsonifier {
 
 	template<typename RTy> void reverseByteOrder(RTy& net) {
-		if (std::endian::native == std::endian::big) {
-		} else {
+		if (std::endian::native == std::endian::little) {
 			switch (sizeof(RTy)) {
 				case 1: {
 					return;
@@ -51,24 +50,20 @@ namespace Jsonifier {
 					__m256i value{ _mm256_set1_epi16(net) };
 					__m256i indexes{ _mm256_set_epi8(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
 						1) };
-					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-					net = *reinterpret_cast<uint16_t*>(&result);
+					net = _mm256_extract_epi16(_mm256_shuffle_epi8(value, indexes), 0);
 					return;
 				}
 				case 4: {
 					__m256i value{ _mm256_set1_epi32(net) };
 					__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2,
 						3) };
-					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-					net = *reinterpret_cast<uint32_t*>(&result);
-					return;
+					net = _mm256_extract_epi32(_mm256_shuffle_epi8(value, indexes), 0);
 				}
 				case 8: {
 					__m256i value{ _mm256_set1_epi64x(net) };
 					__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6,
 						7) };
-					__m256i result{ _mm256_shuffle_epi8(value, indexes) };
-					net = *reinterpret_cast<uint64_t*>(&result);
+					net = _mm256_extract_epi64(_mm256_shuffle_epi8(value, indexes), 0);
 					return;
 				}
 			}
