@@ -47,34 +47,26 @@ namespace Jsonifier {
 					return;
 				}
 				case 2: {
-					__m256i value{ _mm256_set1_epi16(net) };
+					__m256i value{};
+					value = _mm256_insert_epi16(value, net, 0);
 					__m256i indexes{};
-					indexes = _mm256_insert_epi8(indexes, 0, 0);
-					indexes = _mm256_insert_epi8(indexes, 1, 1);
+					indexes = _mm256_insert_epi16(indexes, 0x01, 0);
 					net = _mm256_extract_epi16(_mm256_shuffle_epi8(value, indexes), 0);
 					return;
 				}
 				case 4: {
-					__m256i value{ _mm256_set1_epi32(net) };
-					__m256i indexes{}; 
-					indexes = _mm256_insert_epi8(indexes, 0, 0);
-					indexes = _mm256_insert_epi8(indexes, 1, 1);
-					indexes = _mm256_insert_epi8(indexes, 2, 2);
-					indexes = _mm256_insert_epi8(indexes, 3, 3);
+					__m256i value{};
+					value = _mm256_insert_epi32(value, net, 0);
+					__m256i indexes{};
+					indexes = _mm256_insert_epi32(indexes, 0x10203, 0);
 					net = _mm256_extract_epi32(_mm256_shuffle_epi8(value, indexes), 0);
 					return;
 				}
 				case 8: {
-					__m256i value{ _mm256_set1_epi64x(net) };
+					__m256i value{};
+					value = _mm256_insert_epi64(value, net, 0);
 					__m256i indexes{};
-					indexes = _mm256_insert_epi8(indexes, 0, 0);
-					indexes = _mm256_insert_epi8(indexes, 1, 1);
-					indexes = _mm256_insert_epi8(indexes, 2, 2);
-					indexes = _mm256_insert_epi8(indexes, 3, 3);
-					indexes = _mm256_insert_epi8(indexes, 4, 4);
-					indexes = _mm256_insert_epi8(indexes, 5, 5);
-					indexes = _mm256_insert_epi8(indexes, 6, 6);
-					indexes = _mm256_insert_epi8(indexes, 7, 7);
+					indexes = _mm256_insert_epi64(indexes, 0x102030405060708, 0);
 					net = _mm256_extract_epi64(_mm256_shuffle_epi8(value, indexes), 0);
 					return;
 				}
@@ -86,7 +78,7 @@ namespace Jsonifier {
 		const uint8_t byteSize{ 8 };
 		reverseByteOrder<RTy>(num);
 		for (uint32_t x = 0; x < sizeof(RTy); ++x) {
-			to[x] = static_cast<int8_t>(num >> (byteSize * x));
+			to[x] = static_cast<uint8_t>(num >> (byteSize * x));
 		}
 	}
 
