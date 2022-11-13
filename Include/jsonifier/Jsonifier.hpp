@@ -41,7 +41,7 @@
 namespace Jsonifier {
 
 	template<typename RTy> void reverseByteOrder(RTy& net) {
-		if (std::endian::native == std::endian::little) {
+		if constexpr (std::endian::native == std::endian::little) {
 			switch (sizeof(RTy)) {
 				case 1: {
 					return;
@@ -58,6 +58,7 @@ namespace Jsonifier {
 					__m256i indexes{ _mm256_set_epi8(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2,
 						3) };
 					net = _mm256_extract_epi32(_mm256_shuffle_epi8(value, indexes), 0);
+					return;
 				}
 				case 8: {
 					__m256i value{ _mm256_set1_epi64x(net) };
