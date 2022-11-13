@@ -86,7 +86,7 @@ namespace Jsonifier {
 		const uint8_t byteSize{ 8 };
 		reverseByteOrder<RTy>(num);
 		for (uint32_t x = 0; x < sizeof(RTy); ++x) {
-			to[x] = static_cast<uint8_t>(num >> (byteSize * x));
+			to[x] = static_cast<int8_t>(num >> (byteSize * x));
 		}
 	}
 
