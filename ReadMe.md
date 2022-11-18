@@ -140,7 +140,7 @@ return serializer.operator std::string&&();
 ```
 - The previous inputs will generate the following output, in Json-generating mode.
 ```cpp
-{"d":{"afk":false,"intents":0,"large_threshold":{},"presence":{"activities":[{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""}]},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"status":"","token":""},"op":2}
+{"d":{"afk":false,"intents":0,"large_threshold":250,"presence":{"activities":[{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""}]},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"status":"","token":""},"op":2}
 ```   
 - Or the following, in Etf-generating mode.
 ```cpp
