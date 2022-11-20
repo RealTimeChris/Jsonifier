@@ -47,11 +47,11 @@ namespace Jsonifier {
 					return;
 				}
 				case 2: {
-					net = _mm256_extract_epi16(_mm256_shuffle_epi8(_mm256_insert_epi16(__m256i{}, net, 0), _mm256_insert_epi16(__m256i{}, 0x102030405060708, 0)), 0);
+					net = _mm256_extract_epi16(_mm256_shuffle_epi8(_mm256_insert_epi16(__m256i{}, net, 0), _mm256_insert_epi16(__m256i{}, 0x01, 0)), 0);
 					return;
 				}
 				case 4: {
-					net = _mm256_extract_epi32(_mm256_shuffle_epi8(_mm256_insert_epi32(__m256i{}, net, 0), _mm256_insert_epi32(__m256i{}, 0x102030405060708, 0)), 0);
+					net = _mm256_extract_epi32(_mm256_shuffle_epi8(_mm256_insert_epi32(__m256i{}, net, 0), _mm256_insert_epi32(__m256i{}, 0x10203, 0)), 0);
 					return;
 				}
 				case 8: {
