@@ -69,10 +69,13 @@ file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifi
 
 target_compile_options(
 	"${PROJECT_NAME}" PUBLIC
-	"$<$<PLATFORM_ID:Windows>:/arch:AVX2>"
-	"$<$<PLATFORM_ID:Windows>:/fp:fast>"
-	"$<$<PLATFORM_ID:Windows>:/MP>"
-	"$<$<PLATFORM_ID:Linux>:-mavx2>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/Zi>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/MP>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:$ENV{EnableASAN},true>:-fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:GNU>:-fpermissive>"
+	"$<$<CXX_COMPILER_ID:GNU>:-mavx2>"
 )
 
 set_target_properties(

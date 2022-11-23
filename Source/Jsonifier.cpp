@@ -53,6 +53,18 @@ namespace Jsonifier {
 		return *this;
 	}
 
+	Jsonifier& Jsonifier::operator=(ObjectType&& data) noexcept {
+		this->setValue(JsonType::Object);
+		for (auto& [key, value]: data) {
+			(*this->jsonValue.object)[key] = std::move(value);
+		}
+		return *this;
+	}
+
+	Jsonifier::Jsonifier(ObjectType&& data) noexcept {
+		*this = std::move(data);
+	}
+
 	Jsonifier::Jsonifier(Jsonifier&& data) noexcept {
 		*this = std::move(data);
 	}

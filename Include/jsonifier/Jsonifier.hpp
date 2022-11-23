@@ -293,6 +293,10 @@ namespace Jsonifier {
 			*this = data;
 		}
 
+		Jsonifier& operator=(ObjectType&& data) noexcept;
+
+		Jsonifier(ObjectType&& data) noexcept;
+
 		Jsonifier& operator=(Jsonifier&& data) noexcept;
 
 		Jsonifier(Jsonifier&& data) noexcept;
