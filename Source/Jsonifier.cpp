@@ -2,19 +2,30 @@
 
 namespace Jsonifier {
 
-	EnumConverter::operator std::vector<uint64_t>() const noexcept {
+	JsonifierException::JsonifierException(const std::string& error, std::source_location location) noexcept : std::runtime_error(error) {
+		std::stringstream stream{};
+		stream << "Error Report: \n"
+			   << "Caught in File: " << location.file_name() << " (" << std::to_string(location.line()) << ":" << std::to_string(location.column())
+			   << ")"
+			   << "\nThe Error: \n"
+			   << error << std::endl
+			   << std::endl;
+		*static_cast<std::runtime_error*>(this) = std::runtime_error{ stream.str() };
+	}
+
+	EnumConverter::operator std::vector<uint64_t>() noexcept {
 		return this->vector;
 	}
 
-	EnumConverter::operator uint64_t() const noexcept {
+	EnumConverter::operator uint64_t() noexcept {
 		return this->integer;
 	}
 
-	bool EnumConverter::isItAVector() const noexcept {
+	bool EnumConverter::isItAVector() noexcept {
 		return this->vectorType;
 	}
 
-	Jsonifier& Jsonifier::operator=(Jsonifier&& data) noexcept {
+	Serializer& Serializer::operator=(Serializer&& data) noexcept {
 		switch (data.type) {
 			case JsonType::Object: {
 				this->setValue(JsonType::Object);
@@ -53,23 +64,7 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	Jsonifier& Jsonifier::operator=(ObjectType&& data) noexcept {
-		this->setValue(JsonType::Object);
-		for (auto& [key, value]: data) {
-			(*this->jsonValue.object)[key] = std::move(value);
-		}
-		return *this;
-	}
-
-	Jsonifier::Jsonifier(ObjectType&& data) noexcept {
-		*this = std::move(data);
-	}
-
-	Jsonifier::Jsonifier(Jsonifier&& data) noexcept {
-		*this = std::move(data);
-	}
-
-	Jsonifier& Jsonifier::operator=(const Jsonifier& data) noexcept {
+	Serializer& Serializer::operator=(const Serializer& data) noexcept {
 		switch (data.type) {
 			case JsonType::Object: {
 				this->setValue(JsonType::Object);
@@ -108,23 +103,23 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(const Jsonifier& data) noexcept {
+	Serializer::Serializer(const Serializer& data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier::operator std::string&&() noexcept {
+	Serializer::operator std::string&&() noexcept {
 		return std::move(this->string);
 	}
 
-	Jsonifier::operator std::string() noexcept {
+	Serializer::operator std::string() noexcept {
 		return this->string;
 	}
 
-	JsonType Jsonifier::getType() noexcept {
+	JsonType Serializer::getType() noexcept {
 		return this->type;
 	}
 
-	void Jsonifier::refreshString(JsonifierSerializeType opCode) {
+	void Serializer::refreshString(JsonifierSerializeType opCode) {
 		this->string.clear();
 		if (opCode == JsonifierSerializeType::Etf) {
 			this->appendVersion();
@@ -134,7 +129,7 @@ namespace Jsonifier {
 		}
 	}
 
-	Jsonifier& Jsonifier::operator=(EnumConverter&& data) noexcept {
+	Serializer& Serializer::operator=(EnumConverter&& data) noexcept {
 		if (data.isItAVector()) {
 			this->setValue(JsonType::Array);
 			for (auto& value: data.operator std::vector<uint64_t>()) {
@@ -147,11 +142,11 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(EnumConverter&& data) noexcept {
+	Serializer::Serializer(EnumConverter&& data) noexcept {
 		*this = std::move(data);
 	}
 
-	Jsonifier& Jsonifier::operator=(const EnumConverter& data) noexcept {
+	Serializer& Serializer::operator=(EnumConverter& data) noexcept {
 		if (data.isItAVector()) {
 			this->setValue(JsonType::Array);
 			for (auto& value: data.operator std::vector<uint64_t>()) {
@@ -164,224 +159,219 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(const EnumConverter& data) noexcept {
+	Serializer::Serializer(EnumConverter& data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(std::string&& data) noexcept {
+	Serializer& Serializer::operator=(std::string&& data) noexcept {
 		this->setValue(JsonType::String);
 		*this->jsonValue.string = std::move(data);
 		this->type = JsonType::String;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(std::string&& data) noexcept {
+	Serializer::Serializer(std::string&& data) noexcept {
 		*this = std::move(data);
 	}
 
-	Jsonifier& Jsonifier::operator=(const std::string& data) noexcept {
+	Serializer& Serializer::operator=(const std::string& data) noexcept {
 		this->setValue(JsonType::String);
 		*this->jsonValue.string = data;
 		this->type = JsonType::String;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(const std::string& data) noexcept {
+	Serializer::Serializer(const std::string& data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(const char* data) noexcept {
+	Serializer& Serializer::operator=(const char* data) noexcept {
 		this->setValue(JsonType::String);
 		*this->jsonValue.string = data;
 		this->type = JsonType::String;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(const char* data) noexcept {
+	Serializer::Serializer(const char* data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(double data) noexcept {
+	Serializer& Serializer::operator=(double data) noexcept {
 		this->jsonValue.numberDouble = data;
 		this->type = JsonType::Float;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(double data) noexcept {
+	Serializer::Serializer(double data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(float data) noexcept {
+	Serializer& Serializer::operator=(float data) noexcept {
 		this->jsonValue.numberDouble = data;
 		this->type = JsonType::Float;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(float data) noexcept {
+	Serializer::Serializer(float data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(uint64_t data) noexcept {
+	Serializer& Serializer::operator=(uint64_t data) noexcept {
 		this->jsonValue.numberUint = data;
 		this->type = JsonType::Uint64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(uint64_t data) noexcept {
+	Serializer::Serializer(uint64_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(uint32_t data) noexcept {
+	Serializer& Serializer::operator=(uint32_t data) noexcept {
 		this->jsonValue.numberUint = data;
 		this->type = JsonType::Uint64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(uint32_t data) noexcept {
+	Serializer::Serializer(uint32_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(uint16_t data) noexcept {
+	Serializer& Serializer::operator=(uint16_t data) noexcept {
 		this->jsonValue.numberUint = data;
 		this->type = JsonType::Uint64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(uint16_t data) noexcept {
+	Serializer::Serializer(uint16_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(uint8_t data) noexcept {
+	Serializer& Serializer::operator=(uint8_t data) noexcept {
 		this->jsonValue.numberUint = data;
 		this->type = JsonType::Uint64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(uint8_t data) noexcept {
+	Serializer::Serializer(uint8_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(int64_t data) noexcept {
+	Serializer& Serializer::operator=(int64_t data) noexcept {
 		this->jsonValue.numberInt = data;
 		this->type = JsonType::Int64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(int64_t data) noexcept {
+	Serializer::Serializer(int64_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(int32_t data) noexcept {
+	Serializer& Serializer::operator=(int32_t data) noexcept {
 		this->jsonValue.numberInt = data;
 		this->type = JsonType::Int64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(int32_t data) noexcept {
+	Serializer::Serializer(int32_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(int16_t data) noexcept {
+	Serializer& Serializer::operator=(int16_t data) noexcept {
 		this->jsonValue.numberInt = data;
 		this->type = JsonType::Int64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(int16_t data) noexcept {
+	Serializer::Serializer(int16_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(int8_t data) noexcept {
+	Serializer& Serializer::operator=(int8_t data) noexcept {
 		this->jsonValue.numberInt = data;
 		this->type = JsonType::Int64;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(int8_t data) noexcept {
+	Serializer::Serializer(int8_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(std::nullptr_t) noexcept {
+	Serializer& Serializer::operator=(std::nullptr_t) noexcept {
 		this->type = JsonType::Null;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(std::nullptr_t data) noexcept {
+	Serializer::Serializer(std::nullptr_t data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(bool data) noexcept {
+	Serializer& Serializer::operator=(bool data) noexcept {
 		this->jsonValue.boolean = data;
 		this->type = JsonType::Bool;
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(bool data) noexcept {
+	Serializer::Serializer(bool data) noexcept {
 		*this = data;
 	}
 
-	Jsonifier& Jsonifier::operator=(JsonType typeNew) noexcept {
+	Serializer& Serializer::operator=(JsonType typeNew) noexcept {
 		this->type = typeNew;
 		this->setValue(this->type);
 		return *this;
 	}
 
-	Jsonifier::Jsonifier(JsonType type) noexcept {
+	Serializer::Serializer(JsonType type) noexcept {
 		*this = type;
 	}
 
-	Jsonifier& Jsonifier::operator[](typename ObjectType::key_type key) {
+	Serializer& Serializer::operator[](typename ObjectType::key_type key) {
 		if (this->type == JsonType::Null) {
 			this->setValue(JsonType::Object);
 			this->type = JsonType::Object;
 		}
-
 		if (this->type == JsonType::Object) {
-			auto result = this->jsonValue.object->emplace(std::move(key), Jsonifier{});
+			auto result = this->jsonValue.object->emplace(std::move(key), Serializer{});
 			return result.first->second;
 		}
-		throw std::runtime_error{ "Sorry, but that item-key could not be produced/accessed." };
+		throw JsonifierException{ "Sorry, but that item-key could not be produced/accessed." };
 	}
 
-	Jsonifier& Jsonifier::operator[](uint64_t index) {
+	Serializer& Serializer::operator[](uint64_t index) {
 		if (this->type == JsonType::Null) {
 			this->setValue(JsonType::Array);
 			this->type = JsonType::Array;
 		}
-
 		if (this->type == JsonType::Array) {
 			if (index >= this->jsonValue.array->size()) {
 				this->jsonValue.array->resize(index + 1);
 			}
-
 			return this->jsonValue.array->operator[](index);
 		}
-		throw std::runtime_error{ "Sorry, but that index could not be produced/accessed." };
+		throw JsonifierException{ "Sorry, but that index could not be produced/accessed." };
 	}
 
-	void Jsonifier::emplaceBack(Jsonifier&& other) noexcept {
+	void Serializer::emplaceBack(Serializer&& other) noexcept {
 		if (this->type == JsonType::Null) {
 			this->setValue(JsonType::Array);
 			this->type = JsonType::Array;
 		}
-
 		if (this->type == JsonType::Array) {
 			this->jsonValue.array->emplace_back(std::move(other));
 		}
 	}
 
-	void Jsonifier::emplaceBack(Jsonifier& other) noexcept {
+	void Serializer::emplaceBack(Serializer& other) noexcept {
 		if (this->type == JsonType::Null) {
 			this->setValue(JsonType::Array);
 			this->type = JsonType::Array;
 		}
-
 		if (this->type == JsonType::Array) {
 			this->jsonValue.array->emplace_back(other);
 		}
 	}
 
-	void Jsonifier::serializeJsonToEtfString(const Jsonifier* dataToParse) {
+	void Serializer::serializeJsonToEtfString(const Serializer* dataToParse) {
 		switch (dataToParse->type) {
 			case JsonType::Object: {
 				return this->writeEtfObject(*dataToParse->jsonValue.object);
@@ -410,7 +400,7 @@ namespace Jsonifier {
 		}
 	}
 
-	void Jsonifier::serializeJsonToJsonString(const Jsonifier* dataToParse) {
+	void Serializer::serializeJsonToJsonString(const Serializer* dataToParse) {
 		switch (dataToParse->type) {
 			case JsonType::Object: {
 				return this->writeJsonObject(*dataToParse->jsonValue.object);
@@ -439,7 +429,7 @@ namespace Jsonifier {
 		}
 	}
 
-	void Jsonifier::writeJsonObject(const ObjectType& objectNew) {
+	void Serializer::writeJsonObject(const ObjectType& objectNew) {
 		if (objectNew.empty()) {
 			this->writeString("{}", 2);
 			return;
@@ -455,18 +445,16 @@ namespace Jsonifier {
 			if (index != objectNew.size() - 1) {
 				this->writeCharacter(',');
 			}
-			index++;
+			++index;
 		}
-
 		this->writeCharacter('}');
 	}
 
-	void Jsonifier::writeJsonArray(const ArrayType& arrayNew) {
+	void Serializer::writeJsonArray(const ArrayType& arrayNew) {
 		if (arrayNew.empty()) {
 			this->writeString("[]", 2);
 			return;
 		}
-
 		this->writeCharacter('[');
 
 		int32_t index{};
@@ -475,59 +463,23 @@ namespace Jsonifier {
 			if (index != arrayNew.size() - 1) {
 				this->writeCharacter(',');
 			}
-			index++;
+			++index;
 		}
-
 		this->writeCharacter(']');
 	}
 
-	void Jsonifier::writeJsonString(const StringType& stringNew) {
-		this->writeCharacter('\"');
-		for (auto& value: stringNew) {
-			switch (static_cast<std::uint8_t>(value)) {
-				case 0x08: {
-					this->writeCharacter('b');
-					break;
-				}
-				case 0x09: {
-					this->writeCharacter('t');
-					break;
-				}
-				case 0x0A: {
-					this->writeCharacter('n');
-					break;
-				}
-				case 0x0C: {
-					this->writeCharacter('f');
-					break;
-				}
-				case 0x0D: {
-					this->writeCharacter('r');
-					break;
-				}
-				case 0x22: {
-					this->writeCharacter('\"');
-					break;
-				}
-				case 0x5C: {
-					this->writeCharacter('\\');
-					break;
-				}
-				default: {
-					this->writeCharacter(value);
-					break;
-				}
-			}
-		}
-		this->writeCharacter('\"');
+	void Serializer::writeJsonString(const StringType& stringNew) {
+		this->writeCharacter('"');
+		this->writeString(stringNew.data(), stringNew.size());
+		this->writeCharacter('"');
 	}
 
-	void Jsonifier::writeJsonFloat(const FloatType x) {
+	void Serializer::writeJsonFloat(const FloatType x) {
 		auto floatValue = std::to_string(x);
 		this->writeString(floatValue.data(), floatValue.size());
 	}
 
-	void Jsonifier::writeJsonBool(const BoolType jsonValueNew) {
+	void Serializer::writeJsonBool(const BoolType jsonValueNew) {
 		if (jsonValueNew) {
 			this->writeString("true", 4);
 		} else {
@@ -535,11 +487,11 @@ namespace Jsonifier {
 		}
 	}
 
-	void Jsonifier::writeJsonNull() {
+	void Serializer::writeJsonNull() {
 		this->writeString("null", 4);
 	}
 
-	void Jsonifier::writeEtfObject(const ObjectType& jsonData) {
+	void Serializer::writeEtfObject(const ObjectType& jsonData) {
 		this->appendMapHeader(static_cast<uint32_t>(jsonData.size()));
 		for (auto& [key, value]: jsonData) {
 			this->appendBinaryExt(key, static_cast<uint32_t>(key.size()));
@@ -547,7 +499,7 @@ namespace Jsonifier {
 		}
 	}
 
-	void Jsonifier::writeEtfArray(const ArrayType& jsonData) {
+	void Serializer::writeEtfArray(const ArrayType& jsonData) {
 		this->appendListHeader(static_cast<uint32_t>(jsonData.size()));
 		for (auto& value: jsonData) {
 			this->serializeJsonToEtfString(&value);
@@ -555,51 +507,51 @@ namespace Jsonifier {
 		this->appendNilExt();
 	}
 
-	void Jsonifier::writeEtfString(const StringType& jsonData) {
+	void Serializer::writeEtfString(const StringType& jsonData) {
 		this->appendBinaryExt(jsonData, static_cast<uint32_t>(jsonData.size()));
 	}
 
-	void Jsonifier::writeEtfUint(const UintType jsonData) {
-		if (jsonData <= 255) {
-			this->appendSmallIntegerExt(static_cast<int8_t>(jsonData));
-		} else if (jsonData <= std::numeric_limits<uint32_t>::max()) {
-			this->appendIntegerExt(static_cast<uint32_t>(jsonData));
+	void Serializer::writeEtfUint(const UintType jsonData) {
+		if (jsonData >= std::numeric_limits<uint8_t>::min() && jsonData <= std::numeric_limits<uint8_t>::max()) {
+			this->appendUint8(static_cast<uint8_t>(jsonData));
+		} else if (jsonData >= std::numeric_limits<uint32_t>::min() && jsonData <= std::numeric_limits<uint32_t>::max()) {
+			this->appendUint32(static_cast<uint32_t>(jsonData));
 		} else {
-			this->appendUnsignedLongLong(jsonData);
+			this->appendUint64(jsonData);
 		}
 	}
 
-	void Jsonifier::writeEtfInt(const IntType jsonData) {
-		if (jsonData <= 127 && jsonData >= -127) {
-			this->appendSmallIntegerExt(static_cast<int8_t>(jsonData));
-		} else if (jsonData <= std::numeric_limits<int32_t>::max() && jsonData >= std::numeric_limits<int32_t>::min()) {
-			this->appendIntegerExt(static_cast<uint32_t>(jsonData));
+	void Serializer::writeEtfInt(const IntType jsonData) {
+		if (jsonData >= std::numeric_limits<int8_t>::min() && jsonData <= std::numeric_limits<int8_t>::max()) {
+			this->appendInt8(static_cast<int8_t>(jsonData));
+		} else if (jsonData >= std::numeric_limits<int32_t>::min() && jsonData <= std::numeric_limits<int32_t>::max()) {
+			this->appendInt32(static_cast<int32_t>(jsonData));
 		} else {
-			this->appendUnsignedLongLong(static_cast<uint64_t>(jsonData));
+			this->appendInt64(jsonData);
 		}
 	}
 
-	void Jsonifier::writeEtfFloat(const FloatType jsonData) {
+	void Serializer::writeEtfFloat(const FloatType jsonData) {
 		this->appendNewFloatExt(jsonData);
 	}
 
-	void Jsonifier::writeEtfBool(const BoolType jsonData) {
+	void Serializer::writeEtfBool(const BoolType jsonData) {
 		this->appendBool(jsonData);
 	}
 
-	void Jsonifier::writeEtfNull() {
+	void Serializer::writeEtfNull() {
 		this->appendNil();
 	}
 
-	void Jsonifier::writeString(const char* data, std::size_t length) {
+	void Serializer::writeString(const char* data, size_t length) {
 		this->string.append(data, length);
 	}
 
-	void Jsonifier::writeCharacter(const char charValue) {
+	void Serializer::writeCharacter(const char charValue) {
 		this->string.push_back(charValue);
 	}
 
-	bool operator==(const Jsonifier& lhs, const Jsonifier& rhs) {
+	bool operator==(const Serializer& lhs, const Serializer& rhs) {
 		if (lhs.type != rhs.type) {
 			return false;
 		}
@@ -650,81 +602,109 @@ namespace Jsonifier {
 		return true;
 	}
 
-	void Jsonifier::appendBinaryExt(const std::string& bytes, uint32_t sizeNew) {
+	void Serializer::appendBinaryExt(const std::string& bytes, uint32_t sizeNew) {
 		char newBuffer[5]{ static_cast<int8_t>(EtfType::Binary_Ext) };
 		storeBits(newBuffer + 1, sizeNew);
 		this->writeString(newBuffer, std::size(newBuffer));
 		this->writeString(bytes.data(), bytes.size());
 	}
 
-	void Jsonifier::appendUnsignedLongLong(uint64_t value) {
+	void Serializer::appendUint64(uint64_t value) {
 		char newBuffer[11]{ static_cast<int8_t>(EtfType::Small_Big_Ext) };
 		char encodedBytes{};
 		while (value > 0) {
 			newBuffer[3 + encodedBytes] = value & 0xFF;
 			value >>= 8;
-			encodedBytes++;
+			++encodedBytes;
 		}
 		newBuffer[1] = encodedBytes;
 		newBuffer[2] = 0;
-		this->writeString(newBuffer, 1 + 2 + encodedBytes);
+		this->writeString(newBuffer, 1ull + 2ull + static_cast<size_t>(encodedBytes));
 	}
 
-	void Jsonifier::appendNewFloatExt(const double FloatValue) {
-		char newBuffer[9]{ static_cast<unsigned char>(EtfType::New_Float_Ext) };
+	void Serializer::appendInt64(int64_t value) {
+		char newBuffer[11]{ static_cast<int8_t>(EtfType::Small_Big_Ext) };
+		char encodedBytes{};
+		while (value > 0) {
+			newBuffer[3 + encodedBytes] = value & 0xFF;
+			value >>= 8;
+			++encodedBytes;
+		}
+		newBuffer[1] = encodedBytes;
+		if (value >= 0) {
+			newBuffer[2] = 0;
+		} else {
+			newBuffer[2] = 1;
+		}
+		this->writeString(newBuffer, 1ull + 2ull + static_cast<size_t>(encodedBytes));
+	}
+
+	void Serializer::appendNewFloatExt(const double FloatValue) {
+		char newBuffer[9]{ static_cast<uint8_t>(EtfType::New_Float_Ext) };
 		const void* punner{ &FloatValue };
 		storeBits(newBuffer + 1, *static_cast<const uint64_t*>(punner));
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::appendSmallIntegerExt(const uint8_t value) {
-		char newBuffer[2]{ static_cast<int8_t>(EtfType::Small_Integer_Ext), static_cast<char>(value) };
+	void Serializer::appendUint8(const uint8_t value) {
+		char newBuffer[2]{ static_cast<uint8_t>(EtfType::Small_Integer_Ext), static_cast<char>(value) };
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::appendIntegerExt(const uint32_t value) {
-		char newBuffer[5]{ static_cast<int8_t>(EtfType::Integer_Ext) };
+	void Serializer::appendInt8(const int8_t value) {
+		char newBuffer[2]{ static_cast<uint8_t>(EtfType::Small_Integer_Ext), static_cast<char>(value) };
+		this->writeString(newBuffer, std::size(newBuffer));
+	}
+
+	void Serializer::appendUint32(const uint32_t value) {
+		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Integer_Ext) };
 		storeBits(newBuffer + 1, value);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::appendListHeader(const uint32_t sizeNew) {
-		char newBuffer[5]{ static_cast<int8_t>(EtfType::List_Ext) };
+	void Serializer::appendInt32(const int32_t value) {
+		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Integer_Ext) };
+		storeBits(newBuffer + 1, value);
+		this->writeString(newBuffer, std::size(newBuffer));
+	}
+
+	void Serializer::appendListHeader(const uint32_t sizeNew) {
+		char newBuffer[5]{ static_cast<uint8_t>(EtfType::List_Ext) };
 		storeBits(newBuffer + 1, sizeNew);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::appendMapHeader(const uint32_t sizeNew) {
-		char newBuffer[5]{ static_cast<int8_t>(EtfType::Map_Ext) };
+	void Serializer::appendMapHeader(const uint32_t sizeNew) {
+		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Map_Ext) };
 		storeBits(newBuffer + 1, sizeNew);
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::appendBool(bool data) {
+	void Serializer::appendBool(bool data) {
 		if (data) {
-			char newBuffer[6]{ static_cast<int8_t>(EtfType::Small_Atom_Ext), static_cast<int8_t>(4), 't', 'r', 'u', 'e' };
+			char newBuffer[6]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(4), 't', 'r', 'u', 'e' };
 			this->writeString(newBuffer, std::size(newBuffer));
-
 		} else {
-			char newBuffer[7]{ static_cast<int8_t>(EtfType::Small_Atom_Ext), static_cast<int8_t>(5), 'f', 'a', 'l', 's', 'e' };
+			char newBuffer[7]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(5), 'f', 'a', 'l', 's', 'e' };
 			this->writeString(newBuffer, std::size(newBuffer));
 		}
 	}
 
-	void Jsonifier::appendVersion() {
-		this->writeCharacter(static_cast<int8_t>(formatVersion));
-	}
-
-	void Jsonifier::appendNilExt() {
-		this->writeCharacter(static_cast<int8_t>(EtfType::Nil_Ext));
-	}
-
-	void Jsonifier::appendNil() {
-		char newBuffer[5]{ static_cast<int8_t>(EtfType::Small_Atom_Ext), static_cast<int8_t>(3), 'n', 'i', 'l' };
+	void Serializer::appendVersion() {
+		char newBuffer[1]{ static_cast<int8_t>(formatVersion) };
 		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
-	void Jsonifier::setValue(JsonType typeNew) {
+	void Serializer::appendNilExt() {
+		this->writeCharacter(static_cast<uint8_t>(EtfType::Nil_Ext));
+	}
+
+	void Serializer::appendNil() {
+		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(3), 'n', 'i', 'l' };
+		this->writeString(newBuffer, std::size(newBuffer));
+	}
+
+	void Serializer::setValue(JsonType typeNew) {
 		this->destroy();
 		this->type = typeNew;
 		switch (this->type) {
@@ -749,7 +729,24 @@ namespace Jsonifier {
 		}
 	}
 
-	void Jsonifier::destroy() noexcept {
+	size_t Serializer::size() noexcept {
+		switch (this->type) {
+			case JsonType::Object: {
+				return this->jsonValue.object->size();
+			}
+			case JsonType::Array: {
+				return this->jsonValue.array->size();
+			}
+			case JsonType::String: {
+				return this->jsonValue.string->size();
+			}
+			default: {
+				return 1;
+			}
+		}
+	}
+
+	void Serializer::destroy() noexcept {
 		switch (this->type) {
 			case JsonType::Object: {
 				AllocatorType<ObjectType> allocator{};
@@ -772,7 +769,7 @@ namespace Jsonifier {
 		}
 	}
 
-	Jsonifier::~Jsonifier() noexcept {
+	Serializer::~Serializer() noexcept {
 		this->destroy();
 	}
 }

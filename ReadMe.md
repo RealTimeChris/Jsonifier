@@ -5,7 +5,7 @@
 ![Lines of code](https://img.shields.io/tokei/lines/github/realtimechris/Jsonifier?&style=plastic&label=Lines%20of%20Code)
 
 
-## A class for serializing objects into JSON or ETF strings - very rapidly.
+## A class for serializing and parsing objects into/from JSON or ETF strings - very rapidly.
 ## Benchmark
 ### Serializing the following data into a json string:
 ```cpp
