@@ -62,9 +62,7 @@ namespace Jsonifier {
 		inline JsonifierResult<ArrayIterator>& operator++() noexcept;
 	};
 
-	template<>
-	struct JsonifierResult<Array>
-		: public ImplementationJsonifierResultBase<Array> {
+	template<> struct JsonifierResult<Array> : public ImplementationJsonifierResultBase<Array> {
 	  public:
 		inline JsonifierResult(Array&& value) noexcept;///< @private
 		inline JsonifierResult(ErrorCode error) noexcept;///< @private

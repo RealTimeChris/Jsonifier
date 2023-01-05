@@ -17,7 +17,6 @@ namespace Jsonifier {
 		inline T&& valueUnsafe() && noexcept;
 
 	  protected:
-		
 		T first{};
 		ErrorCode second{ Uninitialized };
 	};
@@ -32,10 +31,9 @@ namespace Jsonifier {
 		inline ErrorCode error() const noexcept;
 		inline const T& valueUnsafe() const& noexcept;
 		inline T&& valueUnsafe() && noexcept;
-
 	};
 
-	template<typename T> struct JsonifierResult : public ImplementationJsonifierResultBase<T> {
+	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
 		inline JsonifierResult() noexcept;
 		inline JsonifierResult(T&& value) noexcept;
 		inline JsonifierResult(ErrorCode ErrorCode) noexcept;

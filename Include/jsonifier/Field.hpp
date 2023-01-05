@@ -5,6 +5,7 @@
 
 namespace Jsonifier {
 
+
 	class Jsonifier_Dll Field : public std::pair<RawJsonString, Value> {
 	  public:
 		inline Field() noexcept;
@@ -21,9 +22,7 @@ namespace Jsonifier {
 		friend class ObjectIterator;
 	};
 
-	template<>
-	struct JsonifierResult<Field>
-		: public ImplementationJsonifierResultBase<Field> {
+	template<> struct JsonifierResult<Field> : public ImplementationJsonifierResultBase<Field> {
 	  public:
 		inline JsonifierResult(Field&& value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

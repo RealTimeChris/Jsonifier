@@ -74,9 +74,7 @@ namespace Jsonifier {
 		friend class Token;
 	};
 
-	template<>
-	struct JsonifierResult<Document>
-		: public ImplementationJsonifierResultBase<Document> {
+	template<> struct JsonifierResult<Document> : public ImplementationJsonifierResultBase<Document> {
 	  public:
 		inline JsonifierResult(Document&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

@@ -222,15 +222,6 @@ namespace Jsonifier {
 		friend struct JsonifierResult<Field>;
 	};
 
-	template<>
-	struct JsonifierResult<ValueIterator>
-		: public ImplementationJsonifierResultBase<ValueIterator> {
-	  public:
-		inline JsonifierResult(ValueIterator&& value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
-		inline JsonifierResult() noexcept = default;
-	};
-
 	template<> struct JsonifierResult<Value> : public ImplementationJsonifierResultBase<Value> {
 	  public:
 		inline JsonifierResult(Value&& value) noexcept;

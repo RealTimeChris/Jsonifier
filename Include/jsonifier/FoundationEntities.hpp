@@ -162,9 +162,7 @@ namespace Jsonifier {
 		JsonifierResult<std::string_view> unescape(JsonIterator& iter) const noexcept;
 	};
 
-	template<>
-	struct JsonifierResult<TokenIterator>
-		: public ImplementationJsonifierResultBase<TokenIterator> {
+	template<> struct JsonifierResult<TokenIterator> : public ImplementationJsonifierResultBase<TokenIterator> {
 	  public:
 		inline JsonifierResult(TokenIterator&& value) noexcept;///< @private
 		inline JsonifierResult(ErrorCode error) noexcept;///< @private
@@ -172,8 +170,7 @@ namespace Jsonifier {
 		inline ~JsonifierResult() noexcept = default;///< @private
 	};
 
-	template<>
-	struct JsonifierResult<JsonIterator> : public ImplementationJsonifierResultBase<JsonIterator> {
+	template<> struct JsonifierResult<JsonIterator> : public ImplementationJsonifierResultBase<JsonIterator> {
 	  public:
 		inline JsonifierResult(JsonIterator&& value) noexcept;///< @private
 		inline JsonifierResult(ErrorCode error) noexcept;///< @private
@@ -181,9 +178,7 @@ namespace Jsonifier {
 		inline JsonifierResult() noexcept = default;
 	};
 
-	template<>
-	struct JsonifierResult<JsonType>
-		: public ImplementationJsonifierResultBase<JsonType> {
+	template<> struct JsonifierResult<JsonType> : public ImplementationJsonifierResultBase<JsonType> {
 	  public:
 		inline JsonifierResult(JsonType&& value) noexcept;///< @private
 		inline JsonifierResult(ErrorCode error) noexcept;///< @private
