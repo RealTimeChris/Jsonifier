@@ -563,6 +563,12 @@ namespace Jsonifier {
 			this->prevInScalar = '\0';
 			this->prevInString = 0x00;
 			this->structurals = SimdBase256{};
+			this->whitespace = SimdBase256{};
+			this->backslash = SimdBase256{};
+			this->inString = SimdBase256{};
+			this->escaped = SimdBase256{};
+			this->quote = SimdBase256{};
+			this->op = SimdBase256{};
 		}
 
 		void submitDataForProcessing(const uint8_t* valueNew) {
