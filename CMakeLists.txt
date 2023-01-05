@@ -100,7 +100,14 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:$ENV{EnableASAN},true>:-fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:GNU>:-fpermissive>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/MDd>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/Od>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/Ob0>>"
 	"$<$<CXX_COMPILER_ID:GNU>:-mavx2>"
+)
+
+target_link_options(
+	"${PROJECT_NAME}" PUBLIC
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/DEBUG>>"
 )
 
 set_target_properties(
