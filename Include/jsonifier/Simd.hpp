@@ -302,7 +302,7 @@ namespace Jsonifier {
 		template<size_t amount> inline SimdBase256 shr() {
 			SimdBase256 returnValue{};
 			returnValue = _mm256_srli_epi64(*this, (amount % 64));
-			SimdBase256 returnValueReal{ _mm256_set_epi64x(0, 0, 0, static_cast<int64_t>((1ULL << 64 - amount) - (1ULL << 0))) };
+			SimdBase256 returnValueReal{ _mm256_set_epi64x(0, 0, 0, (1ull << amount) - (1ull << 0)) };
 			returnValue &= returnValueReal;
 			return returnValue;
 		}
@@ -532,25 +532,18 @@ namespace Jsonifier {
 			return convertSimdBytesToBits(quotesReal);
 		}
 
-		SimdBase256 shiftLastBitToFirst(SimdBase256 bitsToShift) {
-			bitsToShift = _mm256_permute4x64_epi64(bitsToShift, 0b10010011);
-			bitsToShift = _mm256_srli_epi64(bitsToShift, 63);
-			return bitsToShift;
-		}
-
 		inline SimdBase256 collectFinalStructurals() {
 			this->collectEscapedCharacters();
 			this->collectJsonCharacters();
 			auto scalar = ~(this->op | this->whitespace);
 			SimdBase256 nonQuoteScalar = ~(this->op | this->whitespace).bitAndNot(this->quote);
 			auto prevInScalarNew = this->prevInScalar;
-			SimdBase256 shiftMask{ _mm256_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ull,
-				0ull, 0ull) };
-			this->prevInScalar = shiftLastBitToFirst(nonQuoteScalar & shiftMask);
-			this->prevInScalar.printBits("PREV IN SCALAR: ");
+			SimdBase256 shiftMask{ _mm256_set_epi64x(0ull - (1ull << 63ull), 0ull, 0ull, 0ull) };
+			this->prevInScalar = nonQuoteScalar & shiftMask;
+			this->prevInScalar = _mm256_permute4x64_epi64(this->prevInScalar, 0b10010011);
+			this->prevInScalar = _mm256_srli_epi64(this->prevInScalar, 63);
 			auto followsNonQuoteScalar = nonQuoteScalar.shl<1>();
 			followsNonQuoteScalar = prevInScalarNew.copyLastBitToFirst(followsNonQuoteScalar);
-			followsNonQuoteScalar.printBits("FOLLLOWS NONQUTOE SCALAR: ");
 			auto potentialScalarStart = scalar.bitAndNot(followsNonQuoteScalar);
 			auto stringTail = this->inString ^ this->quote;
 			auto potentialStructuralStart = this->op | potentialScalarStart;
@@ -568,7 +561,7 @@ namespace Jsonifier {
 			this->packStringIntoValue(&this->values[6], valueNew + 192);
 			this->packStringIntoValue(&this->values[7], valueNew + 224);
 			this->structurals = this->collectFinalStructurals();
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:

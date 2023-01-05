@@ -2,7 +2,7 @@
 
 namespace Jsonifier {
 
-	JsonifierException::JsonifierException(const std::string& error, std::source_location location) noexcept : std::runtime_error(error) {
+	JsonifierError::JsonifierError(std::string&& error, std::source_location location) noexcept : std::runtime_error(error) {
 		std::stringstream stream{};
 		stream << "Error Report: \n"
 			   << "Caught in File: " << location.file_name() << " (" << std::to_string(location.line()) << ":" << std::to_string(location.column())
@@ -334,7 +334,7 @@ namespace Jsonifier {
 			auto result = this->jsonValue.object->emplace(std::move(key), Serializer{});
 			return result.first->second;
 		}
-		throw JsonifierException{ "Sorry, but that item-key could not be produced/accessed." };
+		throw JsonifierError{ "Sorry, but that item-key could not be produced/accessed." };
 	}
 
 	Serializer& Serializer::operator[](uint64_t index) {
@@ -348,7 +348,7 @@ namespace Jsonifier {
 			}
 			return this->jsonValue.array->operator[](index);
 		}
-		throw JsonifierException{ "Sorry, but that index could not be produced/accessed." };
+		throw JsonifierError{ "Sorry, but that index could not be produced/accessed." };
 	}
 
 	void Serializer::emplaceBack(Serializer&& other) noexcept {

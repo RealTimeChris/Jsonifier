@@ -43,27 +43,19 @@ namespace Jsonifier {
 		Out_Of_Order_Iteration = 18
 	};
 
-	class JsonifierError : public std::runtime_error {
+	class Jsonifier_Dll JsonifierError : public std::runtime_error {
 	  public:
-		JsonifierError(std::string&& errorString, ErrorCode errorNew)
-			: error{ errorNew }, std::runtime_error{ std::forward<std::string>(errorString) } {};
-
-		ErrorCode getError() {
-			return this->error;
-		}
-
-	  protected:
-		ErrorCode error{};
+		JsonifierError(std::string&& errorString, std::source_location = std::source_location::current()) noexcept;
 	};
 
-	struct AdjustedMantissa {
+	struct Jsonifier_Dll AdjustedMantissa {
 		uint64_t mantissa;
 		int power2;
 		AdjustedMantissa() : mantissa(0), power2(0) {
 		}
 	};
 
-	class NumberParser {
+	class Jsonifier_Dll NumberParser {
 	  public:
 		template<typename I> static inline bool parseDigit(const uint8_t c, I& i) {
 			const uint8_t digit = static_cast<uint8_t>(c - '0');
@@ -137,7 +129,7 @@ namespace Jsonifier {
 			return (c >= '0' && c <= '9');
 		}
 
-		struct Decimal {
+		struct Jsonifier_Dll Decimal {
 			uint32_t numDigits;
 			int32_t decimalPoint;
 			bool negative;

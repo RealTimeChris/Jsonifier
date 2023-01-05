@@ -5,11 +5,11 @@
 
 namespace Jsonifier {
 
-	class Parser;
-	class JsonIterator;
-	class Object;
-	class Array;
-	class Field;
+	class Jsonifier_Dll Parser;
+	class Jsonifier_Dll JsonIterator;
+	class Jsonifier_Dll Object;
+	class Jsonifier_Dll Array;
+	class Jsonifier_Dll Field;
 
 	enum class JsonType : uint8_t {
 		Document = 0,
@@ -24,7 +24,7 @@ namespace Jsonifier {
 		Null = 9
 	};
 
-	class RawJsonString {
+	class Jsonifier_Dll RawJsonString {
 	  public:
 		inline RawJsonString() noexcept = default;
 		inline RawJsonString(const uint8_t* _buf) noexcept;
@@ -47,13 +47,14 @@ namespace Jsonifier {
 		inline JsonifierResult<std::string_view> unescape(JsonIterator& iter) const noexcept;
 
 		const uint8_t* stringView{};
-		friend class Object;
-		friend class Field;
-		friend struct JsonifierResult<RawJsonString>;
+		friend class Jsonifier_Dll Object;
+		friend class Jsonifier_Dll Field;
+		friend struct Jsonifier_Dll JsonifierResult<RawJsonString>;
 	};
 
-	class TokenIterator {
+	class Jsonifier_Dll TokenIterator {
 	  public:
+		inline TokenIterator() noexcept = default;
 		inline TokenIterator(TokenIterator&& other) noexcept = default;
 		inline TokenIterator& operator=(TokenIterator&& other) noexcept = default;
 		inline TokenIterator(const TokenIterator& other) noexcept = default;
@@ -82,12 +83,12 @@ namespace Jsonifier {
 		const uint8_t* stringView{};
 		uint32_t* currentPosition{};
 
-		friend class JsonIterator;
-		friend class ValueIterator;
-		friend class Object;
+		friend class Jsonifier_Dll JsonIterator;
+		friend class Jsonifier_Dll ValueIterator;
+		friend class Jsonifier_Dll Object;
 	};
 
-	class JsonIterator {
+	class Jsonifier_Dll JsonIterator {
 	  protected:
 		TokenIterator token;
 		Parser* parser{};
@@ -97,6 +98,7 @@ namespace Jsonifier {
 		uint32_t* rootStructural{};
 
 	  public:
+		inline JsonIterator() noexcept = default;
 		inline JsonIterator(JsonIterator&& other) noexcept;
 		inline JsonIterator& operator=(JsonIterator&& other) noexcept;
 		inline ErrorCode skipChild(size_t parentDepth) noexcept;
@@ -139,14 +141,14 @@ namespace Jsonifier {
 		inline uint32_t* endPosition() const noexcept;
 		inline uint32_t* end() const noexcept;
 
-		friend class Document;
-		friend class document_stream;
-		friend class Object;
-		friend class Orray;
-		friend class Value;
-		friend class RawJsonString;
-		friend class Parser;
-		friend class ValueIterator;
+		friend class Jsonifier_Dll Document;
+		friend class Jsonifier_Dll Document_stream;
+		friend class Jsonifier_Dll Object;
+		friend class Jsonifier_Dll Orray;
+		friend class Jsonifier_Dll Value;
+		friend class Jsonifier_Dll RawJsonString;
+		friend class Jsonifier_Dll Parser;
+		friend class Jsonifier_Dll ValueIterator;
 	};
 
 	template<> struct JsonifierResult<RawJsonString> : public JsonifierResultBase<RawJsonString> {

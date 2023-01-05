@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class Document {
+	class Jsonifier_Dll Document {
 	  public:
 		inline Document() noexcept = default;
 		inline Document(const Document& other) noexcept = delete;
@@ -45,37 +45,36 @@ namespace Jsonifier {
 		inline JsonifierResult<bool> isScalar() noexcept;
 
 	  protected:
-		inline JsonifierResult<std::string_view> rawJsonToken() noexcept;
-		inline void rewind() noexcept;
-		inline bool isAlive() noexcept;
-		inline JsonifierResult<const char*> currentLocation() noexcept;
-		inline int32_t currentDepth() const noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
-		inline JsonifierResult<std::string_view> rawJson() noexcept;
-		inline ErrorCode consume() noexcept;
-
-		inline Document(JsonIterator&& iter) noexcept;
-		inline const uint8_t* text(uint32_t idx) const noexcept;
-
-		inline ValueIterator resumeValueIterator() noexcept;
-		inline ValueIterator getRootValueIterator() noexcept;
-		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		static inline Document start(JsonIterator&& iter) noexcept;
-
-		JsonIterator iterator;
 		static constexpr size_t DOCUMENT_DEPTH = 0;
+		JsonIterator iterator{};
 
-		friend class ArrayIterator;
-		friend class Parser;
-		friend class Object;
-		friend class Value;
-		friend class Array;
-		friend class Field;
-		friend class Token;
+		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
+		inline JsonifierResult<std::string_view> rawJsonToken() noexcept;
+		inline JsonifierResult<const char*> currentLocation() noexcept;
+		inline JsonifierResult<Object> startOrResumeObject() noexcept;
+		inline JsonifierResult<std::string_view> rawJson() noexcept;
+		static inline Document start(JsonIterator&& iter) noexcept;
+		inline const uint8_t* text(uint32_t idx) const noexcept;
+		inline ValueIterator getRootValueIterator() noexcept;
+		inline ValueIterator resumeValueIterator() noexcept;
+		inline Document(JsonIterator&& iter) noexcept;
+		inline int32_t currentDepth() const noexcept;
+		inline ErrorCode consume() noexcept;
+		inline bool isAlive() noexcept;
+		inline void rewind() noexcept;
+
+		friend class Jsonifier_Dll ArrayIterator;
+		friend class Jsonifier_Dll JsonifierResult<Document>;
+		friend class Jsonifier_Dll Parser;
+		friend class Jsonifier_Dll Object;
+		friend class Jsonifier_Dll Value;
+		friend class Jsonifier_Dll Array;
+		friend class Jsonifier_Dll Field;
+		friend class Jsonifier_Dll Token;
 	};
 
 	template<>
-	struct JsonifierResult<Document>
+	struct Jsonifier_Dll JsonifierResult<Document>
 		: public JsonifierResultBase<Document> {
 	  public:
 		inline JsonifierResult(Document&& Value) noexcept;

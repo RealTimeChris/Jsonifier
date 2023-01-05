@@ -4,10 +4,10 @@
 
 namespace Jsonifier {
 
-	class JsonIterator;
-	class ArrayIterator;
+	class Jsonifier_Dll JsonIterator;
+	class Jsonifier_Dll ArrayIterator;
 
-	class EnumStringConverter {
+	class Jsonifier_Dll EnumStringConverter {
 	  public:
 		inline EnumStringConverter(ErrorCode error) {
 			this->code = error;
@@ -57,11 +57,7 @@ namespace Jsonifier {
 		ErrorCode code{};
 	};
 
-	struct Jsonifier_Dll JsonifierException : public std::runtime_error, std::string {
-		JsonifierException(const std::string&, std::source_location = std::source_location::current()) noexcept;
-	};
-
-	class ValueIterator {
+	class Jsonifier_Dll ValueIterator {
 	  protected:
 		JsonIterator* jsonIterator{};
 		size_t currentDepth{};
@@ -166,17 +162,18 @@ namespace Jsonifier {
 		inline uint32_t* endPosition() const noexcept;
 		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
 
-		friend class Document;
-		friend class Object;
-		friend class Array;
-		friend class Value;
+		friend class Jsonifier_Dll Document;
+		friend class Jsonifier_Dll Object;
+		friend class Jsonifier_Dll Array;
+		friend class Jsonifier_Dll Value;
 	};
 
-	class Value {
+	class Jsonifier_Dll Value {
 	  public:
 		template<typename T> inline JsonifierResult<T> get() noexcept {
 			static_assert(!sizeof(T), "The get method with given type is not implemented by the simdjson library.");
 		}
+		inline Value() noexcept = default;
 		template<typename T> inline ErrorCode get(T& out) noexcept;
 		inline JsonifierResult<Array> getArray() noexcept;
 		inline JsonifierResult<Object> getObject() noexcept;
@@ -213,12 +210,12 @@ namespace Jsonifier {
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
 		ValueIterator iterator{};
 
-		friend class Document;
-		friend class ArrayIterator;
-		friend class Field;
-		friend class Object;
-		friend struct JsonifierResult<Value>;
-		friend struct JsonifierResult<Field>;
+		friend class Jsonifier_Dll Document;
+		friend class Jsonifier_Dll ArrayIterator;
+		friend class Jsonifier_Dll Field;
+		friend class Jsonifier_Dll Object;
+		friend struct Jsonifier_Dll JsonifierResult<Value>;
+		friend struct Jsonifier_Dll JsonifierResult<Field>;
 	};
 
 	template<> struct JsonifierResult<Value> : public JsonifierResultBase<Value> {

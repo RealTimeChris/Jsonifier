@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class ArrayIterator {
+	class Jsonifier_Dll ArrayIterator {
 	  public:
 		inline ArrayIterator() noexcept = default;
 		inline JsonifierResult<Value> operator*() noexcept;
@@ -18,12 +18,12 @@ namespace Jsonifier {
 
 		inline ArrayIterator(const ValueIterator& iter) noexcept;
 
-		friend class Array;
-		friend class Value;
-		friend struct JsonifierResult<ArrayIterator>;
+		friend class Jsonifier_Dll Array;
+		friend class Jsonifier_Dll Value;
+		friend struct Jsonifier_Dll JsonifierResult<ArrayIterator>;
 	};
 
-	class Array {
+	class Jsonifier_Dll Array {
 	  public:
 		inline Array() noexcept = default;
 		inline JsonifierResult<ArrayIterator> begin() noexcept;
@@ -43,11 +43,11 @@ namespace Jsonifier {
 		inline Array(const ValueIterator& iter) noexcept;
 		ValueIterator iterator{};
 
-		friend class Value;
-		friend class Document;
-		friend struct JsonifierResult<Value>;
-		friend struct JsonifierResult<Array>;
-		friend class ArrayIterator;
+		friend class Jsonifier_Dll Value;
+		friend class Jsonifier_Dll Document;
+		friend struct Jsonifier_Dll JsonifierResult<Value>;
+		friend struct Jsonifier_Dll JsonifierResult<Array>;
+		friend class Jsonifier_Dll ArrayIterator;
 	};
 
 	template<> struct JsonifierResult<ArrayIterator> : public JsonifierResultBase<ArrayIterator> {
@@ -63,7 +63,7 @@ namespace Jsonifier {
 	};
 
 	template<>
-	struct JsonifierResult<Array>
+	struct Jsonifier_Dll JsonifierResult<Array>
 		: public JsonifierResultBase<Array> {
 	  public:
 		inline JsonifierResult(Array&& value) noexcept;///< @private

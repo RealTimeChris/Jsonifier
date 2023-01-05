@@ -1,5 +1,5 @@
 #
-#	Jsonifier, A few classes for parsing and serializing objects from/into JSON or ETF strings - very rapidly.
+#	Jsonifier, A few class Jsonifier_Dlles for parsing and serializing objects from/into JSON or ETF strings - very rapidly.
 #
 #	Copyright 2022 Chris M. (RealTimeChris)
 #
@@ -28,7 +28,7 @@
 cmake_minimum_required(VERSION 3.20)
 set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "1.0.0")
-set(DESCRIPTION "A few classes for serializing objects into JSON or ETF strings - very rapidly.")
+set(DESCRIPTION "A few class Jsonifier_Dlles for serializing objects into JSON or ETF strings - very rapidly.")
 
 project(
 	"${PROJECT_NAME}"
