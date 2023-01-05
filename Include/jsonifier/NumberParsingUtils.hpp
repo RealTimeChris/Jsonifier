@@ -43,7 +43,7 @@ namespace Jsonifier {
 		Out_Of_Order_Iteration = 18
 	};
 
-	class JsonifierError : public std::runtime_error {
+	class Jsonifier_Dll JsonifierError : public std::runtime_error {
 	  public:
 		JsonifierError(std::string&& errorString, ErrorCode errorNew)
 			: error{ errorNew }, std::runtime_error{ std::forward<std::string>(errorString) } {};
@@ -63,7 +63,7 @@ namespace Jsonifier {
 		}
 	};
 
-	class NumberParser {
+	class Jsonifier_Dll NumberParser {
 	  public:
 		template<typename I> static inline bool parseDigit(const uint8_t c, I& i) {
 			const uint8_t digit = static_cast<uint8_t>(c - '0');

@@ -24,7 +24,7 @@ namespace Jsonifier {
 		Null = 9
 	};
 
-	class RawJsonString {
+	class Jsonifier_Dll RawJsonString {
 	  public:
 		inline RawJsonString() noexcept = default;
 		inline RawJsonString(const uint8_t* _buf) noexcept;
@@ -52,8 +52,9 @@ namespace Jsonifier {
 		friend struct JsonifierResult<RawJsonString>;
 	};
 
-	class TokenIterator {
+	class Jsonifier_Dll TokenIterator {
 	  public:
+		inline TokenIterator() noexcept = default;
 		inline TokenIterator(TokenIterator&& other) noexcept = default;
 		inline TokenIterator& operator=(TokenIterator&& other) noexcept = default;
 		inline TokenIterator(const TokenIterator& other) noexcept = default;
@@ -87,7 +88,7 @@ namespace Jsonifier {
 		friend class Object;
 	};
 
-	class JsonIterator {
+	class Jsonifier_Dll JsonIterator {
 	  protected:
 		TokenIterator token;
 		Parser* parser{};
@@ -149,7 +150,7 @@ namespace Jsonifier {
 		friend class ValueIterator;
 	};
 
-	template<> struct JsonifierResult<RawJsonString> : public JsonifierResultBase<RawJsonString> {
+	template<> struct JsonifierResult<RawJsonString> : public ImplementationJsonifierResultBase<RawJsonString> {
 	  public:
 		JsonifierResult(RawJsonString&& value) noexcept;
 		JsonifierResult(ErrorCode error) noexcept;
@@ -158,6 +159,26 @@ namespace Jsonifier {
 
 		JsonifierResult<const char*> raw() const noexcept;
 		JsonifierResult<std::string_view> unescape(JsonIterator& iter) const noexcept;
+	};
+
+	template<>
+	struct JsonifierResult<TokenIterator>
+		: public ImplementationJsonifierResultBase<TokenIterator> {
+	  public:
+		inline JsonifierResult(TokenIterator&& value) noexcept;///< @private
+		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult() noexcept = default;
+		inline ~JsonifierResult() noexcept = default;///< @private
+	};
+
+	template<>
+	struct JsonifierResult<JsonType>
+		: public ImplementationJsonifierResultBase<JsonType> {
+	  public:
+		inline JsonifierResult(JsonType&& value) noexcept;///< @private
+		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult() noexcept = default;
+		inline ~JsonifierResult() noexcept = default;///< @private
 	};
 
 }

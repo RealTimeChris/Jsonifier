@@ -4,10 +4,10 @@
 
 namespace Jsonifier {
 
-	class JsonIterator;
-	class ArrayIterator;
+	class Jsonifier_Dll JsonIterator;
+	class Jsonifier_Dll ArrayIterator;
 
-	class EnumStringConverter {
+	class Jsonifier_Dll EnumStringConverter {
 	  public:
 		inline EnumStringConverter(ErrorCode error) {
 			this->code = error;
@@ -57,11 +57,11 @@ namespace Jsonifier {
 		ErrorCode code{};
 	};
 
-	struct Jsonifier_Dll JsonifierException : public std::runtime_error, std::string {
+	struct JsonifierException : public std::runtime_error, std::string {
 		JsonifierException(const std::string&, std::source_location = std::source_location::current()) noexcept;
 	};
 
-	class ValueIterator {
+	class Jsonifier_Dll ValueIterator {
 	  protected:
 		JsonIterator* jsonIterator{};
 		size_t currentDepth{};
@@ -172,8 +172,9 @@ namespace Jsonifier {
 		friend class Value;
 	};
 
-	class Value {
+	class Jsonifier_Dll Value {
 	  public:
+		inline Value() noexcept = default;
 		template<typename T> inline JsonifierResult<T> get() noexcept {
 			static_assert(!sizeof(T), "The get method with given type is not implemented by the simdjson library.");
 		}
@@ -211,7 +212,7 @@ namespace Jsonifier {
 		static inline Value start(const ValueIterator& iter) noexcept;
 		static inline Value resume(const ValueIterator& iter) noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		ValueIterator iterator{};
+		ValueIterator iterator;
 
 		friend class Document;
 		friend class ArrayIterator;
@@ -221,7 +222,7 @@ namespace Jsonifier {
 		friend struct JsonifierResult<Field>;
 	};
 
-	template<> struct JsonifierResult<Value> : public JsonifierResultBase<Value> {
+	template<> struct JsonifierResult<Value> : public ImplementationJsonifierResultBase<Value> {
 	  public:
 		inline JsonifierResult(Value&& value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

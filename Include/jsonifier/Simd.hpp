@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class SimdBase128 {
+	class Jsonifier_Dll SimdBase128 {
 	  public:
 		inline SimdBase128() noexcept = default;
 
@@ -26,7 +26,7 @@ namespace Jsonifier {
 		__m128i value{};
 	};
 
-	class SimdBase256 {
+	class Jsonifier_Dll SimdBase256 {
 	  public:
 		inline SimdBase256() noexcept {};
 
@@ -434,7 +434,7 @@ namespace Jsonifier {
 		index += StepSize;
 	}
 
-	class SimdStringSection {
+	class Jsonifier_Dll SimdStringSection {
 	  public:
 		inline SimdStringSection() noexcept = default;
 
@@ -547,10 +547,10 @@ namespace Jsonifier {
 			SimdBase256 shiftMask{ _mm256_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ull,
 				0ull, 0ull) };
 			this->prevInScalar = shiftLastBitToFirst(nonQuoteScalar & shiftMask);
-			this->prevInScalar.printBits("PREV IN SCALAR: ");
+			//this->prevInScalar.printBits("PREV IN SCALAR: ");
 			auto followsNonQuoteScalar = nonQuoteScalar.shl<1>();
 			followsNonQuoteScalar = prevInScalarNew.copyLastBitToFirst(followsNonQuoteScalar);
-			followsNonQuoteScalar.printBits("FOLLLOWS NONQUTOE SCALAR: ");
+			//followsNonQuoteScalar.printBits("FOLLLOWS NONQUTOE SCALAR: ");
 			auto potentialScalarStart = scalar.bitAndNot(followsNonQuoteScalar);
 			auto stringTail = this->inString ^ this->quote;
 			auto potentialStructuralStart = this->op | potentialScalarStart;
@@ -568,7 +568,7 @@ namespace Jsonifier {
 			this->packStringIntoValue(&this->values[6], valueNew + 192);
 			this->packStringIntoValue(&this->values[7], valueNew + 224);
 			this->structurals = this->collectFinalStructurals();
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:

@@ -22,11 +22,21 @@
 #include <deque>
 #include <map>
 
+#ifdef _WIN32
+	#ifdef Jsonifier_EXPORTS
+		#define Jsonifier_Dll __declspec(dllexport)
+	#else
+		#define Jsonifier_Dll __declspec(dllimport)
+	#endif
+#else
+	#define Jsonifier_Dll
+#endif
+
 namespace Jsonifier {
 
-	class SimdBase256;
+	class Jsonifier_Dll SimdBase256;
 
-	class StringParser {
+	class Jsonifier_Dll StringParser {
 	  public:
 		static inline uint32_t stringToUint32(const char* str) {
 			uint32_t val{};

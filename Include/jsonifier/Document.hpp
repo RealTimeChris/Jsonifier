@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class Document {
+	class Jsonifier_Dll Document {
 	  public:
 		inline Document() noexcept = default;
 		inline Document(const Document& other) noexcept = delete;
@@ -76,7 +76,7 @@ namespace Jsonifier {
 
 	template<>
 	struct JsonifierResult<Document>
-		: public JsonifierResultBase<Document> {
+		: public ImplementationJsonifierResultBase<Document> {
 	  public:
 		inline JsonifierResult(Document&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;
