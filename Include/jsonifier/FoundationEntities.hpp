@@ -50,6 +50,8 @@ namespace Jsonifier {
 		friend class Object;
 		friend class Field;
 		friend struct JsonifierResult<RawJsonString>;
+		friend struct JsonifierResult<std::string_view>;
+		friend struct JsonIterator;
 	};
 
 	class Jsonifier_Dll TokenIterator {

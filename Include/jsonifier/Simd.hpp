@@ -560,8 +560,9 @@ namespace Jsonifier {
 
 		void reset() {
 			this->currentIndexIntoString = 0;
-			this->prevInScalar = '\x00';
+			this->prevInScalar = '\0';
 			this->prevInString = 0x00;
+			this->structurals = SimdBase256{};
 		}
 
 		void submitDataForProcessing(const uint8_t* valueNew) {
@@ -591,4 +592,14 @@ namespace Jsonifier {
 		bool prevEscaped{};
 		SimdBase256 op{};
 	};
+
+	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
+		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
+		SimdBase256 v(src);
+		v.store(dst);
+		return {
+			static_cast<uint32_t>((v == '\\').toBitMask()),
+			static_cast<uint32_t>((v == '"').toBitMask()),
+		};
+	}
 }

@@ -43,6 +43,28 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll SimdBase256;
 
+	template<typename SimdBase256> struct BackslashAndQuote {
+	  public:
+		static constexpr uint32_t BYTES_PROCESSED = 32;
+		inline static BackslashAndQuote<SimdBase256> copyAndFind(const uint8_t* src, uint8_t* dst);
+
+		inline bool hasQuoteFirst() {
+			return ((this->bsBits - 1) & this->quoteBits) != 0;
+		}
+		inline bool hasBackslash() {
+			return ((this->quoteBits - 1) & this->bsBits) != 0;
+		}
+		inline int quoteIndex() {
+			return _tzcnt_u32(this->quoteBits);
+		}
+		inline int backslashIndex() {
+			return _tzcnt_u32(this->bsBits);
+		}
+
+		uint64_t quoteBits{};
+		uint64_t bsBits{};
+	};
+
 	class Jsonifier_Dll StringParser {
 	  public:
 		static inline uint32_t stringToUint32(const char* str) {
@@ -202,32 +224,38 @@ namespace Jsonifier {
 			return offset > 0;
 		}
 
-		template<typename SimdBase256> static inline uint32_t copyAndFind(const uint8_t* src, uint8_t* dst) {
-			SimdBase256 values{ src };
-
-			values.store(dst);
-			for (size_t x = 0; x < 32; ++x) {
-				if (dst[x] == '"') {
-					dst[x] = '\0';
-					return x;
+		static inline uint8_t* parseString(const uint8_t* src, uint8_t* dst) {
+			while (1) {
+				auto bs_quote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
+				if (bs_quote.hasQuoteFirst()) {
+					return dst + bs_quote.quoteIndex();
 				}
-			}
-
-			return 0;
-		}
-
-		static inline uint8_t* parseString(uint8_t* src, uint8_t* dst) {
-			uint32_t index{};
-			uint8_t* returnValue{};
-			while (index == 0) {
-				if (index = copyAndFind<SimdBase256>(src + index, dst + index); index != 0) {
-					returnValue = dst;
+				if (bs_quote.hasBackslash()) {
+					auto bs_dist = bs_quote.backslashIndex();
+					uint8_t escape_char = src[bs_dist + 1];
+					if (escape_char == 'u') {
+						src += bs_dist;
+						dst += bs_dist;
+						if (!handleUnicodeCodepoint(&src, &dst)) {
+							return nullptr;
+						}
+					} else {
+						uint8_t escape_result = escapeMap[escape_char];
+						if (escape_result == 0u) {
+							return nullptr; 
+						}
+						dst[bs_dist] = escape_result;
+						src += bs_dist + 2;
+						dst += bs_dist + 1;
+					}
 				} else {
-					returnValue = nullptr;
+					src += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
+					dst += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
 				}
 			}
-			return returnValue;
+			return nullptr;
 		}
+
 		static inline const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -241,33 +269,6 @@ namespace Jsonifier {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-		template<typename SimdBase256> struct BackslashAndQuote {
-		  public:
-			static constexpr uint32_t BYTES_PROCESSED = 32;
-			static inline BackslashAndQuote copyAndFind(uint8_t* src, uint8_t* dst) {
-				static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
-				SimdBase256 v(reinterpret_cast<char*>(src));
-				v.store(dst);
-				return {
-					static_cast<uint32_t>((v == '\\').toBitMask()),
-					static_cast<uint32_t>((v == '\"').toBitMask()),
-				};
-			}
-			inline bool hasQuoteFirst() {
-				return ((bsBits - 1) & quoteBits) != 0;
-			}
-			inline bool hasBackslash() {
-				return bsBits != 0;
-			}
-			inline int quoteIndex() {
-				return _tzcnt_u64(quoteBits);
-			}
-			inline int backslashIndex() {
-				return _tzcnt_u64(bsBits);
-			}
-			uint32_t bsBits;
-			uint32_t quoteBits;
-		};
 	};
 
 

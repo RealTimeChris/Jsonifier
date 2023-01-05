@@ -1112,8 +1112,13 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<std::string_view> JsonIterator::unescape(RawJsonString in) noexcept {
-		return JsonifierResult<std::string_view>{ reinterpret_cast<const char*>(
-			StringParser::parseString(( uint8_t* )(in.raw()), this->stringBuffer)) };
+		uint8_t* end = StringParser::parseString(in.stringView, this->stringBuffer);
+		if (!end) {
+			return String_Error;
+		}
+		std::string_view result(reinterpret_cast<const char*>(this->stringBuffer), end - this->stringBuffer);
+		this->stringBuffer = end;
+		return result;
 	}
 
 	inline void JsonIterator::reenterChild(uint32_t* position, size_t childDepth) noexcept {
