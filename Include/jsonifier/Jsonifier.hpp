@@ -78,9 +78,6 @@ namespace Jsonifier {
 		}
 	};
 
-	constexpr int64_t JSON_VALUE_MASK{ 0x00FFFFFFFFFFFFFF };
-	constexpr uint32_t JSON_COUNT_MASK{ 0xFFFFFF };
-
 	template<typename RTy> inline void reverseByteOrder(RTy& net) {
 		if constexpr (std::endian::native == std::endian::little) {
 			switch (sizeof(RTy)) {
@@ -164,22 +161,6 @@ namespace Jsonifier {
 	  protected:
 		std::atomic<TTy> maxNumberOfMs{ TTy{ 0 } };
 		std::atomic<TTy> startTime{ TTy{ 0 } };
-	};
-
-	const uint8_t formatVersion{ 131 };
-
-	enum class EtfType : uint8_t {
-		New_Float_Ext = 70,
-		Small_Integer_Ext = 97,
-		Integer_Ext = 98,
-		Atom_Ext = 100,
-		Nil_Ext = 106,
-		String_Ext = 107,
-		List_Ext = 108,
-		Binary_Ext = 109,
-		Small_Big_Ext = 110,
-		Small_Atom_Ext = 115,
-		Map_Ext = 116,
 	};
 
 	template<typename Ty>
@@ -431,8 +412,6 @@ namespace Jsonifier {
 		JsonValue jsonValue{};
 		std::string string{};
 
-		void serializeJsonToEtfString(const Serializer* dataToParse);
-
 		void serializeJsonToJsonString(const Serializer* dataToParse);
 
 		void writeJsonObject(const ObjectType& ObjectNew);
@@ -456,53 +435,9 @@ namespace Jsonifier {
 
 		void writeJsonNull();
 
-		void writeEtfObject(const ObjectType& jsonData);
-
-		void writeEtfArray(const ArrayType& jsonData);
-
-		void writeEtfString(const StringType& jsonData);
-
-		void writeEtfUint(const UintType jsonData);
-
-		void writeEtfInt(const IntType jsonData);
-
-		void writeEtfFloat(const FloatType jsonData);
-
-		void writeEtfBool(const BoolType jsonData);
-
-		void writeEtfNull();
-
 		void writeString(const char* data, size_t length);
 
 		void writeCharacter(const char Char);
-
-		void appendBinaryExt(const std::string& bytes, const uint32_t sizeNew);
-
-		void appendNewFloatExt(const double FloatValue);
-
-		void appendListHeader(const uint32_t sizeNew);
-
-		void appendMapHeader(const uint32_t sizeNew);
-
-		void appendUint64(const uint64_t value);
-
-		void appendUint32(const uint32_t value);
-
-		void appendInt64(const int64_t value);
-
-		void appendInt32(const int32_t value);
-
-		void appendUint8(const uint8_t value);
-
-		void appendInt8(const int8_t value);
-
-		void appendBool(bool data);
-
-		void appendVersion();
-
-		void appendNilExt();
-
-		void appendNil();
 
 		void setValue(JsonType TypeNew);
 
@@ -539,151 +474,42 @@ namespace Jsonifier {
 		return this->jsonValue.boolean;
 	}
 
-	class Jsonifier_Dll EscapeJsonString {
-	  public:
-		inline EscapeJsonString(std::string_view _str) noexcept : str{ _str } {
-		}
-
-		inline operator std::string() noexcept {
-			std::stringstream s;
-			s << *this;
-			return s.str();
-		}
-
-	  protected:
-		std::string_view str;
-		inline friend std::ostream& operator<<(std::ostream& out, const EscapeJsonString& unescaped);
-	};
-
-	inline std::ostream& operator<<(std::ostream& out, const EscapeJsonString& unescaped) {
-		for (size_t i = 0; i < unescaped.str.length(); i++) {
-			switch (unescaped.str[i]) {
-				case '\b':
-					out << "\\b";
-					break;
-				case '\f':
-					out << "\\f";
-					break;
-				case '\n':
-					out << "\\n";
-					break;
-				case '\r':
-					out << "\\r";
-					break;
-				case '\"':
-					out << "\\\"";
-					break;
-				case '\t':
-					out << "\\t";
-					break;
-				case '\\':
-					out << "\\\\";
-					break;
-				default:
-					if (static_cast<uint8_t>(unescaped.str[i]) <= 0x1F) {
-						std::ios::fmtflags f(out.flags());
-						out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << int(unescaped.str[i]);
-						out.flags(f);
-					} else {
-						out << unescaped.str[i];
-					}
-			}
-		}
-		return out;
-	}
-
-	inline bool dumpRawTape(uint64_t* tape, const uint8_t* stringBuffer) noexcept {
-		using std::cout;
-		uint32_t string_length{};
-		size_t tape_idx{ 0 };
-		uint64_t tape_val{ tape[tape_idx] };
-		uint8_t type{ uint8_t(tape_val >> 56) };
-		cout << tape_idx << " : " << type;
-		tape_idx++;
-		size_t how_many{ 0 };
-		if (type == 'r') {
-			how_many = size_t(tape_val & JSON_VALUE_MASK);
-		} else {
-			return false;
-		}
-		cout << "\t// pointing to " << how_many << " (right after last node)\n";
-		for (; tape_idx < how_many; tape_idx++) {
-			cout << tape_idx << " : ";
-			tape_val = tape[tape_idx];
-			type = uint8_t(tape_val >> 56);
-			switch (type) {
-				case '"':
-					cout << "string \"";
-					std::memcpy(&string_length, stringBuffer + (tape_val & JSON_VALUE_MASK), sizeof(uint32_t));
-					cout << EscapeJsonString(std::string_view(
-						reinterpret_cast<const char*>(stringBuffer + (tape_val & JSON_VALUE_MASK) + sizeof(uint32_t)), string_length));
-					cout << '"';
-					cout << '\n';
-					break;
-				case 'l':
-					if (tape_idx + 1 >= how_many) {
-						return false;
-					}
-					cout << "integer " << static_cast<int64_t>(tape[++tape_idx]) << "\n";
-					break;
-				case 'u':
-					if (tape_idx + 1 >= how_many) {
-						return false;
-					}
-					cout << "unsigned integer " << tape[++tape_idx] << "\n";
-					break;
-				case 'd':
-					cout << "float ";
-					if (tape_idx + 1 >= how_many) {
-						return false;
-					}
-					double answer;
-					std::memcpy(&answer, &tape[++tape_idx], sizeof(answer));
-					cout << answer << '\n';
-					break;
-				case 'n':
-					cout << "null\n";
-					break;
-				case 't':
-					cout << "true\n";
-					break;
-				case 'f':
-					cout << "false\n";
-					break;
-				case '{':
-					cout << "{\t// pointing to next tape location " << uint32_t((tape_val & JSON_VALUE_MASK)) << " (first node after the scope), "
-						 << " saturated count " << (((tape_val & JSON_VALUE_MASK) >> 32) & JSON_COUNT_MASK) << "\n";
-					break;
-				case '}':
-					cout << "}\t// pointing to previous tape location " << uint32_t((tape_val & JSON_VALUE_MASK)) << " (start of the scope)\n";
-					break;
-				case '[':
-					cout << "[\t// pointing to next tape location " << uint32_t((tape_val & JSON_VALUE_MASK)) << " (first node after the scope), "
-						 << " saturated count " << (((tape_val & JSON_VALUE_MASK) >> 32) & JSON_COUNT_MASK) << "\n";
-					break;
-				case ']':
-					cout << "]\t// pointing to previous tape location " << uint32_t((tape_val & JSON_VALUE_MASK)) << " (start of the scope)\n";
-					break;
-				case 'r':
-					return false;
-				default:
-					return false;
-			}
-		}
-		tape_val = tape[tape_idx];
-		type = uint8_t(tape_val >> 56);
-		cout << tape_idx << " : " << type << "\t// pointing to " << (tape_val & JSON_VALUE_MASK) << " (start rootStructural)\n";
-		return true;
-	}
-
 	inline int64_t totalTimePassed{};
 	inline int64_t iterationCount{};
 
 	class Jsonifier_Dll Parser {
 	  public:
+		friend class JsonIterator;
 		inline Parser& operator=(Parser&&) = default;
 		inline Parser(Parser&&) = default;
 		inline Parser(){};
+
+		inline Document parseJson(const char* string, size_t stringLength);
+		inline Document parseJson(const std::string& string);		
+
+	  protected:
+		ObjectBuffer<uint32_t> structuralIndexes{};
+		ObjectBuffer<uint8_t> stringBuffer{};
+		SimdStringSection section{};
+		size_t stringLengthRaw{};
+		uint8_t* stringView{};
+		size_t tapeLength{};
+
+		inline uint8_t* getStringView() {
+			return this->stringView;
+		}
+
+		inline uint8_t* getStringBuffer() {
+			return this->stringBuffer;
+		}
+
+		inline uint32_t* getStructuralIndices() {
+			return this->structuralIndexes;
+		}
+
+		inline size_t& getTapeLength() {
+			return this->tapeLength;
+		}
 
 		inline uint64_t round(int64_t a, int64_t n) {
 			return (((a) + (( n )-1)) & ~(( n )-1));
@@ -740,34 +566,6 @@ namespace Jsonifier {
 				//}
 			}
 		}
-
-		inline uint8_t* getStringView() {
-			return this->stringView;
-		}
-
-		inline uint8_t* getStringBuffer() {
-			return this->stringBuffer;
-		}
-
-		inline uint32_t* getStructuralIndices() {
-			return this->structuralIndexes;
-		}
-
-		inline Document parseJson(const char* string, size_t stringLength);
-
-		inline Document parseJson(const std::string& string);
-
-		inline size_t& getTapeLength() {
-			return this->tapeLength;
-		}
-
-	  protected:
-		ObjectBuffer<uint32_t> structuralIndexes{};
-		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section{};
-		size_t stringLengthRaw{};
-		uint8_t* stringView{};
-		size_t tapeLength{};
 	};
 
 	inline Document Parser::parseJson(const char* string, size_t stringLength) {

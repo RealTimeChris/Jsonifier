@@ -121,12 +121,7 @@ namespace Jsonifier {
 
 	void Serializer::refreshString(JsonifierSerializeType opCode) {
 		this->string.clear();
-		if (opCode == JsonifierSerializeType::Etf) {
-			this->appendVersion();
-			this->serializeJsonToEtfString(this);
-		} else {
-			this->serializeJsonToJsonString(this);
-		}
+		this->serializeJsonToJsonString(this);
 	}
 
 	Serializer& Serializer::operator=(EnumConverter&& data) noexcept {
@@ -371,35 +366,6 @@ namespace Jsonifier {
 		}
 	}
 
-	void Serializer::serializeJsonToEtfString(const Serializer* dataToParse) {
-		switch (dataToParse->type) {
-			case JsonType::Object: {
-				return this->writeEtfObject(*dataToParse->jsonValue.object);
-			}
-			case JsonType::Array: {
-				return this->writeEtfArray(*dataToParse->jsonValue.array);
-			}
-			case JsonType::String: {
-				return this->writeEtfString(*dataToParse->jsonValue.string);
-			}
-			case JsonType::Float: {
-				return this->writeEtfFloat(dataToParse->jsonValue.numberDouble);
-			}
-			case JsonType::Uint64: {
-				return this->writeEtfUint(dataToParse->jsonValue.numberUint);
-			}
-			case JsonType::Int64: {
-				return this->writeEtfInt(dataToParse->jsonValue.numberInt);
-			}
-			case JsonType::Bool: {
-				return this->writeEtfBool(dataToParse->jsonValue.boolean);
-			}
-			case JsonType::Null: {
-				return this->writeEtfNull();
-			}
-		}
-	}
-
 	void Serializer::serializeJsonToJsonString(const Serializer* dataToParse) {
 		switch (dataToParse->type) {
 			case JsonType::Object: {
@@ -491,58 +457,6 @@ namespace Jsonifier {
 		this->writeString("null", 4);
 	}
 
-	void Serializer::writeEtfObject(const ObjectType& jsonData) {
-		this->appendMapHeader(static_cast<uint32_t>(jsonData.size()));
-		for (auto& [key, value]: jsonData) {
-			this->appendBinaryExt(key, static_cast<uint32_t>(key.size()));
-			this->serializeJsonToEtfString(&value);
-		}
-	}
-
-	void Serializer::writeEtfArray(const ArrayType& jsonData) {
-		this->appendListHeader(static_cast<uint32_t>(jsonData.size()));
-		for (auto& value: jsonData) {
-			this->serializeJsonToEtfString(&value);
-		}
-		this->appendNilExt();
-	}
-
-	void Serializer::writeEtfString(const StringType& jsonData) {
-		this->appendBinaryExt(jsonData, static_cast<uint32_t>(jsonData.size()));
-	}
-
-	void Serializer::writeEtfUint(const UintType jsonData) {
-		if (jsonData >= std::numeric_limits<uint8_t>::min() && jsonData <= std::numeric_limits<uint8_t>::max()) {
-			this->appendUint8(static_cast<uint8_t>(jsonData));
-		} else if (jsonData >= std::numeric_limits<uint32_t>::min() && jsonData <= std::numeric_limits<uint32_t>::max()) {
-			this->appendUint32(static_cast<uint32_t>(jsonData));
-		} else {
-			this->appendUint64(jsonData);
-		}
-	}
-
-	void Serializer::writeEtfInt(const IntType jsonData) {
-		if (jsonData >= std::numeric_limits<int8_t>::min() && jsonData <= std::numeric_limits<int8_t>::max()) {
-			this->appendInt8(static_cast<int8_t>(jsonData));
-		} else if (jsonData >= std::numeric_limits<int32_t>::min() && jsonData <= std::numeric_limits<int32_t>::max()) {
-			this->appendInt32(static_cast<int32_t>(jsonData));
-		} else {
-			this->appendInt64(jsonData);
-		}
-	}
-
-	void Serializer::writeEtfFloat(const FloatType jsonData) {
-		this->appendNewFloatExt(jsonData);
-	}
-
-	void Serializer::writeEtfBool(const BoolType jsonData) {
-		this->appendBool(jsonData);
-	}
-
-	void Serializer::writeEtfNull() {
-		this->appendNil();
-	}
-
 	void Serializer::writeString(const char* data, size_t length) {
 		this->string.append(data, length);
 	}
@@ -600,108 +514,6 @@ namespace Jsonifier {
 			}
 		}
 		return true;
-	}
-
-	void Serializer::appendBinaryExt(const std::string& bytes, uint32_t sizeNew) {
-		char newBuffer[5]{ static_cast<int8_t>(EtfType::Binary_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
-		this->writeString(newBuffer, std::size(newBuffer));
-		this->writeString(bytes.data(), bytes.size());
-	}
-
-	void Serializer::appendUint64(uint64_t value) {
-		char newBuffer[11]{ static_cast<int8_t>(EtfType::Small_Big_Ext) };
-		char encodedBytes{};
-		while (value > 0) {
-			newBuffer[3 + encodedBytes] = value & 0xFF;
-			value >>= 8;
-			++encodedBytes;
-		}
-		newBuffer[1] = encodedBytes;
-		newBuffer[2] = 0;
-		this->writeString(newBuffer, 1ull + 2ull + static_cast<size_t>(encodedBytes));
-	}
-
-	void Serializer::appendInt64(int64_t value) {
-		char newBuffer[11]{ static_cast<int8_t>(EtfType::Small_Big_Ext) };
-		char encodedBytes{};
-		while (value > 0) {
-			newBuffer[3 + encodedBytes] = value & 0xFF;
-			value >>= 8;
-			++encodedBytes;
-		}
-		newBuffer[1] = encodedBytes;
-		if (value >= 0) {
-			newBuffer[2] = 0;
-		} else {
-			newBuffer[2] = 1;
-		}
-		this->writeString(newBuffer, 1ull + 2ull + static_cast<size_t>(encodedBytes));
-	}
-
-	void Serializer::appendNewFloatExt(const double FloatValue) {
-		char newBuffer[9]{ static_cast<uint8_t>(EtfType::New_Float_Ext) };
-		const void* punner{ &FloatValue };
-		storeBits(newBuffer + 1, *static_cast<const uint64_t*>(punner));
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendUint8(const uint8_t value) {
-		char newBuffer[2]{ static_cast<uint8_t>(EtfType::Small_Integer_Ext), static_cast<char>(value) };
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendInt8(const int8_t value) {
-		char newBuffer[2]{ static_cast<uint8_t>(EtfType::Small_Integer_Ext), static_cast<char>(value) };
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendUint32(const uint32_t value) {
-		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Integer_Ext) };
-		storeBits(newBuffer + 1, value);
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendInt32(const int32_t value) {
-		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Integer_Ext) };
-		storeBits(newBuffer + 1, value);
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendListHeader(const uint32_t sizeNew) {
-		char newBuffer[5]{ static_cast<uint8_t>(EtfType::List_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendMapHeader(const uint32_t sizeNew) {
-		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Map_Ext) };
-		storeBits(newBuffer + 1, sizeNew);
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendBool(bool data) {
-		if (data) {
-			char newBuffer[6]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(4), 't', 'r', 'u', 'e' };
-			this->writeString(newBuffer, std::size(newBuffer));
-		} else {
-			char newBuffer[7]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(5), 'f', 'a', 'l', 's', 'e' };
-			this->writeString(newBuffer, std::size(newBuffer));
-		}
-	}
-
-	void Serializer::appendVersion() {
-		char newBuffer[1]{ static_cast<int8_t>(formatVersion) };
-		this->writeString(newBuffer, std::size(newBuffer));
-	}
-
-	void Serializer::appendNilExt() {
-		this->writeCharacter(static_cast<uint8_t>(EtfType::Nil_Ext));
-	}
-
-	void Serializer::appendNil() {
-		char newBuffer[5]{ static_cast<uint8_t>(EtfType::Small_Atom_Ext), static_cast<uint8_t>(3), 'n', 'i', 'l' };
-		this->writeString(newBuffer, std::size(newBuffer));
 	}
 
 	void Serializer::setValue(JsonType typeNew) {
