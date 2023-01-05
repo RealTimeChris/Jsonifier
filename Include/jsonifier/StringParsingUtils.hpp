@@ -24,9 +24,9 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll SimdBase256;
+	class SimdBase256;
 
-	class Jsonifier_Dll StringParser {
+	class StringParser {
 	  public:
 		static inline uint32_t stringToUint32(const char* str) {
 			uint32_t val{};

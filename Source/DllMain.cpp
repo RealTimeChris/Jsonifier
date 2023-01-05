@@ -1,5 +1,5 @@
 /*
-	Jsonifier, A few class Jsonifier_Dlles for parsing and serializing objects from/into JSON or ETF strings - very rapidly.
+	Jsonifier, A few classes for parsing and serializing objects from/into JSON or ETF strings - very rapidly.
 
 	Copyright 2021, 2022 Chris M. (RealTimeChris)
 
