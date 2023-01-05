@@ -14,7 +14,7 @@ namespace Jsonifier {
 		inline ArrayIterator& operator++() noexcept;
 
 	  private:
-		ValueIterator iterator;
+		ValueIterator iterator{};
 
 		inline ArrayIterator(const ValueIterator& iter) noexcept;
 
@@ -41,7 +41,7 @@ namespace Jsonifier {
 		static inline JsonifierResult<Array> startRoot(ValueIterator& iter) noexcept;
 		static inline JsonifierResult<Array> started(ValueIterator& iter) noexcept;
 		inline Array(const ValueIterator& iter) noexcept;
-		ValueIterator iterator;
+		ValueIterator iterator{};
 
 		friend class Value;
 		friend class Document;

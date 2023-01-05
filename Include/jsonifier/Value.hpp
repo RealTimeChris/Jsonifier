@@ -100,7 +100,7 @@ namespace Jsonifier {
 		inline JsonifierResult<RawJsonString> getRawJsonString() noexcept;
 		inline JsonifierResult<uint64_t> getUint64() noexcept;
 		inline JsonifierResult<int64_t> getInt64() noexcept;
-		inline JsonifierResult<double> getDouble() noexcept;
+		inline JsonifierResult<double> getDouble(std::source_location = std::source_location::current()) noexcept;
 		inline JsonifierResult<bool> getBool() noexcept;
 		inline JsonifierResult<bool> isNull() noexcept;
 
@@ -183,7 +183,7 @@ namespace Jsonifier {
 		inline JsonifierResult<Object> getObject() noexcept;
 		inline JsonifierResult<uint64_t> getUint64() noexcept;
 		inline JsonifierResult<int64_t> getInt64() noexcept;
-		inline JsonifierResult<double> getDouble() noexcept;
+		inline JsonifierResult<double> getDouble(std::source_location = std::source_location::current()) noexcept;
 		inline JsonifierResult<std::string_view> getString() noexcept;
 		inline JsonifierResult<RawJsonString> getRawJsonString() noexcept;
 		inline JsonifierResult<bool> getBool() noexcept;
@@ -220,7 +220,7 @@ namespace Jsonifier {
 		static inline Value start(const ValueIterator& iter) noexcept;
 		static inline Value resume(const ValueIterator& iter) noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		ValueIterator iterator;
+		ValueIterator iterator{};
 
 		friend class Document;
 		friend class ArrayIterator;
