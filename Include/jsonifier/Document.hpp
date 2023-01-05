@@ -64,7 +64,7 @@ namespace Jsonifier {
 
 		JsonIterator iterator;
 		static constexpr size_t DOCUMENT_DEPTH = 0;
-
+		friend class JsonifierResult<Document>;
 		friend class ArrayIterator;
 		friend class Parser;
 		friend class Object;

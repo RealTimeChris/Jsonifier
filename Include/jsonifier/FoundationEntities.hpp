@@ -98,6 +98,7 @@ namespace Jsonifier {
 		uint32_t* rootStructural{};
 
 	  public:
+		inline JsonIterator() noexcept = default;
 		inline JsonIterator(JsonIterator&& other) noexcept;
 		inline JsonIterator& operator=(JsonIterator&& other) noexcept;
 		inline ErrorCode skipChild(size_t parentDepth) noexcept;
@@ -169,6 +170,15 @@ namespace Jsonifier {
 		inline JsonifierResult(ErrorCode error) noexcept;///< @private
 		inline JsonifierResult() noexcept = default;
 		inline ~JsonifierResult() noexcept = default;///< @private
+	};
+
+	template<>
+	struct JsonifierResult<JsonIterator> : public ImplementationJsonifierResultBase<JsonIterator> {
+	  public:
+		inline JsonifierResult(JsonIterator&& value) noexcept;///< @private
+		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+
+		inline JsonifierResult() noexcept = default;
 	};
 
 	template<>

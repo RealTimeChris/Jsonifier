@@ -35,7 +35,7 @@ namespace Jsonifier {
 
 	};
 
-	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
+	template<typename T> struct JsonifierResult : public ImplementationJsonifierResultBase<T> {
 		inline JsonifierResult() noexcept;
 		inline JsonifierResult(T&& value) noexcept;
 		inline JsonifierResult(ErrorCode ErrorCode) noexcept;
