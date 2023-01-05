@@ -689,13 +689,13 @@ namespace Jsonifier {
 			return (((a) + (( n )-1)) & ~(( n )-1));
 		}
 
-		inline ErrorCode allocate(uint8_t* stringViewNew) noexcept {
+		inline ErrorCode allocate(const uint8_t* stringViewNew) noexcept {
 			if (this->stringLengthRaw == 0) {
 				return ErrorCode::Success;
 			}
 			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
 			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 256));
-			this->stringView = stringViewNew;
+			this->stringView = ( uint8_t* )stringViewNew;
 			if (!(this->structuralIndexes && this->stringBuffer)) {
 				this->stringBuffer.reset(0);
 				this->structuralIndexes.reset(0);
@@ -705,7 +705,7 @@ namespace Jsonifier {
 			return ErrorCode::Success;
 		}
 
-		inline void generateJsonEvents(uint8_t* stringNew, size_t stringLength) {
+		inline void generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
 			if (stringNew) {
 				if (stringLength == 0) {
 					throw JsonifierException{ "Failed to parse as the string size is 0." };
@@ -755,7 +755,7 @@ namespace Jsonifier {
 
 		inline Document parseJson(const char* string, size_t stringLength);
 
-		inline Document parseJson(std::string& string);
+		inline Document parseJson(const std::string& string);
 
 		inline size_t& getTapeLength() {
 			return this->tapeLength;
@@ -770,23 +770,13 @@ namespace Jsonifier {
 		size_t tapeLength{};
 	};
 
-	enum class TapeType : uint8_t {
-		Root = 'r',
-		Start_Array = '[',
-		Start_Object = '{',
-		End_Array = ']',
-		End_Object = '}',
-		String = '"',
-		Int64 = 'l',
-		Uint64 = 'u',
-		Double = 'd',
-		True_Value = 't',
-		False_Value = 'f',
-		Null_Value = 'n'
-	};
+	inline Document Parser::parseJson(const char* string, size_t stringLength) {
+		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string), stringLength);
+		return std::forward<Document>(JsonIterator{ this });
+	}
 
-	Document Parser::parseJson(std::string& string) {
-		this->generateJsonEvents(reinterpret_cast<uint8_t*>(string.data()), string.size());
+	inline Document Parser::parseJson(const std::string& string) {
+		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
