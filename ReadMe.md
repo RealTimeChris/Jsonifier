@@ -55,14 +55,14 @@ vector.clear();
 totalTime = 0;
 size = 0;
 WebSocketIdentifyDataThree dataTwo{};
-rapidjson::StringBuffer stringBuffer = dataTwo;
+rapidjson::StringBuffer this->stringBuffer = dataTwo;
 stopWatch.resetTimer();
 for (uint32_t x = 0; x < 50; ++x) {			
 	stopWatch.resetTimer();
 	for (uint32_t x = 0; x < 1024 * 128 ; ++x) {
 		dataTwo.intents = x;
 		stringBuffer = dataTwo;
-		std::string string{ stringBuffer.GetString() };
+		std::string string{ this->stringBuffer.GetString() };
 		vector.push_back(string);
 		size += vector.back().size();
 	}

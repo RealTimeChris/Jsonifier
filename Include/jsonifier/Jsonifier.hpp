@@ -1099,7 +1099,7 @@ namespace Jsonifier {
 	}
 
 	inline uint8_t*& JsonIterator::stringBufLoc() noexcept {
-		return stringBuffer;
+		return this->stringBuffer;
 	}
 
 	inline ErrorCode JsonIterator::reportError(ErrorCode _error, const char* message) noexcept {
@@ -1113,7 +1113,7 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<std::string_view> JsonIterator::unescape(RawJsonString in) noexcept {
-		return JsonifierResult<std::string_view>{ reinterpret_cast<const char*>(StringParser::parseString(( uint8_t* )(in.raw()), stringBuffer)) };
+		return JsonifierResult<std::string_view>{ reinterpret_cast<const char*>(StringParser::parseString(( uint8_t* )(in.raw()), this->stringBuffer)) };
 	}
 
 	inline void JsonIterator::reenterChild(uint32_t* position, size_t childDepth) noexcept {

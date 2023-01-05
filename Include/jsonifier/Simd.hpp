@@ -426,7 +426,7 @@ namespace Jsonifier {
 			return 0;
 		}
 		std::memset(dst, 0x20, StepSize);
-		std::memcpy(dst, stringBuffer + index, length - index);
+		std::memcpy(dst, this->stringBuffer + index, length - index);
 		return length - index;
 	}
 
