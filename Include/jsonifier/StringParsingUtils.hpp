@@ -61,8 +61,8 @@ namespace Jsonifier {
 			return _tzcnt_u32(this->bsBits);
 		}
 
-		uint64_t quoteBits{};
 		uint64_t bsBits{};
+		uint64_t quoteBits{};
 	};
 
 	class Jsonifier_Dll StringParser {
