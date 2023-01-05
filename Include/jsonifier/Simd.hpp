@@ -558,6 +558,12 @@ namespace Jsonifier {
 			return structuralStart;
 		}
 
+		void reset() {
+			this->currentIndexIntoString = 0;
+			this->prevInScalar = '\x00';
+			this->prevInString = 0x00;
+		}
+
 		void submitDataForProcessing(const uint8_t* valueNew) {
 			this->packStringIntoValue(&this->values[0], valueNew);
 			this->packStringIntoValue(&this->values[1], valueNew + 32);

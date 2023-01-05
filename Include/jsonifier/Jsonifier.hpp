@@ -719,7 +719,7 @@ namespace Jsonifier {
 						throw JsonifierException{ "Failed to allocate properly!" };
 					}
 				}
-
+				this->section.reset();
 				//iterationCount++;
 				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
 				//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
@@ -1681,22 +1681,11 @@ namespace Jsonifier {
 	inline int64_t iterationsNew{};
 
 	inline JsonifierResult<double> ValueIterator::getDouble(std::source_location location) noexcept {
-		//std::cout << "Error Report: \n"
-		//<< "Caught in File: " << location.file_name() << " (" << std::to_string(location.line()) << ":" << std::to_string(location.column())
-		//<< ")"
-		//<< "\nThe Error: \n"
-		//<< std::endl;
-		//iterationsNew++;
-		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		auto result = NumberParser::parseDouble(peekNonRootScalar("double"));
-		//totalTimeNew += stopWatch.totalTimePassed().count();
-		//std::cout << "TIME IT TOOK TO PARSE THE DOUBLE (JSON):  " << totalTimeNew / iterationsNew << std::endl;
-		advanceNonRootScalar("double");
-			
-			
-			return result;
-	
-		
+		if (result.error() == Success) {
+			advanceNonRootScalar("double");
+		}
+		return result;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::getBool() noexcept {
