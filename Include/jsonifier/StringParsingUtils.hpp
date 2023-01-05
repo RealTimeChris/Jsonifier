@@ -32,6 +32,13 @@
 	#define Jsonifier_Dll
 #endif
 
+#ifdef max
+	#undef max
+#endif
+#ifdef min
+	#undef min
+#endif
+
 namespace Jsonifier {
 
 	class Jsonifier_Dll SimdBase256;

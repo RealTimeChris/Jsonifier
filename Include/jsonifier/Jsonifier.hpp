@@ -281,7 +281,7 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
-			this->setValue(JsonType::object);
+			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
 				(*this->jsonValue.object)[key] = std::move(value);
 			}
@@ -294,7 +294,7 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>& data) noexcept {
-			this->setValue(JsonType::object);
+			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
 				(*this->jsonValue.object)[key] = value;
 			}
@@ -306,7 +306,7 @@ namespace Jsonifier {
 		};
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>&& data) noexcept {
-			this->setValue(JsonType::object);
+			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
 				(*this->jsonValue.object)[key] = std::move(value);
 			}
@@ -318,7 +318,7 @@ namespace Jsonifier {
 		};
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>& data) noexcept {
-			this->setValue(JsonType::object);
+			this->setValue(JsonType::Object);
 			for (auto& [key, value]: data) {
 				(*this->jsonValue.object)[key] = value;
 			}
