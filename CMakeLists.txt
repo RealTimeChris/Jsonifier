@@ -107,7 +107,7 @@ target_compile_options(
 
 target_link_options(
 	"${PROJECT_NAME}" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/PDB>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/DEBUG>>"
 )
 
 set_target_properties(
