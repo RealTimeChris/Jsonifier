@@ -205,6 +205,14 @@ namespace Jsonifier {
 		inline JsonifierResult<const char*> currentLocation() noexcept;
 		inline int32_t currentDepth() const noexcept;
 		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
+		inline operator Array() noexcept(false);
+		inline operator Object() noexcept(false);
+		inline operator uint64_t() noexcept(false);
+		inline operator int64_t() noexcept(false);
+		inline operator double() noexcept(false);
+		inline operator std::string_view() noexcept(false);
+		inline operator RawJsonString() noexcept(false);
+		inline operator bool() noexcept(false);
 
 	  protected:
 		inline Value(const ValueIterator& iter) noexcept;
@@ -259,5 +267,13 @@ namespace Jsonifier {
 		inline JsonifierResult<const char*> currentLocation() noexcept;
 		inline JsonifierResult<int32_t> currentDepth() const noexcept;
 		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
+		inline operator Array() noexcept(false);
+		inline operator Object() noexcept(false);
+		inline operator uint64_t() noexcept(false);
+		inline operator int64_t() noexcept(false);
+		inline operator double() noexcept(false);
+		inline operator std::string_view() noexcept(false);
+		inline operator RawJsonString() noexcept(false);
+		inline operator bool() noexcept(false);
 	};
 }

@@ -1,47 +1,14 @@
 #pragma once
 
-#include <source_location>
-#include <unordered_map>
-#include <immintrin.h>
-#include <string_view>
-#include <functional>
-#include <concepts>
-#include <iostream>
-#include <vector>
-#include <atomic>
-#include <memory>
-#include <thread>
-#include <chrono>
-#include <bitset>
-#include <array>
-#include <deque>
-#include <map>
 
 #include "StringParsingUtils.hpp"
+#include "JsonifierResult.hpp"
 
 namespace Jsonifier {
 
-	enum ErrorCode : int8_t {
-		Success = 0,
-		Tape_Error = 1,
-		Depth_Error = 2,
-		Empty = 3,
-		Parse_Error = 4,
-		String_Error = 5,
-		TAtom_Error = 6,
-		FAtom_Error = 7,
-		NAtom_Error = 8,
-		Mem_Alloc_Error = 9,
-		Invalid_Number = 10,
-		Incorrect_Type = 11,
-		Uninitialized = 12,
-		Out_Of_Bounds = 13,
-		Invalid_Json_Pointer = 14,
-		No_Such_Field = 15,
-		Number_Error = 16,
-		Trailing_Content = 17,
-		Out_Of_Order_Iteration = 18
-	};
+	template<typename T> class JsonifierResult;
+
+	
 
 	class Jsonifier_Dll JsonifierError : public std::runtime_error {
 	  public:
@@ -823,28 +790,27 @@ namespace Jsonifier {
 			return structural_or_whitespace_negated[c];
 		}
 
-		static inline double parseDouble(const uint8_t* src) noexcept {
+		static inline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
 			bool negative = (*src == '-');
 			src += uint8_t(negative);
-
 			uint64_t i = 0;
 			const uint8_t* p = src;
 			p += parseDigit(*p, i);
-			bool leadingZero = (i == 0);
+			bool leading_zero = (i == 0);
 			while (parseDigit(*p, i)) {
 				p++;
 			}
 			if (p == src) {
 				return INCORRECT_TYPE;
 			}
-			if ((leadingZero && p != src + 1)) {
+			if ((leading_zero && p != src + 1)) {
 				return NUMBER_ERROR;
 			}
 			int64_t exponent = 0;
 			bool overflow;
 			if (*p == '.') {
 				p++;
-				const uint8_t* startDecimalDigits = p;
+				const uint8_t* start_decimal_digits = p;
 				if (!parseDigit(*p, i)) {
 					return NUMBER_ERROR;
 				}
@@ -852,36 +818,40 @@ namespace Jsonifier {
 				while (parseDigit(*p, i)) {
 					p++;
 				}
-				exponent = -(p - startDecimalDigits);
+				exponent = -(p - start_decimal_digits);
 				overflow = p - src - 1 > 19;
-				if (overflow && leadingZero) {
-					const uint8_t* startDigits = src + 2;
-					while (*startDigits == '0') {
-						startDigits++;
+				if (overflow && leading_zero) {
+					const uint8_t* start_digits = src + 2;
+					while (*start_digits == '0') {
+						start_digits++;
 					}
-					overflow = startDigits - src > 19;
+					overflow = start_digits - src > 19;
 				}
 			} else {
 				overflow = p - src > 19;
 			}
+
 			if (*p == 'e' || *p == 'E') {
 				p++;
-				bool expNeg = *p == '-';
-				p += expNeg || *p == '+';
+				bool exp_neg = *p == '-';
+				p += exp_neg || *p == '+';
 
 				uint64_t exp = 0;
-				const uint8_t* startExpDigits = p;
+				const uint8_t* start_exp_digits = p;
 				while (parseDigit(*p, exp)) {
 					p++;
 				}
-				if (p - startExpDigits == 0 || p - startExpDigits > 19) {
+				if (p - start_exp_digits == 0 || p - start_exp_digits > 19) {
 					return NUMBER_ERROR;
 				}
-				exponent += expNeg ? 0 - exp : exp;
+
+				exponent += exp_neg ? 0 - exp : exp;
 			}
+
 			if (isNotStructuralOrWhitespace(*p)) {
 				return NUMBER_ERROR;
 			}
+
 			overflow = overflow || exponent < smallestPower || exponent > largestPower;
 
 			double d;
