@@ -100,7 +100,7 @@ namespace Jsonifier {
 		inline JsonifierResult<RawJsonString> getRawJsonString() noexcept;
 		inline JsonifierResult<uint64_t> getUint64() noexcept;
 		inline JsonifierResult<int64_t> getInt64() noexcept;
-		inline JsonifierResult<double> getDouble(std::source_location = std::source_location::current()) noexcept;
+		inline JsonifierResult<double> getDouble() noexcept;
 		inline JsonifierResult<bool> getBool() noexcept;
 		inline JsonifierResult<bool> isNull() noexcept;
 
@@ -183,7 +183,7 @@ namespace Jsonifier {
 		inline JsonifierResult<Object> getObject() noexcept;
 		inline JsonifierResult<uint64_t> getUint64() noexcept;
 		inline JsonifierResult<int64_t> getInt64() noexcept;
-		inline JsonifierResult<double> getDouble(std::source_location = std::source_location::current()) noexcept;
+		inline JsonifierResult<double> getDouble() noexcept;
 		inline JsonifierResult<std::string_view> getString() noexcept;
 		inline JsonifierResult<RawJsonString> getRawJsonString() noexcept;
 		inline JsonifierResult<bool> getBool() noexcept;
