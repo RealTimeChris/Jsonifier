@@ -344,6 +344,12 @@ namespace Jsonifier {
 			return returnValue;
 		}
 
+		SimdBase256& shiftLastBitToFirst() {
+			*this = _mm256_permute4x64_epi64(*this, 0b10010011);
+			*this = _mm256_srli_epi64(*this, 63);
+			return *this;
+		}
+
 		inline void printBits(uint64_t values, const std::string& valuesTitle) {
 			using std::cout;
 			cout << valuesTitle;
@@ -532,12 +538,6 @@ namespace Jsonifier {
 			return convertSimdBytesToBits(quotesReal);
 		}
 
-		SimdBase256 shiftLastBitToFirst(SimdBase256 bitsToShift) {
-			bitsToShift = _mm256_permute4x64_epi64(bitsToShift, 0b10010011);
-			bitsToShift = _mm256_srli_epi64(bitsToShift, 63);
-			return bitsToShift;
-		}
-
 		inline SimdBase256 collectFinalStructurals() {
 			this->collectEscapedCharacters();
 			this->collectJsonCharacters();
@@ -546,7 +546,7 @@ namespace Jsonifier {
 			auto prevInScalarNew = this->prevInScalar;
 			SimdBase256 shiftMask{ _mm256_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ull,
 				0ull, 0ull) };
-			this->prevInScalar = shiftLastBitToFirst(nonQuoteScalar & shiftMask);
+			this->prevInScalar = (nonQuoteScalar & shiftMask).shiftLastBitToFirst();
 			auto followsNonQuoteScalar = nonQuoteScalar.shl<1>();
 			followsNonQuoteScalar = prevInScalarNew.copyLastBitToFirst(followsNonQuoteScalar);
 			auto potentialScalarStart = scalar.bitAndNot(followsNonQuoteScalar);
@@ -572,7 +572,6 @@ namespace Jsonifier {
 			this->packStringIntoValue(&this->values[6], valueNew + 192);
 			this->packStringIntoValue(&this->values[7], valueNew + 224);
 			this->structurals = this->collectFinalStructurals();
-			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:
