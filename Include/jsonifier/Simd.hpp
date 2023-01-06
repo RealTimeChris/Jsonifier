@@ -556,6 +556,12 @@ namespace Jsonifier {
 			return structuralStart;
 		}
 
+		void reset() {
+			this->prevInScalar = SimdBase256{};
+			this->prevEscaped = false;
+			this->prevInString = 0;
+		}
+
 		void submitDataForProcessing(const uint8_t* valueNew) {
 			this->packStringIntoValue(&this->values[0], valueNew);
 			this->packStringIntoValue(&this->values[1], valueNew + 32);

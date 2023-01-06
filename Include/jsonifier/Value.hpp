@@ -216,12 +216,12 @@ namespace Jsonifier {
 		inline operator bool() noexcept(false);
 
 	  protected:
-		inline Value(const ValueIterator& iter) noexcept;
+		inline Value(const ValueIterator& iteratorNew) noexcept;
 		inline void skip() noexcept;
-		static inline Value start(const ValueIterator& iter) noexcept;
-		static inline Value resume(const ValueIterator& iter) noexcept;
+		static inline Value start(const ValueIterator& iteratorNew) noexcept;
+		static inline Value resume(const ValueIterator& iteratorNew) noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		ValueIterator iterator;
+		ValueIterator iterator{};
 
 		friend class Document;
 		friend class ArrayIterator;
