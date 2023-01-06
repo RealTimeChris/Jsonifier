@@ -65,8 +65,8 @@ namespace Jsonifier {
 	class Jsonifier_Dll ValueIterator {
 	  protected:
 		JsonIterator* jsonIterator{};
+		size_t currentDepth{ 1 };
 		uint32_t* rootStructural{};
-		size_t currentDepth{ 0 };
 
 	  public:
 		inline ValueIterator() noexcept = default;
@@ -78,7 +78,7 @@ namespace Jsonifier {
 		inline bool atFirstField() const noexcept;
 		inline void abandon() noexcept;
 		inline ValueIterator childValue() const noexcept;
-		inline size_t depth() const noexcept;
+		inline int32_t depth() const noexcept;
 		inline JsonifierResult<JsonType> type() const noexcept;
 		inline JsonifierResult<bool> startObject() noexcept;
 		inline JsonifierResult<bool> startRootObject() noexcept;

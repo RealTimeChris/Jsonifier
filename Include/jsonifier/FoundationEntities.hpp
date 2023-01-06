@@ -103,40 +103,35 @@ namespace Jsonifier {
 		inline JsonIterator() noexcept = default;
 		inline JsonIterator(JsonIterator&& other) noexcept;
 		inline JsonIterator& operator=(JsonIterator&& other) noexcept;
-		inline explicit JsonIterator(const JsonIterator& other) noexcept = default;
-		inline JsonIterator& operator=(const JsonIterator& other) noexcept = default;
-		inline ErrorCode skipChild(size_t parent_depth) noexcept;
+		inline ErrorCode skipChild(size_t parentDepth) noexcept;
 		inline bool atRoot() const noexcept;
 		inline uint32_t* rootPosition() const noexcept;
+		inline bool isSingleToken() const noexcept;
 		inline void assertAtDocumentDepth() const noexcept;
 		inline void assertAtRoot() const noexcept;
 		inline bool atEnd() const noexcept;
 		inline bool isAlive() const noexcept;
 		inline void abandon() noexcept;
 		inline const uint8_t* returnCurrentAndAdvance() noexcept;
-		inline bool isSingleToken() const noexcept;
-		inline void assertMoreTokens(uint32_t required_tokens = 1) const noexcept;
-		inline void assertValidPosition(uint32_t* position) const noexcept;
 		inline const uint8_t* peek(int32_t delta = 0) const noexcept;
 		inline uint32_t peekLength(int32_t delta = 0) const noexcept;
 		inline const uint8_t* unsafePointer() const noexcept;
 		inline const uint8_t* peek(uint32_t* position) const noexcept;
 		inline uint32_t peekLength(uint32_t* position) const noexcept;
 		inline const uint8_t* peekLast() const noexcept;
-		inline void ascendTo(size_t parent_depth) noexcept;
-		inline void descendTo(size_t child_depth) noexcept;
-		inline void descendTo(size_t child_depth, int32_t delta) noexcept;
+		inline void ascendTo(size_t parentDepth) noexcept;
+		inline void descendTo(size_t childDepth) noexcept;
+		inline void descendTo(size_t childDepth, int32_t delta) noexcept;
 		inline size_t depth() const noexcept;
 		inline uint8_t*& stringBufLoc() noexcept;
 		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
 		inline ErrorCode optionalError(ErrorCode error, const char* message) noexcept;
 
-		template<int N>
-		inline bool copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept;
+		template<int N> inline bool copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept;
 
 		inline uint32_t* position() const noexcept;
 		inline JsonifierResult<std::string_view> unescape(RawJsonString in) noexcept;
-		inline void reenterChild(uint32_t* position, size_t child_depth) noexcept;
+		inline void reenterChild(uint32_t* position, size_t childDepth) noexcept;
 		inline std::string toString() const noexcept;
 		inline JsonifierResult<const char*> currentLocation() noexcept;
 		inline void rewind() noexcept;
@@ -149,8 +144,9 @@ namespace Jsonifier {
 		inline uint32_t* end() const noexcept;
 
 		friend class Document;
+		friend class document_stream;
 		friend class Object;
-		friend class Array;
+		friend class Orray;
 		friend class Value;
 		friend class RawJsonString;
 		friend class Parser;

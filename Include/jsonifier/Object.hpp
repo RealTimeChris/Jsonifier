@@ -49,6 +49,8 @@ namespace Jsonifier {
 
 		inline ErrorCode findFieldRaw(const std::string_view key) noexcept;
 
+		ValueIterator iter{};
+
 		friend class Value;
 		friend class document;
 		friend struct JsonifierResult<Object>;
