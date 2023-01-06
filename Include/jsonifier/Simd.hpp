@@ -557,16 +557,16 @@ namespace Jsonifier {
 		}
 
 		void reset() {
-			this->currentIndexIntoString = 0;
-			this->prevInScalar = char{ 0 };
-			this->prevInString = 0x00;
-			this->structurals = SimdBase256{};
-			this->whitespace = SimdBase256{};
-			this->backslash = SimdBase256{};
-			this->inString = SimdBase256{};
-			this->escaped = SimdBase256{};
-			this->quote = SimdBase256{};
-			this->op = SimdBase256{};
+			//this->currentIndexIntoString = 0;
+			//this->prevInScalar = char{ 0 };
+			//this->prevInString = 0x00;
+			//this->structurals = SimdBase256{};
+			//this->whitespace = SimdBase256{};
+			//this->backslash = SimdBase256{};
+			//this->inString = SimdBase256{};
+			//this->escaped = SimdBase256{};
+			//this->quote = SimdBase256{};
+			//this->op = SimdBase256{};
 		}
 
 		void submitDataForProcessing(const uint8_t* valueNew) {
