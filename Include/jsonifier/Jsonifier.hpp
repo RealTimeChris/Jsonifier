@@ -1401,12 +1401,10 @@ namespace Jsonifier {
 
 	inline JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
 		auto json = peekScalar("string");
-		std::cout << "THE STRING IS: " << (json + 1) << std::endl;
 		if (*json != '"') {
 			return incorrectTypeError("Not a string");
 		}
 		advanceScalar("string");
-		std::cout << "THE STRING IS: " << (json + 1) << std::endl;
 		return RawJsonString(json + 1);
 	}
 
