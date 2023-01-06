@@ -585,7 +585,7 @@ namespace Jsonifier {
 		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
-		uint8_t* stringView{};
+		uint8_t* stringView{};		
 		size_t tapeLength{};
 
 		inline uint8_t* getStringView() {
@@ -637,22 +637,20 @@ namespace Jsonifier {
 						throw JsonifierException{ "Failed to allocate properly!" };
 					}
 				}
-
 				this->stringView = ( uint8_t* )stringNew;
-				this->section.reset();
 				//iterationCount++;
 				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
 				//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 				size_t tapeCurrentIndex{ 0 };
 				while (stringReader.hasFullBlock()) {
-					this->section.submitDataForProcessing(stringReader.fullBlock());
+					section.submitDataForProcessing(stringReader.fullBlock());
 					section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
 					stringReader.advance();
 				}
 				uint8_t block[256];
 				stringReader.getRemainder(block);
-				this->section.submitDataForProcessing(block);
-				this->section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
+				section.submitDataForProcessing(block);
+				section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
 				//totalTimePassed += stopWatch.totalTimePassed().count();
 				this->getTapeLength() = tapeCurrentIndex;
 				//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
