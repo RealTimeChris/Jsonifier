@@ -492,6 +492,7 @@ namespace Jsonifier {
 		ObjectBuffer<uint8_t> stringBuffer{};
 		SimdStringSection section{};
 		size_t stringLengthRaw{};
+		size_t allocatedSpace{};
 		uint8_t* stringView{};
 		size_t tapeLength{};
 
@@ -521,6 +522,7 @@ namespace Jsonifier {
 			}
 			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
 			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 256));
+			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 256, 256);
 			this->stringView = ( uint8_t* )stringViewNew;
 			if (!(this->structuralIndexes && this->stringBuffer)) {
 				this->stringBuffer.reset(0);
@@ -537,12 +539,14 @@ namespace Jsonifier {
 					throw JsonifierException{ "Failed to parse as the string size is 0." };
 				}
 
-				if (this->stringLengthRaw < stringLength) {
-					this->stringLengthRaw = stringLength;
+				this->stringLengthRaw = stringLength;
+				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 256, 256)) {
 					if (this->allocate(stringNew) != ErrorCode::Success) {
 						throw JsonifierException{ "Failed to allocate properly!" };
 					}
 				}
+
+				this->stringView = ( uint8_t* )stringNew;
 				this->section.reset();
 				//iterationCount++;
 				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
