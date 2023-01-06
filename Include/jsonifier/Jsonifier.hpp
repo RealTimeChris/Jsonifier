@@ -1269,7 +1269,9 @@ namespace Jsonifier {
 
 		switch (*this->jsonIterator->returnCurrentAndAdvance()) {
 			case '}':
-				this->endContainer();
+				if (auto error = endContainer()) {
+					return error;
+				}
 				return false;
 			case ',':
 				return true;
@@ -1464,7 +1466,9 @@ namespace Jsonifier {
 
 		switch (*jsonIterator->returnCurrentAndAdvance()) {
 			case ']':
-				endContainer();
+				if (auto error = endContainer()) {
+					return error;
+				}
 				return false;
 			case ',':
 				jsonIterator->descendTo(static_cast<size_t>(depth()) + 1);
@@ -2875,11 +2879,10 @@ namespace Jsonifier {
 
 	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonType>(error) {
 	}
-
+	
 	inline JsonifierResult<JsonIterator>::JsonifierResult(JsonIterator&& value) noexcept
-		: ImplementationJsonifierResultBase<JsonIterator>(std::forward<JsonIterator>(value)){};
-
-	inline JsonifierResult<JsonIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonIterator>(error){};
+		: ImplementationJsonifierResultBase<JsonIterator>(std::forward<JsonIterator>(value)){}
+	inline JsonifierResult<JsonIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonIterator>(error){}
 
 	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : ImplementationJsonifierResultBase<Value>(std::forward<Value>(value)){};
 
