@@ -5,6 +5,8 @@
 
 namespace Jsonifier {
 
+	class Document;
+
 	class Jsonifier_Dll ArrayIterator {
 	  public:
 		inline ArrayIterator() noexcept = default;
@@ -16,11 +18,14 @@ namespace Jsonifier {
 	  private:
 		ValueIterator iterator{};
 
-		inline ArrayIterator(const ValueIterator& iter) noexcept;
+		inline ArrayIterator(const ValueIterator& iteratorNew) noexcept;
 
 		friend class Array;
 		friend class Value;
 		friend struct JsonifierResult<ArrayIterator>;
+		friend struct JsonifierResult<Document>;
+		friend struct Document;
+		friend struct JsonifierResult<Value>;
 	};
 
 	class Jsonifier_Dll Array {
@@ -37,10 +42,10 @@ namespace Jsonifier {
 
 	  protected:
 		inline ErrorCode consume() noexcept;
-		static inline JsonifierResult<Array> start(ValueIterator& iter) noexcept;
-		static inline JsonifierResult<Array> startRoot(ValueIterator& iter) noexcept;
-		static inline JsonifierResult<Array> started(ValueIterator& iter) noexcept;
-		inline Array(const ValueIterator& iter) noexcept;
+		static inline JsonifierResult<Array> start(ValueIterator& iteratorNew) noexcept;
+		static inline JsonifierResult<Array> startRoot(ValueIterator& iteratorNew) noexcept;
+		static inline JsonifierResult<Array> started(ValueIterator& iteratorNew) noexcept;
+		inline Array(const ValueIterator& iteratorNew) noexcept;
 		ValueIterator iterator{};
 
 		friend class Value;

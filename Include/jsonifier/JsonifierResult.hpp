@@ -57,6 +57,10 @@ namespace Jsonifier {
 		inline T& valueUnsafe() & noexcept;
 		inline const T& valueUnsafe() const& noexcept;
 		inline T&& valueUnsafe() && noexcept;
+		inline T& value() & noexcept(false);
+		inline T&& value() && noexcept(false);
+		inline T&& takeValue() && noexcept(false);
+		inline operator T&&() && noexcept(false);
 
 	  protected:
 		T first;
@@ -77,6 +81,10 @@ namespace Jsonifier {
 		inline ErrorCode error() const noexcept;
 		inline const T& valueUnsafe() const& noexcept;
 		inline T&& valueUnsafe() && noexcept;
+		inline T& value() & noexcept(false);
+		inline T&& value() && noexcept(false);
+		inline T&& takeValue() && noexcept(false);
+		inline operator T&&() && noexcept(false);
 	};
 
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
@@ -93,5 +101,9 @@ namespace Jsonifier {
 		inline ErrorCode error() const noexcept;
 		inline const T& valueUnsafe() const& noexcept;
 		inline T&& valueUnsafe() && noexcept;
+		inline T& value() & noexcept(false);
+		inline T&& value() && noexcept(false);
+		inline T&& takeValue() && noexcept(false);
+		inline operator T&&() && noexcept(false);
 	};
 }

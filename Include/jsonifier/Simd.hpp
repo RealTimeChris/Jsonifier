@@ -547,10 +547,8 @@ namespace Jsonifier {
 			SimdBase256 shiftMask{ _mm256_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ull,
 				0ull, 0ull) };
 			this->prevInScalar = shiftLastBitToFirst(nonQuoteScalar & shiftMask);
-			this->prevInScalar.printBits("PREV IN SCALAR: ");
 			auto followsNonQuoteScalar = nonQuoteScalar.shl<1>();
 			followsNonQuoteScalar = prevInScalarNew.copyLastBitToFirst(followsNonQuoteScalar);
-			//followsNonQuoteScalar.printBits("FOLLLOWS NONQUTOE SCALAR: ");
 			auto potentialScalarStart = scalar.bitAndNot(followsNonQuoteScalar);
 			auto stringTail = this->inString ^ this->quote;
 			auto potentialStructuralStart = this->op | potentialScalarStart;
@@ -559,10 +557,9 @@ namespace Jsonifier {
 		}
 
 		void reset() {
-			this->currentIndexIntoString = 0;
-			this->prevInScalar = char{ 0 };
-			this->prevInString = 0x00;
-			this->structurals = SimdBase256{};
+			this->prevInScalar = SimdBase256{};
+			this->prevEscaped = false;
+			this->prevInString = 0;
 		}
 
 		void submitDataForProcessing(const uint8_t* valueNew) {
@@ -575,7 +572,7 @@ namespace Jsonifier {
 			this->packStringIntoValue(&this->values[6], valueNew + 192);
 			this->packStringIntoValue(&this->values[7], valueNew + 224);
 			this->structurals = this->collectFinalStructurals();
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:

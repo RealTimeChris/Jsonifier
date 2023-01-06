@@ -5,9 +5,10 @@
 
 namespace Jsonifier {
 
+	class ValueIterator;
+
 	class Jsonifier_Dll Document {
 	  public:
-		inline Document() noexcept = default;
 		inline Document(const Document& other) noexcept = delete;
 		inline Document(Document&& other) noexcept = default;
 		inline Document& operator=(const Document& other) noexcept = delete;
@@ -43,7 +44,15 @@ namespace Jsonifier {
 		inline JsonifierResult<Value> operator[](const char* key) & noexcept;
 		inline JsonifierResult<JsonType> type() noexcept;
 		inline JsonifierResult<bool> isScalar() noexcept;
-
+		inline operator Array() & noexcept(false);
+		inline operator Object() & noexcept(false);
+		inline operator uint64_t() noexcept(false);
+		inline operator int64_t() noexcept(false);
+		inline operator double() noexcept(false);
+		inline operator std::string_view() noexcept(false);
+		inline operator RawJsonString() noexcept(false);
+		inline operator bool() noexcept(false);
+		inline operator Value() noexcept(false);
 	  protected:
 		inline JsonifierResult<std::string_view> rawJsonToken() noexcept;
 		inline void rewind() noexcept;
@@ -54,15 +63,14 @@ namespace Jsonifier {
 		inline JsonifierResult<std::string_view> rawJson() noexcept;
 		inline ErrorCode consume() noexcept;
 
-		inline Document(JsonIterator&& iter) noexcept;
+		inline Document(JsonIterator&& iteratorNew) noexcept;
 		inline const uint8_t* text(uint32_t idx) const noexcept;
 
 		inline ValueIterator resumeValueIterator() noexcept;
 		inline ValueIterator getRootValueIterator() noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		static inline Document start(JsonIterator&& iter) noexcept;
 
-		JsonIterator iterator{};
+		JsonIterator iterator;
 		static constexpr size_t DOCUMENT_DEPTH = 0;
 		friend class JsonifierResult<Document>;
 		friend class ArrayIterator;

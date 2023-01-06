@@ -12,7 +12,7 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll JsonifierError : public std::runtime_error {
 	  public:
-		JsonifierError(std::string&& errorString, ErrorCode errorNew)
+		JsonifierError(std::string&& errorString, ErrorCode errorNew = ErrorCode::Success)
 			: error{ errorNew }, std::runtime_error{ std::forward<std::string>(errorString) } {};
 
 		ErrorCode getError() {

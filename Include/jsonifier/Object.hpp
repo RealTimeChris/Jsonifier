@@ -16,7 +16,7 @@ namespace Jsonifier {
 	  protected:
 		ValueIterator iterator{};
 
-		inline ObjectIterator(const ValueIterator& iter) noexcept;
+		inline ObjectIterator(const ValueIterator& iteratorNew) noexcept;
 		friend struct JsonifierResult<ObjectIterator>;
 		friend class Object;
 	};
@@ -41,18 +41,18 @@ namespace Jsonifier {
 
 	  protected:
 		inline ErrorCode consume() noexcept;
-		static inline JsonifierResult<Object> start(ValueIterator& iter) noexcept;
-		static inline JsonifierResult<Object> startRoot(ValueIterator& iter) noexcept;
-		static inline JsonifierResult<Object> started(ValueIterator& iter) noexcept;
-		static inline Object resume(const ValueIterator& iter) noexcept;
-		inline Object(const ValueIterator& iter) noexcept;
+		static inline JsonifierResult<Object> start(ValueIterator& iteratorNew) noexcept;
+		static inline JsonifierResult<Object> startRoot(ValueIterator& iteratorNew) noexcept;
+		static inline JsonifierResult<Object> started(ValueIterator& iteratorNew) noexcept;
+		static inline Object resume(const ValueIterator& iteratorNew) noexcept;
+		inline Object(const ValueIterator& iteratorNew) noexcept;
 
 		inline ErrorCode findFieldRaw(const std::string_view key) noexcept;
 
-		ValueIterator iter{};
+		ValueIterator iteratorNew{};
 
 		friend class Value;
-		friend class document;
+		friend class Document;
 		friend struct JsonifierResult<Object>;
 
 		ValueIterator iterator{};

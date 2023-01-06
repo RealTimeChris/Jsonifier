@@ -44,7 +44,7 @@ namespace Jsonifier {
 		inline bool alive() const noexcept {
 			return this->stringView != nullptr;
 		}
-		inline JsonifierResult<std::string_view> unescape(JsonIterator& iter) const noexcept;
+		inline JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
 
 		const uint8_t* stringView{};
 		friend class Object;
@@ -56,7 +56,6 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll TokenIterator {
 	  public:
-		inline TokenIterator() noexcept = default;
 		inline TokenIterator(TokenIterator&& other) noexcept = default;
 		inline TokenIterator& operator=(TokenIterator&& other) noexcept = default;
 		inline TokenIterator(const TokenIterator& other) noexcept = default;
@@ -161,7 +160,7 @@ namespace Jsonifier {
 		~JsonifierResult() noexcept = default;
 
 		JsonifierResult<const char*> raw() const noexcept;
-		JsonifierResult<std::string_view> unescape(JsonIterator& iter) const noexcept;
+		JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
 	};
 
 	template<> struct JsonifierResult<TokenIterator> : public ImplementationJsonifierResultBase<TokenIterator> {
