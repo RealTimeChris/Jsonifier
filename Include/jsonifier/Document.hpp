@@ -5,6 +5,8 @@
 
 namespace Jsonifier {
 
+	class ValueIterator;
+
 	class Jsonifier_Dll Document {
 	  public:
 		inline Document() noexcept = default;

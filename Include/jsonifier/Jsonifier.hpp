@@ -1014,7 +1014,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline Field::Field() noexcept : std::pair<RawJsonString, Value>(nullptr, ValueIterator{}){};
+	inline Field::Field() noexcept : std::pair<RawJsonString, Value>(nullptr, ValueIterator{ this->second.iterator }){};
 
 	inline Field::Field(RawJsonString key, Value&& value) noexcept : std::pair<RawJsonString, Value>(key, std::forward<Value>(value)) {
 	}
@@ -1185,8 +1185,8 @@ namespace Jsonifier {
 		this->first.iterator.assertIsValid();
 	}
 
-	inline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ObjectIterator>({}, error) {
-	}
+	inline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept
+		: ImplementationJsonifierResultBase<ObjectIterator>({ this->first.iterator }, error){};
 
 	inline JsonifierResult<Field> JsonifierResult<ObjectIterator>::operator*() noexcept {
 		if (auto errorNew = error()) {
@@ -2320,7 +2320,7 @@ namespace Jsonifier {
 		if (auto errorNew = error()) {
 			return errorNew;
 		}
-		return {};
+		return { this->first.iterator };
 	}
 
 	inline JsonifierResult<Value> JsonifierResult<Value>::findField(std::string_view key) noexcept {
@@ -2558,7 +2558,8 @@ namespace Jsonifier {
 		first.iterator.assertIsValid();
 	}
 
-	inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ArrayIterator>({}, error){}
+	inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept
+		: ImplementationJsonifierResultBase<ArrayIterator>({ this->first.iterator }, error){}
 
 	inline JsonifierResult<Value> JsonifierResult<ArrayIterator>::operator*() noexcept {
 		if (auto errorNew = error()) {
@@ -2645,7 +2646,7 @@ namespace Jsonifier {
 		json_pointer = json_pointer.substr(1);
 		size_t slash = json_pointer.find('/');
 		std::string_view key = json_pointer.substr(0, slash);
-		JsonifierResult<Value> child;
+		JsonifierResult<Value> child{ this->iterator };
 		size_t escape = key.find('~');
 		if (escape != std::string_view::npos) {
 			std::string unescaped(key);
@@ -2677,8 +2678,9 @@ namespace Jsonifier {
 
 	inline JsonifierResult<Value> Object::findField(const std::string_view key) & noexcept {
 		bool hasValue;
-		if (auto error = iterator.findFieldRaw(key).get(hasValue))
-			;
+		if (auto error = iterator.findFieldRaw(key).get(hasValue)) {
+			return error;
+		}
 		if (!hasValue) {
 			return No_Such_Field;
 		}
@@ -2758,7 +2760,7 @@ namespace Jsonifier {
 
 	template<typename T>
 	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(ErrorCode error) noexcept
-		: ImplementationJsonifierResultBase(T{}, error){}
+		: ImplementationJsonifierResultBase(T{}, error){};
 
 	template<typename T>
 	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(T&& value) noexcept
@@ -2895,7 +2897,7 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<ArrayIterator> JsonifierResult<Document>::end() & noexcept {
-		return {};
+		return ArrayIterator{ ValueIterator{ &this->first.iterator, 0ull, this->first.iterator.rootPosition() } };
 	}
 
 	inline JsonifierResult<Value> JsonifierResult<Document>::findFieldUnordered(std::string_view key) & noexcept {
@@ -3354,14 +3356,14 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<ArrayIterator> Document::end() & noexcept {
-		return {};
+		return { ValueIterator{ &this->iterator, 0, this->iterator.rootPosition() } };
 	}
 
 	inline JsonifierResult<ArrayIterator> Value::begin() & noexcept {
 		return getArray().begin();
 	}
 	inline JsonifierResult<ArrayIterator> Value::end() & noexcept {
-		return {};
+		return { ValueIterator{ this->iterator } };
 	}
 
 	inline Array::Array(const ValueIterator& _iter) noexcept : iterator{ _iter } {
@@ -3385,7 +3387,9 @@ namespace Jsonifier {
 
 	inline JsonifierResult<Array> Array::started(ValueIterator& iter) noexcept {
 		bool hasValue;
-		if (auto error = iter.startedArray().get(hasValue));
+		if (auto error = iter.startedArray().get(hasValue)) {
+			return error;
+		}
 		return Array(iter);
 	}
 

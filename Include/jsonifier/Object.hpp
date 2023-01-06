@@ -14,7 +14,7 @@ namespace Jsonifier {
 		inline ObjectIterator& operator++() noexcept;
 
 	  protected:
-		ValueIterator iterator{};
+		ValueIterator iterator;
 
 		inline ObjectIterator(const ValueIterator& iter) noexcept;
 		friend struct JsonifierResult<ObjectIterator>;
@@ -53,7 +53,7 @@ namespace Jsonifier {
 		friend class document;
 		friend struct JsonifierResult<Object>;
 
-		ValueIterator iterator{};
+		ValueIterator iterator;
 
 		friend class Value;
 		friend class Document;

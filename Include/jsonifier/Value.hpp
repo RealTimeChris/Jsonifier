@@ -6,6 +6,7 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll JsonIterator;
 	class Jsonifier_Dll ArrayIterator;
+	class Jsonifier_Dll Document;
 
 	class Jsonifier_Dll EnumStringConverter {
 	  public:
@@ -165,7 +166,7 @@ namespace Jsonifier {
 		inline uint32_t* lastPosition() const noexcept;
 		inline uint32_t* endPosition() const noexcept;
 		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
-
+		friend struct JsonifierResult<Document>;
 		friend class Document;
 		friend class Object;
 		friend class Array;
@@ -220,7 +221,7 @@ namespace Jsonifier {
 		static inline Value start(const ValueIterator& iter) noexcept;
 		static inline Value resume(const ValueIterator& iter) noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
-		ValueIterator iterator{};
+		ValueIterator iterator;
 
 		friend class Document;
 		friend class ArrayIterator;
