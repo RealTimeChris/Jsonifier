@@ -93,21 +93,15 @@ file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifi
 
 target_compile_options(
 	"${PROJECT_NAME}" PUBLIC
+	"$<$<NOT:$<PLATFORM_ID:Linux>>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/Zi>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/MP>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:$ENV{EnableASAN},true>:-fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:GNU>:-fpermissive>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/MDd>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/Od>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/Ob0>>"
-	"$<$<CXX_COMPILER_ID:GNU>:-mavx2>"
-)
-
-target_link_options(
-	"${PROJECT_NAME}" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:/PDB>>"
+	"$<$<CXX_COMPILER_ID:GNU>:-mavx512f>"
+	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
 )
 
 set_target_properties(
@@ -138,7 +132,7 @@ set(DEBUG_PDB_FILE_PATH "debug/bin/jsonifier.pdb")
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-	"./CMake/${CONFIG_FILE_NAME}.in"
+	"${CMAKE_SOURCE_DIR}/CMake/${CONFIG_FILE_NAME}.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
 	INSTALL_DESTINATION "share/jsonifier"
 	PATH_VARS
@@ -176,6 +170,16 @@ install(
 	NAMESPACE "${PROJECT_NAME}::"
 	DESTINATION "share/jsonifier"
 )
+
+if (WIN32)
+	install(
+		FILES 
+		"$<TARGET_PDB_FILE:${PROJECT_NAME}>"
+		DESTINATION "$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}bin,bin>"
+		OPTIONAL
+	)
+endif()
+
 
 if (BUILDING_THE_FETCH_PACKAGE)
 	set(package_files "${SOURCES}" "${HEADERS}" "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/GenerateProductVersion.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/FetchContent.cmake" "${PACKAGE_FILES}")
