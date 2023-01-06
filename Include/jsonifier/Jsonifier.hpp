@@ -572,6 +572,8 @@ namespace Jsonifier {
 		friend class JsonIterator;
 		inline Parser& operator=(Parser&&) = default;
 		inline Parser(Parser&&) = default;
+		inline Parser& operator=(const Parser&) = delete;
+		inline Parser(const Parser&) = delete;
 		inline Parser(){};
 
 		inline Document parseJson(const char* string, size_t stringLength);
@@ -781,9 +783,6 @@ namespace Jsonifier {
 		: token(_parser->getStringView(), _parser->getStructuralIndices()), parser{ _parser }, stringBuffer{ _parser->getStringBuffer() },
 		  currentDepth{ 1 }, rootStructural{ _parser->getStructuralIndices() } {};
 
-	inline TokenIterator::TokenIterator(const uint8_t* _bufNew, uint32_t* positionNew) noexcept
-		: stringView{ _bufNew }, currentPosition{ positionNew } {
-	}
 
 	inline void JsonIterator::rewind() noexcept {
 		this->token.setPosition(rootPosition());
@@ -1066,7 +1065,9 @@ namespace Jsonifier {
 
 	JsonifierResult<Value> Object::findFieldUnordered(const std::string_view key) && noexcept {
 		bool hasValue;
-		this->iterator.findFieldUnorderedRaw(key).get(hasValue);
+		if (auto error = this->iterator.findFieldUnorderedRaw(key).get(hasValue)) {
+			return error;
+		}
 		if (!hasValue) {
 			return No_Such_Field;
 		}
@@ -1229,12 +1230,16 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startObject() noexcept {
-		this->startContainer('{', "Not an object", "object");
+		if (auto error = this->startContainer('{', "Not an object", "object")) {
+			return error;
+		}
 		return this->startedObject();
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startRootObject() noexcept {
-		this->startContainer('{', "Not an object", "object");
+		if (auto error = this->startContainer('{', "Not an object", "object")) {
+			return error;
+		}
 		return this->startedRootObject();
 	}
 
@@ -1242,7 +1247,9 @@ namespace Jsonifier {
 		this->assertAtContainerStart();
 		if (*this->jsonIterator->peek() == '}') {
 			this->jsonIterator->returnCurrentAndAdvance();
-			this->endContainer();
+			if (auto error = this->endContainer()) {
+				return error;
+			}
 			return false;
 		}
 		return true;
@@ -1413,12 +1420,16 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startArray() noexcept {
-		startContainer('[', "Not an array", "array");
+		if (auto error = startContainer('[', "Not an array", "array")) {
+			return error;
+		}
 		return startedArray();
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startRootArray() noexcept {
-		startContainer('[', "Not an array", "array");
+		if (auto error = startContainer('[', "Not an array", "array")) {
+			return error;
+		}
 		return startedRootArray();
 	}
 
@@ -1435,7 +1446,9 @@ namespace Jsonifier {
 		assertAtContainerStart();
 		if (*jsonIterator->peek() == ']') {
 			jsonIterator->returnCurrentAndAdvance();
-			endContainer();
+			if (auto error = endContainer()) {
+				return error;
+			}
 			return false;
 		}
 		jsonIterator->descendTo(static_cast<size_t>(depth()) + 1);
@@ -1639,7 +1652,7 @@ namespace Jsonifier {
 	}
 
 	inline bool ValueIterator::atFirstField() const noexcept {
-		assert(jsonIterator->token.currentPosition > rootStructural);
+		assert(jsonIterator->token.position() > rootStructural);
 		return jsonIterator->token.position() == startPosition() + 1;
 	}
 
@@ -1920,68 +1933,62 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	inline uint32_t TokenIterator::currentOffset() const noexcept {
-		return *(this->currentPosition);
+	inline TokenIterator::TokenIterator(const uint8_t* _buf, uint32_t* position) noexcept : stringView{ _buf }, currentPosition{ position } {
 	}
 
+	inline uint32_t TokenIterator::currentOffset() const noexcept {
+		return *(currentPosition);
+	}
+
+
 	inline const uint8_t* TokenIterator::returnCurrentAndAdvance() noexcept {
-		return &this->stringView[*(this->currentPosition++)];
+		return &stringView[*(currentPosition++)];
 	}
 
 	inline const uint8_t* TokenIterator::peek(uint32_t* position) const noexcept {
-		return &this->stringView[*position];
+		return &stringView[*position];
 	}
-
 	inline uint32_t TokenIterator::peekIndex(uint32_t* position) const noexcept {
 		return *position;
 	}
-
 	inline uint32_t TokenIterator::peekLength(uint32_t* position) const noexcept {
 		return *(position + 1) - *position;
 	}
 
 	inline const uint8_t* TokenIterator::peek(int32_t delta) const noexcept {
-		return &this->stringView[*(this->currentPosition + delta)];
+		return &stringView[*(currentPosition + delta)];
 	}
-
 	inline uint32_t TokenIterator::peekIndex(int32_t delta) const noexcept {
-		return *(this->currentPosition + delta);
+		return *(currentPosition + delta);
 	}
-
 	inline uint32_t TokenIterator::peekLength(int32_t delta) const noexcept {
-		return *(this->currentPosition + delta + 1) - *(this->currentPosition + delta);
+		return *(currentPosition + delta + 1) - *(currentPosition + delta);
 	}
 
 	inline uint32_t* TokenIterator::position() const noexcept {
-		return this->currentPosition;
+		return currentPosition;
 	}
-
 	inline void TokenIterator::setPosition(uint32_t* target_position) noexcept {
-		this->currentPosition = target_position;
+		currentPosition = target_position;
 	}
 
 	inline bool TokenIterator::operator==(const TokenIterator& other) const noexcept {
-		return this->currentPosition == other.currentPosition;
+		return currentPosition == other.currentPosition;
 	}
-
 	inline bool TokenIterator::operator!=(const TokenIterator& other) const noexcept {
-		return this->currentPosition != other.currentPosition;
+		return currentPosition != other.currentPosition;
 	}
-
 	inline bool TokenIterator::operator>(const TokenIterator& other) const noexcept {
-		return this->currentPosition > other.currentPosition;
+		return currentPosition > other.currentPosition;
 	}
-
 	inline bool TokenIterator::operator>=(const TokenIterator& other) const noexcept {
-		return this->currentPosition >= other.currentPosition;
+		return currentPosition >= other.currentPosition;
 	}
-
 	inline bool TokenIterator::operator<(const TokenIterator& other) const noexcept {
-		return this->currentPosition < other.currentPosition;
+		return currentPosition < other.currentPosition;
 	}
-
 	inline bool TokenIterator::operator<=(const TokenIterator& other) const noexcept {
-		return this->currentPosition <= other.currentPosition;
+		return currentPosition <= other.currentPosition;
 	}
 
 	inline JsonifierResult<RawJsonString>::JsonifierResult(RawJsonString&& value) noexcept

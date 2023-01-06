@@ -65,7 +65,7 @@ namespace Jsonifier {
 	class Jsonifier_Dll ValueIterator {
 	  protected:
 		JsonIterator* jsonIterator{};
-		size_t currentDepth{ 1 };
+		size_t currentDepth{};
 		uint32_t* rootStructural{};
 
 	  public:
