@@ -14,7 +14,24 @@
 ----
 - Jsonifier = 778900 nanoseconds average per iteration.   
 - simdjson = 1045980 nanoseconds average per iteration.   
-
+----
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/citm-catalog.json) data (citm-catalog.json):
+----
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 1727204, per iteration:
+----
+- Jsonifier = 618040 nanoseconds average per iteration.   
+- simdjson = 903040 nanoseconds average per iteration.   
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data (twitter.json):
+----
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 631514, per iteration:
+----
+- Jsonifier = 241680 nanoseconds average per iteration.   
+- simdjson = 648420 nanoseconds average per iteration.   
+----
 ## Benchmark - Serializing the following data into a json string:
 ```cpp
 {"d":{"intents":131071,"large_threshold":250,"presence":{"afk":false,"since":0,"status":""},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"token":""},"op":2}
