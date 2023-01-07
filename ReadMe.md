@@ -5,16 +5,33 @@
 
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
-## Benchmark - Parsing the following data into a structure:
-```cpp
-A data structure named TEST_VALUE_11, containing a field called "d", containing an array called "TEST_VALUES", with the following element: {"TEST_VALUE_00":0.003334,"TEST_VALUE_01":true,"TEST_VALUE_02":"TESTING_VALUE112323","TEST_VALUE_03":4325454,"TEST_VALUE_04":0.003334,"TEST_VALUE_05":true,"TEST_VALUE_06":"TESTING_VALUE","TEST_VALUE_07":4325454} repeated 150 times.
-```
-### Windows 11 Results:
+## Benchmarks:
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data (canada.json):
 ----
-### A total of 1 time, for a total number of parsed bytes of 31841:
-- Jsonifier = 267800 nanoseconds average per iteration.   
-- simdjson = 1184000 nanoseconds average per iteration.   
-
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 2251051, per iteration:
+----
+- Jsonifier = 778900 nanoseconds average per iteration.   
+- simdjson = 1045980 nanoseconds average per iteration.   
+----
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/citm-catalog.json) data (citm-catalog.json):
+----
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 1727204, per iteration:
+----
+- Jsonifier = 618040 nanoseconds average per iteration.   
+- simdjson = 903040 nanoseconds average per iteration.   
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/twitter.json) data (twitter.json):
+----
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 631514, per iteration:
+----
+- Jsonifier = 241680 nanoseconds average per iteration.   
+- simdjson = 648420 nanoseconds average per iteration.   
+----
 ## Benchmark - Serializing the following data into a json string:
 ```cpp
 {"d":{"intents":131071,"large_threshold":250,"presence":{"afk":false,"since":0,"status":""},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"token":""},"op":2}
