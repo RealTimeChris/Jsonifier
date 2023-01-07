@@ -177,7 +177,23 @@ namespace Jsonifier {
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline size_t codepointToUtf8(uint32_t cp, uint8_t* c) {
+	inline static const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x4.
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x5c, 0, 0, 0,// 0x5.
+		0, 0, 0x08, 0, 0, 0, 0x0c, 0, 0, 0, 0, 0, 0, 0, 0x0a, 0,// 0x6.
+		0, 0, 0x0d, 0, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x7.
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+
+	inline size_t codePointToUtf8(uint32_t cp, uint8_t* c) {
 		if (cp <= 0x7F) {
 			c[0] = uint8_t(cp);
 			return 1;
@@ -201,91 +217,61 @@ namespace Jsonifier {
 		return 0;
 	}
 
-	class Jsonifier_Dll StringParser {
-	  public:
-
-		static inline bool isValidTrueAtom(const uint8_t* src) {
-			return (str4ncmp(src, "true")) == 0;
-		}
-
-		static inline bool isValidFalseAtom(const uint8_t* src) {
-			return (str4ncmp(src, "false")) == 0;
-		}
-
-		static inline bool isValidNullAtom(const uint8_t* src) {
-			return (str4ncmp(src, "null")) == 0;
-		}
-
-		static inline bool handleUnicodeCodepoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
-			uint32_t codePoint = hexToU32Nocheck(*srcPtr + 2);
-			*srcPtr += 6;
-			if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-				const uint8_t* srcData = *srcPtr;
-				if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
-					return false;
-				}
-				uint32_t codePoint2 = hexToU32Nocheck(srcData + 2);
-				uint32_t lowBit = codePoint2 - 0xdc00;
-				if (lowBit >> 10) {
-					return false;
-				}
-				codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
-				*srcPtr += 6;
-			} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+	inline bool handleUnicodeCodePoint(const uint8_t** src_ptr, uint8_t** dst_ptr) {
+		uint32_t code_point = hexToU32Nocheck(*src_ptr + 2);
+		*src_ptr += 6;
+		if (code_point >= 0xd800 && code_point < 0xdc00) {
+			const uint8_t *src_data = *src_ptr;
+			if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
 				return false;
 			}
-			size_t offset = codepointToUtf8(codePoint, *dstPtr);
-			*dstPtr += offset;
-			return offset > 0;
-		}
-
-		static inline uint8_t* parseString(const uint8_t* src, uint8_t* dst) {
-			while (1) {
-				auto bs_quote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
-				if (bs_quote.hasQuoteFirst()) {
-					return dst + bs_quote.quoteIndex();
-				}
-				if (bs_quote.hasBackslash()) {
-					auto bs_dist = bs_quote.backslashIndex();
-					uint8_t escape_char = src[bs_dist + 1];
-					if (escape_char == 'u') {
-						src += bs_dist;
-						dst += bs_dist;
-						if (!handleUnicodeCodepoint(&src, &dst)) {
-							return nullptr;
-						}
-					} else {
-						uint8_t escape_result = escapeMap[escape_char];
-						if (escape_result == 0u) {
-							return nullptr; 
-						}
-						dst[bs_dist] = escape_result;
-						src += bs_dist + 2;
-						dst += bs_dist + 1;
-					}
-				} else {
-					src += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
-					dst += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
-				}
+			uint32_t code_point_2 = hexToU32Nocheck(src_data + 2);
+			uint32_t low_bit = code_point_2 - 0xdc00;
+			if (low_bit >> 10) {
+				return false;
 			}
-			return nullptr;
+
+			code_point =
+				(((code_point - 0xd800) << 10) | low_bit) + 0x10000;
+			*src_ptr += 6;
+		} else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
+			return false;
 		}
+		size_t offset = codePointToUtf8(code_point, *dst_ptr);
+		*dst_ptr += offset;
+		return offset > 0;
+	}
 
-		static inline const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0,
-
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x5c, 0, 0, 0, 0, 0, 0x08, 0, 0, 0, 0x0c, 0, 0, 0, 0,
-			0, 0, 0, 0x0a, 0, 0, 0, 0x0d, 0, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-	};
-
-
+	inline uint8_t *parseString(const uint8_t *src, uint8_t *dst) {
+		while (1) {
+			auto bs_quote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
+			if (bs_quote.hasQuoteFirst()) {
+					return dst + bs_quote.quoteIndex();
+			}
+			if (bs_quote.hasBackslash()) {
+			  auto bs_dist = bs_quote.backslashIndex();
+			  uint8_t escape_char = src[bs_dist + 1];
+			  if (escape_char == 'u') {
+				src += bs_dist;
+				dst += bs_dist;
+				if (!handleUnicodeCodePoint(&src, &dst)) {
+				  return nullptr;
+				}
+			  } else {
+				uint8_t escape_result = escapeMap[escape_char];
+				if (escape_result == 0u) {
+				  return nullptr;
+				}
+				dst[bs_dist] = escape_result;
+				src += bs_dist + 2;
+				dst += bs_dist + 1;
+			  }
+			} else {
+				src += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
+			  dst += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;
+			}
+		 }
+		return nullptr;
+	}
 
 }

@@ -1244,7 +1244,7 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<std::string_view> JsonIterator::unescape(RawJsonString in) noexcept {
-		uint8_t* end = StringParser::parseString(in.stringView, this->stringBuffer);
+		uint8_t* end = parseString(in.stringView, this->stringBuffer);
 		if (!end) {
 			return String_Error;
 		}
