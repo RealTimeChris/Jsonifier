@@ -30,7 +30,7 @@ namespace Jsonifier {
 		}
 	};
 
-	static inline const uint32_t maxDigits = 768;
+	inline const uint32_t maxDigits = 768;
 
 	struct Decimal {
 		uint32_t numDigits;
@@ -40,19 +40,11 @@ namespace Jsonifier {
 		uint8_t digits[maxDigits];
 	};
 
-	static inline int infinitePower() {
+	inline int infinitePower() {
 		return 0x7FF;
 	}
 
-	static inline void trim(Decimal& h) {
-		while ((h.numDigits > 0) && (h.digits[h.numDigits - 1] == 0)) {
-			h.numDigits--;
-		}
-	}
-
-	static inline const int32_t decimalPointRange = 2047;
-
-	template<typename I> static inline bool parseDigit(const uint8_t c, I& i) {
+	template<typename I> inline bool parseDigit(const uint8_t c, I& i) {
 		const uint8_t digit = static_cast<uint8_t>(c - '0');
 		if (digit > 9) {
 			return false;
@@ -61,7 +53,15 @@ namespace Jsonifier {
 		return true;
 	}
 
-	static inline void decimalRightShift(Decimal& h, uint32_t shift) {
+	inline void trim(Decimal& h) {
+		while ((h.numDigits > 0) && (h.digits[h.numDigits - 1] == 0)) {
+			h.numDigits--;
+		}
+	}
+
+	inline const int32_t decimalPointRange = 2047;
+
+	inline void decimalRightShift(Decimal& h, uint32_t shift) {
 		uint32_t readIndex = 0;
 		uint32_t writeIndex = 0;
 
@@ -107,7 +107,7 @@ namespace Jsonifier {
 		trim(h);
 	}
 
-	static inline uint32_t numberOfDigitsDecimalLeftShift(Decimal& h, uint32_t shift) {
+	inline uint32_t numberOfDigitsDecimalLeftShift(Decimal& h, uint32_t shift) {
 		shift &= 63;
 		const static uint16_t numberOfDigitsDecimalLeftShift_table[65]{ 0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817,
 			0x181D, 0x2024, 0x202B, 0x2033, 0x203C, 0x2846, 0x2850, 0x285B, 0x3067, 0x3073, 0x3080, 0x388E, 0x389C, 0x38AB, 0x38BB, 0x40CC, 0x40DD,
@@ -168,7 +168,7 @@ namespace Jsonifier {
 		return numNewDigits;
 	}
 
-	static inline void decimalLeftShift(Decimal& h, uint32_t shift) {
+	inline void decimalLeftShift(Decimal& h, uint32_t shift) {
 		if (h.numDigits == 0) {
 			return;
 		}
@@ -209,11 +209,11 @@ namespace Jsonifier {
 		trim(h);
 	}
 
-	static inline int minimumExponent() {
+	inline int minimumExponent() {
 		return -1023;
 	}
 
-	static inline ErrorCode parseDecimal(const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
+	inline ErrorCode parseDecimal(const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
 		const uint8_t* const firstAfterPeriod = p;
 
 		if (parseDigit(*p, i)) {
@@ -229,11 +229,11 @@ namespace Jsonifier {
 		return ErrorCode::Success;
 	}
 
-	static inline bool isInteger(uint8_t c) noexcept {
+	inline bool isInteger(uint8_t c) noexcept {
 		return (c >= '0' && c <= '9');
 	}
 
-	static inline Decimal parseDecimal(const uint8_t*& p) noexcept {
+	inline Decimal parseDecimal(const uint8_t*& p) noexcept {
 		Decimal answer{};
 		answer.numDigits = 0;
 		answer.decimalPoint = 0;
@@ -307,7 +307,7 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	static inline uint64_t round(Decimal& h) {
+	inline uint64_t round(Decimal& h) {
 		if ((h.numDigits == 0) || (h.decimalPoint < 0)) {
 			return 0;
 		} else if (h.decimalPoint > 18) {
@@ -331,11 +331,11 @@ namespace Jsonifier {
 		return n;
 	}
 
-	static inline int mantissaExplicitBits() {
+	inline int mantissaExplicitBits() {
 		return 52;
 	}
 
-	static inline AdjustedMantissa computeFloat(Decimal& d) {
+	inline AdjustedMantissa computeFloat(Decimal& d) {
 		AdjustedMantissa answer;
 		if (d.numDigits == 0) {
 			answer.power2 = 0;
@@ -423,16 +423,16 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	static inline int signIndex() {
+	inline int signIndex() {
 		return 63;
 	}
 
-	static inline AdjustedMantissa parseLongMantissa(const uint8_t* first) {
+	inline AdjustedMantissa parseLongMantissa(const uint8_t* first) {
 		Decimal d = parseDecimal(first);
 		return computeFloat(d);
 	}
 
-	static inline double fromChars(const uint8_t* first) noexcept {
+	inline double fromChars(const uint8_t* first) noexcept {
 		bool negative = first[0] == '-';
 		if (negative) {
 			first++;
@@ -446,12 +446,12 @@ namespace Jsonifier {
 		return value;
 	}
 
-	static inline bool parseFloatFallback(const uint8_t* ptr, double* outDouble) {
+	inline bool parseFloatFallback(const uint8_t* ptr, double* outDouble) {
 		*outDouble = fromChars(reinterpret_cast<const uint8_t*>(ptr));
 		return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 	}
 
-	static inline const uint64_t powerOfFive[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
+	inline const uint64_t powerOfFive[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
 		0x5d79bcf00d2df649, 0xe95a99df8ace6f53, 0xf4d82c2c107973dc, 0x91d8a02bb6c10594, 0x79071b9b8a4be869, 0xb64ec836a47146f9, 0x9748e2826cdee284,
 		0xe3e27a444d8d98b7, 0xfd1b1b2308169b25, 0x8e6d8c6ab0787f72, 0xfe30f0f5e50e20f7, 0xb208ef855c969f4f, 0xbdbd2d335e51a935, 0xde8b2b66b3bc4723,
 		0xad2c788035e61382, 0x8b16fb203055ac76, 0x4c3bcb5021afcc31, 0xaddcb9e83c6b1793, 0xdf4abe242a1bbf3d, 0xd953e8624b85dd78, 0xd71d6dad34a2af0d,
@@ -641,7 +641,7 @@ namespace Jsonifier {
 		uint64_t high;
 	};
 
-	static inline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
+	inline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
 		Value128 answer;
 		answer.low = _umul128(value1, value2, &answer.high);
 		return answer;
@@ -649,7 +649,7 @@ namespace Jsonifier {
 
 	enum NumberError { NUMBER_ERROR, SUCCESS, INCORRECT_TYPE };
 
-	static inline const uint8_t integerStringFinisher[256] = { NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+	inline const uint8_t integerStringFinisher[256] = { NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
@@ -709,6 +709,7 @@ namespace Jsonifier {
 		while (parseDigit(*p, i)) {
 			p++;
 		}
+
 		size_t digit_count = size_t(p - start_digits);
 		if ((digit_count == 0) || (digit_count > 20)) {
 			return INCORRECT_TYPE;
@@ -729,7 +730,7 @@ namespace Jsonifier {
 		return i;
 	}
 
-	static inline double toDouble(uint64_t mantissa, uint64_t realExponent, bool negative) {
+	inline double toDouble(uint64_t mantissa, uint64_t realExponent, bool negative) {
 		double d;
 		mantissa &= ~(1ULL << 52);
 		mantissa |= realExponent << 52;
@@ -738,10 +739,10 @@ namespace Jsonifier {
 		return d;
 	}
 
-	static inline const int smallestPower = -342;
-	static inline const int largestPower = 308;
+	inline const int smallestPower = -342;
+	inline const int largestPower = 308;
 
-	static inline const double powerOfTen[24]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18,
+	inline const double powerOfTen[24]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18,
 		1e19, 1e20, 1e21, 1e22 };
 
 	inline bool computeFloat64(int64_t power, uint64_t i, bool negative, double& d) {
