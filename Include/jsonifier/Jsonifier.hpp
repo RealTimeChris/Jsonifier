@@ -1378,9 +1378,9 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::parseBool(const uint8_t* json) const noexcept {
-		auto notTrue = StringParser::str4ncmp(json, "true");
-		auto notFalse = StringParser::str4ncmp(json, "fals") | (json[4] ^ 'e');
-		bool error = (notTrue && notFalse) || NumberParser::isNotStructuralOrWhitespace(json[notTrue ? 5 : 4]);
+		auto notTrue = str4ncmp(json, "true");
+		auto notFalse = str4ncmp(json, "fals") | (json[4] ^ 'e');
+		bool error = (notTrue && notFalse) || isNotStructuralOrWhitespace(json[notTrue ? 5 : 4]);
 		if (error) {
 			return incorrectTypeError("Not a boolean");
 		}
@@ -1388,7 +1388,7 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::parseNull(const uint8_t* json) const noexcept {
-		bool is_null_string = !StringParser::str4ncmp(json, "null") && NumberParser::isNotStructuralOrWhitespace(json[4]);
+		bool is_null_string = !str4ncmp(json, "null") && isNotStructuralOrWhitespace(json[4]);
 		if (!is_null_string && json[0] == 'n') {
 			return incorrectTypeError("Not a null but starts with n");
 		}
@@ -1409,13 +1409,13 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<uint64_t> ValueIterator::getUint64() noexcept {
-		auto result = NumberParser::parseUnsigned(peekNonRootScalar("uint64"));
+		auto result = parseUnsigned(peekNonRootScalar("uint64"));
 		advanceNonRootScalar("uint64");
 		return result;
 	}
 
 	inline JsonifierResult<int64_t> ValueIterator::getInt64() noexcept {
-		auto result = NumberParser::parseInteger(peekNonRootScalar("int64"));
+		auto result = parseInteger(peekNonRootScalar("int64"));
 		advanceNonRootScalar("int64");
 		return result;
 	}
@@ -1460,7 +1460,7 @@ namespace Jsonifier {
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
 			return Number_Error;
 		}
-		auto result = NumberParser::parseUnsigned(tmpbuf);
+		auto result = parseUnsigned(tmpbuf);
 		if (!jsonIterator->isSingleToken()) {
 			return Trailing_Content;
 		}
@@ -1476,7 +1476,7 @@ namespace Jsonifier {
 			return Number_Error;
 		}
 
-		auto result = NumberParser::parseInteger(tmpbuf);
+		auto result = parseInteger(tmpbuf);
 		if (!jsonIterator->isSingleToken()) {
 			return Trailing_Content;
 		}
@@ -1523,7 +1523,7 @@ namespace Jsonifier {
 		auto max_len = peekStartLength();
 		auto json = peekRootScalar("null");
 		bool result =
-			(max_len >= 4 && !StringParser::str4ncmp(json, "null") && (max_len == 4 || !NumberParser::isNotStructuralOrWhitespace(json[5])));
+			(max_len >= 4 && !str4ncmp(json, "null") && (max_len == 4 || !isNotStructuralOrWhitespace(json[5])));
 		if (result) {
 			advanceRootScalar("null");
 		}

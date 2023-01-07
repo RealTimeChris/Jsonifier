@@ -581,14 +581,6 @@ namespace Jsonifier {
 			0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 			0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 
-		static inline uint32_t hexToU32Nocheck(const uint8_t* src) {
-			uint32_t v1 = digitToVal32[630 + src[0]];
-			uint32_t v2 = digitToVal32[420 + src[1]];
-			uint32_t v3 = digitToVal32[210 + src[2]];
-			uint32_t v4 = digitToVal32[0 + src[3]];
-			return v1 | v2 | v3 | v4;
-		}
-
 		struct Value128 {
 			uint64_t low;
 			uint64_t high;
@@ -2155,22 +2147,6 @@ namespace Jsonifier {
 			return negative ? (~i + 1) : i;
 		}
 
-		static inline const bool structural_or_whitespace_negated[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
-
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1,
-
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-
-		static inline uint32_t isNotStructuralOrWhitespace(uint8_t c) {
-			return structural_or_whitespace_negated[c];
-		}
-
 		static inline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
 			bool negative = (*src == '-');
 			src += uint8_t(negative);
@@ -2246,32 +2222,100 @@ namespace Jsonifier {
 			return d;
 		}
 
-		static inline uint64_t parseUnsigned(const uint8_t* const src) noexcept {
-			const uint8_t* p = src;
-			const uint8_t* const startDigits = p;
-			uint64_t i = 0;
-			while (parseDigit(*p, i)) {
-				p++;
-			}
-			size_t digitCount = size_t(p - startDigits);
-			if ((digitCount == 0) || (digitCount > 20)) {
-				return INCORRECT_TYPE;
-			}
-			if (('0' == *startDigits) && (digitCount > 1)) {
-				return NUMBER_ERROR;
-			}
-			if (integerStringFinisher[*p] != SUCCESS) {
-				return static_cast<uint64_t>(ErrorCode::Invalid_Number);
-			}
-			if (digitCount == 20) {
-				if (src[0] != uint8_t('1') || i <= uint64_t(INT64_MAX)) {
-					return INCORRECT_TYPE;
-				}
-			}
-
-			return i;
-		}
+		
 	};
 
+	enum NumberError { NUMBER_ERROR, SUCCESS, INCORRECT_TYPE };
+
+	static inline const uint8_t integerStringFinisher[256] = { NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, INCORRECT_TYPE,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, INCORRECT_TYPE, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, INCORRECT_TYPE, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, SUCCESS, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR };
+
+	;
+
+	template<typename I> inline bool parseDigit(const uint8_t c, I& i) {
+		const uint8_t digit = static_cast<uint8_t>(c - '0');
+		if (digit > 9) {
+			return false;
+		}
+		i = 10 * i + digit;
+		return true;
+	}
+
+	inline JsonifierResult<int64_t> parseInteger(const uint8_t* src) noexcept {
+		bool negative = (*src == '-');
+		const uint8_t* p = src + uint8_t(negative);
+		const uint8_t* const start_digits = p;
+		uint64_t i = 0;
+		while (parseDigit(*p, i)) {
+			p++;
+		}
+
+		size_t digit_count = size_t(p - start_digits);
+		size_t longest_digit_count = 19;
+		if ((digit_count == 0) || (digit_count > longest_digit_count)) {
+			return INCORRECT_TYPE;
+		}
+		if (('0' == *start_digits) && (digit_count > 1)) {
+			return NUMBER_ERROR;
+		}
+		if (integerStringFinisher[*p] != SUCCESS) {
+			return NUMBER_ERROR;
+		}
+		if (i > uint64_t(INT64_MAX) + uint64_t(negative)) {
+			return INCORRECT_TYPE;
+		}
+		return negative ? (~i + 1) : i;
+	}
+
+	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
+		const uint8_t* p = src;
+		const uint8_t* const start_digits = p;
+		uint64_t i = 0;
+		while (parseDigit(*p, i)) {
+			p++;
+		}
+		size_t digit_count = size_t(p - start_digits);
+		if ((digit_count == 0) || (digit_count > 20)) {
+			return INCORRECT_TYPE;
+		}
+		if (('0' == *start_digits) && (digit_count > 1)) {
+			return NUMBER_ERROR;
+		}
+		if (integerStringFinisher[*p] != SUCCESS) {
+			return NUMBER_ERROR;
+		}
+
+		if (digit_count == 20) {
+			if (src[0] != uint8_t('1') || i <= uint64_t(INT64_MAX)) {
+				return INCORRECT_TYPE;
+			}
+		}
+
+		return i;
+	}
 
 }
