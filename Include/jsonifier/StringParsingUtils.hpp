@@ -1,43 +1,6 @@
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4251)
-
-#include <source_location>
-#include <unordered_map>
-#include <immintrin.h>
-#include <string_view>
-#include <functional>
-#include <concepts>
-#include <iostream>
-#include <cassert>
-#include <vector>
-#include <atomic>
-#include <memory>
-#include <thread>
-#include <chrono>
-#include <bitset>
-#include <array>
-#include <deque>
-#include <map>
-
-#ifdef _WIN32
-	#ifdef Jsonifier_EXPORTS
-		#define Jsonifier_Dll __declspec(dllexport)
-	#else
-		#define Jsonifier_Dll __declspec(dllimport)
-	#endif
-#else
-	#define Jsonifier_Dll
-#endif
-
-#ifdef max
-	#undef max
-#endif
-#ifdef min
-	#undef min
-#endif
+#include <jsonifier/Base.hpp>
 
 namespace Jsonifier {
 
@@ -45,18 +8,21 @@ namespace Jsonifier {
 
 	template<typename SimdBase256> struct BackslashAndQuote {
 	  public:
-		static constexpr uint32_t BYTES_PROCESSED = 32;
-		inline static BackslashAndQuote<SimdBase256> copyAndFind(const uint8_t* src, uint8_t* dst);
+		static const uint32_t BYTES_PROCESSED = 32;
+		inline BackslashAndQuote<SimdBase256> static copyAndFind(const uint8_t* src, uint8_t* dst);
 
 		inline bool hasQuoteFirst() {
 			return ((this->bsBits - 1) & this->quoteBits) != 0;
 		}
+
 		inline bool hasBackslash() {
 			return ((this->quoteBits - 1) & this->bsBits) != 0;
 		}
+
 		inline int quoteIndex() {
 			return _tzcnt_u32(this->quoteBits);
 		}
+
 		inline int backslashIndex() {
 			return _tzcnt_u32(this->bsBits);
 		}
@@ -75,7 +41,7 @@ namespace Jsonifier {
 		return srcval ^ stringToUint32(atom);
 	}
 
-	static inline const uint32_t digitToVal32[886]{ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+	inline const uint32_t digitToVal32[886]{ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
@@ -153,7 +119,7 @@ namespace Jsonifier {
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 
-	static inline const bool structuralOrWhitespaceNegated[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	inline const bool structuralOrWhitespaceNegated[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
 
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -165,11 +131,22 @@ namespace Jsonifier {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
-	static inline uint32_t isNotStructuralOrWhitespace(uint8_t c) {
+	inline const bool structuralOrWhitespace[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };;
+
+	inline uint32_t isStructuralOrWhitespace(uint8_t c) {
+		return structuralOrWhitespace[c];
+	}
+
+	inline uint32_t isNotStructuralOrWhitespace(uint8_t c) {
 		return structuralOrWhitespaceNegated[c];
 	}
 
-	static inline uint32_t hexToU32Nocheck(const uint8_t* src) {
+	inline uint32_t hexToU32Nocheck(const uint8_t* src) {
 		uint32_t v1 = digitToVal32[630 + src[0]];
 		uint32_t v2 = digitToVal32[420 + src[1]];
 		uint32_t v3 = digitToVal32[210 + src[2]];
@@ -177,7 +154,7 @@ namespace Jsonifier {
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline static const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
+	inline const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0,
 
@@ -217,53 +194,53 @@ namespace Jsonifier {
 		return 0;
 	}
 
-	inline bool handleUnicodeCodePoint(const uint8_t** src_ptr, uint8_t** dst_ptr) {
-		uint32_t code_point = hexToU32Nocheck(*src_ptr + 2);
-		*src_ptr += 6;
-		if (code_point >= 0xd800 && code_point < 0xdc00) {
-			const uint8_t* src_data = *src_ptr;
-			if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
+	inline bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
+		uint32_t codePoint = hexToU32Nocheck(*srcPtr + 2);
+		*srcPtr += 6;
+		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
+			const uint8_t* srcData = *srcPtr;
+			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
 				return false;
 			}
-			uint32_t code_point_2 = hexToU32Nocheck(src_data + 2);
-			uint32_t low_bit = code_point_2 - 0xdc00;
-			if (low_bit >> 10) {
+			uint32_t codePoint2 = hexToU32Nocheck(srcData + 2);
+			uint32_t lowBit = codePoint2 - 0xdc00;
+			if (lowBit >> 10) {
 				return false;
 			}
 
-			code_point = (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
-			*src_ptr += 6;
-		} else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
+			codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
+			*srcPtr += 6;
+		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
 			return false;
 		}
-		size_t offset = codePointToUtf8(code_point, *dst_ptr);
-		*dst_ptr += offset;
+		size_t offset = codePointToUtf8(codePoint, *dstPtr);
+		*dstPtr += offset;
 		return offset > 0;
 	}
 
 	inline uint8_t* parseString(const uint8_t* src, uint8_t* dst) {
 		while (1) {
-			auto bs_quote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
-			if (bs_quote.hasQuoteFirst()) {
-				return dst + bs_quote.quoteIndex();
+			auto bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
+			if (bsQuote.hasQuoteFirst()) {
+				return dst + bsQuote.quoteIndex();
 			}
-			if (bs_quote.hasBackslash()) {
-				auto bs_dist = bs_quote.backslashIndex();
-				uint8_t escape_char = src[bs_dist + 1];
-				if (escape_char == 'u') {
-					src += bs_dist;
-					dst += bs_dist;
+			if (bsQuote.hasBackslash()) {
+				auto bsDist = bsQuote.backslashIndex();
+				uint8_t escapeChar = src[bsDist + 1];
+				if (escapeChar == 'u') {
+					src += bsDist;
+					dst += bsDist;
 					if (!handleUnicodeCodePoint(&src, &dst)) {
 						return nullptr;
 					}
 				} else {
-					uint8_t escape_result = escapeMap[escape_char];
-					if (escape_result == 0u) {
+					uint8_t escapeResult = escapeMap[escapeChar];
+					if (escapeResult == 0u) {
 						return nullptr;
 					}
-					dst[bs_dist] = escape_result;
-					src += bs_dist + 2;
-					dst += bs_dist + 1;
+					dst[bsDist] = escapeResult;
+					src += bsDist + 2ull;
+					dst += bsDist + 1ull;
 				}
 			} else {
 				src += BackslashAndQuote<SimdBase256>::BYTES_PROCESSED;

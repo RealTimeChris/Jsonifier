@@ -1,23 +1,23 @@
 #pragma once
 
-#include "FoundationEntities.hpp"
-#include "Value.hpp"
+#include <jsonifier/FoundationEntities.hpp>
+#include <jsonifier/Value.hpp>
 
 namespace Jsonifier {
 
 
 	class Jsonifier_Dll Field : public std::pair<RawJsonString, Value> {
 	  public:
-		inline Field() noexcept;
-		inline JsonifierResult<std::string_view> unescapedKey() noexcept;
-		inline RawJsonString key() const noexcept;
-		inline Value& value() & noexcept;
-		inline Value value() && noexcept;
+		Field() noexcept;
+		JsonifierResult<std::string_view> unescapedKey() noexcept;
+		RawJsonString key() const noexcept;
+		Value& value() & noexcept;
+		Value value() && noexcept;
 
 	  protected:
-		inline Field(RawJsonString key, Value&& Value) noexcept;
-		static inline JsonifierResult<Field> start(ValueIterator& parent_iter) noexcept;
-		static inline JsonifierResult<Field> start(const ValueIterator& parent_iter, RawJsonString key) noexcept;
+		Field(RawJsonString key, Value&& Value) noexcept;
+		static JsonifierResult<Field> start(ValueIterator& parent_iter) noexcept;
+		static JsonifierResult<Field> start(const ValueIterator& parent_iter, RawJsonString key) noexcept;
 		friend struct JsonifierResult<Field>;
 		friend class ObjectIterator;
 	};

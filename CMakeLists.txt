@@ -115,7 +115,7 @@ set_target_properties(
 target_include_directories(
 	"${PROJECT_NAME}" PUBLIC
 	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/>"
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier>"
+	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 
 target_compile_features(

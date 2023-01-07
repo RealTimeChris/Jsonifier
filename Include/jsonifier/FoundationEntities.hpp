@@ -1,7 +1,9 @@
 #pragma once
 
-#include "NumberParsingUtils.hpp"
-#include "JsonifierResult.hpp"
+#include <jsonifier/Simd.hpp>
+#include <jsonifier/NumberParsingUtils.hpp>
+#include <jsonifier/StringParsingUtils.hpp>
+#include <jsonifier/ImplementationJsonifierResultBase.hpp>
 
 namespace Jsonifier {
 
@@ -26,25 +28,25 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll RawJsonString {
 	  public:
-		inline RawJsonString() noexcept = default;
-		inline RawJsonString(const uint8_t* _buf) noexcept;
-		inline const char* raw() const noexcept;
-		inline bool unsafeIsEqual(size_t length, std::string_view target) const noexcept;
-		inline bool unsafeIsEqual(std::string_view target) const noexcept;
-		inline bool unsafeIsEqual(const char* target) const noexcept;
-		inline bool isEqual(std::string_view target) const noexcept;
-		inline bool isEqual(const char* target) const noexcept;
-		static inline bool isFreeFromUnescapedQuote(std::string_view target) noexcept;
-		static inline bool isFreeFromUnescapedQuote(const char* target) noexcept;
+		RawJsonString() noexcept = default;
+		RawJsonString(const uint8_t* stringViewNew) noexcept;
+		const char* raw() const noexcept;
+		bool unsafeIsEqual(size_t length, std::string_view target) const noexcept;
+		bool unsafeIsEqual(std::string_view target) const noexcept;
+		bool unsafeIsEqual(const char* target) const noexcept;
+		bool isEqual(std::string_view target) const noexcept;
+		bool isEqual(const char* target) const noexcept;
 
 	  private:
-		inline void consume() noexcept {
+		void consume() noexcept {
 			this->stringView = nullptr;
 		}
-		inline bool alive() const noexcept {
+
+		bool alive() const noexcept {
 			return this->stringView != nullptr;
 		}
-		inline JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
+
+		JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
 
 		const uint8_t* stringView{};
 		friend class Object;
@@ -56,31 +58,30 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll TokenIterator {
 	  public:
-		inline TokenIterator() noexcept = default;
-		inline TokenIterator(TokenIterator&& other) noexcept = default;
-		inline TokenIterator& operator=(TokenIterator&& other) noexcept = default;
-		inline TokenIterator(const TokenIterator& other) noexcept = default;
-		inline TokenIterator& operator=(const TokenIterator& other) noexcept = default;
+		TokenIterator(TokenIterator&& other) noexcept = default;
+		TokenIterator& operator=(TokenIterator&& other) noexcept = default;
+		TokenIterator(const TokenIterator& other) noexcept = default;
+		TokenIterator& operator=(const TokenIterator& other) noexcept = default;
 
-		inline const uint8_t* returnCurrentAndAdvance() noexcept;
-		inline uint32_t currentOffset() const noexcept;
-		inline const uint8_t* peek(int32_t delta = 0) const noexcept;
-		inline uint32_t peekLength(int32_t delta = 0) const noexcept;
-		inline const uint8_t* peek(uint32_t* position) const noexcept;
-		inline uint32_t peekLength(uint32_t* position) const noexcept;
-		inline uint32_t* position() const noexcept;
-		inline void setPosition(uint32_t* target_position) noexcept;
-		inline bool operator==(const TokenIterator& other) const noexcept;
-		inline bool operator!=(const TokenIterator& other) const noexcept;
-		inline bool operator>(const TokenIterator& other) const noexcept;
-		inline bool operator>=(const TokenIterator& other) const noexcept;
-		inline bool operator<(const TokenIterator& other) const noexcept;
-		inline bool operator<=(const TokenIterator& other) const noexcept;
+		const uint8_t* returnCurrentAndAdvance() noexcept;
+		uint32_t currentOffset() const noexcept;
+		const uint8_t* peek(int32_t delta = 0) const noexcept;
+		uint32_t peekLength(int32_t delta = 0) const noexcept;
+		const uint8_t* peek(uint32_t* position) const noexcept;
+		uint32_t peekLength(uint32_t* position) const noexcept;
+		uint32_t* position() const noexcept;
+		void setPosition(uint32_t* target_position) noexcept;
+		bool operator==(const TokenIterator& other) const noexcept;
+		bool operator!=(const TokenIterator& other) const noexcept;
+		bool operator>(const TokenIterator& other) const noexcept;
+		bool operator>=(const TokenIterator& other) const noexcept;
+		bool operator<(const TokenIterator& other) const noexcept;
+		bool operator<=(const TokenIterator& other) const noexcept;
 
 	  protected:
-		inline TokenIterator(const uint8_t* stringView, uint32_t* position) noexcept;
-		inline uint32_t peekIndex(int32_t delta = 0) const noexcept;
-		inline uint32_t peekIndex(uint32_t* position) const noexcept;
+		TokenIterator(const uint8_t* stringView, uint32_t* position) noexcept;
+		uint32_t peekIndex(int32_t delta = 0) const noexcept;
+		uint32_t peekIndex(uint32_t* position) const noexcept;
 
 		const uint8_t* stringView{};
 		uint32_t* currentPosition{};
@@ -100,48 +101,49 @@ namespace Jsonifier {
 		uint32_t* rootStructural{};
 
 	  public:
-		inline JsonIterator() noexcept = default;
-		inline JsonIterator(JsonIterator&& other) noexcept;
-		inline JsonIterator& operator=(JsonIterator&& other) noexcept;
-		inline ErrorCode skipChild(size_t parentDepth) noexcept;
-		inline bool atRoot() const noexcept;
-		inline uint32_t* rootPosition() const noexcept;
-		inline bool isSingleToken() const noexcept;
-		inline void assertAtDocumentDepth() const noexcept;
-		inline void assertAtRoot() const noexcept;
-		inline bool atEnd() const noexcept;
-		inline bool isAlive() const noexcept;
-		inline void abandon() noexcept;
-		inline const uint8_t* returnCurrentAndAdvance() noexcept;
-		inline const uint8_t* peek(int32_t delta = 0) const noexcept;
-		inline uint32_t peekLength(int32_t delta = 0) const noexcept;
-		inline const uint8_t* unsafePointer() const noexcept;
-		inline const uint8_t* peek(uint32_t* position) const noexcept;
-		inline uint32_t peekLength(uint32_t* position) const noexcept;
-		inline const uint8_t* peekLast() const noexcept;
-		inline void ascendTo(size_t parentDepth) noexcept;
-		inline void descendTo(size_t childDepth) noexcept;
-		inline void descendTo(size_t childDepth, int32_t delta) noexcept;
-		inline size_t depth() const noexcept;
-		inline uint8_t*& stringBufLoc() noexcept;
-		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
-		inline ErrorCode optionalError(ErrorCode error, const char* message) noexcept;
+		JsonIterator(JsonIterator&& other) noexcept;
+		JsonIterator& operator=(JsonIterator&& other) noexcept;
+		ErrorCode skipChild(size_t parentDepth) noexcept;
+		bool atRoot() const noexcept;
+		uint32_t* rootPosition() const noexcept;
+		bool isSingleToken() const noexcept;
+		void assertAtDocumentDepth() const noexcept;
+		void assertAtRoot() const noexcept;
+		bool atEnd() const noexcept;
+		bool isAlive() const noexcept;
+		void abandon() noexcept;
+		const uint8_t* returnCurrentAndAdvance() noexcept;
+		const uint8_t* peek(int32_t delta = 0) const noexcept;
+		uint32_t peekLength(int32_t delta = 0) const noexcept;
+		const uint8_t* unsafePointer() const noexcept;
+		const uint8_t* peek(uint32_t* position) const noexcept;
+		uint32_t peekLength(uint32_t* position) const noexcept;
+		inline uint32_t* startPosition(size_t depth) const noexcept;
+		inline void setStartPosition(size_t depth, uint32_t* position) noexcept;
+		const uint8_t* peekLast() const noexcept;
+		void ascendTo(size_t parentDepth) noexcept;
+		void descendTo(size_t childDepth) noexcept;
+		void descendTo(size_t childDepth, int32_t delta) noexcept;
+		size_t depth() const noexcept;
+		uint8_t*& stringBufLoc() noexcept;
+		ErrorCode reportError(ErrorCode error, const char* message) noexcept;
+		ErrorCode optionalError(ErrorCode error, const char* message) noexcept;
 
-		template<int N> inline bool copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept;
+		template<int N> bool copyToBuffer(const uint8_t* json, uint32_t maxLength, uint8_t (&tmpbuf)[N]) noexcept;
 
-		inline uint32_t* position() const noexcept;
-		inline JsonifierResult<std::string_view> unescape(RawJsonString in) noexcept;
-		inline void reenterChild(uint32_t* position, size_t childDepth) noexcept;
-		inline std::string toString() const noexcept;
-		inline JsonifierResult<const char*> currentLocation() noexcept;
-		inline void rewind() noexcept;
-		inline bool balanced() const noexcept;
+		uint32_t* position() const noexcept;
+		JsonifierResult<std::string_view> unescape(RawJsonString in) noexcept;
+		void reenterChild(uint32_t* position, size_t childDepth) noexcept;
+		std::string toString() const noexcept;
+		JsonifierResult<const char*> currentLocation() noexcept;
+		void rewind() noexcept;
+		bool balanced() const noexcept;
 
 	  protected:
-		inline JsonIterator(Parser* parser) noexcept;
-		inline uint32_t* lastPosition() const noexcept;
-		inline uint32_t* endPosition() const noexcept;
-		inline uint32_t* end() const noexcept;
+		JsonIterator(Parser* parser) noexcept;
+		uint32_t* lastPosition() const noexcept;
+		uint32_t* endPosition() const noexcept;
+		uint32_t* end() const noexcept;
 
 		friend class Document;
 		friend class document_stream;
@@ -155,37 +157,47 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<RawJsonString> : public ImplementationJsonifierResultBase<RawJsonString> {
 	  public:
-		JsonifierResult(RawJsonString&& value) noexcept;
-		JsonifierResult(ErrorCode error) noexcept;
-		JsonifierResult() noexcept = default;
-		~JsonifierResult() noexcept = default;
+		inline JsonifierResult(RawJsonString&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
+		inline JsonifierResult() noexcept = default;
+		inline ~JsonifierResult() noexcept = default;
 
-		JsonifierResult<const char*> raw() const noexcept;
-		JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
+		inline JsonifierResult<const char*> raw() const noexcept;
+		inline JsonifierResult<std::string_view> unescape(JsonIterator& iteratorNew) const noexcept;
 	};
 
 	template<> struct JsonifierResult<TokenIterator> : public ImplementationJsonifierResultBase<TokenIterator> {
 	  public:
-		inline JsonifierResult(TokenIterator&& value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult(TokenIterator&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
 		inline JsonifierResult() noexcept = default;
-		inline ~JsonifierResult() noexcept = default;///< @private
+		inline ~JsonifierResult() noexcept = default;
 	};
 
 	template<> struct JsonifierResult<JsonIterator> : public ImplementationJsonifierResultBase<JsonIterator> {
 	  public:
-		inline JsonifierResult(JsonIterator&& value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult(JsonIterator&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
 
 		inline JsonifierResult() noexcept = default;
 	};
 
 	template<> struct JsonifierResult<JsonType> : public ImplementationJsonifierResultBase<JsonType> {
 	  public:
-		inline JsonifierResult(JsonType&& value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult(JsonType&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
 		inline JsonifierResult() noexcept = default;
-		inline ~JsonifierResult() noexcept = default;///< @private
+		inline ~JsonifierResult() noexcept = default;
 	};
+
+	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
+		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
+		SimdBase256 v(src);
+		v.store(dst);
+		return {
+			static_cast<uint32_t>((v == '\\').toBitMask()),
+			static_cast<uint32_t>((v == '"').toBitMask()),
+		};
+	}
 
 }

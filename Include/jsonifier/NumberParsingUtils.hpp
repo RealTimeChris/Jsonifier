@@ -1,14 +1,10 @@
 #pragma once
 
-
-#include "StringParsingUtils.hpp"
-#include "JsonifierResult.hpp"
+#include <jsonifier/Base.hpp>
 
 namespace Jsonifier {
 
 	template<typename T> class JsonifierResult;
-
-
 
 	class Jsonifier_Dll JsonifierError : public std::runtime_error {
 	  public:
@@ -183,7 +179,7 @@ namespace Jsonifier {
 			uint64_t remainder = n - (10 * quotient);
 			if (writeIndex < maxDigits) {
 				h.digits[writeIndex] = uint8_t(remainder);
-			} else if (remainder > 0) {
+	} else if (remainder > 0) {
 				h.truncated = true;
 			}
 			n = quotient;
@@ -195,7 +191,7 @@ namespace Jsonifier {
 			uint64_t remainder = n - (10 * quotient);
 			if (writeIndex < maxDigits) {
 				h.digits[writeIndex] = uint8_t(remainder);
-			} else if (remainder > 0) {
+	} else if (remainder > 0) {
 				h.truncated = true;
 			}
 			n = quotient;
@@ -248,7 +244,7 @@ namespace Jsonifier {
 		while (isInteger(*p)) {
 			if (answer.numDigits < maxDigits) {
 				answer.digits[answer.numDigits] = uint8_t(*p - '0');
-			}
+	}
 			answer.numDigits++;
 			++p;
 		}
@@ -263,12 +259,12 @@ namespace Jsonifier {
 			while (isInteger(*p)) {
 				if (answer.numDigits < maxDigits) {
 					answer.digits[answer.numDigits] = uint8_t(*p - '0');
-				}
+	}
 				answer.numDigits++;
 				++p;
 			}
 			answer.decimalPoint = int32_t(firstAfterPeriod - p);
-		}
+	}
 		if (answer.numDigits > 0) {
 			const uint8_t* preverse = p - 1;
 			int32_t trailingZeros = 0;
@@ -280,7 +276,7 @@ namespace Jsonifier {
 			}
 			answer.decimalPoint += int32_t(answer.numDigits);
 			answer.numDigits -= uint32_t(trailingZeros);
-		}
+	}
 		if (answer.numDigits > maxDigits) {
 			answer.numDigits = maxDigits;
 			answer.truncated = true;
@@ -303,7 +299,7 @@ namespace Jsonifier {
 				++p;
 			}
 			answer.decimalPoint += (negExp ? -expNumber : expNumber);
-		}
+	}
 		return answer;
 	}
 
@@ -317,13 +313,13 @@ namespace Jsonifier {
 		uint64_t n = 0;
 		for (uint32_t i = 0; i < dp; i++) {
 			n = (10 * n) + ((i < h.numDigits) ? h.digits[i] : 0);
-		}
+	}
 		bool roundUp = false;
 		if (dp < h.numDigits) {
 			roundUp = h.digits[dp] >= 5;
 			if ((h.digits[dp] == 5) && (dp + 1 == h.numDigits)) {
 				roundUp = h.truncated || ((dp > 0) && (1 & h.digits[dp - 1]));
-			}
+	}
 		}
 		if (roundUp) {
 			n++;
@@ -366,7 +362,7 @@ namespace Jsonifier {
 				return answer;
 			}
 			exp2 += int32_t(shift);
-		}
+	}
 		while (d.decimalPoint <= 0) {
 			uint32_t shift;
 			if (d.decimalPoint == 0) {
@@ -385,7 +381,7 @@ namespace Jsonifier {
 				return answer;
 			}
 			exp2 -= int32_t(shift);
-		}
+	}
 		exp2--;
 		const int32_t minimumExponentNew = minimumExponent();
 		while ((minimumExponentNew + 1) > exp2) {
@@ -395,7 +391,7 @@ namespace Jsonifier {
 			}
 			decimalRightShift(d, n);
 			exp2 += int32_t(n);
-		}
+	}
 		if ((exp2 - minimumExponentNew) >= infinitePower()) {
 			answer.power2 = infinitePower();
 			answer.mantissa = 0;
@@ -642,7 +638,7 @@ namespace Jsonifier {
 	};
 
 	inline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
-		Value128 answer;
+		Value128 answer{};
 		answer.low = _umul128(value1, value2, &answer.high);
 		return answer;
 	}
@@ -679,18 +675,18 @@ namespace Jsonifier {
 	inline JsonifierResult<int64_t> parseInteger(const uint8_t* src) noexcept {
 		bool negative = (*src == '-');
 		const uint8_t* p = src + uint8_t(negative);
-		const uint8_t* const start_digits = p;
+		const uint8_t* const startDigits = p;
 		uint64_t i = 0;
 		while (parseDigit(*p, i)) {
 			p++;
 		}
 
-		size_t digit_count = size_t(p - start_digits);
-		size_t longest_digit_count = 19;
-		if ((digit_count == 0) || (digit_count > longest_digit_count)) {
+		size_t digitCount = size_t(p - startDigits);
+		size_t longestDigitCount = 19;
+		if ((digitCount == 0) || (digitCount > longestDigitCount)) {
 			return INCORRECT_TYPE;
 		}
-		if (('0' == *start_digits) && (digit_count > 1)) {
+		if (('0' == *startDigits) && (digitCount > 1)) {
 			return NUMBER_ERROR;
 		}
 		if (integerStringFinisher[*p] != SUCCESS) {
@@ -704,24 +700,24 @@ namespace Jsonifier {
 
 	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
 		const uint8_t* p = src;
-		const uint8_t* const start_digits = p;
+		const uint8_t* const startDigits = p;
 		uint64_t i = 0;
 		while (parseDigit(*p, i)) {
 			p++;
 		}
 
-		size_t digit_count = size_t(p - start_digits);
-		if ((digit_count == 0) || (digit_count > 20)) {
+		size_t digitCount = size_t(p - startDigits);
+		if ((digitCount == 0) || (digitCount > 20)) {
 			return INCORRECT_TYPE;
 		}
-		if (('0' == *start_digits) && (digit_count > 1)) {
+		if (('0' == *startDigits) && (digitCount > 1)) {
 			return NUMBER_ERROR;
 		}
 		if (integerStringFinisher[*p] != SUCCESS) {
 			return NUMBER_ERROR;
 		}
 
-		if (digit_count == 20) {
+		if (digitCount == 20) {
 			if (src[0] != uint8_t('1') || i <= uint64_t(INT64_MAX)) {
 				return INCORRECT_TYPE;
 			}
@@ -762,7 +758,7 @@ namespace Jsonifier {
 			d = negative ? -0.0 : 0.0;
 			return true;
 		}
-		int64_t exponent = (((152170 + 65536) * power) >> 16) + 1024 + 63;
+		int64_t exponent = (((152170ull + 65536ull) * power) >> 16ull) + 1024ull + 63ull;
 		int lz = _lzcnt_u32(i);
 		i <<= lz;
 		const uint32_t index = 2 * uint32_t(power - smallestPower);
@@ -821,21 +817,21 @@ namespace Jsonifier {
 		uint64_t i = 0;
 		const uint8_t* p = src;
 		p += parseDigit(*p, i);
-		bool leading_zero = (i == 0);
+		bool leadingZero = (i == 0);
 		while (parseDigit(*p, i)) {
 			p++;
 		}
 		if (p == src) {
 			return INCORRECT_TYPE;
 		}
-		if ((leading_zero && p != src + 1)) {
+		if ((leadingZero && p != src + 1)) {
 			return NUMBER_ERROR;
 		}
 		int64_t exponent = 0;
 		bool overflow;
 		if (*p == '.') {
 			p++;
-			const uint8_t* start_decimal_digits = p;
+			const uint8_t* startDecimalDigits = p;
 			if (!parseDigit(*p, i)) {
 				return NUMBER_ERROR;
 			}
@@ -843,33 +839,33 @@ namespace Jsonifier {
 			while (parseDigit(*p, i)) {
 				p++;
 			}
-			exponent = -(p - start_decimal_digits);
+			exponent = -(p - startDecimalDigits);
 			overflow = p - src - 1 > 19;
-			if (overflow && leading_zero) {
-				const uint8_t* start_digits = src + 2;
-				while (*start_digits == '0') {
-					start_digits++;
+			if (overflow && leadingZero) {
+				const uint8_t* startDigits = src + 2;
+				while (*startDigits == '0') {
+					startDigits++;
 				}
-				overflow = start_digits - src > 19;
+				overflow = startDigits - src > 19;
 			}
 		} else {
 			overflow = p - src > 19;
 		}
 		if (*p == 'e' || *p == 'E') {
 			p++;
-			bool exp_neg = *p == '-';
-			p += exp_neg || *p == '+';
+			bool expNeg = *p == '-';
+			p += expNeg || *p == '+';
 
 			uint64_t exp = 0;
-			const uint8_t* start_exp_digits = p;
+			const uint8_t* startExpDigits = p;
 			while (parseDigit(*p, exp)) {
 				p++;
 			}
-			if (p - start_exp_digits == 0 || p - start_exp_digits > 19) {
+			if (p - startExpDigits == 0 || p - startExpDigits > 19) {
 				return NUMBER_ERROR;
 			}
 
-			exponent += exp_neg ? 0 - exp : exp;
+			exponent += expNeg ? 0 - exp : exp;
 		}
 
 		if (isNotStructuralOrWhitespace(*p)) {

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <immintrin.h>
-#include <intrin.h>
+#include "Base.hpp"
 
 namespace Jsonifier {
 
@@ -39,19 +38,24 @@ namespace Jsonifier {
 			return false;
 		}
 
-		inline SimdBase256(const bool value) {
+		inline SimdBase256& operator=(const bool value) {
 			if (value) {
-				this->value = _mm256_set1_epi8('\xff');
+				this->value = _mm256_insert_epi64(*this, 0x01, 0);
 			} else {
 				this->value = _mm256_set1_epi8('\0');
 			}
+			return *this;
 		}
 
-		int32_t toBitMask() {
+		inline SimdBase256(const bool value) {
+			*this = value;
+		}
+
+		inline int32_t toBitMask() {
 			return _mm256_movemask_epi8(*this);
 		}
 
-		void fromUint64(uint64_t data) {
+		inline void fromUint64(uint64_t data) {
 			this->value = _mm256_set1_epi64x(static_cast<int64_t>(data));
 		}
 
@@ -287,7 +291,7 @@ namespace Jsonifier {
 			return returnValueReal;
 		}
 
-		SimdBase256 copyLastBitToFirst(SimdBase256 dest) {
+		inline SimdBase256 copyLastBitToFirst(SimdBase256 dest) {
 			SimdBase256 zeroesMask{};
 			SimdBase256 onesMask{ '\xff' };
 			onesMask = onesMask.shr<63>();
@@ -344,7 +348,7 @@ namespace Jsonifier {
 			return returnValue;
 		}
 
-		SimdBase256& shiftLastBitToFirst() {
+		inline SimdBase256& shiftLastBitToFirst() {
 			*this = _mm256_permute4x64_epi64(*this, 0b10010011);
 			*this = _mm256_srli_epi64(*this, 63);
 			return *this;
@@ -396,7 +400,7 @@ namespace Jsonifier {
 
 	template<size_t StepSize> struct StringBlockReader {
 	  public:
-		inline StringBlockReader(const uint8_t* _buf, size_t _len);
+		inline StringBlockReader(const uint8_t* stringViewNew, size_t _len);
 		inline size_t getRemainder(uint8_t* dst) const;
 		inline const uint8_t* fullBlock() const;
 		inline bool hasFullBlock() const;
@@ -411,8 +415,8 @@ namespace Jsonifier {
 	};
 
 	template<size_t StepSize>
-	inline StringBlockReader<StepSize>::StringBlockReader(const uint8_t* _buf, size_t _len)
-		: stringBuffer{ _buf }, length{ _len }, lengthMinusStep{ length < StepSize ? 0 : length - StepSize }, index{ 0 } {
+	inline StringBlockReader<StepSize>::StringBlockReader(const uint8_t* stringViewNew, size_t _len)
+		: stringBuffer{ stringViewNew }, length{ _len }, lengthMinusStep{ length < StepSize ? 0 : length - StepSize }, index{ 0 } {
 	}
 
 	template<size_t StepSize> inline size_t StringBlockReader<StepSize>::blockIndex() {
@@ -511,14 +515,14 @@ namespace Jsonifier {
 
 		inline void collectEscapedCharacters() {
 			this->backslash = this->collectBackslashes();
-			backslash &= SimdBase256{ bool{ !this->prevEscaped } };
-			SimdBase256 followsEscape = this->backslash.shl<1>() | SimdBase256{ this->prevEscaped };
+			this->backslash = this->backslash.bitAndNot(prevEscaped);
+			SimdBase256 followsEscape = this->backslash.shl<1>() | this->prevEscaped;
 			SimdBase256 evenBits{ _mm256_set1_epi8(0b01010101) };
 			SimdBase256 oddSequenceStarts = this->backslash.bitAndNot(evenBits.bitAndNot(followsEscape));
 			SimdBase256 sequencesStartingOnEvenBits{};
-			this->prevEscaped = oddSequenceStarts.collectCarries(this->backslash, sequencesStartingOnEvenBits);
-			SimdBase256 invertMask = sequencesStartingOnEvenBits.shl<1>();
-			this->escaped = (evenBits ^ invertMask) & followsEscape;
+			this->prevEscaped = this->backslash.collectCarries(oddSequenceStarts, sequencesStartingOnEvenBits);
+			SimdBase256 invert_mask = sequencesStartingOnEvenBits.shl<1>();
+			this->escaped = (evenBits ^ invert_mask) & followsEscape;
 		}
 
 		void collectJsonCharacters() {
@@ -557,8 +561,10 @@ namespace Jsonifier {
 		}
 
 		void reset() {
-			this->prevInScalar = SimdBase256{};
-			this->prevEscaped = false;
+			this->prevInScalar = SimdBase256{ '\x00' };
+			this->prevEscaped = SimdBase256{ '\x00' };
+			this->backslash = SimdBase256{ '\x00' };
+			this->currentIndexIntoString = 0;
 			this->prevInString = 0;
 		}
 
@@ -578,6 +584,7 @@ namespace Jsonifier {
 		size_t currentIndexIntoString{};
 		SimdBase256 prevInScalar{};
 		SimdBase256 structurals{};
+		SimdBase256 prevEscaped{};
 		SimdBase256 whitespace{};
 		uint64_t prevInString{};
 		SimdBase256 values[8]{};
@@ -585,17 +592,6 @@ namespace Jsonifier {
 		SimdBase256 inString{};
 		SimdBase256 escaped{};
 		SimdBase256 quote{};
-		bool prevEscaped{};
 		SimdBase256 op{};
 	};
-
-	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
-		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
-		SimdBase256 v(src);
-		v.store(dst);
-		return {
-			static_cast<uint32_t>((v == '\\').toBitMask()),
-			static_cast<uint32_t>((v == '"').toBitMask()),
-		};
-	}
 }

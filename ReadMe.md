@@ -56,7 +56,7 @@ for (uint32_t x = 0; x < 50; ++x) {
 	}
 
 	totalTime += stopWatch.totalTimePassed();
-}
+	}
 std::cout << "The time it took (In milliseconds, on average): " << totalTime / 50 << ", with a total number of bytes serialized: " << size << std::endl;
 		
 vector.clear();
@@ -73,7 +73,7 @@ for (uint32_t x = 0; x < 50; ++x) {
 		size += vector.back().size();
 	}
 	totalTime += stopWatch.totalTimePassed();
-}
+	}
 std::cout << "The time it took (In milliseconds, on average): " << totalTime / 50 << ", with a total number of bytes serialized: " << size << std::endl;
 
 vector.clear();
@@ -92,7 +92,7 @@ for (uint32_t x = 0; x < 50; ++x) {
 		size += vector.back().size();
 	}
 	totalTime += stopWatch.totalTimePassed();
-}
+	}
 std::cout << "The time it took (In milliseconds, on average): " << totalTime / 50 << ", with a total number of bytes serialized: " << size << std::endl;
 ```
 ### Windows 11 Results:
@@ -117,7 +117,7 @@ struct UpdatePresenceData {
 	int64_t since{ 0 };
 	bool afk{ false };
 	operator Jsonifier();
-};
+	};
 
 UpdatePresenceData::operator Jsonifier() {
 	Jsonifier serializer{};
@@ -155,7 +155,7 @@ WebSocketIdentifyData::operator std::string() {
 	serializer["op"] = 2;
 	serializer.refreshString(JsonifierSerializeType::Json);
 	return serializer.operator std::string&&();
-}
+	}
 
 ```
 - To generate the string, call the `Jsonifier::refreshString()` method with an argument of type `JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the Jsonifier class to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier` class, while the `std::string&&` operator moves it out of the `Jsonifier` class.)**
