@@ -54,6 +54,7 @@ namespace Jsonifier {
 		inline operator RawJsonString() noexcept(false);
 		inline operator bool() noexcept(false);
 		inline operator Value() noexcept(false);
+
 	  protected:
 		inline JsonifierResult<std::string_view> rawJsonToken() noexcept;
 		inline void rewind() noexcept;

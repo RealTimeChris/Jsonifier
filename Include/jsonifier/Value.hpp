@@ -279,9 +279,7 @@ namespace Jsonifier {
 		inline operator bool() noexcept(false);
 	};
 
-	template<>
-	struct JsonifierResult<ValueIterator>
-		: public ImplementationJsonifierResultBase<ValueIterator> {
+	template<> struct JsonifierResult<ValueIterator> : public ImplementationJsonifierResultBase<ValueIterator> {
 	  public:
 		inline JsonifierResult(ValueIterator&& value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

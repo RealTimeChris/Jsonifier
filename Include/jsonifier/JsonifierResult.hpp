@@ -45,7 +45,7 @@ namespace Jsonifier {
 
 	template<typename T> struct ImplementationJsonifierResultBase {
 		inline ImplementationJsonifierResultBase& operator=(const ImplementationJsonifierResultBase&) = delete;
-		inline ImplementationJsonifierResultBase (const ImplementationJsonifierResultBase&) = delete;
+		inline ImplementationJsonifierResultBase(const ImplementationJsonifierResultBase&) = delete;
 		inline ImplementationJsonifierResultBase& operator=(ImplementationJsonifierResultBase&&) = default;
 		inline ImplementationJsonifierResultBase(ImplementationJsonifierResultBase&&) = default;
 		inline ImplementationJsonifierResultBase() noexcept = default;
