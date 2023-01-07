@@ -1,13 +1,21 @@
 # Jsonifier
-[![Codacy Badge](https://img.shields.io/codacy/grade/cfeb498652bb4f269a9d7287c2acaed3?color=lightblue&label=Code%20Quality&style=plastic)](https://www.codacy.com/gh/RealTimeChris/Jsonifier/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=RealTimeChris/Jsonifier&amp;utm_campaign=Badge_Grade)
 [![Build Jsonifier](https://img.shields.io/github/workflow/status/realtimechris/Jsonifier/Release?label=Release&style=plastic&color=purple)](https://github.com/RealTimeChris/Jsonifier/actions/workflows/Release.yml)
 ![Commit Activity](https://img.shields.io/github/commit-activity/m/realtimechris/Jsonifier?color=green&label=Commits&style=plastic)
 ![Lines of code](https://img.shields.io/tokei/lines/github/realtimechris/Jsonifier?&style=plastic&label=Lines%20of%20Code)
 
 
-## A class Jsonifier_Dll for serializing and parsing objects into/from JSON or ETF strings - very rapidly.
-## Benchmark
-### Serializing the following data into a json string:
+## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
+## Benchmark - Parsing the following data into a structure:
+```cpp
+A data structure named TEST_VALUE_11, containing a field called "d", containing an array called "TEST_VALUES", with the following element: {"TEST_VALUE_00":0.003334,"TEST_VALUE_01":true,"TEST_VALUE_02":"TESTING_VALUE112323","TEST_VALUE_03":4325454,"TEST_VALUE_04":0.003334,"TEST_VALUE_05":true,"TEST_VALUE_06":"TESTING_VALUE","TEST_VALUE_07":4325454} repeated 150 times.
+```
+### Windows 11 Results:
+----
+### A total of 1 time, for a total number of parsed bytes of 31841:
+- Jsonifier = 267800 nanoseconds average per iteration.   
+- simdjson = 1184000 nanoseconds average per iteration.   
+
+## Benchmark - Serializing the following data into a json string:
 ```cpp
 {"d":{"intents":131071,"large_threshold":250,"presence":{"afk":false,"since":0,"status":""},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"token":""},"op":2}
 ```
@@ -55,14 +63,14 @@ vector.clear();
 totalTime = 0;
 size = 0;
 WebSocketIdentifyDataThree dataTwo{};
-rapidjson::StringBuffer this->stringBuffer = dataTwo;
+rapidjson::StringBuffer stringBuffer = dataTwo;
 stopWatch.resetTimer();
 for (uint32_t x = 0; x < 50; ++x) {			
 	stopWatch.resetTimer();
 	for (uint32_t x = 0; x < 1024 * 128 ; ++x) {
 		dataTwo.intents = x;
 		stringBuffer = dataTwo;
-		std::string string{ this->stringBuffer.GetString() };
+		std::string string{ stringBuffer.GetString() };
 		vector.push_back(string);
 		size += vector.back().size();
 	}
@@ -133,7 +141,7 @@ WebSocketIdentifyData::operator std::string() {
 }
 
 ```
-- To generate the string, call the `Jsonifier::refreshString()` method with an argument of type `JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the Jsonifier class Jsonifier_Dll to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier` class Jsonifier_Dll, while the `std::string&&` operator moves it out of the `Jsonifier` class Jsonifier_Dll.)**
+- To generate the string, call the `Jsonifier::refreshString()` method with an argument of type `JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the Jsonifier class to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier` class, while the `std::string&&` operator moves it out of the `Jsonifier` class.)**
 ```cpp
 serializer.refreshString(JsonifierSerializeType::Json);
 return serializer.operator std::string&&();
@@ -148,7 +156,7 @@ return serializer.operator std::string&&();
 activitiesl♥t♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmjm
 propertiest♥mbrowsermDiscordCoreAPIm♠devicemDiscordCoreAPIm☻osmWindowsm♣shardl☻aa☺jm♠statusmm♣tokenmm☻opa☻
 ```
-- Also note that the `Jsonifier` class Jsonifier_Dll can accept arguments of type `Jsonifier` to be concatenated into the string - as the `UpdatePresenceData` class Jsonifier_Dll above shows.
+- Also note that the `Jsonifier` class can accept arguments of type `Jsonifier` to be concatenated into the string - as the `UpdatePresenceData` class above shows.
 ## Installation (CMake)
 - Requirements:
 	- CMake 3.20 or later.
