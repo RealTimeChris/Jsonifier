@@ -39,7 +39,8 @@ namespace Jsonifier {
 		No_Such_Field = 15,
 		Number_Error = 16,
 		Trailing_Content = 17,
-		Out_Of_Order_Iteration = 18
+		Out_Of_Order_Iteration = 18,
+		Scalar_Document_As_Value = 19
 	};
 
 	template<typename T> struct ImplementationJsonifierResultBase {

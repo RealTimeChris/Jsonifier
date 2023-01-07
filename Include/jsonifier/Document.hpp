@@ -9,6 +9,7 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll Document {
 	  public:
+		inline Document() noexcept = default;
 		inline Document(const Document& other) noexcept = delete;
 		inline Document(Document&& other) noexcept = default;
 		inline Document& operator=(const Document& other) noexcept = delete;
@@ -105,6 +106,16 @@ namespace Jsonifier {
 
 		template<typename T> inline ErrorCode get(T& out) & noexcept;
 		template<typename T> inline ErrorCode get(T& out) && noexcept;
+
+		inline operator Array() & noexcept(false);
+		inline operator Object() & noexcept(false);
+		inline operator uint64_t() noexcept(false);
+		inline operator int64_t() noexcept(false);
+		inline operator double() noexcept(false);
+		inline operator std::string_view() noexcept(false);
+		inline operator RawJsonString() noexcept(false);
+		inline operator bool() noexcept(false);
+		inline operator Value() noexcept(false);
 
 		inline JsonifierResult<size_t> countElements() & noexcept;
 		inline JsonifierResult<size_t> countFields() & noexcept;

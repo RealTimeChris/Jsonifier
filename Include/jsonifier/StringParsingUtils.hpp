@@ -66,15 +66,12 @@ namespace Jsonifier {
 	};
 
 	inline uint32_t stringToUint32(const char* str) {
-		uint32_t val;
-		std::memcpy(&val, str, sizeof(uint32_t));
+		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
 		return val;
 	}
 
 	inline uint32_t str4ncmp(const uint8_t* src, const char* atom) {
-		uint32_t srcval;
-		static_assert(sizeof(uint32_t) <= 64, "SIMDJSON_PADDING must be larger than 4 bytes");
-		std::memcpy(&srcval, src, sizeof(uint32_t));
+		uint32_t srcval{ *reinterpret_cast<const uint32_t*>(src) };
 		return srcval ^ stringToUint32(atom);
 	}
 

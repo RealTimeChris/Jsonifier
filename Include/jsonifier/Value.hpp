@@ -78,13 +78,14 @@ namespace Jsonifier {
 		inline bool atFirstField() const noexcept;
 		inline void abandon() noexcept;
 		inline ValueIterator childValue() const noexcept;
-		inline int32_t depth() const noexcept;
+		inline size_t depth() const noexcept;
 		inline JsonifierResult<JsonType> type() const noexcept;
 		inline JsonifierResult<bool> startObject() noexcept;
 		inline JsonifierResult<bool> startRootObject() noexcept;
 		inline JsonifierResult<bool> startedObject() noexcept;
 		inline JsonifierResult<bool> startedRootObject() noexcept;
 		inline JsonifierResult<bool> hasNextField() noexcept;
+		inline JsonifierResult<bool> starRootArray() noexcept;
 		inline JsonifierResult<RawJsonString> fieldKey() noexcept;
 		inline ErrorCode fieldValue() noexcept;
 		inline ErrorCode findField(const std::string_view key) noexcept;
@@ -276,5 +277,14 @@ namespace Jsonifier {
 		inline operator std::string_view() noexcept(false);
 		inline operator RawJsonString() noexcept(false);
 		inline operator bool() noexcept(false);
+	};
+
+	template<>
+	struct JsonifierResult<ValueIterator>
+		: public ImplementationJsonifierResultBase<ValueIterator> {
+	  public:
+		inline JsonifierResult(ValueIterator&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
+		inline JsonifierResult() noexcept = default;
 	};
 }
