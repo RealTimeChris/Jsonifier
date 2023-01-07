@@ -7,6 +7,7 @@
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
 ## Benchmarks:
 ### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data:
+----
 #### Windows 11 Results:
 ----
 #### A total of 5 times, for a total number of parsed bytes of 2251051, per iteration:
