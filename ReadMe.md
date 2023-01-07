@@ -5,10 +5,11 @@
 
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
-## Benchmark - Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data:
-### Windows 11 Results:
+## Benchmarks:
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data:
+#### Windows 11 Results:
 ----
-### A total of 5 times, for a total number of parsed bytes of 2251051, per iteration:
+#### A total of 5 times, for a total number of parsed bytes of 2251051, per iteration:
 - Jsonifier = 778900 nanoseconds average per iteration.   
 - simdjson = 1045980 nanoseconds average per iteration.   
 
