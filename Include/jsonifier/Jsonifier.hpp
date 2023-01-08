@@ -1,74 +1,23 @@
 #pragma once
 
-
 #include <jsonifier/Base.hpp>
-#include <jsonifier/ImplementationJsonifierResultBase.hpp>
+#include <jsonifier/Parser.hpp>
 
-#include <jsonifier/FoundationEntities.hpp>
-#include <jsonifier/Simd.hpp>
-#include <jsonifier/Object.hpp>
-#include <jsonifier/Value.hpp>
+#include <jsonifier/JsonType.hpp>
+#include <jsonifier/RawJsonString.hpp>
+#include <jsonifier/TokenIterator.hpp>
+#include <jsonifier/JsonIterator.hpp>
+#include <jsonifier/ValueIterator.hpp>
+#include <jsonifier/ArrayIterator.hpp>
+#include <jsonifier/ObjectIterator.hpp>
 #include <jsonifier/Array.hpp>
 #include <jsonifier/Document.hpp>
+#include <jsonifier/Value.hpp>
 #include <jsonifier/Field.hpp>
-
-#include <jsonifier/ImplementationJsonifierResultBase_Impl.hpp>
-#include <jsonifier/Simd.hpp>
-#include <jsonifier/Object_Impl.hpp>
-#include <jsonifier/Array_Impl.hpp>
-#include <jsonifier/Document_Impl.hpp>
-#include <jsonifier/FoundationEntities_Impl.hpp>
-#include <jsonifier/Field_Impl.hpp>
-#include <jsonifier/Value_Impl.hpp>
+#include <jsonifier/Object.hpp>
+#include <jsonifier/Parser.hpp>
 
 namespace Jsonifier {
-
-	template<typename OTy> class ObjectBuffer {
-	  public:
-		using AllocatorType = std::allocator<OTy>;
-		using AllocatorTraits = std::allocator_traits<AllocatorType>;
-
-		inline ObjectBuffer& operator=(ObjectBuffer&&) = delete;
-		inline ObjectBuffer(ObjectBuffer&&) = delete;
-
-		inline ObjectBuffer& operator=(const ObjectBuffer&) = delete;
-		inline ObjectBuffer(const ObjectBuffer&) = delete;
-
-		inline ObjectBuffer() noexcept = default;
-
-		inline OTy& operator[](size_t index) noexcept {
-			return this->objects[index];
-		}
-
-		inline operator OTy*() noexcept {
-			return this->objects;
-		}
-
-		inline void reset(size_t newSize) noexcept {
-			this->deallocate();
-			if (newSize != 0) {
-				AllocatorType allocator{};
-				this->objects = AllocatorTraits::allocate(allocator, newSize);
-				this->currentSize = newSize;
-			}
-		}
-
-		inline ~ObjectBuffer() noexcept {
-			this->deallocate();
-		}
-
-	  protected:
-		size_t currentSize{};
-		OTy* objects{};
-
-		inline void deallocate() {
-			if (this->currentSize > 0 && this->objects) {
-				AllocatorType allocator{};
-				AllocatorTraits::deallocate(allocator, this->objects, this->currentSize);
-				this->currentSize = 0;
-			}
-		}
-	};
 
 	template<typename RTy> inline void reverseByteOrder(RTy& net) {
 		if constexpr (std::endian::native == std::endian::little) {
@@ -172,12 +121,12 @@ namespace Jsonifier {
 	};
 
 	template<typename Ty>
-	concept IsEnum = std::is_enum<Ty>::value;
+	concept IsEnum = std::is_enum<Ty>::Value;
 
 	struct Jsonifier_Dll EnumConverter {
 		template<IsEnum EnumType> EnumConverter& operator=(const std::vector<EnumType>& data) {
-			for (auto& value: data) {
-				this->vector.emplace_back(std::move(static_cast<uint64_t>(value)));
+			for (auto& Value: data) {
+				this->vector.emplace_back(std::move(static_cast<uint64_t>(Value)));
 			}
 			return *this;
 		};
@@ -246,8 +195,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>&& data) noexcept {
 			this->setValue(JsonType::Array);
-			for (auto& value: data) {
-				this->jsonValue.array->push_back(std::move(value));
+			for (auto& Value: data) {
+				this->jsonValue.array->push_back(std::move(Value));
 			}
 			return *this;
 		}
@@ -258,8 +207,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>& data) noexcept {
 			this->setValue(JsonType::Array);
-			for (auto& value: data) {
-				this->jsonValue.array->push_back(value);
+			for (auto& Value: data) {
+				this->jsonValue.array->push_back(Value);
 			}
 			return *this;
 		}
@@ -271,8 +220,8 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = std::move(value);
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = std::move(Value);
 			}
 			return *this;
 		}
@@ -284,8 +233,8 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = value;
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = Value;
 			}
 			return *this;
 		}
@@ -296,8 +245,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = std::move(value);
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = std::move(Value);
 			}
 			return *this;
 		}
@@ -308,8 +257,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = value;
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = Value;
 			}
 			return *this;
 		}
@@ -398,11 +347,11 @@ namespace Jsonifier {
 
 		Serializer& operator[](uint64_t index);
 
-		template<typename Ty> const Ty& getValue() const {
+		template<typename Ty> inline const Ty& getValue() const {
 			return Ty{};
 		}
 
-		template<typename Ty> Ty& getValue() {
+		template<typename Ty> inline Ty& getValue() {
 			return Ty{};
 		}
 
@@ -471,17 +420,17 @@ namespace Jsonifier {
 
 		void appendMapHeader(const uint32_t sizeNew);
 
-		void appendUint64(const uint64_t value);
+		void appendUint64(const uint64_t Value);
 
-		void appendUint32(const uint32_t value);
+		void appendUint32(const uint32_t Value);
 
-		void appendUint8(const uint8_t value);
+		void appendUint8(const uint8_t Value);
 
-		void appendInt64(const int64_t value);
+		void appendInt64(const int64_t Value);
 
-		void appendInt32(const int32_t value);
+		void appendInt32(const int32_t Value);
 
-		void appendInt8(const int8_t value);
+		void appendInt8(const int8_t Value);
 
 		void appendBool(bool data);
 
@@ -497,34 +446,6 @@ namespace Jsonifier {
 
 		friend bool operator==(const Serializer& lhs, const Serializer& rhs);
 	};
-
-	template<> inline const Serializer::ObjectType& Serializer::getValue() const {
-		return *this->jsonValue.object;
-	}
-
-	template<> inline const Serializer::ArrayType& Serializer::getValue() const {
-		return *this->jsonValue.array;
-	}
-
-	template<> inline const Serializer::StringType& Serializer::getValue() const {
-		return *this->jsonValue.string;
-	}
-
-	template<> inline const Serializer::FloatType& Serializer::getValue() const {
-		return this->jsonValue.numberDouble;
-	}
-
-	template<> inline const Serializer::UintType& Serializer::getValue() const {
-		return this->jsonValue.numberUint;
-	}
-
-	template<> inline const Serializer::IntType& Serializer::getValue() const {
-		return this->jsonValue.numberInt;
-	}
-
-	template<> inline const Serializer::BoolType& Serializer::getValue() const {
-		return this->jsonValue.boolean;
-	}
 
 	template<> inline Serializer::ObjectType& Serializer::getValue() {
 		return *this->jsonValue.object;
@@ -556,133 +477,4 @@ namespace Jsonifier {
 
 	inline int64_t totalTimePassed{};
 	inline int64_t iterationCount{};
-
-	class Jsonifier_Dll Parser {
-	  public:
-		friend class JsonIterator;
-		Parser& operator=(Parser&&) = default;
-		Parser(Parser&&) = default;
-		Parser& operator=(const Parser&) = delete;
-		Parser(const Parser&) = delete;
-		Parser(const std::string&) noexcept;
-		Parser() noexcept = default;
-
-		Document parseJson(const char* string, size_t stringLength);
-		Document parseJson(const std::string& string);
-		Document parseJson(std::string_view string);
-
-		operator Document() noexcept;
-
-	  protected:
-#if JSONIFIER_DEVELOPMENT_CHECKS
-		ObjectBuffer<uint32_t*> startPositions{};
-#endif
-		ObjectBuffer<uint32_t> structuralIndexes{};
-		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section{};
-		size_t stringLengthRaw{};
-		size_t allocatedSpace{};
-		uint8_t* stringView{};
-		size_t tapeLength{};
-
-		inline uint8_t* getStringView() {
-			return this->stringView;
-		}
-
-		inline uint8_t* getStringBuffer() {
-			return this->stringBuffer;
-		}
-
-		inline uint32_t* getStructuralIndices() {
-			return this->structuralIndexes;
-		}
-
-		inline size_t maxDepth() {
-			return 512;
-		}
-
-		inline size_t& getTapeLength() {
-			return this->tapeLength;
-		}
-
-		inline uint64_t round(int64_t a, int64_t n) {
-			return (((a) + (( n )-1)) & ~(( n )-1));
-		}
-
-		inline ErrorCode allocate() noexcept {
-			if (this->stringLengthRaw == 0) {
-				return ErrorCode::Success;
-			}
-			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
-			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 256));
-			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 256, 256);
-#if JSONIFIER_DEVELOPMENT_CHECKS
-			this->startPositions.reset(512);
-#endif
-			if (!(this->structuralIndexes && this->stringBuffer)) {
-				this->stringBuffer.reset(0);
-				this->structuralIndexes.reset(0);
-#if JSONIFIER_DEVELOPMENT_CHECKS
-				this->startPositions.reset(0);
-#endif
-				return ErrorCode::Mem_Alloc_Error;
-			}
-
-			return ErrorCode::Success;
-		}
-
-		inline void generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
-			if (stringNew) {
-				if (stringLength == 0) {
-					throw JsonifierException{ "Failed to parse as the string size is 0." };
-				}
-				this->stringView = ( uint8_t* )stringNew;
-				this->stringLengthRaw = stringLength;
-				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 256, 256)) {
-					if (this->allocate() != ErrorCode::Success) {
-						throw JsonifierException{ "Failed to allocate properly!" };
-					}
-				}
-				this->tapeLength = 0;
-				this->section.reset();
-				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
-				size_t tapeCurrentIndex{ 0 };
-				while (stringReader.hasFullBlock()) {
-					section.submitDataForProcessing(stringReader.fullBlock());
-					section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
-					stringReader.advance();
-				}
-				uint8_t block[256];
-				stringReader.getRemainder(block);
-				section.submitDataForProcessing(block);
-				section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
-				this->getTapeLength() = tapeCurrentIndex;
-			}
-		}
-	};
-
-	inline std::ostream& operator<<(std::ostream& out, const RawJsonString& str) noexcept {
-		bool in_escape = false;
-		const char* s = str.raw();
-		while (true) {
-			switch (*s) {
-				case '\\':
-					in_escape = !in_escape;
-					break;
-				case '"':
-					if (in_escape) {
-						in_escape = false;
-					} else {
-						return out;
-					}
-					break;
-				default:
-					if (in_escape) {
-						in_escape = false;
-					}
-			}
-			out << *s;
-			s++;
-		}
-	}
 }

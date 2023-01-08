@@ -179,7 +179,7 @@ namespace Jsonifier {
 			uint64_t remainder = n - (10 * quotient);
 			if (writeIndex < maxDigits) {
 				h.digits[writeIndex] = uint8_t(remainder);
-	} else if (remainder > 0) {
+			} else if (remainder > 0) {
 				h.truncated = true;
 			}
 			n = quotient;
@@ -191,7 +191,7 @@ namespace Jsonifier {
 			uint64_t remainder = n - (10 * quotient);
 			if (writeIndex < maxDigits) {
 				h.digits[writeIndex] = uint8_t(remainder);
-	} else if (remainder > 0) {
+			} else if (remainder > 0) {
 				h.truncated = true;
 			}
 			n = quotient;
@@ -244,7 +244,7 @@ namespace Jsonifier {
 		while (isInteger(*p)) {
 			if (answer.numDigits < maxDigits) {
 				answer.digits[answer.numDigits] = uint8_t(*p - '0');
-	}
+			}
 			answer.numDigits++;
 			++p;
 		}
@@ -259,12 +259,12 @@ namespace Jsonifier {
 			while (isInteger(*p)) {
 				if (answer.numDigits < maxDigits) {
 					answer.digits[answer.numDigits] = uint8_t(*p - '0');
-	}
+				}
 				answer.numDigits++;
 				++p;
 			}
 			answer.decimalPoint = int32_t(firstAfterPeriod - p);
-	}
+		}
 		if (answer.numDigits > 0) {
 			const uint8_t* preverse = p - 1;
 			int32_t trailingZeros = 0;
@@ -276,7 +276,7 @@ namespace Jsonifier {
 			}
 			answer.decimalPoint += int32_t(answer.numDigits);
 			answer.numDigits -= uint32_t(trailingZeros);
-	}
+		}
 		if (answer.numDigits > maxDigits) {
 			answer.numDigits = maxDigits;
 			answer.truncated = true;
@@ -299,7 +299,7 @@ namespace Jsonifier {
 				++p;
 			}
 			answer.decimalPoint += (negExp ? -expNumber : expNumber);
-	}
+		}
 		return answer;
 	}
 
@@ -313,13 +313,13 @@ namespace Jsonifier {
 		uint64_t n = 0;
 		for (uint32_t i = 0; i < dp; i++) {
 			n = (10 * n) + ((i < h.numDigits) ? h.digits[i] : 0);
-	}
+		}
 		bool roundUp = false;
 		if (dp < h.numDigits) {
 			roundUp = h.digits[dp] >= 5;
 			if ((h.digits[dp] == 5) && (dp + 1 == h.numDigits)) {
 				roundUp = h.truncated || ((dp > 0) && (1 & h.digits[dp - 1]));
-	}
+			}
 		}
 		if (roundUp) {
 			n++;
@@ -362,7 +362,7 @@ namespace Jsonifier {
 				return answer;
 			}
 			exp2 += int32_t(shift);
-	}
+		}
 		while (d.decimalPoint <= 0) {
 			uint32_t shift;
 			if (d.decimalPoint == 0) {
@@ -381,7 +381,7 @@ namespace Jsonifier {
 				return answer;
 			}
 			exp2 -= int32_t(shift);
-	}
+		}
 		exp2--;
 		const int32_t minimumExponentNew = minimumExponent();
 		while ((minimumExponentNew + 1) > exp2) {
@@ -391,7 +391,7 @@ namespace Jsonifier {
 			}
 			decimalRightShift(d, n);
 			exp2 += int32_t(n);
-	}
+		}
 		if ((exp2 - minimumExponentNew) >= infinitePower()) {
 			answer.power2 = infinitePower();
 			answer.mantissa = 0;
@@ -437,9 +437,9 @@ namespace Jsonifier {
 		uint64_t word = am.mantissa;
 		word |= uint64_t(am.power2) << mantissaExplicitBits();
 		word = negative ? word | (uint64_t(1) << signIndex()) : word;
-		double value;
-		std::memcpy(&value, &word, sizeof(double));
-		return value;
+		double Value;
+		std::memcpy(&Value, &word, sizeof(double));
+		return Value;
 	}
 
 	inline bool parseFloatFallback(const uint8_t* ptr, double* outDouble) {

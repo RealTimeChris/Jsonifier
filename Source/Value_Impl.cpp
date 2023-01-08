@@ -5,6 +5,7 @@
 #include <jsonifier/Array_Impl.hpp>
 #include <jsonifier/Value.hpp>
 #include <jsonifier/Object_Impl.hpp>
+#include <jsonifier/RawJsonString.hpp>
 
 namespace Jsonifier {
 
