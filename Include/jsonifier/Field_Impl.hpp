@@ -23,7 +23,7 @@ namespace Jsonifier {
 
 	inline JsonifierResult<std::string_view> Field::unescaped_key() noexcept {
 		assert(first.stringView != nullptr);// We would like to call .alive() but Visual Studio won't let us.
-		JsonifierResult<std::string_view> answer = first.unescape(second.iterator.json_iter());
+		JsonifierResult<std::string_view> answer = first.unescape(second.iterator.jsonIter());
 		first.consume();
 		return answer;
 	}
@@ -64,5 +64,5 @@ namespace Jsonifier {
 		return std::move(first.value());
 	}
 
-	
+
 }

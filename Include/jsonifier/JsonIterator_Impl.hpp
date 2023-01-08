@@ -6,9 +6,10 @@ namespace Jsonifier {
 
 	inline JsonIterator::JsonIterator(JsonIterator&& other) noexcept
 		: token(std::forward<TokenIterator>(other.token)), parser{ other.parser }, stringBufferLocation{ other.stringBufferLocation },
-		  error{ other.error }, currentDepth{ other.currentDepth }, rootStructural{ other.rootStructural }, _streaming{ other._streaming } {
+		  error{ other.error }, currentDepth{ other.currentDepth }, rootStructural{ other.rootStructural } {
 		other.parser = nullptr;
 	}
+
 	inline JsonIterator& JsonIterator::operator=(JsonIterator&& other) noexcept {
 		token = other.token;
 		parser = other.parser;
@@ -16,18 +17,17 @@ namespace Jsonifier {
 		error = other.error;
 		currentDepth = other.currentDepth;
 		rootStructural = other.rootStructural;
-		_streaming = other._streaming;
 		other.parser = nullptr;
 		return *this;
 	}
 
 	inline JsonIterator::JsonIterator(Parser* _parser) noexcept
 		: token(_parser->getStringView(), _parser->getStructuralIndices()), parser{ _parser }, stringBufferLocation{ parser->getStringBuffer() },
-		  currentDepth{ 1 }, rootStructural{ parser->getStructuralIndices() }, _streaming{ false } {
+		  currentDepth{ 1 }, rootStructural{ parser->getStructuralIndices() }{
 	}
 
 	inline void JsonIterator::rewind() noexcept {
-		token.set_position(root_position());
+		token.set_position(rootPosition());
 		stringBufferLocation = parser->getStringBuffer();
 		currentDepth = 1;
 	}
@@ -35,9 +35,9 @@ namespace Jsonifier {
 	inline bool JsonIterator::balanced() const noexcept {
 		TokenIterator ti(token);
 		int32_t count{ 0 };
-		ti.set_position(root_position());
-		while (ti.peek() <= peek_last()) {
-			switch (*ti.return_current_and_advance()) {
+		ti.set_position(rootPosition());
+		while (ti.peek() <= peekLast()) {
+			switch (*ti.returnCurrentAndAdvance()) {
 				case '[':
 				case '{':
 					count++;
@@ -53,11 +53,11 @@ namespace Jsonifier {
 		return count == 0;
 	}
 
-	inline ErrorCode JsonIterator::skip_child(uint32_t parent_depth) noexcept {
+	inline ErrorCode JsonIterator::skipChild(uint32_t parent_depth) noexcept {
 		if (depth() <= parent_depth) {
 			return Success;
 		}
-		switch (*return_current_and_advance()) {
+		switch (*returnCurrentAndAdvance()) {
 			case '[':
 			case '{':
 			case ':':
@@ -73,7 +73,7 @@ namespace Jsonifier {
 				break;
 			case '"':
 				if (*peek() == ':') {
-					return_current_and_advance();
+					returnCurrentAndAdvance();
 					break;
 				}
 				[[fallthrough]];
@@ -85,8 +85,8 @@ namespace Jsonifier {
 				break;
 		}
 
-		while (position() < end_position()) {
-			switch (*return_current_and_advance()) {
+		while (position() < endPosition()) {
+			switch (*returnCurrentAndAdvance()) {
 				case '[':
 				case '{':
 					currentDepth++;
@@ -103,59 +103,41 @@ namespace Jsonifier {
 			}
 		}
 
-		return report_error(Tape_Error, "not enough close braces");
+		return reportError(Tape_Error, "not enough close braces");
 	}
 
-	inline bool JsonIterator::at_root() const noexcept {
-		return position() == root_position();
+	inline bool JsonIterator::atRoot() const noexcept {
+		return position() == rootPosition();
 	}
 
-	inline bool JsonIterator::is_single_token() const noexcept {
+	inline bool JsonIterator::isSingleToken() const noexcept {
 		return parser->getTapeLength() == 1;
 	}
 
-	inline bool JsonIterator::streaming() const noexcept {
-		return _streaming;
-	}
 
-	inline uint32_t* JsonIterator::root_position() const noexcept {
+	inline uint32_t* JsonIterator::rootPosition() const noexcept {
 		return rootStructural;
 	}
 
-	inline void JsonIterator::assert_at_Document_depth() const noexcept {
+	inline void JsonIterator::assertAtDocumentDepth() const noexcept {
 		assert(currentDepth == 1);
 	}
 
-	inline void JsonIterator::assert_at_root() const noexcept {
+	inline void JsonIterator::assertAtRoot() const noexcept {
 		assert(currentDepth == 1);
-#ifndef SIMDJSON_CLANG_VISUAL_STUDIO
-		// Under Visual Studio, the next assert fails with: the argument
-		// has side effects that will be discarded.
-		assert(token.position() == rootStructural);
-#endif
 	}
 
-	inline void JsonIterator::assert_more_tokens(uint32_t required_tokens) const noexcept {
-		assert_valid_position(token.currentPosition + required_tokens - 1);
+	inline bool JsonIterator::atEnd() const noexcept {
+		return position() == endPosition();
 	}
 
-	inline void JsonIterator::assert_valid_position(uint32_t* position) const noexcept {
-#ifndef SIMDJSON_CLANG_VISUAL_STUDIO
-		assert(position >= &parser->getStructuralIndices()[0]);
-		assert(position < &parser->getStructuralIndices()[parser->getTapeLength()]);
-#endif
+	inline uint32_t* JsonIterator::endPosition() const noexcept {
+		size_t structuralIndexCount{ parser->getTapeLength() };
+		return &parser->getStructuralIndices()[structuralIndexCount];
 	}
 
-	inline bool JsonIterator::at_end() const noexcept {
-		return position() == end_position();
-	}
-	inline uint32_t* JsonIterator::end_position() const noexcept {
-		size_t n_structural_indexes{ parser->getTapeLength() };
-		return &parser->getStructuralIndices()[n_structural_indexes];
-	}
-
-	inline std::string JsonIterator::to_string() const noexcept {
-		if (!is_alive()) {
+	inline std::string JsonIterator::toString() const noexcept {
+		if (!isAlive()) {
 			return "dead JsonIterator instance";
 		}
 		const char* current_structural = reinterpret_cast<const char*>(token.peek());
@@ -165,20 +147,20 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<const char*> JsonIterator::currentLocation() noexcept {
-		if (!is_alive()) {// Unrecoverable error
-			if (!at_root()) {
+		if (!isAlive()) {// Unrecoverable error
+			if (!atRoot()) {
 				return reinterpret_cast<const char*>(token.peek(-1));
 			} else {
 				return reinterpret_cast<const char*>(token.peek());
 			}
 		}
-		if (at_end()) {
+		if (atEnd()) {
 			return Out_Of_Bounds;
 		}
 		return reinterpret_cast<const char*>(token.peek());
 	}
 
-	inline bool JsonIterator::is_alive() const noexcept {
+	inline bool JsonIterator::isAlive() const noexcept {
 		return parser;
 	}
 
@@ -187,67 +169,67 @@ namespace Jsonifier {
 		currentDepth = 0;
 	}
 
-	inline const uint8_t* JsonIterator::return_current_and_advance() noexcept {
+	inline const uint8_t* JsonIterator::returnCurrentAndAdvance() noexcept {
 #if SIMDJSON_CHECK_EOF
-		assert_more_tokens();
+		assertMoreTokens();
 #endif// SIMDJSON_CHECK_EOF
-		return token.return_current_and_advance();
+		return token.returnCurrentAndAdvance();
 	}
 
-	inline const uint8_t* JsonIterator::unsafe_pointer() const noexcept {
+	inline const uint8_t* JsonIterator::unsafePointer() const noexcept {
 		// deliberately done without safety guard:
 		return token.peek(0);
 	}
 
 	inline const uint8_t* JsonIterator::peek(int32_t delta) const noexcept {
 #if SIMDJSON_CHECK_EOF
-		assert_more_tokens(delta + 1);
+		assertMoreTokens(delta + 1);
 #endif// SIMDJSON_CHECK_EOF
 		return token.peek(delta);
 	}
 
-	inline uint32_t JsonIterator::peek_length(int32_t delta) const noexcept {
+	inline uint32_t JsonIterator::peekLength(int32_t delta) const noexcept {
 #if SIMDJSON_CHECK_EOF
-		assert_more_tokens(delta + 1);
+		assertMoreTokens(delta + 1);
 #endif// #if SIMDJSON_CHECK_EOF
-		return token.peek_length(delta);
+		return token.peekLength(delta);
 	}
 
 	inline const uint8_t* JsonIterator::peek(uint32_t* position) const noexcept {
 		// todo: currently we require end-of-string buffering, but the following
-		// assert_valid_position should be turned on if/when we lift that condition.
-		// assert_valid_position(position);
+		// assertValidPosition should be turned on if/when we lift that condition.
+		// assertValidPosition(position);
 		// This is almost surely related to SIMDJSON_CHECK_EOF but given that SIMDJSON_CHECK_EOF
 		// is ON by default, we have no choice but to disable it for real with a comment.
 		return token.peek(position);
 	}
 
-	inline uint32_t JsonIterator::peek_length(uint32_t* position) const noexcept {
+	inline uint32_t JsonIterator::peekLength(uint32_t* position) const noexcept {
 #if SIMDJSON_CHECK_EOF
-		assert_valid_position(position);
+		assertValidPosition(position);
 #endif// SIMDJSON_CHECK_EOF
-		return token.peek_length(position);
+		return token.peekLength(position);
 	}
 
-	inline uint32_t* JsonIterator::last_position() const noexcept {
+	inline uint32_t* JsonIterator::lastPosition() const noexcept {
 		// The following line fails under some compilers...
 		// assert(parser->getTapeLength() > 0);
 		// since it has side-effects.
-		size_t n_structural_indexes{ parser->getTapeLength() };
-		assert(n_structural_indexes > 0);
-		return &parser->getStructuralIndices()[n_structural_indexes - 1];
+		size_t structuralIndexCount{ parser->getTapeLength() };
+		assert(structuralIndexCount > 0);
+		return &parser->getStructuralIndices()[structuralIndexCount - 1];
 	}
-	inline const uint8_t* JsonIterator::peek_last() const noexcept {
-		return token.peek(last_position());
+	inline const uint8_t* JsonIterator::peekLast() const noexcept {
+		return token.peek(lastPosition());
 	}
 
-	inline void JsonIterator::ascend_to(uint32_t parent_depth) noexcept {
+	inline void JsonIterator::ascendTo(uint32_t parent_depth) noexcept {
 		assert(parent_depth >= 0 && parent_depth < INT32_MAX - 1);
 		assert(currentDepth == parent_depth + 1);
 		currentDepth = parent_depth;
 	}
 
-	inline void JsonIterator::descend_to(uint32_t child_depth) noexcept {
+	inline void JsonIterator::descendTo(uint32_t child_depth) noexcept {
 		assert(child_depth >= 1 && child_depth < INT32_MAX);
 		assert(currentDepth == child_depth - 1);
 		currentDepth = child_depth;
@@ -257,11 +239,11 @@ namespace Jsonifier {
 		return currentDepth;
 	}
 
-	inline uint8_t*& JsonIterator::string_buf_loc() noexcept {
+	inline uint8_t*& JsonIterator::stringBufLoc() noexcept {
 		return stringBufferLocation;
 	}
 
-	inline ErrorCode JsonIterator::report_error(ErrorCode _error, const char* message) noexcept {
+	inline ErrorCode JsonIterator::reportError(ErrorCode _error, const char* message) noexcept {
 		assert(_error != Success && _error != Uninitialized && _error != Incorrect_Type && _error != No_Such_Field);
 		error = _error;
 		return error;
@@ -281,19 +263,19 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline void JsonIterator::reenter_child(uint32_t* position, uint32_t child_depth) noexcept {
+	inline void JsonIterator::reenterChild(uint32_t* position, uint32_t child_depth) noexcept {
 		assert(child_depth >= 1 && child_depth < INT32_MAX);
 		assert(currentDepth == child_depth - 1);
 		token.set_position(position);
 		currentDepth = child_depth;
 	}
 
-	inline ErrorCode JsonIterator::optional_error(ErrorCode _error, const char* message) noexcept {
+	inline ErrorCode JsonIterator::optionalError(ErrorCode _error, const char* message) noexcept {
 		assert(_error == Incorrect_Type || _error == No_Such_Field);
 		return _error;
 	}
 
-	template<int N> inline bool JsonIterator::copy_to_buffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept {
+	template<int N> inline bool JsonIterator::copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept {
 		// Let us guard against silly cases:
 		if ((N < max_len) || (N == 0)) {
 			return false;

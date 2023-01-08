@@ -24,7 +24,7 @@ namespace Jsonifier {
 		/**
    * Advance to the next token (returning the current one).
    */
-		inline const uint8_t* return_current_and_advance() noexcept;
+		inline const uint8_t* returnCurrentAndAdvance() noexcept;
 		/**
    * Reports the current offset in bytes from the start of the underlying buffer.
    */
@@ -49,7 +49,7 @@ namespace Jsonifier {
    * @param delta The relative position of the token to retrieve. e.g. 0 = current token,
    *              1 = next token, -1 = prev token.
    */
-		inline uint32_t peek_length(int32_t delta = 0) const noexcept;
+		inline uint32_t peekLength(int32_t delta = 0) const noexcept;
 
 		/**
    * Get the JSON text for a given token.
@@ -67,7 +67,7 @@ namespace Jsonifier {
    *
    * @param position The position of the token.
    */
-		inline uint32_t peek_length(uint32_t* position) const noexcept;
+		inline uint32_t peekLength(uint32_t* position) const noexcept;
 
 		/**
    * Return the current index.
@@ -99,7 +99,7 @@ namespace Jsonifier {
    * @param delta The relative position of the token to retrieve. e.g. 0 = current token,
    *              1 = next token, -1 = prev token.
    */
-		inline uint32_t peek_index(int32_t delta = 0) const noexcept;
+		inline uint32_t peekIndex(int32_t delta = 0) const noexcept;
 		/**
    * Get the index of the JSON text for a given token.
    *
@@ -108,7 +108,7 @@ namespace Jsonifier {
    * @param position The position of the token.
    *
    */
-		inline uint32_t peek_index(uint32_t* position) const noexcept;
+		inline uint32_t peekIndex(uint32_t* position) const noexcept;
 
 		const uint8_t* stringView{};
 		uint32_t* currentPosition{};

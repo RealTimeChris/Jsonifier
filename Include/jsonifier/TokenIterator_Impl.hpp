@@ -12,27 +12,27 @@ namespace Jsonifier {
 	}
 
 
-	inline const uint8_t* TokenIterator::return_current_and_advance() noexcept {
+	inline const uint8_t* TokenIterator::returnCurrentAndAdvance() noexcept {
 		return &stringView[*(currentPosition++)];
 	}
 
 	inline const uint8_t* TokenIterator::peek(uint32_t* position) const noexcept {
 		return &stringView[*position];
 	}
-	inline uint32_t TokenIterator::peek_index(uint32_t* position) const noexcept {
+	inline uint32_t TokenIterator::peekIndex(uint32_t* position) const noexcept {
 		return *position;
 	}
-	inline uint32_t TokenIterator::peek_length(uint32_t* position) const noexcept {
+	inline uint32_t TokenIterator::peekLength(uint32_t* position) const noexcept {
 		return *(position + 1) - *position;
 	}
 
 	inline const uint8_t* TokenIterator::peek(int32_t delta) const noexcept {
 		return &stringView[*(currentPosition + delta)];
 	}
-	inline uint32_t TokenIterator::peek_index(int32_t delta) const noexcept {
+	inline uint32_t TokenIterator::peekIndex(int32_t delta) const noexcept {
 		return *(currentPosition + delta);
 	}
-	inline uint32_t TokenIterator::peek_length(int32_t delta) const noexcept {
+	inline uint32_t TokenIterator::peekLength(int32_t delta) const noexcept {
 		return *(currentPosition + delta + 1) - *(currentPosition + delta);
 	}
 

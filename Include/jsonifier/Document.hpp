@@ -123,7 +123,7 @@ namespace Jsonifier {
    * @returns A Value if a JSON Array or Object cannot be found.
    * @returns SCALAR_DOCUMENT_AS_VALUE error is the Document is a scalar (see isScalar() function).
    */
-		inline JsonifierResult<Value> get_value() noexcept;
+		inline JsonifierResult<Value> getValue() noexcept;
 
 		/**
    * Checks if this JSON Value is null.  If and only if the Value is
@@ -266,7 +266,7 @@ namespace Jsonifier {
    * safe to continue.
    *
    * To check that an Object is empty, it is more performant to use
-   * the is_empty() method.
+   * the isEmpty() method.
    */
 		inline JsonifierResult<size_t> countFields() & noexcept;
 		/**
@@ -316,7 +316,7 @@ namespace Jsonifier {
    * OUT_OF_ORDER_ITERATION error is generated.
    *
    * You are expected to access keys only once. You should access the Value corresponding to
-   * a key a single time. Doing Object["mykey"].to_string()and then again Object["mykey"].to_string()
+   * a key a single time. Doing Object["mykey"].toString()and then again Object["mykey"].toString()
    * is an error.
    *
    * @param key The key to look up.
@@ -350,7 +350,7 @@ namespace Jsonifier {
    * OUT_OF_ORDER_ITERATION error is generated.
    *
    * You are expected to access keys only once. You should access the Value corresponding to a key
-   * a single time. Doing Object["mykey"].to_string() and then again Object["mykey"].to_string()
+   * a single time. Doing Object["mykey"].toString() and then again Object["mykey"].toString()
    * is an error.
    *
    * @param key The key to look up.
@@ -423,9 +423,9 @@ namespace Jsonifier {
 		inline std::string to_debug_string() noexcept;
 		/**
    * Some unrecoverable error conditions may render the Document instance unusable.
-   * The is_alive() method returns true when the Document is still suitable.
+   * The isAlive() method returns true when the Document is still suitable.
    */
-		inline bool is_alive() noexcept;
+		inline bool isAlive() noexcept;
 
 		/**
    * Returns the current location in the Document if in bounds.
@@ -475,7 +475,7 @@ namespace Jsonifier {
    *         - SCALAR_DOCUMENT_AS_VALUE if the json_pointer is empty and the Document is not a scalar (see isScalar() function).
    */
 		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
-		inline JsonifierResult<std::string_view> raw_json() noexcept;
+		inline JsonifierResult<std::string_view> rawJson() noexcept;
 
 	  protected:
 		inline ErrorCode consume() noexcept;
@@ -514,7 +514,7 @@ namespace Jsonifier {
 		inline JsonifierResult<std::string_view> getString() noexcept;
 		inline JsonifierResult<RawJsonString> getRawJsonString() noexcept;
 		inline JsonifierResult<bool> getBool() noexcept;
-		inline JsonifierResult<Value> get_value() noexcept;
+		inline JsonifierResult<Value> getValue() noexcept;
 		inline JsonifierResult<bool> isNull() noexcept;
 
 		template<typename T> inline JsonifierResult<T> get() & noexcept;
