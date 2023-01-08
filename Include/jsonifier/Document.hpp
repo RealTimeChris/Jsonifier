@@ -13,7 +13,7 @@ namespace Jsonifier {
 	class ArrayIterator;
 	class ValueIterator;
 
-	class Jsonifier_Dll Document {
+	class Jsonifier_Dll Document : public JsonIterator {
 	  public:
 		inline Document() noexcept = default;
 		inline Document(const Document& other) noexcept = delete;
@@ -31,10 +31,10 @@ namespace Jsonifier {
 		inline JsonifierResult<Value> getValue() noexcept;
 		inline JsonifierResult<bool> isNull() noexcept;
 		template<typename T> inline JsonifierResult<T> get() & noexcept {
-			static_assert(!sizeof(T), "The get method with given type is not implemented by the simdjson library.");
+			static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 		}
 		template<typename T> inline JsonifierResult<T> get() && noexcept {
-			static_assert(!sizeof(T), "The get method with given type is not implemented by the simdjson library.");
+			static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 		}
 		template<typename T> inline ErrorCode get(T& out) & noexcept;
 		template<typename T> inline ErrorCode get(T& out) && noexcept;
@@ -66,8 +66,8 @@ namespace Jsonifier {
 		inline bool isAlive() noexcept;
 		inline JsonifierResult<const char*> currentLocation() noexcept;
 		inline int32_t currentDepth() const noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
-		inline JsonifierResult<std::string_view> raw_json() noexcept;
+		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
+		inline JsonifierResult<std::string_view> rawJson() noexcept;
 
 	  protected:
 		inline ErrorCode consume() noexcept;
@@ -79,7 +79,6 @@ namespace Jsonifier {
 		inline ValueIterator getRootValueIterator() noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
 		static inline Document start(JsonIterator&& iterator) noexcept;
-		JsonIterator iterator;
 		static constexpr uint32_t DOCUMENT_DEPTH = 0;
 
 		friend class ArrayIterator;
@@ -92,8 +91,8 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<Document> : public ImplementationJsonifierResultBase<Document> {
 	  public:
-		inline JsonifierResult(Document&& Value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult(Document&& Value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
 		inline JsonifierResult() noexcept = default;
 		inline ErrorCode rewind() noexcept;
 
@@ -142,7 +141,7 @@ namespace Jsonifier {
 		inline int32_t currentDepth() const noexcept;
 		inline JsonifierResult<std::string_view> rawJsonToken() noexcept;
 
-		inline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
+		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
 	};
 
 

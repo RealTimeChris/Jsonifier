@@ -5,20 +5,16 @@
 
 namespace Jsonifier {
 
-	inline RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {
-	}
+	inline RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {}
 
 	inline const char* RawJsonString::raw() const noexcept {
 		return reinterpret_cast<const char*>(stringView);
 	}
 
-
-	inline bool RawJsonString::is_free_from_unescaped_quote(std::string_view target) noexcept {
+	inline bool RawJsonString::isFreeFromUnescapedQuote(std::string_view target) noexcept {
 		size_t pos{ 0 };
-		// if the content has no escape character, just scan through it quickly!
 		for (; pos < target.size() && target[pos] != '\\'; pos++) {
 		}
-		// slow path may begin.
 		bool escaping{ false };
 		for (; pos < target.size(); pos++) {
 			if ((target[pos] == '"') && !escaping) {
@@ -32,12 +28,10 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline bool RawJsonString::is_free_from_unescaped_quote(const char* target) noexcept {
+	inline bool RawJsonString::isFreeFromUnescapedQuote(const char* target) noexcept {
 		size_t pos{ 0 };
-		// if the content has no escape character, just scan through it quickly!
 		for (; target[pos] && target[pos] != '\\'; pos++) {
 		}
-		// slow path may begin.
 		bool escaping{ false };
 		for (; target[pos]; pos++) {
 			if ((target[pos] == '"') && !escaping) {
@@ -51,15 +45,11 @@ namespace Jsonifier {
 		return true;
 	}
 
-
-	inline bool RawJsonString::unsafe_is_equal(size_t length, std::string_view target) const noexcept {
-		// If we are going to call memcmp, then we must know something about the length of the RawJsonString.
+	inline bool RawJsonString::unsafeIsEqual(size_t length, std::string_view target) const noexcept {
 		return (length >= target.size()) && (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 	}
 
-	inline bool RawJsonString::unsafe_is_equal(std::string_view target) const noexcept {
-		// Assumptions: does not contain unescaped quote characters, and
-		// the raw content is quote terminated within a valid JSON string.
+	inline bool RawJsonString::unsafeIsEqual(std::string_view target) const noexcept {
 		if (target.size() <= 256) {
 			return (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 		}
@@ -76,7 +66,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline bool RawJsonString::is_equal(std::string_view target) const noexcept {
+	inline bool RawJsonString::isEqual(std::string_view target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		bool escaping{ false };
@@ -84,12 +74,7 @@ namespace Jsonifier {
 			if (r[pos] != target[pos]) {
 				return false;
 			}
-			// if target is a compile-time constant and it is free from
-			// quotes, then the next part could get optimized away through
-			// inlining.
 			if ((target[pos] == '"') && !escaping) {
-				// We have reached the end of the RawJsonString but
-				// the target is not done.
 				return false;
 			} else if (target[pos] == '\\') {
 				escaping = !escaping;
@@ -103,10 +88,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-
-	inline bool RawJsonString::unsafe_is_equal(const char* target) const noexcept {
-		// Assumptions: 'target' does not contain unescaped quote characters, is null terminated and
-		// the raw content is quote terminated within a valid JSON string.
+	inline bool RawJsonString::unsafeIsEqual(const char* target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		for (; target[pos]; pos++) {
@@ -120,9 +102,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline bool RawJsonString::is_equal(const char* target) const noexcept {
-		// Assumptions: does not contain unescaped quote characters, and
-		// the raw content is quote terminated within a valid JSON string.
+	inline bool RawJsonString::isEqual(const char* target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		bool escaping{ false };
@@ -130,12 +110,7 @@ namespace Jsonifier {
 			if (r[pos] != target[pos]) {
 				return false;
 			}
-			// if target is a compile-time constant and it is free from
-			// quotes, then the next part could get optimized away through
-			// inlining.
 			if ((target[pos] == '"') && !escaping) {
-				// We have reached the end of the RawJsonString but
-				// the target is not done.
 				return false;
 			} else if (target[pos] == '\\') {
 				escaping = !escaping;
@@ -150,7 +125,7 @@ namespace Jsonifier {
 	}
 
 	inline bool operator==(const RawJsonString& a, std::string_view c) noexcept {
-		return a.unsafe_is_equal(c);
+		return a.unsafeIsEqual(c);
 	}
 
 	inline bool operator==(std::string_view c, const RawJsonString& a) noexcept {
@@ -165,11 +140,9 @@ namespace Jsonifier {
 		return !(a == c);
 	}
 
-
 	inline JsonifierResult<std::string_view> RawJsonString::unescape(JsonIterator& iterator) const noexcept {
 		return iterator.unescape(*this);
 	}
-
 
 	inline std::ostream& operator<<(std::ostream& out, const RawJsonString& str) noexcept {
 		bool in_escape = false;
@@ -195,11 +168,11 @@ namespace Jsonifier {
 			s++;
 		}
 	}
+
 	inline JsonifierResult<RawJsonString>::JsonifierResult(RawJsonString&& Value) noexcept
-		: ImplementationJsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)) {
-	}
-	inline JsonifierResult<RawJsonString>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<RawJsonString>(error) {
-	}
+		: ImplementationJsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)){}
+
+	inline JsonifierResult<RawJsonString>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<RawJsonString>(error){}
 
 	inline JsonifierResult<const char*> JsonifierResult<RawJsonString>::raw() const noexcept {
 		if (error()) {
@@ -207,6 +180,7 @@ namespace Jsonifier {
 		}
 		return first.raw();
 	}
+
 	inline JsonifierResult<std::string_view> JsonifierResult<RawJsonString>::unescape(JsonIterator& iterator) const noexcept {
 		if (error()) {
 			return error();

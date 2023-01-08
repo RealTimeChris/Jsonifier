@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ostream>
 #include <jsonifier/JsonType.hpp>
 #include <jsonifier/Parser.hpp>
 
@@ -37,11 +36,7 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept
-		: ImplementationJsonifierResultBase<JsonType>(std::forward<JsonType>(Value)) {
-	}
-	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonType>(error) {
-	}
+		: ImplementationJsonifierResultBase<JsonType>(std::forward<JsonType>(Value)){}
 
-
-
+	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonType>(error){}
 }

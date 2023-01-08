@@ -17,7 +17,7 @@ namespace Jsonifier {
 		inline const uint8_t* peek(uint32_t* position) const noexcept;
 		inline uint32_t peekLength(uint32_t* position) const noexcept;
 		inline uint32_t* position() const noexcept;
-		inline void set_position(uint32_t* target_position) noexcept;
+		inline void setPosition(uint32_t* target_position) noexcept;
 		inline bool operator==(const TokenIterator& other) const noexcept;
 		inline bool operator!=(const TokenIterator& other) const noexcept;
 		inline bool operator>(const TokenIterator& other) const noexcept;
@@ -40,10 +40,10 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<TokenIterator> : public ImplementationJsonifierResultBase<TokenIterator> {
 	  public:
-		inline JsonifierResult(TokenIterator&& Value) noexcept;///< @private
-		inline JsonifierResult(ErrorCode error) noexcept;///< @private
+		inline JsonifierResult(TokenIterator&& Value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept;
 		inline JsonifierResult() noexcept = default;
-		inline ~JsonifierResult() noexcept = default;///< @private
+		inline ~JsonifierResult() noexcept = default;
 	};
 
 }

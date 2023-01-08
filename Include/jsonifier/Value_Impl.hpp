@@ -9,11 +9,9 @@
 
 namespace Jsonifier {
 
-	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : ImplementationJsonifierResultBase<Value>(std::forward<Value>(value)) {
-	}
+	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : ImplementationJsonifierResultBase<Value>(std::forward<Value>(value)){}
 
-	inline JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Value>(error) {
-	}
+	inline JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Value>(error){}
 
 	inline JsonifierResult<size_t> JsonifierResult<Value>::countElements() & noexcept {
 		if (error()) {
@@ -319,8 +317,7 @@ namespace Jsonifier {
 		return get<T>().get(out);
 	}
 
-	inline Value::Value(const ValueIterator& _iterator) noexcept : iterator{ _iterator } {
-	}
+	inline Value::Value(const ValueIterator& _iterator) noexcept : ValueIterator{ _iterator } {}
 
 	inline Value Value::start(const ValueIterator& iterator) noexcept {
 		return iterator;
@@ -331,47 +328,47 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<Array> Value::getArray() noexcept {
-		return Array::start(iterator);
+		return Array::start(*this);
 	}
 
 	inline JsonifierResult<Object> Value::getObject() noexcept {
-		return Object::start(iterator);
+		return Object::start(*this);
 	}
 
 	inline JsonifierResult<Object> Value::startOrResumeObject() noexcept {
-		if (iterator.at_start()) {
+		if (this->atStart()) {
 			return getObject();
 		} else {
-			return Object::resume(iterator);
+			return Object::resume(*this);
 		}
 	}
 
 	inline JsonifierResult<RawJsonString> Value::getRawJsonString() noexcept {
-		return iterator.getRawJsonString();
+		return ValueIterator::getRawJsonString();
 	}
 
 	inline JsonifierResult<std::string_view> Value::getString() noexcept {
-		return iterator.getString();
+		return ValueIterator::getString();
 	}
 
 	inline JsonifierResult<double> Value::getDouble() noexcept {
-		return iterator.getDouble();
+		return ValueIterator::getDouble();
 	}
 
 	inline JsonifierResult<uint64_t> Value::getUint64() noexcept {
-		return iterator.getUint64();
+		return ValueIterator::getUint64();
 	}
 
 	inline JsonifierResult<int64_t> Value::getInt64() noexcept {
-		return iterator.getInt64();
+		return ValueIterator::getInt64();
 	}
 
 	inline JsonifierResult<bool> Value::getBool() noexcept {
-		return iterator.getBool();
+		return ValueIterator::getBool();
 	}
 
 	inline JsonifierResult<bool> Value::isNull() noexcept {
-		return iterator.isNull();
+		return ValueIterator::isNull();
 	}
 
 	inline Value::operator Array() noexcept(false) {
@@ -418,7 +415,7 @@ namespace Jsonifier {
 		JsonifierResult<size_t> answer;
 		auto a = getArray();
 		answer = a.countElements();
-		iterator.move_at_start();
+		ValueIterator::moveAtStart();
 		return answer;
 	}
 
@@ -426,7 +423,7 @@ namespace Jsonifier {
 		JsonifierResult<size_t> answer;
 		auto a = getObject();
 		answer = a.countFields();
-		iterator.move_at_start();
+		ValueIterator::moveAtStart();
 		return answer;
 	}
 
@@ -464,28 +461,28 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<JsonType> Value::type() noexcept {
-		return iterator.type();
+		return ValueIterator::type();
 	}
 
 	inline JsonifierResult<bool> Value::isScalar() noexcept {
-		JsonType this_type;
-		auto error = type().get(this_type);
+		JsonType thisType;
+		auto error = type().get(thisType);
 		if (error) {
 			return error;
 		}
-		return !((this_type == JsonType::Array) || (this_type == JsonType::Object));
+		return !((thisType == JsonType::Array) || (thisType == JsonType::Object));
 	}
 
 	inline std::string_view Value::rawJsonToken() noexcept {
-		return std::string_view(reinterpret_cast<const char*>(iterator.peek_start()), iterator.peek_start_length());
+		return std::string_view(reinterpret_cast<const char*>(ValueIterator::peekStart()), ValueIterator::peekStartLength());
 	}
 
 	inline JsonifierResult<const char*> Value::currentLocation() noexcept {
-		return iterator.jsonIterator->currentLocation();
+		return ValueIterator::jsonIterator->currentLocation();
 	}
 
 	inline int32_t Value::currentDepth() const noexcept {
-		return iterator.jsonIterator->depth();
+		return ValueIterator::jsonIterator->depth();
 	}
 
 	inline JsonifierResult<Value> Value::atPointer(std::string_view jsonPointer) noexcept {
@@ -500,5 +497,5 @@ namespace Jsonifier {
 				return Invalid_Json_Pointer;
 		}
 	}
-	
+
 }

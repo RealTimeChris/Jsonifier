@@ -27,12 +27,6 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4251)
 
-#ifdef _DEBUG
-	#ifdef JSONIFIER_DEV_CHECKS
-		#define JSONIFIER_DEVELOPMENT_CHECKS 0
-	#endif
-#endif
-
 #ifndef JsonifierTry
 	#define JsonifierTry(EXPR) \
 		{ \

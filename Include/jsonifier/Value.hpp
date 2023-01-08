@@ -8,11 +8,11 @@ namespace Jsonifier {
 
 	class ArrayIterator;
 
-	class Jsonifier_Dll Value {
+	class Jsonifier_Dll Value : public ValueIterator {
 	  public:
 		inline Value() noexcept = default;
 		template<typename T> inline JsonifierResult<T> get() noexcept {
-			static_assert(!sizeof(T), "The get method with given type is not implemented by the simdjson library.");
+			static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 		}
 		template<typename T> inline ErrorCode get(T& out) noexcept;
 		inline JsonifierResult<Array> getArray() noexcept;
@@ -57,8 +57,6 @@ namespace Jsonifier {
 		static inline Value resume(const ValueIterator& iter) noexcept;
 		inline JsonifierResult<Object> startOrResumeObject() noexcept;
 
-		ValueIterator iterator{};
-
 		friend class Document;
 		friend class ArrayIterator;
 		friend class Field;
@@ -88,7 +86,6 @@ namespace Jsonifier {
 		template<typename T> inline JsonifierResult<T> get() noexcept;
 
 		template<typename T> inline ErrorCode get(T& out) noexcept;
-
 
 		inline operator Array() noexcept(false);
 		inline operator Object() noexcept(false);

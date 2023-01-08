@@ -620,7 +620,6 @@ namespace Jsonifier {
 	void Serializer::appendBinaryExt(const std::string& bytes, uint32_t sizeNew) {
 		char newBuffer[5]{ static_cast<char>(EtfType::Binary_Ext) };
 		storeBits(newBuffer + 1, sizeNew);
-		std::cout << "APPENDING STRING: " << bytes << std::endl;
 		this->writeString(newBuffer, std::size(newBuffer));
 		this->writeString(bytes.data(), bytes.size());
 	}

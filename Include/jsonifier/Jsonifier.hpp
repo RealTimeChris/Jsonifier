@@ -66,26 +66,26 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline StopWatch(const StopWatch<TTy>& data) {
+	inline StopWatch(const StopWatch<TTy>& data) {
 			*this = data;
 		}
 
-		inline StopWatch(TTy maxNumberOfMsNew) {
+	inline StopWatch(TTy maxNumberOfMsNew) {
 			this->maxNumberOfMs.store(maxNumberOfMsNew);
 			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
 		}
 
-		inline TTy totalTimePassed() {
+	inline TTy totalTimePassed() {
 			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
 			TTy elapsedTime = currentTime - this->startTime.load();
 			return elapsedTime;
 		}
 
-		inline TTy getTotalWaitTime() {
+	inline TTy getTotalWaitTime() {
 			return this->maxNumberOfMs.load();
 		}
 
-		inline bool hasTimePassed() {
+	inline bool hasTimePassed() {
 			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
 			TTy elapsedTime = currentTime - this->startTime.load();
 			if (elapsedTime >= this->maxNumberOfMs.load()) {
@@ -95,7 +95,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void resetTimer() {
+	inline void resetTimer() {
 			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
 		}
 
@@ -349,11 +349,11 @@ namespace Jsonifier {
 
 		Serializer& operator[](uint64_t index);
 
-		template<typename Ty> inline const Ty& getValue() const {
+		template<typename Ty> inline Ty getValue() && {
 			return Ty{};
 		}
 
-		template<typename Ty> inline Ty& getValue() {
+		template<typename Ty> inline Ty& getValue() & {
 			return Ty{};
 		}
 
@@ -449,34 +449,59 @@ namespace Jsonifier {
 		friend bool operator==(const Serializer& lhs, const Serializer& rhs);
 	};
 
-	template<> inline Serializer::ObjectType& Serializer::getValue() {
-		return *this->jsonValue.object;
+	template<> inline Serializer::ObjectType Serializer::getValue() && {
+		return std::move(*this->jsonValue.object);
 	}
 
-	template<> inline Serializer::ArrayType& Serializer::getValue() {
-		return *this->jsonValue.array;
+	template<> inline Serializer::ArrayType Serializer::getValue() && {
+		return std::move(*this->jsonValue.array);
 	}
 
-	template<> inline Serializer::StringType& Serializer::getValue() {
-		return *this->jsonValue.string;
+	template<> inline Serializer::StringType Serializer::getValue() && {
+		return std::move(*this->jsonValue.string);
 	}
 
-	template<> inline Serializer::FloatType& Serializer::getValue() {
+	template<> inline Serializer::FloatType Serializer::getValue() && {
 		return this->jsonValue.numberDouble;
 	}
 
-	template<> inline Serializer::UintType& Serializer::getValue() {
+	template<> inline Serializer::UintType Serializer::getValue() && {
 		return this->jsonValue.numberUint;
 	}
 
-	template<> inline Serializer::IntType& Serializer::getValue() {
+	template<> inline Serializer::IntType Serializer::getValue() && {
 		return this->jsonValue.numberInt;
 	}
 
-	template<> inline Serializer::BoolType& Serializer::getValue() {
+	template<> inline Serializer::BoolType Serializer::getValue() && {
 		return this->jsonValue.boolean;
 	}
 
-	inline int64_t totalTimePassed{};
-	inline int64_t iterationCount{};
+	template<> inline Serializer::ObjectType& Serializer::getValue() & {
+		return *this->jsonValue.object;
+	}
+
+	template<> inline Serializer::ArrayType& Serializer::getValue() & {
+		return *this->jsonValue.array;
+	}
+
+	template<> inline Serializer::StringType& Serializer::getValue() & {
+		return *this->jsonValue.string;
+	}
+
+	template<> inline Serializer::FloatType& Serializer::getValue() & {
+		return this->jsonValue.numberDouble;
+	}
+
+	template<> inline Serializer::UintType& Serializer::getValue() & {
+		return this->jsonValue.numberUint;
+	}
+
+	template<> inline Serializer::IntType& Serializer::getValue() & {
+		return this->jsonValue.numberInt;
+	}
+
+	template<> inline Serializer::BoolType& Serializer::getValue() & {
+		return this->jsonValue.boolean;
+	}
 }
