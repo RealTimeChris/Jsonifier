@@ -20,11 +20,11 @@ namespace Jsonifier {
 		}
 
 		inline int quoteIndex() {
-			return _tzcnt_u32(this->quoteBits);
+			return _tzcnt_u64(this->quoteBits);
 		}
 
 		inline int backslashIndex() {
-			return _tzcnt_u32(this->bsBits);
+			return _tzcnt_u64(this->bsBits);
 		}
 
 		uint64_t bsBits{};
@@ -154,22 +154,6 @@ namespace Jsonifier {
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x0.
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0,
-
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x4.
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x5c, 0, 0, 0,// 0x5.
-		0, 0, 0x08, 0, 0, 0, 0x0c, 0, 0, 0, 0, 0, 0, 0, 0x0a, 0,// 0x6.
-		0, 0, 0x0d, 0, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,// 0x7.
-
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-
 	inline size_t codePointToUtf8(uint32_t cp, uint8_t* c) {
 		if (cp <= 0x7F) {
 			c[0] = uint8_t(cp);
@@ -192,6 +176,45 @@ namespace Jsonifier {
 			return 4;
 		}
 		return 0;
+	}
+
+	inline const uint8_t escapeMap[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x5c, 0, 0, 0,
+		0, 0, 0x08, 0, 0, 0, 0x0c, 0, 0, 0, 0, 0, 0, 0, 0x0a, 0,
+		0, 0, 0x0d, 0, 0x09, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+	inline bool handleUnicodeCodepoint(const uint8_t** src_ptr, uint8_t** dst_ptr) {
+		uint32_t code_point = hexToU32Nocheck(*src_ptr + 2);
+		*src_ptr += 6;
+		if (code_point >= 0xd800 && code_point < 0xdc00) {
+			const uint8_t* src_data = *src_ptr;
+			if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
+				return false;
+			}
+			uint32_t code_point_2 = hexToU32Nocheck(src_data + 2);
+			uint32_t low_bit = code_point_2 - 0xdc00;
+			if (low_bit >> 10) {
+				return false;
+			}
+
+			code_point = (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
+			*src_ptr += 6;
+		} else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
+			return false;
+		}
+		size_t offset = codePointToUtf8(code_point, *dst_ptr);
+		*dst_ptr += offset;
+		return offset > 0;
 	}
 
 	inline bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
@@ -222,6 +245,8 @@ namespace Jsonifier {
 		while (1) {
 			auto bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
 			if (bsQuote.hasQuoteFirst()) {
+				//std::cout << "RETURNING THIS STRING: " << std::basic_string<uint8_t>{ src, static_cast<size_t>(bsQuote.quoteIndex()) }.data()
+						  //<< std::endl;
 				return dst + bsQuote.quoteIndex();
 			}
 			if (bsQuote.hasBackslash()) {

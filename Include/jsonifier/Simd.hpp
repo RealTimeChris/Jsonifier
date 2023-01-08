@@ -59,7 +59,7 @@ namespace Jsonifier {
 			this->value = _mm256_set1_epi64x(static_cast<int64_t>(data));
 		}
 
-		explicit inline SimdBase256(int64_t other) {
+		explicit inline SimdBase256(uint64_t other) {
 			this->fromUint64(other);
 		}
 

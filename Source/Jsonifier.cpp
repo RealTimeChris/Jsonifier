@@ -14,7 +14,7 @@ namespace Jsonifier {
 		*static_cast<std::runtime_error*>(this) = std::runtime_error{ stream.str() };
 	}
 
-	EnumConverter::operator std::vector<uint64_t, std::allocator<uint64_t>>()const noexcept {
+	EnumConverter::operator std::vector<uint64_t>() const noexcept {
 		return this->vector;
 	}
 
@@ -30,23 +30,17 @@ namespace Jsonifier {
 		switch (data.type) {
 			case JsonType::Object: {
 				this->setValue(JsonType::Object);
-				this->jsonValue.object = data.jsonValue.object;
-				data.jsonValue.object = nullptr;
-				data.type = JsonType::Null;
+				*this->jsonValue.object = std::move(*data.jsonValue.object);
 				break;
 			}
 			case JsonType::Array: {
 				this->setValue(JsonType::Array);
-				this->jsonValue.array = data.jsonValue.array;
-				data.jsonValue.array = nullptr;
-				data.type = JsonType::Null;
+				*this->jsonValue.array = std::move(*data.jsonValue.array);
 				break;
 			}
 			case JsonType::String: {
 				this->setValue(JsonType::String);
-				this->jsonValue.string = data.jsonValue.string;
-				data.jsonValue.string = nullptr;
-				data.type = JsonType::Null;
+				*this->jsonValue.string = std::move(*data.jsonValue.string);
 				break;
 			}
 			case JsonType::Float: {
@@ -527,9 +521,9 @@ namespace Jsonifier {
 	}
 
 	void Serializer::writeEtfUint(const UintType jsonData) {
-		if (jsonData >= std::numeric_limits<uint8_t>::min() && jsonData <= std::numeric_limits<uint8_t>::max()) {
+		if (jsonData <= std::numeric_limits<uint8_t>::max() && jsonData >= std::numeric_limits<uint8_t>::min()) {
 			this->appendUint8(static_cast<uint8_t>(jsonData));
-		} else if (jsonData >= std::numeric_limits<uint32_t>::min() && jsonData <= std::numeric_limits<uint32_t>::max()) {
+		} else if (jsonData <= std::numeric_limits<uint32_t>::max() && jsonData >= std::numeric_limits<uint32_t>::min()) {
 			this->appendUint32(static_cast<uint32_t>(jsonData));
 		} else {
 			this->appendUint64(jsonData);
@@ -537,9 +531,9 @@ namespace Jsonifier {
 	}
 
 	void Serializer::writeEtfInt(const IntType jsonData) {
-		if (jsonData >= std::numeric_limits<int8_t>::min() && jsonData <= std::numeric_limits<int8_t>::max()) {
+		if (jsonData <= std::numeric_limits<int8_t>::max() && jsonData >= std::numeric_limits<int8_t>::min()) {
 			this->appendInt8(static_cast<int8_t>(jsonData));
-		} else if (jsonData >= std::numeric_limits<int32_t>::min() && jsonData <= std::numeric_limits<int32_t>::max()) {
+		} else if (jsonData <= std::numeric_limits<int32_t>::max() && jsonData >= std::numeric_limits<int32_t>::min()) {
 			this->appendInt32(static_cast<int32_t>(jsonData));
 		} else {
 			this->appendInt64(jsonData);
