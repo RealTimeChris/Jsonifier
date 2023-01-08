@@ -304,8 +304,8 @@ namespace Jsonifier {
 		inline const JsonIterator& json_iter() const noexcept;
 		inline JsonIterator& json_iter() noexcept;
 
-		inline void assert_is_valid() const noexcept;
-		inline bool is_valid() const noexcept;
+		inline void assertIsValid() const noexcept;
+		inline bool isValid() const noexcept;
 
 		/** @} */
 	  protected:

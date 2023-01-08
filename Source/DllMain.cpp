@@ -24,7 +24,7 @@
 /// \file DllMain.cpp
 
 #ifdef _WIN32
-	#include <jsonifier/Jsonifier_Impl.hpp>
+	#include <jsonifier/Index.hpp>
 	#include <Windows.h>
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, unsigned long fdwReason, void* lpvReserved) noexcept {

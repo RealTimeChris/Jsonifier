@@ -90,7 +90,7 @@ inline ObjectIterator& ObjectIterator::operator++() noexcept {
 //
 inline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& Value) noexcept
 	: ImplementationJsonifierResultBase<ObjectIterator>(std::forward<ObjectIterator>(Value)) {
-	first.iterator.assert_is_valid();
+	first.iterator.assertIsValid();
 }
 inline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ObjectIterator>({}, error) {
 }
@@ -103,14 +103,14 @@ inline JsonifierResult<Field> JsonifierResult<ObjectIterator>::operator*() noexc
 }
 // If we're iterating and there is an error, return the error once.
 inline bool JsonifierResult<ObjectIterator>::operator==(const JsonifierResult<ObjectIterator>& other) const noexcept {
-	if (!first.iterator.is_valid()) {
+	if (!first.iterator.isValid()) {
 		return !error();
 	}
 	return first == other.first;
 }
 // If we're iterating and there is an error, return the error once.
 inline bool JsonifierResult<ObjectIterator>::operator!=(const JsonifierResult<ObjectIterator>& other) const noexcept {
-	if (!first.iterator.is_valid()) {
+	if (!first.iterator.isValid()) {
 		return error();
 	}
 	return first != other.first;

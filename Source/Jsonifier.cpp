@@ -1,4 +1,5 @@
 #include <jsonifier/Jsonifier.hpp>
+#include <jsonifier/Jsonifier_Impl.hpp>
 #include <jsonifier/Document.hpp>
 #include <jsonifier/Parser.hpp>
 
@@ -767,29 +768,4 @@ namespace Jsonifier {
 	Serializer::~Serializer() {
 		this->destroy();
 	}
-
-	inline std::ostream& operator<<(std::ostream& out, const RawJsonString& str) noexcept {
-		bool in_escape = false;
-		const char* s = str.raw();
-		while (true) {
-			switch (*s) {
-				case '\\':
-					in_escape = !in_escape;
-					break;
-				case '"':
-					if (in_escape) {
-						in_escape = false;
-					} else {
-						return out;
-					}
-					break;
-				default:
-					if (in_escape) {
-						in_escape = false;
-					}
-			}
-			out << *s;
-			s++;
-		}
-	};
 }

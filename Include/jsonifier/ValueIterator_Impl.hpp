@@ -835,11 +835,11 @@ namespace Jsonifier {
 		assert(currentDepth > 1);
 	}
 
-	inline void ValueIterator::assert_is_valid() const noexcept {
+	inline void ValueIterator::assertIsValid() const noexcept {
 		assert(jsonIterator != nullptr);
 	}
 
-	inline bool ValueIterator::is_valid() const noexcept {
+	inline bool ValueIterator::isValid() const noexcept {
 		return jsonIterator != nullptr;
 	}
 

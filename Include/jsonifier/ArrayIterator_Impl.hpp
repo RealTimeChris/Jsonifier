@@ -5,6 +5,42 @@
 
 namespace Jsonifier {
 
+
+	inline JsonifierResult<ArrayIterator>::JsonifierResult(ArrayIterator&& value) noexcept
+		: ImplementationJsonifierResultBase<ArrayIterator>(std::forward<ArrayIterator>(value)) {
+		first.iterator.assertIsValid();
+	}
+	inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ArrayIterator>({}, error) {
+	}
+
+	inline JsonifierResult<Value> JsonifierResult<ArrayIterator>::operator*() noexcept {
+		if (error()) {
+			return error();
+		}
+		return *first;
+	}
+	bool JsonifierResult<ArrayIterator>::operator==(const JsonifierResult<ArrayIterator>& other) const noexcept {
+		if (!first.iterator.isValid()) {
+			return !error();
+		}
+		return first == other.first;
+	}
+	bool JsonifierResult<ArrayIterator>::operator!=(const JsonifierResult<ArrayIterator>& other) const noexcept {
+		if (!first.iterator.isValid()) {
+			return error();
+		}
+		return first != other.first;
+	}
+	inline JsonifierResult<ArrayIterator>& JsonifierResult<ArrayIterator>::operator++() noexcept {
+		// Clear the error if there is one, so we don't yield it twice
+		if (error()) {
+			second = Success;
+			return *this;
+		}
+		++(first);
+		return *this;
+	}
+
 	inline ArrayIterator::ArrayIterator(const ValueIterator& _iter) noexcept : iterator{ _iter } {
 	}
 
@@ -36,41 +72,5 @@ namespace Jsonifier {
 		}
 		return *this;
 	}
-
-		inline JsonifierResult<ArrayIterator>::JsonifierResult(ArrayIterator&& Value) noexcept
-			: ImplementationJsonifierResultBase<ArrayIterator>(std::forward<ArrayIterator>(Value)) {
-			first.iterator.assert_is_valid();
-		}
-		inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept
-			: ImplementationJsonifierResultBase<ArrayIterator>({}, error) {
-		}
-
-		inline JsonifierResult<Value> JsonifierResult<ArrayIterator>::operator*() noexcept {
-			if (error()) {
-				return error();
-			}
-			return *first;
-		}
-		inline bool JsonifierResult<ArrayIterator>::operator==(const JsonifierResult<ArrayIterator>& other) const noexcept {
-			if (!first.iterator.is_valid()) {
-				return !error();
-			}
-			return first == other.first;
-		}
-		inline bool JsonifierResult<ArrayIterator>::operator!=(const JsonifierResult<ArrayIterator>& other) const noexcept {
-			if (!first.iterator.is_valid()) {
-				return error();
-			}
-			return first != other.first;
-		}
-		inline JsonifierResult<ArrayIterator>& JsonifierResult<ArrayIterator>::operator++() noexcept {
-			// Clear the error if there is one, so we don't yield it twice
-			if (error()) {
-				second = Success;
-				return *this;
-			}
-			++(first);
-			return *this;
-		}
-
-	}
+}
+	
