@@ -55,7 +55,7 @@ namespace Jsonifier {
 	inline ErrorCode Object::consume() noexcept {
 		if (iterator.is_at_key()) {
 			/**
-     * whenever you are pointing at a key, calling skip_child() is
+     * whenever you are pointing at a key, calling skipChild() is
      * unsafe because you will hit a string and you will assume that
      * it is string Value, and this mistake will lead you to make bad
      * depth computation.
@@ -79,7 +79,7 @@ namespace Jsonifier {
 				return error;
 			}
 		}
-		auto error_skip = iterator.json_iter().skip_child(iterator.depth() - 1);
+		auto error_skip = iterator.json_iter().skipChild(iterator.depth() - 1);
 		if (error_skip) {
 			iterator.abandon();
 		}

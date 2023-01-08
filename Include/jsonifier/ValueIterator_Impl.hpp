@@ -29,25 +29,17 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::started_root_object() noexcept {
-		if (*jsonIterator->peek_last() != '}') {
-			jsonIterator->abandon();
-			return reportError(Incomplete_Array_Or_Object, "missing } at end");
-		}
-		if ((*jsonIterator->peek(jsonIterator->end_position()) == '}') && (!jsonIterator->balanced())) {
-			jsonIterator->abandon();
-			return reportError(Incomplete_Array_Or_Object, "the Document is unbalanced");
-		}
 		return started_object();
 	}
 
 	inline ErrorCode ValueIterator::end_container() noexcept {
 #if SIMDJSON_CHECK_EOF
-		if (depth() > 1 && at_end()) {
+		if (depth() > 1 && atEnd()) {
 			return reportError(Incomplete_Array_Or_Object, "missing parent ] or }");
 		}
-		// if (depth() <= 1 && !at_end()) { return reportError(Incomplete_Array_Or_Object, "missing [ or { at start"); }
+		// if (depth() <= 1 && !atEnd()) { return reportError(Incomplete_Array_Or_Object, "missing [ or { at start"); }
 #endif// SIMDJSON_CHECK_EOF
-		jsonIterator->ascend_to(depth() - 1);
+		jsonIterator->ascendTo(depth() - 1);
 		return Success;
 	}
 
@@ -110,7 +102,7 @@ namespace Jsonifier {
 			//    ```
 			//
 		} else {
-			if ((error = skip_child())) {
+			if ((error = skipChild())) {
 				abandon();
 				return error;
 			}
@@ -149,9 +141,9 @@ namespace Jsonifier {
 				return true;
 			}
 
-			// The call to skip_child is meant to skip over the Value corresponding to the key.
-			// After skip_child(), we are right before the next comma (',') or the final brace ('}').
-			JsonifierTry(skip_child());// Skip the Value entirely
+			// The call to skipChild is meant to skip over the Value corresponding to the key.
+			// After skipChild(), we are right before the next comma (',') or the final brace ('}').
+			JsonifierTry(skipChild());// Skip the Value entirely
 			// The has_next_field() advances the pointer and check that either ',' or '}' is found.
 			// It returns true if ',' is found, false otherwise. If anything other than ',' or '}' is found,
 			// then we are in error and we abort.
@@ -224,8 +216,8 @@ namespace Jsonifier {
 		} else {
 			// If someone queried a key but they not did access the Value, then we are left pointing
 			// at the ':' and we need to move forward through the Value... If the Value was
-			// processed then skip_child() does not move the iterator (but may adjust the depth).
-			if ((error = skip_child())) {
+			// processed then skipChild() does not move the iterator (but may adjust the depth).
+			if ((error = skipChild())) {
 				abandon();
 				return error;
 			}
@@ -283,9 +275,9 @@ namespace Jsonifier {
 				return true;
 			}
 
-			// The call to skip_child is meant to skip over the Value corresponding to the key.
-			// After skip_child(), we are right before the next comma (',') or the final brace ('}').
-			JsonifierTry(skip_child());
+			// The call to skipChild is meant to skip over the Value corresponding to the key.
+			// After skipChild(), we are right before the next comma (',') or the final brace ('}').
+			JsonifierTry(skipChild());
 			// The has_next_field() advances the pointer and check that either ',' or '}' is found.
 			// It returns true if ',' is found, false otherwise. If anything other than ',' or '}' is found,
 			// then we are in error and we abort.
@@ -337,9 +329,9 @@ namespace Jsonifier {
 				return true;
 			}
 
-			// The call to skip_child is meant to skip over the Value corresponding to the key.
-			// After skip_child(), we are right before the next comma (',') or the final brace ('}').
-			JsonifierTry(skip_child());
+			// The call to skipChild is meant to skip over the Value corresponding to the key.
+			// After skipChild(), we are right before the next comma (',') or the final brace ('}').
+			JsonifierTry(skipChild());
 			// If we reached the end of the key-Value pair we started from, then we know
 			// that the key is not there so we return false. We are either right before
 			// the next comma or the final brace.
@@ -375,7 +367,7 @@ namespace Jsonifier {
 		if (*jsonIterator->returnCurrentAndAdvance() != ':') {
 			return reportError(Tape_Error, "Missing colon in Object Field");
 		}
-		jsonIterator->descend_to(depth() + 1);
+		jsonIterator->descendTo(depth() + 1);
 		return Success;
 	}
 
@@ -389,10 +381,10 @@ namespace Jsonifier {
 		return started_root_array();
 	}
 
-	inline std::string ValueIterator::to_string() const noexcept {
+	inline std::string ValueIterator::toString() const noexcept {
 		auto answer = std::string("ValueIterator [ depth : ") + std::to_string(currentDepth) + std::string(", ");
 		if (jsonIterator != nullptr) {
-			answer += jsonIterator->to_string();
+			answer += jsonIterator->toString();
 		}
 		answer += std::string(" ]");
 		return answer;
@@ -405,16 +397,16 @@ namespace Jsonifier {
 			JsonifierTry(end_container());
 			return false;
 		}
-		jsonIterator->descend_to(depth() + 1);
+		jsonIterator->descendTo(depth() + 1);
 		return true;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::started_root_array() noexcept {
-		if (*jsonIterator->peek_last() != ']') {
+		if (*jsonIterator->peekLast() != ']') {
 			jsonIterator->abandon();
 			return reportError(Incomplete_Array_Or_Object, "missing ] at end");
 		}
-		if ((*jsonIterator->peek(jsonIterator->end_position()) == ']') && (!jsonIterator->balanced())) {
+		if ((*jsonIterator->peek(jsonIterator->endPosition()) == ']') && (!jsonIterator->balanced())) {
 			jsonIterator->abandon();
 			return reportError(Incomplete_Array_Or_Object, "the Document is unbalanced");
 		}
@@ -429,7 +421,7 @@ namespace Jsonifier {
 				JsonifierTry(end_container());
 				return false;
 			case ',':
-				jsonIterator->descend_to(depth() + 1);
+				jsonIterator->descendTo(depth() + 1);
 				return true;
 			default:
 				return reportError(Tape_Error, "Missing comma between Array elements");
@@ -445,6 +437,7 @@ namespace Jsonifier {
 		}
 		return JsonifierResult<bool>(!not_true);
 	}
+
 	inline JsonifierResult<bool> ValueIterator::parse_null(const uint8_t* json) const noexcept {
 		bool is_null_string = !str4ncmp(json, "null") && isStructuralOrWhitespace(json[4]);
 		// if we start with 'n', we must be a null
@@ -457,6 +450,7 @@ namespace Jsonifier {
 	inline JsonifierResult<std::string_view> ValueIterator::getString() noexcept {
 		return getRawJsonString().unescape(json_iter());
 	}
+
 	inline JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
 		auto json = peek_scalar("string");
 		if (*json != '"') {
@@ -465,6 +459,7 @@ namespace Jsonifier {
 		advance_scalar("string");
 		return RawJsonString(json + 1);
 	}
+
 	inline JsonifierResult<uint64_t> ValueIterator::getUint64() noexcept {
 		auto result = parseUnsigned(peek_non_root_scalar("uint64"));
 		if (result.error() == Success) {
@@ -472,6 +467,7 @@ namespace Jsonifier {
 		}
 		return result;
 	}
+
 	inline JsonifierResult<int64_t> ValueIterator::getInt64() noexcept {
 		auto result = parseInteger(peek_non_root_scalar("int64"));
 		if (result.error() == Success) {
@@ -479,6 +475,7 @@ namespace Jsonifier {
 		}
 		return result;
 	}
+
 	inline JsonifierResult<double> ValueIterator::getDouble() noexcept {
 		auto result = parseDouble(peek_non_root_scalar("double"));
 		if (result.error() == Success) {
@@ -486,6 +483,7 @@ namespace Jsonifier {
 		}
 		return result;
 	}
+
 	inline JsonifierResult<bool> ValueIterator::getBool() noexcept {
 		auto result = parse_bool(peek_non_root_scalar("bool"));
 		if (result.error() == Success) {
@@ -493,6 +491,7 @@ namespace Jsonifier {
 		}
 		return result;
 	}
+
 	inline JsonifierResult<bool> ValueIterator::isNull() noexcept {
 		bool is_null_value;
 		JsonifierTry(parse_null(peek_non_root_scalar("null")).get(is_null_value));
@@ -502,13 +501,14 @@ namespace Jsonifier {
 		return is_null_value;
 	}
 
-
 	inline JsonifierResult<std::string_view> ValueIterator::get_root_string() noexcept {
 		return getString();
 	}
+
 	inline JsonifierResult<RawJsonString> ValueIterator::get_root_raw_json_string() noexcept {
 		return getRawJsonString();
 	}
+
 	inline JsonifierResult<uint64_t> ValueIterator::get_root_uint64() noexcept {
 		auto max_len = peek_start_length();
 		auto json = peek_root_scalar("uint64");
@@ -518,13 +518,14 @@ namespace Jsonifier {
 		}
 		auto result = parseUnsigned(tmpbuf);
 		if (result.error() == Success) {
-			if (!jsonIterator->is_single_token()) {
+			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
 			advance_root_scalar("uint64");
 		}
 		return result;
 	}
+
 	inline JsonifierResult<int64_t> ValueIterator::get_root_int64() noexcept {
 		auto max_len = peek_start_length();
 		auto json = peek_root_scalar("int64");
@@ -535,13 +536,14 @@ namespace Jsonifier {
 
 		auto result = parseInteger(tmpbuf);
 		if (result.error() == Success) {
-			if (!jsonIterator->is_single_token()) {
+			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
 			advance_root_scalar("int64");
 		}
 		return result;
 	}
+
 	inline JsonifierResult<double> ValueIterator::get_root_double() noexcept {
 		auto max_len = peek_start_length();
 		auto json = peek_root_scalar("double");
@@ -554,7 +556,7 @@ namespace Jsonifier {
 		}
 		auto result = parseDouble(tmpbuf);
 		if (result.error() == Success) {
-			if (!jsonIterator->is_single_token()) {
+			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
 			advance_root_scalar("double");
@@ -571,16 +573,17 @@ namespace Jsonifier {
 		}
 		auto result = parse_bool(tmpbuf);
 		if (result.error() == Success) {
-			if (!jsonIterator->is_single_token()) {
+			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
 			advance_root_scalar("bool");
 		}
 		return result;
 	}
+
 	inline bool ValueIterator::is_root_null() noexcept {
 		// If there is trailing content, then the Document is not null.
-		if (!jsonIterator->is_single_token()) {
+		if (!jsonIterator->isSingleToken()) {
 			return false;
 		}
 		auto max_len = peek_start_length();
@@ -592,11 +595,11 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline ErrorCode ValueIterator::skip_child() noexcept {
+	inline ErrorCode ValueIterator::skipChild() noexcept {
 		assert(jsonIterator->token.currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth >= currentDepth);
 
-		return jsonIterator->skip_child(depth());
+		return jsonIterator->skipChild(depth());
 	}
 
 	inline ValueIterator ValueIterator::child() const noexcept {
@@ -608,8 +611,8 @@ namespace Jsonifier {
 		return jsonIterator->depth() >= depth();
 	}
 
-	inline bool ValueIterator::at_end() const noexcept {
-		return jsonIterator->at_end();
+	inline bool ValueIterator::atEnd() const noexcept {
+		return jsonIterator->atEnd();
 	}
 
 	inline bool ValueIterator::at_start() const noexcept {
@@ -628,15 +631,19 @@ namespace Jsonifier {
 	inline int32_t ValueIterator::depth() const noexcept {
 		return currentDepth;
 	}
+
 	inline ErrorCode ValueIterator::error() const noexcept {
 		return jsonIterator->error;
 	}
+
 	inline uint8_t*& ValueIterator::string_buf_loc() noexcept {
 		return jsonIterator->string_buf_loc();
 	}
+
 	inline const JsonIterator& ValueIterator::json_iter() const noexcept {
 		return *jsonIterator;
 	}
+
 	inline JsonIterator& ValueIterator::json_iter() noexcept {
 		return *jsonIterator;
 	}
@@ -644,6 +651,7 @@ namespace Jsonifier {
 	inline const uint8_t* ValueIterator::peek_start() const noexcept {
 		return jsonIterator->peek(start_position());
 	}
+
 	inline uint32_t ValueIterator::peek_start_length() const noexcept {
 		return jsonIterator->peekLength(start_position());
 	}
@@ -668,7 +676,7 @@ namespace Jsonifier {
 		// Get the JSON and advance the cursor, decreasing depth to signify that we have retrieved the Value.
 		assert_at_start();
 		jsonIterator->returnCurrentAndAdvance();
-		jsonIterator->ascend_to(depth() - 1);
+		jsonIterator->ascendTo(depth() - 1);
 	}
 
 	inline ErrorCode ValueIterator::start_container(uint8_t start_char, const char* incorrect_type_message, const char* type) noexcept {
@@ -697,15 +705,15 @@ namespace Jsonifier {
 		return Success;
 	}
 
-
 	inline const uint8_t* ValueIterator::peek_root_scalar(const char* type) noexcept {
 		if (!is_at_start()) {
 			return peek_start();
 		}
 
-		assert_at_root();
+		assertAtRoot();
 		return jsonIterator->peek();
 	}
+
 	inline const uint8_t* ValueIterator::peek_non_root_scalar(const char* type) noexcept {
 		if (!is_at_start()) {
 			return peek_start();
@@ -720,10 +728,11 @@ namespace Jsonifier {
 			return;
 		}
 
-		assert_at_root();
+		assertAtRoot();
 		jsonIterator->returnCurrentAndAdvance();
-		jsonIterator->ascend_to(depth() - 1);
+		jsonIterator->ascendTo(depth() - 1);
 	}
+
 	inline void ValueIterator::advance_non_root_scalar(const char* type) noexcept {
 		if (!is_at_start()) {
 			return;
@@ -731,7 +740,7 @@ namespace Jsonifier {
 
 		assert_at_non_root_start();
 		jsonIterator->returnCurrentAndAdvance();
-		jsonIterator->ascend_to(depth() - 1);
+		jsonIterator->ascendTo(depth() - 1);
 	}
 
 	inline ErrorCode ValueIterator::incorrect_type_error(const char* message) const noexcept {
@@ -799,7 +808,7 @@ namespace Jsonifier {
 		assert(currentDepth > 0);
 	}
 
-	inline void ValueIterator::assert_at_root() const noexcept {
+	inline void ValueIterator::assertAtRoot() const noexcept {
 		assert_at_start();
 		assert(currentDepth == 1);
 	}
@@ -855,8 +864,8 @@ namespace Jsonifier {
 		return jsonIterator->position();
 	}
 
-	inline uint32_t* ValueIterator::end_position() const noexcept {
-		return jsonIterator->end_position();
+	inline uint32_t* ValueIterator::endPosition() const noexcept {
+		return jsonIterator->endPosition();
 	}
 
 	inline uint32_t* ValueIterator::last_position() const noexcept {
@@ -866,9 +875,11 @@ namespace Jsonifier {
 	inline ErrorCode ValueIterator::reportError(ErrorCode error, const char* message) noexcept {
 		return jsonIterator->reportError(error, message);
 	}
+
 	inline JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
 		: ImplementationJsonifierResultBase<ValueIterator>(std::forward<ValueIterator>(Value)) {
 	}
+
 	inline JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ValueIterator>(error) {
 	}
 

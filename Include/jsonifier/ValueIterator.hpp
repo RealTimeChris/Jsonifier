@@ -42,12 +42,12 @@ namespace Jsonifier {
    *
    * Optimized for scalars.
    */
-		inline ErrorCode skip_child() noexcept;
+		inline ErrorCode skipChild() noexcept;
 
 		/**
    * Tell whether the iterator is at the EOF mark
    */
-		inline bool at_end() const noexcept;
+		inline bool atEnd() const noexcept;
 
 		/**
    * Tell whether the iterator is at the start of the Value
@@ -336,7 +336,7 @@ namespace Jsonifier {
    **/
 		inline void move_at_container_start() noexcept;
 		/* Useful for debugging and logging purposes. */
-		inline std::string to_string() const noexcept;
+		inline std::string toString() const noexcept;
 		inline ValueIterator(JsonIterator* json_iter, uint32_t depth, uint32_t* start_index) noexcept;
 
 		inline JsonifierResult<bool> parse_null(const uint8_t* json) const noexcept;
@@ -409,14 +409,14 @@ namespace Jsonifier {
    * Assuming that we are within an Object, this returns true if we
    * are pointing at a key.
    *
-   * Usage: the skip_child() method should never be used while we are pointing
+   * Usage: the skipChild() method should never be used while we are pointing
    * at a key inside an Object.
    */
 		inline bool is_at_key() const noexcept;
 
 		inline void assert_at_start() const noexcept;
 		inline void assert_at_container_start() const noexcept;
-		inline void assert_at_root() const noexcept;
+		inline void assertAtRoot() const noexcept;
 		inline void assert_at_child() const noexcept;
 		inline void assert_at_next() const noexcept;
 		inline void assert_at_non_root_start() const noexcept;
@@ -426,10 +426,10 @@ namespace Jsonifier {
 
 		/** @copydoc ErrorCode JsonIterator::position() const noexcept; */
 		inline uint32_t* position() const noexcept;
-		/** @copydoc ErrorCode JsonIterator::end_position() const noexcept; */
+		/** @copydoc ErrorCode JsonIterator::endPosition() const noexcept; */
 		inline uint32_t* last_position() const noexcept;
-		/** @copydoc ErrorCode JsonIterator::end_position() const noexcept; */
-		inline uint32_t* end_position() const noexcept;
+		/** @copydoc ErrorCode JsonIterator::endPosition() const noexcept; */
+		inline uint32_t* endPosition() const noexcept;
 		/** @copydoc ErrorCode JsonIterator::reportError(ErrorCode error, const char *message) noexcept; */
 		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
 

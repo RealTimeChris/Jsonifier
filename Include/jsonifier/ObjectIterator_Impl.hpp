@@ -36,7 +36,7 @@ inline ObjectIterator& ObjectIterator::operator++() noexcept {
 	}// Iterator will be released if there is an error
 
 	ErrorCode error;
-	if ((error = iterator.skip_child())) {
+	if ((error = iterator.skipChild())) {
 		return *this;
 	}
 

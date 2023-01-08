@@ -18,7 +18,7 @@ namespace Jsonifier {
 	}
 
 	inline std::string Document::toDebugString() noexcept {
-		return iterator.to_string();
+		return iterator.toString();
 	}
 
 	inline JsonifierResult<const char*> Document::currentLocation() noexcept {
@@ -33,20 +33,20 @@ namespace Jsonifier {
 		return iterator.isAlive();
 	}
 	inline ValueIterator Document::resumeValueIterator() noexcept {
-		return ValueIterator(&iterator, 1, iterator.root_position());
+		return ValueIterator(&iterator, 1, iterator.rootPosition());
 	}
 	inline ValueIterator Document::getRootValueIterator() noexcept {
 		return resumeValueIterator();
 	}
 	inline JsonifierResult<Object> Document::startOrResumeObject() noexcept {
-		if (iterator.at_root()) {
+		if (iterator.atRoot()) {
 			return getObject();
 		} else {
 			return Object::resume(resumeValueIterator());
 		}
 	}
 	inline JsonifierResult<Value> Document::getValue() noexcept {
-		iterator.assert_at_Document_depth();
+		iterator.assertAtDocumentDepth();
 		switch (*iterator.peek()) {
 			case '[':
 			case '{':
@@ -219,7 +219,7 @@ namespace Jsonifier {
 	}
 
 	inline ErrorCode Document::consume() noexcept {
-		auto error = iterator.skip_child(0);
+		auto error = iterator.skipChild(0);
 		if (error) {
 			iterator.abandon();
 		}
@@ -236,7 +236,7 @@ namespace Jsonifier {
 		// After 'consume()', we could be left pointing just beyond the Document, but that
 		// is ok because we are not going to dereference the final pointer position, we just
 		// use it to compute the length in bytes.
-		const uint8_t* final_point{ iterator.unsafe_pointer() };
+		const uint8_t* final_point{ iterator.unsafePointer() };
 		return std::string_view(reinterpret_cast<const char*>(starting_point), size_t(final_point - starting_point));
 	}
 

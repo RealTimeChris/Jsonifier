@@ -122,11 +122,11 @@ namespace Jsonifier {
 			return this->objects[index];
 		}
 
-		inline operator OTy*() noexcept {
+	inline operator OTy*() noexcept {
 			return this->objects;
 		}
 
-		inline void reset(size_t newSize) noexcept {
+	inline void reset(size_t newSize) noexcept {
 			this->deallocate();
 			if (newSize != 0) {
 				AllocatorType allocator{};
@@ -135,7 +135,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline ~ObjectBuffer() noexcept {
+	inline ~ObjectBuffer() noexcept {
 			this->deallocate();
 		}
 

@@ -50,11 +50,13 @@ namespace Jsonifier {
 		JsonifierTry(iterator.start_array().get(has_value));
 		return Array(iterator);
 	}
+
 	inline JsonifierResult<Array> Array::start_root(ValueIterator& iterator) noexcept {
 		bool has_value;
 		JsonifierTry(iterator.start_root_array().get(has_value));
 		return Array(iterator);
 	}
+
 	inline JsonifierResult<Array> Array::started(ValueIterator& iterator) noexcept {
 		bool has_value;
 		JsonifierTry(iterator.started_array().get(has_value));
@@ -64,11 +66,13 @@ namespace Jsonifier {
 	inline JsonifierResult<ArrayIterator> Array::begin() noexcept {
 		return ArrayIterator(iterator);
 	}
+
 	inline JsonifierResult<ArrayIterator> Array::end() noexcept {
 		return ArrayIterator(iterator);
 	}
+
 	inline ErrorCode Array::consume() noexcept {
-		auto error = iterator.json_iter().skip_child(iterator.depth() - 1);
+		auto error = iterator.json_iter().skipChild(iterator.depth() - 1);
 		if (error) {
 			iterator.abandon();
 		}
@@ -84,7 +88,7 @@ namespace Jsonifier {
 		// After 'consume()', we could be left pointing just beyond the Document, but that
 		// is ok because we are not going to dereference the final pointer position, we just
 		// use it to compute the length in bytes.
-		const uint8_t* final_point{ iterator.jsonIterator->unsafe_pointer() };
+		const uint8_t* final_point{ iterator.jsonIterator->unsafePointer() };
 		return std::string_view(reinterpret_cast<const char*>(starting_point), size_t(final_point - starting_point));
 	}
 
@@ -174,44 +178,49 @@ namespace Jsonifier {
 		return Out_Of_Bounds;
 	}
 
-
-		inline JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept
+	inline JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept
 			: ImplementationJsonifierResultBase<Array>(std::forward<Array>(Value)) {
 		}
-		inline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Array>(error) {
+
+	inline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Array>(error) {
 		}
 
-		inline JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
+	inline JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
 			if (error()) {
 				return error();
 			}
 			return first.begin();
 		}
-		inline JsonifierResult<ArrayIterator> JsonifierResult<Array>::end() noexcept {
+
+	inline JsonifierResult<ArrayIterator> JsonifierResult<Array>::end() noexcept {
 			if (error()) {
 				return error();
 			}
 			return first.end();
 		}
-		inline JsonifierResult<size_t> JsonifierResult<Array>::countElements() & noexcept {
+
+	inline JsonifierResult<size_t> JsonifierResult<Array>::countElements() & noexcept {
 			if (error()) {
 				return error();
 			}
 			return first.countElements();
 		}
-		inline JsonifierResult<bool> JsonifierResult<Array>::is_empty() & noexcept {
+
+	inline JsonifierResult<bool> JsonifierResult<Array>::is_empty() & noexcept {
 			if (error()) {
 				return error();
 			}
 			return first.is_empty();
 		}
-		inline JsonifierResult<Value> JsonifierResult<Array>::at(size_t index) noexcept {
+
+	inline JsonifierResult<Value> JsonifierResult<Array>::at(size_t index) noexcept {
 			if (error()) {
 				return error();
 			}
 			return first.at(index);
 		}
-		inline JsonifierResult<Value> JsonifierResult<Array>::atPointer(std::string_view json_pointer) noexcept {
+
+	inline JsonifierResult<Value> JsonifierResult<Array>::atPointer(std::string_view json_pointer) noexcept {
 			if (error()) {
 				return error();
 			}

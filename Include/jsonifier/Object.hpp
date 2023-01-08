@@ -45,7 +45,7 @@ namespace Jsonifier {
 	   * OUT_OF_ORDER_ITERATION error is generated.
 	   *
 	   * You are expected to access keys only once. You should access the Value corresponding to a
-	   * key a single time. Doing Object["mykey"].to_string() and then again Object["mykey"].to_string()
+	   * key a single time. Doing Object["mykey"].toString() and then again Object["mykey"].toString()
 	   * is an error.
 	   *
 	   * @param key The key to look up.
@@ -83,7 +83,7 @@ namespace Jsonifier {
 	   * OUT_OF_ORDER_ITERATION error is generated.
 	   *
 	   * You are expected to access keys only once. You should access the Value corresponding to a key
-	   * a single time. Doing Object["mykey"].to_string() and then again Object["mykey"].to_string() is an error.
+	   * a single time. Doing Object["mykey"].toString() and then again Object["mykey"].toString() is an error.
 	   *
 	   * @param key The key to look up.
 	   * @returns The Value of the Field, or No_Such_Field if the Field is not in the Object.
