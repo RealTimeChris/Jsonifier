@@ -1,12 +1,22 @@
 # Jsonifier
-[![Build Jsonifier](https://img.shields.io/github/workflow/status/realtimechris/Jsonifier/Release?label=Release&style=plastic&color=purple)](https://github.com/RealTimeChris/Jsonifier/actions/workflows/Release.yml)
+[![Build Jsonifier](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/Release.yml?branch=main&style=plastic&color=purple)](https://github.com/RealTimeChris/Jsonifier/actions/workflows/Release.yml)
 ![Commit Activity](https://img.shields.io/github/commit-activity/m/realtimechris/Jsonifier?color=green&label=Commits&style=plastic)
-![Lines of code](https://img.shields.io/tokei/lines/github/realtimechris/Jsonifier?&style=plastic&label=Lines%20of%20Code)
+![Lines of code](https://img.shields.io/tokei/lines/github/RealTimeChris/Jsonifier?&style=plastic&label=Lines%20of%20Code)
 
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
+---
 ## Benchmarks:
-### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/canada.json) data (canada.json):
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/main/Benchmarking/test_data.json) data (test_data.json):
+----
+#### Windows 11 Results:
+----
+#### A total of 5 times, for a total number of parsed bytes of 6060, per iteration:
+----
+- Jsonifier = 20920 nanoseconds average per iteration.   
+- simdjson = 304900 nanoseconds average per iteration.   
+----
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/main/Benchmarking/canada.json) data (canada.json):
 ----
 #### Windows 11 Results:
 ----
@@ -15,7 +25,7 @@
 - Jsonifier = 778900 nanoseconds average per iteration.   
 - simdjson = 1045980 nanoseconds average per iteration.   
 ----
-### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/citm-catalog.json) data (citm-catalog.json):
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/main/Benchmarking/citm-catalog.json) data (citm-catalog.json):
 ----
 #### Windows 11 Results:
 ----
@@ -23,7 +33,7 @@
 ----
 - Jsonifier = 618040 nanoseconds average per iteration.   
 - simdjson = 903040 nanoseconds average per iteration.   
-### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/Dev/Benchmarking/twitter.json) data (twitter.json):
+### Parsing the [following](https://github.com/RealTimeChris/Jsonifier/blob/main/Benchmarking/twitter.json) data (twitter.json):
 ----
 #### Windows 11 Results:
 ----
@@ -43,7 +53,7 @@ std::vector<std::string> vector{};
 uint64_t totalTime{};
 size_t size{};
 WebSocketIdentifyData data{};
-auto serializer = data.operator Jsonifier::Jsonifier();
+auto serializer = data.operator Jsonifier::Serializer();
 stopWatch.resetTimer();
 
 for (uint32_t x = 0; x < 50; ++x) {
@@ -107,7 +117,7 @@ std::cout << "The time it took (In milliseconds, on average): " << totalTime / 5
 - Jsonifier = 238 milliseconds average per iteration.   
 - Nlohmann-Json = 451 milliseconds average per iteration.   
 ## Usage
-- Use the square bracket operator with the desired key names, to create objects. Also, use `Jsonifier::emplaceBack()` to create and add to arrays.
+- Use the square bracket operator with the desired key names, to create objects. Also, use `Jsonifier::Serializer::emplaceBack()` to create and add to arrays.
 - Alternatively use the square bracket operator with numbers as keys to access array-fields. If you try to access fields that don't exist, it will append the missing number of fields as "null".
 ----
 ```cpp
@@ -116,11 +126,11 @@ struct UpdatePresenceData {
 	std::string status{};
 	int64_t since{ 0 };
 	bool afk{ false };
-	operator Jsonifier();
+	operator Jsonifier::Serializer();
 	};
 
-UpdatePresenceData::operator Jsonifier() {
-	Jsonifier serializer{};
+UpdatePresenceData::operator Jsonifier::Serializer() {
+	Jsonifier::Serializer serializer{};
 	serializer["status"] = this->status;
 	serializer["since"] = this->since;
 	serializer["afk"] = this->afk;
@@ -128,7 +138,7 @@ UpdatePresenceData::operator Jsonifier() {
 }
 
 WebSocketIdentifyData::operator std::string() {
-	Jsonifier serializer{};
+	Jsonifier::Serializer serializer{};
 	serializer["d"]["intents"] = this->intents;
 	std::map<std::string, DiscordCoreAPI::ChannelType> map{};
 	serializer["d"]["large_threshold"] = map;
@@ -153,14 +163,14 @@ WebSocketIdentifyData::operator std::string() {
 	serializer["d"]["shard"].emplaceBack(1);
 	serializer["d"]["token"] = this->botToken;
 	serializer["op"] = 2;
-	serializer.refreshString(JsonifierSerializeType::Json);
+	serializer.refreshString(Jsonifier::SerializeType::Json);
 	return serializer.operator std::string&&();
 	}
 
 ```
-- To generate the string, call the `Jsonifier::refreshString()` method with an argument of type `JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the Jsonifier class to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier` class, while the `std::string&&` operator moves it out of the `Jsonifier` class.)**
+- To generate the string, call the `Jsonifier::Serializer::refreshString()` method with an argument of type `Jsonifier::JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the `Jsonifier::Serializer` class to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier::Serializer` class, while the `std::string&&` operator moves it out of the `Jsonifier::Serializer` class.)**
 ```cpp
-serializer.refreshString(JsonifierSerializeType::Json);
+serializer.refreshString(Jsonifier::JsonifierSerializeType::Json);
 return serializer.operator std::string&&();
 ```
 - The previous inputs will generate the following output, in Json-generating mode.
@@ -173,7 +183,7 @@ return serializer.operator std::string&&();
 activitiesl♥t♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmjm
 propertiest♥mbrowsermDiscordCoreAPIm♠devicemDiscordCoreAPIm☻osmWindowsm♣shardl☻aa☺jm♠statusmm♣tokenmm☻opa☻
 ```
-- Also note that the `Jsonifier` class can accept arguments of type `Jsonifier` to be concatenated into the string - as the `UpdatePresenceData` class above shows.
+- Also note that the `Jsonifier::Serializer` class can accept arguments of type `Jsonifier::Serializer` to be concatenated into the string - as the `UpdatePresenceData` class above shows.
 ## Installation (CMake)
 - Requirements:
 	- CMake 3.20 or later.
