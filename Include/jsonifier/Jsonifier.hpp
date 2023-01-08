@@ -125,8 +125,8 @@ namespace Jsonifier {
 
 	struct Jsonifier_Dll EnumConverter {
 		template<IsEnum EnumType> EnumConverter& operator=(const std::vector<EnumType>& data) {
-			for (auto& value: data) {
-				this->vector.emplace_back(std::move(static_cast<uint64_t>(value)));
+			for (auto& Value: data) {
+				this->vector.emplace_back(std::move(static_cast<uint64_t>(Value)));
 			}
 			return *this;
 		};
@@ -195,8 +195,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>&& data) noexcept {
 			this->setValue(JsonType::Array);
-			for (auto& value: data) {
-				this->jsonValue.array->push_back(std::move(value));
+			for (auto& Value: data) {
+				this->jsonValue.array->push_back(std::move(Value));
 			}
 			return *this;
 		}
@@ -207,8 +207,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>& data) noexcept {
 			this->setValue(JsonType::Array);
-			for (auto& value: data) {
-				this->jsonValue.array->push_back(value);
+			for (auto& Value: data) {
+				this->jsonValue.array->push_back(Value);
 			}
 			return *this;
 		}
@@ -220,8 +220,8 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = std::move(value);
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = std::move(Value);
 			}
 			return *this;
 		}
@@ -233,8 +233,8 @@ namespace Jsonifier {
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
 		inline Serializer& operator=(std::unordered_map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = value;
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = Value;
 			}
 			return *this;
 		}
@@ -245,8 +245,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = std::move(value);
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = std::move(Value);
 			}
 			return *this;
 		}
@@ -257,8 +257,8 @@ namespace Jsonifier {
 
 		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
-			for (auto& [key, value]: data) {
-				(*this->jsonValue.object)[key] = value;
+			for (auto& [key, Value]: data) {
+				(*this->jsonValue.object)[key] = Value;
 			}
 			return *this;
 		}
@@ -278,6 +278,8 @@ namespace Jsonifier {
 		}
 
 		Serializer& operator=(Serializer&& data) noexcept;
+
+		Serializer(Serializer&& data) noexcept;
 
 		Serializer& operator=(const Serializer& data) noexcept;
 
@@ -347,11 +349,11 @@ namespace Jsonifier {
 
 		Serializer& operator[](uint64_t index);
 
-		template<typename Ty> const Ty& getValue() const {
+		template<typename Ty> inline const Ty& getValue() const {
 			return Ty{};
 		}
 
-		template<typename Ty> Ty& getValue() {
+		template<typename Ty> inline Ty& getValue() {
 			return Ty{};
 		}
 
@@ -420,17 +422,17 @@ namespace Jsonifier {
 
 		void appendMapHeader(const uint32_t sizeNew);
 
-		void appendUint64(const uint64_t value);
+		void appendUint64(const uint64_t Value);
 
-		void appendUint32(const uint32_t value);
+		void appendUint32(const uint32_t Value);
 
-		void appendUint8(const uint8_t value);
+		void appendUint8(const uint8_t Value);
 
-		void appendInt64(const int64_t value);
+		void appendInt64(const int64_t Value);
 
-		void appendInt32(const int32_t value);
+		void appendInt32(const int32_t Value);
 
-		void appendInt8(const int8_t value);
+		void appendInt8(const int8_t Value);
 
 		void appendBool(bool data);
 
@@ -446,34 +448,6 @@ namespace Jsonifier {
 
 		friend bool operator==(const Serializer& lhs, const Serializer& rhs);
 	};
-
-	template<> inline const Serializer::ObjectType& Serializer::getValue() const {
-		return *this->jsonValue.object;
-	}
-
-	template<> inline const Serializer::ArrayType& Serializer::getValue() const {
-		return *this->jsonValue.array;
-	}
-
-	template<> inline const Serializer::StringType& Serializer::getValue() const {
-		return *this->jsonValue.string;
-	}
-
-	template<> inline const Serializer::FloatType& Serializer::getValue() const {
-		return this->jsonValue.numberDouble;
-	}
-
-	template<> inline const Serializer::UintType& Serializer::getValue() const {
-		return this->jsonValue.numberUint;
-	}
-
-	template<> inline const Serializer::IntType& Serializer::getValue() const {
-		return this->jsonValue.numberInt;
-	}
-
-	template<> inline const Serializer::BoolType& Serializer::getValue() const {
-		return this->jsonValue.boolean;
-	}
 
 	template<> inline Serializer::ObjectType& Serializer::getValue() {
 		return *this->jsonValue.object;
@@ -502,7 +476,6 @@ namespace Jsonifier {
 	template<> inline Serializer::BoolType& Serializer::getValue() {
 		return this->jsonValue.boolean;
 	}
-
 
 	inline int64_t totalTimePassed{};
 	inline int64_t iterationCount{};

@@ -7,7 +7,7 @@ namespace Jsonifier {
 
 	inline TokenIterator::TokenIterator(const uint8_t* _buf, uint32_t* position) noexcept : stringView{ _buf }, currentPosition{ position } {};
 
-	inline uint32_t TokenIterator::current_offset() const noexcept {
+	inline uint32_t TokenIterator::currentOffset() const noexcept {
 		return *(currentPosition);
 	}
 

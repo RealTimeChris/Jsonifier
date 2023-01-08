@@ -42,12 +42,12 @@ namespace Jsonifier {
    *
    * Optimized for scalars.
    */
-		inline ErrorCode skipChild() noexcept;
+		inline ErrorCode skip_child() noexcept;
 
 		/**
    * Tell whether the iterator is at the EOF mark
    */
-		inline bool atEnd() const noexcept;
+		inline bool at_end() const noexcept;
 
 		/**
    * Tell whether the iterator is at the start of the Value
@@ -189,7 +189,7 @@ namespace Jsonifier {
    * unescape it. This works well for typical ASCII and UTF-8 keys (almost all of them), but may
    * fail to match some keys with escapes (\u, \n, etc.).
    */
-		inline JsonifierResult<bool> findFieldRaw(const std::string_view key) noexcept;
+		inline JsonifierResult<bool> find_field_raw(const std::string_view key) noexcept;
 
 		/**
    * Find the Field with the given key without regard to order, and *without* unescaping.
@@ -226,7 +226,7 @@ namespace Jsonifier {
    * @returns Whether the Array had any elements (returns false for empty).
    * @error Incorrect_Type If there is no [.
    */
-		inline JsonifierResult<bool> startArray() noexcept;
+		inline JsonifierResult<bool> start_array() noexcept;
 		/**
    * Check for an opening [ and start an Array iteration while at the root.
    *
@@ -234,7 +234,7 @@ namespace Jsonifier {
    * @error Incorrect_Type If there is no [.
    * @error Tape_Error if there is no matching ] at end of Document
    */
-		inline JsonifierResult<bool> startRootArray() noexcept;
+		inline JsonifierResult<bool> start_root_array() noexcept;
 
 		/**
    * Start an Array iteration, after the user has already checked and moved past the [.
@@ -245,7 +245,7 @@ namespace Jsonifier {
    * @error Incomplete_Array_Or_Object If there are no more tokens (implying the *parent*
    *        Array or Object is incomplete).
    */
-		inline JsonifierResult<bool> startedArray() noexcept;
+		inline JsonifierResult<bool> started_array() noexcept;
 		/**
    * Start an Array iteration from the root, after the user has already checked and moved past the [.
    *
@@ -255,7 +255,7 @@ namespace Jsonifier {
    * @error Incomplete_Array_Or_Object If there are no more tokens (implying the *parent*
    *        Array or Object is incomplete).
    */
-		inline JsonifierResult<bool> startedRootArray() noexcept;
+		inline JsonifierResult<bool> started_root_array() noexcept;
 
 		/**
    * Moves to the next element in an Array.
@@ -300,9 +300,9 @@ namespace Jsonifier {
 		inline bool is_root_null() noexcept;
 
 		inline ErrorCode error() const noexcept;
-		inline uint8_t*& stringBufLoc() noexcept;
-		inline const JsonIterator& jsonIter() const noexcept;
-		inline JsonIterator& jsonIter() noexcept;
+		inline uint8_t*& string_buf_loc() noexcept;
+		inline const JsonIterator& json_iter() const noexcept;
+		inline JsonIterator& json_iter() noexcept;
 
 		inline void assertIsValid() const noexcept;
 		inline bool isValid() const noexcept;
@@ -313,7 +313,7 @@ namespace Jsonifier {
    * Restarts an Array iteration.
    * @returns Whether the Array has any elements (returns false for empty).
    */
-		inline JsonifierResult<bool> resetArray() noexcept;
+		inline JsonifierResult<bool> reset_array() noexcept;
 		/**
    * Restarts an Object iteration.
    * @returns Whether the Object has any fields (returns false for empty).
@@ -332,16 +332,16 @@ namespace Jsonifier {
    * move_at_container_start(): moves us so that we are pointing at the beginning of
    * the container so that assert_at_container_start() passes.
    *
-   * Usage: used with resetArray() and reset_object().
+   * Usage: used with reset_array() and reset_object().
    **/
 		inline void move_at_container_start() noexcept;
 		/* Useful for debugging and logging purposes. */
-		inline std::string toString() const noexcept;
-		inline ValueIterator(JsonIterator* jsonIter, uint32_t depth, uint32_t* start_index) noexcept;
+		inline std::string to_string() const noexcept;
+		inline ValueIterator(JsonIterator* json_iter, uint32_t depth, uint32_t* start_index) noexcept;
 
 		inline JsonifierResult<bool> parse_null(const uint8_t* json) const noexcept;
 		inline JsonifierResult<bool> parse_bool(const uint8_t* json) const noexcept;
-		inline const uint8_t* peekStart() const noexcept;
+		inline const uint8_t* peek_start() const noexcept;
 		inline uint32_t peek_start_length() const noexcept;
 
 		/**
@@ -409,14 +409,14 @@ namespace Jsonifier {
    * Assuming that we are within an Object, this returns true if we
    * are pointing at a key.
    *
-   * Usage: the skipChild() method should never be used while we are pointing
+   * Usage: the skip_child() method should never be used while we are pointing
    * at a key inside an Object.
    */
 		inline bool is_at_key() const noexcept;
 
 		inline void assert_at_start() const noexcept;
 		inline void assert_at_container_start() const noexcept;
-		inline void assertAtRoot() const noexcept;
+		inline void assert_at_root() const noexcept;
 		inline void assert_at_child() const noexcept;
 		inline void assert_at_next() const noexcept;
 		inline void assert_at_non_root_start() const noexcept;
@@ -426,10 +426,10 @@ namespace Jsonifier {
 
 		/** @copydoc ErrorCode JsonIterator::position() const noexcept; */
 		inline uint32_t* position() const noexcept;
-		/** @copydoc ErrorCode JsonIterator::endPosition() const noexcept; */
-		inline uint32_t* lastPosition() const noexcept;
-		/** @copydoc ErrorCode JsonIterator::endPosition() const noexcept; */
-		inline uint32_t* endPosition() const noexcept;
+		/** @copydoc ErrorCode JsonIterator::end_position() const noexcept; */
+		inline uint32_t* last_position() const noexcept;
+		/** @copydoc ErrorCode JsonIterator::end_position() const noexcept; */
+		inline uint32_t* end_position() const noexcept;
 		/** @copydoc ErrorCode JsonIterator::reportError(ErrorCode error, const char *message) noexcept; */
 		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
 

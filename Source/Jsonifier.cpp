@@ -67,6 +67,10 @@ namespace Jsonifier {
 		return *this;
 	}
 
+	Serializer::Serializer(Serializer&& data) noexcept {
+		*this = std::move(data);
+	}
+
 	Serializer& Serializer::operator=(const Serializer& data) noexcept {
 		switch (data.type) {
 			case JsonType::Object: {

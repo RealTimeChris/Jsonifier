@@ -64,7 +64,7 @@ namespace Jsonifier {
 		if ((error = iterator.error())) {
 			return *this;
 		}
-		if ((error = iterator.skipChild())) {
+		if ((error = iterator.skip_child())) {
 			return *this;
 		}
 		if ((error = iterator.has_next_element().error())) {
@@ -73,3 +73,4 @@ namespace Jsonifier {
 		return *this;
 	}
 }
+	

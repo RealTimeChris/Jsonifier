@@ -477,7 +477,7 @@ namespace Jsonifier {
 	}
 
 	inline std::string_view Value::rawJsonToken() noexcept {
-		return std::string_view(reinterpret_cast<const char*>(iterator.peekStart()), iterator.peek_start_length());
+		return std::string_view(reinterpret_cast<const char*>(iterator.peek_start()), iterator.peek_start_length());
 	}
 
 	inline JsonifierResult<const char*> Value::currentLocation() noexcept {
@@ -500,5 +500,5 @@ namespace Jsonifier {
 				return Invalid_Json_Pointer;
 		}
 	}
-
+	
 }
