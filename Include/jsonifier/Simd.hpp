@@ -55,14 +55,6 @@ namespace Jsonifier {
 			return _mm256_movemask_epi8(*this);
 		}
 
-		inline void fromUint64(uint64_t data) {
-			this->value = _mm256_set1_epi64x(static_cast<int64_t>(data));
-		}
-
-		explicit inline SimdBase256(uint64_t other) {
-			this->fromUint64(other);
-		}
-
 		inline SimdBase256& operator=(char other) {
 			this->value = _mm256_set1_epi8(other);
 			return *this;
