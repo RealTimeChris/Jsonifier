@@ -485,7 +485,7 @@ namespace Jsonifier {
 
 		inline ValueIterator resume_value_iterator() noexcept;
 		inline ValueIterator get_root_value_iterator() noexcept;
-		inline JsonifierResult<Object> start_or_resume_object() noexcept;
+		inline JsonifierResult<Object> startOrResumeObject() noexcept;
 		static inline Document start(JsonIterator&& iterator) noexcept;
 		JsonIterator iterator{};
 		static constexpr uint32_t DOCUMENT_DEPTH = 0;

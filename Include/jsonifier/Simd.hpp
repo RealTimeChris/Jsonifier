@@ -9,7 +9,7 @@ namespace Jsonifier {
 		inline SimdBase128() noexcept = default;
 
 		inline SimdBase128& operator=(char other) {
-			this->Value = _mm_set1_epi8(other);
+			this->value = _mm_set1_epi8(other);
 			return *this;
 		}
 
@@ -18,11 +18,11 @@ namespace Jsonifier {
 		}
 
 		inline operator __m128i() {
-			return this->Value;
+			return this->value;
 		}
 
 	  protected:
-		__m128i Value{};
+		__m128i value{};
 	};
 
 	class Jsonifier_Dll SimdBase256 {
@@ -38,17 +38,17 @@ namespace Jsonifier {
 			return false;
 		}
 
-		inline SimdBase256& operator=(const bool Value) {
-			if (Value) {
-				this->Value = _mm256_insert_epi64(*this, 0x01, 0);
+		inline SimdBase256& operator=(const bool value) {
+			if (value) {
+				this->value = _mm256_insert_epi64(*this, 0x01, 0);
 			} else {
-				this->Value = _mm256_set1_epi8('\0');
+				this->value = _mm256_set1_epi8('\0');
 			}
 			return *this;
 		}
 
-		inline SimdBase256(const bool Value) {
-			*this = Value;
+		inline SimdBase256(const bool value) {
+			*this = value;
 		}
 
 		inline int32_t toBitMask() {
@@ -56,7 +56,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256& operator=(char other) {
-			this->Value = _mm256_set1_epi8(other);
+			this->value = _mm256_set1_epi8(other);
 			return *this;
 		}
 
@@ -83,16 +83,16 @@ namespace Jsonifier {
 		}
 
 		explicit inline SimdBase256(int64_t value00, int64_t value01, int64_t value02, int64_t value03) {
-			this->Value = _mm256_set_epi64x(value03, value02, value01, value00);
+			this->value = _mm256_set_epi64x(value03, value02, value01, value00);
 		}
 
 		explicit inline SimdBase256(uint64_t value00, uint64_t value01, uint64_t value02, uint64_t value03) {
-			this->Value = _mm256_set_epi64x(static_cast<int64_t>(value03), static_cast<int64_t>(value02), static_cast<int64_t>(value01),
+			this->value = _mm256_set_epi64x(static_cast<int64_t>(value03), static_cast<int64_t>(value02), static_cast<int64_t>(value01),
 				static_cast<int64_t>(value00));
 		}
 
 		inline SimdBase256& operator=(__m256i other) {
-			this->Value = other;
+			this->value = other;
 			return *this;
 		}
 
@@ -101,25 +101,25 @@ namespace Jsonifier {
 		}
 
 		inline void store(uint8_t dst[32]) const {
-			_mm256_storeu_epi8(dst, this->Value);
+			_mm256_storeu_epi8(dst, this->value);
 		}
 
 		inline uint64_t getUint64(size_t index) {
 			switch (index) {
 				case 0: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->Value, 0));
+					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 0));
 				}
 				case 1: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->Value, 1));
+					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 1));
 				}
 				case 2: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->Value, 2));
+					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 2));
 				}
 				case 3: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->Value, 3));
+					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 3));
 				}
 				default: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->Value, 0));
+					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 0));
 				}
 			}
 		}
@@ -127,91 +127,91 @@ namespace Jsonifier {
 		inline int64_t getInt64(size_t index) {
 			switch (index) {
 				case 0: {
-					return _mm256_extract_epi64(this->Value, 0);
+					return _mm256_extract_epi64(this->value, 0);
 				}
 				case 1: {
-					return _mm256_extract_epi64(this->Value, 1);
+					return _mm256_extract_epi64(this->value, 1);
 				}
 				case 2: {
-					return _mm256_extract_epi64(this->Value, 2);
+					return _mm256_extract_epi64(this->value, 2);
 				}
 				case 3: {
-					return _mm256_extract_epi64(this->Value, 3);
+					return _mm256_extract_epi64(this->value, 3);
 				}
 				default: {
-					return _mm256_extract_epi64(this->Value, 0);
+					return _mm256_extract_epi64(this->value, 0);
 				}
 			}
 		}
 
-		inline void insertUint64(uint64_t Value, size_t index) {
+		inline void insertUint64(uint64_t value, size_t index) {
 			switch (index) {
 				case 0: {
-					this->Value = _mm256_insert_epi64(this->Value, static_cast<int64_t>(Value), 0);
+					this->value = _mm256_insert_epi64(this->value, static_cast<int64_t>(value), 0);
 					break;
 				}
 				case 1: {
-					this->Value = _mm256_insert_epi64(this->Value, static_cast<int64_t>(Value), 1);
+					this->value = _mm256_insert_epi64(this->value, static_cast<int64_t>(value), 1);
 					break;
 				}
 				case 2: {
-					this->Value = _mm256_insert_epi64(this->Value, static_cast<int64_t>(Value), 2);
+					this->value = _mm256_insert_epi64(this->value, static_cast<int64_t>(value), 2);
 					break;
 				}
 				case 3: {
-					this->Value = _mm256_insert_epi64(this->Value, static_cast<int64_t>(Value), 3);
+					this->value = _mm256_insert_epi64(this->value, static_cast<int64_t>(value), 3);
 					break;
 				}
 				default: {
-					this->Value = _mm256_insert_epi64(this->Value, static_cast<int64_t>(Value), 0);
+					this->value = _mm256_insert_epi64(this->value, static_cast<int64_t>(value), 0);
 					break;
 				}
 			}
 		}
 
-		inline void insertInt64(int64_t Value, size_t index) {
+		inline void insertInt64(int64_t value, size_t index) {
 			switch (index) {
 				case 0: {
-					this->Value = _mm256_insert_epi64(this->Value, Value, 0);
+					this->value = _mm256_insert_epi64(this->value, value, 0);
 					break;
 				}
 				case 1: {
-					this->Value = _mm256_insert_epi64(this->Value, Value, 1);
+					this->value = _mm256_insert_epi64(this->value, value, 1);
 					break;
 				}
 				case 2: {
-					this->Value = _mm256_insert_epi64(this->Value, Value, 2);
+					this->value = _mm256_insert_epi64(this->value, value, 2);
 					break;
 				}
 				case 3: {
-					this->Value = _mm256_insert_epi64(this->Value, Value, 3);
+					this->value = _mm256_insert_epi64(this->value, value, 3);
 					break;
 				}
 				default: {
-					this->Value = _mm256_insert_epi64(this->Value, Value, 0);
+					this->value = _mm256_insert_epi64(this->value, value, 0);
 					break;
 				}
 			}
 		}
 
 		inline operator __m256i&() {
-			return this->Value;
+			return this->value;
 		}
 
 		inline SimdBase256 operator|(SimdBase256& other) {
-			return _mm256_or_si256(this->Value, other);
+			return _mm256_or_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator&(SimdBase256& other) {
-			return _mm256_and_si256(this->Value, other);
+			return _mm256_and_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator^(SimdBase256& other) {
-			return _mm256_xor_si256(this->Value, other);
+			return _mm256_xor_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator+(SimdBase256& other) {
-			return _mm256_add_epi8(this->Value, other);
+			return _mm256_add_epi8(this->value, other);
 		}
 
 		inline SimdBase256& operator|=(SimdBase256& other) {
@@ -230,23 +230,23 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 operator==(SimdBase256& other) {
-			return _mm256_cmpeq_epi8(this->Value, other);
+			return _mm256_cmpeq_epi8(this->value, other);
 		}
 
 		inline SimdBase256 operator|(SimdBase256&& other) {
-			return _mm256_or_si256(this->Value, other);
+			return _mm256_or_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator&(SimdBase256&& other) {
-			return _mm256_and_si256(this->Value, other);
+			return _mm256_and_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator^(SimdBase256&& other) {
-			return _mm256_xor_si256(this->Value, other);
+			return _mm256_xor_si256(this->value, other);
 		}
 
 		inline SimdBase256 operator+(SimdBase256&& other) {
-			return _mm256_add_epi8(this->Value, other);
+			return _mm256_add_epi8(this->value, other);
 		}
 
 		inline SimdBase256& operator|=(SimdBase256&& other) {
@@ -265,11 +265,11 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 operator==(SimdBase256&& other) {
-			return _mm256_cmpeq_epi8(this->Value, other);
+			return _mm256_cmpeq_epi8(this->value, other);
 		}
 
 		inline SimdBase256 operator==(uint8_t other) {
-			return _mm256_cmpeq_epi8(this->Value, _mm256_set1_epi8(other));
+			return _mm256_cmpeq_epi8(this->value, _mm256_set1_epi8(other));
 		}
 
 		template<size_t amount> inline SimdBase256 shl() {
@@ -358,7 +358,7 @@ namespace Jsonifier {
 			cout << valuesTitle;
 			for (size_t x = 0; x < 32; ++x) {
 				for (size_t y = 0; y < 8; ++y) {
-					cout << std::bitset<1>{ static_cast<size_t>(*(reinterpret_cast<int8_t*>(&this->Value) + x)) >> y };
+					cout << std::bitset<1>{ static_cast<size_t>(*(reinterpret_cast<int8_t*>(&this->value) + x)) >> y };
 				}
 			}
 			cout << std::endl;
@@ -366,15 +366,15 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 bitAndNot(SimdBase256 other) {
-			return _mm256_andnot_si256(other, this->Value);
+			return _mm256_andnot_si256(other, this->value);
 		}
 
 		inline SimdBase256 shuffle(SimdBase256 other) {
-			return _mm256_shuffle_epi8(other, this->Value);
+			return _mm256_shuffle_epi8(other, this->value);
 		}
 
 	  protected:
-		__m256i Value{};
+		__m256i value{};
 	};
 
 	inline SimdBase256 convertSimdBytesToBits(SimdBase256 input00[8]) {

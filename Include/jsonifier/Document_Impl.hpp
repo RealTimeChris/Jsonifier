@@ -38,7 +38,7 @@ namespace Jsonifier {
 	inline ValueIterator Document::get_root_value_iterator() noexcept {
 		return resume_value_iterator();
 	}
-	inline JsonifierResult<Object> Document::start_or_resume_object() noexcept {
+	inline JsonifierResult<Object> Document::startOrResumeObject() noexcept {
 		if (iterator.at_root()) {
 			return getObject();
 		} else {
@@ -200,22 +200,22 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<Value> Document::findField(std::string_view key) & noexcept {
-		return start_or_resume_object().findField(key);
+		return startOrResumeObject().findField(key);
 	}
 	inline JsonifierResult<Value> Document::findField(const char* key) & noexcept {
-		return start_or_resume_object().findField(key);
+		return startOrResumeObject().findField(key);
 	}
 	inline JsonifierResult<Value> Document::findFieldUnordered(std::string_view key) & noexcept {
-		return start_or_resume_object().findFieldUnordered(key);
+		return startOrResumeObject().findFieldUnordered(key);
 	}
 	inline JsonifierResult<Value> Document::findFieldUnordered(const char* key) & noexcept {
-		return start_or_resume_object().findFieldUnordered(key);
+		return startOrResumeObject().findFieldUnordered(key);
 	}
 	inline JsonifierResult<Value> Document::operator[](std::string_view key) & noexcept {
-		return start_or_resume_object()[key];
+		return startOrResumeObject()[key];
 	}
 	inline JsonifierResult<Value> Document::operator[](const char* key) & noexcept {
-		return start_or_resume_object()[key];
+		return startOrResumeObject()[key];
 	}
 
 	inline ErrorCode Document::consume() noexcept {

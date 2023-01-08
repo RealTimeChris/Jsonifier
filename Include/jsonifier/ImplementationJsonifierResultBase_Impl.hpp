@@ -8,16 +8,16 @@
 
 namespace Jsonifier {
 
-	template<typename T> inline void JsonifierResultBase<T>::tie(T& Value, ErrorCode& error) && noexcept {
+	template<typename T> inline void JsonifierResultBase<T>::tie(T& value, ErrorCode& error) && noexcept {
 		error = this->second;
 		if (!error) {
-			Value = std::forward<JsonifierResultBase<T>>(*this).first;
+			value = std::forward<JsonifierResultBase<T>>(*this).first;
 		}
 	}
 
-	template<typename T> inline ErrorCode JsonifierResultBase<T>::get(T& Value) && noexcept {
+	template<typename T> inline ErrorCode JsonifierResultBase<T>::get(T& value) && noexcept {
 		ErrorCode error{};
-		std::forward<JsonifierResultBase<T>>(*this).tie(Value, error);
+		std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
 		return error;
 	}
 
@@ -27,7 +27,7 @@ namespace Jsonifier {
 
 	template<typename T> inline T& JsonifierResultBase<T>::value() & noexcept(false) {
 		if (error()) {
-			throw error();
+			throw simdjson_error(error());
 		}
 		return this->first;
 	}
@@ -56,25 +56,25 @@ namespace Jsonifier {
 	}
 
 	template<typename T>
-	inline JsonifierResultBase<T>::JsonifierResultBase(T&& Value, ErrorCode error) noexcept : std::pair<T, ErrorCode>(std::forward<T>(Value), error) {
+	inline JsonifierResultBase<T>::JsonifierResultBase(T&& value, ErrorCode error) noexcept : std::pair<T, ErrorCode>(std::forward<T>(value), error) {
 	}
 
 	template<typename T> inline JsonifierResultBase<T>::JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error) {
 	}
 
 	template<typename T>
-	inline JsonifierResultBase<T>::JsonifierResultBase(T&& Value) noexcept : JsonifierResultBase(std::forward<T>(Value), Success) {
+	inline JsonifierResultBase<T>::JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success) {
 	}
 
 	template<typename T> inline JsonifierResultBase<T>::JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized) {
 	}
 
-	template<typename T> inline void JsonifierResult<T>::tie(T& Value, ErrorCode& error) && noexcept {
-		std::forward<JsonifierResultBase<T>>(*this).tie(Value, error);
+	template<typename T> inline void JsonifierResult<T>::tie(T& value, ErrorCode& error) && noexcept {
+		std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
 	}
 
-	template<typename T> inline ErrorCode JsonifierResult<T>::get(T& Value) && noexcept {
-		return std::forward<JsonifierResultBase<T>>(*this).get(Value);
+	template<typename T> inline ErrorCode JsonifierResult<T>::get(T& value) && noexcept {
+		return std::forward<JsonifierResultBase<T>>(*this).get(value);
 	}
 
 	template<typename T> inline ErrorCode JsonifierResult<T>::error() const noexcept {
@@ -106,28 +106,28 @@ namespace Jsonifier {
 	}
 
 	template<typename T>
-	inline JsonifierResult<T>::JsonifierResult(T&& Value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(Value), error) {
+	inline JsonifierResult<T>::JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
 	}
 
 	template<typename T> inline JsonifierResult<T>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<T>(error) {
 	}
 
-	template<typename T> inline JsonifierResult<T>::JsonifierResult(T&& Value) noexcept : JsonifierResultBase<T>(std::forward<T>(Value)) {
+	template<typename T> inline JsonifierResult<T>::JsonifierResult(T&& value) noexcept : JsonifierResultBase<T>(std::forward<T>(value)) {
 	}
 
 	template<typename T> inline JsonifierResult<T>::JsonifierResult() noexcept : JsonifierResultBase<T>() {
 	}
 
-	template<typename T> inline void ImplementationJsonifierResultBase<T>::tie(T& Value, ErrorCode& error) && noexcept {
+	template<typename T> inline void ImplementationJsonifierResultBase<T>::tie(T& value, ErrorCode& error) && noexcept {
 		error = this->second;
 		if (!error) {
-			Value = std::forward<ImplementationJsonifierResultBase<T>>(*this).first;
+			value = std::forward<ImplementationJsonifierResultBase<T>>(*this).first;
 		}
 	}
 
-	template<typename T> inline ErrorCode ImplementationJsonifierResultBase<T>::get(T& Value) && noexcept {
+	template<typename T> inline ErrorCode ImplementationJsonifierResultBase<T>::get(T& value) && noexcept {
 		ErrorCode error{};
-		std::forward<ImplementationJsonifierResultBase<T>>(*this).tie(Value, error);
+		std::forward<ImplementationJsonifierResultBase<T>>(*this).tie(value, error);
 		return error;
 	}
 
@@ -170,8 +170,8 @@ namespace Jsonifier {
 	}
 
 	template<typename T>
-	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(T&& Value, ErrorCode error) noexcept
-		: first{ std::forward<T>(Value) }, second{ error } {
+	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(T&& value, ErrorCode error) noexcept
+		: first{ std::forward<T>(value) }, second{ error } {
 	}
 
 	template<typename T>
@@ -180,8 +180,8 @@ namespace Jsonifier {
 	}
 
 	template<typename T>
-	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(T&& Value) noexcept
-		: ImplementationJsonifierResultBase(std::forward<T>(Value), Success) {
+	inline ImplementationJsonifierResultBase<T>::ImplementationJsonifierResultBase(T&& value) noexcept
+		: ImplementationJsonifierResultBase(std::forward<T>(value), Success) {
 	}
 
 }
