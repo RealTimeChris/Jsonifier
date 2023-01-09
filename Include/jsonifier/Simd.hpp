@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "Base.hpp"
@@ -64,14 +65,12 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline SimdBase256& operator=(const char* values) {
-			*this = _mm256_set_epi8(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9],
-				values[10], values[11], values[12], values[13], values[14], values[15], values[16], values[17], values[18], values[19], values[20],
-				values[21], values[22], values[23], values[24], values[25], values[26], values[27], values[28], values[29], values[30], values[31]);
+		inline SimdBase256& operator=(const uint8_t* values) {
+			*this = _mm256_loadu_epi8(values);
 			return *this;
 		}
 
-		explicit inline SimdBase256(const char* values) {
+		inline SimdBase256(const uint8_t* values) {
 			*this = values;
 		}
 
@@ -455,7 +454,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 collectWhiteSpace() {
-			char valuesNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2,
+			uint8_t valuesNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2,
 				100, '\t', '\n', 112, 100, '\r', 100, 100 };
 			SimdBase256 whitespaceTable{ valuesNew };
 			SimdBase256 whiteSpaceReal[8]{};
@@ -466,7 +465,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 collectStructuralCharacters() {
-			char newValues[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			uint8_t newValues[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
 			SimdBase256 opTable{ newValues };
 			SimdBase256 structural[8]{};
 			for (size_t x = 0; x < 8; ++x) {
@@ -535,14 +534,9 @@ namespace Jsonifier {
 		}
 
 		void submitDataForProcessing(const uint8_t* valueNew) {
-			this->packStringIntoValue(&this->values[0], valueNew);
-			this->packStringIntoValue(&this->values[1], valueNew + 32);
-			this->packStringIntoValue(&this->values[2], valueNew + 64);
-			this->packStringIntoValue(&this->values[3], valueNew + 96);
-			this->packStringIntoValue(&this->values[4], valueNew + 128);
-			this->packStringIntoValue(&this->values[5], valueNew + 160);
-			this->packStringIntoValue(&this->values[6], valueNew + 192);
-			this->packStringIntoValue(&this->values[7], valueNew + 224);
+			for (size_t x = 0; x < 8; ++x) {
+				this->packStringIntoValue(&this->values[x], valueNew + (32 * x));
+			}
 			this->structurals = this->collectFinalStructurals();
 		}
 

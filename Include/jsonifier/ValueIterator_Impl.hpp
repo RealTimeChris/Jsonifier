@@ -9,12 +9,12 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startObject() noexcept {
-		JsonifierTry(startContainer('{', "Not an Object", "Object"));
+		JsonifierTry(startContainer('{'));
 		return startedObject();
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startRootObject() noexcept {
-		JsonifierTry(startContainer('{', "Not an Object", "Object"));
+		JsonifierTry(startContainer('{'));
 		return startedRootObject();
 	}
 
@@ -46,7 +46,7 @@ namespace Jsonifier {
 			case ',':
 				return true;
 			default:
-				return reportError(Tape_Error, "Missing comma between Object fields");
+				return reportError(Tape_Error);
 		}
 	}
 
@@ -161,7 +161,7 @@ namespace Jsonifier {
 
 		const uint8_t* key = jsonIterator->returnCurrentAndAdvance();
 		if (*(key++) != '"') {
-			return reportError(Tape_Error, "Object key is not a string");
+			return reportError(Tape_Error);
 		}
 		return RawJsonString(key);
 	}
@@ -170,19 +170,19 @@ namespace Jsonifier {
 		assertAtNext();
 
 		if (*jsonIterator->returnCurrentAndAdvance() != ':') {
-			return reportError(Tape_Error, "Missing colon in Object Field");
+			return reportError(Tape_Error);
 		}
 		jsonIterator->descendTo(depth() + 1);
 		return Success;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startArray() noexcept {
-		JsonifierTry(startContainer('[', "Not an Array", "Array"));
+		JsonifierTry(startContainer('['));
 		return startedArray();
 	}
 
 	inline JsonifierResult<bool> ValueIterator::startRootArray() noexcept {
-		JsonifierTry(startContainer('[', "Not an Array", "Array"));
+		JsonifierTry(startContainer('['));
 		return startedRootArray();
 	}
 
@@ -209,11 +209,11 @@ namespace Jsonifier {
 	inline JsonifierResult<bool> ValueIterator::startedRootArray() noexcept {
 		if (*jsonIterator->peekLast() != ']') {
 			jsonIterator->abandon();
-			return reportError(Incomplete_Array_Or_Object, "missing ] at end");
+			return reportError(Incomplete_Array_Or_Object);
 		}
 		if ((*jsonIterator->peek(jsonIterator->endPosition()) == ']') && (!jsonIterator->balanced())) {
 			jsonIterator->abandon();
-			return reportError(Incomplete_Array_Or_Object, "the Document is unbalanced");
+			return reportError(Incomplete_Array_Or_Object);
 		}
 		return startedArray();
 	}
@@ -229,7 +229,7 @@ namespace Jsonifier {
 				jsonIterator->descendTo(depth() + 1);
 				return true;
 			default:
-				return reportError(Tape_Error, "Missing comma between Array elements");
+				return reportError(Tape_Error);
 		}
 	}
 
@@ -238,7 +238,7 @@ namespace Jsonifier {
 		auto not_false = str4ncmp(json, "fals") | (json[4] ^ 'e');
 		bool error = (not_true && not_false) || isNotStructuralOrWhitespace(json[not_true ? 5 : 4]);
 		if (error) {
-			return incorrect_type_error("Not a boolean");
+			return incorrectTypeError();
 		}
 		return JsonifierResult<bool>(!not_true);
 	}
@@ -246,7 +246,7 @@ namespace Jsonifier {
 	inline JsonifierResult<bool> ValueIterator::parseNull(const uint8_t* json) const noexcept {
 		bool is_null_string = !str4ncmp(json, "null") && isStructuralOrWhitespace(json[4]);
 		if (!is_null_string && json[0] == 'n') {
-			return incorrect_type_error("Not a null but starts with n");
+			return incorrectTypeError();
 		}
 		return is_null_string;
 	}
@@ -258,7 +258,7 @@ namespace Jsonifier {
 	inline JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
 		auto json = peekScalar();
 		if (*json != '"') {
-			return incorrect_type_error("Not a string");
+			return incorrectTypeError();
 		}
 		advanceScalar();
 		return RawJsonString(json + 1);
@@ -368,7 +368,7 @@ namespace Jsonifier {
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[5 + 1];
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
-			return incorrect_type_error("Not a boolean");
+			return incorrectTypeError();
 		}
 		auto result = parseBool(tmpbuf);
 		if (result.error() == Success) {
@@ -473,18 +473,18 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline ErrorCode ValueIterator::startContainer(uint8_t start_char, const char* incorrect_type_message, const char* type) noexcept {
+	inline ErrorCode ValueIterator::startContainer(uint8_t start_char) noexcept {
 		const uint8_t* json;
 		if (!isAtStart()) {
 			json = peekStart();
 			if (*json != start_char) {
-				return incorrect_type_error(incorrect_type_message);
+				return incorrectTypeError();
 			}
 		} else {
 			assertAtStart();
 			json = jsonIterator->peek();
 			if (*json != start_char) {
-				return incorrect_type_error(incorrect_type_message);
+				return incorrectTypeError();
 			}
 			jsonIterator->returnCurrentAndAdvance();
 		}
@@ -531,7 +531,7 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline ErrorCode ValueIterator::incorrect_type_error(const char* message) const noexcept {
+	inline ErrorCode ValueIterator::incorrectTypeError() const noexcept {
 		return Incorrect_Type;
 	}
 
@@ -656,8 +656,8 @@ namespace Jsonifier {
 		return jsonIterator->lastPosition();
 	}
 
-	inline ErrorCode ValueIterator::reportError(ErrorCode error, const char* message) noexcept {
-		return jsonIterator->reportError(error, message);
+	inline ErrorCode ValueIterator::reportError(ErrorCode error) noexcept {
+		return jsonIterator->reportError(error);
 	}
 
 	inline JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept

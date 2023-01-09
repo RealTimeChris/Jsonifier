@@ -49,8 +49,7 @@ namespace Jsonifier {
 		inline void descendTo(uint32_t child_depth, int32_t delta) noexcept;
 		inline uint32_t depth() const noexcept;
 		inline uint8_t*& stringBufLoc() noexcept;
-		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
-		inline ErrorCode optionalError(ErrorCode error, const char* message) noexcept;
+		inline ErrorCode reportError(ErrorCode error) noexcept;
 		template<int N> inline bool copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept;
 		inline uint32_t* position() const noexcept;
 		inline JsonifierResult<std::string_view> unescape(RawJsonString in) noexcept;

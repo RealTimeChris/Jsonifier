@@ -102,7 +102,7 @@ namespace Jsonifier {
 			}
 		}
 
-		return reportError(Tape_Error, "not enough close braces");
+		return reportError(Tape_Error);
 	}
 
 	inline bool JsonIterator::atRoot() const noexcept {
@@ -221,7 +221,7 @@ namespace Jsonifier {
 		return stringBuffer;
 	}
 
-	inline ErrorCode JsonIterator::reportError(ErrorCode errorNew, const char* message) noexcept {
+	inline ErrorCode JsonIterator::reportError(ErrorCode errorNew) noexcept {
 		assert(errorNew != Success && errorNew != Uninitialized && errorNew != Incorrect_Type && errorNew != No_Such_Field);
 		error = errorNew;
 		return error;
@@ -246,11 +246,6 @@ namespace Jsonifier {
 		assert(currentDepth == child_depth - 1);
 		TokenIterator::setPosition(position);
 		currentDepth = child_depth;
-	}
-
-	inline ErrorCode JsonIterator::optionalError(ErrorCode errorNew, const char* message) noexcept {
-		assert(errorNew == Incorrect_Type || errorNew == No_Such_Field);
-		return errorNew;
 	}
 
 	template<int N> inline bool JsonIterator::copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept {

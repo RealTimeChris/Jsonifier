@@ -90,11 +90,11 @@ namespace Jsonifier {
 		inline const uint8_t* peekNonRootScalar() noexcept;
 
 
-		inline ErrorCode startContainer(uint8_t start_char, const char* incorrect_type_message, const char* type) noexcept;
+		inline ErrorCode startContainer(uint8_t start_char) noexcept;
 		inline ErrorCode endContainer() noexcept;
 		inline JsonifierResult<const uint8_t*> advanceToValue() noexcept;
 
-		inline ErrorCode incorrect_type_error(const char* message) const noexcept;
+		inline ErrorCode incorrectTypeError() const noexcept;
 		inline ErrorCode error_unless_more_tokens(uint32_t tokens = 1) const noexcept;
 
 		inline bool isAtStart() const noexcept;
@@ -111,7 +111,7 @@ namespace Jsonifier {
 		inline uint32_t* position() const noexcept;
 		inline uint32_t* lastPosition() const noexcept;
 		inline uint32_t* endPosition() const noexcept;
-		inline ErrorCode reportError(ErrorCode error, const char* message) noexcept;
+		inline ErrorCode reportError(ErrorCode error) noexcept;
 
 		friend class Document;
 		friend class Object;
