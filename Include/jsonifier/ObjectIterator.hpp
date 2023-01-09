@@ -9,28 +9,28 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll ObjectIterator : public ValueIterator {
 	  public:
-		inline ObjectIterator() noexcept = default;
-		inline JsonifierResult<Field> operator*() noexcept;
-		inline bool operator==(const ObjectIterator&) const noexcept;
-		inline bool operator!=(const ObjectIterator&) const noexcept;
-		inline ObjectIterator& operator++() noexcept;
+		ObjectIterator() noexcept = default;
+		JsonifierResult<Field> operator*() noexcept;
+		bool operator==(const ObjectIterator&) const noexcept;
+		bool operator!=(const ObjectIterator&) const noexcept;
+		ObjectIterator& operator++() noexcept;
 
 	  protected:
-		inline ObjectIterator(const ValueIterator& iterator) noexcept;
+		ObjectIterator(const ValueIterator& iterator) noexcept;
 		friend struct JsonifierResult<ObjectIterator>;
 		friend class Object;
 	};
 
 	template<> struct JsonifierResult<ObjectIterator> : public JsonifierResultBase<ObjectIterator> {
 	  public:
-		inline JsonifierResult(ObjectIterator&& value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
-		inline JsonifierResult() noexcept = default;
+		JsonifierResult(ObjectIterator&& value) noexcept;
+		JsonifierResult(ErrorCode error) noexcept;
+		JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<Field> operator*() noexcept;
-		inline bool operator==(const JsonifierResult<ObjectIterator>&) const noexcept;
-		inline bool operator!=(const JsonifierResult<ObjectIterator>&) const noexcept;
-		inline JsonifierResult<ObjectIterator>& operator++() noexcept;
+		JsonifierResult<Field> operator*() noexcept;
+		bool operator==(const JsonifierResult<ObjectIterator>&) const noexcept;
+		bool operator!=(const JsonifierResult<ObjectIterator>&) const noexcept;
+		JsonifierResult<ObjectIterator>& operator++() noexcept;
 	};
 
 }

@@ -79,8 +79,7 @@ namespace Jsonifier {
 		Trailing_Content = 17,
 		Out_Of_Order_Iteration = 18,
 		Scalar_Document_As_Value = 19,
-		Incomplete_Array_Or_Object = 20,
-		Unclosed_String = 21
+		Incomplete_Array_Or_Object = 20
 	};
 
 	enum class JsonType : uint8_t {
@@ -148,30 +147,64 @@ namespace Jsonifier {
 	};
 
 	template<typename T> struct JsonifierResultBase {
-		inline void tie(T& value, ErrorCode& error) && noexcept;
-		inline ErrorCode get(T& value) && noexcept;
+		inline void tie(T& value, ErrorCode& error) && noexcept {
+			error = this->second;
+			if (!error) {
+				value = std::forward<JsonifierResultBase<T>>(*this).first;
+			}
+		}
 
-		inline ErrorCode error() const noexcept;
+		inline ErrorCode get(T& value) && noexcept {
+			ErrorCode error;
+			std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
+			return error;
+		}
 
-		inline T& value() & noexcept(false);
+		inline ErrorCode error() const noexcept {
+			return this->second;
+		}
 
-		inline T&& value() && noexcept(false);
+		inline T& value() & noexcept(false) {
+			if (error()) {
+				throw error();
+			}
+			return this->first;
+		}
 
-		inline T&& takeValue() && noexcept(false);
+		inline T&& value() && noexcept(false) {
+			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
+		}
 
-		inline operator T&&() && noexcept(false);
+		inline T&& takeValue() && noexcept(false) {
+			if (error()) {
+				throw error();
+			}
+			return std::forward<T>(this->first);
+		}
 
-		inline const T& valueUnsafe() const& noexcept;
+		operator T&&() && noexcept(false) {
+			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
+		}
 
-		inline T&& valueUnsafe() && noexcept;
+		inline const T& valueUnsafe() const& noexcept {
+			return this->first;
+		}
 
-		inline JsonifierResultBase(T&& value, ErrorCode error) noexcept;
+		inline T&& valueUnsafe() && noexcept {
+			return std::forward<T>(this->first);
+		}
 
-		inline JsonifierResultBase(ErrorCode error) noexcept;
+		template<typename T> inline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {
+		}
 
-		inline JsonifierResultBase(T&& value) noexcept;
+		inline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error) {
+		}
 
-		inline JsonifierResultBase() noexcept;
+		template<typename T> inline JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success) {
+		}
+
+		inline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized) {
+		}
 
 	  protected:
 		T first{};
@@ -179,30 +212,53 @@ namespace Jsonifier {
 	};
 
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
-		inline void tie(T& value, ErrorCode& error) && noexcept;
-		inline ErrorCode get(T& value) && noexcept;
+		inline void tie(T& value, ErrorCode& error) && noexcept {
+			std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
+		}
 
-		inline ErrorCode error() const noexcept;
+		inline ErrorCode get(T& value) && noexcept {
+			return std::forward<JsonifierResultBase<T>>(*this).get(value);
+		}
 
-		inline T& value() & noexcept(false);
+		inline ErrorCode error() const noexcept {
+			return JsonifierResultBase<T>::error();
+		}
 
-		inline T&& value() && noexcept(false);
+		inline T& value() & noexcept(false) {
+			return JsonifierResultBase<T>::value();
+		}
 
-		inline T&& takeValue() && noexcept(false);
+		inline T&& value() && noexcept(false) {
+			return std::forward<JsonifierResultBase<T>>(*this).value();
+		}
 
-		inline operator T&&() && noexcept(false);
+		inline T&& takeValue() && noexcept(false) {
+			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
+		}
 
-		inline const T& valueUnsafe() const& noexcept;
+		inline operator T&&() && noexcept(false) {
+			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
+		}
 
-		inline T&& valueUnsafe() && noexcept;
+		inline const T& valueUnsafe() const& noexcept {
+			return JsonifierResultBase<T>::valueUnsafe();
+		}
 
-		inline JsonifierResult(T&& value, ErrorCode error) noexcept;
+		inline T&& valueUnsafe() && noexcept {
+			return std::forward<JsonifierResultBase<T>>(*this).valueUnsafe();
+		}
 
-		inline JsonifierResult(ErrorCode error) noexcept;
+		template<typename T> inline JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
+		}
 
-		inline JsonifierResult(T&& value) noexcept;
+		inline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<T>(error) {
+		}
 
-		inline JsonifierResult() noexcept;
+		inline JsonifierResult(T&& value) noexcept : JsonifierResultBase<T>(std::forward<T>(value)) {
+		}
+
+		inline JsonifierResult() noexcept : JsonifierResultBase<T>() {
+		}
 	};
 
 	inline uint32_t isStructuralOrWhitespace(uint8_t c);

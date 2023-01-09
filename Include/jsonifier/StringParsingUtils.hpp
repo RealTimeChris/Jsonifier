@@ -9,7 +9,7 @@ namespace Jsonifier {
 	template<typename SimdBase256> struct BackslashAndQuote {
 	  public:
 		static const uint32_t BYTES_PROCESSED = 32;
-		inline BackslashAndQuote<SimdBase256> static copyAndFind(const uint8_t* src, uint8_t* dst);
+		BackslashAndQuote<SimdBase256> static copyAndFind(const uint8_t* src, uint8_t* dst);
 
 		inline bool hasQuoteFirst() {
 			return ((this->bsBits - 1) & this->quoteBits) != 0;

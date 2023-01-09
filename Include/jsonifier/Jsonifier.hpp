@@ -17,3 +17,5 @@
 #include <jsonifier/Field.hpp>
 #include <jsonifier/Object.hpp>
 #include <jsonifier/Parser.hpp>
+#include <jsonifier/Document_Impl.hpp>
+#include <jsonifier/Value_Impl.hpp>

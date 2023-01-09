@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	inline std::ostream& operator<<(std::ostream& out, JsonType type) noexcept {
+	std::ostream& operator<<(std::ostream& out, JsonType type) noexcept {
 		switch (type) {
 			case JsonType::Array:
 				out << "Array";
@@ -31,12 +31,16 @@ namespace Jsonifier {
 		return out;
 	}
 
-	inline std::ostream& operator<<(std::ostream& out, JsonifierResult<JsonType>& type) noexcept(false) {
+	std::ostream& operator<<(std::ostream& out, JsonifierResult<JsonType>& type) noexcept(false) {
 		return out << type.value();
 	}
 
-	inline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept : JsonifierResultBase<JsonType>{ std::move(Value) } {};
+	JsonType JsonifierResult<JsonType>::value() noexcept {
+		return this->first;
+	}
+
+	JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept : JsonifierResultBase<JsonType>{ std::move(Value) } {};
 
 
-	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase{ error } {};
+	JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase{ error } {};
 }

@@ -1,24 +1,25 @@
 #pragma once
 
 #include <jsonifier/ValueIterator.hpp>
+#include <jsonifier/RawJsonString.hpp>
 
 namespace Jsonifier {
 
-	inline ValueIterator::ValueIterator(JsonIterator* jsonIter, uint32_t depth, uint32_t* startPosition) noexcept
+	ValueIterator::ValueIterator(JsonIterator* jsonIter, uint32_t depth, uint32_t* startPosition) noexcept
 		: jsonIterator{ jsonIter }, currentDepth{ depth }, rootStructural{ startPosition } {
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startObject() noexcept {
+	JsonifierResult<bool> ValueIterator::startObject() noexcept {
 		JsonifierTry(startContainer('{'));
 		return startedObject();
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startRootObject() noexcept {
+	JsonifierResult<bool> ValueIterator::startRootObject() noexcept {
 		JsonifierTry(startContainer('{'));
 		return startedRootObject();
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startedObject() noexcept {
+	JsonifierResult<bool> ValueIterator::startedObject() noexcept {
 		assertAtContainerStart();
 		if (*jsonIterator->peek() == '}') {
 			jsonIterator->returnCurrentAndAdvance();
@@ -28,16 +29,16 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startedRootObject() noexcept {
+	JsonifierResult<bool> ValueIterator::startedRootObject() noexcept {
 		return startedObject();
 	}
 
-	inline ErrorCode ValueIterator::endContainer() noexcept {
+	ErrorCode ValueIterator::endContainer() noexcept {
 		jsonIterator->ascendTo(depth() - 1);
 		return Success;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::hasNextField() noexcept {
+	JsonifierResult<bool> ValueIterator::hasNextField() noexcept {
 		assertAtNext();
 		switch (*jsonIterator->returnCurrentAndAdvance()) {
 			case '}':
@@ -50,7 +51,7 @@ namespace Jsonifier {
 		}
 	}
 
-	inline JsonifierResult<bool> ValueIterator::findFieldRaw(const std::string_view key) noexcept {
+	JsonifierResult<bool> ValueIterator::findFieldRaw(const std::string_view key) noexcept {
 		ErrorCode error{};
 		bool hasValue{};
 		if (atFirstField()) {
@@ -89,7 +90,7 @@ namespace Jsonifier {
 		return false;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::findFieldUnorderedRaw(const std::string_view key) noexcept {
+	JsonifierResult<bool> ValueIterator::findFieldUnorderedRaw(const std::string_view key) noexcept {
 		ErrorCode error{};
 		bool hasValue{};
 		uint32_t* search_start = jsonIterator->position();
@@ -156,7 +157,7 @@ namespace Jsonifier {
 		return false;
 	}
 
-	inline JsonifierResult<RawJsonString> ValueIterator::fieldKey() noexcept {
+	JsonifierResult<RawJsonString> ValueIterator::fieldKey() noexcept {
 		assertAtNext();
 
 		const uint8_t* key = jsonIterator->returnCurrentAndAdvance();
@@ -166,7 +167,7 @@ namespace Jsonifier {
 		return RawJsonString(key);
 	}
 
-	inline ErrorCode ValueIterator::fieldValue() noexcept {
+	ErrorCode ValueIterator::fieldValue() noexcept {
 		assertAtNext();
 
 		if (*jsonIterator->returnCurrentAndAdvance() != ':') {
@@ -176,17 +177,17 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startArray() noexcept {
+	JsonifierResult<bool> ValueIterator::startArray() noexcept {
 		JsonifierTry(startContainer('['));
 		return startedArray();
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startRootArray() noexcept {
+	JsonifierResult<bool> ValueIterator::startRootArray() noexcept {
 		JsonifierTry(startContainer('['));
 		return startedRootArray();
 	}
 
-	inline std::string ValueIterator::toString() const noexcept {
+	std::string ValueIterator::toString() const noexcept {
 		auto answer = std::string("ValueIterator [ depth : ") + std::to_string(currentDepth) + std::string(", ");
 		if (jsonIterator != nullptr) {
 			answer += jsonIterator->toString();
@@ -195,7 +196,7 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startedArray() noexcept {
+	JsonifierResult<bool> ValueIterator::startedArray() noexcept {
 		assertAtContainerStart();
 		if (*jsonIterator->peek() == ']') {
 			jsonIterator->returnCurrentAndAdvance();
@@ -206,7 +207,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::startedRootArray() noexcept {
+	JsonifierResult<bool> ValueIterator::startedRootArray() noexcept {
 		if (*jsonIterator->peekLast() != ']') {
 			jsonIterator->abandon();
 			return reportError(Incomplete_Array_Or_Object);
@@ -218,7 +219,7 @@ namespace Jsonifier {
 		return startedArray();
 	}
 
-	inline JsonifierResult<bool> ValueIterator::hasNextElement() noexcept {
+	JsonifierResult<bool> ValueIterator::hasNextElement() noexcept {
 		assertAtNext();
 
 		switch (*jsonIterator->returnCurrentAndAdvance()) {
@@ -233,7 +234,7 @@ namespace Jsonifier {
 		}
 	}
 
-	inline JsonifierResult<bool> ValueIterator::parseBool(const uint8_t* json) const noexcept {
+	JsonifierResult<bool> ValueIterator::parseBool(const uint8_t* json) const noexcept {
 		auto not_true = str4ncmp(json, "true");
 		auto not_false = str4ncmp(json, "fals") | (json[4] ^ 'e');
 		bool error = (not_true && not_false) || isNotStructuralOrWhitespace(json[not_true ? 5 : 4]);
@@ -243,7 +244,7 @@ namespace Jsonifier {
 		return JsonifierResult<bool>(!not_true);
 	}
 
-	inline JsonifierResult<bool> ValueIterator::parseNull(const uint8_t* json) const noexcept {
+	JsonifierResult<bool> ValueIterator::parseNull(const uint8_t* json) const noexcept {
 		bool is_null_string = !str4ncmp(json, "null") && isStructuralOrWhitespace(json[4]);
 		if (!is_null_string && json[0] == 'n') {
 			return incorrectTypeError();
@@ -251,11 +252,11 @@ namespace Jsonifier {
 		return is_null_string;
 	}
 
-	inline JsonifierResult<std::string_view> ValueIterator::getString() noexcept {
+	JsonifierResult<std::string_view> ValueIterator::getString() noexcept {
 		return getRawJsonString().unescape(jsonIter());
 	}
 
-	inline JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
+	JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
 		auto json = peekScalar();
 		if (*json != '"') {
 			return incorrectTypeError();
@@ -264,7 +265,7 @@ namespace Jsonifier {
 		return RawJsonString(json + 1);
 	}
 
-	inline JsonifierResult<uint64_t> ValueIterator::getUint64() noexcept {
+	JsonifierResult<uint64_t> ValueIterator::getUint64() noexcept {
 		auto result = parseUnsigned(peekNonRootScalar());
 		if (result.error() == Success) {
 			advanceNonRootScalar();
@@ -272,7 +273,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<int64_t> ValueIterator::getInt64() noexcept {
+	JsonifierResult<int64_t> ValueIterator::getInt64() noexcept {
 		auto result = parseInteger(peekNonRootScalar());
 		if (result.error() == Success) {
 			advanceNonRootScalar();
@@ -280,7 +281,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<double> ValueIterator::getDouble() noexcept {
+	JsonifierResult<double> ValueIterator::getDouble() noexcept {
 		auto result = parseDouble(peekNonRootScalar());
 		if (result.error() == Success) {
 			advanceNonRootScalar();
@@ -288,7 +289,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::getBool() noexcept {
+	JsonifierResult<bool> ValueIterator::getBool() noexcept {
 		auto result = parseBool(peekNonRootScalar());
 		if (result.error() == Success) {
 			advanceNonRootScalar();
@@ -296,7 +297,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::isNull() noexcept {
+	JsonifierResult<bool> ValueIterator::isNull() noexcept {
 		bool is_null_value;
 		JsonifierTry(parseNull(peekNonRootScalar()).get(is_null_value));
 		if (is_null_value) {
@@ -305,15 +306,15 @@ namespace Jsonifier {
 		return is_null_value;
 	}
 
-	inline JsonifierResult<std::string_view> ValueIterator::getRootString() noexcept {
+	JsonifierResult<std::string_view> ValueIterator::getRootString() noexcept {
 		return getString();
 	}
 
-	inline JsonifierResult<RawJsonString> ValueIterator::getRootRawJsonString() noexcept {
+	JsonifierResult<RawJsonString> ValueIterator::getRootRawJsonString() noexcept {
 		return getRawJsonString();
 	}
 
-	inline JsonifierResult<uint64_t> ValueIterator::getRootUint64() noexcept {
+	JsonifierResult<uint64_t> ValueIterator::getRootUint64() noexcept {
 		auto max_len = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
@@ -330,7 +331,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<int64_t> ValueIterator::getRootInt64() noexcept {
+	JsonifierResult<int64_t> ValueIterator::getRootInt64() noexcept {
 		auto max_len = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
@@ -346,7 +347,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<double> ValueIterator::getRootDouble() noexcept {
+	JsonifierResult<double> ValueIterator::getRootDouble() noexcept {
 		auto max_len = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[1074 + 8 + 1];
@@ -363,7 +364,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline JsonifierResult<bool> ValueIterator::getRootBool() noexcept {
+	JsonifierResult<bool> ValueIterator::getRootBool() noexcept {
 		auto max_len = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[5 + 1];
@@ -380,7 +381,7 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline bool ValueIterator::isRootNull() noexcept {
+	bool ValueIterator::isRootNull() noexcept {
 		if (!jsonIterator->isSingleToken()) {
 			return false;
 		}
@@ -393,68 +394,68 @@ namespace Jsonifier {
 		return result;
 	}
 
-	inline ErrorCode ValueIterator::skipChild() noexcept {
+	ErrorCode ValueIterator::skipChild() noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth >= currentDepth);
 
 		return jsonIterator->skipChild(depth());
 	}
 
-	inline ValueIterator ValueIterator::child() const noexcept {
+	ValueIterator ValueIterator::child() const noexcept {
 		assertAtChild();
 		return { jsonIterator, static_cast<size_t>(depth() + 1), jsonIterator->TokenIterator::position() };
 	}
 
-	inline bool ValueIterator::isOpen() const noexcept {
+	bool ValueIterator::isOpen() const noexcept {
 		return jsonIterator->depth() >= depth();
 	}
 
-	inline bool ValueIterator::atEnd() const noexcept {
+	bool ValueIterator::atEnd() const noexcept {
 		return jsonIterator->atEnd();
 	}
 
-	inline bool ValueIterator::atStart() const noexcept {
+	bool ValueIterator::atStart() const noexcept {
 		return jsonIterator->TokenIterator::position() == startPosition();
 	}
 
-	inline bool ValueIterator::atFirstField() const noexcept {
+	bool ValueIterator::atFirstField() const noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
 		return jsonIterator->TokenIterator::position() == startPosition() + 1;
 	}
 
-	inline void ValueIterator::abandon() noexcept {
+	void ValueIterator::abandon() noexcept {
 		jsonIterator->abandon();
 	}
 
-	inline int32_t ValueIterator::depth() const noexcept {
+	int32_t ValueIterator::depth() const noexcept {
 		return currentDepth;
 	}
 
-	inline ErrorCode ValueIterator::error() const noexcept {
+	ErrorCode ValueIterator::error() const noexcept {
 		return jsonIterator->error;
 	}
 
-	inline uint8_t*& ValueIterator::stringBufLoc() noexcept {
+	uint8_t*& ValueIterator::stringBufLoc() noexcept {
 		return jsonIterator->stringBufLoc();
 	}
 
-	inline const JsonIterator& ValueIterator::jsonIter() const noexcept {
+	const JsonIterator& ValueIterator::jsonIter() const noexcept {
 		return *jsonIterator;
 	}
 
-	inline JsonIterator& ValueIterator::jsonIter() noexcept {
+	JsonIterator& ValueIterator::jsonIter() noexcept {
 		return *jsonIterator;
 	}
 
-	inline const uint8_t* ValueIterator::peekStart() const noexcept {
+	const uint8_t* ValueIterator::peekStart() const noexcept {
 		return jsonIterator->peek(startPosition());
 	}
 
-	inline uint32_t ValueIterator::peekStartLength() const noexcept {
+	uint32_t ValueIterator::peekStartLength() const noexcept {
 		return jsonIterator->peekLength(startPosition());
 	}
 
-	inline const uint8_t* ValueIterator::peekScalar() noexcept {
+	const uint8_t* ValueIterator::peekScalar() noexcept {
 		if (!isAtStart()) {
 			return peekStart();
 		}
@@ -463,7 +464,7 @@ namespace Jsonifier {
 		return jsonIterator->peek();
 	}
 
-	inline void ValueIterator::advanceScalar() noexcept {
+	void ValueIterator::advanceScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -473,7 +474,7 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline ErrorCode ValueIterator::startContainer(uint8_t start_char) noexcept {
+	ErrorCode ValueIterator::startContainer(uint8_t start_char) noexcept {
 		const uint8_t* json;
 		if (!isAtStart()) {
 			json = peekStart();
@@ -493,7 +494,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline const uint8_t* ValueIterator::peekRootScalar() noexcept {
+	const uint8_t* ValueIterator::peekRootScalar() noexcept {
 		if (!isAtStart()) {
 			return peekStart();
 		}
@@ -502,7 +503,7 @@ namespace Jsonifier {
 		return jsonIterator->peek();
 	}
 
-	inline const uint8_t* ValueIterator::peekNonRootScalar() noexcept {
+	const uint8_t* ValueIterator::peekNonRootScalar() noexcept {
 		//if (!isAtStart()) {
 		//return peekStart();
 		//}
@@ -511,7 +512,7 @@ namespace Jsonifier {
 		return jsonIterator->peek();
 	}
 
-	inline void ValueIterator::advanceRootScalar() noexcept {
+	void ValueIterator::advanceRootScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -521,7 +522,7 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline void ValueIterator::advanceNonRootScalar() noexcept {
+	void ValueIterator::advanceNonRootScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -531,86 +532,86 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline ErrorCode ValueIterator::incorrectTypeError() const noexcept {
+	ErrorCode ValueIterator::incorrectTypeError() const noexcept {
 		return Incorrect_Type;
 	}
 
-	inline bool ValueIterator::isAtStart() const noexcept {
+	bool ValueIterator::isAtStart() const noexcept {
 		return position() == startPosition();
 	}
 
-	inline bool ValueIterator::isAtKey() const noexcept {
+	bool ValueIterator::isAtKey() const noexcept {
 		return currentDepth == jsonIterator->currentDepth && *jsonIterator->peek() == '"';
 	}
 
-	inline bool ValueIterator::isAtIteratorStart() const noexcept {
+	bool ValueIterator::isAtIteratorStart() const noexcept {
 		auto delta = position() - startPosition();
 		return delta == 1 || delta == 2;
 	}
 
-	inline void ValueIterator::assertAtStart() const noexcept {
+	void ValueIterator::assertAtStart() const noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition == rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
-	inline void ValueIterator::assertAtContainerStart() const noexcept {
+	void ValueIterator::assertAtContainerStart() const noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition == rootStructural + 1);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
-	inline void ValueIterator::assertAtNext() const noexcept {
+	void ValueIterator::assertAtNext() const noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
-	inline void ValueIterator::moveAtStart() noexcept {
+	void ValueIterator::moveAtStart() noexcept {
 		jsonIterator->currentDepth = currentDepth;
 		jsonIterator->TokenIterator::setPosition(rootStructural);
 	}
 
-	inline void ValueIterator::moveAtContainerStart() noexcept {
+	void ValueIterator::moveAtContainerStart() noexcept {
 		jsonIterator->currentDepth = currentDepth;
 		jsonIterator->TokenIterator::setPosition(rootStructural + 1);
 	}
 
-	inline JsonifierResult<bool> ValueIterator::resetArray() noexcept {
+	JsonifierResult<bool> ValueIterator::resetArray() noexcept {
 		moveAtContainerStart();
 		return startedArray();
 	}
 
-	inline JsonifierResult<bool> ValueIterator::resetObject() noexcept {
+	JsonifierResult<bool> ValueIterator::resetObject() noexcept {
 		moveAtContainerStart();
 		return startedObject();
 	}
 
-	inline void ValueIterator::assertAtChild() const noexcept {
+	void ValueIterator::assertAtChild() const noexcept {
 		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth + 1);
 		assert(currentDepth > 0);
 	}
 
-	inline void ValueIterator::assertAtRoot() const noexcept {
+	void ValueIterator::assertAtRoot() const noexcept {
 		assertAtStart();
 		assert(currentDepth == 1);
 	}
 
-	inline void ValueIterator::assertAtNonRootStart() const noexcept {
+	void ValueIterator::assertAtNonRootStart() const noexcept {
 		assertAtStart();
 		assert(currentDepth > 1);
 	}
 
-	inline void ValueIterator::assertIsValid() const noexcept {
+	void ValueIterator::assertIsValid() const noexcept {
 		assert(jsonIterator != nullptr);
 	}
 
-	inline bool ValueIterator::isValid() const noexcept {
+	bool ValueIterator::isValid() const noexcept {
 		return jsonIterator != nullptr;
 	}
 
-	inline JsonifierResult<JsonType> ValueIterator::type() const noexcept {
+	JsonifierResult<JsonType> ValueIterator::type() const noexcept {
 		switch (*peekStart()) {
 			case '{':
 				return JsonType::Object;
@@ -640,31 +641,31 @@ namespace Jsonifier {
 		}
 	}
 
-	inline uint32_t* ValueIterator::startPosition() const noexcept {
+	uint32_t* ValueIterator::startPosition() const noexcept {
 		return rootStructural;
 	}
 
-	inline uint32_t* ValueIterator::position() const noexcept {
+	uint32_t* ValueIterator::position() const noexcept {
 		return jsonIterator->position();
 	}
 
-	inline uint32_t* ValueIterator::endPosition() const noexcept {
+	uint32_t* ValueIterator::endPosition() const noexcept {
 		return jsonIterator->endPosition();
 	}
 
-	inline uint32_t* ValueIterator::lastPosition() const noexcept {
+	uint32_t* ValueIterator::lastPosition() const noexcept {
 		return jsonIterator->lastPosition();
 	}
 
-	inline ErrorCode ValueIterator::reportError(ErrorCode error) noexcept {
+	ErrorCode ValueIterator::reportError(ErrorCode error) noexcept {
 		return jsonIterator->reportError(error);
 	}
 
-	inline JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
+	JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
 		: JsonifierResultBase<ValueIterator>(std::forward<ValueIterator>(Value)) {
 	}
 
-	inline JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ValueIterator>(error) {
+	JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ValueIterator>(error) {
 	}
 
 }

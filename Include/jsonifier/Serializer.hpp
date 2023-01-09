@@ -4,7 +4,7 @@
 
 namespace Jsonifier {
 
-	template<typename RTy> inline void reverseByteOrder(RTy& net) {
+	template<typename RTy> void reverseByteOrder(RTy& net) {
 		if constexpr (std::endian::native == std::endian::little) {
 			switch (sizeof(RTy)) {
 				case 1: {
@@ -31,7 +31,7 @@ namespace Jsonifier {
 		}
 	}
 
-	template<typename RTy> inline void storeBits(char* to, RTy num) {
+	template<typename RTy> void storeBits(char* to, RTy num) {
 		uint8_t byteSize{ 8 };
 		reverseByteOrder<RTy>(num);
 		for (uint32_t x = 0; x < sizeof(RTy); ++x) {
@@ -128,7 +128,7 @@ namespace Jsonifier {
 
 		Serializer() noexcept = default;
 
-		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier OTy> Serializer& operator=(std::vector<OTy>&& data) noexcept {
 			this->setValue(JsonType::Array);
 			for (auto& Value: data) {
 				this->jsonValue.array->push_back(std::move(Value));
@@ -136,11 +136,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier OTy> inline Serializer(std::vector<OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier OTy> Serializer(std::vector<OTy>&& data) noexcept {
 			*this = std::move(data);
 		}
 
-		template<IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::vector<OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier OTy> Serializer& operator=(std::vector<OTy>& data) noexcept {
 			this->setValue(JsonType::Array);
 			for (auto& Value: data) {
 				this->jsonValue.array->push_back(Value);
@@ -148,12 +148,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier OTy> inline Serializer(std::vector<OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier OTy> Serializer(std::vector<OTy>& data) noexcept {
 			*this = data;
 		}
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
-		inline Serializer& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer& operator=(std::unordered_map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, Value]: data) {
 				(*this->jsonValue.object)[key] = std::move(Value);
@@ -161,12 +160,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer(std::unordered_map<KTy, OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer(std::unordered_map<KTy, OTy>&& data) noexcept {
 			*this = std::move(data);
 		};
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy>
-		inline Serializer& operator=(std::unordered_map<KTy, OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer& operator=(std::unordered_map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, Value]: data) {
 				(*this->jsonValue.object)[key] = Value;
@@ -174,11 +172,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer(std::unordered_map<KTy, OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer(std::unordered_map<KTy, OTy>& data) noexcept {
 			*this = data;
 		};
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer& operator=(std::map<KTy, OTy>&& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, Value]: data) {
 				(*this->jsonValue.object)[key] = std::move(Value);
@@ -186,11 +184,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer(std::map<KTy, OTy>&& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer(std::map<KTy, OTy>&& data) noexcept {
 			*this = std::move(data);
 		};
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer& operator=(std::map<KTy, OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer& operator=(std::map<KTy, OTy>& data) noexcept {
 			this->setValue(JsonType::Object);
 			for (auto& [key, Value]: data) {
 				(*this->jsonValue.object)[key] = Value;
@@ -198,17 +196,17 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> inline Serializer(std::map<KTy, OTy>& data) noexcept {
+		template<IsConvertibleToJsonifier KTy, IsConvertibleToJsonifier OTy> Serializer(std::map<KTy, OTy>& data) noexcept {
 			*this = data;
 		};
 
-		template<IsEnum Ty> inline Serializer& operator=(Ty data) noexcept {
+		template<IsEnum Ty> Serializer& operator=(Ty data) noexcept {
 			this->jsonValue.numberUint = static_cast<uint64_t>(data);
 			this->type = JsonType::Uint64;
 			return *this;
 		}
 
-		template<IsEnum Ty> inline Serializer(Ty data) noexcept {
+		template<IsEnum Ty> Serializer(Ty data) noexcept {
 			*this = data;
 		}
 
@@ -320,7 +318,7 @@ namespace Jsonifier {
 			std::enable_if_t<
 				std::is_integral<NumberType>::value || std::is_same<NumberType, uint64_t>::value || std::is_same<NumberType, int64_t>::value, int> =
 				0>
-		void writeJsonInt(NumberType Int) {
+		inline void writeJsonInt(NumberType Int) {
 			auto IntNew = std::to_string(Int);
 			this->writeString(IntNew.data(), IntNew.size());
 		}

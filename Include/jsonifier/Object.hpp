@@ -10,29 +10,29 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll Object : public ValueIterator {
 	  public:
-		inline Object() noexcept = default;
-		inline JsonifierResult<ObjectIterator> begin() noexcept;
-		inline JsonifierResult<ObjectIterator> end() noexcept;
-		inline JsonifierResult<Value> findField(std::string_view key) & noexcept;
-		inline JsonifierResult<Value> findField(std::string_view key) && noexcept;
-		inline JsonifierResult<Value> findFieldUnordered(std::string_view key) & noexcept;
-		inline JsonifierResult<Value> findFieldUnordered(std::string_view key) && noexcept;
-		inline JsonifierResult<Value> operator[](std::string_view key) & noexcept;
-		inline JsonifierResult<Value> operator[](std::string_view key) && noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
-		inline JsonifierResult<bool> reset() & noexcept;
-		inline JsonifierResult<bool> isEmpty() & noexcept;
-		inline JsonifierResult<size_t> countFields() & noexcept;
-		inline JsonifierResult<std::string_view> rawJson() noexcept;
+		Object() noexcept = default;
+		JsonifierResult<ObjectIterator> begin() noexcept;
+		JsonifierResult<ObjectIterator> end() noexcept;
+		JsonifierResult<Value> findField(std::string_view key) & noexcept;
+		JsonifierResult<Value> findField(std::string_view key) && noexcept;
+		JsonifierResult<Value> findFieldUnordered(std::string_view key) & noexcept;
+		JsonifierResult<Value> findFieldUnordered(std::string_view key) && noexcept;
+		JsonifierResult<Value> operator[](std::string_view key) & noexcept;
+		JsonifierResult<Value> operator[](std::string_view key) && noexcept;
+		JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
+		JsonifierResult<bool> reset() & noexcept;
+		JsonifierResult<bool> isEmpty() & noexcept;
+		JsonifierResult<size_t> countFields() & noexcept;
+		JsonifierResult<std::string_view> rawJson() noexcept;
 
 	  protected:
-		inline ErrorCode consume() noexcept;
-		static inline JsonifierResult<Object> start(ValueIterator& iterator) noexcept;
-		static inline JsonifierResult<Object> startRoot(ValueIterator& iterator) noexcept;
-		static inline JsonifierResult<Object> started(ValueIterator& iterator) noexcept;
-		static inline Object resume(const ValueIterator& iterator) noexcept;
-		inline Object(const ValueIterator& iterator) noexcept;
-		inline ErrorCode findFieldRaw(const std::string_view key) noexcept;
+		ErrorCode consume() noexcept;
+		static JsonifierResult<Object> start(ValueIterator& iterator) noexcept;
+		static JsonifierResult<Object> startRoot(ValueIterator& iterator) noexcept;
+		static JsonifierResult<Object> started(ValueIterator& iterator) noexcept;
+		static Object resume(const ValueIterator& iterator) noexcept;
+		Object(const ValueIterator& iterator) noexcept;
+		ErrorCode findFieldRaw(const std::string_view key) noexcept;
 
 		friend class Value;
 		friend class Document;
@@ -41,22 +41,22 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<Object> : public JsonifierResultBase<Object> {
 	  public:
-		inline JsonifierResult(Object&& Value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
-		inline JsonifierResult() noexcept = default;
+		JsonifierResult(Object&& Value) noexcept;
+		JsonifierResult(ErrorCode error) noexcept;
+		JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<ObjectIterator> begin() noexcept;
-		inline JsonifierResult<ObjectIterator> end() noexcept;
-		inline JsonifierResult<Value> findField(std::string_view key) & noexcept;
-		inline JsonifierResult<Value> findField(std::string_view key) && noexcept;
-		inline JsonifierResult<Value> findFieldUnordered(std::string_view key) & noexcept;
-		inline JsonifierResult<Value> findFieldUnordered(std::string_view key) && noexcept;
-		inline JsonifierResult<Value> operator[](std::string_view key) & noexcept;
-		inline JsonifierResult<Value> operator[](std::string_view key) && noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
-		inline JsonifierResult<bool> reset() noexcept;
-		inline JsonifierResult<bool> isEmpty() noexcept;
-		inline JsonifierResult<size_t> countFields() & noexcept;
+		JsonifierResult<ObjectIterator> begin() noexcept;
+		JsonifierResult<ObjectIterator> end() noexcept;
+		JsonifierResult<Value> findField(std::string_view key) & noexcept;
+		JsonifierResult<Value> findField(std::string_view key) && noexcept;
+		JsonifierResult<Value> findFieldUnordered(std::string_view key) & noexcept;
+		JsonifierResult<Value> findFieldUnordered(std::string_view key) && noexcept;
+		JsonifierResult<Value> operator[](std::string_view key) & noexcept;
+		JsonifierResult<Value> operator[](std::string_view key) && noexcept;
+		JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
+		JsonifierResult<bool> reset() noexcept;
+		JsonifierResult<bool> isEmpty() noexcept;
+		JsonifierResult<size_t> countFields() & noexcept;
 	};
 
 }

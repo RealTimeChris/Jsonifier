@@ -690,29 +690,10 @@ namespace Jsonifier {
 			return answer;
 		}
 
-		static const uint32_t maxShift = 60;
-		static const uint32_t numPowers = 19;
-		static const uint8_t powers[19] = {
-			0,
-			3,
-			6,
-			9,
-			13,
-			16,
-			19,
-			23,
-			26,
-			29,
-			33,
-			36,
-			39,
-			43,
-			46,
-			49,
-			53,
-			56,
-			59,
-		};
+		static const uint8_t powers[19]{ 0, 3, 6, 9, 13, 16, 19, 23, 26, 29, 33, 36, 39, 43, 46, 49, 53, 56, 59 };
+		static const uint32_t numPowers{ 19 };
+		static const uint32_t maxShift{ 60 };
+
 		int32_t exp2 = 0;
 		while (d.decimalPoint > 0) {
 			uint32_t n = uint32_t(d.decimalPoint);

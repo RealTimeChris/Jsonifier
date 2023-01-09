@@ -10,29 +10,29 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll Field : public std::pair<RawJsonString, Value> {
 	  public:
-		inline Field() noexcept;
-		inline JsonifierResult<std::string_view> unescapedKey() noexcept;
-		inline RawJsonString key() const noexcept;
-		inline Value& value() & noexcept;
-		inline Value value() && noexcept;
+		Field() noexcept;
+		JsonifierResult<std::string_view> unescapedKey() noexcept;
+		RawJsonString key() const noexcept;
+		Value& value() & noexcept;
+		Value value() && noexcept;
 
 	  protected:
-		inline Field(RawJsonString key, Value&& value) noexcept;
-		static inline JsonifierResult<Field> start(ValueIterator& parentIter) noexcept;
-		static inline JsonifierResult<Field> start(const ValueIterator& parentIter, RawJsonString key) noexcept;
+		Field(RawJsonString key, Value&& value) noexcept;
+		static JsonifierResult<Field> start(ValueIterator& parentIter) noexcept;
+		static JsonifierResult<Field> start(const ValueIterator& parentIter, RawJsonString key) noexcept;
 		friend struct JsonifierResult<Field>;
 		friend class ObjectIterator;
 	};
 
 	template<> struct JsonifierResult<Field> : public JsonifierResultBase<Field> {
 	  public:
-		inline JsonifierResult(Field&& Value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
-		inline JsonifierResult() noexcept = default;
+		JsonifierResult(Field&& Value) noexcept;
+		JsonifierResult(ErrorCode error) noexcept;
+		JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<std::string_view> unescapedKey() noexcept;
-		inline JsonifierResult<RawJsonString> key() noexcept;
-		inline JsonifierResult<Value> value() noexcept;
+		JsonifierResult<std::string_view> unescapedKey() noexcept;
+		JsonifierResult<RawJsonString> key() noexcept;
+		JsonifierResult<Value> value() noexcept;
 	};
 
 }

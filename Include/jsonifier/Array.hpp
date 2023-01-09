@@ -10,22 +10,22 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll Array : public ValueIterator {
 	  public:
-		inline Array() noexcept = default;
-		inline JsonifierResult<ArrayIterator> begin() noexcept;
-		inline JsonifierResult<ArrayIterator> end() noexcept;
-		inline JsonifierResult<size_t> countElements() & noexcept;
-		inline JsonifierResult<bool> isEmpty() & noexcept;
-		inline JsonifierResult<bool> reset() & noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
-		inline JsonifierResult<std::string_view> rawJson() noexcept;
-		inline JsonifierResult<Value> at(size_t index) noexcept;
+		Array() noexcept = default;
+		JsonifierResult<ArrayIterator> begin() noexcept;
+		JsonifierResult<ArrayIterator> end() noexcept;
+		JsonifierResult<size_t> countElements() & noexcept;
+		JsonifierResult<bool> isEmpty() & noexcept;
+		JsonifierResult<bool> reset() & noexcept;
+		JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
+		JsonifierResult<std::string_view> rawJson() noexcept;
+		JsonifierResult<Value> at(size_t index) noexcept;
 
 	  protected:
-		inline ErrorCode consume() noexcept;
-		static inline JsonifierResult<Array> start(ValueIterator& iterator) noexcept;
-		static inline JsonifierResult<Array> startRoot(ValueIterator& iterator) noexcept;
-		static inline JsonifierResult<Array> started(ValueIterator& iterator) noexcept;
-		inline Array(const ValueIterator& iterator) noexcept;
+		ErrorCode consume() noexcept;
+		static JsonifierResult<Array> start(ValueIterator& iterator) noexcept;
+		static JsonifierResult<Array> startRoot(ValueIterator& iterator) noexcept;
+		static JsonifierResult<Array> started(ValueIterator& iterator) noexcept;
+		Array(const ValueIterator& iterator) noexcept;
 
 		friend class Value;
 		friend class Document;
@@ -36,17 +36,17 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<Array> : public JsonifierResultBase<Array> {
 	  public:
-		inline JsonifierResult(Array&& Value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
-		inline JsonifierResult() noexcept = default;
+		JsonifierResult(Array&& Value) noexcept;
+		JsonifierResult(ErrorCode error) noexcept;
+		JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<ArrayIterator> begin() noexcept;
-		inline JsonifierResult<ArrayIterator> end() noexcept;
-		inline JsonifierResult<size_t> countElements() & noexcept;
-		inline JsonifierResult<bool> isEmpty() & noexcept;
-		inline JsonifierResult<bool> reset() & noexcept;
-		inline JsonifierResult<Value> at(size_t index) noexcept;
-		inline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
+		JsonifierResult<ArrayIterator> begin() noexcept;
+		JsonifierResult<ArrayIterator> end() noexcept;
+		JsonifierResult<size_t> countElements() & noexcept;
+		JsonifierResult<bool> isEmpty() & noexcept;
+		JsonifierResult<bool> reset() & noexcept;
+		JsonifierResult<Value> at(size_t index) noexcept;
+		JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
 	};
 
 }

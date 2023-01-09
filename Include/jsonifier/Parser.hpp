@@ -15,22 +15,26 @@ namespace Jsonifier {
 	class Jsonifier_Dll Parser {
 	  public:
 		friend class JsonIterator;
-		inline Parser& operator=(Parser&&) = default;
-		inline Parser(Parser&&) = default;
-		inline Parser& operator=(const Parser&) = delete;
-		inline Parser(const Parser&) = delete;
-		inline Parser(const std::string&) noexcept;
-		inline Parser() noexcept = default;
+		Parser& operator=(Parser&&) = default;
+		Parser(Parser&&) = default;
+		Parser& operator=(const Parser&) = delete;
+		Parser(const Parser&) = delete;
+		Parser(const std::string&) noexcept;
+		Parser() noexcept = default;
 
-		inline JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
-		inline JsonifierResult<Document> parseJson(const std::string& string);
-		inline JsonifierResult<Document> parseJson(std::string_view string);
+		Document parseJson(const char* string, size_t stringLength);
+		Document parseJson(const std::string& string);
+		Document parseJson(std::string_view string);
 
 		operator Document() noexcept;
+
+		int64_t totalTimePassed{};
+		int64_t iterationCount{};
 
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
+		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -88,8 +92,8 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				StringBlockReader<64> stringReader{ this->stringView, this->stringLengthRaw };
-				SimdStringSection section{};
+				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
+				section.reset();
 				this->tapeLength = 0;
 				size_t tapeCurrentIndex{ 0 };
 				while (stringReader.hasFullBlock()) {
@@ -97,7 +101,7 @@ namespace Jsonifier {
 					section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
 					stringReader.advance();
 				}
-				uint8_t block[64];
+				uint8_t block[256];
 				stringReader.getRemainder(block);
 				section.submitDataForProcessing(block);
 				section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
@@ -107,9 +111,9 @@ namespace Jsonifier {
 		}
 	};
 
-	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
+	template<> BackslashAndQuote<SimdBase256> inline BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
 		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than 256 bytes");
-		SimdBase256 v(src);
+		SimdBase256 v(reinterpret_cast<const char*>(src));
 		v.store(dst);
 		return {
 			static_cast<uint32_t>((v == '\\').toBitMask()),

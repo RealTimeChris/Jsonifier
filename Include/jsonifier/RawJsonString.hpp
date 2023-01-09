@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <jsonifier/Base.hpp>
@@ -11,25 +10,25 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll RawJsonString {
 	  public:
-		inline RawJsonString() noexcept = default;
-		inline RawJsonString(const uint8_t* _buf) noexcept;
-		inline const char* raw() const noexcept;
-		inline bool unsafeIsEqual(size_t length, std::string_view target) const noexcept;
-		inline bool unsafeIsEqual(std::string_view target) const noexcept;
-		inline bool unsafeIsEqual(const char* target) const noexcept;
-		inline bool isEqual(std::string_view target) const noexcept;
-		inline bool isEqual(const char* target) const noexcept;
-		static inline bool isFreeFromUnescapedQuote(std::string_view target) noexcept;
-		static inline bool isFreeFromUnescapedQuote(const char* target) noexcept;
+		RawJsonString() noexcept = default;
+		RawJsonString(const uint8_t* _buf) noexcept;
+		const char* raw() const noexcept;
+		bool unsafeIsEqual(size_t length, std::string_view target) const noexcept;
+		bool unsafeIsEqual(std::string_view target) const noexcept;
+		bool unsafeIsEqual(const char* target) const noexcept;
+		bool isEqual(std::string_view target) const noexcept;
+		bool isEqual(const char* target) const noexcept;
+		static bool isFreeFromUnescapedQuote(std::string_view target) noexcept;
+		static bool isFreeFromUnescapedQuote(const char* target) noexcept;
 
 	  protected:
-		inline void consume() noexcept {
+		void consume() noexcept {
 			stringView = nullptr;
 		}
-		inline bool alive() const noexcept {
+		bool alive() const noexcept {
 			return stringView != nullptr;
 		}
-		inline JsonifierResult<std::string_view> unescape(JsonIterator& iterator) const noexcept;
+		JsonifierResult<std::string_view> unescape(JsonIterator& iterator) const noexcept;
 
 		const uint8_t* stringView{};
 		friend class Object;
@@ -39,25 +38,25 @@ namespace Jsonifier {
 		friend class JsonIterator;
 	};
 
-	inline std::ostream& operator<<(std::ostream&, const RawJsonString&) noexcept;
+	std::ostream& operator<<(std::ostream&, const RawJsonString&) noexcept;
 
-	inline bool operator==(const RawJsonString& a, std::string_view c) noexcept;
-	inline bool operator==(std::string_view c, const RawJsonString& a) noexcept;
-	inline bool operator!=(const RawJsonString& a, std::string_view c) noexcept;
-	inline bool operator!=(std::string_view c, const RawJsonString& a) noexcept;
+	bool operator==(const RawJsonString& a, std::string_view c) noexcept;
+	bool operator==(std::string_view c, const RawJsonString& a) noexcept;
+	bool operator!=(const RawJsonString& a, std::string_view c) noexcept;
+	bool operator!=(std::string_view c, const RawJsonString& a) noexcept;
 
 	template<> struct JsonifierResult<RawJsonString> : public JsonifierResultBase<RawJsonString> {
 	  public:
-		inline JsonifierResult(RawJsonString&& Value) noexcept : JsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)) {
+		JsonifierResult(RawJsonString&& Value) noexcept : JsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)) {
 		}
 
-		inline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<RawJsonString>(error) {
+		JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<RawJsonString>(error) {
 		}
-		inline JsonifierResult() noexcept = default;
-		inline ~JsonifierResult() noexcept = default;
+		JsonifierResult() noexcept = default;
+		~JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<const char*> raw() noexcept;
-		inline JsonifierResult<std::string_view> unescape(JsonIterator& iterator) noexcept;
+		JsonifierResult<const char*> raw() noexcept;
+		JsonifierResult<std::string_view> unescape(JsonIterator& iterator) noexcept;
 	};
 
 }
