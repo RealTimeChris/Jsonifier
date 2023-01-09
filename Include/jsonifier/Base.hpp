@@ -79,7 +79,8 @@ namespace Jsonifier {
 		Trailing_Content = 17,
 		Out_Of_Order_Iteration = 18,
 		Scalar_Document_As_Value = 19,
-		Incomplete_Array_Or_Object = 20
+		Incomplete_Array_Or_Object = 20,
+		Unclosed_String = 21
 	};
 
 	enum class JsonType : uint8_t {
