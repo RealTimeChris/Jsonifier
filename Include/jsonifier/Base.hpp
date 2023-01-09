@@ -146,25 +146,24 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename T> struct JsonifierResultBase  { 
-		
+	template<typename T> struct JsonifierResultBase {
 		inline void tie(T& value, ErrorCode& error) && noexcept;
 		inline ErrorCode get(T& value) && noexcept;
-		
+
 		inline ErrorCode error() const noexcept;
 
 		inline T& value() & noexcept(false);
-		
+
 		inline T&& value() && noexcept(false);
-		
+
 		inline T&& takeValue() && noexcept(false);
-		
+
 		inline operator T&&() && noexcept(false);
-		
+
 		inline const T& valueUnsafe() const& noexcept;
-		
+
 		inline T&& valueUnsafe() && noexcept;
-		
+
 		inline JsonifierResultBase(T&& value, ErrorCode error) noexcept;
 
 		inline JsonifierResultBase(ErrorCode error) noexcept;
@@ -181,21 +180,21 @@ namespace Jsonifier {
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
 		inline void tie(T& value, ErrorCode& error) && noexcept;
 		inline ErrorCode get(T& value) && noexcept;
-		
+
 		inline ErrorCode error() const noexcept;
-		
+
 		inline T& value() & noexcept(false);
-		
+
 		inline T&& value() && noexcept(false);
-		
+
 		inline T&& takeValue() && noexcept(false);
-		
+
 		inline operator T&&() && noexcept(false);
-		
+
 		inline const T& valueUnsafe() const& noexcept;
-		
+
 		inline T&& valueUnsafe() && noexcept;
-		
+
 		inline JsonifierResult(T&& value, ErrorCode error) noexcept;
 
 		inline JsonifierResult(ErrorCode error) noexcept;

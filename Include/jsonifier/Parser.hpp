@@ -104,7 +104,7 @@ namespace Jsonifier {
 				this->getTapeLength() = tapeCurrentIndex;
 			}
 			return Success;
-		}		
+		}
 	};
 
 	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {

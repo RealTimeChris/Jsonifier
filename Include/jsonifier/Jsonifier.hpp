@@ -17,4 +17,3 @@
 #include <jsonifier/Field.hpp>
 #include <jsonifier/Object.hpp>
 #include <jsonifier/Parser.hpp>
-

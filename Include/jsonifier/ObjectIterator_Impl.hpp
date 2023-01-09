@@ -44,7 +44,8 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	inline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept : JsonifierResultBase<ObjectIterator>{ std::move(value) } {
+	inline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept
+		: JsonifierResultBase<ObjectIterator>{ std::move(value) } {
 		this->first.assertIsValid();
 	}
 

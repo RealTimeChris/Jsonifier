@@ -693,8 +693,25 @@ namespace Jsonifier {
 		static const uint32_t maxShift = 60;
 		static const uint32_t numPowers = 19;
 		static const uint8_t powers[19] = {
-			0, 3, 6, 9, 13, 16, 19, 23, 26, 29,
-			33, 36, 39, 43, 46, 49, 53, 56, 59,
+			0,
+			3,
+			6,
+			9,
+			13,
+			16,
+			19,
+			23,
+			26,
+			29,
+			33,
+			36,
+			39,
+			43,
+			46,
+			49,
+			53,
+			56,
+			59,
 		};
 		int32_t exp2 = 0;
 		while (d.decimalPoint > 0) {
@@ -764,7 +781,7 @@ namespace Jsonifier {
 		answer.mantissa = mantissa & ((uint64_t(1) << mantissaExplicitBits()) - 1);
 		return answer;
 	}
-	
+
 	inline Decimal parseDecimal(const char*& p) noexcept {
 		Decimal answer;
 		answer.numDigits = 0;
@@ -920,7 +937,7 @@ namespace Jsonifier {
 		return (*src == '-');
 	}
 
-	
+
 	inline Decimal parseDecimal(const char*& p, const char* end) noexcept {
 		Decimal answer;
 		answer.numDigits = 0;
@@ -938,7 +955,7 @@ namespace Jsonifier {
 			++p;
 		}
 		while ((p != end) && isInteger(*p)) {
-			if (answer.numDigits< maxDigits) {
+			if (answer.numDigits < maxDigits) {
 				answer.digits[answer.numDigits] = uint8_t(*p - '0');
 			}
 			answer.numDigits++;
@@ -950,13 +967,13 @@ namespace Jsonifier {
 				return answer;
 			}
 			const char* firstAfterPeriod = p;
-			if (answer.numDigits== 0) {
+			if (answer.numDigits == 0) {
 				while (*p == '0') {
 					++p;
 				}
 			}
 			while ((p != end) && isInteger(*p)) {
-				if (answer.numDigits< maxDigits) {
+				if (answer.numDigits < maxDigits) {
 					answer.digits[answer.numDigits] = uint8_t(*p - '0');
 				}
 				answer.numDigits++;
@@ -964,7 +981,7 @@ namespace Jsonifier {
 			}
 			answer.decimalPoint = int32_t(firstAfterPeriod - p);
 		}
-		if (answer.numDigits> 0) {
+		if (answer.numDigits > 0) {
 			const char* preverse = p - 1;
 			int32_t trailingZeros = 0;
 			while ((*preverse == '0') || (*preverse == '.')) {
@@ -974,10 +991,10 @@ namespace Jsonifier {
 				--preverse;
 			}
 			answer.decimalPoint += int32_t(answer.numDigits);
-			answer.numDigits-= uint32_t(trailingZeros);
+			answer.numDigits -= uint32_t(trailingZeros);
 		}
-		if (answer.numDigits> maxDigits) {
-			answer.numDigits= maxDigits;
+		if (answer.numDigits > maxDigits) {
+			answer.numDigits = maxDigits;
 			answer.truncated = true;
 		}
 		if ((p != end) && (('e' == *p) || ('E' == *p))) {
@@ -1004,7 +1021,7 @@ namespace Jsonifier {
 		}
 		return answer;
 	}
-	
+
 	template<typename binary> inline AdjustedMantissa parse_long_mantissa(const char* first, const char* end) {
 		Decimal d = parseDecimal(first, end);
 		return computeFloat<binary>(d);
@@ -1015,8 +1032,8 @@ namespace Jsonifier {
 	}
 
 	inline double fromChars(const char* first) noexcept {
-			bool negative = first[0] == '-';
-			if (negative) {
+		bool negative = first[0] == '-';
+		if (negative) {
 			first++;
 		}
 		AdjustedMantissa am = parse_long_mantissa<double>(first);
@@ -1038,9 +1055,7 @@ namespace Jsonifier {
 		return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 	}
 
-	template<typename I>
-		inline bool
-		parseDigit(const uint8_t c, I& i) {
+	template<typename I> inline bool parseDigit(const uint8_t c, I& i) {
 		const uint8_t digit = static_cast<uint8_t>(c - '0');
 		if (digit > 9) {
 			return false;
@@ -1049,7 +1064,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline ErrorCode parseDecimal( const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
+	inline ErrorCode parseDecimal(const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
 		const uint8_t* const firstAfterPeriod = p;
 		if (parseDigit(*p, i)) {
 			++p;
@@ -1064,7 +1079,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline ErrorCode parseExponent( const uint8_t* const src, const uint8_t*& p, int64_t& exponent) {
+	inline ErrorCode parseExponent(const uint8_t* const src, const uint8_t*& p, int64_t& exponent) {
 		bool negExp = ('-' == *p);
 		if (negExp || '+' == *p) {
 			p++;
@@ -1089,7 +1104,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	 inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
+	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
 		const uint8_t* p = src;
 		const uint8_t* const startDigits = p;
 		uint64_t i = 0;
@@ -1117,8 +1132,8 @@ namespace Jsonifier {
 		return i;
 	}
 
-	 inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src, const uint8_t* const src_end) noexcept {
-		 StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src, const uint8_t* const src_end) noexcept {
+		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		const uint8_t* p = src;
 		const uint8_t* const startDigits = p;
 		uint64_t i = 0;
@@ -1170,7 +1185,7 @@ namespace Jsonifier {
 		return negative ? (~i + 1) : i;
 	}
 
-	 inline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
+	inline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
 		bool negative = (*src == '-');
 		src += uint8_t(negative);
 		uint64_t i = 0;
@@ -1200,7 +1215,7 @@ namespace Jsonifier {
 			}
 			exponent = -(p - startDecimalDigits);
 			overflow = p - src - 1 > 19;
-			if (overflow &&leadingZero) {
+			if (overflow && leadingZero) {
 				const uint8_t* startDigits = src + 2;
 				while (*startDigits == '0') {
 					startDigits++;
