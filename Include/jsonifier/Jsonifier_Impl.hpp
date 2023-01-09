@@ -1,3 +1,6 @@
+#pragma once
+
+#include <jsonifier/Base_Impl.hpp>
 #include <jsonifier/Jsonifier.hpp>
 #include <jsonifier/JsonType_Impl.hpp>
 #include <jsonifier/RawJsonString_Impl.hpp>
@@ -12,4 +15,3 @@
 #include <jsonifier/Field_Impl.hpp>
 #include <jsonifier/Object_Impl.hpp>
 #include <jsonifier/Parser_Impl.hpp>
-#include <jsonifier/ImplementationJsonifierResultBase_Impl.hpp>

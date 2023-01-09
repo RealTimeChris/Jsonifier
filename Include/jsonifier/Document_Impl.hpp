@@ -6,7 +6,8 @@
 
 namespace Jsonifier {
 
-	inline Document::Document(JsonIterator&& iteratorNew) noexcept : JsonIterator{ std::forward<JsonIterator>(iteratorNew) } {}
+	inline Document::Document(JsonIterator&& iteratorNew) noexcept : JsonIterator{ std::forward<JsonIterator>(iteratorNew) } {
+	}
 
 	inline Document Document::start(JsonIterator&& iterator) noexcept {
 		return Document(std::forward<JsonIterator>(iterator));
@@ -312,10 +313,11 @@ namespace Jsonifier {
 		}
 	}
 
-	inline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept
-		: ImplementationJsonifierResultBase<Document>(std::forward<Document>(Value)){}
+	inline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept : JsonifierResultBase<Document>(std::forward<Document>(Value)) {
+	}
 
-	inline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Document>(error){}
+	inline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Document>(error) {
+	}
 
 	inline JsonifierResult<size_t> JsonifierResult<Document>::countElements() & noexcept {
 		if (error()) {
@@ -336,6 +338,10 @@ namespace Jsonifier {
 			return error();
 		}
 		return first.at(index);
+	}
+
+	inline ErrorCode JsonifierResult<Document>::error() noexcept {
+		return JsonifierResultBase<Document>::error();
 	}
 
 	inline ErrorCode JsonifierResult<Document>::rewind() noexcept {

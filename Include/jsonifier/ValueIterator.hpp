@@ -81,13 +81,13 @@ namespace Jsonifier {
 		inline const uint8_t* peekStart() const noexcept;
 		inline uint32_t peekStartLength() const noexcept;
 
-		inline void advanceScalar(const char* type) noexcept;
-		inline void advanceRootScalar(const char* type) noexcept;
-		inline void advanceNonRootScalar(const char* type) noexcept;
+		inline void advanceScalar() noexcept;
+		inline void advanceRootScalar() noexcept;
+		inline void advanceNonRootScalar() noexcept;
 
-		inline const uint8_t* peekScalar(const char* type) noexcept;
-		inline const uint8_t* peekRootScalar(const char* type) noexcept;
-		inline const uint8_t* peekNonRootScalar(const char* type) noexcept;
+		inline const uint8_t* peekScalar() noexcept;
+		inline const uint8_t* peekRootScalar() noexcept;
+		inline const uint8_t* peekNonRootScalar() noexcept;
 
 
 		inline ErrorCode startContainer(uint8_t start_char, const char* incorrect_type_message, const char* type) noexcept;
@@ -119,7 +119,7 @@ namespace Jsonifier {
 		friend class Value;
 	};
 
-	template<> struct JsonifierResult<ValueIterator> : public ImplementationJsonifierResultBase<ValueIterator> {
+	template<> struct JsonifierResult<ValueIterator> : public JsonifierResultBase<ValueIterator> {
 	  public:
 		inline JsonifierResult(ValueIterator&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

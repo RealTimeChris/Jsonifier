@@ -123,9 +123,9 @@ namespace Jsonifier {
 		return Out_Of_Bounds;
 	}
 
-	inline JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept : ImplementationJsonifierResultBase<Array>(std::forward<Array>(Value)){};
+	inline JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept : JsonifierResultBase<Array>(std::forward<Array>(Value)){};
 
-	inline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Array>(error){};
+	inline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Array>(error){};
 
 	inline JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
 		if (error()) {

@@ -22,7 +22,8 @@ namespace Jsonifier {
 
 	inline JsonIterator::JsonIterator(Parser* parserNew) noexcept
 		: TokenIterator(parserNew->getStringView(), parserNew->getStructuralIndices()), parser{ parserNew },
-		  stringBuffer{ parserNew->getStringBuffer() }, currentDepth{ 1 }, rootStructural{ parser->getStructuralIndices() } {}
+		  stringBuffer{ parserNew->getStringBuffer() }, currentDepth{ 1 }, rootStructural{ parser->getStructuralIndices() } {
+	}
 
 	inline void JsonIterator::rewind() noexcept {
 		TokenIterator::setPosition(rootPosition());
@@ -139,8 +140,8 @@ namespace Jsonifier {
 		}
 		const char* current_structural = reinterpret_cast<const char*>(TokenIterator::peek());
 		return std::string("JsonIterator [ depth : ") + std::to_string(currentDepth) + std::string(", structural : '") +
-			std::string(current_structural, 1) + std::string("', offset : ") + std::to_string(TokenIterator::currentOffset()) + std::string("', error : ") +
-			std::to_string(error) + std::string(" ]");
+			std::string(current_structural, 1) + std::string("', offset : ") + std::to_string(TokenIterator::currentOffset()) +
+			std::string("', error : ") + std::to_string(error) + std::string(" ]");
 	}
 
 	inline JsonifierResult<const char*> JsonIterator::currentLocation() noexcept {
@@ -265,8 +266,10 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<JsonIterator>::JsonifierResult(JsonIterator&& Value) noexcept
-		: ImplementationJsonifierResultBase<JsonIterator>(std::forward<JsonIterator>(Value)){}
+		: JsonifierResultBase<JsonIterator>(std::forward<JsonIterator>(Value)) {
+	}
 
-	inline JsonifierResult<JsonIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonIterator>(error){}
+	inline JsonifierResult<JsonIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<JsonIterator>(error) {
+	}
 
 }

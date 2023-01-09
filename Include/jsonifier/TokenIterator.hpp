@@ -6,6 +6,7 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll TokenIterator {
 	  public:
+		inline TokenIterator() noexcept = default;
 		inline TokenIterator(TokenIterator&& other) noexcept = default;
 		inline TokenIterator& operator=(TokenIterator&& other) noexcept = default;
 		inline TokenIterator(const TokenIterator& other) noexcept = default;
@@ -38,7 +39,7 @@ namespace Jsonifier {
 		friend class Object;
 	};
 
-	template<> struct JsonifierResult<TokenIterator> : public ImplementationJsonifierResultBase<TokenIterator> {
+	template<> struct JsonifierResult<TokenIterator> : public JsonifierResultBase<TokenIterator> {
 	  public:
 		inline JsonifierResult(TokenIterator&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

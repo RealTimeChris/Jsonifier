@@ -256,51 +256,51 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<RawJsonString> ValueIterator::getRawJsonString() noexcept {
-		auto json = peekScalar("string");
+		auto json = peekScalar();
 		if (*json != '"') {
 			return incorrect_type_error("Not a string");
 		}
-		advanceScalar("string");
+		advanceScalar();
 		return RawJsonString(json + 1);
 	}
 
 	inline JsonifierResult<uint64_t> ValueIterator::getUint64() noexcept {
-		auto result = parseUnsigned(peekNonRootScalar("uint64"));
+		auto result = parseUnsigned(peekNonRootScalar());
 		if (result.error() == Success) {
-			advanceNonRootScalar("uint64");
+			advanceNonRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<int64_t> ValueIterator::getInt64() noexcept {
-		auto result = parseInteger(peekNonRootScalar("int64"));
+		auto result = parseInteger(peekNonRootScalar());
 		if (result.error() == Success) {
-			advanceNonRootScalar("int64");
+			advanceNonRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<double> ValueIterator::getDouble() noexcept {
-		auto result = parseDouble(peekNonRootScalar("double"));
+		auto result = parseDouble(peekNonRootScalar());
 		if (result.error() == Success) {
-			advanceNonRootScalar("double");
+			advanceNonRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::getBool() noexcept {
-		auto result = parseBool(peekNonRootScalar("bool"));
+		auto result = parseBool(peekNonRootScalar());
 		if (result.error() == Success) {
-			advanceNonRootScalar("bool");
+			advanceNonRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::isNull() noexcept {
 		bool is_null_value;
-		JsonifierTry(parseNull(peekNonRootScalar("null")).get(is_null_value));
+		JsonifierTry(parseNull(peekNonRootScalar()).get(is_null_value));
 		if (is_null_value) {
-			advanceNonRootScalar("null");
+			advanceNonRootScalar();
 		}
 		return is_null_value;
 	}
@@ -315,7 +315,7 @@ namespace Jsonifier {
 
 	inline JsonifierResult<uint64_t> ValueIterator::getRootUint64() noexcept {
 		auto max_len = peekStartLength();
-		auto json = peekRootScalar("uint64");
+		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
 			return NUMBER_ERROR;
@@ -325,32 +325,30 @@ namespace Jsonifier {
 			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
-			advanceRootScalar("uint64");
+			advanceRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<int64_t> ValueIterator::getRootInt64() noexcept {
 		auto max_len = peekStartLength();
-		auto json = peekRootScalar("int64");
+		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
 			return NUMBER_ERROR;
 		}
 
 		auto result = parseInteger(tmpbuf);
-		if (result.error() == Success) {
-			if (!jsonIterator->isSingleToken()) {
-				return Trailing_Content;
-			}
-			advanceRootScalar("int64");
+		if (!jsonIterator->isSingleToken()) {
+			return Trailing_Content;
 		}
+		advanceRootScalar();
 		return result;
 	}
 
 	inline JsonifierResult<double> ValueIterator::getRootDouble() noexcept {
 		auto max_len = peekStartLength();
-		auto json = peekRootScalar("double");
+		auto json = peekRootScalar();
 		uint8_t tmpbuf[1074 + 8 + 1];
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
 			return NUMBER_ERROR;
@@ -360,14 +358,14 @@ namespace Jsonifier {
 			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
-			advanceRootScalar("double");
+			advanceRootScalar();
 		}
 		return result;
 	}
 
 	inline JsonifierResult<bool> ValueIterator::getRootBool() noexcept {
 		auto max_len = peekStartLength();
-		auto json = peekRootScalar("bool");
+		auto json = peekRootScalar();
 		uint8_t tmpbuf[5 + 1];
 		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
 			return incorrect_type_error("Not a boolean");
@@ -377,7 +375,7 @@ namespace Jsonifier {
 			if (!jsonIterator->isSingleToken()) {
 				return Trailing_Content;
 			}
-			advanceRootScalar("bool");
+			advanceRootScalar();
 		}
 		return result;
 	}
@@ -387,10 +385,10 @@ namespace Jsonifier {
 			return false;
 		}
 		auto max_len = peekStartLength();
-		auto json = peekRootScalar("null");
+		auto json = peekRootScalar();
 		bool result = (max_len >= 4 && !str4ncmp(json, "null") && (max_len == 4 || isStructuralOrWhitespace(json[5])));
 		if (result) {
-			advanceRootScalar("null");
+			advanceRootScalar();
 		}
 		return result;
 	}
@@ -456,7 +454,7 @@ namespace Jsonifier {
 		return jsonIterator->peekLength(startPosition());
 	}
 
-	inline const uint8_t* ValueIterator::peekScalar(const char* type) noexcept {
+	inline const uint8_t* ValueIterator::peekScalar() noexcept {
 		if (!isAtStart()) {
 			return peekStart();
 		}
@@ -465,7 +463,7 @@ namespace Jsonifier {
 		return jsonIterator->peek();
 	}
 
-	inline void ValueIterator::advanceScalar(const char* type) noexcept {
+	inline void ValueIterator::advanceScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -495,7 +493,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline const uint8_t* ValueIterator::peekRootScalar(const char* type) noexcept {
+	inline const uint8_t* ValueIterator::peekRootScalar() noexcept {
 		if (!isAtStart()) {
 			return peekStart();
 		}
@@ -504,16 +502,16 @@ namespace Jsonifier {
 		return jsonIterator->peek();
 	}
 
-	inline const uint8_t* ValueIterator::peekNonRootScalar(const char* type) noexcept {
-		if (!isAtStart()) {
-			return peekStart();
-		}
+	inline const uint8_t* ValueIterator::peekNonRootScalar() noexcept {
+		//if (!isAtStart()) {
+		//return peekStart();
+		//}
 
-		assertAtNonRootStart();
+		//assertAtNonRootStart();
 		return jsonIterator->peek();
 	}
 
-	inline void ValueIterator::advanceRootScalar(const char* type) noexcept {
+	inline void ValueIterator::advanceRootScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -523,7 +521,7 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	inline void ValueIterator::advanceNonRootScalar(const char* type) noexcept {
+	inline void ValueIterator::advanceNonRootScalar() noexcept {
 		if (!isAtStart()) {
 			return;
 		}
@@ -663,8 +661,10 @@ namespace Jsonifier {
 	}
 
 	inline JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
-		: ImplementationJsonifierResultBase<ValueIterator>(std::forward<ValueIterator>(Value)){}
+		: JsonifierResultBase<ValueIterator>(std::forward<ValueIterator>(Value)) {
+	}
 
-	inline JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ValueIterator>(error){}
+	inline JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ValueIterator>(error) {
+	}
 
 }

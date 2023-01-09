@@ -46,15 +46,18 @@ namespace Jsonifier {
 	inline bool operator!=(const RawJsonString& a, std::string_view c) noexcept;
 	inline bool operator!=(std::string_view c, const RawJsonString& a) noexcept;
 
-	template<> struct JsonifierResult<RawJsonString> : public ImplementationJsonifierResultBase<RawJsonString> {
+	template<> struct JsonifierResult<RawJsonString> : public JsonifierResultBase<RawJsonString> {
 	  public:
-		inline JsonifierResult(RawJsonString&& Value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
+		inline JsonifierResult(RawJsonString&& Value) noexcept : JsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)) {
+		}
+
+		inline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<RawJsonString>(error) {
+		}
 		inline JsonifierResult() noexcept = default;
 		inline ~JsonifierResult() noexcept = default;
 
-		inline JsonifierResult<const char*> raw() const noexcept;
-		inline JsonifierResult<std::string_view> unescape(JsonIterator& iterator) const noexcept;
+		inline JsonifierResult<const char*> raw() noexcept;
+		inline JsonifierResult<std::string_view> unescape(JsonIterator& iterator) noexcept;
 	};
 
 }

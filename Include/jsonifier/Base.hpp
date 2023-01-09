@@ -116,11 +116,11 @@ namespace Jsonifier {
 			return this->objects[index];
 		}
 
-	inline operator OTy*() noexcept {
+		inline operator OTy*() noexcept {
 			return this->objects;
 		}
 
-	inline void reset(size_t newSize) noexcept {
+		inline void reset(size_t newSize) noexcept {
 			this->deallocate();
 			if (newSize != 0) {
 				AllocatorType allocator{};
@@ -129,7 +129,7 @@ namespace Jsonifier {
 			}
 		}
 
-	inline ~ObjectBuffer() noexcept {
+		inline ~ObjectBuffer() noexcept {
 			this->deallocate();
 		}
 
@@ -146,65 +146,117 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename T> struct JsonifierResultBase : protected std::pair<T, ErrorCode> {
-		inline JsonifierResultBase() noexcept;
-		inline JsonifierResultBase(ErrorCode error) noexcept;
-		inline JsonifierResultBase(T&& Value) noexcept;
-		inline JsonifierResultBase(T&& Value, ErrorCode error) noexcept;
-		inline void tie(T& Value, ErrorCode& error) && noexcept;
-		inline ErrorCode get(T& Value) && noexcept;
+	template<typename T> struct JsonifierResultBase  { 
+		
+		inline void tie(T& value, ErrorCode& error) && noexcept;
+		inline ErrorCode get(T& value) && noexcept;
+		
 		inline ErrorCode error() const noexcept;
+
 		inline T& value() & noexcept(false);
+		
 		inline T&& value() && noexcept(false);
+		
 		inline T&& takeValue() && noexcept(false);
+		
 		inline operator T&&() && noexcept(false);
+		
 		inline const T& valueUnsafe() const& noexcept;
+		
 		inline T&& valueUnsafe() && noexcept;
+		
+		inline JsonifierResultBase(T&& value, ErrorCode error) noexcept;
+
+		inline JsonifierResultBase(ErrorCode error) noexcept;
+
+		inline JsonifierResultBase(T&& value) noexcept;
+
+		inline JsonifierResultBase() noexcept;
+
+	  protected:
+		T first{};
+		ErrorCode second{};
 	};
 
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
+		inline void tie(T& value, ErrorCode& error) && noexcept;
+		inline ErrorCode get(T& value) && noexcept;
+		
+		inline ErrorCode error() const noexcept;
+		
+		inline T& value() & noexcept(false);
+		
+		inline T&& value() && noexcept(false);
+		
+		inline T&& takeValue() && noexcept(false);
+		
+		inline operator T&&() && noexcept(false);
+		
+		inline const T& valueUnsafe() const& noexcept;
+		
+		inline T&& valueUnsafe() && noexcept;
+		
+		inline JsonifierResult(T&& value, ErrorCode error) noexcept;
+
+		inline JsonifierResult(ErrorCode error) noexcept;
+
+		inline JsonifierResult(T&& value) noexcept;
+
 		inline JsonifierResult() noexcept;
-		inline JsonifierResult(T&& Value) noexcept;
-		inline JsonifierResult(ErrorCode ErrorCode) noexcept;
-		inline JsonifierResult(T&& Value, ErrorCode error) noexcept;
-		inline void tie(T& Value, ErrorCode& error) && noexcept;
-		inline ErrorCode get(T& Value) && noexcept;
-		inline ErrorCode error() const noexcept;
-		inline T& value() & noexcept(false);
-		inline T&& value() && noexcept(false);
-		inline T&& takeValue() && noexcept(false);
-		inline operator T&&() && noexcept(false);
-		inline const T& valueUnsafe() const& noexcept;
-		inline T&& valueUnsafe() && noexcept;
-	};
-
-	template<typename T> struct ImplementationJsonifierResultBase {
-		inline ImplementationJsonifierResultBase& operator=(const ImplementationJsonifierResultBase&) = delete;
-		inline ImplementationJsonifierResultBase(const ImplementationJsonifierResultBase&) = delete;
-		inline ImplementationJsonifierResultBase& operator=(ImplementationJsonifierResultBase&&) = default;
-		inline ImplementationJsonifierResultBase(ImplementationJsonifierResultBase&&) = default;
-		inline ImplementationJsonifierResultBase() noexcept = default;
-		inline ImplementationJsonifierResultBase(ErrorCode error) noexcept;
-		inline ImplementationJsonifierResultBase(T&& Value) noexcept;
-		inline ImplementationJsonifierResultBase(T&& Value, ErrorCode error) noexcept;
-		inline void tie(T& Value, ErrorCode& error) && noexcept;
-		inline ErrorCode get(T& Value) && noexcept;
-		inline ErrorCode error() const noexcept;
-		inline T& valueUnsafe() & noexcept;
-		inline const T& valueUnsafe() const& noexcept;
-		inline T&& valueUnsafe() && noexcept;
-		inline T& value() & noexcept(false);
-		inline T&& value() && noexcept(false);
-		inline T&& takeValue() && noexcept(false);
-		inline operator T&&() && noexcept(false);
-
-	  protected:
-		T first;
-		ErrorCode second{ Uninitialized };
 	};
 
 	inline uint32_t isStructuralOrWhitespace(uint8_t c);
 
 	inline uint32_t isNotStructuralOrWhitespace(uint8_t c);
+
+	template<typename TTy> class StopWatch {
+	  public:
+		using HRClock = std::chrono::high_resolution_clock;
+
+		inline StopWatch() = delete;
+
+		inline StopWatch<TTy>& operator=(const StopWatch<TTy>& data) {
+			this->maxNumberOfMs.store(data.maxNumberOfMs.load());
+			this->startTime.store(data.startTime.load());
+			return *this;
+		}
+
+		inline StopWatch(const StopWatch<TTy>& data) {
+			*this = data;
+		}
+
+		inline StopWatch(TTy maxNumberOfMsNew) {
+			this->maxNumberOfMs.store(maxNumberOfMsNew);
+			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
+		}
+
+		inline TTy totalTimePassed() {
+			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
+			TTy elapsedTime = currentTime - this->startTime.load();
+			return elapsedTime;
+		}
+
+		inline TTy getTotalWaitTime() {
+			return this->maxNumberOfMs.load();
+		}
+
+		inline bool hasTimePassed() {
+			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
+			TTy elapsedTime = currentTime - this->startTime.load();
+			if (elapsedTime >= this->maxNumberOfMs.load()) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		inline void resetTimer() {
+			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
+		}
+
+	  protected:
+		std::atomic<TTy> maxNumberOfMs{ TTy{ 0 } };
+		std::atomic<TTy> startTime{ TTy{ 0 } };
+	};
 
 }

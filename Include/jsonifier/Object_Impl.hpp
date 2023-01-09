@@ -171,10 +171,11 @@ namespace Jsonifier {
 		return ValueIterator::resetObject();
 	}
 
-	inline JsonifierResult<Object>::JsonifierResult(Object&& Value) noexcept
-		: ImplementationJsonifierResultBase<Object>(std::forward<Object>(Value)){}
+	inline JsonifierResult<Object>::JsonifierResult(Object&& Value) noexcept : JsonifierResultBase<Object>(std::forward<Object>(Value)) {
+	}
 
-	inline JsonifierResult<Object>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Object>(error){}
+	inline JsonifierResult<Object>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Object>(error) {
+	}
 
 	inline JsonifierResult<ObjectIterator> JsonifierResult<Object>::begin() noexcept {
 		if (error()) {

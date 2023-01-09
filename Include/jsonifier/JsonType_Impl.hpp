@@ -35,8 +35,8 @@ namespace Jsonifier {
 		return out << type.value();
 	}
 
-	inline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept
-		: ImplementationJsonifierResultBase<JsonType>(std::forward<JsonType>(Value)){}
+	inline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept : JsonifierResultBase<JsonType>{ std::move(Value) } {};
 
-	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<JsonType>(error){}
+
+	inline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase{ error } {};
 }

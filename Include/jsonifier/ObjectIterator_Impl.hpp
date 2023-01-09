@@ -44,13 +44,11 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	inline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept
-		: ImplementationJsonifierResultBase<ObjectIterator>(std::forward<ObjectIterator>(value)) {
-		first.ValueIterator::assertIsValid();
+	inline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept : JsonifierResultBase<ObjectIterator>{ std::move(value) } {
+		this->first.assertIsValid();
 	}
 
-	inline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept
-		: ImplementationJsonifierResultBase<ObjectIterator>({}, error){}
+	inline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ObjectIterator>{ error } {};
 
 	inline JsonifierResult<Field> JsonifierResult<ObjectIterator>::operator*() noexcept {
 		if (error()) {
@@ -72,7 +70,7 @@ namespace Jsonifier {
 		}
 		return first != other.first;
 	}
-	
+
 	inline JsonifierResult<ObjectIterator>& JsonifierResult<ObjectIterator>::operator++() noexcept {
 		if (error()) {
 			second = Success;

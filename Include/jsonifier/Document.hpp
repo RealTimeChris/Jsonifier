@@ -89,12 +89,14 @@ namespace Jsonifier {
 		friend class document_stream;
 	};
 
-	template<> struct JsonifierResult<Document> : public ImplementationJsonifierResultBase<Document> {
+	template<> struct JsonifierResult<Document> : public JsonifierResultBase<Document> {
 	  public:
 		inline JsonifierResult(Document&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;
 		inline JsonifierResult() noexcept = default;
 		inline ErrorCode rewind() noexcept;
+		inline ErrorCode error() noexcept;
+		inline ErrorCode error() const noexcept;
 
 		inline JsonifierResult<Array> getArray() & noexcept;
 		inline JsonifierResult<Object> getObject() & noexcept;
@@ -112,7 +114,6 @@ namespace Jsonifier {
 
 		template<typename T> inline ErrorCode get(T& out) & noexcept;
 		template<typename T> inline ErrorCode get(T& out) && noexcept;
-
 
 		inline operator Array() & noexcept(false);
 		inline operator Object() & noexcept(false);

@@ -15,15 +15,15 @@ namespace Jsonifier {
 			return ((this->bsBits - 1) & this->quoteBits) != 0;
 		}
 
-	inline bool hasBackslash() {
+		inline bool hasBackslash() {
 			return ((this->quoteBits - 1) & this->bsBits) != 0;
 		}
 
-	inline int quoteIndex() {
+		inline int quoteIndex() {
 			return _tzcnt_u32(this->quoteBits);
 		}
 
-	inline int backslashIndex() {
+		inline int backslashIndex() {
 			return _tzcnt_u32(this->bsBits);
 		}
 

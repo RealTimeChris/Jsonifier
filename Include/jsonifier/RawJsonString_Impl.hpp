@@ -5,7 +5,8 @@
 
 namespace Jsonifier {
 
-	inline RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {}
+	inline RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {
+	}
 
 	inline const char* RawJsonString::raw() const noexcept {
 		return reinterpret_cast<const char*>(stringView);
@@ -169,19 +170,14 @@ namespace Jsonifier {
 		}
 	}
 
-	inline JsonifierResult<RawJsonString>::JsonifierResult(RawJsonString&& Value) noexcept
-		: ImplementationJsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)){}
-
-	inline JsonifierResult<RawJsonString>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<RawJsonString>(error){}
-
-	inline JsonifierResult<const char*> JsonifierResult<RawJsonString>::raw() const noexcept {
+	inline JsonifierResult<const char*> JsonifierResult<RawJsonString>::raw() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.raw();
 	}
 
-	inline JsonifierResult<std::string_view> JsonifierResult<RawJsonString>::unescape(JsonIterator& iterator) const noexcept {
+	inline JsonifierResult<std::string_view> JsonifierResult<RawJsonString>::unescape(JsonIterator& iterator) noexcept {
 		if (error()) {
 			return error();
 		}

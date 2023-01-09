@@ -6,11 +6,11 @@
 namespace Jsonifier {
 
 	inline JsonifierResult<ArrayIterator>::JsonifierResult(ArrayIterator&& value) noexcept
-		: ImplementationJsonifierResultBase<ArrayIterator>(std::forward<ArrayIterator>(value)) {
+		: JsonifierResultBase<ArrayIterator>(std::forward<ArrayIterator>(value)) {
 		first.assertIsValid();
 	}
 
-	inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<ArrayIterator>({}, error){}
+	inline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ArrayIterator>(this->second){};
 
 	inline JsonifierResult<Value> JsonifierResult<ArrayIterator>::operator*() noexcept {
 		if (error()) {

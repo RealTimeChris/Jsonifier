@@ -24,7 +24,7 @@ namespace Jsonifier {
 		friend class ObjectIterator;
 	};
 
-	template<> struct JsonifierResult<Field> : public ImplementationJsonifierResultBase<Field> {
+	template<> struct JsonifierResult<Field> : public JsonifierResultBase<Field> {
 	  public:
 		inline JsonifierResult(Field&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;

@@ -22,16 +22,15 @@ namespace Jsonifier {
 		inline Parser(const std::string&) noexcept;
 		inline Parser() noexcept = default;
 
-		inline Document parseJson(const char* string, size_t stringLength);
-		inline Document parseJson(const std::string& string);
-		inline Document parseJson(std::string_view string);
+		inline JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
+		inline JsonifierResult<Document> parseJson(const std::string& string);
+		inline JsonifierResult<Document> parseJson(std::string_view string);
 
 		operator Document() noexcept;
 
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -41,27 +40,27 @@ namespace Jsonifier {
 			return this->stringView;
 		}
 
-	inline uint8_t* getStringBuffer() {
+		inline uint8_t* getStringBuffer() {
 			return this->stringBuffer;
 		}
 
-	inline uint32_t* getStructuralIndices() {
+		inline uint32_t* getStructuralIndices() {
 			return this->structuralIndexes;
 		}
 
-	inline size_t maxDepth() {
+		inline size_t maxDepth() {
 			return 512;
 		}
 
-	inline size_t& getTapeLength() {
+		inline size_t& getTapeLength() {
 			return this->tapeLength;
 		}
 
-	inline uint64_t round(int64_t a, int64_t n) {
+		inline uint64_t round(int64_t a, int64_t n) {
 			return (((a) + (( n )-1)) & ~(( n )-1));
 		}
 
-	inline ErrorCode allocate() noexcept {
+		inline ErrorCode allocate() noexcept {
 			if (this->stringLengthRaw == 0) {
 				return ErrorCode::Success;
 			}
@@ -77,21 +76,21 @@ namespace Jsonifier {
 			return ErrorCode::Success;
 		}
 
-	inline void generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
+		inline ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
 			if (stringNew) {
 				if (stringLength == 0) {
-					throw JsonifierException{ "Failed to parse as the string size is 0." };
+					return String_Error;
 				}
 				this->stringView = ( uint8_t* )stringNew;
 				this->stringLengthRaw = stringLength;
 				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 256, 256)) {
 					if (this->allocate() != ErrorCode::Success) {
-						throw JsonifierException{ "Failed to allocate properly!" };
+						return Mem_Alloc_Error;
 					}
 				}
-				this->tapeLength = 0;
-				this->section.reset();
 				StringBlockReader<256> stringReader{ this->stringView, this->stringLengthRaw };
+				SimdStringSection section{};
+				this->tapeLength = 0;
 				size_t tapeCurrentIndex{ 0 };
 				while (stringReader.hasFullBlock()) {
 					section.submitDataForProcessing(stringReader.fullBlock());
@@ -104,7 +103,8 @@ namespace Jsonifier {
 				section.getStructuralIndices(this->structuralIndexes, tapeCurrentIndex, this->stringLengthRaw);
 				this->getTapeLength() = tapeCurrentIndex;
 			}
-		}
+			return Success;
+		}		
 	};
 
 	template<> inline BackslashAndQuote<SimdBase256> BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {

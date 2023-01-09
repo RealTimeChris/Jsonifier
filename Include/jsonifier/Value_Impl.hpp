@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jsonifier/ImplementationJsonifierResultBase_Impl.hpp>
 #include <jsonifier/Field_Impl.hpp>
 #include <jsonifier/Array_Impl.hpp>
 #include <jsonifier/Object_Impl.hpp>
@@ -9,9 +8,11 @@
 
 namespace Jsonifier {
 
-	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : ImplementationJsonifierResultBase<Value>(std::forward<Value>(value)){}
+	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : JsonifierResultBase<Value>(std::forward<Value>(value)) {
+	}
 
-	inline JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Value>(error){}
+	inline JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Value>(error) {
+	}
 
 	inline JsonifierResult<size_t> JsonifierResult<Value>::countElements() & noexcept {
 		if (error()) {
@@ -164,8 +165,9 @@ namespace Jsonifier {
 	template<typename T> inline ErrorCode JsonifierResult<Value>::get(T& out) noexcept {
 		if (error()) {
 			return error();
-		}
-		return first.get<T>(out);
+		};
+		auto result = first.get<T>(out);
+		return result;
 	}
 
 	template<> inline JsonifierResult<Value> JsonifierResult<Value>::get<Value>() noexcept {
@@ -317,7 +319,8 @@ namespace Jsonifier {
 		return get<T>().get(out);
 	}
 
-	inline Value::Value(const ValueIterator& _iterator) noexcept : ValueIterator{ _iterator } {}
+	inline Value::Value(const ValueIterator& _iterator) noexcept : ValueIterator{ _iterator } {
+	}
 
 	inline Value Value::start(const ValueIterator& iterator) noexcept {
 		return iterator;
@@ -452,7 +455,6 @@ namespace Jsonifier {
 		return startOrResumeObject()[key];
 	}
 
-	inline int64_t totalTime{};
 	inline int64_t iteratorations{};
 
 	inline JsonifierResult<Value> Value::operator[](const char* key) noexcept {

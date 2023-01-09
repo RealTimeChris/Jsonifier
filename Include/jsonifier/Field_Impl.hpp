@@ -6,7 +6,8 @@ namespace Jsonifier {
 
 	inline Field::Field() noexcept : std::pair<RawJsonString, Value>(){};
 
-	inline Field::Field(RawJsonString key, Value&& value) noexcept : std::pair<RawJsonString, Value>(key, std::forward<Value>(value)){}
+	inline Field::Field(RawJsonString key, Value&& value) noexcept : std::pair<RawJsonString, Value>(key, std::forward<Value>(value)) {
+	}
 
 	inline JsonifierResult<Field> Field::start(ValueIterator& parentIter) noexcept {
 		RawJsonString key;
@@ -38,9 +39,11 @@ namespace Jsonifier {
 		return std::forward<Field>(*this).second;
 	}
 
-	inline JsonifierResult<Field>::JsonifierResult(Field&& Value) noexcept : ImplementationJsonifierResultBase<Field>(std::forward<Field>(Value)){}
+	inline JsonifierResult<Field>::JsonifierResult(Field&& Value) noexcept : JsonifierResultBase<Field>(std::forward<Field>(Value)) {
+	}
 
-	inline JsonifierResult<Field>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Field>(error){}
+	inline JsonifierResult<Field>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Field>(error) {
+	}
 
 	inline JsonifierResult<RawJsonString> JsonifierResult<Field>::key() noexcept {
 		if (error()) {

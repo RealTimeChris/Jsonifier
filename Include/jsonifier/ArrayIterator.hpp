@@ -25,7 +25,7 @@ namespace Jsonifier {
 		friend struct JsonifierResult<ArrayIterator>;
 	};
 
-	template<> struct JsonifierResult<ArrayIterator> : public ImplementationJsonifierResultBase<ArrayIterator> {
+	template<> struct JsonifierResult<ArrayIterator> : public JsonifierResultBase<ArrayIterator> {
 	  public:
 		inline JsonifierResult(ArrayIterator&& Value) noexcept;
 		inline JsonifierResult(ErrorCode error) noexcept;
