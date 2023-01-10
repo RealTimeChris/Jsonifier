@@ -12,9 +12,9 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<JsonType> : public JsonifierResultBase<JsonType> {
 	  public:
-		inline JsonifierResult(JsonType&& Value) noexcept;
-		inline JsonifierResult(ErrorCode error) noexcept;
-		inline JsonType value() noexcept;
+		__forceinline JsonifierResult(JsonType&& Value) noexcept;
+		__forceinline JsonifierResult(ErrorCode error) noexcept;
+		__forceinline JsonType value() noexcept;
 		JsonifierResult() noexcept = default;
 		~JsonifierResult() noexcept = default;
 	};

@@ -104,23 +104,23 @@ namespace Jsonifier {
 		using AllocatorType = std::allocator<OTy>;
 		using AllocatorTraits = std::allocator_traits<AllocatorType>;
 
-		inline ObjectBuffer& operator=(ObjectBuffer&&) = delete;
-		inline ObjectBuffer(ObjectBuffer&&) = delete;
+		__forceinline ObjectBuffer& operator=(ObjectBuffer&&) = delete;
+		__forceinline ObjectBuffer(ObjectBuffer&&) = delete;
 
-		inline ObjectBuffer& operator=(const ObjectBuffer&) = delete;
-		inline ObjectBuffer(const ObjectBuffer&) = delete;
+		__forceinline ObjectBuffer& operator=(const ObjectBuffer&) = delete;
+		__forceinline ObjectBuffer(const ObjectBuffer&) = delete;
 
-		inline ObjectBuffer() noexcept = default;
+		__forceinline ObjectBuffer() noexcept = default;
 
-		inline OTy& operator[](size_t index) noexcept {
+		__forceinline OTy& operator[](size_t index) noexcept {
 			return this->objects[index];
 		}
 
-		inline operator OTy*() noexcept {
+		__forceinline operator OTy*() noexcept {
 			return this->objects;
 		}
 
-		inline void reset(size_t newSize) noexcept {
+		__forceinline void reset(size_t newSize) noexcept {
 			this->deallocate();
 			if (newSize != 0) {
 				AllocatorType allocator{};
@@ -129,7 +129,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline ~ObjectBuffer() noexcept {
+		__forceinline ~ObjectBuffer() noexcept {
 			this->deallocate();
 		}
 
@@ -137,7 +137,7 @@ namespace Jsonifier {
 		size_t currentSize{};
 		OTy* objects{};
 
-		inline void deallocate() {
+		__forceinline void deallocate() {
 			if (this->currentSize > 0 && this->objects) {
 				AllocatorType allocator{};
 				AllocatorTraits::deallocate(allocator, this->objects, this->currentSize);
@@ -147,35 +147,35 @@ namespace Jsonifier {
 	};
 
 	template<typename T> struct JsonifierResultBase {
-		inline void tie(T& value, ErrorCode& error) && noexcept {
+		__forceinline void tie(T& value, ErrorCode& error) && noexcept {
 			error = this->second;
 			if (!error) {
 				value = std::forward<JsonifierResultBase<T>>(*this).first;
 			}
 		}
 
-		inline ErrorCode get(T& value) && noexcept {
+		__forceinline ErrorCode get(T& value) && noexcept {
 			ErrorCode error;
 			std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
 			return error;
 		}
 
-		inline ErrorCode error() const noexcept {
+		__forceinline ErrorCode error() const noexcept {
 			return this->second;
 		}
 
-		inline T& value() & noexcept(false) {
+		__forceinline T& value() & noexcept(false) {
 			if (error()) {
 				throw error();
 			}
 			return this->first;
 		}
 
-		inline T&& value() && noexcept(false) {
+		__forceinline T&& value() && noexcept(false) {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		inline T&& takeValue() && noexcept(false) {
+		__forceinline T&& takeValue() && noexcept(false) {
 			if (error()) {
 				throw error();
 			}
@@ -186,24 +186,24 @@ namespace Jsonifier {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		inline const T& valueUnsafe() const& noexcept {
+		__forceinline const T& valueUnsafe() const& noexcept {
 			return this->first;
 		}
 
-		inline T&& valueUnsafe() && noexcept {
+		__forceinline T&& valueUnsafe() && noexcept {
 			return std::forward<T>(this->first);
 		}
 
-		template<typename T> inline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {
+		template<typename T> __forceinline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {
 		}
 
-		inline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error) {
+		__forceinline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error) {
 		}
 
-		template<typename T> inline JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success) {
+		template<typename T> __forceinline JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success) {
 		}
 
-		inline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized) {
+		__forceinline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized) {
 		}
 
 	  protected:
@@ -212,91 +212,91 @@ namespace Jsonifier {
 	};
 
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {
-		inline void tie(T& value, ErrorCode& error) && noexcept {
+		__forceinline void tie(T& value, ErrorCode& error) && noexcept {
 			std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
 		}
 
-		inline ErrorCode get(T& value) && noexcept {
+		__forceinline ErrorCode get(T& value) && noexcept {
 			return std::forward<JsonifierResultBase<T>>(*this).get(value);
 		}
 
-		inline ErrorCode error() const noexcept {
+		__forceinline ErrorCode error() const noexcept {
 			return JsonifierResultBase<T>::error();
 		}
 
-		inline T& value() & noexcept(false) {
+		__forceinline T& value() & noexcept(false) {
 			return JsonifierResultBase<T>::value();
 		}
 
-		inline T&& value() && noexcept(false) {
+		__forceinline T&& value() && noexcept(false) {
 			return std::forward<JsonifierResultBase<T>>(*this).value();
 		}
 
-		inline T&& takeValue() && noexcept(false) {
+		__forceinline T&& takeValue() && noexcept(false) {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		inline operator T&&() && noexcept(false) {
+		__forceinline operator T&&() && noexcept(false) {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		inline const T& valueUnsafe() const& noexcept {
+		__forceinline const T& valueUnsafe() const& noexcept {
 			return JsonifierResultBase<T>::valueUnsafe();
 		}
 
-		inline T&& valueUnsafe() && noexcept {
+		__forceinline T&& valueUnsafe() && noexcept {
 			return std::forward<JsonifierResultBase<T>>(*this).valueUnsafe();
 		}
 
-		template<typename T> inline JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
+		template<typename T> __forceinline JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
 		}
 
-		inline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<T>(error) {
+		__forceinline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<T>(error) {
 		}
 
-		inline JsonifierResult(T&& value) noexcept : JsonifierResultBase<T>(std::forward<T>(value)) {
+		__forceinline JsonifierResult(T&& value) noexcept : JsonifierResultBase<T>(std::forward<T>(value)) {
 		}
 
-		inline JsonifierResult() noexcept : JsonifierResultBase<T>() {
+		__forceinline JsonifierResult() noexcept : JsonifierResultBase<T>() {
 		}
 	};
 
-	inline uint32_t isStructuralOrWhitespace(uint8_t c);
+	__forceinline uint32_t isStructuralOrWhitespace(uint8_t c);
 
-	inline uint32_t isNotStructuralOrWhitespace(uint8_t c);
+	__forceinline uint32_t isNotStructuralOrWhitespace(uint8_t c);
 
 	template<typename TTy> class StopWatch {
 	  public:
 		using HRClock = std::chrono::high_resolution_clock;
 
-		inline StopWatch() = delete;
+		__forceinline StopWatch() = delete;
 
-		inline StopWatch<TTy>& operator=(const StopWatch<TTy>& data) {
+		__forceinline StopWatch<TTy>& operator=(const StopWatch<TTy>& data) {
 			this->maxNumberOfMs.store(data.maxNumberOfMs.load());
 			this->startTime.store(data.startTime.load());
 			return *this;
 		}
 
-		inline StopWatch(const StopWatch<TTy>& data) {
+		__forceinline StopWatch(const StopWatch<TTy>& data) {
 			*this = data;
 		}
 
-		inline StopWatch(TTy maxNumberOfMsNew) {
+		__forceinline StopWatch(TTy maxNumberOfMsNew) {
 			this->maxNumberOfMs.store(maxNumberOfMsNew);
 			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
 		}
 
-		inline TTy totalTimePassed() {
+		__forceinline TTy totalTimePassed() {
 			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
 			TTy elapsedTime = currentTime - this->startTime.load();
 			return elapsedTime;
 		}
 
-		inline TTy getTotalWaitTime() {
+		__forceinline TTy getTotalWaitTime() {
 			return this->maxNumberOfMs.load();
 		}
 
-		inline bool hasTimePassed() {
+		__forceinline bool hasTimePassed() {
 			TTy currentTime = std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch());
 			TTy elapsedTime = currentTime - this->startTime.load();
 			if (elapsedTime >= this->maxNumberOfMs.load()) {
@@ -306,7 +306,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void resetTimer() {
+		__forceinline void resetTimer() {
 			this->startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
 		}
 

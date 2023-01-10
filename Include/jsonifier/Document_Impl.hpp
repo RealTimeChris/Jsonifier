@@ -8,75 +8,75 @@
 
 namespace Jsonifier {
 
-	template<typename T> inline JsonifierResult<T> Document::get() & noexcept {
+	template<typename T> __forceinline JsonifierResult<T> Document::get() & noexcept {
 		static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 	}
 
-	template<typename T> inline JsonifierResult<T> Document::get() && noexcept {
+	template<typename T> __forceinline JsonifierResult<T> Document::get() && noexcept {
 		static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 	}
 
-	template<> inline JsonifierResult<Array> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Array> Document::get() & noexcept {
 		return getArray();
 	}
 
-	template<> inline JsonifierResult<Object> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Object> Document::get() & noexcept {
 		return getObject();
 	}
 
-	template<> inline JsonifierResult<RawJsonString> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<RawJsonString> Document::get() & noexcept {
 		return getRawJsonString();
 	}
 
-	template<> inline JsonifierResult<std::string_view> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<std::string_view> Document::get() & noexcept {
 		return getString();
 	}
 
-	template<> inline JsonifierResult<double> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<double> Document::get() & noexcept {
 		return getDouble();
 	}
 
-	template<> inline JsonifierResult<uint64_t> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<uint64_t> Document::get() & noexcept {
 		return getUint64();
 	}
 
-	template<> inline JsonifierResult<int64_t> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<int64_t> Document::get() & noexcept {
 		return getInt64();
 	}
 
-	template<> inline JsonifierResult<bool> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<bool> Document::get() & noexcept {
 		return getBool();
 	}
 
-	template<> inline JsonifierResult<Value> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Value> Document::get() & noexcept {
 		return getValue();
 	}
 
-	template<> inline JsonifierResult<RawJsonString> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<RawJsonString> Document::get() && noexcept {
 		return getRawJsonString();
 	}
 
-	template<> inline JsonifierResult<std::string_view> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<std::string_view> Document::get() && noexcept {
 		return getString();
 	}
 
-	template<> inline JsonifierResult<double> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<double> Document::get() && noexcept {
 		return std::forward<Document>(*this).getDouble();
 	}
 
-	template<> inline JsonifierResult<uint64_t> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<uint64_t> Document::get() && noexcept {
 		return std::forward<Document>(*this).getUint64();
 	}
 
-	template<> inline JsonifierResult<int64_t> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<int64_t> Document::get() && noexcept {
 		return std::forward<Document>(*this).getInt64();
 	}
 
-	template<> inline JsonifierResult<bool> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<bool> Document::get() && noexcept {
 		return std::forward<Document>(*this).getBool();
 	}
 
-	template<> inline JsonifierResult<Value> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<Value> Document::get() && noexcept {
 		return getValue();
 	}
 
@@ -116,18 +116,18 @@ namespace Jsonifier {
 		return std::forward<Document>(first).get<T>(out);
 	}
 
-	template<> inline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() & noexcept = delete;
+	template<> __forceinline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() & noexcept = delete;
 
-	template<> inline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() && noexcept {
+	template<> __forceinline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() && noexcept {
 		if (error()) {
 			return error();
 		}
 		return std::forward<Document>(first);
 	}
 
-	template<> inline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) & noexcept = delete;
+	template<> __forceinline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) & noexcept = delete;
 
-	template<> inline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) && noexcept {
+	template<> __forceinline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) && noexcept {
 		if (error()) {
 			return error();
 		}

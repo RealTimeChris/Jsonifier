@@ -34,37 +34,37 @@ namespace Jsonifier {
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section{};
+		SimdStringSection section01{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
 		size_t tapeLength{};
 
-		inline uint8_t* getStringView() {
+		__forceinline uint8_t* getStringView() {
 			return this->stringView;
 		}
 
-		inline uint8_t* getStringBuffer() {
+		__forceinline uint8_t* getStringBuffer() {
 			return this->stringBuffer;
 		}
 
-		inline uint32_t* getStructuralIndices() {
+		__forceinline uint32_t* getStructuralIndices() {
 			return this->structuralIndexes;
 		}
 
-		inline size_t maxDepth() {
+		__forceinline size_t maxDepth() {
 			return 512;
 		}
 
-		inline size_t& getTapeLength() {
+		__forceinline size_t& getTapeLength() {
 			return this->tapeLength;
 		}
 
-		inline uint64_t round(int64_t a, int64_t n) {
+		__forceinline uint64_t round(int64_t a, int64_t n) {
 			return (((a) + (( n )-1)) & ~(( n )-1));
 		}
 
-		inline ErrorCode allocate() noexcept {
+		__forceinline ErrorCode allocate() noexcept {
 			if (this->stringLengthRaw == 0) {
 				return ErrorCode::Success;
 			}
@@ -80,7 +80,7 @@ namespace Jsonifier {
 			return ErrorCode::Success;
 		}
 
-		inline ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
+		__forceinline ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
 			if (stringNew) {
 				if (stringLength == 0) {
 					return String_Error;
@@ -92,21 +92,32 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				StringBlockReader<256> stringReader{};
-				
+				StringBlockReader<128> stringReader{};
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
-				section.reset();
+				section01.reset();
 				this->tapeLength = 0;
-				size_t tapeCurrentIndex{ 0 };
+				size_t tapeCurrentIndex{};
+				size_t currentStringIndex{};
 				while (stringReader.hasFullBlock()) {
-					section.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes);
-					section.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
+					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
+					currentStringIndex += 128;
+					//section03.submitDataForProcessing(stringReader.fullBlock() + 512, this->structuralIndexes, currentStringIndex);
+					//currentStringIndex += 256;
+					//section04.submitDataForProcessing(stringReader.fullBlock() + 768, this->structuralIndexes, currentStringIndex);
+					//currentStringIndex += 256;
+					section01.generateStructurals();
+					//section03.generateStructurals();
+					//section04.generateStructurals();
+					section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
+					//section02.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
+					//section03.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
+					//section04.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 					stringReader.advance();
 				}
-				uint8_t block[256];
+				uint8_t block[128];
 				stringReader.getRemainder(block);
-				section.submitDataForProcessing(block, this->structuralIndexes);
-				section.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
+				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
+				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 				this->getTapeLength() = tapeCurrentIndex;
 				//for (size_t x = 0; x < this->tapeLength; ++x) {
 					//std::cout << "CURRENT INDEX: " << this->structuralIndexes[x] << ", THE INDICES'S VALUE"
@@ -117,7 +128,7 @@ namespace Jsonifier {
 		}
 	};
 
-	template<> BackslashAndQuote<SimdBase256> inline BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
+	template<> BackslashAndQuote<SimdBase256> __forceinline BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
 		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than 256 bytes");
 		SimdBase256 v(reinterpret_cast<const char*>(src));
 		v.store(dst);

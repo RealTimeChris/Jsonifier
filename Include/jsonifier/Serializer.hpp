@@ -282,11 +282,11 @@ namespace Jsonifier {
 
 		Serializer& operator[](uint64_t index);
 
-		template<typename Ty> inline Ty getValue() && {
+		template<typename Ty> __forceinline Ty getValue() && {
 			return Ty{};
 		}
 
-		template<typename Ty> inline Ty& getValue() & {
+		template<typename Ty> __forceinline Ty& getValue() & {
 			return Ty{};
 		}
 
@@ -318,7 +318,7 @@ namespace Jsonifier {
 			std::enable_if_t<
 				std::is_integral<NumberType>::value || std::is_same<NumberType, uint64_t>::value || std::is_same<NumberType, int64_t>::value, int> =
 				0>
-		inline void writeJsonInt(NumberType Int) {
+		__forceinline void writeJsonInt(NumberType Int) {
 			auto IntNew = std::to_string(Int);
 			this->writeString(IntNew.data(), IntNew.size());
 		}
@@ -382,59 +382,59 @@ namespace Jsonifier {
 		friend bool operator==(const Serializer& lhs, const Serializer& rhs);
 	};
 
-	template<> inline Serializer::ObjectType Serializer::getValue() && {
+	template<> __forceinline Serializer::ObjectType Serializer::getValue() && {
 		return std::move(*this->jsonValue.object);
 	}
 
-	template<> inline Serializer::ArrayType Serializer::getValue() && {
+	template<> __forceinline Serializer::ArrayType Serializer::getValue() && {
 		return std::move(*this->jsonValue.array);
 	}
 
-	template<> inline Serializer::StringType Serializer::getValue() && {
+	template<> __forceinline Serializer::StringType Serializer::getValue() && {
 		return std::move(*this->jsonValue.string);
 	}
 
-	template<> inline Serializer::FloatType Serializer::getValue() && {
+	template<> __forceinline Serializer::FloatType Serializer::getValue() && {
 		return this->jsonValue.numberDouble;
 	}
 
-	template<> inline Serializer::UintType Serializer::getValue() && {
+	template<> __forceinline Serializer::UintType Serializer::getValue() && {
 		return this->jsonValue.numberUint;
 	}
 
-	template<> inline Serializer::IntType Serializer::getValue() && {
+	template<> __forceinline Serializer::IntType Serializer::getValue() && {
 		return this->jsonValue.numberInt;
 	}
 
-	template<> inline Serializer::BoolType Serializer::getValue() && {
+	template<> __forceinline Serializer::BoolType Serializer::getValue() && {
 		return this->jsonValue.boolean;
 	}
 
-	template<> inline Serializer::ObjectType& Serializer::getValue() & {
+	template<> __forceinline Serializer::ObjectType& Serializer::getValue() & {
 		return *this->jsonValue.object;
 	}
 
-	template<> inline Serializer::ArrayType& Serializer::getValue() & {
+	template<> __forceinline Serializer::ArrayType& Serializer::getValue() & {
 		return *this->jsonValue.array;
 	}
 
-	template<> inline Serializer::StringType& Serializer::getValue() & {
+	template<> __forceinline Serializer::StringType& Serializer::getValue() & {
 		return *this->jsonValue.string;
 	}
 
-	template<> inline Serializer::FloatType& Serializer::getValue() & {
+	template<> __forceinline Serializer::FloatType& Serializer::getValue() & {
 		return this->jsonValue.numberDouble;
 	}
 
-	template<> inline Serializer::UintType& Serializer::getValue() & {
+	template<> __forceinline Serializer::UintType& Serializer::getValue() & {
 		return this->jsonValue.numberUint;
 	}
 
-	template<> inline Serializer::IntType& Serializer::getValue() & {
+	template<> __forceinline Serializer::IntType& Serializer::getValue() & {
 		return this->jsonValue.numberInt;
 	}
 
-	template<> inline Serializer::BoolType& Serializer::getValue() & {
+	template<> __forceinline Serializer::BoolType& Serializer::getValue() & {
 		return this->jsonValue.boolean;
 	}
 }

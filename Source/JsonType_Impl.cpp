@@ -35,7 +35,7 @@ namespace Jsonifier {
 		return out << type.value();
 	}
 
-	JsonType inline JsonifierResult<JsonType>::value() noexcept {
+	JsonType __forceinline JsonifierResult<JsonType>::value() noexcept {
 		return this->first;
 	}
 

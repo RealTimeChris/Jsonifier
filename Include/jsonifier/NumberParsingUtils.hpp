@@ -32,7 +32,7 @@ namespace Jsonifier {
 		}
 	};
 
-	inline int mantissaExplicitBits() {
+	__forceinline int mantissaExplicitBits() {
 		return 52;
 	}
 
@@ -51,13 +51,13 @@ namespace Jsonifier {
 		uint64_t high;
 	};
 
-	inline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
+	__forceinline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
 		Value128 answer{};
 		answer.low = _umul128(value1, value2, &answer.high);
 		return answer;
 	}
 
-	inline uint64_t round(Decimal& h) {
+	__forceinline uint64_t round(Decimal& h) {
 		if ((h.numDigits == 0) || (h.decimalPoint < 0)) {
 			return 0;
 		} else if (h.decimalPoint > 18) {
@@ -480,7 +480,7 @@ namespace Jsonifier {
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR };
 
-	inline void trim(Decimal& h) {
+	__forceinline void trim(Decimal& h) {
 		while ((h.numDigits > 0) && (h.digits[h.numDigits - 1] == 0)) {
 			h.numDigits--;
 		}
@@ -488,7 +488,7 @@ namespace Jsonifier {
 
 	const int32_t decimalPointRange = 2047;
 
-	inline uint32_t numberOfDigitsDecimalLeftShift(Decimal& h, uint32_t shift) {
+	__forceinline uint32_t numberOfDigitsDecimalLeftShift(Decimal& h, uint32_t shift) {
 		shift &= 63;
 		const static uint16_t numberOfDigitsDecimalLeftShift_table[65]{ 0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817,
 			0x181D, 0x2024, 0x202B, 0x2033, 0x203C, 0x2846, 0x2850, 0x285B, 0x3067, 0x3073, 0x3080, 0x388E, 0x389C, 0x38AB, 0x38BB, 0x40CC, 0x40DD,
@@ -549,7 +549,7 @@ namespace Jsonifier {
 		return numNewDigits;
 	}
 
-	inline void decimalLeftShift(Decimal& h, uint32_t shift) {
+	__forceinline void decimalLeftShift(Decimal& h, uint32_t shift) {
 		if (h.numDigits == 0) {
 			return;
 		}
@@ -590,7 +590,7 @@ namespace Jsonifier {
 		trim(h);
 	}
 
-	inline void decimalRightShift(Decimal& h, uint32_t shift) {
+	__forceinline void decimalRightShift(Decimal& h, uint32_t shift) {
 		uint32_t readIndex = 0;
 		uint32_t writeIndex = 0;
 
@@ -636,7 +636,7 @@ namespace Jsonifier {
 		trim(h);
 	}
 
-	inline JsonifierResult<bool> isInteger(char* src) noexcept {
+	__forceinline JsonifierResult<bool> isInteger(char* src) noexcept {
 		bool negative = (*src == '-');
 		src += uint8_t(negative);
 		const char* p = src;
@@ -652,11 +652,11 @@ namespace Jsonifier {
 		return false;
 	}
 
-	inline bool isInteger(char c) noexcept {
+	__forceinline bool isInteger(char c) noexcept {
 		return (c >= '0' && c <= '9');
 	}
 
-	inline double toDouble(uint64_t mantissa, uint64_t realExponent, bool negative) {
+	__forceinline double toDouble(uint64_t mantissa, uint64_t realExponent, bool negative) {
 		double d;
 		mantissa &= ~(1ULL << 52);
 		mantissa |= realExponent << 52;
@@ -665,15 +665,15 @@ namespace Jsonifier {
 		return d;
 	}
 
-	constexpr inline int infinitePower() {
+	constexpr __forceinline int infinitePower() {
 		return 0x7FF;
 	}
 
-	constexpr inline int minimumExponent() {
+	constexpr __forceinline int minimumExponent() {
 		return -1023;
 	}
 
-	template<typename binary> inline AdjustedMantissa computeFloat(Decimal& d) {
+	template<typename binary> __forceinline AdjustedMantissa computeFloat(Decimal& d) {
 		AdjustedMantissa answer;
 		if (d.numDigits == 0) {
 			answer.power2 = 0;
@@ -763,7 +763,7 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	inline Decimal parseDecimal(const char*& p) noexcept {
+	__forceinline Decimal parseDecimal(const char*& p) noexcept {
 		Decimal answer;
 		answer.numDigits = 0;
 		answer.decimalPoint = 0;
@@ -838,7 +838,7 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	inline bool computeFloat64(int64_t power, uint64_t i, bool negative, double& d) {
+	__forceinline bool computeFloat64(int64_t power, uint64_t i, bool negative, double& d) {
 		if (-22 <= power && power <= 22 && i <= 9007199254740991) {
 			d = double(i);
 			if (power < 0) {
@@ -909,17 +909,17 @@ namespace Jsonifier {
 		return true;
 	}
 
-	template<typename binary> inline AdjustedMantissa parse_long_mantissa(const char* first) {
+	template<typename binary> __forceinline AdjustedMantissa parse_long_mantissa(const char* first) {
 		Decimal d = parseDecimal(first);
 		return computeFloat<binary>(d);
 	}
 
-	inline bool isNegative(const uint8_t* src) noexcept {
+	__forceinline bool isNegative(const uint8_t* src) noexcept {
 		return (*src == '-');
 	}
 
 
-	inline Decimal parseDecimal(const char*& p, const char* end) noexcept {
+	__forceinline Decimal parseDecimal(const char*& p, const char* end) noexcept {
 		Decimal answer;
 		answer.numDigits = 0;
 		answer.decimalPoint = 0;
@@ -1003,16 +1003,16 @@ namespace Jsonifier {
 		return answer;
 	}
 
-	template<typename binary> inline AdjustedMantissa parse_long_mantissa(const char* first, const char* end) {
+	template<typename binary> __forceinline AdjustedMantissa parse_long_mantissa(const char* first, const char* end) {
 		Decimal d = parseDecimal(first, end);
 		return computeFloat<binary>(d);
 	}
 
-	inline int signIndex() {
+	__forceinline int signIndex() {
 		return 63;
 	}
 
-	inline double fromChars(const char* first) noexcept {
+	__forceinline double fromChars(const char* first) noexcept {
 		bool negative = first[0] == '-';
 		if (negative) {
 			first++;
@@ -1026,7 +1026,7 @@ namespace Jsonifier {
 		return value;
 	}
 
-	inline bool parseFloatFallback(const uint8_t* ptr, double* outDouble) {
+	__forceinline bool parseFloatFallback(const uint8_t* ptr, double* outDouble) {
 		*outDouble = fromChars(reinterpret_cast<const char*>(ptr));
 		return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 	}
@@ -1036,7 +1036,7 @@ namespace Jsonifier {
 		return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 	}
 
-	template<typename I> inline bool parseDigit(const uint8_t c, I& i) {
+	template<typename I> __forceinline bool parseDigit(const uint8_t c, I& i) {
 		const uint8_t digit = static_cast<uint8_t>(c - '0');
 		if (digit > 9) {
 			return false;
@@ -1045,7 +1045,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline ErrorCode parseDecimal(const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
+	__forceinline ErrorCode parseDecimal(const uint8_t* const src, const uint8_t*& p, uint64_t& i, int64_t& exponent) {
 		const uint8_t* const firstAfterPeriod = p;
 		if (parseDigit(*p, i)) {
 			++p;
@@ -1060,7 +1060,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline ErrorCode parseExponent(const uint8_t* const src, const uint8_t*& p, int64_t& exponent) {
+	__forceinline ErrorCode parseExponent(const uint8_t* const src, const uint8_t*& p, int64_t& exponent) {
 		bool negExp = ('-' == *p);
 		if (negExp || '+' == *p) {
 			p++;
@@ -1085,7 +1085,7 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
+	__forceinline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src) noexcept {
 		const uint8_t* p = src;
 		const uint8_t* const startDigits = p;
 		uint64_t i = 0;
@@ -1113,7 +1113,7 @@ namespace Jsonifier {
 		return i;
 	}
 
-	inline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src, const uint8_t* const src_end) noexcept {
+	__forceinline JsonifierResult<uint64_t> parseUnsigned(const uint8_t* const src, const uint8_t* const src_end) noexcept {
 		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		const uint8_t* p = src;
 		const uint8_t* const startDigits = p;
@@ -1140,7 +1140,7 @@ namespace Jsonifier {
 		return i;
 	}
 
-	inline JsonifierResult<int64_t> parseInteger(const uint8_t* src) noexcept {
+	__forceinline JsonifierResult<int64_t> parseInteger(const uint8_t* src) noexcept {
 		bool negative = (*src == '-');
 		const uint8_t* p = src + uint8_t(negative);
 		const uint8_t* const startDigits = p;
@@ -1166,7 +1166,7 @@ namespace Jsonifier {
 		return negative ? (~i + 1) : i;
 	}
 
-	inline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
+	__forceinline JsonifierResult<double> parseDouble(const uint8_t* src) noexcept {
 		bool negative = (*src == '-');
 		src += uint8_t(negative);
 		uint64_t i = 0;

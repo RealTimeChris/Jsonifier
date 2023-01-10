@@ -30,10 +30,10 @@ namespace Jsonifier {
 		JsonifierResult<bool> getBool() noexcept;
 		JsonifierResult<Value> getValue() noexcept;
 		JsonifierResult<bool> isNull() noexcept;
-		template<typename T> inline JsonifierResult<T> get() & noexcept;
-		template<typename T> inline JsonifierResult<T> get() && noexcept;
-		template<typename T> inline ErrorCode get(T& out) & noexcept;
-		template<typename T> inline ErrorCode get(T& out) && noexcept;
+		template<typename T> __forceinline JsonifierResult<T> get() & noexcept;
+		template<typename T> __forceinline JsonifierResult<T> get() && noexcept;
+		template<typename T> __forceinline ErrorCode get(T& out) & noexcept;
+		template<typename T> __forceinline ErrorCode get(T& out) && noexcept;
 		operator Array() & noexcept(false);
 		operator Object() & noexcept(false);
 		operator uint64_t() noexcept(false);
@@ -104,11 +104,11 @@ namespace Jsonifier {
 		JsonifierResult<Value> getValue() noexcept;
 		JsonifierResult<bool> isNull() noexcept;
 
-		template<typename T> inline JsonifierResult<T> get() & noexcept;
-		template<typename T> inline JsonifierResult<T> get() && noexcept;
+		template<typename T> __forceinline JsonifierResult<T> get() & noexcept;
+		template<typename T> __forceinline JsonifierResult<T> get() && noexcept;
 
-		template<typename T> inline ErrorCode get(T& out) & noexcept;
-		template<typename T> inline ErrorCode get(T& out) && noexcept;
+		template<typename T> __forceinline ErrorCode get(T& out) & noexcept;
+		template<typename T> __forceinline ErrorCode get(T& out) && noexcept;
 
 		operator Array() & noexcept(false);
 		operator Object() & noexcept(false);

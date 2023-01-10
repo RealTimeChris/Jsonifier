@@ -11,11 +11,11 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll ArrayIterator : public ValueIterator {
 	  public:
-		inline ArrayIterator() noexcept = default;
-		inline ArrayIterator(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
+		__forceinline ArrayIterator() noexcept = default;
+		__forceinline ArrayIterator(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
 		}
 
-		inline JsonifierResult<Value> operator*() noexcept {
+		__forceinline JsonifierResult<Value> operator*() noexcept {
 			if (error()) {
 				abandon();
 				return error();
@@ -23,15 +23,15 @@ namespace Jsonifier {
 			return Value(child());
 		}
 
-		inline bool operator==(const ArrayIterator& other) const noexcept {
+		__forceinline bool operator==(const ArrayIterator& other) const noexcept {
 			return !(*this != other);
 		}
 
-		inline bool operator!=(const ArrayIterator&) const noexcept {
+		__forceinline bool operator!=(const ArrayIterator&) const noexcept {
 			return ValueIterator::isOpen();
 		}
 
-		inline ArrayIterator& operator++() noexcept {
+		__forceinline ArrayIterator& operator++() noexcept {
 			ErrorCode error{};
 			if ((error = ValueIterator::error())) {
 				return *this;
@@ -58,28 +58,28 @@ namespace Jsonifier {
 		JsonifierResult(ErrorCode error) noexcept;
 		JsonifierResult() noexcept = default;
 
-		JsonifierResult<Value> inline operator*() noexcept {
+		JsonifierResult<Value> __forceinline operator*() noexcept {
 			if (error()) {
 				return error();
 			}
 			return *first;
 		}
 
-		inline bool operator==(const JsonifierResult<ArrayIterator>& other) const noexcept {
+		__forceinline bool operator==(const JsonifierResult<ArrayIterator>& other) const noexcept {
 			if (!first.isValid()) {
 				return !error();
 			}
 			return first == other.first;
 		}
 
-		inline bool operator!=(const JsonifierResult<ArrayIterator>& other) const noexcept {
+		__forceinline bool operator!=(const JsonifierResult<ArrayIterator>& other) const noexcept {
 			if (!first.isValid()) {
 				return error();
 			}
 			return first != other.first;
 		}
 
-		inline JsonifierResult<ArrayIterator>& operator++() noexcept {
+		__forceinline JsonifierResult<ArrayIterator>& operator++() noexcept {
 			if (error()) {
 				second = Success;
 				return *this;
