@@ -13,16 +13,20 @@ namespace Jsonifier {
 		__forceinline JsonType value() noexcept;
 		__forceinline JsonifierResult() noexcept = default;
 		__forceinline ~JsonifierResult() noexcept = default;
+
+	  protected:
+		JsonType first{};
+		ErrorCode second{};
 	};
 
 	__forceinline JsonType JsonifierResult<JsonType>::value() noexcept {
 		return this->first;
 	}
 
-	__forceinline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept : JsonifierResultBase<JsonType>{ std::move(Value) } {};
+	__forceinline JsonifierResult<JsonType>::JsonifierResult(JsonType&& Value) noexcept {};
 
 
-	__forceinline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase{ error } {};
+	__forceinline JsonifierResult<JsonType>::JsonifierResult(ErrorCode error) noexcept {};
 
 	__forceinline std::ostream& operator<<(std::ostream& out, JsonType type) noexcept {
 		switch (type) {
@@ -54,4 +58,4 @@ namespace Jsonifier {
 		return out << type.value();
 	}
 
-}
+};

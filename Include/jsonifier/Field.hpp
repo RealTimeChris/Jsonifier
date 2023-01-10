@@ -35,10 +35,10 @@ namespace Jsonifier {
 		__forceinline JsonifierResult<Value> value() noexcept;
 	};
 
-	__forceinline JsonifierResult<Field>::JsonifierResult(Field&& Value) noexcept : JsonifierResultBase<Field>(std::forward<Field>(Value)) {
+	__forceinline JsonifierResult<Field>::JsonifierResult(Field&& Value) noexcept  {
 	}
 
-	__forceinline JsonifierResult<Field>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Field>(error) {
+	__forceinline JsonifierResult<Field>::JsonifierResult(ErrorCode error) noexcept {
 	}
 
 	__forceinline JsonifierResult<Value> JsonifierResult<Field>::value() noexcept {

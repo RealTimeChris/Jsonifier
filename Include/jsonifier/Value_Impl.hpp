@@ -507,7 +507,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<Value> Value::atPointer(std::string_view jsonPointer) noexcept {
-		JsonType t;
+		JsonType t{};
 		JsonifierTry(type().get(t));
 		switch (t) {
 			case JsonType::Array:

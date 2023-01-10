@@ -80,12 +80,16 @@ namespace Jsonifier {
 
 		__forceinline JsonifierResult<ArrayIterator>& operator++() noexcept {
 			if (error()) {
-				second = Success;
+				second = ErrorCode::Success;
 				return *this;
 			}
 			++(first);
 			return *this;
 		}
+
+	  protected:
+		ArrayIterator first{};
+		ErrorCode second{};
 	};
 
 }

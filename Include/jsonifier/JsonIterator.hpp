@@ -18,8 +18,8 @@ namespace Jsonifier {
 	  protected:
 		Parser* parser{};
 		uint8_t* stringBuffer{};
-		ErrorCode error{ Success };
-		uint32_t currentDepth{};
+		ErrorCode error{ ErrorCode::Success };
+		uint32_t currentDepth{ 1 };
 		uint32_t* rootStructural{};
 
 	  public:

@@ -71,11 +71,8 @@ namespace Jsonifier {
 		return currentPosition <= other.currentPosition;
 	}
 
-	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(TokenIterator&& Value) noexcept
-		: JsonifierResultBase<TokenIterator>(std::forward<TokenIterator>(Value)) {
-	}
+	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(TokenIterator&& Value) noexcept {};
 
-	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<TokenIterator>(error) {
-	}
+	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(ErrorCode error) noexcept {};
 
 }

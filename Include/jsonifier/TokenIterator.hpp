@@ -39,7 +39,7 @@ namespace Jsonifier {
 		friend class Object;
 	};
 
-	template<> struct JsonifierResult<TokenIterator> : public JsonifierResultBase<TokenIterator> {
+	template<> struct JsonifierResult<TokenIterator> {
 	  public:
 		__forceinline JsonifierResult(TokenIterator&& Value) noexcept;
 		__forceinline JsonifierResult(ErrorCode error) noexcept;
