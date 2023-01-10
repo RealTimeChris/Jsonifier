@@ -807,17 +807,19 @@ namespace Jsonifier {
 			return structuralStart;
 		}
 
+		template<size_t StringBlockCount>
 		void submitDataForProcessing(const uint8_t* valueNew) {
-			for (size_t x = 0; x < 16; ++x) {
+			for (size_t x = 0; x < StringBlockCount * 8; ++x) {
 				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (32 * x)));
 			}
 		}
 
+		template<size_t StringBlockCount>
 		size_t generateStructurals() {
-			for (size_t x = 0; x < 2; ++x) {
+			for (size_t x = 0; x < StringBlockCount; ++x) {
+				this->currentBlock = x;
 				this->structurals = this->collectFinalStructurals();
 				this->getStructuralIndices();
-				this->currentBlock = x;
 			}
 			this->currentBlock = 0;
 			//this->structurals.printBits("FINAL BITS: ");

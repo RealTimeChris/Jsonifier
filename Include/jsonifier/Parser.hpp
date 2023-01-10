@@ -97,14 +97,14 @@ namespace Jsonifier {
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				this->tapeLength = 0;
 				while (stringReader.hasFullBlock()) {
-					section01.submitDataForProcessing(stringReader.fullBlock());
-					section01.generateStructurals();
+					section01.submitDataForProcessing<2>(stringReader.fullBlock());
+					section01.generateStructurals<2>();
 					stringReader.advance();
 				}
 				uint8_t block[512];
 				stringReader.getRemainder(block);
-				section01.submitDataForProcessing(block);
-				this->getTapeLength() = section01.generateStructurals();
+				section01.submitDataForProcessing<2>(block);
+				this->getTapeLength() = section01.generateStructurals<2>();
 			}
 			return Success;
 		}
