@@ -514,14 +514,14 @@ namespace Jsonifier {
 
 		__forceinline void setFirstBit(bool onOrOff) {
 			if (onOrOff) {
-				this->insertInt64(this->getInt64(0) | 1L << 0, 0);
+				this->insertInt64(this->value.m256i_i64[0] | 1L << 0, 0);
 			} else {
-				this->insertInt64(this->getInt64(0) & ~(1L << 0), 0);
+				this->insertInt64(this->value.m256i_i64[0] & ~(1L << 0), 0);
 			}
 		}
 
 		__forceinline bool checkLastBit() {
-			return ((this->getUint64(3) >> 63) & 1) << 63;
+			return ((this->value.m256i_u64[3] >> 63) & 1) << 63;
 		}
 
 		__forceinline SimdBase256 operator~() {
@@ -550,7 +550,7 @@ namespace Jsonifier {
 			bool returnValue{};
 			uint64_t returnValue64{};
 			for (size_t x = 0; x < 4; ++x) {
-				if (_addcarry_u64(0, this->getUint64(x), other1.getUint64(x), &returnValue64)) {
+				if (_addcarry_u64(0, this->value.m256i_u64[x], other1.value.m256i_u64[x], &returnValue64)) {
 					returnValue = true;
 				} else {
 					returnValue = false;
@@ -666,8 +666,21 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll SimdStringSection {
 	  public:
-		__forceinline SimdStringSection(size_t stringLengthNew, uint32_t* tapePtrsNew) noexcept {
-			this->tapePtrs = tapePtrsNew;
+
+		__forceinline SimdStringSection& operator=(SimdStringSection&& other) noexcept {
+			this->structuralIndexes = std::move(other.structuralIndexes);
+			this->stringLength = other.stringLength;
+			return *this;
+		};
+
+		__forceinline SimdStringSection(SimdStringSection&& other) noexcept {
+			*this = std::move(other);
+		}
+
+		__forceinline SimdStringSection() noexcept = default;
+
+		__forceinline SimdStringSection(size_t stringLengthNew, size_t structuralIndexCount) noexcept {
+			this->structuralIndexes.reset(structuralIndexCount);
 			this->stringLength = stringLengthNew;
 		};
 
@@ -678,17 +691,17 @@ namespace Jsonifier {
 		__forceinline void addTapeValues() {
 			for (size_t x = 0; x < 4; ++x) {
 				uint64_t newValue{};
-				int cnt = static_cast<int>(__popcnt64(*(reinterpret_cast<int64_t*>(&structurals) + x)));
+				int cnt = static_cast<int>(__popcnt64(*(reinterpret_cast<uint64_t*>(&structurals) + x)));
 				for (int i = 0; i < cnt; i++) {
-					newValue = _tzcnt_u64(*(reinterpret_cast<int64_t*>(&structurals) + x)) + (x * 64) + currentIndexIntoString;
+					newValue = _tzcnt_u64(*(reinterpret_cast<uint64_t*>(&structurals) + x)) + (x * 64) + currentIndexIntoString;
 
 					if (newValue > stringLength) {
 						this->currentTapeIndex += i;
 						return;
 
 					} else {
-						tapePtrs[i + this->currentTapeIndex] = newValue;
-						*(reinterpret_cast<int64_t*>(&structurals) + x) = _blsr_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
+						this->structuralIndexes[i + this->currentTapeIndex] = newValue;
+						*(reinterpret_cast<uint64_t*>(&structurals) + x) = _blsr_u64(*(reinterpret_cast<uint64_t*>(&structurals) + x));
 					}
 				}
 				this->currentTapeIndex += cnt;
@@ -799,7 +812,12 @@ namespace Jsonifier {
 			return this->currentTapeIndex;
 		}
 
+		uint32_t* getTapePtrs() {
+			return this->structuralIndexes;
+		}
+
 	  protected:
+		ObjectBuffer<uint32_t> structuralIndexes{};
 		size_t currentIndexIntoString{};
 		int8_t currentBlock{};
 		uint64_t prevInString{};
@@ -814,7 +832,6 @@ namespace Jsonifier {
 		SimdBase256 backslash;
 		SimdBase256 inString;
 		SimdBase256 escaped;
-		uint32_t* tapePtrs;
 		SimdBase256 quote;
 		bool prevInScalar{};
 		SimdBase256 op;

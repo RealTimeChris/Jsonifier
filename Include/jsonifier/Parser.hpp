@@ -28,8 +28,8 @@ namespace Jsonifier {
 		operator Document() noexcept;
 
 	  protected:
-		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
+		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -44,7 +44,7 @@ namespace Jsonifier {
 		}
 
 		__forceinline uint32_t* getStructuralIndices() {
-			return this->structuralIndexes;
+			return this->section.getTapePtrs();
 		}
 
 		__forceinline size_t maxDepth() {
@@ -64,11 +64,9 @@ namespace Jsonifier {
 				return ErrorCode::Success;
 			}
 			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
-			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 256));
 			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 256, 256);
-			if (!(this->structuralIndexes && this->stringBuffer)) {
+			if (!this->stringBuffer) {
 				this->stringBuffer.reset(0);
-				this->structuralIndexes.reset(0);
 				return ErrorCode::Mem_Alloc_Error;
 			}
 
@@ -89,20 +87,19 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				
 				StringBlockReader<BlockCountPerIteration * 256> stringReader{};
-				SimdStringSection section01{ stringLengthRaw, this->structuralIndexes };
+				section = SimdStringSection{ this->stringLengthRaw, round(this->stringLengthRaw + 3, 256) };
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				this->tapeLength = 0;
 				while (stringReader.hasFullBlock()) {
-					section01.submitDataForProcessing<2>(stringReader.fullBlock());
-					section01.generateStructurals<2>();
+					section.submitDataForProcessing<2>(stringReader.fullBlock());
+					section.generateStructurals<2>();
 					stringReader.advance();
 				}
 				uint8_t block[BlockCountPerIteration * 256];
 				stringReader.getRemainder(block);
-				section01.submitDataForProcessing<2>(block);
-				this->getTapeLength() = section01.generateStructurals<2>();
+				section.submitDataForProcessing<2>(block);
+				this->getTapeLength() = section.generateStructurals<2>();
 			}
 			return Success;
 		}

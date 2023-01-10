@@ -104,8 +104,17 @@ namespace Jsonifier {
 		using AllocatorType = std::allocator<OTy>;
 		using AllocatorTraits = std::allocator_traits<AllocatorType>;
 
-		__forceinline ObjectBuffer& operator=(ObjectBuffer&&) = delete;
-		__forceinline ObjectBuffer(ObjectBuffer&&) = delete;
+		__forceinline ObjectBuffer& operator=(ObjectBuffer&& other) noexcept {
+			this->currentSize = other.currentSize;
+			this->objects = other.objects;
+			other.objects = nullptr;
+			other.currentSize = 0;
+			return *this;
+		};
+		
+		__forceinline ObjectBuffer(ObjectBuffer&& other) noexcept {
+			*this = std::move(other);
+		};
 
 		__forceinline ObjectBuffer& operator=(const ObjectBuffer&) = delete;
 		__forceinline ObjectBuffer(const ObjectBuffer&) = delete;
