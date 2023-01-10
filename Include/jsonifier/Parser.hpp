@@ -22,9 +22,9 @@ namespace Jsonifier {
 		Parser(const std::string&) noexcept;
 		Parser() noexcept = default;
 
-		Document parseJson(const char* string, size_t stringLength);
-		Document parseJson(const std::string& string);
-		Document parseJson(std::string_view string);
+		JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
+		JsonifierResult<Document> parseJson(const std::string& string);
+		JsonifierResult<Document> parseJson(std::string_view string);
 
 		operator Document() noexcept;
 
@@ -34,6 +34,7 @@ namespace Jsonifier {
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
+		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -92,19 +93,19 @@ namespace Jsonifier {
 					}
 				}
 				StringBlockReader<256> stringReader{};
-				SimdStringSection section{ this->structuralIndexes };
+				
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				section.reset();
 				this->tapeLength = 0;
 				size_t tapeCurrentIndex{ 0 };
 				while (stringReader.hasFullBlock()) {
-					section.submitDataForProcessing(stringReader.fullBlock());
+					section.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes);
 					section.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 					stringReader.advance();
 				}
 				uint8_t block[256];
 				stringReader.getRemainder(block);
-				section.submitDataForProcessing(block);
+				section.submitDataForProcessing(block, this->structuralIndexes);
 				section.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 				this->getTapeLength() = tapeCurrentIndex;
 				//for (size_t x = 0; x < this->tapeLength; ++x) {
