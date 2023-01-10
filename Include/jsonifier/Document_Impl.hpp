@@ -638,5 +638,4 @@ namespace Jsonifier {
 		}
 		return first.atPointer(jsonPointer);
 	}
-
 }

@@ -4,8 +4,7 @@
 
 namespace Jsonifier {
 
-	__forceinline TokenIterator::TokenIterator(const uint8_t* _buf, uint32_t* position) noexcept : stringView{ _buf }, currentPosition{ position } {
-	}
+	__forceinline TokenIterator::TokenIterator(const uint8_t* _buf, uint32_t* position) noexcept : stringView{ _buf }, currentPosition{ position } {}
 
 	__forceinline uint32_t TokenIterator::currentOffset() const noexcept {
 		return *(currentPosition);
@@ -72,10 +71,8 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(TokenIterator&& Value) noexcept
-		: JsonifierResultBase<TokenIterator>(std::forward<TokenIterator>(Value)) {
-	}
+		: JsonifierResultBase<TokenIterator>(std::forward<TokenIterator>(Value)){}
 
-	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<TokenIterator>(error) {
-	}
+	__forceinline JsonifierResult<TokenIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<TokenIterator>(error){}
 
 }

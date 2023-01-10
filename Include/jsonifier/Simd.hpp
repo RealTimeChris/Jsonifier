@@ -514,14 +514,14 @@ namespace Jsonifier {
 
 		__forceinline void setFirstBit(bool onOrOff) {
 			if (onOrOff) {
-				this->insertInt64(this->value.m256i_i64[0] | 1L << 0, 0);
+				this->insertInt64(this->getInt64(0) | 1L << 0, 0);
 			} else {
-				this->insertInt64(this->value.m256i_i64[0] & ~(1L << 0), 0);
+				this->insertInt64(this->getInt64(0) & ~(1L << 0), 0);
 			}
 		}
 
 		__forceinline bool checkLastBit() {
-			return ((this->value.m256i_u64[3] >> 63) & 1) << 63;
+			return ((this->getUint64(3) >> 63) & 1) << 63;
 		}
 
 		__forceinline SimdBase256 operator~() {
@@ -550,7 +550,7 @@ namespace Jsonifier {
 			bool returnValue{};
 			uint64_t returnValue64{};
 			for (size_t x = 0; x < 4; ++x) {
-				if (_addcarry_u64(0, this->value.m256i_u64[x], other1.value.m256i_u64[x], &returnValue64)) {
+				if (_addcarry_u64(0, this->getUint64(x), other1.getUint64(x), &returnValue64)) {
 					returnValue = true;
 				} else {
 					returnValue = false;
@@ -803,7 +803,7 @@ namespace Jsonifier {
 				this->getStructuralIndices();
 			}
 			this->currentBlock = 0;
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 			return this->currentTapeIndex;
 		}
 
