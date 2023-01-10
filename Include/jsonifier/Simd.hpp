@@ -631,6 +631,7 @@ namespace Jsonifier {
 			this->lengthMinusStep = length < StepSize ? 0 : length - StepSize;
 			this->index = 0;
 		}
+
 		__forceinline size_t blockIndex() {
 			return index;
 		}
