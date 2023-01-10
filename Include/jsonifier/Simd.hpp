@@ -684,40 +684,21 @@ namespace Jsonifier {
 
 		__forceinline void addTapeValues() {
 			for (size_t x = 0; x < 4; ++x) {
+				uint64_t newValue{};
 				int cnt = static_cast<int>(__popcnt64(*(reinterpret_cast<int64_t*>(&structurals) + x)));
-				if (currentIndexIntoString >= stringLength) {
-					currentTapeIndex += cnt;
-					return;
-				}
-				for (int i = 0; i < 8; i++) {
-					this->tapePtrs[i + currentIndexIntoString] = this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
-					*(reinterpret_cast<int64_t*>(&structurals) + x) = _blsr_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
-				}
-				if (currentIndexIntoString >= stringLength) {
-					currentIndexIntoString += cnt;
-					return;
-				}
-				if (cnt > 8) {
-					for (int i = 8; i < 16; i++) {
-						this->tapePtrs[i + currentIndexIntoString] =
-							this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
+				for (int i = 0; i < cnt; i++) {
+					newValue = _tzcnt_u64(*(reinterpret_cast<int64_t*>(&structurals) + x)) + (x * 64) + currentIndexIntoString;
+
+					if (newValue > stringLength) {
+						this->currentTapeIndex += i;
+						return;
+
+					} else {
+						tapePtrs[i + this->currentTapeIndex] = newValue;
 						*(reinterpret_cast<int64_t*>(&structurals) + x) = _blsr_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
 					}
-					if (currentIndexIntoString >= stringLength) {
-						currentIndexIntoString += cnt;
-						return;
-					}
-					if (cnt > 16) {
-						int i = 16;
-						do {
-							this->tapePtrs[i + currentIndexIntoString] =
-								this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
-							*(reinterpret_cast<int64_t*>(&structurals) + x) = _blsr_u64(*(reinterpret_cast<int64_t*>(&structurals) + x));
-							i++;
-						} while (i < cnt);
-					}
 				}
-				currentIndexIntoString += cnt;
+				this->currentTapeIndex += cnt;
 			}
 			return;
 		}
@@ -803,7 +784,7 @@ namespace Jsonifier {
 			auto stringTail = SimdBase256{ std::move(this->inString) } ^ this->quote;
 			auto potentialStructuralStart = SimdBase256{ std::move(this->op) } | potentialScalarStart;
 			auto structuralStart = (potentialStructuralStart.bitAndNot(stringTail));
-			structuralStart.printBits("FINAL BITS: ");
+			//structuralStart.printBits("FINAL BITS: ");
 			return structuralStart;
 		}
 
@@ -822,7 +803,7 @@ namespace Jsonifier {
 				this->getStructuralIndices();
 			}
 			this->currentBlock = 0;
-			//this->structurals.printBits("FINAL BITS: ");
+			this->structurals.printBits("FINAL BITS: ");
 			return this->currentTapeIndex;
 		}
 

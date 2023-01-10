@@ -106,6 +106,10 @@ namespace Jsonifier {
 				section01.submitDataForProcessing<2>(block);
 				this->getTapeLength() = section01.generateStructurals<2>();
 			}
+			for (size_t x = 0; x < this->tapeLength; ++x) {
+				std::cout << "CURRENT INDEX: " << this->structuralIndexes[x]
+						  << ", THE INDEXES'S VALUE: " << this->stringView[this->structuralIndexes[x]] << std::endl;
+			}
 			return Success;
 		}
 	};
