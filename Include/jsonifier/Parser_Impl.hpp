@@ -18,7 +18,7 @@ namespace Jsonifier {
 				return Document{};
 			}
 		}
-		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
+		this->generateJsonIndices<2>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		//totalTimePassed += stopWatch.totalTimePassed().count();
 		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		return std::forward<Document>(JsonIterator{ this });
@@ -37,7 +37,7 @@ namespace Jsonifier {
 		}
 		iterationCount++;
 		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
-		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string), stringLength);
+		this->generateJsonIndices<2>(reinterpret_cast<const uint8_t*>(string), stringLength);
 		totalTimePassed += stopWatch.totalTimePassed().count();
 		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		return std::forward<Document>(JsonIterator{ this });
@@ -56,7 +56,7 @@ namespace Jsonifier {
 		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		//iterationCount++;
 		// Run stage 1.
-		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
+		this->generateJsonIndices<2>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		//totalTimePassed += stopWatch.totalTimePassed().count();
 		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		return std::forward<Document>(JsonIterator{ this });

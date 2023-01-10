@@ -624,13 +624,37 @@ namespace Jsonifier {
 
 	template<size_t StepSize> struct StringBlockReader {
 	  public:
-		__forceinline StringBlockReader() noexcept = default;
-		__forceinline void addNewString(const uint8_t* stringViewNew, size_t _len) noexcept;
-		__forceinline size_t getRemainder(uint8_t* dst) const;
-		__forceinline const uint8_t* fullBlock() const;
-		__forceinline bool hasFullBlock() const;
-		__forceinline size_t blockIndex();
-		__forceinline void advance();
+
+		__forceinline void addNewString(const uint8_t* stringViewNew, size_t _len) noexcept {
+			this->stringBuffer = stringViewNew;
+			this->length = _len;
+			this->lengthMinusStep = length < StepSize ? 0 : length - StepSize;
+			this->index = 0;
+		}
+		__forceinline size_t blockIndex() {
+			return index;
+		}
+
+		__forceinline bool hasFullBlock() const {
+			return index < lengthMinusStep;
+		}
+
+		__forceinline const uint8_t* fullBlock() const {
+			return &stringBuffer[index];
+		}
+
+		__forceinline size_t getRemainder(uint8_t* dst) const {
+			if (length == index) {
+				return 0;
+			}
+			std::memset(dst, 0x20, StepSize);
+			std::memcpy(dst, this->stringBuffer + index, length - index);
+			return length - index;
+		}
+
+		__forceinline void advance() {
+			index += StepSize;
+		}
 
 	  protected:
 		const uint8_t* stringBuffer{};
@@ -638,38 +662,6 @@ namespace Jsonifier {
 		size_t lengthMinusStep{};
 		size_t index{};
 	};
-
-	template<size_t StepSize> __forceinline void StringBlockReader<StepSize>::addNewString(const uint8_t* stringViewNew, size_t _len) noexcept {
-		this->stringBuffer = stringViewNew;
-		this->length = _len;
-		this->lengthMinusStep = length < StepSize ? 0 : length - StepSize;
-		this->index = 0;
-	}
-
-	template<size_t StepSize> __forceinline size_t StringBlockReader<StepSize>::blockIndex() {
-		return index;
-	}
-
-	template<size_t StepSize> __forceinline bool StringBlockReader<StepSize>::hasFullBlock() const {
-		return index < lengthMinusStep;
-	}
-
-	template<size_t StepSize> __forceinline const uint8_t* StringBlockReader<StepSize>::fullBlock() const {
-		return &stringBuffer[index];
-	}
-
-	template<size_t StepSize> __forceinline size_t StringBlockReader<StepSize>::getRemainder(uint8_t* dst) const {
-		if (length == index) {
-			return 0;
-		}
-		std::memset(dst, 0x20, StepSize);
-		std::memcpy(dst, this->stringBuffer + index, length - index);
-		return length - index;
-	}
-
-	template<size_t StepSize> __forceinline void StringBlockReader<StepSize>::advance() {
-		index += StepSize;
-	}
 
 	class Jsonifier_Dll SimdStringSection {
 	  public:
@@ -788,15 +780,14 @@ namespace Jsonifier {
 			return structuralStart;
 		}
 
-		template<size_t StringBlockCount>
-		void submitDataForProcessing(const uint8_t* valueNew) {
+		template<size_t StringBlockCount> __forceinline void submitDataForProcessing(const uint8_t* valueNew) {
 			for (size_t x = 0; x < StringBlockCount * 8; ++x) {
 				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (32 * x)));
 			}
 		}
 
 		template<size_t StringBlockCount>
-		size_t generateStructurals() {
+		__forceinline size_t generateStructurals() {
 			for (size_t x = 0; x < StringBlockCount; ++x) {
 				this->currentBlock = x;
 				this->structurals = this->collectFinalStructurals();

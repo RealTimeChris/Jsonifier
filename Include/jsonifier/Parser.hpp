@@ -74,10 +74,8 @@ namespace Jsonifier {
 
 			return ErrorCode::Success;
 		}
-		inline static int64_t totalTimeCollecting{};
-		inline static int64_t totalTimeGenerating{};
-		inline static int64_t totalTimePacking{};
-		inline static int64_t iterations{};
+
+		template<size_t BlockCountPerIteration>
 		__forceinline ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
 			StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 			if (stringNew) {
@@ -92,7 +90,7 @@ namespace Jsonifier {
 					}
 				}
 				
-				StringBlockReader<512> stringReader{};
+				StringBlockReader<BlockCountPerIteration * 256> stringReader{};
 				SimdStringSection section01{ stringLengthRaw, this->structuralIndexes };
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				this->tapeLength = 0;
@@ -101,14 +99,10 @@ namespace Jsonifier {
 					section01.generateStructurals<2>();
 					stringReader.advance();
 				}
-				uint8_t block[512];
+				uint8_t block[BlockCountPerIteration * 256];
 				stringReader.getRemainder(block);
 				section01.submitDataForProcessing<2>(block);
 				this->getTapeLength() = section01.generateStructurals<2>();
-			}
-			for (size_t x = 0; x < this->tapeLength; ++x) {
-				std::cout << "CURRENT INDEX: " << this->structuralIndexes[x]
-						  << ", THE INDEXES'S VALUE: " << this->stringView[this->structuralIndexes[x]] << std::endl;
 			}
 			return Success;
 		}
