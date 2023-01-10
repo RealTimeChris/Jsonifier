@@ -20,7 +20,7 @@ namespace Jsonifier {
 		};
 
 		__forceinline SimdBase128& operator=(const char* other) noexcept {
-			this->value = _mm_load_si128(( __m128i* )other);
+			this->value = _mm_loadu_epi8(other);
 			return *this;
 		};
 
@@ -49,17 +49,7 @@ namespace Jsonifier {
 		};
 
 		__forceinline uint64_t getUint64(size_t index) {
-			switch (index) {
-				case 0: {
-					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 0));
-				}
-				case 1: {
-					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 1));
-				}
-				default: {
-					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 0));
-				}
-			}
+			return this->value.m128i_u64[index];
 		}
 
 		SimdBase128(int64_t valueOne, int64_t valueTwo) {
@@ -71,17 +61,7 @@ namespace Jsonifier {
 		}
 
 		__forceinline int64_t getInt64(size_t index) {
-			switch (index) {
-				case 0: {
-					return _mm_extract_epi64(this->value, 0);
-				}
-				case 1: {
-					return _mm_extract_epi64(this->value, 1);
-				}
-				default: {
-					return _mm_extract_epi64(this->value, 0);
-				}
-			}
+			return this->value.m128i_i64[index];
 		}
 
 		__forceinline void insertUint64(uint64_t value, size_t index) {
@@ -753,29 +733,51 @@ namespace Jsonifier {
 		}
 
 			
-		__forceinline void addTapeValues(uint64_t* theBits, size_t currentIndexNew, size_t& currentIndexIntoTape, size_t stringLength) {
-			uint64_t newValue{};
-			int cnt = static_cast<int>(__popcnt64(*theBits));
-			for (int i = 0; i < cnt; i++) {
-				newValue = _tzcnt_u64(*theBits) + (currentIndexNew * 64) + currentIndexIntoString;
-
-				if (newValue > stringLength) {
-					currentIndexIntoTape += i;
+		__forceinline void addTapeValues(__m128i bitsNew, size_t currentIndexNew, size_t& currentIndexIntoTape, size_t stringLength) {
+			for (size_t x = 0; x < 2; ++x) {
+				uint64_t newValue{};
+				int cnt = static_cast<int>(__popcnt64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x)));
+				if (currentIndexIntoString >= stringLength) {
+					currentIndexIntoTape += cnt;
 					return;
-
-				} else {
-					tapePtrs[i + currentIndexIntoTape] = newValue;
-					*theBits = _blsr_u64(*theBits);
 				}
+				for (int i = 0; i < 8; i++) {
+					this->tapePtrs[i + currentIndexIntoTape] =
+						this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+					*(reinterpret_cast<uint64_t*>(&bitsNew) + x) = _blsr_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+				}
+				if (currentIndexIntoString >= stringLength) {
+					currentIndexIntoTape += cnt;
+					return;
+				}
+				if (cnt > 8) {
+					for (int i = 8; i < 16; i++) {
+						this->tapePtrs[i + currentIndexIntoTape] =
+							this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+						*(reinterpret_cast<uint64_t*>(&bitsNew) + x) = _blsr_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+					}
+					if (currentIndexIntoString >= stringLength) {
+						currentIndexIntoTape += cnt;
+						return;
+					}
+					if (cnt > 16) {
+						int i = 16;
+						do {
+							this->tapePtrs[i + currentIndexIntoTape] =
+								this->currentIndexIntoString + _tzcnt_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+							*(reinterpret_cast<uint64_t*>(&bitsNew) + x) = _blsr_u64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x));
+							i++;
+						} while (i < cnt);
+					}
+				}
+				currentIndexIntoTape += cnt;
 			}
-			currentIndexIntoTape += cnt;
 			return;
 		}
 
 		__forceinline void getStructuralIndices(size_t& currentIndexIntoTape, size_t stringLength) {
 			for (size_t x = 0; x < 2; ++x) {
-				auto newValue = this->structurals.getUint64(x);
-				this->addTapeValues(&newValue, x, currentIndexIntoTape, stringLength);
+				this->addTapeValues(this->structurals, x, currentIndexIntoTape, stringLength);
 			}
 			return;
 		}
@@ -865,23 +867,22 @@ namespace Jsonifier {
 			return structuralStart;
 		}
 
-
 		void submitDataForProcessing(const uint8_t* valueNew, uint32_t* tapePtrsNew, size_t currentStringIndexNew) {
 			this->currentIndexIntoString = currentStringIndexNew;
-			//this->iterationCount++;
+			//iterationCount++;
 			this->tapePtrs = tapePtrsNew;
-			StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+			//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 			for (size_t x = 0; x < 8; ++x) {
 				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (16 * x)));
 			}
 			//passedTime += stopWatch.totalTimePassed().count();
-			//std::cout << "TIME TO PACK THE VALUES: " << passedTime / iterationCount << std::endl;
+			//std::cout << "TIME TO PACK THE VALUES: " << passedTime / iterationCount << " A COUNT OF: " << 16 * 8 << " bytes." << std::endl;
 		}
 
 		void generateStructurals() {
 			this->structurals = this->collectFinalStructurals();
 
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:
@@ -890,8 +891,8 @@ namespace Jsonifier {
 		SimdBase128 structurals;
 		SimdBase128 prevEscaped;
 		SimdBase128 whitespace;
-		int64_t iterationCount{};
-		int64_t passedTime{};
+		inline static int64_t iterationCount{};
+		inline static int64_t passedTime{};
 		SimdBase128 values[8];
 		SimdBase128 backslash;
 		SimdBase128 inString;
