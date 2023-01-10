@@ -844,8 +844,8 @@ namespace Jsonifier {
 
 		void generateStructurals() {
 			for (size_t x = 0; x < 2; ++x) {
-				this->currentBlock = x;
 				this->structurals = this->collectFinalStructurals();
+				this->currentBlock = x;
 			}
 			this->currentBlock = 0;
 			//this->structurals.printBits("FINAL BITS: ");
