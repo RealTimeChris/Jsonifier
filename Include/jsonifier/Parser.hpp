@@ -30,8 +30,6 @@ namespace Jsonifier {
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
 		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section01{};
-		SimdStringSection section02{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -93,56 +91,25 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
+				SimdStringSection section01{};
 				StringBlockReader<512> stringReader{};
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
-				section01.reset();
-				section02.reset();
-				//section03.reset();
-				//section04.reset();
 				this->tapeLength = 0;
 				size_t tapeCurrentIndex{};
 				size_t currentStringIndex{};
 				while (stringReader.hasFullBlock()) {
-					//iterations++;
-					//stopWatch.resetTimer();
 					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
-					//std::cout << "FULL BLOCK: " << stringReader.fullBlock() << std::endl;
-					currentStringIndex += 256;
-					section02.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
-					//std::cout << "FULL BLOCK (2): " << (stringReader.fullBlock()) << std::endl;
-					currentStringIndex += 256;
-					//section03.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
-					//currentStringIndex += 128;
-					//section04.submitDataForProcessing(stringReader.fullBlock() + 384, this->structuralIndexes, currentStringIndex);
-					//currentStringIndex += 128;
-					//totalTimePacking += stopWatch.totalTimePassed().count();
-					//std::cout << "TOTAL TIME FOR PACKING THE VALUES: " << totalTimePacking / iterations << std::endl;
-					//stopWatch.resetTimer();
-					//stopWatch.resetTimer();
+					currentStringIndex += 512;
 					section01.generateStructurals();
-					section02.generateStructurals();
-					//section03.generateStructurals();
-					//section04.generateStructurals();
-					//totalTimeGenerating += stopWatch.totalTimePassed().count();
-					//std::cout << "TOTAL TIME FOR GENERATING THE VALUES: " << totalTimeGenerating / iterations << std::endl;
-
 					section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
-					section02.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
-					//section03.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
-					//section04.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
-					//totalTimeCollecting += stopWatch.totalTimePassed().count();
-					//std::cout << "TOTAL TIME FOR COLLLECTING THE VALUES: " << totalTimeCollecting / iterations << std::endl;
 					stringReader.advance();
 				}
 				uint8_t block[512];
+				//std::cout << "WERE HERE THIS IS TI!" << std::endl;
 				stringReader.getRemainder(block);
 				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
 				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 				this->getTapeLength() = tapeCurrentIndex;
-				//for (size_t x = 0; x < this->tapeLength; ++x) {
-				//std::cout << "CURRENT INDEX: " << this->structuralIndexes[x] << ", THE INDICES'S VALUE"
-				//<< this->stringView[this->structuralIndexes[x]] << std::endl;
-				//}
 			}
 			return Success;
 		}
