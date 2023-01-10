@@ -73,7 +73,8 @@ namespace Jsonifier {
 		return *this;
 	}
 
-	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept {
+	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept
+		: JsonifierResultBase<ObjectIterator>{ std::move(value) } {
 		this->first.assertIsValid();
 	}
 

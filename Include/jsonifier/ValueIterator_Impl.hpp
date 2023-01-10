@@ -665,8 +665,11 @@ namespace Jsonifier {
 #endif
 	}
 
-	JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept {};
+	JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
+		: JsonifierResultBase<ValueIterator>(std::forward<ValueIterator>(Value)) {
+	}
 
-	JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept {};
+	JsonifierResult<ValueIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ValueIterator>(error) {
+	}
 
 }

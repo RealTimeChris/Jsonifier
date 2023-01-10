@@ -190,13 +190,13 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<Array> Document::getArray() & noexcept {
-		auto value = getRootValueIterator();
-		return Array::startRoot(value);
+		auto Value = getRootValueIterator();
+		return Array::startRoot(Value);
 	}
 
 	__forceinline JsonifierResult<Object> Document::getObject() & noexcept {
-		auto value = getRootValueIterator();
-		return Object::startRoot(value);
+		auto Value = getRootValueIterator();
+		return Object::startRoot(Value);
 	}
 
 	__forceinline JsonifierResult<uint64_t> Document::getUint64() noexcept {
@@ -371,10 +371,11 @@ namespace Jsonifier {
 		}
 	}
 
-	__forceinline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept {
+	__forceinline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept
+		: JsonifierResultBase<Document>(std::forward<Document>(Value)) {
 	}
 
-	__forceinline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept {
+	__forceinline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Document>(error) {
 	}
 
 	__forceinline JsonifierResult<size_t> JsonifierResult<Document>::countElements() & noexcept {

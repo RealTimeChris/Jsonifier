@@ -86,6 +86,7 @@ namespace Jsonifier {
 		__forceinline const uint8_t* peekRootScalar() noexcept;
 		__forceinline const uint8_t* peekNonRootScalar() noexcept;
 
+
 		__forceinline ErrorCode startContainer(uint8_t start_char) noexcept;
 		__forceinline ErrorCode endContainer() noexcept;
 		__forceinline JsonifierResult<const uint8_t*> advanceToValue() noexcept;
@@ -107,7 +108,7 @@ namespace Jsonifier {
 		__forceinline uint32_t* position() const noexcept;
 		__forceinline uint32_t* lastPosition() const noexcept;
 		__forceinline uint32_t* endPosition() const noexcept;
-		__forceinline ErrorCode reportError(ErrorCode error);
+		__forceinline ErrorCode reportError(ErrorCode error) noexcept;
 
 		friend class Document;
 		friend class Object;
@@ -115,7 +116,7 @@ namespace Jsonifier {
 		friend class Value;
 	};
 
-	template<> struct JsonifierResult<ValueIterator>  {
+	template<> struct JsonifierResult<ValueIterator> : public JsonifierResultBase<ValueIterator> {
 	  public:
 		__forceinline JsonifierResult(ValueIterator&& Value) noexcept;
 		__forceinline JsonifierResult(ErrorCode error) noexcept;

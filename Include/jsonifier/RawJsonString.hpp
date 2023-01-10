@@ -47,12 +47,12 @@ namespace Jsonifier {
 
 	template<> struct JsonifierResult<RawJsonString> : public JsonifierResultBase<RawJsonString> {
 	  public:
-		__forceinline JsonifierResult(RawJsonString&& Value) noexcept {}
+		__forceinline JsonifierResult(RawJsonString&& Value) noexcept : JsonifierResultBase<RawJsonString>(std::forward<RawJsonString>(Value)) {
+		}
 
-		__forceinline JsonifierResult(ErrorCode error) noexcept {}
-
+		__forceinline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<RawJsonString>(error) {
+		}
 		__forceinline JsonifierResult() noexcept = default;
-
 		__forceinline ~JsonifierResult() noexcept = default;
 
 		__forceinline JsonifierResult<const char*> raw() noexcept;
