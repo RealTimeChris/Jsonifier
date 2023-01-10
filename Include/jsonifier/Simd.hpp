@@ -803,7 +803,7 @@ namespace Jsonifier {
 			auto stringTail = SimdBase256{ std::move(this->inString) } ^ this->quote;
 			auto potentialStructuralStart = SimdBase256{ std::move(this->op) } | potentialScalarStart;
 			auto structuralStart = (potentialStructuralStart.bitAndNot(stringTail));
-			structuralStart.printBits("FINAL BITS: ");
+			//structuralStart.printBits("FINAL BITS: ");
 			return structuralStart;
 		}
 
