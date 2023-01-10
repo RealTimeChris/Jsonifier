@@ -7,17 +7,80 @@ namespace Jsonifier {
 	class Jsonifier_Dll SimdBase128 {
 	  public:
 		inline SimdBase128() noexcept {};
-		inline SimdBase128& operator=(const SimdBase128&) noexcept = delete;
-		inline SimdBase128(const SimdBase128&) noexcept = delete;
 
-		inline SimdBase128& operator=(SimdBase128&& other) noexcept {
-			this->value = other.value;
-			return *this;
-		};
+		inline uint64_t getUint64(size_t index) {
+			switch (index) {
+				case 0: {
+					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 0));
+				}
+				case 1: {
+					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 1));
+				}
+				default: {
+					return static_cast<uint64_t>(_mm_extract_epi64(this->value, 0));
+				}
+			}
+		}
 
-		inline SimdBase128(SimdBase128&& other) noexcept {
-			*this = std::move(other);
-		};
+		inline int64_t getInt64(size_t index) {
+			switch (index) {
+				case 0: {
+					return _mm_extract_epi64(this->value, 0);
+				}
+				case 1: {
+					return _mm_extract_epi64(this->value, 1);
+				}
+				default: {
+					return _mm_extract_epi64(this->value, 0);
+				}
+			}
+		}
+
+		inline void insertUint64(uint64_t value, size_t index) {
+			switch (index) {
+				case 0: {
+					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 0);
+					break;
+				}
+				case 1: {
+					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 1);
+					break;
+				}
+				default: {
+					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 0);
+					break;
+				}
+			}
+		}
+
+		inline void insertInt64(int64_t value, size_t index) {
+			switch (index) {
+				case 0: {
+					this->value = _mm_insert_epi64(this->value, value, 0);
+					break;
+				}
+				case 1: {
+					this->value = _mm_insert_epi64(this->value, value, 1);
+					break;
+				}
+				default: {
+					this->value = _mm_insert_epi64(this->value, value, 0);
+					break;
+				}
+			}
+		}
+
+		inline void setFirstBit(bool onOrOff) {
+			if (onOrOff) {
+				this->insertInt64(this->getInt64(0) | 1L << 0, 0);
+			} else {
+				this->insertInt64(this->getInt64(0) & ~(1L << 0), 0);
+			}
+		}
+
+		bool checkLastBit() {
+			return ((this->getUint64(1) >> 63) & 1) << 63;
+		}
 
 		inline SimdBase128& operator=(__m128i& other) {
 			this->value = other;
@@ -340,16 +403,19 @@ namespace Jsonifier {
 			return newValues;
 		}
 
-		inline SimdBase256 carrylessMultiplication(bool& prevInString) {
+		inline SimdBase256 carrylessMultiplication(SimdBase128& prevInString) {
 			SimdBase128 allOnes{ '\xFF' };
 			SimdBase256 returnValue{};
-			SimdBase128 inString00 = _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0);
-			inString00 |= _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 1), allOnes, 0);
+			SimdBase128 inString00 = SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0) } ^ prevInString;
+			prevInString.setFirstBit(inString00.checkLastBit());
+			inString00 |= SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0) } ^ prevInString;
+			prevInString.setFirstBit(inString00.checkLastBit());
 			returnValue.insert128iValue(inString00, 0);
-			SimdBase128 inString01 = _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 1);
-			inString01 |= _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 1), allOnes, 1);
-			returnValue.insert128iValue(inString01, 1);
-			prevInString = returnValue.checkLastBit();
+			inString00 = SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0) } ^ prevInString;
+			prevInString.setFirstBit(inString00.checkLastBit());
+			inString00 |= SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0) } ^ prevInString;
+			prevInString.setFirstBit(inString00.checkLastBit());
+			returnValue.insert128iValue(inString00, 1);
 			return returnValue;
 		}
 
@@ -568,8 +634,6 @@ namespace Jsonifier {
 
 		inline void reset() {
 			this->currentIndexIntoString = 0;
-			//this->backslash = SimdBase256{};
-			//this->prevEscaped = SimdBase256{};
 			this->prevInScalar = false;
 		}
 
@@ -601,11 +665,12 @@ namespace Jsonifier {
 			//passedTime += stopWatch.totalTimePassed().count();
 			//std::cout << "TIME TO PACK THE VALUES: " << passedTime / iterationCount << std::endl;
 			this->structurals = this->collectFinalStructurals();
-			this->structurals.printBits("FINAL BITS: ");
+			//this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:
 		size_t currentIndexIntoString{};
+		SimdBase128 prevInString{};
 		SimdBase256 structurals{};
 		SimdBase256 prevEscaped{};
 		SimdBase256 whitespace{};
@@ -616,7 +681,7 @@ namespace Jsonifier {
 		uint32_t* tapePtrs{};
 		SimdBase256 quote{};
 		bool prevInScalar{};
-		bool prevInString{};
 		SimdBase256 op{};
 	};
 }
+

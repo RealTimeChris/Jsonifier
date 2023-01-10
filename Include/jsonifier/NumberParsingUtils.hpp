@@ -19,10 +19,10 @@ namespace Jsonifier {
 		ErrorCode error{};
 	};
 
-	inline const int smallestPower = -342;
-	inline const int largestPower = 308;
+	const int smallestPower = -342;
+	const int largestPower = 308;
 
-	inline const double powerOfTen[24]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
+	const double powerOfTen[24]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 		1e20, 1e21, 1e22 };
 
 	struct AdjustedMantissa {
@@ -36,7 +36,7 @@ namespace Jsonifier {
 		return 52;
 	}
 
-	inline const uint32_t maxDigits = 768;
+	const uint32_t maxDigits = 768;
 
 	struct Decimal {
 		uint32_t numDigits;
@@ -83,7 +83,7 @@ namespace Jsonifier {
 
 	enum NumberError { NUMBER_ERROR, SUCCESS, INCORRECT_TYPE };
 
-	inline const uint64_t powerOfFive128[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
+	const uint64_t powerOfFive128[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
 		0x5d79bcf00d2df649, 0xe95a99df8ace6f53, 0xf4d82c2c107973dc, 0x91d8a02bb6c10594, 0x79071b9b8a4be869, 0xb64ec836a47146f9, 0x9748e2826cdee284,
 		0xe3e27a444d8d98b7, 0xfd1b1b2308169b25, 0x8e6d8c6ab0787f72, 0xfe30f0f5e50e20f7, 0xb208ef855c969f4f, 0xbdbd2d335e51a935, 0xde8b2b66b3bc4723,
 		0xad2c788035e61382, 0x8b16fb203055ac76, 0x4c3bcb5021afcc31, 0xaddcb9e83c6b1793, 0xdf4abe242a1bbf3d, 0xd953e8624b85dd78, 0xd71d6dad34a2af0d,
@@ -268,7 +268,7 @@ namespace Jsonifier {
 		0xf37801e0c43ebc8, 0xbaa718e68396cffd, 0xd30560258f54e6ba, 0xe950df20247c83fd, 0x47c6b82ef32a2069, 0x91d28b7416cdd27e, 0x4cdc331d57fa5441,
 		0xb6472e511c81471d, 0xe0133fe4adf8e952, 0xe3d8f9e563a198e5, 0x58180fddd97723a6, 0x8e679c2f5e44ff8f, 0x570f09eaa7ea7648 };
 
-	inline const uint64_t powerOfFive[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
+	const uint64_t powerOfFive[] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
 		0x5d79bcf00d2df649, 0xe95a99df8ace6f53, 0xf4d82c2c107973dc, 0x91d8a02bb6c10594, 0x79071b9b8a4be869, 0xb64ec836a47146f9, 0x9748e2826cdee284,
 		0xe3e27a444d8d98b7, 0xfd1b1b2308169b25, 0x8e6d8c6ab0787f72, 0xfe30f0f5e50e20f7, 0xb208ef855c969f4f, 0xbdbd2d335e51a935, 0xde8b2b66b3bc4723,
 		0xad2c788035e61382, 0x8b16fb203055ac76, 0x4c3bcb5021afcc31, 0xaddcb9e83c6b1793, 0xdf4abe242a1bbf3d, 0xd953e8624b85dd78, 0xd71d6dad34a2af0d,
@@ -453,7 +453,7 @@ namespace Jsonifier {
 		0xf37801e0c43ebc8, 0xbaa718e68396cffd, 0xd30560258f54e6ba, 0xe950df20247c83fd, 0x47c6b82ef32a2069, 0x91d28b7416cdd27e, 0x4cdc331d57fa5441,
 		0xb6472e511c81471d, 0xe0133fe4adf8e952, 0xe3d8f9e563a198e5, 0x58180fddd97723a6, 0x8e679c2f5e44ff8f, 0x570f09eaa7ea7648 };
 
-	inline const uint8_t integerStringFinisher[256] = { NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
+	const uint8_t integerStringFinisher[256] = { NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
 		NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, SUCCESS, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR, NUMBER_ERROR,
@@ -486,7 +486,7 @@ namespace Jsonifier {
 		}
 	}
 
-	inline const int32_t decimalPointRange = 2047;
+	const int32_t decimalPointRange = 2047;
 
 	inline uint32_t numberOfDigitsDecimalLeftShift(Decimal& h, uint32_t shift) {
 		shift &= 63;

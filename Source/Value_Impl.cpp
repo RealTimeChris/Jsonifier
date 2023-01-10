@@ -9,12 +9,6 @@
 
 namespace Jsonifier {
 
-	JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : JsonifierResultBase<Value>(std::forward<Value>(value)) {
-	}
-
-	JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Value>(error) {
-	}
-
 	JsonifierResult<size_t> JsonifierResult<Value>::countElements() & noexcept {
 		if (error()) {
 			return error();
@@ -76,20 +70,6 @@ namespace Jsonifier {
 			return error();
 		}
 		return first.findFieldUnordered(key);
-	}
-
-	JsonifierResult<Value> JsonifierResult<Value>::operator[](std::string_view key) noexcept {
-		if (error()) {
-			return error();
-		}
-		return first[key];
-	}
-
-	JsonifierResult<Value> JsonifierResult<Value>::operator[](const char* key) noexcept {
-		if (error()) {
-			return error();
-		}
-		return first[key];
 	}
 
 	JsonifierResult<Array> JsonifierResult<Value>::getArray() noexcept {

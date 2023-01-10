@@ -9,6 +9,12 @@
 
 namespace Jsonifier {
 
+	inline JsonifierResult<Value>::JsonifierResult(Value&& value) noexcept : JsonifierResultBase<Value>(std::forward<Value>(value)) {
+	}
+
+	inline JsonifierResult<Value>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Value>(error) {
+	}
+
 	template<typename T> inline ErrorCode Value::get(T& out) noexcept {
 		return get<T>().get(out);
 	}
@@ -93,5 +99,19 @@ namespace Jsonifier {
 
 	template<typename T> inline JsonifierResult<T> Value::get() noexcept {
 		static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
+	}
+
+	JsonifierResult<Value> inline JsonifierResult<Value>::operator[](std::string_view key) noexcept {
+		if (error()) {
+			return error();
+		}
+		return first[key];
+	}
+
+	JsonifierResult<Value> inline JsonifierResult<Value>::operator[](const char* key) noexcept {
+		if (error()) {
+			return error();
+		}
+		return first[key];
 	}
 }

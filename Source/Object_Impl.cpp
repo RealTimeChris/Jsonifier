@@ -3,6 +3,7 @@
 #include <jsonifier/Object.hpp>
 #include <jsonifier/RawJsonString.hpp>
 #include <jsonifier/Field.hpp>
+#include <jsonifier/Value_Impl.hpp>
 
 namespace Jsonifier {
 

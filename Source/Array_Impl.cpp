@@ -2,6 +2,7 @@
 
 #include <jsonifier/Array.hpp>
 #include <jsonifier/Value.hpp>
+#include <jsonifier/Value_Impl.hpp>
 
 namespace Jsonifier {
 

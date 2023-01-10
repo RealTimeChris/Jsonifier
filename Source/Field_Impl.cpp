@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsonifier/Field.hpp>
+#include <jsonifier/Value_Impl.hpp>
 
 namespace Jsonifier {
 

@@ -5,6 +5,8 @@
 #include <jsonifier/Object.hpp>
 #include <jsonifier/Array.hpp>
 #include <jsonifier/Document_Impl.hpp>
+#include <jsonifier/Value_Impl.hpp>
+#include <jsonifier/ArrayIterator.hpp>
 
 namespace Jsonifier {
 
