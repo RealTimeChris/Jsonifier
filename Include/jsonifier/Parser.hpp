@@ -91,25 +91,20 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				SimdStringSection section01{};
+				
 				StringBlockReader<512> stringReader{};
+				SimdStringSection section01{ stringLengthRaw, this->structuralIndexes };
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				this->tapeLength = 0;
-				size_t tapeCurrentIndex{};
-				size_t currentStringIndex{};
 				while (stringReader.hasFullBlock()) {
-					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
-					currentStringIndex += 512;
+					section01.submitDataForProcessing(stringReader.fullBlock());
 					section01.generateStructurals();
-					section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 					stringReader.advance();
 				}
 				uint8_t block[512];
-				//std::cout << "WERE HERE THIS IS TI!" << std::endl;
 				stringReader.getRemainder(block);
-				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
-				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
-				this->getTapeLength() = tapeCurrentIndex;
+				section01.submitDataForProcessing(block);
+				this->getTapeLength() = section01.generateStructurals();
 			}
 			return Success;
 		}
