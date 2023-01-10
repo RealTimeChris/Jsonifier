@@ -204,7 +204,7 @@ namespace Jsonifier {
 		template<typename T> __forceinline JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success) {
 		}
 
-		__forceinline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Success) {
+		__forceinline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized) {
 		}
 
 	  protected:

@@ -15,17 +15,17 @@ namespace Jsonifier {
 	class Jsonifier_Dll Parser {
 	  public:
 		friend class JsonIterator;
-		__forceinline Parser& operator=(Parser&&) = default;
-		__forceinline Parser(Parser&&) = default;
-		__forceinline Parser& operator=(const Parser&) = delete;
-		__forceinline Parser(const Parser&) = delete;
-		__forceinline Parser(const std::string&) noexcept;
-		__forceinline Parser() noexcept = default;
+		Parser& operator=(Parser&&) = default;
+		Parser(Parser&&) = default;
+		Parser& operator=(const Parser&) = delete;
+		Parser(const Parser&) = delete;
+		Parser(const std::string&) noexcept;
+		Parser() noexcept = default;
 		__forceinline JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
 		__forceinline JsonifierResult<Document> parseJson(const std::string& string);
 		__forceinline JsonifierResult<Document> parseJson(std::string_view string);
 
-		__forceinline operator Document() noexcept;
+		operator Document() noexcept;
 
 	  protected:
 		ObjectBuffer<uint32_t> structuralIndexes{};
