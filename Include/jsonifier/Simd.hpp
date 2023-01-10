@@ -670,8 +670,19 @@ namespace Jsonifier {
 		__forceinline SimdStringSection& operator=(SimdStringSection&& other) noexcept {
 			this->structuralIndexes = std::move(other.structuralIndexes);
 			this->stringLength = other.stringLength;
+			this->currentIndexIntoString = 0;
+			this->currentTapeIndex = 0;
+			this->currentBlock = 0;
 			return *this;
-		};
+		}
+		
+		__forceinline void reset(size_t stringLengthNew,size_t allocationSize) {
+			this->structuralIndexes.reset(allocationSize);
+			this->stringLength = stringLengthNew;
+			this->currentIndexIntoString = 0;
+			this->currentTapeIndex = 0;
+			this->currentBlock = 0;
+		}
 
 		__forceinline SimdStringSection(SimdStringSection&& other) noexcept {
 			*this = std::move(other);
@@ -824,16 +835,16 @@ namespace Jsonifier {
 		SimdBase256 structurals;
 		size_t stringLength{};
 		size_t currentTapeIndex{};
-		SimdBase256 prevEscaped;
-		SimdBase256 whitespace;
+		SimdBase256 prevEscaped{};
+		SimdBase256 whitespace{};
 		int64_t iterationCount{};
 		int64_t passedTime{};
 		SimdBase256 values[16];
-		SimdBase256 backslash;
-		SimdBase256 inString;
-		SimdBase256 escaped;
-		SimdBase256 quote;
+		SimdBase256 backslash{};
+		SimdBase256 inString{};
+		SimdBase256 escaped{};
+		SimdBase256 quote{};
 		bool prevInScalar{};
-		SimdBase256 op;
+		SimdBase256 op{};
 	};
 };
