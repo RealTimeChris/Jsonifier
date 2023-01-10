@@ -108,7 +108,7 @@ namespace Jsonifier {
 		__forceinline uint32_t* position() const noexcept;
 		__forceinline uint32_t* lastPosition() const noexcept;
 		__forceinline uint32_t* endPosition() const noexcept;
-		__forceinline ErrorCode reportError(ErrorCode error) noexcept;
+		__forceinline ErrorCode reportError(ErrorCode error);
 
 		friend class Document;
 		friend class Object;

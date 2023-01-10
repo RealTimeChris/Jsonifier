@@ -817,12 +817,12 @@ namespace Jsonifier {
 		template<size_t StringBlockCount>
 		size_t generateStructurals() {
 			for (size_t x = 0; x < StringBlockCount; ++x) {
-				this->currentBlock = x;
 				this->structurals = this->collectFinalStructurals();
 				this->getStructuralIndices();
+				this->currentBlock = x;
 			}
 			this->currentBlock = 0;
-			//this->structurals.printBits("FINAL BITS: ");
+			this->structurals.printBits("FINAL BITS: ");
 			return this->currentTapeIndex;
 		}
 

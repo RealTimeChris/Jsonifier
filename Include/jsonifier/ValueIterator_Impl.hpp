@@ -657,8 +657,12 @@ namespace Jsonifier {
 		return jsonIterator->lastPosition();
 	}
 
-	ErrorCode ValueIterator::reportError(ErrorCode error) noexcept {
+	ErrorCode ValueIterator::reportError(ErrorCode error) {
+#if _DEBUG 
+		throw JsonifierException{ "Error is: " + std::to_string(error) };
+#else
 		return jsonIterator->reportError(error);
+#endif
 	}
 
 	JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept
