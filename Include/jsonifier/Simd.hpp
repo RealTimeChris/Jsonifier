@@ -200,7 +200,7 @@ namespace Jsonifier {
 		}
 
 		__forceinline SimdBase128 operator~() {
-			SimdBase128 newValues{ _mm_xor_si128(*this, _mm_set1_epi64x(-1ull)) };
+			SimdBase128 newValues{ _mm_xor_si128(*this, _mm_set1_epi64x(-1ULL)) };
 			return newValues;
 		}
 
@@ -366,43 +366,11 @@ namespace Jsonifier {
 		}
 
 		__forceinline uint64_t getUint64(size_t index) {
-			switch (index) {
-				case 0: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 0));
-				}
-				case 1: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 1));
-				}
-				case 2: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 2));
-				}
-				case 3: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 3));
-				}
-				default: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(this->value, 0));
-				}
-			}
+			return this->value.m256i_u64[index];
 		}
 
 		__forceinline int64_t getInt64(size_t index) {
-			switch (index) {
-				case 0: {
-					return _mm256_extract_epi64(this->value, 0);
-				}
-				case 1: {
-					return _mm256_extract_epi64(this->value, 1);
-				}
-				case 2: {
-					return _mm256_extract_epi64(this->value, 2);
-				}
-				case 3: {
-					return _mm256_extract_epi64(this->value, 3);
-				}
-				default: {
-					return _mm256_extract_epi64(this->value, 0);
-				}
-			}
+			return this->value.m256i_i64[index];
 		}
 
 		__forceinline void insertUint64(uint64_t value, size_t index) {
@@ -459,7 +427,7 @@ namespace Jsonifier {
 			return this->value;
 		}
 
-		__forceinline SimdBase256 operator|(SimdBase256&other) {
+		__forceinline SimdBase256 operator|(SimdBase256& other) {
 			return _mm256_or_si256(this->value, other);
 		}
 
@@ -546,18 +514,18 @@ namespace Jsonifier {
 
 		__forceinline void setFirstBit(bool onOrOff) {
 			if (onOrOff) {
-				this->insertInt64(this->getInt64(0) | 1L << 0, 0);
+				this->insertInt64(this->value.m256i_i64[0] | 1L << 0, 0);
 			} else {
-				this->insertInt64(this->getInt64(0) & ~(1L << 0), 0);
+				this->insertInt64(this->value.m256i_i64[0] & ~(1L << 0), 0);
 			}
 		}
 
 		bool checkLastBit() {
-			return ((this->getUint64(3) >> 63) & 1) << 63;
+			return ((this->value.m256i_u64[3] >> 63) & 1) << 63;
 		}
 
 		__forceinline SimdBase256 operator~() {
-			SimdBase256 newValues{ _mm256_xor_si256(*this, _mm256_set1_epi64x(-1ull)) };
+			SimdBase256 newValues{ _mm256_xor_si256(*this, _mm256_set1_epi64x(-1ULL)) };
 			return newValues;
 		}
 
@@ -583,19 +551,14 @@ namespace Jsonifier {
 			SimdBase128 inString00 =
 				SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 0) } ^ std::move(prevInString);
 			prevInString.setFirstBit(inString00.checkLastBit());
-			//inString00.printBits("IN STRING 00: 01: ");
 			inString00 |= SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 0), allOnes, 1) } ^ std::move(prevInString);
-			//inString00.printBits("IN STRING 00: 02: ");
 			prevInString.setFirstBit(inString00.checkLastBit());
 			SimdBase256 returnValue{ std::move(inString00), 0 };
 			inString00 = SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 1), allOnes, 0) } ^ std::move(prevInString);
-			//inString00.printBits("IN STRING 00: 03: ");
 			prevInString.setFirstBit(inString00.checkLastBit());
 			inString00 |= SimdBase128{ _mm_clmulepi64_si128(_mm256_extracti128_si256(this->value, 1), allOnes, 1) } ^ std::move(prevInString);
-			//inString00.printBits("IN STRING 00: 04: ");
 			prevInString.setFirstBit(inString00.checkLastBit());
 			returnValue.insert128iValue(inString00, 1);
-			//returnValue.printBits("PREV IN STRING BITS: ");
 			return returnValue;
 		}
 
@@ -603,7 +566,7 @@ namespace Jsonifier {
 			bool returnValue{};
 			uint64_t returnValue64{};
 			for (size_t x = 0; x < 4; ++x) {
-				if (_addcarry_u64(0, this->getUint64(x), other1->getUint64(x), &returnValue64)) {
+				if (_addcarry_u64(0, this->value.m256i_u64[x], other1->value.m256i_u64[x], &returnValue64)) {
 					returnValue = true;
 				} else {
 					returnValue = false;
@@ -680,8 +643,8 @@ namespace Jsonifier {
 		__forceinline StringBlockReader() noexcept = default;
 		__forceinline void addNewString(const uint8_t* stringViewNew, size_t _len) noexcept;
 		__forceinline size_t getRemainder(uint8_t* dst) const;
-		__forceinline const uint8_t* fullBlock() const;
-		__forceinline bool hasFullBlock() const;
+		__forceinline const uint8_t* fULLBlock() const;
+		__forceinline bool hasFULLBlock() const;
 		__forceinline size_t blockIndex();
 		__forceinline void advance();
 
@@ -703,11 +666,11 @@ namespace Jsonifier {
 		return index;
 	}
 
-	template<size_t StepSize> __forceinline bool StringBlockReader<StepSize>::hasFullBlock() const {
+	template<size_t StepSize> __forceinline bool StringBlockReader<StepSize>::hasFULLBlock() const {
 		return index < lengthMinusStep;
 	}
 
-	template<size_t StepSize> __forceinline const uint8_t* StringBlockReader<StepSize>::fullBlock() const {
+	template<size_t StepSize> __forceinline const uint8_t* StringBlockReader<StepSize>::fULLBlock() const {
 		return &stringBuffer[index];
 	}
 
@@ -728,13 +691,12 @@ namespace Jsonifier {
 	  public:
 		__forceinline SimdStringSection() noexcept = default;
 
-		__forceinline void packStringIntoValue(SimdBase128* theValue, const char* string) {
+		__forceinline void packStringIntoValue(SimdBase256* theValue, const char* string) {
 			*theValue = string;
 		}
-
 			
-		__forceinline void addTapeValues(__m128i bitsNew, size_t currentIndexNew, size_t& currentIndexIntoTape, size_t stringLength) {
-			for (size_t x = 0; x < 2; ++x) {
+		__forceinline void addTapeValues(__m256i bitsNew, size_t& currentIndexIntoTape, size_t stringLength) {
+			for (size_t x = 0; x < 4; ++x) {
 				uint64_t newValue{};
 				int cnt = static_cast<int>(__popcnt64(*(reinterpret_cast<uint64_t*>(&bitsNew) + x)));
 				if (currentIndexIntoString >= stringLength) {
@@ -776,66 +738,65 @@ namespace Jsonifier {
 		}
 
 		__forceinline void getStructuralIndices(size_t& currentIndexIntoTape, size_t stringLength) {
-			for (size_t x = 0; x < 2; ++x) {
-				this->addTapeValues(this->structurals, x, currentIndexIntoTape, stringLength);
-			}
+			this->addTapeValues(this->structurals, currentIndexIntoTape, stringLength);
 			return;
 		}
 
-		__forceinline SimdBase128 collectWhiteSpace() {
-			char valuesNew[16]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
-			SimdBase128 whitespaceTable{ valuesNew };
-			SimdBase128 whiteSpaceReal[8]{};
+		__forceinline SimdBase256 collectWhiteSpace() {
+			char valuesNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2,
+				100, '\t', '\n', 112, 100, '\r', 100, 100 };
+			SimdBase256 whitespaceTable{ valuesNew };
+			SimdBase256 whiteSpaceReal[8]{};
 			for (size_t x = 0; x < 8; ++x) {
 				whiteSpaceReal[x] = this->values[x].shuffle(whitespaceTable) == this->values[x];
 			}
-			return std::move(SimdBase128{}.operator=(whiteSpaceReal));
+			return std::move(SimdBase256{}.operator=(whiteSpaceReal));
 		}
 
-		__forceinline SimdBase128 collectStructuralCharacters() {
-			char newValues[16]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
-			SimdBase128 opTable{ newValues };
-			SimdBase128 structural[8];
+		__forceinline SimdBase256 collectStructuralCharacters() {
+			char newValues[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			SimdBase256 opTable{ newValues };
+			SimdBase256 structural[8];
 			for (size_t x = 0; x < 8; ++x) {
-				SimdBase128 charVals{ char{ 0x20 } };
+				SimdBase256 charVals{ char{ 0x20 } };
 				auto valuesNew00 = this->values[x] | std::move(charVals);
 				structural[x] = this->values[x].shuffle(opTable) == valuesNew00;
 			}
-			return std::move(SimdBase128{}.operator=(structural));
+			return std::move(SimdBase256{}.operator=(structural));
 		}
 
-		__forceinline SimdBase128 collectBackslashes() {
-			SimdBase128 backslashes = _mm_set1_epi8('\\');
-			SimdBase128 backslashesReal[8];
+		__forceinline SimdBase256 collectBackslashes() {
+			SimdBase256 backslashes = _mm256_set1_epi8('\\');
+			SimdBase256 backslashesReal[8];
 			for (size_t x = 0; x < 8; ++x) {
 				backslashesReal[x] = this->values[x] == backslashes;
 			}
-			return std::move(SimdBase128{}.operator=(backslashesReal));
+			return std::move(SimdBase256{}.operator=(backslashesReal));
 		}
 
 		__forceinline void collectEscapedCharacters() {
 			auto backslash = this->collectBackslashes();
 			backslash = backslash.bitAndNot(prevEscaped);
-			SimdBase128 followsEscape = backslash.shl<1>() | std::move(this->prevEscaped);
-			SimdBase128 evenBits{ _mm_set1_epi8(0b01010101) };
+			SimdBase256 followsEscape = backslash.shl<1>() | std::move(this->prevEscaped);
+			SimdBase256 evenBits{ _mm256_set1_epi8(0b01010101) };
 			auto newBits = evenBits.bitAndNot(followsEscape);
-			SimdBase128 oddSequenceStarts = backslash.bitAndNot(newBits);
-			SimdBase128 sequencesStartingOnEvenBits{};
+			SimdBase256 oddSequenceStarts = backslash.bitAndNot(newBits);
+			SimdBase256 sequencesStartingOnEvenBits{};
 			this->prevEscaped = backslash.collectCarries(&oddSequenceStarts, sequencesStartingOnEvenBits);
-			SimdBase128 invert_mask = sequencesStartingOnEvenBits.shl<1>();
+			SimdBase256 invert_mask = sequencesStartingOnEvenBits.shl<1>();
 			this->escaped = (evenBits ^ std::move(invert_mask)) & std::move(followsEscape);
 		}
 
 		void collectJsonCharacters() {
-			SimdBase128 quotes = _mm_set1_epi8('"');
-			SimdBase128 quotesReal[8];
+			SimdBase256 quotes = _mm256_set1_epi8('"');
+			SimdBase256 quotesReal[8];
 			for (size_t x = 0; x < 8; ++x) {
 				quotesReal[x] = (this->values[x] == quotes);
 				//this->values[x].printBits("VALUES: ");
 				//quotes.printBits("QUOTES: ");
 				//quotesReal[x].printBits("QUOTES (REAL): ");
 			}
-			SimdBase128 quotesFinal = quotesReal;
+			SimdBase256 quotesFinal = quotesReal;
 			
 			this->quote = quotesFinal.bitAndNot(this->escaped);
 			//this->quote.printBits("QUOTE BITS: ");
@@ -849,13 +810,13 @@ namespace Jsonifier {
 			this->prevInScalar = false;
 		}
 
-		__forceinline SimdBase128 collectFinalStructurals() {
+		__forceinline SimdBase256 collectFinalStructurals() {
 			this->collectEscapedCharacters();
 			this->collectJsonCharacters();
 			auto scalar = ~(this->op | std::move(this->whitespace));
-			SimdBase128 nonQuoteScalar = ~(this->op | std::move(this->whitespace)).bitAndNot(this->quote);
+			SimdBase256 nonQuoteScalar = ~(this->op | std::move(this->whitespace)).bitAndNot(this->quote);
 			auto prevInScalarNew = this->prevInScalar;
-			SimdBase128 shiftMask{ _mm_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ull) };
+			SimdBase256 shiftMask{ _mm256_set_epi64x(static_cast<int64_t>(static_cast<uint64_t>(0ULL) - static_cast<uint64_t>(1ULL << 62)), 0ULL, 0ULL, 0ULL) };
 			this->prevInScalar = (nonQuoteScalar & std::move(shiftMask)).checkLastBit();
 			auto followsNonQuoteScalar = nonQuoteScalar.shl<1>();
 			followsNonQuoteScalar.setFirstBit(prevInScalarNew);
@@ -873,7 +834,7 @@ namespace Jsonifier {
 			this->tapePtrs = tapePtrsNew;
 			//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 			for (size_t x = 0; x < 8; ++x) {
-				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (16 * x)));
+				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (32 * x)));
 			}
 			//passedTime += stopWatch.totalTimePassed().count();
 			//std::cout << "TIME TO PACK THE VALUES: " << passedTime / iterationCount << " A COUNT OF: " << 16 * 8 << " bytes." << std::endl;
@@ -888,18 +849,18 @@ namespace Jsonifier {
 	  protected:
 		size_t currentIndexIntoString{};
 		SimdBase128 prevInString{};
-		SimdBase128 structurals;
-		SimdBase128 prevEscaped;
-		SimdBase128 whitespace;
+		SimdBase256 structurals;
+		SimdBase256 prevEscaped;
+		SimdBase256 whitespace;
 		inline static int64_t iterationCount{};
 		inline static int64_t passedTime{};
-		SimdBase128 values[8];
-		SimdBase128 backslash;
-		SimdBase128 inString;
-		SimdBase128 escaped;
+		SimdBase256 values[8];
+		SimdBase256 backslash;
+		SimdBase256 inString;
+		SimdBase256 escaped;
 		uint32_t* tapePtrs;
-		SimdBase128 quote;
+		SimdBase256 quote;
 		bool prevInScalar{};
-		SimdBase128 op;
+		SimdBase256 op;
 	};
 };

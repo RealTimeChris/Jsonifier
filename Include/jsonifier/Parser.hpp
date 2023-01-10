@@ -68,9 +68,9 @@ namespace Jsonifier {
 			if (this->stringLengthRaw == 0) {
 				return ErrorCode::Success;
 			}
-			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 128, 128));
-			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 128));
-			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 128, 128);
+			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
+			this->structuralIndexes.reset(round(this->stringLengthRaw + 3, 256));
+			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 256, 256);
 			if (!(this->structuralIndexes && this->stringBuffer)) {
 				this->stringBuffer.reset(0);
 				this->structuralIndexes.reset(0);
@@ -91,12 +91,12 @@ namespace Jsonifier {
 				}
 				this->stringView = ( uint8_t* )stringNew;
 				this->stringLengthRaw = stringLength;
-				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 128, 128)) {
+				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 256, 256)) {
 					if (this->allocate() != ErrorCode::Success) {
 						return Mem_Alloc_Error;
 					}
 				}
-				StringBlockReader<256> stringReader{};
+				StringBlockReader<512> stringReader{};
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				section01.reset();
 				section02.reset();
@@ -105,16 +105,16 @@ namespace Jsonifier {
 				this->tapeLength = 0;
 				size_t tapeCurrentIndex{};
 				size_t currentStringIndex{};
-				while (stringReader.hasFullBlock()) {
+				while (stringReader.hasFULLBlock()) {
 					//iterations++;
 					//stopWatch.resetTimer();
-					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
-					currentStringIndex += 128;
-					section02.submitDataForProcessing(stringReader.fullBlock() + 128, this->structuralIndexes, currentStringIndex);
-					currentStringIndex += 128;
-					//section03.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
+					section01.submitDataForProcessing(stringReader.fULLBlock(), this->structuralIndexes, currentStringIndex);
+					currentStringIndex += 256;
+					section02.submitDataForProcessing(stringReader.fULLBlock() + 256, this->structuralIndexes, currentStringIndex);
+					currentStringIndex += 256;
+					//section03.submitDataForProcessing(stringReader.fULLBlock() + 256, this->structuralIndexes, currentStringIndex);
 					//currentStringIndex += 128;
-					//section04.submitDataForProcessing(stringReader.fullBlock() + 384, this->structuralIndexes, currentStringIndex);
+					//section04.submitDataForProcessing(stringReader.fULLBlock() + 384, this->structuralIndexes, currentStringIndex);
 					//currentStringIndex += 128;
 					//totalTimePacking += stopWatch.totalTimePassed().count();
 					//std::cout << "TOTAL TIME FOR PACKING THE VALUES: " << totalTimePacking / iterations << std::endl;
@@ -135,7 +135,7 @@ namespace Jsonifier {
 					//std::cout << "TOTAL TIME FOR COLLLECTING THE VALUES: " << totalTimeCollecting / iterations << std::endl;
 					stringReader.advance();
 				}
-				uint8_t block[256];
+				uint8_t block[512];
 				stringReader.getRemainder(block);
 				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
 				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
