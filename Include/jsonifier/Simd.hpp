@@ -643,8 +643,8 @@ namespace Jsonifier {
 		__forceinline StringBlockReader() noexcept = default;
 		__forceinline void addNewString(const uint8_t* stringViewNew, size_t _len) noexcept;
 		__forceinline size_t getRemainder(uint8_t* dst) const;
-		__forceinline const uint8_t* fULLBlock() const;
-		__forceinline bool hasFULLBlock() const;
+		__forceinline const uint8_t* fullBlock() const;
+		__forceinline bool hasFullBlock() const;
 		__forceinline size_t blockIndex();
 		__forceinline void advance();
 
@@ -666,11 +666,11 @@ namespace Jsonifier {
 		return index;
 	}
 
-	template<size_t StepSize> __forceinline bool StringBlockReader<StepSize>::hasFULLBlock() const {
+	template<size_t StepSize> __forceinline bool StringBlockReader<StepSize>::hasFullBlock() const {
 		return index < lengthMinusStep;
 	}
 
-	template<size_t StepSize> __forceinline const uint8_t* StringBlockReader<StepSize>::fULLBlock() const {
+	template<size_t StepSize> __forceinline const uint8_t* StringBlockReader<StepSize>::fullBlock() const {
 		return &stringBuffer[index];
 	}
 
@@ -843,12 +843,12 @@ namespace Jsonifier {
 		void generateStructurals() {
 			this->structurals = this->collectFinalStructurals();
 
-			//this->structurals.printBits("FINAL BITS: ");
+			this->structurals.printBits("FINAL BITS: ");
 		}
 
 	  protected:
 		size_t currentIndexIntoString{};
-		SimdBase128 prevInString{};
+		uint64_t prevInString{};
 		SimdBase256 structurals;
 		SimdBase256 prevEscaped;
 		SimdBase256 whitespace;

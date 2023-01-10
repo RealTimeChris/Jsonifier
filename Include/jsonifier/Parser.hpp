@@ -96,7 +96,7 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				StringBlockReader<512> stringReader{};
+				StringBlockReader<256> stringReader{};
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				section01.reset();
 				section02.reset();
@@ -105,16 +105,16 @@ namespace Jsonifier {
 				this->tapeLength = 0;
 				size_t tapeCurrentIndex{};
 				size_t currentStringIndex{};
-				while (stringReader.hasFULLBlock()) {
+				while (stringReader.hasFullBlock()) {
 					//iterations++;
 					//stopWatch.resetTimer();
-					section01.submitDataForProcessing(stringReader.fULLBlock(), this->structuralIndexes, currentStringIndex);
+					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
 					currentStringIndex += 256;
-					section02.submitDataForProcessing(stringReader.fULLBlock() + 256, this->structuralIndexes, currentStringIndex);
+					section02.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
 					currentStringIndex += 256;
-					//section03.submitDataForProcessing(stringReader.fULLBlock() + 256, this->structuralIndexes, currentStringIndex);
+					//section03.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
 					//currentStringIndex += 128;
-					//section04.submitDataForProcessing(stringReader.fULLBlock() + 384, this->structuralIndexes, currentStringIndex);
+					//section04.submitDataForProcessing(stringReader.fullBlock() + 384, this->structuralIndexes, currentStringIndex);
 					//currentStringIndex += 128;
 					//totalTimePacking += stopWatch.totalTimePassed().count();
 					//std::cout << "TOTAL TIME FOR PACKING THE VALUES: " << totalTimePacking / iterations << std::endl;
@@ -135,7 +135,7 @@ namespace Jsonifier {
 					//std::cout << "TOTAL TIME FOR COLLLECTING THE VALUES: " << totalTimeCollecting / iterations << std::endl;
 					stringReader.advance();
 				}
-				uint8_t block[512];
+				uint8_t block[256];
 				stringReader.getRemainder(block);
 				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
 				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
