@@ -5,14 +5,14 @@
 
 namespace Jsonifier {
 
-	RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {
+	__forceinline RawJsonString::RawJsonString(const uint8_t* _buf) noexcept : stringView{ _buf } {
 	}
 
-	const char* RawJsonString::raw() const noexcept {
+	__forceinline const char* RawJsonString::raw() const noexcept {
 		return reinterpret_cast<const char*>(stringView);
 	}
 
-	bool RawJsonString::isFreeFromUnescapedQuote(std::string_view target) noexcept {
+	__forceinline bool RawJsonString::isFreeFromUnescapedQuote(std::string_view target) noexcept {
 		size_t pos{ 0 };
 		for (; pos < target.size() && target[pos] != '\\'; pos++) {
 		}
@@ -29,7 +29,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool RawJsonString::isFreeFromUnescapedQuote(const char* target) noexcept {
+	__forceinline bool RawJsonString::isFreeFromUnescapedQuote(const char* target) noexcept {
 		size_t pos{ 0 };
 		for (; target[pos] && target[pos] != '\\'; pos++) {
 		}
@@ -46,11 +46,11 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool RawJsonString::unsafeIsEqual(size_t length, std::string_view target) const noexcept {
+	__forceinline bool RawJsonString::unsafeIsEqual(size_t length, std::string_view target) const noexcept {
 		return (length >= target.size()) && (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 	}
 
-	bool RawJsonString::unsafeIsEqual(std::string_view target) const noexcept {
+	__forceinline bool RawJsonString::unsafeIsEqual(std::string_view target) const noexcept {
 		if (target.size() <= 256) {
 			return (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 		}
@@ -67,7 +67,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool RawJsonString::isEqual(std::string_view target) const noexcept {
+	__forceinline bool RawJsonString::isEqual(std::string_view target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		bool escaping{ false };
@@ -89,7 +89,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool RawJsonString::unsafeIsEqual(const char* target) const noexcept {
+	__forceinline bool RawJsonString::unsafeIsEqual(const char* target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		for (; target[pos]; pos++) {
@@ -103,7 +103,7 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool RawJsonString::isEqual(const char* target) const noexcept {
+	__forceinline bool RawJsonString::isEqual(const char* target) const noexcept {
 		const char* r{ raw() };
 		size_t pos{ 0 };
 		bool escaping{ false };
@@ -125,27 +125,27 @@ namespace Jsonifier {
 		return true;
 	}
 
-	bool operator==(const RawJsonString& a, std::string_view c) noexcept {
+	__forceinline bool operator==(const RawJsonString& a, std::string_view c) noexcept {
 		return a.unsafeIsEqual(c);
 	}
 
-	bool operator==(std::string_view c, const RawJsonString& a) noexcept {
+	__forceinline bool operator==(std::string_view c, const RawJsonString& a) noexcept {
 		return a == c;
 	}
 
-	bool operator!=(const RawJsonString& a, std::string_view c) noexcept {
+	__forceinline bool operator!=(const RawJsonString& a, std::string_view c) noexcept {
 		return !(a == c);
 	}
 
-	bool operator!=(std::string_view c, const RawJsonString& a) noexcept {
+	__forceinline bool operator!=(std::string_view c, const RawJsonString& a) noexcept {
 		return !(a == c);
 	}
 
-	JsonifierResult<std::string_view> RawJsonString::unescape(JsonIterator& iterator) const noexcept {
+	__forceinline JsonifierResult<std::string_view> RawJsonString::unescape(JsonIterator& iterator) const noexcept {
 		return iterator.unescape(*this);
 	}
 
-	std::ostream& operator<<(std::ostream& out, const RawJsonString& str) noexcept {
+	__forceinline std::ostream& operator<<(std::ostream& out, const RawJsonString& str) noexcept {
 		bool in_escape = false;
 		const char* s = str.raw();
 		while (true) {
@@ -170,14 +170,14 @@ namespace Jsonifier {
 		}
 	}
 
-	JsonifierResult<const char*> JsonifierResult<RawJsonString>::raw() noexcept {
+	__forceinline JsonifierResult<const char*> JsonifierResult<RawJsonString>::raw() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.raw();
 	}
 
-	JsonifierResult<std::string_view> JsonifierResult<RawJsonString>::unescape(JsonIterator& iterator) noexcept {
+	__forceinline JsonifierResult<std::string_view> JsonifierResult<RawJsonString>::unescape(JsonIterator& iterator) noexcept {
 		if (error()) {
 			return error();
 		}

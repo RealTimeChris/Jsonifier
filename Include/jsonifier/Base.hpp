@@ -186,7 +186,7 @@ namespace Jsonifier {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		__forceinline const T& valueUnsafe() const& noexcept {
+		const T& valueUnsafe() const& noexcept {
 			return this->first;
 		}
 
@@ -194,7 +194,8 @@ namespace Jsonifier {
 			return std::forward<T>(this->first);
 		}
 
-		template<typename T> __forceinline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {
+		template<typename T>
+		__forceinline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {
 		}
 
 		__forceinline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error) {
@@ -240,7 +241,7 @@ namespace Jsonifier {
 			return std::forward<JsonifierResultBase<T>>(*this).takeValue();
 		}
 
-		__forceinline const T& valueUnsafe() const& noexcept {
+		const T& valueUnsafe() const& noexcept {
 			return JsonifierResultBase<T>::valueUnsafe();
 		}
 
@@ -248,7 +249,8 @@ namespace Jsonifier {
 			return std::forward<JsonifierResultBase<T>>(*this).valueUnsafe();
 		}
 
-		template<typename T> __forceinline JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
+		template<typename T>
+		__forceinline JsonifierResult(T&& value, ErrorCode error) noexcept : JsonifierResultBase<T>(std::forward<T>(value), error) {
 		}
 
 		__forceinline JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<T>(error) {

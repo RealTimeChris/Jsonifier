@@ -6,35 +6,35 @@
 
 namespace Jsonifier {
 
-	Array::Array(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {};
+	__forceinline Array::Array(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {};
 
-	JsonifierResult<Array> Array::start(ValueIterator& iterator) noexcept {
+	__forceinline JsonifierResult<Array> Array::start(ValueIterator& iterator) noexcept {
 		bool hasValue{};
 		JsonifierTry(iterator.startArray().get(hasValue));
 		return Array(iterator);
 	}
 
-	JsonifierResult<Array> Array::startRoot(ValueIterator& iterator) noexcept {
+	__forceinline JsonifierResult<Array> Array::startRoot(ValueIterator& iterator) noexcept {
 		bool hasValue{};
 		JsonifierTry(iterator.startRootArray().get(hasValue));
 		return Array(iterator);
 	}
 
-	JsonifierResult<Array> Array::started(ValueIterator& iterator) noexcept {
+	__forceinline JsonifierResult<Array> Array::started(ValueIterator& iterator) noexcept {
 		bool hasValue{};
 		JsonifierTry(iterator.startedArray().get(hasValue));
 		return Array(iterator);
 	}
 
-	JsonifierResult<ArrayIterator> Array::begin() noexcept {
+	__forceinline JsonifierResult<ArrayIterator> Array::begin() noexcept {
 		return ArrayIterator(*this);
 	}
 
-	JsonifierResult<ArrayIterator> Array::end() noexcept {
+	__forceinline JsonifierResult<ArrayIterator> Array::end() noexcept {
 		return ArrayIterator(*this);
 	}
 
-	ErrorCode Array::consume() noexcept {
+	__forceinline ErrorCode Array::consume() noexcept {
 		auto error = ValueIterator::jsonIter().skipChild(ValueIterator::depth() - 1);
 		if (error) {
 			ValueIterator::abandon();
@@ -42,7 +42,7 @@ namespace Jsonifier {
 		return error;
 	}
 
-	JsonifierResult<std::string_view> Array::rawJson() noexcept {
+	__forceinline JsonifierResult<std::string_view> Array::rawJson() noexcept {
 		const uint8_t* startingPoint{ ValueIterator::peekStart() };
 		auto error = consume();
 		if (error) {
@@ -52,7 +52,7 @@ namespace Jsonifier {
 		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
 	}
 
-	JsonifierResult<size_t> Array::countElements() & noexcept {
+	__forceinline JsonifierResult<size_t> Array::countElements() & noexcept {
 		size_t count{ 0 };
 		for (auto v: *this) {
 			count++;
@@ -64,7 +64,7 @@ namespace Jsonifier {
 		return count;
 	}
 
-	JsonifierResult<bool> Array::isEmpty() & noexcept {
+	__forceinline JsonifierResult<bool> Array::isEmpty() & noexcept {
 		bool isNotEmpty{};
 		auto error = ValueIterator::resetArray().get(isNotEmpty);
 		if (error) {
@@ -73,11 +73,11 @@ namespace Jsonifier {
 		return !isNotEmpty;
 	}
 
-	JsonifierResult<bool> Array::reset() & noexcept {
+	__forceinline JsonifierResult<bool> Array::reset() & noexcept {
 		return ValueIterator::resetArray();
 	}
 
-	JsonifierResult<Value> Array::atPointer(std::string_view jsonPointer) noexcept {
+	__forceinline JsonifierResult<Value> Array::atPointer(std::string_view jsonPointer) noexcept {
 		if (jsonPointer[0] != '/') {
 			return Invalid_Json_Pointer;
 		}
@@ -114,7 +114,7 @@ namespace Jsonifier {
 		return child;
 	}
 
-	JsonifierResult<Value> Array::at(size_t index) noexcept {
+	__forceinline JsonifierResult<Value> Array::at(size_t index) noexcept {
 		size_t i = 0;
 		for (auto Value: *this) {
 			if (i == index) {
@@ -125,46 +125,46 @@ namespace Jsonifier {
 		return Out_Of_Bounds;
 	}
 
-	JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept : JsonifierResultBase<Array>(std::forward<Array>(Value)){};
+	__forceinline JsonifierResult<Array>::JsonifierResult(Array&& Value) noexcept : JsonifierResultBase<Array>(std::forward<Array>(Value)){};
 
-	JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Array>(error){};
+	__forceinline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Array>(error){};
 
-	JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
+	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.begin();
 	}
 
-	JsonifierResult<ArrayIterator> JsonifierResult<Array>::end() noexcept {
+	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Array>::end() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.end();
 	}
 
-	JsonifierResult<size_t> JsonifierResult<Array>::countElements() & noexcept {
+	__forceinline JsonifierResult<size_t> JsonifierResult<Array>::countElements() & noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.countElements();
 	}
 
-	JsonifierResult<bool> JsonifierResult<Array>::isEmpty() & noexcept {
+	__forceinline JsonifierResult<bool> JsonifierResult<Array>::isEmpty() & noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.isEmpty();
 	}
 
-	JsonifierResult<Value> JsonifierResult<Array>::at(size_t index) noexcept {
+	__forceinline JsonifierResult<Value> JsonifierResult<Array>::at(size_t index) noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.at(index);
 	}
 
-	JsonifierResult<Value> JsonifierResult<Array>::atPointer(std::string_view jsonPointer) noexcept {
+	__forceinline JsonifierResult<Value> JsonifierResult<Array>::atPointer(std::string_view jsonPointer) noexcept {
 		if (error()) {
 			return error();
 		}

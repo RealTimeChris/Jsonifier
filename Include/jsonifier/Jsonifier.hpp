@@ -19,3 +19,4 @@
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/Document_Impl.hpp>
 #include <jsonifier/Value_Impl.hpp>
+#include <jsonifier/Jsonifier_Impl.hpp>

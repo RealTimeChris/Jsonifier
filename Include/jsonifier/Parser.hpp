@@ -21,10 +21,9 @@ namespace Jsonifier {
 		Parser(const Parser&) = delete;
 		Parser(const std::string&) noexcept;
 		Parser() noexcept = default;
-
-		JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
-		JsonifierResult<Document> parseJson(const std::string& string);
-		JsonifierResult<Document> parseJson(std::string_view string);
+		__forceinline JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
+		__forceinline JsonifierResult<Document> parseJson(const std::string& string);
+		__forceinline JsonifierResult<Document> parseJson(std::string_view string);
 
 		operator Document() noexcept;
 
@@ -33,8 +32,6 @@ namespace Jsonifier {
 		ObjectBuffer<uint8_t> stringBuffer{};
 		SimdStringSection section01{};
 		SimdStringSection section02{};
-		SimdStringSection section03{};
-		SimdStringSection section04{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -96,7 +93,7 @@ namespace Jsonifier {
 						return Mem_Alloc_Error;
 					}
 				}
-				StringBlockReader<256> stringReader{};
+				StringBlockReader<512> stringReader{};
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				section01.reset();
 				section02.reset();
@@ -109,8 +106,10 @@ namespace Jsonifier {
 					//iterations++;
 					//stopWatch.resetTimer();
 					section01.submitDataForProcessing(stringReader.fullBlock(), this->structuralIndexes, currentStringIndex);
+					//std::cout << "FULL BLOCK: " << stringReader.fullBlock() << std::endl;
 					currentStringIndex += 256;
 					section02.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
+					//std::cout << "FULL BLOCK (2): " << (stringReader.fullBlock()) << std::endl;
 					currentStringIndex += 256;
 					//section03.submitDataForProcessing(stringReader.fullBlock() + 256, this->structuralIndexes, currentStringIndex);
 					//currentStringIndex += 128;
@@ -126,7 +125,7 @@ namespace Jsonifier {
 					//section04.generateStructurals();
 					//totalTimeGenerating += stopWatch.totalTimePassed().count();
 					//std::cout << "TOTAL TIME FOR GENERATING THE VALUES: " << totalTimeGenerating / iterations << std::endl;
-					
+
 					section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 					section02.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 					//section03.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
@@ -135,14 +134,14 @@ namespace Jsonifier {
 					//std::cout << "TOTAL TIME FOR COLLLECTING THE VALUES: " << totalTimeCollecting / iterations << std::endl;
 					stringReader.advance();
 				}
-				uint8_t block[256];
+				uint8_t block[512];
 				stringReader.getRemainder(block);
 				section01.submitDataForProcessing(block, this->structuralIndexes, currentStringIndex);
 				section01.getStructuralIndices(tapeCurrentIndex, this->stringLengthRaw);
 				this->getTapeLength() = tapeCurrentIndex;
 				//for (size_t x = 0; x < this->tapeLength; ++x) {
-					//std::cout << "CURRENT INDEX: " << this->structuralIndexes[x] << ", THE INDICES'S VALUE"
-							  //<< this->stringView[this->structuralIndexes[x]] << std::endl;
+				//std::cout << "CURRENT INDEX: " << this->structuralIndexes[x] << ", THE INDICES'S VALUE"
+				//<< this->stringView[this->structuralIndexes[x]] << std::endl;
 				//}
 			}
 			return Success;

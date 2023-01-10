@@ -46,7 +46,6 @@ namespace Jsonifier {
 		}
 
 	  protected:
-
 		friend class Array;
 		friend class Value;
 		friend struct JsonifierResult<ArrayIterator>;
