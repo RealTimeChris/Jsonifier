@@ -843,7 +843,7 @@ namespace Jsonifier {
 		}
 
 		void generateStructurals() {
-			for (size_t x = 0; x < 4; ++x) {
+			for (size_t x = 0; x < 2; ++x) {
 				this->currentBlock = x;
 				this->structurals = this->collectFinalStructurals();
 			}
