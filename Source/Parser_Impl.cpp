@@ -34,11 +34,11 @@ namespace Jsonifier {
 				return Document{};
 			}
 		}
-		//iterationCount++;
-		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+		iterationCount++;
+		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string), stringLength);
-		//totalTimePassed += stopWatch.totalTimePassed().count();
-		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
+		totalTimePassed += stopWatch.totalTimePassed().count();
+		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
