@@ -51,15 +51,15 @@ namespace Jsonifier {
 		__forceinline uint32_t depth() const noexcept;
 		__forceinline uint8_t*& stringBufLoc() noexcept;
 		__forceinline ErrorCode reportError(ErrorCode error) noexcept;
-		template<int N> __forceinline bool copyToBuffer(const uint8_t* json, uint32_t max_len, uint8_t (&tmpbuf)[N]) noexcept {
-			if ((N < max_len) || (N == 0)) {
+		template<int N> __forceinline bool copyToBuffer(const uint8_t* json, uint32_t maxLength, uint8_t (&tmpbuf)[N]) noexcept {
+			if ((N < maxLength) || (N == 0)) {
 				return false;
 			}
-			if (max_len > N - 1) {
-				max_len = N - 1;
+			if (maxLength > N - 1) {
+				maxLength = N - 1;
 			}
-			std::memcpy(tmpbuf, json, max_len);
-			tmpbuf[max_len] = ' ';
+			std::copy(json, json + maxLength, tmpbuf);
+			tmpbuf[maxLength] = ' ';
 			return true;
 		}
 
