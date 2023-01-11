@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll Array : public ValueIterator {
+	class Jsonifier_Dll Array {
 	  public:
 		__forceinline Array() noexcept = default;
 		__forceinline JsonifierResult<ArrayIterator> begin() noexcept;
@@ -18,6 +18,7 @@ namespace Jsonifier {
 		__forceinline JsonifierResult<Value> at(size_t index) noexcept;
 
 	  protected:
+		ValueIterator iterator{};
 		__forceinline ErrorCode consume() noexcept;
 		__forceinline static JsonifierResult<Array> start(ValueIterator& iterator) noexcept;
 		__forceinline static JsonifierResult<Array> startRoot(ValueIterator& iterator) noexcept;

@@ -15,11 +15,7 @@ namespace Jsonifier {
 				return Mem_Alloc_Error;
 			}
 		}
-		this->generateJsonIndices<2>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
-		for (size_t x = 0; x < this->tapeLength; ++x) {
-			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
-					  << std::endl;
-		}
+		this->generateJsonIndices<1>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
@@ -60,11 +56,7 @@ namespace Jsonifier {
 				return Mem_Alloc_Error;
 			}
 		}
-		this->generateJsonIndices<2>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
-		//for (size_t x = 0; x < this->tapeLength; ++x) {
-			//std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
-			//<< std::endl;
-		//}
+		this->generateJsonIndices<1>(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
@@ -76,7 +68,7 @@ namespace Jsonifier {
 		return this->stringBuffer;
 	}
 
-	uint32_t*& Parser::getStructuralIndices() noexcept {
+	uint32_t* Parser::getStructuralIndices() noexcept {
 		return this->structuralIndices.operator uint32_t*&();
 	}
 
@@ -84,7 +76,7 @@ namespace Jsonifier {
 		return 512;
 	}
 
-	size_t& Parser::getTapeLength() noexcept {
+	size_t Parser::getTapeLength() noexcept {
 		return this->tapeLength;
 	}
 
@@ -122,7 +114,7 @@ namespace Jsonifier {
 			uint8_t block[BlockCountPerIteration * 256];
 			stringReader.getRemainder(block);
 			section.submitDataForProcessing<BlockCountPerIteration>(block);
-			this->getTapeLength() = section.generateStructurals<BlockCountPerIteration>();
+			this->tapeLength = section.generateStructurals<BlockCountPerIteration>();
 		}
 		return Success;
 	}

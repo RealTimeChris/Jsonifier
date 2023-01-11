@@ -66,7 +66,7 @@ namespace Jsonifier {
 		__forceinline void moveAtStart() noexcept;
 		__forceinline void moveAtContainerStart() noexcept;
 		__forceinline std::string toString() const noexcept;
-		__forceinline ValueIterator(JsonIterator* jsonIter, uint32_t depth, uint32_t* start_index) noexcept;
+		__forceinline ValueIterator(JsonIterator* jsonIter, uint32_t depth, uint32_t* startIndex) noexcept;
 		__forceinline JsonifierResult<bool> parseNull(const uint8_t* json) const noexcept;
 		__forceinline JsonifierResult<bool> parseBool(const uint8_t* json) const noexcept;
 		__forceinline const uint8_t* peekStart() const noexcept;
@@ -81,12 +81,12 @@ namespace Jsonifier {
 		__forceinline const uint8_t* peekNonRootScalar() noexcept;
 
 
-		__forceinline ErrorCode startContainer(uint8_t start_char) noexcept;
+		__forceinline ErrorCode startContainer(uint8_t startChar) noexcept;
 		__forceinline ErrorCode endContainer() noexcept;
 		__forceinline JsonifierResult<const uint8_t*> advanceToValue() noexcept;
 
 		__forceinline ErrorCode incorrectTypeError() const noexcept;
-		__forceinline ErrorCode error_unless_more_tokens(uint32_t tokens = 1) const noexcept;
+		__forceinline ErrorCode errorUnlessMoreTokens(uint32_t tokens = 1) const noexcept;
 
 		__forceinline bool isAtStart() const noexcept;
 		__forceinline bool isAtIteratorStart() const noexcept;

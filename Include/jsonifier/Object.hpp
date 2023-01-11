@@ -6,7 +6,7 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll Object : public ValueIterator {
+	class Jsonifier_Dll Object {
 	  public:
 		__forceinline Object() noexcept = default;
 		__forceinline JsonifierResult<ObjectIterator> begin() noexcept;
@@ -24,6 +24,7 @@ namespace Jsonifier {
 		__forceinline JsonifierResult<std::string_view> rawJson() noexcept;
 
 	  protected:
+		ValueIterator iterator{}; 
 		__forceinline ErrorCode consume() noexcept;
 		__forceinline static JsonifierResult<Object> start(ValueIterator& iterator) noexcept;
 		__forceinline static JsonifierResult<Object> startRoot(ValueIterator& iterator) noexcept;

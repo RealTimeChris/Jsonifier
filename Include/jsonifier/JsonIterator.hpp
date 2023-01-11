@@ -14,8 +14,9 @@ namespace Jsonifier {
 	class Array;
 	class Value;
 
-	class Jsonifier_Dll JsonIterator : public TokenIterator {
+	class Jsonifier_Dll JsonIterator {
 	  protected:
+		TokenIterator iterator{};
 		Parser* parser{};
 		uint8_t* stringBuffer{};
 		ErrorCode error{ Success };

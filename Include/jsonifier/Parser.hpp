@@ -33,11 +33,11 @@ namespace Jsonifier {
 
 		uint8_t* getStringBuffer() noexcept;
 
-		uint32_t*& getStructuralIndices() noexcept;
+		uint32_t* getStructuralIndices() noexcept;
 
 		size_t maxDepth() noexcept;
 
-		size_t& getTapeLength() noexcept;
+		size_t getTapeLength() noexcept;
 
 		uint64_t round(int64_t a, int64_t n) noexcept;
 

@@ -9,7 +9,7 @@ namespace Jsonifier {
 	class ArrayIterator;
 	class Field;
 
-	class Jsonifier_Dll Value : public ValueIterator {
+	class Jsonifier_Dll Value {
 	  public:
 		__forceinline Value() noexcept = default;
 		template<typename T> __forceinline JsonifierResult<T> get() noexcept;
@@ -50,6 +50,7 @@ namespace Jsonifier {
 		__forceinline JsonifierResult<Value> atPointer(std::string_view json_pointer) noexcept;
 
 	  protected:
+		ValueIterator iterator{}; 
 		__forceinline Value(const ValueIterator& iter) noexcept;
 		__forceinline void skip() noexcept;
 		__forceinline static Value start(const ValueIterator& iter) noexcept;

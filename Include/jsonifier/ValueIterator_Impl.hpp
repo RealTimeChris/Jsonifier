@@ -395,7 +395,7 @@ namespace Jsonifier {
 	}
 
 	ErrorCode ValueIterator::skipChild() noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
+		assert(jsonIterator->iterator.currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth >= currentDepth);
 
 		return jsonIterator->skipChild(depth());
@@ -403,7 +403,7 @@ namespace Jsonifier {
 
 	ValueIterator ValueIterator::child() const noexcept {
 		assertAtChild();
-		return { jsonIterator, static_cast<size_t>(depth() + 1), jsonIterator->TokenIterator::position() };
+		return { jsonIterator, static_cast<size_t>(depth() + 1), jsonIterator->iterator.position() };
 	}
 
 	bool ValueIterator::isOpen() const noexcept {
@@ -415,12 +415,12 @@ namespace Jsonifier {
 	}
 
 	bool ValueIterator::atStart() const noexcept {
-		return jsonIterator->TokenIterator::position() == startPosition();
+		return jsonIterator->iterator.position() == startPosition();
 	}
 
 	bool ValueIterator::atFirstField() const noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
-		return jsonIterator->TokenIterator::position() == startPosition() + 1;
+		assert(jsonIterator->iterator.currentPosition > rootStructural);
+		return jsonIterator->iterator.position() == startPosition() + 1;
 	}
 
 	void ValueIterator::abandon() noexcept {
@@ -474,17 +474,17 @@ namespace Jsonifier {
 		jsonIterator->ascendTo(depth() - 1);
 	}
 
-	ErrorCode ValueIterator::startContainer(uint8_t start_char) noexcept {
+	ErrorCode ValueIterator::startContainer(uint8_t startChar) noexcept {
 		const uint8_t* json;
 		if (!isAtStart()) {
 			json = peekStart();
-			if (*json != start_char) {
+			if (*json != startChar) {
 				return incorrectTypeError();
 			}
 		} else {
 			assertAtStart();
 			json = jsonIterator->peek();
-			if (*json != start_char) {
+			if (*json != startChar) {
 				return incorrectTypeError();
 			}
 			jsonIterator->returnCurrentAndAdvance();
@@ -550,31 +550,31 @@ namespace Jsonifier {
 	}
 
 	void ValueIterator::assertAtStart() const noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition == rootStructural);
+		assert(jsonIterator->iterator.currentPosition == rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
 	void ValueIterator::assertAtContainerStart() const noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition == rootStructural + 1);
+		assert(jsonIterator->iterator.currentPosition == rootStructural + 1);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
 	void ValueIterator::assertAtNext() const noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
+		assert(jsonIterator->iterator.currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth);
 		assert(currentDepth > 0);
 	}
 
 	void ValueIterator::moveAtStart() noexcept {
 		jsonIterator->currentDepth = currentDepth;
-		jsonIterator->TokenIterator::setPosition(rootStructural);
+		jsonIterator->iterator.setPosition(rootStructural);
 	}
 
 	void ValueIterator::moveAtContainerStart() noexcept {
 		jsonIterator->currentDepth = currentDepth;
-		jsonIterator->TokenIterator::setPosition(rootStructural + 1);
+		jsonIterator->iterator.setPosition(rootStructural + 1);
 	}
 
 	JsonifierResult<bool> ValueIterator::resetArray() noexcept {
@@ -588,7 +588,7 @@ namespace Jsonifier {
 	}
 
 	void ValueIterator::assertAtChild() const noexcept {
-		assert(jsonIterator->TokenIterator::currentPosition > rootStructural);
+		assert(jsonIterator->iterator.currentPosition > rootStructural);
 		assert(jsonIterator->currentDepth == currentDepth + 1);
 		assert(currentDepth > 0);
 	}

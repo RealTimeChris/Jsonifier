@@ -6,7 +6,7 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll ObjectIterator : public ValueIterator {
+	class Jsonifier_Dll ObjectIterator {
 	  public:
 		ObjectIterator() noexcept = default;
 		JsonifierResult<Field> operator*() noexcept;
@@ -15,6 +15,7 @@ namespace Jsonifier {
 		ObjectIterator& operator++() noexcept;
 
 	  protected:
+		ValueIterator iterator{}; 
 		ObjectIterator(const ValueIterator& iterator) noexcept;
 		friend struct JsonifierResult<ObjectIterator>;
 		friend class Object;
@@ -32,17 +33,17 @@ namespace Jsonifier {
 		JsonifierResult<ObjectIterator>& operator++() noexcept;
 	};
 
-	__forceinline ObjectIterator::ObjectIterator(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {};
+	__forceinline ObjectIterator::ObjectIterator(const ValueIterator& iteratorNew) noexcept : iterator{ iteratorNew } {};
 
 	__forceinline JsonifierResult<Field> ObjectIterator::operator*() noexcept {
-		ErrorCode error = ValueIterator::error();
+		ErrorCode error = iterator.error();
 		if (error) {
-			ValueIterator::abandon();
+			iterator.abandon();
 			return error;
 		}
-		auto result = Field::start(*this);
+		auto result = Field::start(this->iterator);
 		if (result.error()) {
-			ValueIterator::abandon();
+			iterator.abandon();
 		}
 		return result;
 	}
@@ -52,20 +53,20 @@ namespace Jsonifier {
 	}
 
 	__forceinline bool ObjectIterator::operator!=(const ObjectIterator&) const noexcept {
-		return ValueIterator::isOpen();
+		return iterator.isOpen();
 	}
 
 	__forceinline ObjectIterator& ObjectIterator::operator++() noexcept {
-		if (!ValueIterator::isOpen()) {
+		if (!iterator.isOpen()) {
 			return *this;
 		}
 		ErrorCode error{};
-		if ((error = ValueIterator::skipChild())) {
+		if ((error = iterator.skipChild())) {
 			return *this;
 		}
 
 		bool hasValue{};
-		if ((error = ValueIterator::hasNextField().get(hasValue))) {
+		if ((error = iterator.hasNextField().get(hasValue))) {
 			return *this;
 		};
 		return *this;
@@ -73,7 +74,7 @@ namespace Jsonifier {
 
 	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& value) noexcept
 		: JsonifierResultBase<ObjectIterator>{ std::move(value) } {
-		this->first.assertIsValid();
+		this->first.iterator.assertIsValid();
 	}
 
 	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ObjectIterator>{ error } {};
@@ -86,14 +87,14 @@ namespace Jsonifier {
 	}
 
 	__forceinline bool JsonifierResult<ObjectIterator>::operator==(const JsonifierResult<ObjectIterator>& other) const noexcept {
-		if (!first.ValueIterator::isValid()) {
+		if (!first.iterator.isValid()) {
 			return !error();
 		}
 		return first == other.first;
 	}
 
 	__forceinline bool JsonifierResult<ObjectIterator>::operator!=(const JsonifierResult<ObjectIterator>& other) const noexcept {
-		if (!first.ValueIterator::isValid()) {
+		if (!first.iterator.isValid()) {
 			return error();
 		}
 		return first != other.first;

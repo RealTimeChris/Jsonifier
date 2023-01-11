@@ -10,7 +10,6 @@
 #include <string_view>
 #include <functional>
 #include <concepts>
-#include <intrin.h>
 #include <iostream>
 #include <cassert>
 #include <vector>
@@ -19,7 +18,7 @@
 #include <thread>
 #include <chrono>
 #include <bitset>
-#include <Array>
+#include <array>
 #include <deque>
 #include <map>
 
@@ -44,6 +43,7 @@
 		#define Jsonifier_Dll __declspec(dllimport)
 	#endif
 #else
+	#define __forceinline __attribute__((always_inline))
 	#define Jsonifier_Dll
 #endif
 

@@ -9,20 +9,20 @@ namespace Jsonifier {
 
 	__forceinline JsonifierResult<Value> Object::findFieldUnordered(const std::string_view key) & noexcept {
 		bool hasValue{};
-		JsonifierTry(ValueIterator::findFieldUnorderedRaw(key).get(hasValue));
+		JsonifierTry(iterator.findFieldUnorderedRaw(key).get(hasValue));
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(child());
+		return Value(iterator.child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::findFieldUnordered(const std::string_view key) && noexcept {
 		bool hasValue{};
-		JsonifierTry(ValueIterator::findFieldUnorderedRaw(key).get(hasValue));
+		JsonifierTry(iterator.findFieldUnorderedRaw(key).get(hasValue));
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(child());
+		return Value(iterator.child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::operator[](const std::string_view key) & noexcept {
@@ -35,20 +35,20 @@ namespace Jsonifier {
 
 	__forceinline JsonifierResult<Value> Object::findField(const std::string_view key) & noexcept {
 		bool hasValue{};
-		JsonifierTry(ValueIterator::findFieldRaw(key).get(hasValue));
+		JsonifierTry(iterator.findFieldRaw(key).get(hasValue));
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(child());
+		return Value(iterator.child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::findField(const std::string_view key) && noexcept {
 		bool hasValue{};
-		JsonifierTry(ValueIterator::findFieldRaw(key).get(hasValue));
+		JsonifierTry(iterator.findFieldRaw(key).get(hasValue));
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(child());
+		return Value(iterator.child());
 	}
 
 	__forceinline JsonifierResult<Object> Object::start(ValueIterator& iterator) noexcept {
@@ -62,32 +62,32 @@ namespace Jsonifier {
 	}
 
 	__forceinline ErrorCode Object::consume() noexcept {
-		if (ValueIterator::isAtKey()) {
+		if (iterator.isAtKey()) {
 			RawJsonString actualKey{};
-			auto error = ValueIterator::fieldKey().get(actualKey);
+			auto error = iterator.fieldKey().get(actualKey);
 			if (error) {
-				ValueIterator::abandon();
+				iterator.abandon();
 				return error;
 			};
-			if ((error = ValueIterator::fieldValue())) {
-				ValueIterator::abandon();
+			if ((error = iterator.fieldValue())) {
+				iterator.abandon();
 				return error;
 			}
 		}
-		auto errorSkip = ValueIterator::jsonIter().skipChild(ValueIterator::depth() - 1);
+		auto errorSkip = iterator.jsonIter().skipChild(iterator.depth() - 1);
 		if (errorSkip) {
-			ValueIterator::abandon();
+			iterator.abandon();
 		}
 		return errorSkip;
 	}
 
 	__forceinline JsonifierResult<std::string_view> Object::rawJson() noexcept {
-		const uint8_t* startingPoint{ peekStart() };
+		const uint8_t* startingPoint{ iterator.peekStart() };
 		auto error = consume();
 		if (error) {
 			return error;
 		}
-		const uint8_t* finalPoint{ this->jsonIterator->peek(0) };
+		const uint8_t* finalPoint{ this->iterator.jsonIterator->peek(0) };
 		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
 	}
 
@@ -100,15 +100,15 @@ namespace Jsonifier {
 		return iterator;
 	}
 
-	__forceinline Object::Object(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
+	__forceinline Object::Object(const ValueIterator& iteratorNew) noexcept : iterator{ iteratorNew } {
 	}
 
 	__forceinline JsonifierResult<ObjectIterator> Object::begin() noexcept {
-		return ObjectIterator(*this);
+		return ObjectIterator(this->iterator);
 	}
 
 	__forceinline JsonifierResult<ObjectIterator> Object::end() noexcept {
-		return ObjectIterator(*this);
+		return ObjectIterator(this->iterator);
 	}
 
 	__forceinline JsonifierResult<Value> Object::atPointer(std::string_view jsonPointer) noexcept {
@@ -118,7 +118,7 @@ namespace Jsonifier {
 		jsonPointer = jsonPointer.substr(1);
 		size_t slash = jsonPointer.find('/');
 		std::string_view key = jsonPointer.substr(0, slash);
-		JsonifierResult<Value> child;
+		JsonifierResult<Value> child{};
 		size_t escape = key.find('~');
 		if (escape != std::string_view::npos) {
 			std::string unescaped(key);
@@ -153,16 +153,16 @@ namespace Jsonifier {
 		for (auto v: *this) {
 			count++;
 		}
-		if (ValueIterator::error()) {
-			return ValueIterator::error();
+		if (iterator.error()) {
+			return iterator.error();
 		}
-		ValueIterator::resetObject();
+		iterator.resetObject();
 		return count;
 	}
 
 	__forceinline JsonifierResult<bool> Object::isEmpty() & noexcept {
 		bool isNotEmpty{};
-		auto error = ValueIterator::resetObject().get(isNotEmpty);
+		auto error = iterator.resetObject().get(isNotEmpty);
 		if (error) {
 			return error;
 		}
@@ -170,7 +170,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<bool> Object::reset() & noexcept {
-		return ValueIterator::resetObject();
+		return iterator.resetObject();
 	}
 
 	__forceinline JsonifierResult<Object>::JsonifierResult(Object&& Value) noexcept : JsonifierResultBase<Object>(std::forward<Object>(Value)){}

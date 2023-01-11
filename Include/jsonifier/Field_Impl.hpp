@@ -5,8 +5,6 @@
 
 namespace Jsonifier {
 
-	__forceinline Field::Field() noexcept : std::pair<RawJsonString, Value>(){};
-
 	__forceinline Field::Field(RawJsonString key, Value&& value) noexcept : std::pair<RawJsonString, Value>(key, std::forward<Value>(value)){};
 
 	__forceinline JsonifierResult<Field> Field::start(ValueIterator& parentIter) noexcept {
@@ -21,7 +19,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<std::string_view> Field::unescapedKey() noexcept {
-		JsonifierResult<std::string_view> answer = first.unescape(second.jsonIter());
+		JsonifierResult<std::string_view> answer = first.unescape(second.iterator.jsonIter());
 		first.consume();
 		return answer;
 	}

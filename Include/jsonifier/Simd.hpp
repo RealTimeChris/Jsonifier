@@ -681,7 +681,7 @@ namespace Jsonifier {
 
 		__forceinline SimdStringSection() noexcept = default;
 
-		__forceinline SimdStringSection(size_t stringLengthNew, uint32_t*& tapePtrsNew) noexcept : tapePtrs{ tapePtrsNew } {
+		__forceinline SimdStringSection(size_t stringLengthNew, uint32_t* tapePtrsNew) noexcept : tapePtrs{ tapePtrsNew } {
 			this->stringLength = stringLengthNew;
 		};
 
@@ -850,7 +850,7 @@ namespace Jsonifier {
 		int8_t currentBlock{};
 		size_t stringLength{};
 		int64_t passedTime{};
-		uint32_t*& tapePtrs;
+		uint32_t* tapePtrs;
 		SimdBase256 quote{};
 		SimdBase256 op{};
 	};

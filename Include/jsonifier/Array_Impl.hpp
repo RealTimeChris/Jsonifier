@@ -6,7 +6,7 @@
 
 namespace Jsonifier {
 
-	__forceinline Array::Array(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {};
+	__forceinline Array::Array(const ValueIterator& iteratorNew) noexcept : iterator{ iteratorNew } {};
 
 	__forceinline JsonifierResult<Array> Array::start(ValueIterator& iterator) noexcept {
 		bool hasValue{};
@@ -27,28 +27,28 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<ArrayIterator> Array::begin() noexcept {
-		return ArrayIterator(*this);
+		return ArrayIterator(this->iterator);
 	}
 
 	__forceinline JsonifierResult<ArrayIterator> Array::end() noexcept {
-		return ArrayIterator(*this);
+		return ArrayIterator(this->iterator);
 	}
 
 	__forceinline ErrorCode Array::consume() noexcept {
-		auto error = ValueIterator::jsonIter().skipChild(ValueIterator::depth() - 1);
+		auto error = iterator.jsonIter().skipChild(iterator.depth() - 1);
 		if (error) {
-			ValueIterator::abandon();
+			iterator.abandon();
 		}
 		return error;
 	}
 
 	__forceinline JsonifierResult<std::string_view> Array::rawJson() noexcept {
-		const uint8_t* startingPoint{ ValueIterator::peekStart() };
+		const uint8_t* startingPoint{ iterator.peekStart() };
 		auto error = consume();
 		if (error) {
 			return error;
 		}
-		const uint8_t* finalPoint{ ValueIterator::jsonIterator->unsafePointer() };
+		const uint8_t* finalPoint{ iterator.jsonIterator->unsafePointer() };
 		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
 	}
 
@@ -57,16 +57,16 @@ namespace Jsonifier {
 		for (auto v: *this) {
 			count++;
 		}
-		if (ValueIterator::error()) {
-			return ValueIterator::error();
+		if (iterator.error()) {
+			return iterator.error();
 		}
-		ValueIterator::resetArray();
+		iterator.resetArray();
 		return count;
 	}
 
 	__forceinline JsonifierResult<bool> Array::isEmpty() & noexcept {
 		bool isNotEmpty{};
-		auto error = ValueIterator::resetArray().get(isNotEmpty);
+		auto error = iterator.resetArray().get(isNotEmpty);
 		if (error) {
 			return error;
 		}
@@ -74,7 +74,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<bool> Array::reset() & noexcept {
-		return ValueIterator::resetArray();
+		return iterator.resetArray();
 	}
 
 	__forceinline JsonifierResult<Value> Array::atPointer(std::string_view jsonPointer) noexcept {

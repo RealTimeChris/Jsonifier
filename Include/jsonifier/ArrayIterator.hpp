@@ -5,18 +5,18 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll ArrayIterator : public ValueIterator {
+	class Jsonifier_Dll ArrayIterator {
 	  public:
 		__forceinline ArrayIterator() noexcept = default;
-		__forceinline ArrayIterator(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
+		__forceinline ArrayIterator(const ValueIterator& iteratorNew) noexcept : iterator{ iteratorNew } {
 		}
 
 		__forceinline JsonifierResult<Value> operator*() noexcept {
-			if (error()) {
-				abandon();
-				return error();
+			if (iterator.error()) {
+				iterator.abandon();
+				return iterator.error();
 			}
-			return Value(child());
+			return Value(iterator.child());
 		}
 
 		__forceinline bool operator==(const ArrayIterator& other) const noexcept {
@@ -24,24 +24,25 @@ namespace Jsonifier {
 		}
 
 		__forceinline bool operator!=(const ArrayIterator&) const noexcept {
-			return ValueIterator::isOpen();
+			return iterator.isOpen();
 		}
 
 		__forceinline ArrayIterator& operator++() noexcept {
 			ErrorCode error{};
-			if ((error = ValueIterator::error())) {
+			if ((error = iterator.error())) {
 				return *this;
 			}
-			if ((error = ValueIterator::skipChild())) {
+			if ((error = iterator.skipChild())) {
 				return *this;
 			}
-			if ((error = ValueIterator::hasNextElement().error())) {
+			if ((error = iterator.hasNextElement().error())) {
 				return *this;
 			}
 			return *this;
 		}
 
 	  protected:
+		ValueIterator iterator{}; 
 		friend class Array;
 		friend class Value;
 		friend struct JsonifierResult<ArrayIterator>;
@@ -61,14 +62,14 @@ namespace Jsonifier {
 		}
 
 		__forceinline bool operator==(const JsonifierResult<ArrayIterator>& other) const noexcept {
-			if (!first.isValid()) {
+			if (!first.iterator.isValid()) {
 				return !error();
 			}
 			return first == other.first;
 		}
 
 		__forceinline bool operator!=(const JsonifierResult<ArrayIterator>& other) const noexcept {
-			if (!first.isValid()) {
+			if (!first.iterator.isValid()) {
 				return error();
 			}
 			return first != other.first;
