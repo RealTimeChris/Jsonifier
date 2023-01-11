@@ -486,7 +486,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<bool> Value::isScalar() noexcept {
-		JsonType thisType;
+		JsonType thisType{};
 		auto error = type().get(thisType);
 		if (error) {
 			return error;

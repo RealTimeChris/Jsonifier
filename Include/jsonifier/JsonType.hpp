@@ -4,8 +4,6 @@
 
 namespace Jsonifier {
 
-	class ValueIterator;
-
 	template<> struct JsonifierResult<JsonType> : public JsonifierResultBase<JsonType> {
 	  public:
 		__forceinline JsonifierResult(JsonType&& Value) noexcept;

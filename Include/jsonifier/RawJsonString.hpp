@@ -4,10 +4,6 @@
 
 namespace Jsonifier {
 
-	class Object;
-	class parser;
-	class JsonIterator;
-
 	class Jsonifier_Dll RawJsonString {
 	  public:
 		__forceinline RawJsonString() noexcept = default;
@@ -30,7 +26,7 @@ namespace Jsonifier {
 		}
 		__forceinline JsonifierResult<std::string_view> unescape(JsonIterator& iterator) const noexcept;
 
-		const uint8_t* stringView{};
+		const uint8_t* stringView;
 		friend class Object;
 		friend class Field;
 		friend class Parser;

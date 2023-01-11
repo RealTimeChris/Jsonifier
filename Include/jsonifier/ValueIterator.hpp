@@ -4,17 +4,11 @@
 
 namespace Jsonifier {
 
-	class Document;
-	class Object;
-	class Array;
-	class Value;
-	class RawJsonString;
-
 	class Jsonifier_Dll ValueIterator {
 	  protected:
-		JsonIterator* jsonIterator{};
-		uint32_t currentDepth{};
-		uint32_t* rootStructural{};
+		JsonIterator* jsonIterator;
+		uint32_t currentDepth;
+		uint32_t* rootStructural;
 
 	  public:
 		__forceinline ValueIterator() noexcept = default;

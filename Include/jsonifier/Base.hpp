@@ -56,8 +56,6 @@
 
 namespace Jsonifier {
 
-	class Field;
-
 	enum ErrorCode {
 		Success = 0,
 		Tape_Error = 1,
@@ -125,16 +123,18 @@ namespace Jsonifier {
 			return this->objects[index];
 		}
 
-		__forceinline operator OTy*() noexcept {
+		__forceinline operator OTy*&() noexcept {
 			return this->objects;
 		}
 
 		__forceinline void reset(size_t newSize) noexcept {
-			this->deallocate();
-			if (newSize != 0) {
-				AllocatorType allocator{};
-				this->objects = AllocatorTraits::allocate(allocator, newSize);
-				this->currentSize = newSize;
+			if (this->currentSize < newSize) {
+				this->deallocate();
+				if (newSize != 0) {
+					AllocatorType allocator{};
+					this->objects = AllocatorTraits::allocate(allocator, newSize);
+					this->currentSize = newSize;
+				}
 			}
 		}
 
@@ -164,7 +164,7 @@ namespace Jsonifier {
 		}
 
 		__forceinline ErrorCode get(T& value) && noexcept {
-			ErrorCode error;
+			ErrorCode error{};
 			std::forward<JsonifierResultBase<T>>(*this).tie(value, error);
 			return error;
 		}

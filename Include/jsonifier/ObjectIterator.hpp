@@ -6,8 +6,6 @@
 
 namespace Jsonifier {
 
-	class Field;
-
 	class Jsonifier_Dll ObjectIterator : public ValueIterator {
 	  public:
 		ObjectIterator() noexcept = default;

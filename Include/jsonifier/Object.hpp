@@ -6,8 +6,6 @@
 
 namespace Jsonifier {
 
-	class Value;
-
 	class Jsonifier_Dll Object : public ValueIterator {
 	  public:
 		__forceinline Object() noexcept = default;

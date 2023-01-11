@@ -5,10 +5,6 @@
 
 namespace Jsonifier {
 
-	class Array;
-	class Document;
-	class Value;
-
 	class Jsonifier_Dll ArrayIterator : public ValueIterator {
 	  public:
 		__forceinline ArrayIterator() noexcept = default;

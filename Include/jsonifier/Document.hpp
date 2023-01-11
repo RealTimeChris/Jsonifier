@@ -5,14 +5,6 @@
 
 namespace Jsonifier {
 
-	class Parser;
-	class Array;
-	class Object;
-	class Value;
-	class RawJsonString;
-	class ArrayIterator;
-	class ValueIterator;
-
 	class Jsonifier_Dll Document : public JsonIterator {
 	  public:
 		__forceinline Document() noexcept = default;
@@ -138,6 +130,4 @@ namespace Jsonifier {
 
 		__forceinline JsonifierResult<Value> atPointer(std::string_view jsonPointer) noexcept;
 	};
-
-
 }

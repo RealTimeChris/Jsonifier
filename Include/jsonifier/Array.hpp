@@ -5,12 +5,9 @@
 
 namespace Jsonifier {
 
-	class Value;
-	class document;
-
 	class Jsonifier_Dll Array : public ValueIterator {
 	  public:
-		Array() noexcept = default;
+		__forceinline Array() noexcept = default;
 		__forceinline JsonifierResult<ArrayIterator> begin() noexcept;
 		__forceinline JsonifierResult<ArrayIterator> end() noexcept;
 		__forceinline JsonifierResult<size_t> countElements() & noexcept;
@@ -22,9 +19,9 @@ namespace Jsonifier {
 
 	  protected:
 		__forceinline ErrorCode consume() noexcept;
-		static __forceinline JsonifierResult<Array> start(ValueIterator& iterator) noexcept;
-		static __forceinline JsonifierResult<Array> startRoot(ValueIterator& iterator) noexcept;
-		static __forceinline JsonifierResult<Array> started(ValueIterator& iterator) noexcept;
+		__forceinline static JsonifierResult<Array> start(ValueIterator& iterator) noexcept;
+		__forceinline static JsonifierResult<Array> startRoot(ValueIterator& iterator) noexcept;
+		__forceinline static JsonifierResult<Array> started(ValueIterator& iterator) noexcept;
 		__forceinline Array(const ValueIterator& iterator) noexcept;
 
 		friend class Value;

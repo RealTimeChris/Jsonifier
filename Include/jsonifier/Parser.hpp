@@ -3,14 +3,9 @@
 #include <jsonifier/Simd.hpp>
 #include <jsonifier/StringParsingUtils.hpp>
 #include <jsonifier/NumberParsingUtils.hpp>
+#include <jsonifier/Document.hpp>
 
 namespace Jsonifier {
-
-	class Array;
-	class Object;
-	class Value;
-	class RawJsonString;
-	class Document;
 
 	class Jsonifier_Dll Parser {
 	  public:
@@ -21,15 +16,16 @@ namespace Jsonifier {
 		Parser(const Parser&) = delete;
 		Parser(const std::string&) noexcept;
 		Parser() noexcept = default;
-		__forceinline JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
-		__forceinline JsonifierResult<Document> parseJson(const std::string& string);
-		__forceinline JsonifierResult<Document> parseJson(std::string_view string);
+
+		JsonifierResult<Document> parseJson(const char* string, size_t stringLength);
+		JsonifierResult<Document> parseJson(const std::string& string);
+		JsonifierResult<Document> parseJson(std::string_view string);
 
 		operator Document() noexcept;
 
 	  protected:
+		ObjectBuffer<uint32_t> structuralIndices{};
 		ObjectBuffer<uint8_t> stringBuffer{};
-		SimdStringSection section{};
 		size_t stringLengthRaw{};
 		size_t allocatedSpace{};
 		uint8_t* stringView{};
@@ -43,8 +39,8 @@ namespace Jsonifier {
 			return this->stringBuffer;
 		}
 
-		__forceinline uint32_t* getStructuralIndices() {
-			return this->section.getTapePtrs();
+		__forceinline uint32_t*& getStructuralIndices() {
+			return this->structuralIndices.operator uint32_t*&();
 		}
 
 		__forceinline size_t maxDepth() {
@@ -64,8 +60,9 @@ namespace Jsonifier {
 				return ErrorCode::Success;
 			}
 			this->stringBuffer.reset(round(5 * this->stringLengthRaw / 3 + 256, 256));
+			this->structuralIndices.reset(round(this->stringLengthRaw + 3, 256));
 			this->allocatedSpace = round(5 * this->stringLengthRaw / 3 + 256, 256);
-			if (!this->stringBuffer) {
+			if (!(this->stringBuffer && this->structuralIndices)) {
 				this->stringBuffer.reset(0);
 				return ErrorCode::Mem_Alloc_Error;
 			}
@@ -77,34 +74,21 @@ namespace Jsonifier {
 		__forceinline ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) {
 			StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 			if (stringNew) {
-				if (stringLength == 0) {
-					return String_Error;
-				}
-				this->stringView = ( uint8_t* )stringNew;
-				this->stringLengthRaw = stringLength;
-				if (this->allocatedSpace < round(5 * this->stringLengthRaw / 3 + 256, 256)) {
-					if (this->allocate() != ErrorCode::Success) {
-						return Mem_Alloc_Error;
-					}
-				}
+				
 				StringBlockReader<BlockCountPerIteration * 256> stringReader{};
-				section = SimdStringSection{ this->stringLengthRaw, round(this->stringLengthRaw + 3, 256) };
+				SimdStringSection<BlockCountPerIteration> section{ this->stringLengthRaw, this->getStructuralIndices() };
 				stringReader.addNewString(this->stringView, this->stringLengthRaw);
 				this->tapeLength = 0;
 				while (stringReader.hasFullBlock()) {
-					section.submitDataForProcessing<2>(stringReader.fullBlock());
-					section.generateStructurals<2>();
+					section.submitDataForProcessing<BlockCountPerIteration>(stringReader.fullBlock());
+					section.generateStructurals<BlockCountPerIteration>();
 					stringReader.advance();
 				}
 				uint8_t block[BlockCountPerIteration * 256];
 				stringReader.getRemainder(block);
-				section.submitDataForProcessing<2>(block);
-				this->getTapeLength() = section.generateStructurals<2>();
+				section.submitDataForProcessing<BlockCountPerIteration>(block);
+				this->getTapeLength() = section.generateStructurals<BlockCountPerIteration>();
 			}
-			//for (size_t x = 0; x < this->tapeLength; ++x) {
-				//std::cout << "CURRENT INDEX: " << this->getStructuralIndices()[x]
-							 //<< ", THE INDEXES'S VALUE: " << this->stringView[this->getStructuralIndices()[x]] << std::endl;
-			//}
 			return Success;
 		}
 	};

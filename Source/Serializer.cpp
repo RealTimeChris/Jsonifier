@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jsonifier/Jsonifier.hpp>
+#include <jsonifier/Serializer.hpp>
 #include <jsonifier/Jsonifier.hpp>
 #include <jsonifier/Document.hpp>
 #include <jsonifier/Parser.hpp>
