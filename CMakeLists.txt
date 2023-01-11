@@ -22,7 +22,7 @@
 # Dec 17, 2022
 # https://github.com/RealTimeChris/Jsonifier
 
-# Set this value to install the output files to a particular location.
+# Set this Value to install the output files to a particular location.
 #set(CMAKE_INSTALL_PREFIX)
 
 cmake_minimum_required(VERSION 3.20)

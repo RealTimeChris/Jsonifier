@@ -125,7 +125,7 @@ Commands
   The content ``<name>`` can be any string without spaces, but good practice
   would be to use only letters, numbers and underscores.  The name will be
   treated case-insensitively and it should be obvious for the content it
-  represents, often being the name of the child project or the value given
+  represents, often being the name of the child project or the Value given
   to its top level :command:`project` command (if it is a CMake project).
   For well-known public projects, the name should generally be the official
   name of the project.  Choosing an unusual name makes it unlikely that other
@@ -264,7 +264,7 @@ Commands
       If permitted, :command:`find_package(<name> [<args>...]) <find_package>`
       will be called, where ``<args>...`` may be provided by the
       ``FIND_PACKAGE_ARGS`` option in :command:`FetchContent_Declare`.
-      The value of the :variable:`FETCHCONTENT_TRY_FIND_PACKAGE_MODE` variable
+      The Value of the :variable:`FETCHCONTENT_TRY_FIND_PACKAGE_MODE` variable
       at the time :command:`FetchContent_Declare` was called determines whether
       ``FetchContent_MakeAvailable()`` can call :command:`find_package`.
       If the :variable:`CMAKE_FIND_PACKAGE_TARGETS_GLOBAL` variable is set to
@@ -366,7 +366,7 @@ Commands
 
   Note that :variable:`CMAKE_VERIFY_INTERFACE_HEADER_SETS` is explicitly set
   to false upon entry to ``FetchContent_MakeAvailable()``, and is restored to
-  its original value before the command returns.  Developers typically only
+  its original Value before the command returns.  Developers typically only
   want to verify header sets from the main project, not those from any
   dependencies.  This local manipulation of the
   :variable:`CMAKE_VERIFY_INTERFACE_HEADER_SETS` variable provides that
@@ -487,7 +487,7 @@ Commands
 
   ``SUBBUILD_DIR``
     The ``SUBBUILD_DIR`` argument can be provided to change the location of the
-    sub-build created to perform the population.  The default value is
+    sub-build created to perform the population.  The default Value is
     ``${CMAKE_CURRENT_BINARY_DIR}/<lowercaseName>-subbuild`` and it would be
     unusual to need to override this default.  If a relative path is specified,
     it will be interpreted as relative to :variable:`CMAKE_CURRENT_BINARY_DIR`.
@@ -542,7 +542,7 @@ Commands
     )
 
   The ``SOURCE_DIR``, ``BINARY_DIR`` and ``POPULATED`` options can be used to
-  specify which properties should be retrieved.  Each option accepts a value
+  specify which properties should be retrieved.  Each option accepts a Value
   which is the name of the variable in which to store that property.  Most of
   the time though, only ``<name>`` is given, in which case the call will then
   set the same variables as a call to
@@ -619,7 +619,7 @@ A number of cache variables can influence the behavior where details from a
   cache variable controls the point under which all content population
   directories are collected, but in most cases, developers would not need to
   change this.  The default location is ``${CMAKE_BINARY_DIR}/_deps``, but if
-  developers change this value, they should aim to keep the path short and
+  developers change this Value, they should aim to keep the path short and
   just below the top level of the build tree to avoid running into path
   length problems on Windows.
 
@@ -657,12 +657,12 @@ A number of cache variables can influence the behavior where details from a
 
   This variable modifies the details that :command:`FetchContent_Declare`
   records for a given dependency.  While it ultimately controls the behavior
-  of :command:`FetchContent_MakeAvailable`, it is the variable's value when
+  of :command:`FetchContent_MakeAvailable`, it is the variable's Value when
   :command:`FetchContent_Declare` is called that gets used.  It makes no
   difference what the variable is set to when
   :command:`FetchContent_MakeAvailable` is called.  Since the variable should
   only be set by the user and not by projects directly, it will typically have
-  the same value throughout anyway, so this distinction is not usually
+  the same Value throughout anyway, so this distinction is not usually
   noticeable.
 
   ``FETCHCONTENT_TRY_FIND_PACKAGE_MODE`` ultimately controls whether
@@ -690,7 +690,7 @@ A number of cache variables can influence the behavior where details from a
     :command:`FetchContent_Declare` call will be ignored.
 
   As a special case, if the :variable:`FETCHCONTENT_SOURCE_DIR_<uppercaseName>`
-  variable has a non-empty value for a dependency, it is assumed that the
+  variable has a non-empty Value for a dependency, it is assumed that the
   user is overriding all other methods of making that dependency available.
   ``FETCHCONTENT_TRY_FIND_PACKAGE_MODE`` will have no effect on that
   dependency and :command:`FetchContent_MakeAvailable` will not try to call
@@ -1068,7 +1068,7 @@ current working directory.
 # Sets a content-specific global property (not meant for use
 # outside of functions defined here in this file) which can later
 # be retrieved using __FetchContent_getSavedDetails() with just the
-# same content name. If there is already a value stored in the
+# same content name. If there is already a Value stored in the
 # property, it is left unchanged and this call has no effect.
 # This allows parent projects to define the content details,
 # overriding anything a child project may try to set (properties
@@ -1095,7 +1095,7 @@ function(__FetchContent_declareDetails contentName)
     set(__tryFindPackageAllowed TRUE)
   else()
     message(FATAL_ERROR
-      "Unsupported value for FETCHCONTENT_TRY_FIND_PACKAGE_MODE: "
+      "Unsupported Value for FETCHCONTENT_TRY_FIND_PACKAGE_MODE: "
       "${FETCHCONTENT_TRY_FIND_PACKAGE_MODE}"
     )
   endif()
@@ -1122,7 +1122,7 @@ function(__FetchContent_declareDetails contentName)
         set(__tryFindPackage TRUE)
       endif()
       # All arguments after this keyword are for find_package(). Define the
-      # variable but with an empty value initially. This allows us to check
+      # variable but with an empty Value initially. This allows us to check
       # at the start of the loop whether to store remaining items in this
       # variable or not. Note that there could be no more args, which is still
       # a valid case because we automatically provide ${contentName} as the
@@ -1202,7 +1202,7 @@ function(FetchContent_Declare contentName)
   endif()
 
   # Because we are only looking for a subset of the supported keywords, we
-  # cannot check for multi-value arguments with this method. We will have to
+  # cannot check for multi-Value arguments with this method. We will have to
   # handle the URL keyword differently.
   set(oneValueArgs
     SVN_REPOSITORY
@@ -1270,7 +1270,7 @@ function(FetchContent_Declare contentName)
             "rebuilt if the URL changes. The OLD behavior preserves the "
             "timestamps from the archive instead, but this is usually not "
             "what you want. Update your project to the NEW behavior or "
-            "specify the DOWNLOAD_EXTRACT_TIMESTAMP option with a value of "
+            "specify the DOWNLOAD_EXTRACT_TIMESTAMP option with a Value of "
             "true to avoid this robustness issue."
           )
           set(ARG_DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
@@ -1378,24 +1378,24 @@ function(FetchContent_GetProperties contentName)
 
   if(ARG_SOURCE_DIR)
     set(propertyName "${prefix}_sourceDir")
-    get_property(value GLOBAL PROPERTY ${propertyName})
-    if(value)
-      set(${ARG_SOURCE_DIR} ${value} PARENT_SCOPE)
+    get_property(Value GLOBAL PROPERTY ${propertyName})
+    if(Value)
+      set(${ARG_SOURCE_DIR} ${Value} PARENT_SCOPE)
     endif()
   endif()
 
   if(ARG_BINARY_DIR)
     set(propertyName "${prefix}_binaryDir")
-    get_property(value GLOBAL PROPERTY ${propertyName})
-    if(value)
-      set(${ARG_BINARY_DIR} ${value} PARENT_SCOPE)
+    get_property(Value GLOBAL PROPERTY ${propertyName})
+    if(Value)
+      set(${ARG_BINARY_DIR} ${Value} PARENT_SCOPE)
     endif()
   endif()
 
   if(ARG_POPULATED)
     set(propertyName "${prefix}_populated")
-    get_property(value GLOBAL PROPERTY ${propertyName} DEFINED)
-    set(${ARG_POPULATED} ${value} PARENT_SCOPE)
+    get_property(Value GLOBAL PROPERTY ${propertyName} DEFINED)
+    set(${ARG_POPULATED} ${Value} PARENT_SCOPE)
   endif()
 
 endfunction()
@@ -1405,7 +1405,7 @@ endfunction()
 # Performing the population
 #=======================================================================
 
-# The value of contentName will always have been lowercased by the caller.
+# The Value of contentName will always have been lowercased by the caller.
 # All other arguments are assumed to be options that are understood by
 # ExternalProject_Add(), except for QUIET and SUBBUILD_DIR.
 function(__FetchContent_directPopulate contentName)
@@ -1826,8 +1826,8 @@ endfunction()
 # calls will be available to the caller.
 macro(FetchContent_MakeAvailable)
 
-  # We must append an item, even if the variable is unset, so prefix its value.
-  # We will strip that prefix when we pop the value at the end of the macro.
+  # We must append an item, even if the variable is unset, so prefix its Value.
+  # We will strip that prefix when we pop the Value at the end of the macro.
   list(APPEND __cmake_fcCurrentVarsStack
     "__fcprefix__${CMAKE_VERIFY_INTERFACE_HEADER_SETS}"
   )

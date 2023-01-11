@@ -1,387 +1,636 @@
- #pragma once
+#pragma once
 
-#include <jsonifier/ImplementationJsonifierResultBase_Impl.hpp>
-#include <jsonifier/Value_Impl.hpp>
-#include <jsonifier/Array_Impl.hpp>
-#include <jsonifier/Object_Impl.hpp>
+#include <jsonifier/RawJsonString.hpp>
+#include <jsonifier/Document.hpp>
+#include <jsonifier/Object.hpp>
+#include <jsonifier/Array.hpp>
+#include <jsonifier/ArrayIterator.hpp>
 
 namespace Jsonifier {
 
-	inline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept
-		: ImplementationJsonifierResultBase<Document>(std::forward<Document>(Value)) {
+	template<typename T> __forceinline JsonifierResult<T> Document::get() & noexcept {
+		static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 	}
 
-	inline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept : ImplementationJsonifierResultBase<Document>(error) {
+	template<typename T> __forceinline JsonifierResult<T> Document::get() && noexcept {
+		static_assert(!sizeof(T), "The get method with given type is not implemented by the Jsonifier library.");
 	}
 
-	inline JsonifierResult<size_t> JsonifierResult<Document>::countElements() & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.countElements();
-	}
-
-	inline JsonifierResult<size_t> JsonifierResult<Document>::countFields() & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.countFields();
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::at(size_t index) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.at(index);
-	}
-
-	inline ErrorCode JsonifierResult<Document>::rewind() noexcept {
-		if (error()) {
-			return error();
-		}
-		first.rewind();
-		return ErrorCode::Success;
-	}
-
-	inline JsonifierResult<ArrayIterator> JsonifierResult<Document>::begin() & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.begin();
-	}
-
-	inline JsonifierResult<ArrayIterator> JsonifierResult<Document>::end() & noexcept {
-		return {};
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::findFieldUnordered(std::string_view key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.findFieldUnordered(key);
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::findFieldUnordered(const char* key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.findFieldUnordered(key);
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::operator[](std::string_view key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first[key];
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::operator[](const char* key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first[key];
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::findField(std::string_view key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.findField(key);
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::findField(const char* key) & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.findField(key);
-	}
-
-	inline JsonifierResult<Array> JsonifierResult<Document>::getArray() & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getArray();
-	}
-
-	template<> inline JsonifierResult<Array> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Array> Document::get() & noexcept {
 		return getArray();
 	}
 
-	template<> inline JsonifierResult<Object> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Object> Document::get() & noexcept {
 		return getObject();
 	}
 
-	template<> inline JsonifierResult<RawJsonString> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<RawJsonString> Document::get() & noexcept {
 		return getRawJsonString();
 	}
 
-	template<> inline JsonifierResult<std::string_view> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<std::string_view> Document::get() & noexcept {
 		return getString();
 	}
 
-	template<> inline JsonifierResult<double> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<double> Document::get() & noexcept {
 		return getDouble();
 	}
 
-	template<> inline JsonifierResult<uint64_t> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<uint64_t> Document::get() & noexcept {
 		return getUint64();
 	}
 
-	template<> inline JsonifierResult<int64_t> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<int64_t> Document::get() & noexcept {
 		return getInt64();
 	}
 
-	template<> inline JsonifierResult<bool> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<bool> Document::get() & noexcept {
 		return getBool();
 	}
 
-	template<> inline JsonifierResult<Value> Document::get() & noexcept {
+	template<> __forceinline JsonifierResult<Value> Document::get() & noexcept {
 		return getValue();
 	}
 
-	template<> inline JsonifierResult<RawJsonString> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<RawJsonString> Document::get() && noexcept {
 		return getRawJsonString();
 	}
 
-	template<> inline JsonifierResult<std::string_view> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<std::string_view> Document::get() && noexcept {
 		return getString();
 	}
 
-	template<> inline JsonifierResult<double> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<double> Document::get() && noexcept {
 		return std::forward<Document>(*this).getDouble();
 	}
 
-	template<> inline JsonifierResult<uint64_t> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<uint64_t> Document::get() && noexcept {
 		return std::forward<Document>(*this).getUint64();
 	}
 
-	template<> inline JsonifierResult<int64_t> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<int64_t> Document::get() && noexcept {
 		return std::forward<Document>(*this).getInt64();
 	}
 
-	template<> inline JsonifierResult<bool> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<bool> Document::get() && noexcept {
 		return std::forward<Document>(*this).getBool();
 	}
 
-	template<> inline JsonifierResult<Value> Document::get() && noexcept {
+	template<> __forceinline JsonifierResult<Value> Document::get() && noexcept {
 		return getValue();
 	}
 
-	template<typename T> inline ErrorCode Document::get(T& out) & noexcept {
+	template<typename T> ErrorCode Document::get(T& out) & noexcept {
 		return get<T>().get(out);
 	}
 
-	template<typename T> inline ErrorCode Document::get(T& out) && noexcept {
+	template<typename T> ErrorCode Document::get(T& out) && noexcept {
 		return std::forward<Document>(*this).get<T>().get(out);
 	}
 
-	inline JsonifierResult<Object> JsonifierResult<Document>::getObject() & noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getObject();
-	}
-
-	inline JsonifierResult<uint64_t> JsonifierResult<Document>::getUint64() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getUint64();
-	}
-
-	inline JsonifierResult<int64_t> JsonifierResult<Document>::getInt64() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getInt64();
-	}
-
-	inline JsonifierResult<double> JsonifierResult<Document>::getDouble() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getDouble();
-	}
-
-	inline JsonifierResult<std::string_view> JsonifierResult<Document>::getString() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getString();
-	}
-
-	inline JsonifierResult<RawJsonString> JsonifierResult<Document>::getRawJsonString() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getRawJsonString();
-	}
-
-	inline JsonifierResult<bool> JsonifierResult<Document>::getBool() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getBool();
-	}
-
-	inline JsonifierResult<Value> JsonifierResult<Document>::getValue() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.getValue();
-	}
-
-	inline JsonifierResult<bool> JsonifierResult<Document>::isNull() noexcept {
-		if (error()) {
-			return error();
-		}
-		return first.isNull();
-	}
-
-	template<typename T> inline JsonifierResult<T> JsonifierResult<Document>::get() & noexcept {
+	template<typename T> JsonifierResult<T> JsonifierResult<Document>::get() & noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.get<T>();
 	}
 
-	template<typename T> inline JsonifierResult<T> JsonifierResult<Document>::get() && noexcept {
+	template<typename T> JsonifierResult<T> JsonifierResult<Document>::get() && noexcept {
 		if (error()) {
 			return error();
 		}
 		return std::forward<Document>(first).get<T>();
 	}
 
-	template<typename T> ErrorCode inline JsonifierResult<Document>::get(T& out) & noexcept {
+	template<typename T> ErrorCode JsonifierResult<Document>::get(T& out) & noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.get<T>(out);
 	}
 
-	template<typename T> ErrorCode inline JsonifierResult<Document>::get(T& out) && noexcept {
+	template<typename T> ErrorCode JsonifierResult<Document>::get(T& out) && noexcept {
 		if (error()) {
 			return error();
 		}
 		return std::forward<Document>(first).get<T>(out);
 	}
 
-	template<> inline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() & noexcept = delete;
-	template<> inline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() && noexcept {
+	template<> __forceinline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() & noexcept = delete;
+
+	template<> __forceinline JsonifierResult<Document> JsonifierResult<Document>::get<Document>() && noexcept {
 		if (error()) {
 			return error();
 		}
 		return std::forward<Document>(first);
 	}
 
-	template<> inline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) & noexcept = delete;
-	template<> inline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) && noexcept {
+	template<> __forceinline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) & noexcept = delete;
+
+	template<> __forceinline ErrorCode JsonifierResult<Document>::get<Document>(Document& out) && noexcept {
 		if (error()) {
 			return error();
 		}
 		out = std::forward<Document>(first);
-		return ErrorCode::Success;
+		return Success;
 	}
 
-	inline JsonifierResult<JsonType> JsonifierResult<Document>::type() noexcept {
+	__forceinline Document::Document(JsonIterator&& iteratorNew) noexcept : JsonIterator{ std::forward<JsonIterator>(iteratorNew) } {
+	}
+
+	__forceinline Document Document::start(JsonIterator&& iterator) noexcept {
+		return Document(std::forward<JsonIterator>(iterator));
+	}
+
+	__forceinline void Document::rewind() noexcept {
+		JsonIterator::rewind();
+	}
+
+	__forceinline std::string Document::toDebugString() noexcept {
+		return JsonIterator::toString();
+	}
+
+	__forceinline JsonifierResult<const char*> Document::currentLocation() noexcept {
+		return JsonIterator::currentLocation();
+	}
+
+	__forceinline int32_t Document::currentDepth() const noexcept {
+		return JsonIterator::depth();
+	}
+
+	__forceinline bool Document::isAlive() noexcept {
+		return JsonIterator::isAlive();
+	}
+
+	__forceinline ValueIterator Document::resumeValueIterator() noexcept {
+		return ValueIterator(this, 1, JsonIterator::rootPosition());
+	}
+
+	__forceinline ValueIterator Document::getRootValueIterator() noexcept {
+		return resumeValueIterator();
+	}
+
+	__forceinline JsonifierResult<Object> Document::startOrResumeObject() noexcept {
+		if (JsonIterator::atRoot()) {
+			return getObject();
+		} else {
+			return Object::resume(resumeValueIterator());
+		}
+	}
+
+	__forceinline JsonifierResult<Value> Document::getValue() noexcept {
+		JsonIterator::assertAtDocumentDepth();
+		switch (*JsonIterator::peek()) {
+			case '[':
+			case '{':
+				return Value(getRootValueIterator());
+			default:
+				return Scalar_Document_As_Value;
+		}
+	}
+
+	__forceinline JsonifierResult<Array> Document::getArray() & noexcept {
+		auto Value = getRootValueIterator();
+		return Array::startRoot(Value);
+	}
+
+	__forceinline JsonifierResult<Object> Document::getObject() & noexcept {
+		auto Value = getRootValueIterator();
+		return Object::startRoot(Value);
+	}
+
+	__forceinline JsonifierResult<uint64_t> Document::getUint64() noexcept {
+		return getRootValueIterator().getRootUint64();
+	}
+
+	__forceinline JsonifierResult<int64_t> Document::getInt64() noexcept {
+		return getRootValueIterator().getRootInt64();
+	}
+
+	__forceinline JsonifierResult<double> Document::getDouble() noexcept {
+		return getRootValueIterator().getRootDouble();
+	}
+
+	__forceinline JsonifierResult<std::string_view> Document::getString() noexcept {
+		return getRootValueIterator().getRootString();
+	}
+
+	__forceinline JsonifierResult<RawJsonString> Document::getRawJsonString() noexcept {
+		return getRootValueIterator().getRootRawJsonString();
+	}
+
+	__forceinline JsonifierResult<bool> Document::getBool() noexcept {
+		return getRootValueIterator().getRootBool();
+	}
+
+	__forceinline JsonifierResult<bool> Document::isNull() noexcept {
+		return getRootValueIterator().isRootNull();
+	}
+
+	__forceinline Document::operator Array() & noexcept(false) {
+		return getArray();
+	}
+
+	__forceinline Document::operator Object() & noexcept(false) {
+		return getObject();
+	}
+
+	__forceinline Document::operator uint64_t() noexcept(false) {
+		return getUint64();
+	}
+
+	__forceinline Document::operator int64_t() noexcept(false) {
+		return getInt64();
+	}
+
+	__forceinline Document::operator double() noexcept(false) {
+		return getDouble();
+	}
+
+	__forceinline Document::operator std::string_view() noexcept(false) {
+		return getString();
+	}
+
+	__forceinline Document::operator RawJsonString() noexcept(false) {
+		return getRawJsonString();
+	}
+
+	__forceinline Document::operator bool() noexcept(false) {
+		return getBool();
+	}
+
+	__forceinline Document::operator Value() noexcept(false) {
+		return getValue();
+	}
+
+	__forceinline JsonifierResult<size_t> Document::countElements() & noexcept {
+		auto a = getArray();
+		JsonifierResult<size_t> answer = a.countElements();
+		if (answer.error() == Success) {
+			rewind();
+		}
+		return answer;
+	}
+
+	__forceinline JsonifierResult<size_t> Document::countFields() & noexcept {
+		auto a = getObject();
+		JsonifierResult<size_t> answer = a.countFields();
+		if (answer.error() == Success) {
+			rewind();
+		}
+		return answer;
+	}
+
+	__forceinline JsonifierResult<Value> Document::at(size_t index) & noexcept {
+		auto a = getArray();
+		return a.at(index);
+	}
+
+	__forceinline JsonifierResult<ArrayIterator> Document::begin() & noexcept {
+		return getArray().begin();
+	}
+
+	__forceinline JsonifierResult<ArrayIterator> Document::end() & noexcept {
+		return {};
+	}
+
+	__forceinline JsonifierResult<Value> Document::findField(std::string_view key) & noexcept {
+		return startOrResumeObject().findField(key);
+	}
+
+	__forceinline JsonifierResult<Value> Document::findField(const char* key) & noexcept {
+		return startOrResumeObject().findField(key);
+	}
+
+	__forceinline JsonifierResult<Value> Document::findFieldUnordered(std::string_view key) & noexcept {
+		return startOrResumeObject().findFieldUnordered(key);
+	}
+
+	__forceinline JsonifierResult<Value> Document::findFieldUnordered(const char* key) & noexcept {
+		return startOrResumeObject().findFieldUnordered(key);
+	}
+
+	__forceinline JsonifierResult<Value> Document::operator[](std::string_view key) & noexcept {
+		return startOrResumeObject()[key];
+	}
+
+	__forceinline JsonifierResult<Value> Document::operator[](const char* key) & noexcept {
+		return startOrResumeObject()[key];
+	}
+
+	__forceinline ErrorCode Document::consume() noexcept {
+		auto error = JsonIterator::skipChild(0);
+		if (error) {
+			JsonIterator::abandon();
+		}
+		return error;
+	}
+
+	__forceinline JsonifierResult<std::string_view> Document::rawJson() noexcept {
+		auto iteratorNew = getRootValueIterator();
+		const uint8_t* startingPoint{ iteratorNew.peekStart() };
+		auto error = consume();
+		if (error) {
+			return error;
+		}
+		const uint8_t* finalPoint{ JsonIterator::unsafePointer() };
+		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
+	}
+
+	__forceinline JsonifierResult<JsonType> Document::type() noexcept {
+		return getRootValueIterator().type();
+	}
+
+	__forceinline JsonifierResult<bool> Document::isScalar() noexcept {
+		JsonType thisType;
+		auto error = type().get(thisType);
+		if (error) {
+			return error;
+		}
+		return !((thisType == JsonType::Array) || (thisType == JsonType::Object));
+	}
+
+	__forceinline JsonifierResult<std::string_view> Document::rawJsonToken() noexcept {
+		auto iteratorNew = getRootValueIterator();
+		return std::string_view(reinterpret_cast<const char*>(iteratorNew.peekStart()), iteratorNew.peekStartLength());
+	}
+
+	JsonifierResult<Value> Document::atPointer(std::string_view jsonPointer) noexcept {
+		if (jsonPointer.empty()) {
+			return this->getValue();
+		}
+		JsonType t;
+		JsonifierTry(type().get(t));
+		switch (t) {
+			case JsonType::Array:
+				return (*this).getArray().atPointer(jsonPointer);
+			case JsonType::Object:
+				return (*this).getObject().atPointer(jsonPointer);
+			default:
+				return Invalid_Json_Pointer;
+		}
+	}
+
+	__forceinline JsonifierResult<Document>::JsonifierResult(Document&& Value) noexcept
+		: JsonifierResultBase<Document>(std::forward<Document>(Value)){}
+
+	__forceinline JsonifierResult<Document>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Document>(error){}
+
+	__forceinline JsonifierResult<size_t> JsonifierResult<Document>::countElements() & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.countElements();
+	}
+
+	__forceinline JsonifierResult<size_t> JsonifierResult<Document>::countFields() & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.countFields();
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::at(size_t index) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.at(index);
+	}
+
+	__forceinline ErrorCode JsonifierResult<Document>::error() noexcept {
+		return JsonifierResultBase<Document>::error();
+	}
+
+	__forceinline ErrorCode JsonifierResult<Document>::rewind() noexcept {
+		if (error()) {
+			return error();
+		}
+		first.rewind();
+		return Success;
+	}
+
+	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Document>::begin() & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.begin();
+	}
+
+	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Document>::end() & noexcept {
+		return {};
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::findFieldUnordered(std::string_view key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.findFieldUnordered(key);
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::findFieldUnordered(const char* key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.findFieldUnordered(key);
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::operator[](std::string_view key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first[key];
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::operator[](const char* key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first[key];
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::findField(std::string_view key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.findField(key);
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::findField(const char* key) & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.findField(key);
+	}
+
+	__forceinline JsonifierResult<Array> JsonifierResult<Document>::getArray() & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getArray();
+	}
+
+	__forceinline JsonifierResult<Object> JsonifierResult<Document>::getObject() & noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getObject();
+	}
+
+	__forceinline JsonifierResult<uint64_t> JsonifierResult<Document>::getUint64() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getUint64();
+	}
+
+	__forceinline JsonifierResult<int64_t> JsonifierResult<Document>::getInt64() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getInt64();
+	}
+
+	__forceinline JsonifierResult<double> JsonifierResult<Document>::getDouble() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getDouble();
+	}
+
+	__forceinline JsonifierResult<std::string_view> JsonifierResult<Document>::getString() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getString();
+	}
+
+	__forceinline JsonifierResult<RawJsonString> JsonifierResult<Document>::getRawJsonString() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getRawJsonString();
+	}
+
+	__forceinline JsonifierResult<bool> JsonifierResult<Document>::getBool() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getBool();
+	}
+
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::getValue() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.getValue();
+	}
+
+	__forceinline JsonifierResult<bool> JsonifierResult<Document>::isNull() noexcept {
+		if (error()) {
+			return error();
+		}
+		return first.isNull();
+	}
+
+	__forceinline JsonifierResult<JsonType> JsonifierResult<Document>::type() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.type();
 	}
 
-	inline JsonifierResult<bool> JsonifierResult<Document>::isScalar() noexcept {
+	__forceinline JsonifierResult<bool> JsonifierResult<Document>::isScalar() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.isScalar();
 	}
 
-	inline JsonifierResult<Document>::operator Array() & noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator Array() & noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator Object() & noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator Object() & noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator uint64_t() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator uint64_t() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator int64_t() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator int64_t() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator double() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator double() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator std::string_view() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator std::string_view() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator RawJsonString() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator RawJsonString() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator bool() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator bool() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<Document>::operator Value() noexcept(false) {
+	__forceinline JsonifierResult<Document>::operator Value() noexcept(false) {
 		if (error()) {
 			throw error();
 		}
 		return first;
 	}
 
-	inline JsonifierResult<const char*> JsonifierResult<Document>::currentLocation() noexcept {
+	__forceinline JsonifierResult<const char*> JsonifierResult<Document>::currentLocation() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.currentLocation();
 	}
 
-	inline int32_t JsonifierResult<Document>::currentDepth() const noexcept {
+	__forceinline int32_t JsonifierResult<Document>::currentDepth() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.currentDepth();
 	}
 
-	inline JsonifierResult<std::string_view> JsonifierResult<Document>::rawJsonToken() noexcept {
+	__forceinline JsonifierResult<std::string_view> JsonifierResult<Document>::rawJsonToken() noexcept {
 		if (error()) {
 			return error();
 		}
 		return first.rawJsonToken();
 	}
 
-	inline JsonifierResult<Value> JsonifierResult<Document>::atPointer(std::string_view jsonPointer) noexcept {
+	__forceinline JsonifierResult<Value> JsonifierResult<Document>::atPointer(std::string_view jsonPointer) noexcept {
 		if (error()) {
 			return error();
 		}
