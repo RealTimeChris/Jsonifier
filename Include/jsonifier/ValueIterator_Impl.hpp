@@ -315,10 +315,10 @@ namespace Jsonifier {
 	}
 
 	JsonifierResult<uint64_t> ValueIterator::getRootUint64() noexcept {
-		auto max_len = peekStartLength();
+		auto maxLength = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
-		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
+		if (!jsonIterator->copyToBuffer(json, maxLength, tmpbuf)) {
 			return NUMBER_ERROR;
 		}
 		auto result = parseUnsigned(tmpbuf);
@@ -332,10 +332,10 @@ namespace Jsonifier {
 	}
 
 	JsonifierResult<int64_t> ValueIterator::getRootInt64() noexcept {
-		auto max_len = peekStartLength();
+		auto maxLength = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[20 + 1];
-		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
+		if (!jsonIterator->copyToBuffer(json, maxLength, tmpbuf)) {
 			return NUMBER_ERROR;
 		}
 
@@ -348,10 +348,10 @@ namespace Jsonifier {
 	}
 
 	JsonifierResult<double> ValueIterator::getRootDouble() noexcept {
-		auto max_len = peekStartLength();
+		auto maxLength = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[1074 + 8 + 1];
-		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
+		if (!jsonIterator->copyToBuffer(json, maxLength, tmpbuf)) {
 			return NUMBER_ERROR;
 		}
 		auto result = parseDouble(tmpbuf);
@@ -365,10 +365,10 @@ namespace Jsonifier {
 	}
 
 	JsonifierResult<bool> ValueIterator::getRootBool() noexcept {
-		auto max_len = peekStartLength();
+		auto maxLength = peekStartLength();
 		auto json = peekRootScalar();
 		uint8_t tmpbuf[5 + 1];
-		if (!jsonIterator->copyToBuffer(json, max_len, tmpbuf)) {
+		if (!jsonIterator->copyToBuffer(json, maxLength, tmpbuf)) {
 			return incorrectTypeError();
 		}
 		auto result = parseBool(tmpbuf);
@@ -385,9 +385,9 @@ namespace Jsonifier {
 		if (!jsonIterator->isSingleToken()) {
 			return false;
 		}
-		auto max_len = peekStartLength();
+		auto maxLength = peekStartLength();
 		auto json = peekRootScalar();
-		bool result = (max_len >= 4 && !str4ncmp(json, "null") && (max_len == 4 || isStructuralOrWhitespace(json[5])));
+		bool result = (maxLength >= 4 && !str4ncmp(json, "null") && (maxLength == 4 || isStructuralOrWhitespace(json[5])));
 		if (result) {
 			advanceRootScalar();
 		}
