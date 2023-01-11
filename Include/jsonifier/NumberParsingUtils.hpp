@@ -676,7 +676,7 @@ namespace Jsonifier {
 		mantissa &= ~(1ULL << 52);
 		mantissa |= realExponent << 52;
 		mantissa |= ((static_cast<uint64_t>(negative)) << 63);
-		std::copy(&mantissa, &mantissa + sizeof(d), &d);
+		std::memcpy(&d, &mantissa, sizeof(d));
 		return d;
 	}
 
@@ -1036,7 +1036,7 @@ namespace Jsonifier {
 		word |= uint64_t(am.power2) << mantissaExplicitBits();
 		word = negative ? word | (uint64_t(1) << signIndex()) : word;
 		double value;
-		std::copy(&word, &word + sizeof(double), &value);
+		std::memcpy(&value, &word, sizeof(double));
 		return value;
 	}
 

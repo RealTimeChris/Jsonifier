@@ -9,6 +9,7 @@
 #include <immintrin.h>
 #include <string_view>
 #include <functional>
+#include <string.h>
 #include <concepts>
 #include <iostream>
 #include <cassert>
@@ -43,6 +44,7 @@
 		#define Jsonifier_Dll __declspec(dllimport)
 	#endif
 #else
+	#define __popcnt64 _popcnt64
 	#define __forceinline __attribute__((always_inline))
 	#define Jsonifier_Dll
 #endif

@@ -47,12 +47,12 @@ namespace Jsonifier {
 	}
 
 	__forceinline bool RawJsonString::unsafeIsEqual(size_t length, std::string_view target) const noexcept {
-		return (length >= target.size()) && (raw()[target.size()] == '"') && !std::memcmp(raw(), target.data(), target.size());
+		return (length >= target.size()) && (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 	}
 
 	__forceinline bool RawJsonString::unsafeIsEqual(std::string_view target) const noexcept {
 		if (target.size() <= 256) {
-			return (raw()[target.size()] == '"') && !std::memcmp(raw(), target.data(), target.size());
+			return (raw()[target.size()] == '"') && !memcmp(raw(), target.data(), target.size());
 		}
 		const char* r{ raw() };
 		size_t pos{ 0 };

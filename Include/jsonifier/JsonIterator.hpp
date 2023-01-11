@@ -58,7 +58,7 @@ namespace Jsonifier {
 			if (maxLength > N - 1) {
 				maxLength = N - 1;
 			}
-			std::copy(json, json + maxLength, tmpbuf);
+			memcpy(tmpbuf, json, maxLength);
 			tmpbuf[maxLength] = ' ';
 			return true;
 		}
