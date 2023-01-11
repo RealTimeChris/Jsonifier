@@ -503,38 +503,23 @@ namespace Jsonifier {
 
 		template<size_t amount> __forceinline SimdBase256 shl() {
 			SimdBase256 returnValueReal{};
-			SimdBase256 returnValue{};
-			returnValue = _mm256_slli_epi64(*this, (amount % 64));
-			returnValueReal |= returnValue;
-			returnValue = _mm256_permute4x64_epi64(*this, 0b10010011);
+			returnValueReal = _mm256_slli_epi64(*this, (amount % 64));
+			auto returnValue = _mm256_permute4x64_epi64(*this, 0b10010011);
 			returnValue = _mm256_srli_epi64(returnValue, 64 - (amount % 64));
 			returnValueReal |= returnValue;
 			return returnValueReal;
 		}
 
-		__forceinline SimdBase256 shiftLastBitToFirst() {
-			//SimdBase256 returnValueReal{};
-			SimdBase256 returnValue{};
-			returnValue = _mm256_insertf128_si256(returnValue, _mm256_extractf128_si256(*this, 1), 0);
-			returnValue = _mm256_srli_si256(returnValue, 15);
-			returnValue = _mm256_srli_epi64(returnValue, 7);
-			//returnValueReal |= returnValue;
-			//returnValue = _mm256_permute4x64_epi64(*this, 0b10010011);
-			//returnValue = _mm256_slli_epi64(returnValue, 64 - (amount % 64));
-			//returnValueReal |= returnValue;
-			return returnValue;
-		}
-
 		__forceinline void setFirstBit(bool onOrOff) {
 			if (onOrOff) {
-				this->insertInt64(this->value.m256i_i64[0] | 1LL << 0, 0);
+				this->insertInt64(this->getInt64(0) | 1LL << 0, 0);
 			} else {
-				this->insertInt64(this->value.m256i_i64[0] & ~(1LL << 0), 0);
+				this->insertInt64(this->getInt64(0) & ~(1LL << 0), 0);
 			}
 		}
 
 		__forceinline bool checkLastBit() {
-			return ((this->value.m256i_u64[3] >> 63) & 1) << 63;
+			return ((this->getUint64(3) >> 63) & 1) << 63;
 		}
 
 		__forceinline SimdBase256 operator~() {
@@ -706,29 +691,29 @@ namespace Jsonifier {
 
 		__forceinline void addTapeValues() {
 			for (size_t x = 0; x < 4; ++x) {
-				auto bits = *(reinterpret_cast<uint64_t*>(&structurals) + x);
-				if (bits == 0) {
+				auto newBits = *(reinterpret_cast<uint64_t*>(&structurals) + x);
+				if (newBits == 0) {
 					return;
 				}
-				int cnt = static_cast<int>(__popcnt64(bits));
+				int cnt = static_cast<int>(__popcnt64(newBits));
 				for (int i=0; i<8; i++) {
-					auto newValue = _tzcnt_u64(bits) + (x * 64) + currentIndexIntoString;
+					auto newValue = _tzcnt_u64(newBits) + (x * 64) + currentIndexIntoString;
 					this->tapePtrs[i + this->currentTapeIndex] = newValue;
-					bits = _blsr_u64(bits);
+					newBits = _blsr_u64(newBits);
 				}
 				if (cnt > 8){
 					for (int i=8; i<16; i++) {
-						auto newValue = _tzcnt_u64(bits) + (x * 64) + currentIndexIntoString;
+						auto newValue = _tzcnt_u64(newBits) + (x * 64) + currentIndexIntoString;
 						this->tapePtrs[i + this->currentTapeIndex] = newValue;
-						bits = _blsr_u64(bits);
+						newBits = _blsr_u64(newBits);
 					}
 
 					if (cnt > 16) {
 						int i = 16;
 						do {
-							auto newValue = _tzcnt_u64(bits) + (x * 64) + currentIndexIntoString;
+							auto newValue = _tzcnt_u64(newBits) + (x * 64) + currentIndexIntoString;
 							this->tapePtrs[i + this->currentTapeIndex] = newValue;
-							bits = _blsr_u64(bits);
+							newBits = _blsr_u64(newBits);
 							i++;		
 						} while (i < cnt);
 					}
@@ -753,7 +738,7 @@ namespace Jsonifier {
 			for (size_t x = 0; x < 8; ++x) {
 				whiteSpaceReal[x] = this->values[x + (8 * this->currentBlock)].shuffle(whitespaceTable) == this->values[x + (8 * this->currentBlock)];
 			}
-			return std::move(SimdBase256{}.operator=(whiteSpaceReal));
+			return whiteSpaceReal;
 		}
 
 		__forceinline SimdBase256 collectStructuralCharacters() {
@@ -765,7 +750,7 @@ namespace Jsonifier {
 				auto valuesNew00 = this->values[x + (8 * this->currentBlock)] | std::move(charVals);
 				structural[x] = this->values[x + (8 * this->currentBlock)].shuffle(opTable) == valuesNew00;
 			}
-			return std::move(SimdBase256{}.operator=(structural));
+			return structural;
 		}
 
 		__forceinline SimdBase256 collectBackslashes() {
@@ -774,7 +759,7 @@ namespace Jsonifier {
 			for (size_t x = 0; x < 8; ++x) {
 				backslashesReal[x] = this->values[x + (8 * this->currentBlock)] == backslashes;
 			}
-			return std::move(SimdBase256{}.operator=(backslashesReal));
+			return backslashesReal;
 		}
 
 		__forceinline void collectEscapedCharacters() {
