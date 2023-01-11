@@ -51,6 +51,21 @@ namespace Jsonifier {
 		uint64_t high;
 	};
 
+#ifndef _WIN32
+	__forceinline static uint64_t __emulu(uint32_t x, uint32_t y) {
+		return x * ( uint64_t )y;
+	}
+	__forceinline static uint64_t _umul128(uint64_t ab, uint64_t cd, uint64_t* hi) {
+		uint64_t ad = __emulu(( uint32_t )(ab >> 32), ( uint32_t )cd);
+		uint64_t bd = __emulu(( uint32_t )ab, ( uint32_t )cd);
+		uint64_t adbc = ad + __emulu(( uint32_t )ab, ( uint32_t )(cd >> 32));
+		uint64_t adbcCarry = !!(adbc < ad);
+		uint64_t lo = bd + (adbc << 32);
+		*hi = __emulu(( uint32_t )(ab >> 32), ( uint32_t )(cd >> 32)) + (adbc >> 32) + (adbcCarry << 32) + !!(lo < bd);
+		return lo;
+	}
+#endif
+
 	__forceinline Value128 fullMultiplication(uint64_t value1, uint64_t value2) {
 		Value128 answer{};
 		answer.low = _umul128(value1, value2, &answer.high);
