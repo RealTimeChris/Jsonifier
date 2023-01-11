@@ -43,6 +43,6 @@ namespace Jsonifier {
 
 		ErrorCode allocate() noexcept;
 
-		template<size_t BlockCountPerIteration> ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) noexcept;
+		ErrorCode generateJsonIndices(const uint8_t* stringNew, size_t stringLength) noexcept;
 	};
 };

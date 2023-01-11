@@ -8,7 +8,7 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll Field : public std::pair<RawJsonString, Value> {
 	  public:
-		__forceinline Field() noexcept;
+		__forceinline Field() noexcept = default;
 		__forceinline JsonifierResult<std::string_view> unescapedKey() noexcept;
 		__forceinline RawJsonString key() const noexcept;
 		__forceinline Value& value() & noexcept;

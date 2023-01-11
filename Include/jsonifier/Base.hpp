@@ -125,7 +125,7 @@ namespace Jsonifier {
 			return this->objects[index];
 		}
 
-		__forceinline operator OTy*&() noexcept {
+		__forceinline operator OTy*() noexcept {
 			return this->objects;
 		}
 
@@ -207,15 +207,15 @@ namespace Jsonifier {
 
 		__forceinline JsonifierResultBase(T&& value, ErrorCode error) noexcept : first{ std::forward<T>(value) }, second{ error } {}
 
-		__forceinline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{ std::move(this->first) }, error){}
+		__forceinline JsonifierResultBase(ErrorCode error) noexcept : JsonifierResultBase(T{}, error){};
 
 		__forceinline JsonifierResultBase(T&& value) noexcept : JsonifierResultBase(std::forward<T>(value), Success){}
 
-		__forceinline JsonifierResultBase() noexcept : JsonifierResultBase(T{ std::move(this->first) }, Uninitialized){}
+		__forceinline JsonifierResultBase() noexcept : JsonifierResultBase(T{}, Uninitialized){};
 
 	  protected:
 		T first{};
-		ErrorCode second{};
+		ErrorCode second{ ErrorCode::Uninitialized };
 	};
 
 	template<typename T> struct JsonifierResult : public JsonifierResultBase<T> {

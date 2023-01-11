@@ -7,6 +7,133 @@
 
 namespace Jsonifier {
 
+	static constexpr uint8_t UTF8_ACCEPT = 0;
+	static constexpr uint8_t UTF8_REJECT = 1;
+
+	  static uint8_t decode(uint8_t& state, std::uint32_t& codep, const uint8_t byte) noexcept {
+		static const std::array<uint8_t, 400> utf8d = { {
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+			8, 8, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+			0xA, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x4, 0x3, 0x3,
+			0xB, 0x6, 0x6, 0x6, 0x5, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8,
+			0x0, 0x1, 0x2, 0x3, 0x5, 0x8, 0x7, 0x1, 0x1, 0x1, 0x4, 0x6, 0x1, 0x1, 0x1, 0x1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1,
+			1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1,
+			1, 3, 1, 1, 1, 1, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		} };
+
+		assert(byte < utf8d.size());
+		const uint8_t type = utf8d[byte];
+
+		codep = (state != UTF8_ACCEPT) ? (byte & 0x3fu) | (codep << 6u) : (0xFFu >> type) & (byte);
+
+		const size_t index = 256u + static_cast<size_t>(state) * 16u + static_cast<size_t>(type);
+		assert(index < utf8d.size());
+		state = utf8d[index];
+		return state;
+	}
+
+	 void Serializer::dumpEscaped(const std::string& s) {
+		  uint32_t codepoint{};
+		  uint8_t state = UTF8_ACCEPT;
+		  size_t bytes = 0;
+
+			size_t bytes_after_last_accept = 0;
+			size_t undumped_chars = 0;
+
+		  for (size_t i = 0; i < s.size(); ++i) {
+				const auto byte = static_cast<uint8_t>(s[i]);
+
+				switch (decode(state, codepoint, byte)) {
+					case UTF8_ACCEPT: {
+						switch (codepoint) {
+							case 0x08: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = 'b';
+								break;
+							}
+
+							case 0x09: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = 't';
+								break;
+							}
+
+							case 0x0A: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = 'n';
+								break;
+							}
+
+							case 0x0C: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = 'f';
+								break;
+							}
+
+							case 0x0D: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = 'r';
+								break;
+							}
+
+							case 0x22: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = '\"';
+								break;
+							}
+
+							case 0x5C: {
+								stringBuffer[bytes++] = '\\';
+								stringBuffer[bytes++] = '\\';
+								break;
+							}
+
+							default: {
+								if ((codepoint <= 0x1F) || ((codepoint >= 0x7F))) {
+									if (codepoint <= 0xFFFF) {
+										static_cast<void>((std::snprintf)(stringBuffer + bytes, 7, "\\u%04x", static_cast<std::uint16_t>(codepoint)));
+										bytes += 6;
+									} else {
+										static_cast<void>((std::snprintf)(stringBuffer + bytes, 13, "\\u%04x\\u%04x",
+											static_cast<std::uint16_t>(0xD7C0u + (codepoint >> 10u)),
+											static_cast<std::uint16_t>(0xDC00u + (codepoint & 0x3FFu))));
+										bytes += 12;
+									}
+								} else {
+									stringBuffer[bytes++] = s[i];
+								}
+								break;
+							}
+						}
+
+						
+					}
+						if (512 - bytes < 13) {
+							writeString(stringBuffer, bytes);
+							bytes = 0;
+						}
+
+						bytes_after_last_accept = bytes;
+						undumped_chars = 0;
+						break;
+
+						
+				}
+		  }
+		  if (state == UTF8_ACCEPT) {
+			  if (bytes > 0) {
+				  this->writeString(stringBuffer, bytes);
+			  }
+		  }
+	  }
+
 	JsonifierException::JsonifierException(const std::string& error, std::source_location location) noexcept : std::runtime_error(error) {
 		std::stringstream stream{};
 		stream << "Error Report: \n"
@@ -487,7 +614,7 @@ namespace Jsonifier {
 
 	void Serializer::writeJsonString(const StringType& stringNew) {
 		this->writeCharacter('"');
-		this->writeString(stringNew.data(), stringNew.size());
+		this->dumpEscaped(stringNew);
 		this->writeCharacter('"');
 	}
 

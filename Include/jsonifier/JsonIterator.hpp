@@ -25,7 +25,7 @@ namespace Jsonifier {
 
 	  public:
 		__forceinline JsonIterator() noexcept = default;
-		__forceinline JsonIterator(JsonIterator&& other) noexcept;
+		__forceinline JsonIterator(JsonIterator&& other, std::source_location = std::source_location::current()) noexcept;
 		__forceinline JsonIterator& operator=(JsonIterator&& other) noexcept;
 		__forceinline explicit JsonIterator(const JsonIterator& other) noexcept = default;
 		__forceinline JsonIterator& operator=(const JsonIterator& other) noexcept = default;

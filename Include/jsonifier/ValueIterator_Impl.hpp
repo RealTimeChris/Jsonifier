@@ -155,7 +155,7 @@ namespace Jsonifier {
 			assert(!error);
 		}
 		return false;
-	}
+	}	
 
 	JsonifierResult<RawJsonString> ValueIterator::fieldKey() noexcept {
 		assertAtNext();

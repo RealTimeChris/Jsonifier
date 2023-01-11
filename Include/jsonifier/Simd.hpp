@@ -19,192 +19,35 @@ namespace Jsonifier {
 			*this = std::move(other);
 		};
 
-		__forceinline SimdBase128& operator=(const char* other) noexcept {
-			this->value = _mm_loadu_epi8(other);
+		__forceinline SimdBase128& operator=(const char other) noexcept {
+			this->value = _mm_set1_epi8(other);
 			return *this;
 		};
 
-		__forceinline SimdBase128 operator==(SimdBase128& other) {
-			return _mm_cmpeq_epi8(this->value, other);
-		}
-
-		__forceinline SimdBase128& operator=(SimdBase128* values) {
-			*this = _mm_insert_epi16(__m128i{}, _mm_movemask_epi8(values[0]), 0);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[1]), 1);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[2]), 2);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[3]), 3);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[4]), 4);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[5]), 5);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[6]), 6);
-			*this = _mm_insert_epi16(*this, _mm_movemask_epi8(values[7]), 7);
-			return *this;
-		}
-
-		__forceinline SimdBase128(SimdBase128* values) {
-			*this = value;
-		}
-
-		__forceinline SimdBase128(const char* other) noexcept {
-			*this = std::move(other);
+		__forceinline SimdBase128(const char other) noexcept {
+			*this = other;
 		};
 
-		__forceinline SimdBase128(int64_t valueOne, int64_t valueTwo) {
-			*this = _mm_set_epi64x(valueOne, valueTwo);
-		}
-
-		__forceinline SimdBase128(uint64_t valueOne, uint64_t valueTwo) {
-			*this = _mm_set_epi64x(static_cast<int64_t>(valueOne), static_cast<int64_t>(valueTwo));
-		}
-
-		__forceinline void insertUint64(uint64_t value, size_t index) {
-			switch (index) {
-				case 0: {
-					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 0);
-					break;
-				}
-				case 1: {
-					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 1);
-					break;
-				}
-				default: {
-					this->value = _mm_insert_epi64(this->value, static_cast<int64_t>(value), 0);
-					break;
-				}
-			}
-		}
-
-		__forceinline void insertInt64(int64_t value, size_t index) {
-			switch (index) {
-				case 0: {
-					this->value = _mm_insert_epi64(this->value, value, 0);
-					break;
-				}
-				case 1: {
-					this->value = _mm_insert_epi64(this->value, value, 1);
-					break;
-				}
-				default: {
-					this->value = _mm_insert_epi64(this->value, value, 0);
-					break;
-				}
-			}
-		}
-
-		__forceinline SimdBase128& operator=(__m128i& other) {
+		__forceinline SimdBase128& operator=(__m128i&& other) {
 			this->value = other;
 			return *this;
 		}
 
-		__forceinline SimdBase128(__m128i& other) {
-			*this = other;
-		}
-
-		__forceinline SimdBase128& operator=(__m128i&& other) {
-			this->value = std::move(other);
-			return *this;
-		}
-
 		__forceinline SimdBase128(__m128i&& other) {
-			*this = std::move(other);
+			this->value = other;
 		}
-
-		__forceinline SimdBase128& operator=(char other) {
-			this->value = _mm_set1_epi8(other);
+		
+		__forceinline SimdBase128& operator=(const __m128i& other) {
+			this->value = other;
 			return *this;
 		}
 
-		__forceinline SimdBase128(char other) {
-			*this = other;
-		}
+		__forceinline SimdBase128(const __m128i& other) {
+			this->value = other;
+		}	
 
 		__forceinline operator __m128i() {
 			return this->value;
-		}
-
-		__forceinline SimdBase128 operator|(SimdBase128 other) {
-			return _mm_or_si128(this->value, other);
-		}
-
-		__forceinline SimdBase128 operator&(SimdBase128 other) {
-			return _mm_and_si128(this->value, other);
-		}
-
-		__forceinline SimdBase128 operator^(SimdBase128 other) {
-			return _mm_xor_si128(this->value, other);
-		}
-
-		__forceinline SimdBase128 operator+(SimdBase128 other) {
-			return _mm_add_epi8(this->value, other);
-		}
-
-		__forceinline SimdBase128& operator|=(SimdBase128 other) {
-			*this = *this | std::move(other);
-			return *this;
-		}
-
-		__forceinline SimdBase128& operator&=(SimdBase128 other) {
-			*this = *this | std::move(other);
-			return *this;
-		}
-
-		__forceinline SimdBase128& operator^=(SimdBase128 other) {
-			*this = *this | std::move(other);
-			return *this;
-		}
-
-		__forceinline SimdBase128 printBits(const std::string& valuesTitle) {
-			using std::cout;
-			cout << valuesTitle;
-			for (size_t x = 0; x < 16; ++x) {
-				for (size_t y = 0; y < 8; ++y) {
-					cout << std::bitset<1>{ static_cast<size_t>(*(reinterpret_cast<int8_t*>(&this->value) + x)) >> y };
-				}
-			}
-			cout << std::endl;
-			return std::move(*this);
-		}
-
-		__forceinline int32_t toBitMask() {
-			return _mm_movemask_epi8(*this);
-		}
-
-		template<size_t amount> __forceinline SimdBase128 shl() {
-			SimdBase128 returnValueReal{};
-			SimdBase128 returnValue{};
-			returnValue = _mm_slli_epi64(*this, (amount % 64));
-			returnValueReal |= std::move(returnValue);
-			returnValue = _mm_shuffle_epi32(*this, 0b001100101);
-			returnValue = _mm_srli_epi64(returnValue, 64 - (amount % 64));
-			returnValueReal |= std::move(returnValue);
-			return returnValueReal;
-		}
-
-		__forceinline SimdBase128 operator~() {
-			SimdBase128 newValues{ _mm_xor_si128(*this, _mm_set1_epi64x(-1ULL)) };
-			return newValues;
-		}
-
-		__forceinline void printBits(uint64_t values, const std::string& valuesTitle) {
-			using std::cout;
-			cout << valuesTitle;
-			cout << std::bitset<64>{ values };
-			cout << std::endl;
-		}
-
-		__forceinline SimdBase128 bitAndNot(SimdBase128&& other) {
-			return _mm_andnot_si128(other, this->value);
-		}
-
-		__forceinline SimdBase128 shuffle(SimdBase128&& other) {
-			return _mm_shuffle_epi8(other, this->value);
-		}
-
-		__forceinline SimdBase128 bitAndNot(SimdBase128& other) {
-			return _mm_andnot_si128(other, this->value);
-		}
-
-		__forceinline SimdBase128 shuffle(SimdBase128& other) {
-			return _mm_shuffle_epi8(other, this->value);
 		}
 
 	  protected:
@@ -634,7 +477,6 @@ namespace Jsonifier {
 		size_t index{};
 	};
 
-	template<size_t BlockStringCount>
 	class Jsonifier_Dll SimdStringSection {
 	  public:
 
@@ -690,7 +532,7 @@ namespace Jsonifier {
 			SimdBase256 whitespaceTable{ valuesNew };
 			SimdBase256 whiteSpaceReal[8]{};
 			for (size_t x = 0; x < 8; ++x) {
-				whiteSpaceReal[x] = this->values[x + (8 * this->currentBlock)].shuffle(whitespaceTable) == this->values[x + (8 * this->currentBlock)];
+				whiteSpaceReal[x] = this->values[x].shuffle(whitespaceTable) == this->values[x];
 			}
 			return whiteSpaceReal;
 		}
@@ -701,8 +543,8 @@ namespace Jsonifier {
 			SimdBase256 structural[8];
 			for (size_t x = 0; x < 8; ++x) {
 				SimdBase256 charVals{ char{ 0x20 } };
-				auto valuesNew00 = this->values[x + (8 * this->currentBlock)] | std::move(charVals);
-				structural[x] = this->values[x + (8 * this->currentBlock)].shuffle(opTable) == valuesNew00;
+				auto valuesNew00 = this->values[x] | std::move(charVals);
+				structural[x] = this->values[x].shuffle(opTable) == valuesNew00;
 			}
 			return structural;
 		}
@@ -711,7 +553,7 @@ namespace Jsonifier {
 			SimdBase256 backslashes = _mm256_set1_epi8('\\');
 			SimdBase256 backslashesReal[8];
 			for (size_t x = 0; x < 8; ++x) {
-				backslashesReal[x] = this->values[x + (8 * this->currentBlock)] == backslashes;
+				backslashesReal[x] = this->values[x] == backslashes;
 			}
 			return backslashesReal;
 		}
@@ -733,7 +575,7 @@ namespace Jsonifier {
 			SimdBase256 quotes = _mm256_set1_epi8('"');
 			SimdBase256 quotesReal[8];
 			for (size_t x = 0; x < 8; ++x) {
-				quotesReal[x] = (this->values[x + (8 * this->currentBlock)] == quotes);
+				quotesReal[x] = (this->values[x] == quotes);
 			}
 			SimdBase256 quotesFinal = quotesReal;
 			this->quote = quotesFinal.bitAndNot(this->escaped);
@@ -765,27 +607,21 @@ namespace Jsonifier {
 			//structuralStart.printBits("FINAL BITS: ");
 		}
 
-		template<size_t StringBlockCount> __forceinline void submitDataForProcessing(const uint8_t* valueNew) {
-			for (size_t x = 0; x < StringBlockCount * 8; ++x) {
+		__forceinline void submitDataForProcessing(const uint8_t* valueNew) {
+			for (size_t x = 0; x <  8; ++x) {
 				this->packStringIntoValue(&this->values[x], reinterpret_cast<const char*>(valueNew + (32 * x)));
 			}
 		}
 
-		template<size_t StringBlockCount>
 		__forceinline size_t generateStructurals() {
-			for (size_t x = 0; x < StringBlockCount; ++x) {
-				this->currentBlock = x;
-				this->collectFinalStructurals();
-				this->addTapeValues();
-				this->currentIndexIntoString += 256;
-			}
-			this->currentBlock = 0;
+			this->collectFinalStructurals();
+			this->addTapeValues();
+			this->currentIndexIntoString += 256;
 			//this->structurals.printBits("FINAL BITS: ");
 			return this->currentTapeIndex;
 		}
 
 	  protected:
-		SimdBase256 values[BlockStringCount * 8];
 		size_t currentIndexIntoString{};
 		SimdBase256 prevInScalar{};
 		SimdBase256 structurals{};
@@ -796,11 +632,11 @@ namespace Jsonifier {
 		SimdBase256 backslash{};
 		uint64_t prevInString{};
 		SimdBase256 inString{};
+		SimdBase256 values[8];
 		SimdBase256 escaped{};
-		int8_t currentBlock{};
 		size_t stringLength{};
 		int64_t passedTime{};
-		uint32_t* tapePtrs;
+		uint32_t* tapePtrs{};
 		SimdBase256 quote{};
 		SimdBase256 op{};
 	};

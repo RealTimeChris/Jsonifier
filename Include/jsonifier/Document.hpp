@@ -9,7 +9,15 @@ namespace Jsonifier {
 	  public:
 		__forceinline Document() noexcept = default;
 		__forceinline Document(const Document& other) noexcept = delete;
-		__forceinline Document(Document&& other) noexcept = default;
+		__forceinline Document(Document&& other, std::source_location location=std::source_location::current()) noexcept{
+			//std::cout << "Error Report: \n"
+			//<< "Caught in File: " << location.file_name() << " (" << std::to_string(location.line()) << ":"
+			//<< std::to_string(location.column()) << ")"
+			//<< "\nThe Error: \n"
+			//<< std::endl
+			//<< std::endl;
+			*this = std::move(other);
+		}
 		__forceinline Document& operator=(const Document& other) noexcept = delete;
 		__forceinline Document& operator=(Document&& other) noexcept = default;
 		__forceinline JsonifierResult<Array> getArray() & noexcept;

@@ -11,6 +11,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline const uint8_t* TokenIterator::returnCurrentAndAdvance() noexcept {
+		//std::cout << "THE CURRENT INDEX: " << *currentPosition << ", IT'S VALUE: " << stringView[*currentPosition] << std::endl;
 		return &stringView[*(currentPosition++)];
 	}
 
@@ -27,7 +28,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline const uint8_t* TokenIterator::peek(int32_t delta) const noexcept {
-		return &stringView[*(currentPosition + delta)];
+		return &stringView[*(this->currentPosition + delta)];
 	}
 
 	__forceinline uint32_t TokenIterator::peekIndex(int32_t delta) const noexcept {

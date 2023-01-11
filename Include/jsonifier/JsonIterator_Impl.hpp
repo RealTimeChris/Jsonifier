@@ -6,19 +6,27 @@
 
 namespace Jsonifier {
 
-	__forceinline JsonIterator::JsonIterator(JsonIterator&& other) noexcept
+	__forceinline JsonIterator::JsonIterator(JsonIterator&& other, std::source_location location) noexcept
 		: iterator(std::forward<TokenIterator>(other.iterator)), parser{ other.parser }, stringBuffer{ other.stringBuffer }, error{ other.error },
 		  currentDepth{ other.currentDepth }, rootStructural{ other.rootStructural } {
-		other.parser = nullptr;
+		//std::cout << "Error Report: \n"
+		//<< "Caught in File: " << location.file_name() << " (" << std::to_string(location.line()) << ":" << std::to_string(location.column())
+		//<< ")"
+		//<< "\nThe Error: \n"
+		//<< std::endl
+		//<< std::endl;
+		*this = std::move(other);
+		//std::cout << "WERE BEING MOVED! 0101" << std::endl;
 	}
 
 	__forceinline JsonIterator& JsonIterator::operator=(JsonIterator&& other) noexcept {
 		rootStructural = other.rootStructural;
 		currentDepth = other.currentDepth;
 		stringBuffer = other.stringBuffer;
+		iterator = other.iterator;
 		parser = other.parser;
 		error = other.error;
-		other.parser = nullptr;
+		//std::cout << "WERE BEING MOVED!" << std::endl;
 		return *this;
 	}
 
@@ -55,7 +63,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline ErrorCode JsonIterator::skipChild(uint32_t parentDepth) noexcept {
-		if (depth() <= parentDepth) {
+		if (this->depth() <= parentDepth) {
 			return Success;
 		}
 		switch (*returnCurrentAndAdvance()) {
@@ -133,7 +141,7 @@ namespace Jsonifier {
 
 	__forceinline uint32_t* JsonIterator::endPosition() const noexcept {
 		size_t structuralIndexCount{ parser->getTapeLength() };
-		return &parser->getStructuralIndices()[structuralIndexCount - 1];
+		return &this->parser->getStructuralIndices()[structuralIndexCount - 1];
 	}
 
 	__forceinline std::string JsonIterator::toString() const noexcept {
@@ -165,7 +173,8 @@ namespace Jsonifier {
 	}
 
 	__forceinline void JsonIterator::abandon() noexcept {
-		parser = nullptr;
+		std::cout << "WERE ABANDONING!" << std::endl;
+		this->parser = nullptr;
 		currentDepth = 0;
 	}
 
@@ -178,7 +187,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline const uint8_t* JsonIterator::peek(int32_t delta) const noexcept {
-		return iterator.peek(delta);
+		return this->iterator.peek(delta);
 	}
 
 	__forceinline uint32_t JsonIterator::peekLength(int32_t delta) const noexcept {

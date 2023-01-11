@@ -216,7 +216,6 @@ namespace Jsonifier {
 	}
 
 	template<> BackslashAndQuote<SimdBase256> __forceinline BackslashAndQuote<SimdBase256>::copyAndFind(const uint8_t* src, uint8_t* dst) {
-		static_assert(256 >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than 256 bytes");
 		SimdBase256 v(reinterpret_cast<const char*>(src));
 		v.store(dst);
 		return {

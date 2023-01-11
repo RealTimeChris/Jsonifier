@@ -111,6 +111,8 @@ namespace Jsonifier {
 		using IntType = int64_t;
 		using BoolType = bool;
 
+		void dumpEscaped(const std::string& s);
+
 		union JsonValue {
 			JsonValue() noexcept = default;
 			JsonValue& operator=(JsonValue&&) noexcept = delete;
@@ -299,6 +301,7 @@ namespace Jsonifier {
 
 	  protected:
 		JsonType type{ JsonType::Null };
+		char stringBuffer[512];
 		JsonValue jsonValue{};
 		std::string string{};
 
