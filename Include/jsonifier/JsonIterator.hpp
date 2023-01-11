@@ -16,11 +16,11 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll JsonIterator : public TokenIterator {
 	  protected:
-		Parser* parser;
-		uint8_t* stringBuffer;
+		Parser* parser{};
+		uint8_t* stringBuffer{};
 		ErrorCode error{ Success };
-		uint32_t currentDepth;
-		uint32_t* rootStructural;
+		uint32_t currentDepth{};
+		uint32_t* rootStructural{};
 
 	  public:
 		__forceinline JsonIterator() noexcept = default;

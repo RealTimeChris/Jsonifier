@@ -6,9 +6,9 @@ namespace Jsonifier {
 
 	class Jsonifier_Dll ValueIterator {
 	  protected:
-		JsonIterator* jsonIterator;
-		uint32_t currentDepth;
-		uint32_t* rootStructural;
+		JsonIterator* jsonIterator{};
+		uint32_t* rootStructural{};
+		uint32_t currentDepth{};
 
 	  public:
 		__forceinline ValueIterator() noexcept = default;
@@ -104,6 +104,7 @@ namespace Jsonifier {
 		__forceinline uint32_t* endPosition() const noexcept;
 		__forceinline ErrorCode reportError(ErrorCode error) noexcept;
 
+		friend class Field;
 		friend class Document;
 		friend class Object;
 		friend class Array;

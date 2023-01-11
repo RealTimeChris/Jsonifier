@@ -135,35 +135,34 @@ namespace Jsonifier {
 		return Success;
 	}
 
-	__forceinline Document::Document(JsonIterator&& iteratorNew) noexcept : JsonIterator{ std::forward<JsonIterator>(iteratorNew) } {
-	}
+	__forceinline Document::Document(JsonIterator&& iteratorNew) noexcept : iterator{ std::forward<JsonIterator>(iteratorNew) } {};
 
 	__forceinline Document Document::start(JsonIterator&& iterator) noexcept {
 		return Document(std::forward<JsonIterator>(iterator));
 	}
 
 	__forceinline void Document::rewind() noexcept {
-		JsonIterator::rewind();
+		iterator.rewind();
 	}
 
 	__forceinline std::string Document::toDebugString() noexcept {
-		return JsonIterator::toString();
+		return iterator.toString();
 	}
 
 	__forceinline JsonifierResult<const char*> Document::currentLocation() noexcept {
-		return JsonIterator::currentLocation();
+		return iterator.currentLocation();
 	}
 
 	__forceinline int32_t Document::currentDepth() const noexcept {
-		return JsonIterator::depth();
+		return iterator.depth();
 	}
 
 	__forceinline bool Document::isAlive() noexcept {
-		return JsonIterator::isAlive();
+		return iterator.isAlive();
 	}
 
 	__forceinline ValueIterator Document::resumeValueIterator() noexcept {
-		return ValueIterator(this, 1, JsonIterator::rootPosition());
+		return ValueIterator(&this->iterator, 1, iterator.rootPosition());
 	}
 
 	__forceinline ValueIterator Document::getRootValueIterator() noexcept {
@@ -171,7 +170,7 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<Object> Document::startOrResumeObject() noexcept {
-		if (JsonIterator::atRoot()) {
+		if (iterator.atRoot()) {
 			return getObject();
 		} else {
 			return Object::resume(resumeValueIterator());
@@ -179,8 +178,8 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<Value> Document::getValue() noexcept {
-		JsonIterator::assertAtDocumentDepth();
-		switch (*JsonIterator::peek()) {
+		iterator.assertAtDocumentDepth();
+		switch (*iterator.peek()) {
 			case '[':
 			case '{':
 				return Value(getRootValueIterator());
@@ -319,9 +318,9 @@ namespace Jsonifier {
 	}
 
 	__forceinline ErrorCode Document::consume() noexcept {
-		auto error = JsonIterator::skipChild(0);
+		auto error = iterator.skipChild(0);
 		if (error) {
-			JsonIterator::abandon();
+			iterator.abandon();
 		}
 		return error;
 	}
@@ -333,7 +332,7 @@ namespace Jsonifier {
 		if (error) {
 			return error;
 		}
-		const uint8_t* finalPoint{ JsonIterator::unsafePointer() };
+		const uint8_t* finalPoint{ iterator.unsafePointer() };
 		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
 	}
 

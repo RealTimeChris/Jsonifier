@@ -11,7 +11,7 @@ namespace Jsonifier {
 
 	JsonifierResult<bool> ValueIterator::startObject() noexcept {
 		JsonifierTry(startContainer('{'));
-		return startedObject();
+		return this->startedObject();
 	}
 
 	JsonifierResult<bool> ValueIterator::startRootObject() noexcept {
@@ -658,11 +658,7 @@ namespace Jsonifier {
 	}
 
 	ErrorCode ValueIterator::reportError(ErrorCode error) noexcept {
-#if _DEBUG 
-		throw JsonifierException{ "Error is: " + std::to_string(error) };
-#else
 		return jsonIterator->reportError(error);
-#endif
 	}
 
 	JsonifierResult<ValueIterator>::JsonifierResult(ValueIterator&& Value) noexcept

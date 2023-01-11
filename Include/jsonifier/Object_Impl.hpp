@@ -13,7 +13,7 @@ namespace Jsonifier {
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(ValueIterator::child());
+		return Value(child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::findFieldUnordered(const std::string_view key) && noexcept {
@@ -22,7 +22,7 @@ namespace Jsonifier {
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(ValueIterator::child());
+		return Value(child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::operator[](const std::string_view key) & noexcept {
@@ -39,7 +39,7 @@ namespace Jsonifier {
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(ValueIterator::child());
+		return Value(child());
 	}
 
 	__forceinline JsonifierResult<Value> Object::findField(const std::string_view key) && noexcept {
@@ -48,7 +48,7 @@ namespace Jsonifier {
 		if (!hasValue) {
 			return No_Such_Field;
 		}
-		return Value(ValueIterator::child());
+		return Value(child());
 	}
 
 	__forceinline JsonifierResult<Object> Object::start(ValueIterator& iterator) noexcept {
@@ -61,7 +61,7 @@ namespace Jsonifier {
 		return Object(iterator);
 	}
 
-	ErrorCode Object::consume() noexcept {
+	__forceinline ErrorCode Object::consume() noexcept {
 		if (ValueIterator::isAtKey()) {
 			RawJsonString actualKey{};
 			auto error = ValueIterator::fieldKey().get(actualKey);
@@ -82,12 +82,12 @@ namespace Jsonifier {
 	}
 
 	__forceinline JsonifierResult<std::string_view> Object::rawJson() noexcept {
-		const uint8_t* startingPoint{ ValueIterator::peekStart() };
+		const uint8_t* startingPoint{ peekStart() };
 		auto error = consume();
 		if (error) {
 			return error;
 		}
-		const uint8_t* finalPoint{ ValueIterator::jsonIterator->peek(0) };
+		const uint8_t* finalPoint{ this->jsonIterator->peek(0) };
 		return std::string_view(reinterpret_cast<const char*>(startingPoint), size_t(finalPoint - startingPoint));
 	}
 
@@ -96,11 +96,11 @@ namespace Jsonifier {
 		return Object(iterator);
 	}
 
-	Object Object::resume(const ValueIterator& iterator) noexcept {
+	__forceinline Object Object::resume(const ValueIterator& iterator) noexcept {
 		return iterator;
 	}
 
-	Object::Object(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
+	__forceinline Object::Object(const ValueIterator& iteratorNew) noexcept : ValueIterator{ iteratorNew } {
 	}
 
 	__forceinline JsonifierResult<ObjectIterator> Object::begin() noexcept {
@@ -173,11 +173,9 @@ namespace Jsonifier {
 		return ValueIterator::resetObject();
 	}
 
-	__forceinline JsonifierResult<Object>::JsonifierResult(Object&& Value) noexcept : JsonifierResultBase<Object>(std::forward<Object>(Value)) {
-	}
+	__forceinline JsonifierResult<Object>::JsonifierResult(Object&& Value) noexcept : JsonifierResultBase<Object>(std::forward<Object>(Value)){}
 
-	__forceinline JsonifierResult<Object>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Object>(error) {
-	}
+	__forceinline JsonifierResult<Object>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Object>(error){}
 
 	__forceinline JsonifierResult<ObjectIterator> JsonifierResult<Object>::begin() noexcept {
 		if (error()) {

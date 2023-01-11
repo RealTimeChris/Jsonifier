@@ -31,8 +31,8 @@ namespace Jsonifier {
 		__forceinline uint32_t peekIndex(int32_t delta = 0) const noexcept;
 		__forceinline uint32_t peekIndex(uint32_t* position) const noexcept;
 
-		const uint8_t* stringView;
-		uint32_t* currentPosition;
+		const uint8_t* stringView{};
+		uint32_t* currentPosition{};
 
 		friend class JsonIterator;
 		friend class ValueIterator;

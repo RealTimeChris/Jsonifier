@@ -5,7 +5,7 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll Document : public JsonIterator {
+	class Jsonifier_Dll Document {
 	  public:
 		__forceinline Document() noexcept = default;
 		__forceinline Document(const Document& other) noexcept = delete;
@@ -58,6 +58,7 @@ namespace Jsonifier {
 		__forceinline JsonifierResult<std::string_view> rawJson() noexcept;
 
 	  protected:
+		JsonIterator iterator{}; 
 		__forceinline ErrorCode consume() noexcept;
 
 		__forceinline Document(JsonIterator&& iterator) noexcept;
