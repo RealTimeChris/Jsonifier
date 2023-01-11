@@ -825,10 +825,6 @@ namespace Jsonifier {
 			return this->currentTapeIndex;
 		}
 
-		uint32_t*& getTapePtrs() {
-			return this->tapePtrs.operator uint32_t*&();
-		}
-
 	  protected:
 		SimdBase256 values[BlockStringCount * 8];
 		size_t currentIndexIntoString{};
