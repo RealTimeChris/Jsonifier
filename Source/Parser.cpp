@@ -22,10 +22,10 @@ namespace Jsonifier {
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		totalTimePassed += stopWatch.totalTimePassed().count();
 		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
-		for (size_t x = 0; x < this->tapeLength; ++x) {
-			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
-					  << std::endl;
-		}
+		//for (size_t x = 0; x < this->tapeLength; ++x) {
+		//			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
+		//<< std::endl;
+		//}
 		return std::forward<Document>(JsonIterator{ this });
 	}
 	
@@ -45,10 +45,10 @@ namespace Jsonifier {
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string), stringLength);
 		totalTimePassed += stopWatch.totalTimePassed().count();
 		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
-		for (size_t x = 0; x < this->tapeLength; ++x) {
-			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
-					  << std::endl;
-		}
+		//for (size_t x = 0; x < this->tapeLength; ++x) {
+		//std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
+		//<< std::endl;
+		//}
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
@@ -69,10 +69,10 @@ namespace Jsonifier {
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
 		totalTimePassed += stopWatch.totalTimePassed().count();
 		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
-		for (size_t x = 0; x < this->tapeLength; ++x) {
-			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
-					  << std::endl;
-		}
+		//for (size_t x = 0; x < this->tapeLength; ++x) {
+		//			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
+		//<< std::endl;
+		//}
 		return std::forward<Document>(JsonIterator{ this });
 	}
 
