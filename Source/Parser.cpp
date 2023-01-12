@@ -17,11 +17,11 @@ namespace Jsonifier {
 				return Mem_Alloc_Error;
 			}
 		}
-		iterationCount++;
-		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+		//iterationCount++;
+		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
-		totalTimePassed += stopWatch.totalTimePassed().count();
-		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
+		//totalTimePassed += stopWatch.totalTimePassed().count();
+		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		//for (size_t x = 0; x < this->tapeLength; ++x) {
 		//			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
 		//<< std::endl;
@@ -40,11 +40,11 @@ namespace Jsonifier {
 				return Mem_Alloc_Error;
 			}
 		}
-		iterationCount++;
-		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+		//iterationCount++;
+		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string), stringLength);
-		totalTimePassed += stopWatch.totalTimePassed().count();
-		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
+		//totalTimePassed += stopWatch.totalTimePassed().count();
+		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		//for (size_t x = 0; x < this->tapeLength; ++x) {
 		//std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
 		//<< std::endl;
@@ -63,12 +63,12 @@ namespace Jsonifier {
 				return Mem_Alloc_Error;
 			}
 		}
-		iterationCount++;
-		std::cout << "STRING LENGTH RAW: " << this->stringLengthRaw << std::endl;
-		StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
+		//iterationCount++;
+		//std::cout << "STRING LENGTH RAW: " << this->stringLengthRaw << std::endl;
+		//StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
 		this->generateJsonIndices(reinterpret_cast<const uint8_t*>(string.data()), string.size());
-		totalTimePassed += stopWatch.totalTimePassed().count();
-		std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
+		//totalTimePassed += stopWatch.totalTimePassed().count();
+		//std::cout << "TIME FOR STAGE1: " << totalTimePassed / iterationCount << std::endl;
 		//for (size_t x = 0; x < this->tapeLength; ++x) {
 		//			std::cout << "CURRENT INDEX: " << this->structuralIndices[x] << ", THE INDEX'S VALUE: " << this->stringView[this->structuralIndices[x]]
 		//<< std::endl;
@@ -122,7 +122,6 @@ namespace Jsonifier {
 			this->stringView = ( uint8_t* )stringNew;
 			this->stringLengthRaw = stringLength;
 			StringBlockReader<256> stringReader{};
-			std::fill(this->structuralIndices.operator uint32_t*(), this->structuralIndices + round(this->stringLengthRaw + 3, 256), 0x00);
 			SimdStringSection section{ this->stringLengthRaw, this->getStructuralIndices() };
 			stringReader.addNewString(this->stringView, this->stringLengthRaw);
 			this->tapeLength = 0;

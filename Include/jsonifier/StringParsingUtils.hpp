@@ -191,7 +191,7 @@ namespace Jsonifier {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	__forceinline bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
+	__forceinline bool handleUnicodeCodepoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
 		uint32_t codePoint = hexToU32Nocheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
@@ -236,7 +236,7 @@ namespace Jsonifier {
 				if (escapeChar == 'u') {
 					src += bsDist;
 					dst += bsDist;
-					if (!handleUnicodeCodePoint(&src, &dst)) {
+					if (!handleUnicodeCodepoint(&src, &dst)) {
 						return nullptr;
 					}
 				} else {
@@ -255,5 +255,6 @@ namespace Jsonifier {
 		}
 		return nullptr;
 	}
+
 
 }
