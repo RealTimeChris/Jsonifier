@@ -25,58 +25,62 @@
 
 namespace Jsonifier {
 
-	class NodeIterator;
-
-	JsonifierResult<JsonData> Parser::parseJson(std::string_view string) noexcept {
+	JsonDataBase Parser::parseJson(std::string_view string) noexcept {
 		if (string.size() == 0) {
-			return ErrorCode{ No_String_Error };
+			iterator.setError(No_String_Error);
+			return &iterator;
 		}
-		inString = reinterpret_cast<InStringPtr>(string.data());
+		inString = reinterpret_cast<StringViewPtr>(string.data());
 		stringLengthRaw = string.size();
 		if (allocatedSpace < round(5 * stringLengthRaw / 3 + 256, 256)) {
 			if (allocate() != Success) {
-				return ErrorCode{ Mem_Alloc_Error };
+				iterator.setError(Mem_Alloc_Error);
+				return &iterator;
 			}
 		}
 		generateJsonIndices();
 		iterator.reset(this);
-		return std::forward<JsonData>(NodeIterator{ &iterator });
+		return std::forward<JsonDataBase>(&iterator);
 	}
 
-	JsonifierResult<JsonData> Parser::parseJson(const char* string, size_t stringLength) noexcept {
+	JsonDataBase Parser::parseJson(const char* string, size_t stringLength) noexcept {
 		if (stringLength == 0) {
-			return ErrorCode{ No_String_Error };
+			iterator.setError(No_String_Error);
+			return &iterator;
 		}
-		inString = reinterpret_cast<InStringPtr>(string);
+		inString = reinterpret_cast<StringViewPtr>(string);
 		stringLengthRaw = stringLength;
 		if (allocatedSpace < round(5 * stringLengthRaw / 3 + 256, 256)) {
 			if (allocate() != Success) {
-				return ErrorCode{ Mem_Alloc_Error };
+				iterator.setError(Mem_Alloc_Error);
+				return &iterator;
 			}
 		}
 		generateJsonIndices();
 		iterator.reset(this);
-		return std::forward<JsonData>(NodeIterator{ &iterator });
+		return std::forward<JsonDataBase>(&iterator);
 	}
 
-	JsonifierResult<JsonData> Parser::parseJson(const std::string& string) noexcept {
+	JsonDataBase Parser::parseJson(const std::string& string) noexcept {
 		if (string.size() == 0) {
-			return ErrorCode{ No_String_Error };
+			iterator.setError(No_String_Error);
+			return &iterator;
 		}
-		inString = reinterpret_cast<InStringPtr>(string.data());
+		inString = reinterpret_cast<StringViewPtr>(string.data());
 		stringLengthRaw = string.size();
 		if (allocatedSpace < round(5 * stringLengthRaw / 3 + 256, 256)) {
 			if (allocate() != Success) {
-				return ErrorCode{ Mem_Alloc_Error };
+				iterator.setError(Mem_Alloc_Error);
+				return &iterator;
 			}
 		}
 		generateJsonIndices();
 		iterator.reset(this);
-		return std::forward<JsonData>(NodeIterator{ &iterator });
+		return std::forward<JsonDataBase>(&iterator);
 	}
 
-	uint64_t Parser::round(int64_t a, int64_t n) noexcept {
-		return (((a) + (( n )-1)) & ~(( n )-1));
+	uint64_t Parser::round(int64_t a, int64_t size) noexcept {
+		return (((a) + (( size )-1)) & ~(( size )-1));
 	}
 
 	ErrorCode Parser::allocate() noexcept {
@@ -91,7 +95,7 @@ namespace Jsonifier {
 			return ErrorCode{ Mem_Alloc_Error };
 		}
 
-		return { Success };
+		return Success;
 	}
 
 	void Parser::generateJsonIndices() noexcept {

@@ -25,89 +25,100 @@
 
 namespace Jsonifier {
 
-	__forceinline Array::Array(NodeIterator&& other) noexcept {
-		rootStructural = other.rootStructural;
-		iteratorCore = other.iteratorCore;
+	__forceinline Array::Array(IteratorCore* iteratorCoreNew, StructuralIndex indexNew) noexcept {
+		this->iteratorCore = iteratorCoreNew;
+		this->rootStructural = indexNew;
 	}
 
-	__forceinline JsonifierResult<std::string_view> Array::getRawJsonString() noexcept {
-		return NodeIterator::getRawJsonString();
-	}
-
-	__forceinline JsonifierResult<JsonData> Array::operator[](size_t index) noexcept {
+	__forceinline JsonData& Array::operator[](size_t index) noexcept {
 		return at(index);
 	}
 
-	__forceinline JsonifierResult<JsonData> Array::at(size_t index) noexcept {
-		size_t currentDepth{};
-		auto originalPosition = position();
-		setPosition(rootPosition());
-		for (auto& value: *this) {
-			if (currentDepth == index) {
-				auto returnData = JsonData{ NodeIterator{ static_cast<NodeIterator>(value.value()) } };
-				setPosition(originalPosition);
-				return returnData;
-			}
-			currentDepth++;
-		}
-		setPosition(originalPosition);
-		setError(No_Such_Entity);
-		return { std::move(*this) };
+	__forceinline JsonData& Array::at(size_t index) noexcept {
+		return data[index];
 	}
 
-	__forceinline JsonifierResult<ArrayIterator> Array::begin() noexcept {
-		setPosition(rootPosition());
-		if (*peek(position()) != '[') {
+	__forceinline ArrayIterator Array::begin() noexcept {
+		if (!peek(rootStructural) || *peek(rootStructural) != '[') {
 			setError(Incorrect_Type);
-			return ArrayIterator{ operator Jsonifier::NodeIterator() };
+			return ArrayIterator{ VectorIterator<JsonData>{ data.data() } };
 		}
-		setPosition(rootPosition() + 1);
-		return ArrayIterator{ operator Jsonifier::NodeIterator() };
+		return ArrayIterator{ VectorIterator<JsonData>{ data.data() } };
 	}
 
-	__forceinline JsonifierResult<ArrayIterator> Array::end() noexcept {
-		return {};
+	__forceinline ArrayIterator Array::end() noexcept {
+		return ArrayIterator{ VectorIterator<JsonData>{ data.data() + sizeVal } };
 	}
 
-	__forceinline JsonifierResult<size_t> Array::size() noexcept {
-		auto originalPosition = position();
-		setPosition(rootPosition());
-		size_t count{};
-		for (auto& value: *this) {
-			++count;
+	__forceinline StructuralIndex Array::parseJson() noexcept {
+		auto index = rootStructural;
+		++index;
+		size_t openCount{ 1 };
+		size_t closeCount{ 0 };
+		if (index >= iteratorCore->endPosition() || *peek(index + 1) == '}' ||
+			*peek(index) == 'n') {
+			return index;
 		}
-		setPosition(originalPosition);
-		return count;
-	}
+		while (index < iteratorCore->endPosition() && openCount > closeCount) {
+			if (index >= iteratorCore->endPosition()) {
+				return index;
+			}
 
-	__forceinline JsonifierResult<Array>::JsonifierResult(Array&& valueNew) noexcept : JsonifierResultBase<Array>(std::forward<Array>(valueNew)) {
-	}
-
-	__forceinline JsonifierResult<Array>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Array>(error) {
-	}
-
-	__forceinline JsonifierResult<std::string_view> JsonifierResult<Array>::getRawJsonString() noexcept {
-		return second.getRawJsonString();
-	}
-
-	__forceinline JsonifierResult<JsonData> JsonifierResult<Array>::operator[](size_t key) noexcept {
-		return second.operator[](key);
-	}
-
-	__forceinline JsonifierResult<JsonData> JsonifierResult<Array>::at(size_t index) noexcept {
-		return second.at(index);
-	}
-
-	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Array>::begin() noexcept {
-		return second.begin();
-	}
-
-	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<Array>::end() noexcept {
-		return second.end();
-	}
-
-	__forceinline JsonifierResult<size_t> JsonifierResult<Array>::size() noexcept {
-		return second.size();
+			switch (*peek(index)) {
+				case '{': {
+					auto newObject = new Object{ iteratorCore, index };
+					index = newObject->parseJson();
+					data.emplaceBack(JsonData{ newObject });
+					++sizeVal;
+					break;
+				}
+				case '[': {
+					auto newObject = new Array{ iteratorCore, index };
+					index = newObject->parseJson();
+					data.emplaceBack(JsonData{ newObject });
+					++sizeVal;
+					break;
+				}
+				case '}': {
+					++closeCount;
+					if (closeCount >= openCount) {
+						return index;
+					}
+					break;
+				}
+				case ']': {
+					++closeCount;
+					if (closeCount >= openCount) {
+						return index;
+					}
+					break;
+				}
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+				case 't':
+				case 'f':
+				case 'n':
+				case '"':
+				case '-': {
+					data.emplaceBack(JsonData{ new JsonDataBase{ iteratorCore, index } });
+					++sizeVal;
+					++index;
+					break;
+				}
+				default: {
+				};
+			}
+			++index;
+		}
+		return index;
 	}
 
 }

@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -25,21 +25,14 @@
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/Serializer.hpp>
 
-#include <jsonifier/JsonType.hpp>
 #include <jsonifier/IteratorCore.hpp>
-#include <jsonifier/NodeIterator.hpp>
-#include <jsonifier/Object.hpp>
-#include <jsonifier/Array.hpp>
-#include <jsonifier/JsonData.hpp>
-#include <jsonifier/Field.hpp>
+#include <jsonifier/HashMap.hpp>
+#include <jsonifier/FromJson.hpp>
+#include <jsonifier/FromJson_Impl.hpp>
 #include <jsonifier/Parser.hpp>
-#include <jsonifier/JsonData_Impl.hpp>
-#include <jsonifier/ObjectIterator.hpp>
-#include <jsonifier/ArrayIterator.hpp>
-#include <jsonifier/NodeIterator_Impl.hpp>
 #include <jsonifier/IteratorCore_Impl.hpp>
-#include <jsonifier/Field_Impl.hpp>
-#include <jsonifier/ObjectIterator_Impl.hpp>
-#include <jsonifier/ArrayIterator_Impl.hpp>
-#include <jsonifier/Object_Impl.hpp>
-#include <jsonifier/Array_Impl.hpp>
+#include <jsonifier/String.hpp>
+#include <jsonifier/Core.hpp>
+#include <jsonifier/FromJson.hpp>
+#include <jsonifier/Tuple.hpp>
+#include <jsonifier/ToJson_Impl.hpp>

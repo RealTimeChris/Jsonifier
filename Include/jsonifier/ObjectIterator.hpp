@@ -22,39 +22,28 @@
 #pragma once
 
 #include <jsonifier/Base.hpp>
-#include <jsonifier/Field.hpp>
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll ObjectIterator : public NodeIterator {
+	class Jsonifier_Dll ObjectIterator : public HashMapIterator<JsonData,StringView> {
 	  public:
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = JsonData;
+		using difference_type = std::ptrdiff_t;
+		using pointer = JsonData*;
+		using reference = JsonData&;
+
 		__forceinline ObjectIterator() noexcept = default;
 
-		__forceinline ObjectIterator(NodeIterator&& other) noexcept;
+		__forceinline ObjectIterator(Object* other) noexcept;
 
 		__forceinline bool operator==(ObjectIterator& other) noexcept;
 
-		__forceinline JsonifierResult<Field>& operator*() noexcept;
+		__forceinline ObjectIterator& operator++() noexcept;
 
-		__forceinline ObjectIterator operator++() noexcept;
+		__forceinline reference operator*() noexcept;
 
-	  protected:
-		StructuralIndex currentStructural{};
-		JsonifierResult<Field> data{};
+		__forceinline pointer operator->() noexcept;
 	};
 
-	template<> class JsonifierResult<ObjectIterator> : public JsonifierResultBase<ObjectIterator> {
-	  public:
-		__forceinline JsonifierResult() noexcept = default;
-
-		__forceinline JsonifierResult(ObjectIterator&& jsonData) noexcept;
-
-		__forceinline JsonifierResult(ErrorCode error) noexcept;
-
-		__forceinline bool operator==(JsonifierResult<ObjectIterator>& other) noexcept;
-
-		__forceinline JsonifierResult<ObjectIterator> operator++() noexcept;
-
-		__forceinline JsonifierResult<Field>& operator*() noexcept;
-	};
 }

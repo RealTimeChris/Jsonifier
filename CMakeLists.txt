@@ -14,7 +14,7 @@
 #	Lesser General Public License for more details.
 #
 #	You should have received a copy of the GNU Lesser General Public
-#	License along with this library; if not, write to the Free Software
+#	License along with this library; if not, Write to the Free Software
 #	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 #	USA
 #
@@ -22,186 +22,100 @@
 # Dec 17, 2022
 # https://github.com/RealTimeChris/Jsonifier
 
-# Set this Primitive to install the output files to a particular location.
-#set(CMAKE_INSTALL_PREFIX)
+cmake_minimum_required(VERSION 3.18)
 
-cmake_minimum_required(VERSION 3.20)
 set(PROJECT_NAME "Jsonifier")
-set(PRODUCT_VERSION "1.0.0")
-set(DESCRIPTION "A few classes for serializing objects into JSON or ETF strings - very rapidly.")
 
 project(
-	"${PROJECT_NAME}"
-	VERSION "${PRODUCT_VERSION}"
-	LANGUAGES CXX
-	HOMEPAGE_URL "https://github/com/RealTimeChris/Jsonifier"
-	DESCRIPTION "${DESCRIPTION}"
+    "${PROJECT_NAME}"
+    VERSION 1.0.1
+    LANGUAGES CXX
 )
 
-if (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Ofast")
+set_property(GLOBAL PROPERTY USE_FOLDERS YES)
+
+# Done in developer mode only, so users won't be bothered by this :)
+file(GLOB_RECURSE Headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/Include/jsonifier/*.hpp")
+source_group(TREE "${PROJECT_SOURCE_DIR}/Include" PREFIX Headers FILES ${Headers})
+
+file(GLOB_RECURSE Sources CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/Source/*.cpp")
+source_group(TREE "${PROJECT_SOURCE_DIR}/Source" PREFIX Sources FILES ${Sources})
+
+add_library(Jsonifier INTERFACE "${Sources}" "${Headers}")
+add_library(Jsonifier::Jsonifier ALIAS Jsonifier)
+
+if (MSVC)
+   if (matched_cl)
+      target_compile_options(Jsonifier INTERFACE "/Zc:preprocessor" /GL /permissive- /Zc:lambda)
+      target_link_options(Jsonifier INTERFACE /LTCG /INCREMENTAL:NO)
+   endif()
+else()
+   target_compile_options(Jsonifier INTERFACE "-Wno-missing-braces")
 endif()
 
-if (WIN32)
-	if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-		cmake_path(GET CMAKE_ROOT ROOT_PATH ROOT_DRIVE)
-		if (DEFINED ENV{EnableASAN})
-			set(CMAKE_INSTALL_PREFIX "${ROOT_DRIVE}Users/$ENV{USERNAME}/CMake/${PROJECT_NAME}/ASAN" CACHE PATH "The CMake install prefix." FORCE)
-		else()
-			set(CMAKE_INSTALL_PREFIX "${ROOT_DRIVE}Users/$ENV{USERNAME}/CMake/${PROJECT_NAME}" CACHE PATH "The CMake install prefix." FORCE)
-		endif()
-	endif()
-elseif(UNIX)
-	if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-		if (DEFINED ENV{EnableASAN})
-			set(CMAKE_INSTALL_PREFIX "/home/$ENV{USERNAME}/CMake/${PROJECT_NAME}/ASAN" CACHE PATH "The CMake install prefix." FORCE)
-		else()
-			set(CMAKE_INSTALL_PREFIX "/home/$ENV{USERNAME}/CMake/${PROJECT_NAME}" CACHE PATH "The CMake install prefix." FORCE)
-		endif()
-	endif()
-endif()
- 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/CMake/;")
-set(CMAKE_CONFIGURATION_TYPES "${CMAKE_BUILD_TYPE}")
+set_property(TARGET Jsonifier PROPERTY EXPORT_NAME "${PROJECT_NAME}")
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/GenerateProductVersion.cmake")
-generate_product_version(
-	PRODUCT_INFO
-	NAME "${PROJECT_NAME}"
-	FILE_DESCRIPTION "${DESCRIPTION}"
-	ORIGINAL_FILENAME "jsonifier.dll"
-	COMPANY_NAME "RealTimeChris Inc."
-	VERSION_MAJOR "1"
-	VERSION_MINOR "0"
-	VERSION_PATCH "0"
-	VERSION_REVISION "0"
-)
+target_compile_features(Jsonifier INTERFACE cxx_std_23)
 
-file(GLOB PACKAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.in" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.rc")
+set(CMAKE_INSTALL_INCLUDEDIR "Include/jsonifier" CACHE PATH "")
 
-file(GLOB SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
-
-if (WIN32)
-	add_library("${PROJECT_NAME}" SHARED "${SOURCES}" "${PRODUCT_INFO}")
-elseif (UNIX)
-	add_library("${PROJECT_NAME}" STATIC "${SOURCES}")
-endif()
-
-add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
-
-file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
-
-target_compile_options(
-	"${PROJECT_NAME}" PUBLIC
-	"$<$<NOT:$<PLATFORM_ID:Linux>>:/bigobj>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:$ENV{EnableASAN},true>:/Zi>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/MP>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:$ENV{EnableASAN},true>:-fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:GNU>:-fpermissive>"
-	"$<$<CXX_COMPILER_ID:GNU>:-mavx512f>"
-	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
-)
-
-target_link_options(
-	"${PROJECT_NAME}" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:$ENV{EnableASAN},true>:-fsanitize=address>>"
-)
-
-set_target_properties(
-	"${PROJECT_NAME}" PROPERTIES
-	PUBLIC_HEADER "${HEADERS}"
-	OUTPUT_NAME "jsonifier"
-	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS OFF
-)
-
-target_include_directories(
-	"${PROJECT_NAME}" PUBLIC
-	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Include/>"
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>"
-)
-
-target_compile_features(
-	"${PROJECT_NAME}" PUBLIC
-	"cxx_std_20"
-)
-
-set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
-set(EXPORTED_TARGETS_NAME "${PROJECT_NAME}Targets")
-set(EXPORTED_TARGETS_FILE_NAME "${EXPORTED_TARGETS_NAME}.cmake")
-set(EXPORTED_TARGETS_FILE_PATH "share/jsonifier/${EXPORTED_TARGETS_FILE_NAME}")
-set(RELEASE_PDB_FILE_PATH "bin/jsonifier.pdb")
-set(DEBUG_PDB_FILE_PATH "debug/bin/jsonifier.pdb")
+set(CMAKE_INSTALL_LIBDIR lib CACHE PATH "")
 
 include(CMakePackageConfigHelpers)
-configure_package_config_file(
-	"${CMAKE_SOURCE_DIR}/CMake/${CONFIG_FILE_NAME}.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
-	INSTALL_DESTINATION "share/jsonifier"
-	PATH_VARS
-	EXPORTED_TARGETS_FILE_PATH
-	RELEASE_PDB_FILE_PATH
-	DEBUG_PDB_FILE_PATH
+include(GNUInstallDirs)
+
+set(package Jsonifier)
+
+install(
+    DIRECTORY Include/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    COMPONENT Jsonifier_Development
 )
 
-set(VERSION_FILE_NAME "${PROJECT_NAME}ConfigVersion.cmake")
+install(
+    TARGETS Jsonifier
+    EXPORT JsonifierTargets
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
 
 write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
-	VERSION "${PRODUCT_VERSION}"
-	COMPATIBILITY AnyNewerVersion
+    "${package}ConfigVersion.cmake"
+    COMPATIBILITY SameMajorVersion
+    ARCH_INDEPENDENT
+)
+
+# Allow package maintainers to freely override the path for the configs
+set(
+    Jsonifier_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
+    CACHE PATH "CMake package config location relative to the install prefix"
+)
+mark_as_advanced(Jsonifier_INSTALL_CMAKEDIR)
+
+install(
+    FILES cmake/install-config.cmake
+    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
+    RENAME "${package}Config.cmake"
+    COMPONENT Jsonifier_Development
 )
 
 install(
-	FILES
-	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
-	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
-	DESTINATION "share/jsonifier"
+    FILES "${PROJECT_BINARY_DIR}/${package}ConfigVersion.cmake"
+    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
+    COMPONENT Jsonifier_Development
 )
 
 install(
-	TARGETS "${PROJECT_NAME}"
-	EXPORT "${EXPORTED_TARGETS_NAME}"
-	RUNTIME DESTINATION "$<$<NOT:$<PLATFORM_ID:Linux>>:$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}bin,bin>>"
-	ARCHIVE DESTINATION "$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}lib,lib>"
-	PUBLIC_HEADER DESTINATION "include/jsonifier"
+    EXPORT JsonifierTargets
+    NAMESPACE Jsonifier::
+    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
+    COMPONENT Jsonifier_Development
 )
 
-install(
-	EXPORT "${EXPORTED_TARGETS_NAME}"
-	FILE "${EXPORTED_TARGETS_FILE_NAME}"
-	NAMESPACE "${PROJECT_NAME}::"
-	DESTINATION "share/jsonifier"
-)
-
-if (WIN32)
-	install(
-		FILES 
-		"$<TARGET_PDB_FILE:${PROJECT_NAME}>"
-		DESTINATION "$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}bin,bin>"
-		OPTIONAL
-	)
+if(PROJECT_IS_TOP_LEVEL)
+  include(CPack)
 endif()
 
-
-if (BUILDING_THE_FETCH_PACKAGE)
-	set(package_files "${SOURCES}" "${HEADERS}" "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/GenerateProductVersion.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/CMake/FetchContent.cmake" "${PACKAGE_FILES}")
-	add_custom_command(
-		OUTPUT 
-		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip"
-	    COMMAND "${CMAKE_COMMAND}" -E tar c "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip" --format=zip -- ${package_files}
-	    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-	    DEPENDS ${package_files}
-	)
-	add_custom_target(
-		"${PROJECT_NAME}_package" 
-		ALL DEPENDS 
-		"${PROJECT_NAME}" 
-		"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip"
-		${package_files}
-	)
- endif()
-
+target_include_directories(
+    Jsonifier ${warning_guard}
+    INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Include/>"
+)

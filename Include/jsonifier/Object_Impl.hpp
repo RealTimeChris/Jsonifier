@@ -22,107 +22,120 @@
 #pragma once
 
 #include <jsonifier/Object.hpp>
+#include <jsonifier/ObjectIterator.hpp>
 
 namespace Jsonifier {
 
-	__forceinline Object::Object(NodeIterator&& other) noexcept {
-		rootStructural = other.rootStructural;
-		iteratorCore = other.iteratorCore;
+	__forceinline Object::Object() noexcept {};
+
+	__forceinline Object::Object(IteratorCore*iteratorCoreNew, StructuralIndex indexNew) noexcept {
+		this->iteratorCore = iteratorCoreNew;
+		this->rootStructural = indexNew;
 	}
 
-	__forceinline JsonifierResult<JsonData> Object::operator[](std::string_view key) noexcept {
-		setError(Success);
-		bool hasValue{ findField(key) };
-		if (reportError()) {
-			return JsonData{ std::move(*this) };
-		}
-		if (!hasValue) {
-			setError(No_Such_Field);
-			return JsonData{ std::move(*this) };
-		}
-		if (*peek(position()) == ',') {
-			returnCurrentAndAdvance();
-		}
-		NodeIterator iterator{ *this };
-		iterator.rootStructural = position();
-		return JsonData{ std::move(iterator) };
+	__forceinline bool Object::contains(const char* key) noexcept {
+		return this->data.contains(key);
 	}
 
-	__forceinline JsonifierResult<JsonData> Object::operator[](const char* key) noexcept {
-		setError(Success);
-		bool hasValue{ findField(key) };
-		if (reportError()) {
-			return JsonData{ std::move(*this) };
-		}
-		if (!hasValue) {
-			setError(No_Such_Field);
-			return JsonData{ std::move(*this) };
-		}
-		if (*peek(position()) == ',') {
-			returnCurrentAndAdvance();
-		}
-		NodeIterator iterator{ *this };
-		iterator.rootStructural = position();
-		return JsonData{ std::move(iterator) };
+	__forceinline JsonData& Object::operator[](const char* key) noexcept {
+		return data.at(key).accessFirst();
 	}
 
-	__forceinline JsonifierResult<std::string_view> Object::getRawJsonString() noexcept {
-		return NodeIterator::getRawJsonString();
-	}
-
-	__forceinline JsonifierResult<ObjectIterator> Object::begin() noexcept {
-		setPosition(rootPosition());
-		if (*peek(position()) != '{') {
+	__forceinline ObjectIterator Object::begin() noexcept {
+		if (!peek(rootStructural) || *peek(rootStructural) != '{') {
 			setError(Incorrect_Type);
-			return ObjectIterator{ operator Jsonifier::NodeIterator() };
+			return ObjectIterator{ static_cast<Object*>(this) };
 		}
-		setPosition(position() + 1);
-		return ObjectIterator{ operator Jsonifier::NodeIterator() };
+		return ObjectIterator{ static_cast<Object*>(this) };
 	}
 
-	__forceinline JsonifierResult<ObjectIterator> Object::end() noexcept {
+	__forceinline ObjectIterator Object::end() noexcept {
 		return {};
 	}
 
-	__forceinline JsonifierResult<size_t> Object::size() noexcept {
-		auto originalPosition = position();
-		setPosition(rootPosition());
-		size_t count{};
-		for (auto& value: *this) {
-			++count;
+	__forceinline StructuralIndex Object::parseJson() noexcept {
+		auto index = rootStructural;
+		++index;
+		size_t openCount{ 1 };
+		size_t closeCount{ 0 };
+		if (index >= iteratorCore->endPosition() || iteratorCore->getStringView()[*(index + 1)] == '}' ||
+			iteratorCore->getStringView()[*(index)] == 'n') {
+			return index;
 		}
-		setPosition(originalPosition);
-		return count;
-	}
-
-	__forceinline JsonifierResult<Object>::JsonifierResult(Object&& valueNew) noexcept : JsonifierResultBase<Object>(std::forward<Object>(valueNew)) {
-	}
-
-	__forceinline JsonifierResult<Object>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<Object>(error) {
-	}
-
-	__forceinline JsonifierResult<JsonData> JsonifierResult<Object>::operator[](std::string_view key) noexcept {
-		return second.operator[](key);
-	}
-
-	__forceinline JsonifierResult<JsonData> JsonifierResult<Object>::operator[](const char* key) noexcept {
-		return second.operator[](key);
-	}
-
-	__forceinline JsonifierResult<std::string_view> JsonifierResult<Object>::getRawJsonString() noexcept {
-		return second.getRawJsonString();
-	}
-
-	__forceinline JsonifierResult<ObjectIterator> JsonifierResult<Object>::begin() noexcept {
-		return second.begin();
-	}
-
-	__forceinline JsonifierResult<ObjectIterator> JsonifierResult<Object>::end() noexcept {
-		return second.end();
-	}
-
-	__forceinline JsonifierResult<size_t> JsonifierResult<Object>::size() noexcept {
-		return second.size();
+		while (index < iteratorCore->endPosition() && openCount > closeCount) {
+			if (index >= iteratorCore->endPosition()) {
+				return index;
+			}
+			switch (iteratorCore->getStringView()[*(index)]) {
+				case '{': {
+					++openCount;
+					auto keyStart = index - 2;
+					StringView key{ getStringKey(keyStart) };
+					if (key.size() > 0) {
+						Pair<JsonData, StringView> pair{ new Object{ iteratorCore, index }, std::move(key) };
+						index = pair.accessFirst().operator Object&().parseJson();
+						data.emplace(std::move(pair));
+						++sizeVal;
+					}
+					break;
+				}
+				case '[': {
+					++openCount;
+					auto keyStart = index - 2;
+					StringView key{ getStringKey(keyStart) };
+					if (key.size() > 0) {
+						Pair<JsonData, StringView> pair{ new Array{ iteratorCore, index }, std::move(key) };
+						index = pair.accessFirst().operator Array&().parseJson();
+						data.emplace(std::move(pair));
+						++sizeVal;
+					}
+					break;
+				}
+				case '}': {
+					++closeCount;
+					if (closeCount + 2 >= openCount) {
+						return index;
+					}
+					break;
+				}
+				case ']': {
+					++closeCount;
+					if (closeCount + 2 >= openCount) {
+						return index;
+					}
+					break;
+				}
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+				case 't':
+				case 'f':
+				case 'n':
+				case '"':
+				case '-': {
+					if (this->iteratorCore->getStringView()[*(index - 1)] == ':') {
+						auto keyStart = index - 2;
+						StringView key{ getStringKey(keyStart) };
+						if (key.size() > 0) {
+							Pair<JsonData, StringView> pair{ new JsonDataBase{ iteratorCore, index }, std::move(key) };
+							data.emplace(std::move(pair));
+						}
+					}
+					break;
+				}
+				default: {
+				};
+			}
+			++index;
+		}
+		return index;
 	}
 
 }

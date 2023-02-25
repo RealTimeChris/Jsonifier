@@ -25,30 +25,23 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll Array : public JsonData {
+	class Jsonifier_Dll Array : public JsonDataBase {
 	  public:
+		friend class ArrayIterator;
+		friend class JsonDataBase;
+		friend class Object;
+
 		__forceinline Array() noexcept = default;
-		__forceinline Array(NodeIterator&&) noexcept;
+		__forceinline Array(IteratorCore*, StructuralIndex) noexcept;
 
-		__forceinline JsonifierResult<std::string_view> getRawJsonString() noexcept;
-		__forceinline JsonifierResult<JsonData> operator[](size_t) noexcept;
-		__forceinline JsonifierResult<JsonData> at(size_t index) noexcept;
-		__forceinline JsonifierResult<ArrayIterator> begin() noexcept;
-		__forceinline JsonifierResult<ArrayIterator> end() noexcept;
-		__forceinline JsonifierResult<size_t> size() noexcept;
-	};
+		__forceinline virtual JsonData& operator[](size_t) noexcept;
+		__forceinline virtual JsonData& at(size_t index) noexcept;
+		__forceinline virtual ArrayIterator begin() noexcept;
+		__forceinline virtual ArrayIterator end() noexcept;
 
-	template<> class JsonifierResult<Array> : public JsonifierResultBase<Array> {
-	  public:
-		__forceinline JsonifierResult(Array&& value) noexcept;
-		__forceinline JsonifierResult(ErrorCode error) noexcept;
-
-		__forceinline JsonifierResult<std::string_view> getRawJsonString() noexcept;
-		__forceinline JsonifierResult<JsonData> operator[](size_t) noexcept;
-		__forceinline JsonifierResult<JsonData> at(size_t index) noexcept;
-		__forceinline JsonifierResult<ArrayIterator> begin() noexcept;
-		__forceinline JsonifierResult<ArrayIterator> end() noexcept;
-		__forceinline JsonifierResult<size_t> size() noexcept;
+	  protected:
+		Vector<JsonData> data{ 30 };
+		__forceinline StructuralIndex parseJson() noexcept;
 	};
 
 }

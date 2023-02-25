@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -22,38 +22,200 @@
 #pragma once
 
 #include <jsonifier/Simd.hpp>
-#include <jsonifier/JsonData.hpp>
+#include <jsonifier/IteratorCore.hpp>
+#include <jsonifier/String.hpp>
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll Parser {
-	  public:
-		friend class IteratorCore;
-		Parser& operator=(Parser&&) = delete;
-		Parser(Parser&&) = delete;
-		Parser& operator=(const Parser&) = delete;
-		Parser(const Parser&) = delete;
-		Parser(const std::string&) noexcept;
-		Parser() noexcept = default;
+	struct Read;
 
-		JsonifierResult<JsonData> parseJson(const char* string, size_t stringLength) noexcept;
-		JsonifierResult<JsonData> parseJson(const std::string& string) noexcept;
-		JsonifierResult<JsonData> parseJson(std::string_view string) noexcept;
+	class  Parser {
+	  public:
+		inline Parser() = default;
+
+		inline Parser& operator=(Parser&& other) noexcept {
+			this->inString = std::move(other.inString);
+			this->section = std::move(other.section);
+			return *this;
+		};
+
+		inline Parser(Parser&& other) noexcept {
+			*this = std::move(other);
+		};
+
+		inline Parser& operator=(const Parser&) = delete;
+		inline Parser(const Parser&) = delete;
+
+		inline Parser(std::string_view string) {
+			this->reset(string);
+		}
+
+		inline Parser(const std::string& string) {
+			this->reset(string);
+		}
+
+		inline SimdIteratorCore begin() noexcept {
+			return { &section };
+		}
+
+		inline SimdIteratorCore end() noexcept {
+			return { &section };
+		}
+
+		template<typename OTy, typename OTy2> void parseJson(OTy& json, OTy2& inStringNew) {
+			if (inString != inStringNew && inStringNew.size() != 0) {
+				reset(inStringNew);
+			}
+			auto newIter = this->begin();
+			auto endIter = this->end();
+			Read::op<OTy>(json, newIter, endIter);
+		}
 
 	  protected:
-		ObjectBuffer<uint32_t> structuralIndices{};
-		ObjectBuffer<uint8_t> outString{};
-		InStringPtr inString{};
-		IteratorCore iterator{};
-		size_t stringLengthRaw{};
-		size_t allocatedSpace{};
-		size_t tapeLength{};
+		SimdStringReader section{};
+		StringView inString{};
 
+		void generateJsonIndices() noexcept {
+			if (inString.data()) {
+				StringBlockReader<256> stringReader{ reinterpret_cast<StringViewPtr>(inString.data()), inString.size() };
+				while (stringReader.hasFullBlock()) {
+					section.generateStructurals(stringReader.fullBlock());
+				}
+				uint8_t block[256];
+				stringReader.getRemainder(block);
+				section.generateStructurals(block);
+			}
+		}
 
-		uint64_t round(int64_t array, int64_t n) noexcept;
+		inline void reset(std::string_view string) {
+			if (string.size() == 0) {
+				return;
+			}
+			inString = StringView{ string.data(), string.size() };
+			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
+			this->generateJsonIndices();
+		}
 
-		void generateJsonIndices() noexcept;
-
-		ErrorCode allocate() noexcept;
+		inline void reset(const std::string& string) {
+			if (string.size() == 0) {
+				return;
+			}
+			inString = StringView{ string.data(), string.size() };
+			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
+			this->generateJsonIndices();
+		}
 	};
+
+	inline void skipObject(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+		++it;
+		size_t openCount{ 1 };
+		size_t closeCount{};
+		if (**it == '}') {
+			++it;
+			return;
+		}
+		while (openCount > closeCount && it != end) {
+			++it;
+			switch (**it) {
+				case '{': {
+					++openCount;
+					break;
+				}
+				case '[': {
+					++openCount;
+					break;
+				}
+				case ']': {
+					++closeCount;
+					break;
+				}
+				case '}': {
+					++closeCount;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+		}
+		++it;
+	}
+
+	inline void skipArray(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+		++it;
+		size_t openCount{ 1 };
+		size_t closeCount{};
+		if (**it == ']') {
+			++it;
+			return;
+		}
+		while (openCount > closeCount && it != end) {
+			++it;
+			switch (**it) {
+				case '{': {
+					++openCount;
+					break;
+				}
+				case '[': {
+					++openCount;
+					break;
+				}
+				case ']': {
+					++closeCount;
+					break;
+				}
+				case '}': {
+					++closeCount;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+		}
+		++it;
+	}
+
+	inline void skipWhitespace(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+		while (std::isspace(**it)) {
+			++it;
+		}
+	}
+
+	inline void skipValue(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+		switch (**it) {
+			case '{': {
+				skipObject(it, end);
+				break;
+			}
+			case '[': {
+				skipArray(it, end);
+				break;
+			}
+			case '"': {
+				++it;
+				break;
+			}
+			case 'n': {
+				++it;
+				break;
+			}
+			case 'f': {
+				++it;
+				break;
+			}
+			case 't': {
+				++it;
+				break;
+			}
+			case '\0': {
+				break;
+			}
+			default: {
+				++it;
+				++it;
+			}
+		}
+	}
+
 };

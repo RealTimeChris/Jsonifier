@@ -9,7 +9,7 @@
 ## [Benchmarks](https://github.com/RealTimeChris/Json-Benchmarks)
 ----
 ## Usage - Serialization
-- Use the square bracket operator with the desired key names, to create objects. Also, use `Jsonifier::Serializer::emplaceBack()` to create and add to arrays.
+- Use the square bracket operator with the desired key names, to create objects. Also, use `Jsonifier::Serializer::emplace_back()` to create and add to arrays.
 - Alternatively use the square bracket operator with numbers as keys to access array-fields. If you try to access fields that don't exist, it will append the missing number of fields as "null".
 ----
 ```cpp
@@ -36,9 +36,9 @@ WebSocketIdentifyData::operator std::string() {
 	serializer["d"]["large_threshold"] = map;
 
 	UpdatePresenceData data{};
-	serializer["d"]["presence"]["activities"].emplaceBack(data);
-	serializer["d"]["presence"]["activities"].emplaceBack(data);
-	serializer["d"]["presence"]["activities"].emplaceBack(std::move(data));
+	serializer["d"]["presence"]["activities"].emplace_back(data);
+	serializer["d"]["presence"]["activities"].emplace_back(data);
+	serializer["d"]["presence"]["activities"].emplace_back(std::move(data));
 	serializer["d"]["afk"] = presence.afk;
 	if (presence.since != 0) {
 		serializer["since"] = presence.since;
@@ -51,10 +51,10 @@ WebSocketIdentifyData::operator std::string() {
 #else
 	serializer["d"]["properties"]["os"] = "Linux";
 #endif
-	serializer["d"]["shard"].emplaceBack(0);
-	serializer["d"]["shard"].emplaceBack(1);
+	serializer["d"]["shard"].emplace_back(0);
+	serializer["d"]["shard"].emplace_back(1);
 	serializer["d"]["token"] = botToken;
-	serializer["op"] = 2;
+	serializer["parse"] = 2;
 	serializer.refreshString(Jsonifier::SerializeType::Json);
 	return serializer.operator std::string&&();
 	}
@@ -67,7 +67,7 @@ return serializer.operator std::string&&();
 ```
 - The previous inputs will generate the following output, in Json-generating mode.
 ```cpp
-{"d":{"afk":false,"intents":0,"large_threshold":{},"presence":{"activities":[{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""}]},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"status":"","token":""},"op":2}
+{"d":{"afk":false,"intents":0,"large_threshold":{},"presence":{"activities":[{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""}]},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"status":"","token":""},"parse":2}
 ```   
 - Or the following, in Etf-generating mode.
 ```cpp

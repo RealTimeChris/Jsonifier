@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -21,38 +21,95 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Simd.hpp>
 
 namespace Jsonifier {
 
-	class NodeIterator;
-	class JsonData;
 	class Parser;
 
-	class Jsonifier_Dll IteratorCore {
+	class SimdIteratorCore {
 	  public:
-		__forceinline IteratorCore() noexcept = default;
-		__forceinline IteratorCore& operator=(const IteratorCore& other) noexcept = delete;
-		__forceinline IteratorCore(const IteratorCore& other) noexcept = delete;
-		__forceinline IteratorCore& operator=(IteratorCore&& other) noexcept = delete;
-		__forceinline IteratorCore(IteratorCore&& other) noexcept = delete;
+		friend class Parser;
+		using iterator_category = std::contiguous_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = char;
+		using reference = char&;
+		using pointer = char*;
 
-		__forceinline void setPosition(StructuralIndex) noexcept;
-		__forceinline OutStringPtr& getStringBuffer() noexcept;
-		__forceinline StructuralIndex lastPosition() noexcept;
-		__forceinline InStringPtr getStringView() noexcept;
-		__forceinline StructuralIndex position() noexcept;
-		__forceinline void setError(ErrorCode) noexcept;
-		__forceinline ErrorCode reportError() noexcept;
-		__forceinline void reset(Parser*) noexcept;
+		inline SimdIteratorCore(SimdStringReader* stringReaderNew) noexcept {
+			stringLength = stringReaderNew->getStringLength();
+			currentIndex = stringReaderNew->getStructurals();
+			stringReader = stringReaderNew->getStringView();
+		}
+
+		inline uint32_t operator->() noexcept {
+			return *currentIndex;
+		}
+
+		inline StringViewPtr operator*() noexcept {
+			return &stringReader[*currentIndex];
+		}
+
+		inline SimdIteratorCore& operator++(int32_t) noexcept {
+			this->operator++();
+			return *this;
+		}
+
+		inline SimdIteratorCore& operator++() noexcept {
+			++currentIndex;
+			switch (stringReader[*currentIndex]) {
+				case '{': {
+					++currentDepth;
+					break;
+				}
+				case '[': {
+					++currentDepth;
+					break;
+				}
+				case ']': {
+					--currentDepth;
+					break;
+				}
+				case '}': {
+					--currentDepth;
+					break;
+				}
+			}
+			return *this;
+		}
+
+		inline SimdIteratorCore operator+=(int32_t indexToAdd) noexcept {
+			SimdIteratorCore newIter{ *this };
+			for (size_t x = 0; x < indexToAdd; ++x) {
+				newIter.operator++();
+			}
+			return newIter;
+		}
+
+		inline size_t operator-(SimdIteratorCore indexToAdd) noexcept {
+			return static_cast<size_t>(*this->currentIndex - *indexToAdd.currentIndex);
+		}
+
+		inline SimdIteratorCore operator+(int32_t indexToAdd) noexcept {
+			for (size_t x = 0; x < indexToAdd; ++x) {
+				this->operator++();
+			}
+			return *this;
+		}
+
+		inline bool operator<(const SimdIteratorCore& other) noexcept {
+			return *this->currentIndex < *other.currentIndex;
+		}
+
+		inline bool operator==(const SimdIteratorCore& other) const noexcept {
+			return currentDepth == 0 || *currentIndex >= stringLength;
+		}
+
 
 	  protected:
-		StructuralIndex currentStructural{};
-		StructuralIndex rootStructural{};
-		StructuralIndex endStructural{};
-		ErrorCode errorVal{ Success };
-		OutStringPtr outString{};
-		InStringPtr inString{};
+		StructuralIndex currentIndex{};
+		StringViewPtr stringReader{};
+		size_t currentDepth{ 1 };
+		size_t stringLength{};
 	};
-
 }

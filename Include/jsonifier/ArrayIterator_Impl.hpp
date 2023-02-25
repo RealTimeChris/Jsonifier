@@ -25,54 +25,23 @@
 
 namespace Jsonifier {
 
-	__forceinline ArrayIterator::ArrayIterator(NodeIterator&& other) noexcept {
-		iteratorCore = other.iteratorCore;
-		rootStructural = position();
-		currentStructural = rootStructural;
-		data = JsonData{ operator Jsonifier::NodeIterator() };
-	}
-
-	__forceinline JsonifierResult<JsonData>& ArrayIterator::operator*() noexcept {
-		if (*peek(currentStructural) == ',') {
-			++currentStructural;
-		}
-		data = JsonData{ operator Jsonifier::NodeIterator() };
-		data.second.rootStructural = currentStructural;
-		setPosition(currentStructural);
-		return data;
-	}
+	__forceinline ArrayIterator::ArrayIterator(VectorIterator&& other) noexcept : VectorIterator{ other } {};
 
 	__forceinline bool ArrayIterator::operator==(ArrayIterator& other) noexcept {
-		auto returnValue = !isValuePresent(currentStructural, ',');
-		while (*peek(currentStructural) == ']' || *peek(currentStructural) == '}') {
-			++currentStructural;
-		}
-		setPosition(currentStructural);
-		return returnValue;
+		return VectorIterator::operator==(other);
 	}
 
-	__forceinline ArrayIterator ArrayIterator::operator++() noexcept {
-		currentStructural = skipValue(currentStructural);
-		setPosition(currentStructural);
-		return std::move(*this);
+	__forceinline ArrayIterator& ArrayIterator::operator++() noexcept {
+		VectorIterator::operator++();
+		return *this;
 	}
 
-	__forceinline JsonifierResult<ArrayIterator>::JsonifierResult(ArrayIterator&& jsonData) noexcept
-		: JsonifierResultBase<ArrayIterator>(std::forward<ArrayIterator>(jsonData)){};
-
-	__forceinline JsonifierResult<ArrayIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ArrayIterator>(error){};
-
-	__forceinline bool JsonifierResult<ArrayIterator>::operator==(JsonifierResult<ArrayIterator>& other) noexcept {
-		return second == other.second;
+	__forceinline ArrayIterator::reference ArrayIterator::operator*() noexcept {
+		return VectorIterator::operator*();
 	}
 
-	__forceinline JsonifierResult<ArrayIterator> JsonifierResult<ArrayIterator>::operator++() noexcept {
-		++second;
-		return std::move(second);
-	}
-
-	__forceinline JsonifierResult<JsonData>& JsonifierResult<ArrayIterator>::operator*() noexcept {
-		return second.operator*();
+	__forceinline ArrayIterator::pointer ArrayIterator::operator->() noexcept {
+		return VectorIterator::operator->();
 	}
 
 };

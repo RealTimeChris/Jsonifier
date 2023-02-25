@@ -21,60 +21,224 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/NodeIterator.hpp>
+#include <jsonifier/Base.hpp>
+#include <jsonifier/Object.hpp>
+#include <jsonifier/Array.hpp>
+#include <jsonifier/JsonDataBase.hpp>
+#include <jsonifier/JsonData.hpp>
 
 namespace Jsonifier {
 
-	class ArrayIterator;
-
-	class Jsonifier_Dll JsonData : protected NodeIterator {
+	class JsonData {
 	  public:
-		friend class ArrayIterator;
-		friend class NodeIterator;
-		friend class Parser;
-		friend class Object;
-		friend class Array;
-
 		__forceinline JsonData() noexcept = default;
 
-		__forceinline JsonifierResult<std::string_view> getRawJsonString() noexcept;
-		template<typename OTy> __forceinline ErrorCode get(OTy& out) noexcept;
-		__forceinline operator std::string_view() noexcept(false);
-		__forceinline JsonifierResult<JsonType> type() noexcept;
-		__forceinline operator std::string() noexcept(false);
-		__forceinline operator uint64_t() noexcept(false);
-		__forceinline operator int64_t() noexcept(false);
-		__forceinline operator Object() noexcept(false);
-		__forceinline operator double() noexcept(false);
-		__forceinline operator Array() noexcept(false);
-		__forceinline operator bool() noexcept(false);
+		__forceinline JsonData& operator=(JsonData&& other) noexcept {
+			if (this != &other) {
+				if (other.ptr) {
+					if (this->ptr) {
+						delete this->ptr;
+					}
+					this->ptr = other.ptr;
+					other.ptr = nullptr;
+				}
+			}
+			return *this;
+		}
+
+		__forceinline JsonData(JsonData&& other) noexcept {
+			*this = std::move(other);
+		}
+
+		__forceinline JsonData& operator=(const JsonData& other) noexcept {
+			if (this != &other) {
+				if (other.ptr) {
+					if (this->ptr) {
+						delete this->ptr;
+					}
+					switch (other.ptr->type()) {
+						case JsonType::Object: {
+							this->ptr = new Object{};
+							*static_cast<Object*>(this->ptr) = *static_cast<Object*>(other.ptr);
+							break;
+						}
+						case JsonType::Array: {
+							this->ptr = new Array{};
+							*static_cast<Array*>(this->ptr) = *static_cast<Array*>(other.ptr);
+							break;
+						}
+						default: {
+							this->ptr = new JsonDataBase{};
+							*this->ptr = *other.ptr;
+						}
+					}
+				}
+			}
+			return *this;
+		}
+
+		__forceinline JsonData(const JsonData& other) noexcept {
+			*this = other;
+		}
+	
+		__forceinline JsonData& operator=(Object* ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
+		}
+
+		__forceinline JsonData(Object* ptrNew) noexcept {
+			*this = ptrNew;
+		}
+
+		__forceinline JsonData& operator=(Array* ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
+		}
+
+		__forceinline JsonData(Array* ptrNew) noexcept {
+			*this = ptrNew;
+		}
+
+		__forceinline JsonData& operator=(JsonDataBase* ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
+		}
+
+		__forceinline JsonData(JsonDataBase* ptrNew) noexcept {
+			*this = ptrNew;
+		}
+
+		__forceinline JsonData& operator=(nullptr_t ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
+		}	
+
+		__forceinline JsonData(nullptr_t ptrNew) noexcept {
+			*this = ptrNew;
+		}
+
+		__forceinline JsonData& operator[](const char* key) noexcept {
+			return static_cast<Object*>(this->ptr)->operator[](key);
+		}
+
+		__forceinline JsonData& operator[](size_t index) noexcept {
+			return static_cast<Array*>(this->ptr)->operator[](index);
+		}
+
+		__forceinline JsonType type() noexcept {
+			return this->ptr->type();
+		}
+
+		template<typename VTy> __forceinline ErrorCode get(VTy& out) noexcept;
+
+		template<> __forceinline ErrorCode get<std::string_view>(std::string_view& value) noexcept {
+			auto resultValue = this->ptr->getString();
+			auto errorVal = this->ptr->reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<bool>(bool& value) noexcept {
+			auto resultValue = this->ptr->getBool();
+			auto errorVal = this->ptr->reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<double>(double& value) noexcept {
+			auto resultValue = this->ptr->getDouble();
+			auto errorVal = this->ptr->reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<int64_t>(int64_t& value) noexcept {
+			auto resultValue = this->ptr->getInt64();
+			auto errorVal = this->ptr->reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<Array>(Array& value) noexcept {
+			auto resultValue = this->ptr->getArray();
+			auto errorVal = resultValue.reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<Object>(Object& value) noexcept {
+			auto resultValue = this->ptr->getObject();
+			auto errorVal = resultValue.reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		template<> __forceinline ErrorCode get<uint64_t>(uint64_t& value) noexcept {
+			auto resultValue = this->ptr->getUint64();
+			auto errorVal = this->ptr->reportError();
+			if (!errorVal) {
+				value = std::move(resultValue);
+			}
+			return errorVal;
+		}
+
+		__forceinline operator std::string_view() noexcept {
+			return this->ptr->operator std::string_view();
+		}
+
+		__forceinline operator std::string() noexcept {
+			return this->ptr->operator std::string();
+		}
+
+		__forceinline operator uint64_t() noexcept {
+			return this->ptr->operator uint64_t();
+		}
+
+		__forceinline operator int64_t() noexcept {
+			return this->ptr->operator int64_t();
+		}
+
+		__forceinline operator double() noexcept {
+			return this->ptr->operator double();
+		}
+
+		__forceinline operator ErrorCode() noexcept {
+			return this->ptr->operator Jsonifier::ErrorCode();
+		}
+
+		__forceinline operator bool() noexcept {
+			return this->ptr->operator bool();
+		}
+
+		__forceinline operator Array&() noexcept {
+			return *static_cast<Array*>(this->ptr);
+		}
+
+		__forceinline operator Object&() noexcept {
+			return *static_cast<Object*>(this->ptr);
+		}
+
+		__forceinline ~JsonData() noexcept {
+			if (this->ptr) {
+				delete this->ptr;
+				ptr = nullptr;
+			}
+		}
 
 	  protected:
-		__forceinline JsonData(NodeIterator&& iteratorNew) noexcept;
-	};
-
-	template<> class JsonifierResult<JsonData> : public JsonifierResultBase<JsonData> {
-	  public:
-		friend class ArrayIterator;
-		friend class Array;
-
-		__forceinline JsonifierResult() noexcept = default;
-
-		__forceinline JsonifierResult(JsonData&& value) noexcept;
-		__forceinline JsonifierResult(ErrorCode error) noexcept;
-
-
-		__forceinline JsonifierResult<std::string_view> getRawJsonString() noexcept;
-		template<typename OTy> __forceinline ErrorCode get(OTy& out) noexcept;
-		__forceinline operator std::string_view() noexcept(false);
-		__forceinline JsonifierResult<JsonType> type() noexcept;
-		__forceinline operator std::string() noexcept(false);
-		__forceinline operator uint64_t() noexcept(false);
-		__forceinline operator int64_t() noexcept(false);
-		__forceinline operator Object() noexcept(false);
-		__forceinline operator double() noexcept(false);
-		__forceinline operator Array() noexcept(false);
-		__forceinline operator bool() noexcept(false);
+		mutable JsonDataBase* ptr{};
 	};
 
 }

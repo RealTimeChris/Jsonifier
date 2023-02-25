@@ -25,61 +25,24 @@
 
 namespace Jsonifier {
 
-	__forceinline ObjectIterator::ObjectIterator(NodeIterator&& other) noexcept {
-		iteratorCore = other.iteratorCore;
-		rootStructural = position();
-		currentStructural = rootStructural;
-		data = Field{ operator Jsonifier::NodeIterator() };
-	}
-
-	__forceinline JsonifierResult<Field>& ObjectIterator::operator*() noexcept {
-		if (*peek(currentStructural) == ',') {
-			++currentStructural;
-		}
-		setPosition(currentStructural);
-		data = Field{ operator Jsonifier::NodeIterator() };
-		return data;
-	}
-
-	__forceinline ObjectIterator ObjectIterator::operator++() noexcept {
-		if (currentStructural > this->iteratorCore->lastPosition()) {
-			currentStructural = nullptr;
-			return std::move(*this);
-		}
-		currentStructural = skipValue(currentStructural);
-		setPosition(currentStructural);
-		return std::move(*this);
+	__forceinline ObjectIterator::ObjectIterator(Object* other) noexcept : HashMapIterator{ other->data } {
 	}
 
 	__forceinline bool ObjectIterator::operator==(ObjectIterator& other) noexcept {
-		auto returnValue = !isValuePresent(currentStructural, ',');
-		while (*peek(currentStructural) == ']' || *peek(currentStructural) == '}') {
-			++currentStructural;
-		}
-		setPosition(currentStructural);
-		if (returnValue) {
-			returnCurrentAndAdvance();
-		}
-		return returnValue;
+		return HashMapIterator::operator==(other);
 	}
 
-	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ObjectIterator&& jsonData) noexcept
-		: JsonifierResultBase<ObjectIterator>(std::forward<ObjectIterator>(jsonData)){};
-
-
-	__forceinline JsonifierResult<ObjectIterator>::JsonifierResult(ErrorCode error) noexcept : JsonifierResultBase<ObjectIterator>(error){};
-
-	__forceinline JsonifierResult<Field>& JsonifierResult<ObjectIterator>::operator*() noexcept {
-		return second.operator*();
+	__forceinline ObjectIterator& ObjectIterator::operator++() noexcept {
+		HashMapIterator::operator++();
+		return *this;
 	}
 
-	__forceinline JsonifierResult<ObjectIterator> JsonifierResult<ObjectIterator>::operator++() noexcept {
-		++second;
-		return std::move(second);
+	__forceinline ObjectIterator::reference ObjectIterator::operator*() noexcept {
+		return HashMapIterator::operator*();
 	}
 
-	__forceinline bool JsonifierResult<ObjectIterator>::operator==(JsonifierResult<ObjectIterator>& other) noexcept {
-		return second == other.second;
+	__forceinline ObjectIterator::pointer ObjectIterator::operator->() noexcept {
+		return HashMapIterator::operator->();
 	}
 
 };

@@ -22,44 +22,29 @@
 #pragma once
 
 #include <jsonifier/Base.hpp>
+#include <jsonifier/Vector.hpp>
 
 namespace Jsonifier {
 
-	class JsonData;
-
-	class Jsonifier_Dll ArrayIterator : public NodeIterator {
+	class Jsonifier_Dll ArrayIterator : public VectorIterator<JsonData> {
 	  public:
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = JsonData;
+		using difference_type = std::ptrdiff_t;
+		using pointer = JsonData*;
+		using reference = JsonData&;
+
 		__forceinline ArrayIterator() noexcept = default;
 
-		__forceinline ArrayIterator(NodeIterator&& other) noexcept;
-
-		__forceinline JsonifierResult<JsonData>& operator*() noexcept;
+		__forceinline ArrayIterator(VectorIterator&& other) noexcept;
 
 		__forceinline bool operator==(ArrayIterator& other) noexcept;
 
-		__forceinline ArrayIterator operator++() noexcept;
+		__forceinline ArrayIterator& operator++() noexcept;
 
-	  protected:
-		StructuralIndex currentStructural{};
-		JsonifierResult<JsonData> data{};
+		__forceinline reference operator*() noexcept;
+
+		__forceinline pointer operator->() noexcept;
 	};
 
-	__forceinline NodeIterator::operator NodeIterator() noexcept {
-		return NodeIterator{ position(), globalIter() };
-	}
-
-	template<> class JsonifierResult<ArrayIterator> : public JsonifierResultBase<ArrayIterator> {
-	  public:
-		__forceinline JsonifierResult() noexcept = default;
-
-		__forceinline JsonifierResult(ArrayIterator&& jsonData) noexcept;
-
-		__forceinline JsonifierResult(ErrorCode error) noexcept;
-
-		__forceinline bool operator==(JsonifierResult<ArrayIterator>& other) noexcept;
-
-		__forceinline JsonifierResult<ArrayIterator> operator++() noexcept;
-
-		__forceinline JsonifierResult<JsonData>& operator*() noexcept;
-	};
 }

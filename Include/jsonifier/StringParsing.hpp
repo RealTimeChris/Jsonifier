@@ -13,12 +13,13 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
+/// Most of the code in this header was copied from Simdjson - https://github.com/simdjson
 #pragma once
 
 #include <jsonifier/Base.hpp>
@@ -26,34 +27,34 @@
 
 namespace Jsonifier {
 
-	class Jsonifier_Dll SimdBase256;
+	class  SimdBase128;
 
-	template<typename SimdBase256> class BackslashAndQuote {
+	template<typename SimdBase128> class BackslashAndQuote {
 	  public:
-		static const uint32_t bytesProcessed = 32;
+		static const uint32_t bytesProcessed = 16;
 
-		BackslashAndQuote<SimdBase256> __forceinline static copyAndFind(InStringPtr src, OutStringPtr dst) {
-			SimdBase256 values(reinterpret_cast<const uint8_t*>(src));
-			values.store(dst);
+		BackslashAndQuote<SimdBase128> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
+			SimdBase128 values(reinterpret_cast<const uint8_t*>(source));
+			values.store(dest);
 			BackslashAndQuote returnData{};
 			returnData.bsBits = static_cast<uint32_t>((values == '\\').toBitMask());
 			returnData.quoteBits = static_cast<uint32_t>((values == '"').toBitMask());
 			return returnData;
 		}
 
-		__forceinline bool hasQuoteFirst() {
+		inline bool hasQuoteFirst() {
 			return ((bsBits - 1) & quoteBits) != 0;
 		}
 
-		__forceinline bool hasBackslash() {
+		inline bool hasBackslash() {
 			return ((quoteBits - 1) & bsBits) != 0;
 		}
 
-		__forceinline int32_t quoteIndex() {
+		inline int32_t quoteIndex() {
 			return _tzcnt_u32(quoteBits);
 		}
 
-		__forceinline int32_t backslashIndex() {
+		inline int32_t backslashIndex() {
 			return _tzcnt_u32(bsBits);
 		}
 
@@ -62,32 +63,32 @@ namespace Jsonifier {
 		uint32_t bsBits{};
 	};
 
-	__forceinline uint32_t stringToUint32(InStringPtr str) {
+	inline uint32_t stringToUint32(StringViewPtr str) {
 		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
 		return val;
 	}
 
-	__forceinline uint32_t str4ncmp(InStringPtr src, const char* atom) {
-		return stringToUint32(reinterpret_cast<InStringPtr>(src)) ^ stringToUint32(reinterpret_cast<InStringPtr>(atom));
+	inline uint32_t str4ncmp(StringViewPtr source, const char* atom) {
+		return stringToUint32(reinterpret_cast<StringViewPtr>(source)) ^ stringToUint32(reinterpret_cast<StringViewPtr>(atom));
 	}
 
-	__forceinline constexpr uint32_t isStructuralOrWhitespace(uint8_t c) {
+	inline constexpr uint32_t isStructuralOrWhitespace(uint8_t c) {
 		return structuralOrWhitespace[c];
 	}
 
-	__forceinline constexpr uint32_t isNotStructuralOrWhitespace(uint8_t c) {
+	inline constexpr uint32_t isNotStructuralOrWhitespace(uint8_t c) {
 		return structuralOrWhitespaceNegated[c];
 	}
 
-	__forceinline uint32_t hexToU32Nocheck(InStringPtr src) {
-		uint32_t v1 = digitToVal32[630 + src[0]];
-		uint32_t v2 = digitToVal32[420 + src[1]];
-		uint32_t v3 = digitToVal32[210 + src[2]];
-		uint32_t v4 = digitToVal32[0 + src[3]];
+	inline uint32_t hexToU32Nocheck(StringViewPtr source) {
+		uint32_t v1 = digitToVal32[630 + source[0]];
+		uint32_t v2 = digitToVal32[420 + source[1]];
+		uint32_t v3 = digitToVal32[210 + source[2]];
+		uint32_t v4 = digitToVal32[0 + source[3]];
 		return v1 | v2 | v3 | v4;
 	}
 
-	__forceinline size_t codePointToUtf8(uint32_t cp, OutStringPtr c) {
+	inline size_t codePointToUtf8(uint32_t cp, StringBufferPtr c) {
 		if (cp <= 0x7F) {
 			c[0] = uint8_t(cp);
 			return 1;
@@ -111,11 +112,11 @@ namespace Jsonifier {
 		return 0;
 	}
 
-	__forceinline bool handleUnicodeCodepoint(InStringPtr* srcPtr, OutStringPtr* dstPtr) {
+	inline bool handleUnicodeCodepoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
 		uint32_t codePoint = hexToU32Nocheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			InStringPtr srcData = *srcPtr;
+			StringViewPtr srcData = *srcPtr;
 			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
 				return false;
 			}
@@ -135,19 +136,19 @@ namespace Jsonifier {
 		return offset > 0;
 	}
 
-	__forceinline OutStringPtr parseString(InStringPtr src, OutStringPtr dst) {
+	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest) {
 		while (1) {
-			auto bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(src, dst);
+			BackslashAndQuote<SimdBase128> bsQuote = BackslashAndQuote<SimdBase128>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
-				return dst + bsQuote.quoteIndex();
+				return dest + bsQuote.quoteIndex();
 			}
 			if (bsQuote.hasBackslash()) {
-				auto bsDist = bsQuote.backslashIndex();
-				uint8_t escapeChar = src[bsDist + 1];
+				uint32_t bsDist = bsQuote.backslashIndex();
+				uint8_t escapeChar = source[bsDist + 1];
 				if (escapeChar == 'u') {
-					src += bsDist;
-					dst += bsDist;
-					if (!handleUnicodeCodepoint(&src, &dst)) {
+					source += bsDist;
+					dest += bsDist;
+					if (!handleUnicodeCodepoint(&source, &dest)) {
 						return nullptr;
 					}
 				} else {
@@ -155,15 +156,25 @@ namespace Jsonifier {
 					if (escapeResult == 0u) {
 						return nullptr;
 					}
-					dst[bsDist] = escapeResult;
-					src += bsDist + 2ull;
-					dst += bsDist + 1ull;
+					dest[bsDist] = escapeResult;
+					source += bsDist + 2ull;
+					dest += bsDist + 1ull;
 				}
 			} else {
-				src += BackslashAndQuote<SimdBase256>::bytesProcessed;
-				dst += BackslashAndQuote<SimdBase256>::bytesProcessed;
+				source += BackslashAndQuote<SimdBase128>::bytesProcessed;
+				dest += BackslashAndQuote<SimdBase128>::bytesProcessed;
 			}
 		}
 		return nullptr;
+	}
+
+	inline bool parseBool(const uint8_t* json) noexcept {
+		uint32_t notTrue = str4ncmp(json, "true");
+		uint32_t notFalse = str4ncmp(json, "fals") | (json[4] ^ 'e');
+		bool error = (notTrue && notFalse) || isNotStructuralOrWhitespace(json[notTrue ? 5 : 4]);
+		if (error) {
+			return {};
+		}
+		return !notTrue;
 	}
 }

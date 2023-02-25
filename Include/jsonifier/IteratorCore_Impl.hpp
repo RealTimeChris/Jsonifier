@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -24,42 +24,4 @@
 #include <jsonifier/IteratorCore.hpp>
 #include <jsonifier/Parser.hpp>
 
-namespace Jsonifier {
-
-	__forceinline void IteratorCore::setPosition(StructuralIndex newIndex) noexcept {
-		currentStructural = newIndex;
-	}
-
-	__forceinline OutStringPtr& IteratorCore::getStringBuffer() noexcept {
-		return outString;
-	}
-
-	__forceinline StructuralIndex IteratorCore::lastPosition() noexcept {
-		return endStructural;
-	}
-
-	__forceinline InStringPtr IteratorCore::getStringView() noexcept {
-		return inString;
-	}
-
-	__forceinline StructuralIndex IteratorCore::position() noexcept {
-		return currentStructural;
-	}
-
-	__forceinline void IteratorCore::setError(ErrorCode error) noexcept {
-		errorVal = error;
-	}
-
-	__forceinline ErrorCode IteratorCore::reportError() noexcept {
-		return errorVal;
-	}
-
-	__forceinline void IteratorCore::reset(Parser* parserNew) noexcept {
-		endStructural = &parserNew->structuralIndices[parserNew->tapeLength - 1];
-		currentStructural = parserNew->structuralIndices;
-		rootStructural = parserNew->structuralIndices;
-		outString = parserNew->outString;
-		inString = parserNew->inString;
-	}
-
-}
+namespace Jsonifier {};

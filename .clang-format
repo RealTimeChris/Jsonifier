@@ -17,6 +17,7 @@ AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: 'false'
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: 'No'
 ColumnLimit: '150'
 CompactNamespaces: 'false'
 ConstructorInitializerIndentWidth: '4'

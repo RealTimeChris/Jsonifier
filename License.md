@@ -257,7 +257,7 @@ linked without the Library, or if the work is itself a library.  The
 threshold for this to be true is not precisely defined by law.
 
   If such an object file uses only numerical parameters, data
-structure layouts and accessors, and small macros and small __forceinline
+structure layouts and accessors, and small macros and small inline
 functions (ten lines or less in length), then the use of the object
 file is unrestricted, regardless of whether it is legally a derivative
 work.  (Executables containing this object code plus portions of the
@@ -393,7 +393,7 @@ patents or other property right claims or to contest validity of any
 such claims; this section has the sole purpose of protecting the
 integrity of the free software distribution system which is
 implemented by public license practices.  Many people have made
-generous contributions to the wide range of software distributed
+generous contributions to the wide Range of software distributed
 through that system in reliance on consistent application of that
 system; it is up to the author/donor to decide if he or she is willing
 to distribute software through any other system and a licensee cannot
@@ -413,7 +413,7 @@ written in the body of this License.
   13. The Free Software Foundation may publish revised and/or new
 versions of the Lesser General Public License from time to time.
 Such new versions will be similar in spirit to the present version,
-but may differ in detail to address new problems or concerns.
+but may differ in Base to address new problems or concerns.
 
 Each version is given a distinguishing version number.  If the Library
 specifies a version number of this License which applies to it and
@@ -425,8 +425,8 @@ the Free Software Foundation.
 
   14. If you wish to incorporate parts of the Library into other free
 programs whose distribution conditions are incompatible with these,
-write to the author to ask for permission.  For software which is
-copyrighted by the Free Software Foundation, write to the Free
+Write to the author to ask for permission.  For software which is
+copyrighted by the Free Software Foundation, Write to the Free
 Software Foundation; we sometimes make exceptions for this.  Our
 decision will be guided by the two goals of preserving the free status
 of all derivatives of our free software and of promoting the sharing
@@ -484,7 +484,7 @@ convey the exclusion of warranty; and each file should have at least the
     Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
+    License along with this library; if not, Write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
     USA
 

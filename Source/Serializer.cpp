@@ -358,7 +358,7 @@ namespace Jsonifier {
 		}
 
 		if (type == JsonType::Object) {
-			auto result = jsonValue.object->emplace(std::move(key), Serializer{});
+			std::pair result = jsonValue.object->emplace(std::move(key), Serializer{});
 			return result.first->second;
 		}
 		throw JsonifierException{ "Sorry, but that item-key could not be produced/accessed." };
@@ -509,7 +509,7 @@ namespace Jsonifier {
 	}
 
 	void Serializer::writeJsonFloat(const FloatType x) {
-		auto floatValue = std::to_string(x);
+		std::string floatValue = std::to_string(x);
 		writeString(floatValue.data(), floatValue.size());
 	}
 
