@@ -26,6 +26,8 @@
 
 namespace Jsonifier {
 
+	inline void memcpy(void* destVector, const void* sourceVector, size_t lengthNew) noexcept;
+
 	class String {
 	  public:
 		using value_type = char;
@@ -38,11 +40,9 @@ namespace Jsonifier {
 
 		inline String& operator=(String&& other) noexcept {
 			if (this != &other) {
-				this->sizeVal = other.sizeVal;
-				this->string = other.string;
-				other.string = nullptr;
-				other.sizeVal = 0;
-				other.m_capacity = 0;
+				std::swap(this->sizeVal, other.sizeVal);
+				std::swap(this->string, other.string);
+				std::swap(this->m_capacity, other.m_capacity);
 			}
 			return *this;
 		}
@@ -53,7 +53,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const String& other) {
 			reserve(other.m_capacity);
-			std::memcpy(string, other.string, other.sizeVal);
+			Jsonifier::memcpy(string, other.string, other.sizeVal);
 			sizeVal = other.sizeVal;
 			return *this;
 		}
@@ -63,22 +63,22 @@ namespace Jsonifier {
 		}
 
 		inline ~String() {
-			delete[] string;
+			_aligned_free(string);
 		}
 
-		inline char& operator[](std::size_t index) {
+		inline char& operator[](size_t index) {
 			return string[index];
 		}
 
-		inline const char& operator[](std::size_t index) const {
+		inline const char& operator[](size_t index) const {
 			return string[index];
 		}
 
-		inline std::size_t size() const noexcept {
+		inline constexpr size_t size() const noexcept {
 			return sizeVal;
 		}
 
-		inline void resize(std::size_t newSize) {
+		inline void resize(size_t newSize) {
 			if (newSize > m_capacity) {
 				reserve(newSize);
 			}
@@ -87,7 +87,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const std::string& other) {
 			reserve(other.size());
-			std::memcpy(string, other.data(), other.size());
+			Jsonifier::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -98,7 +98,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const std::string_view& other) {
 			reserve(other.size());
-			std::memcpy(string, other.data(), other.size());
+			Jsonifier::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -109,7 +109,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const StringView& other) {
 			reserve(other.size());
-			std::memcpy(string, other.data(), other.size());
+			Jsonifier::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -210,7 +210,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void clear() noexcept {
+		inline constexpr void clear() noexcept {
 			sizeVal = 0;
 		}
 
@@ -224,38 +224,37 @@ namespace Jsonifier {
 			return count01 < count02;
 		}
 
-		inline char* data() const noexcept {
+		inline constexpr char* data() const noexcept {
 			return string;
 		}
 
-		inline char* data() noexcept {
+		inline constexpr char* data() noexcept {
 			return string;
 		}
 
-		inline const size_t capacity() const noexcept {
+		inline constexpr const size_t capacity() const noexcept {
 			return m_capacity;
+		}
+		
+		void reserve(size_t newCapacity) {
+			if (!string) {
+				string = static_cast<char*>(_aligned_malloc(newCapacity, 32));
+			} else {
+				string = static_cast<char*>(_aligned_realloc(string, newCapacity, 32));
+			}
+			m_capacity = newCapacity;
 		}
 
 	  private:
 		static constexpr uint64_t fnvOffsetBasis{ 14695981039346656037ULL };
 		static constexpr uint64_t fnvPrime{ 1099511628211ULL };
-		inline size_t operator()(const String& string) const noexcept {
+		inline size_t operator()(const String& stringNew) const noexcept {
 			size_t value{ fnvOffsetBasis };
-			for (size_t i = 0; i < string.size(); ++i) {
-				value ^= static_cast<std::uint64_t>(string.data()[i]);
+			for (size_t i = 0; i < stringNew.size(); ++i) {
+				value ^= static_cast<std::uint64_t>(stringNew.data()[i]);
 				value *= fnvPrime;
 			}
 			return value;
-		}
-
-		void reserve(std::size_t newCapacity) {
-			char* newData = new char[newCapacity];
-			if (string != nullptr) {
-				std::memcpy(newData, string, sizeVal);
-				delete[] string;
-			}
-			string = newData;
-			m_capacity = newCapacity;
 		}
 
 		void swap(String& other) noexcept {
@@ -265,9 +264,20 @@ namespace Jsonifier {
 		}
 
 		char* string{};
-		std::size_t sizeVal{};
-		std::size_t m_capacity{};
+		size_t sizeVal{};
+		size_t m_capacity{};
 	};
+
+	inline StringView& StringView::operator=(const String& stringNew) noexcept {
+		string = stringNew.data();
+		sizeVal = stringNew.size();
+		return *this;
+	}
+
+	inline constexpr StringView::StringView(const String& stringNew) noexcept {
+		string = stringNew.data();
+		sizeVal = stringNew.size();
+	}
 
 	inline std::ostream& operator<<(std::ostream& out, const String& string) noexcept {
 		out << string.operator std::basic_string_view<char, std::char_traits<char>>();

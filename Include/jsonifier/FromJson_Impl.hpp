@@ -27,21 +27,10 @@
 
 namespace Jsonifier {
 
-	inline StopWatch stopWatch{ std::chrono::nanoseconds{ 1 } };
-	inline int64_t iterationCountString{};
-	inline int64_t stringTime{};
-	inline int64_t iterationCountInteger{};
-	inline int64_t integerTime{};
-	inline int64_t iterationCountArray{};
-	inline int64_t arrayTime{};
-
 	template<typename OTy>
-	requires BoolT<OTy>
+		requires BoolT<OTy>
 	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Bool) {
-				return;
-			}
 			value = parseBool(*it);
 			++it;
 			return;
@@ -49,12 +38,9 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	requires NumT<OTy>
+		requires NumT<OTy>
 	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Number) {
-				return;
-			}
 			auto newPtr = *it;
 			parseNumber(value, newPtr);
 			++it;
@@ -62,18 +48,15 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename OTy>
-	requires StringT<OTy>
-	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::String) {
-				return;
-			}
-			auto start = it;
+	template<typename T>
+		requires StringT<T>
+	struct FromJson<T> {
+		template<class It> inline static void op(auto& value, It&& it, It&& end) noexcept {
+			auto start = *it;
 			++it;
-			size_t newSize = static_cast<size_t>(it - start) - 2;
+			size_t newSize = static_cast<size_t>(*it - start) - 2;
 			value.resize(newSize + (16 - (newSize % 16)));
-			auto newPtr = parseString((*start) + 1, reinterpret_cast<StringBufferPtr>(value.data()));
+			auto newPtr = parseString((start) + 1, reinterpret_cast<StringBufferPtr>(value.data()));
 			newSize = reinterpret_cast<char*>(newPtr) - value.data();
 			value.resize(newSize);
 			return;
@@ -110,15 +93,16 @@ namespace Jsonifier {
 	}
 
 	template<typename OTy>
-	requires(ArrayT<OTy> && !EmplaceBackable<OTy> && !Resizeable<OTy> && Emplaceable<OTy>) struct FromJson<OTy> {
+		requires(ArrayT<OTy> && !EmplaceBackable<OTy> && !Resizeable<OTy> && Emplaceable<OTy>)
+	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Array) {
+			match<'['>(it);
+			if (**it == ']') [[unlikely]] {
+				++it;
 				return;
 			}
-			match<'['>(it);
-			++it;
 
-			while (true) {
+			while (it != end) {
 				using VTy = typename OTy::value_type;
 				if constexpr (sizeof(VTy) > 8) {
 					thread_local VTy v;
@@ -134,21 +118,18 @@ namespace Jsonifier {
 					return;
 				}
 				match<','>(it);
-				++it;
 			}
 		}
 	};
 
 	template<typename OTy>
-	requires(ArrayT<OTy> && ( EmplaceBackable<OTy> || !Resizeable<OTy> )&&!Emplaceable<OTy>) struct FromJson<OTy> {
+		requires(ArrayT<OTy> && ( EmplaceBackable<OTy> || !Resizeable<OTy> ) && !Emplaceable<OTy>)
+	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Array) {
-				return;
-			}
 			match<'['>(it);
-			++it;
 			if (**it == ']') [[unlikely]] {
 				++it;
+				return;
 			}
 			const auto n = value.size();
 
@@ -161,9 +142,6 @@ namespace Jsonifier {
 					++it;
 				} else if (**it == ']') {
 					++it;
-					if constexpr (Resizeable<OTy>) {
-						value.resize(i + 1);
-					}
 					return;
 				} else [[unlikely]] {
 					throw std::runtime_error("Expected ]");
@@ -181,20 +159,19 @@ namespace Jsonifier {
 						throw std::runtime_error("Expected ]");
 					}
 				}
-			} else {
-				throw std::runtime_error("Exceeded inline static array size.");
 			}
-			return;
 		}
 	};
 
 	template<typename OTy>
-	requires ArrayT<OTy> &&( !EmplaceBackable<OTy> && Resizeable<OTy> )struct FromJson<OTy> {
+		requires ArrayT<OTy> && ( !EmplaceBackable<OTy> && Resizeable<OTy> )
+	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Array) {
+			match<'['>(it);
+			if (**it == ']') [[unlikely]] {
+				++it;
 				return;
 			}
-			++it;
 			const auto n = countArrayElements(it, end);
 			value.resize(n);
 			size_t i = 0;
@@ -202,7 +179,6 @@ namespace Jsonifier {
 				Read::op(x, it, end);
 				if (i < n - 1) {
 					match<','>(it);
-					++it;
 				}
 				++i;
 			}
@@ -210,10 +186,12 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	requires ArrayT<OTy>
+		requires ArrayT<OTy>
 	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Array) {
+			match<'['>(it);
+			if (**it == ']') [[unlikely]] {
+				++it;
 				return;
 			}
 			constexpr auto N = []() constexpr {
@@ -222,9 +200,7 @@ namespace Jsonifier {
 				} else {
 					return std::tuple_size_v<OTy>;
 				}
-			}
-			();
-			++it;
+			}();
 
 			forEach<N>([&](auto I) {
 				if (**it == ']') {
@@ -233,7 +209,6 @@ namespace Jsonifier {
 				}
 				if constexpr (I != 0) {
 					match<','>(it);
-					++it;
 				}
 				if constexpr (IsStdTuple<OTy>) {
 					Read::op(std::get<I>(value), it, end);
@@ -247,39 +222,22 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	requires MapT<OTy> || JsonifierObjectT<OTy>
+		requires MapT<OTy> || JsonifierObjectT<OTy>
 	struct FromJson<OTy> {
 		template<typename It> inline static void op(OTy& value, It& it, It& end) {
-			if (getType(it) != JsonType::Object) {
-				return;
-			}
-			++it;
+			match<'{'>(it);
 			bool first{ true };
 			while (it != end) {
-				if (**it == '}' || it == end) [[unlikely]] {
-					++it;
-					return;
-				} else if (first) [[unlikely]] {
+				if (first) [[unlikely]] {
 					first = false;
 				} else [[likely]] {
-					if (it == end) [[unlikely]] {
-						return;
-					}
 					match<','>(it);
-					++it;
 				}
-				match<'"'>(it);
 				auto start = it;
-				++it;
-				StringView key =
-					StringView{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(it.operator->() - start.operator->()) - 2 };
+				match<'"'>(it);
+				StringView key = StringView{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*it - *start) - 2 };
 
 				match<':'>(it);
-				++it;
-				if (**it == '}') [[unlikely]] {
-					++it;
-					return;
-				}
 				constexpr auto frozen_map = makeMap<OTy, true>();
 				const auto& member_it = frozen_map.find(key);
 				if (member_it != frozen_map.end()) [[likely]] {

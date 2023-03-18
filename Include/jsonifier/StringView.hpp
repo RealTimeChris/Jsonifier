@@ -28,9 +28,11 @@
 
 namespace Jsonifier {
 
+	using StructuralIndex = const uint8_t**;
 	using StringViewPtr = const uint8_t*;
-	using StructuralIndex = uint32_t*;
 	using StringBufferPtr = uint8_t*;
+
+	class String;
 
 	inline size_t findSingleCharacter(const char* const string, size_t lengthNew, const char charToFind) noexcept;
 
@@ -59,7 +61,7 @@ namespace Jsonifier {
 		const char* ptr{};
 	};
 
-	struct  StringView {
+	struct StringView {
 	  public:
 		using difference_type = std::ptrdiff_t;
 		using value_type = char;
@@ -105,6 +107,10 @@ namespace Jsonifier {
 			sizeVal = stringNew.size();
 		}
 
+		inline StringView& operator=(const String& stringNew) noexcept;
+		
+		inline constexpr StringView(const String& stringNew) noexcept;
+
 		inline constexpr StringView(const char*& stringNew) noexcept {
 			sizeVal = std::char_traits<char>::length(stringNew);
 			string = stringNew;
@@ -139,30 +145,6 @@ namespace Jsonifier {
 
 		inline constexpr bool operator==(const StringView& rhs) const noexcept {
 			if (sizeVal != rhs.sizeVal) {
-				return false;
-			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
-			} else if (sizeVal == 0 && rhs.size() == 0) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		inline constexpr bool operator==(const std::string& rhs) const noexcept {
-			if (sizeVal != rhs.size()) {
-				return false;
-			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
-			} else if (sizeVal == 0 && rhs.size() == 0) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		inline constexpr bool operator==(const std::string_view& rhs) const noexcept {
-			if (sizeVal != rhs.size()) {
 				return false;
 			} else if (sizeVal) {
 				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);

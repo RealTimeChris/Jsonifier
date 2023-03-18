@@ -29,7 +29,6 @@ namespace Jsonifier {
 	namespace Tuplet {
 		template<typename OTy> using IdentityT = OTy;
 
-		// Obtains OTy::type
 		template<typename OTy> using TypeT = typename OTy::type;
 
 		template<size_t I> using Tag = std::integral_constant<size_t, I>;
@@ -246,8 +245,8 @@ namespace Jsonifier {
 			using base_list = TypeList<>;
 			using element_list = TypeList<>;
 
-			template<OtherThan<Tuple> U>// Preserves default assignments
-			requires Stateless<U>// Check that U is similarly Stateless
+			template<OtherThan<Tuple> U>
+				requires Stateless<U>
 			inline constexpr auto& operator=(U&&) noexcept {
 				return *this;
 			}
@@ -258,45 +257,24 @@ namespace Jsonifier {
 			auto operator<=>(Tuple const&) const = default;
 			bool operator==(Tuple const&) const = default;
 
-			// Applies a function to every element of the Tuple. The order is the
-			// declaration order, so first the function will be applied to element 0,
-			// then element 1, then element 2, and so on, where element N is identified
-			// by get<N>
-			//
-			// (Does nothing when invoked on empty Tuple)
 			template<typename F> inline constexpr void forEach(F&&) const noexcept {
 			}
 
-			// Applies a function to each element successively, until one returns a
-			// truthy value. Returns true if any application returned a truthy value,
-			// and false otherwise
-			//
-			// (Returns false for empty Tuple)
 			template<typename F> inline constexpr bool any(F&&) const noexcept {
 				return false;
 			}
 
-			// Applies a function to each element successively, until one returns a
-			// falsy value. Returns true if every application returned a truthy value,
-			// and false otherwise
-			//
-			// (Returns true for empty Tuple)
 			template<typename F> inline constexpr bool all(F&&) const noexcept {
 				return true;
 			}
 
-			// Map a function over every element in the Tuple, using the values to
-			// construct a new Tuple
-			//
-			// (Returns empty Tuple when invoked on empty Tuple)
 			template<typename F> inline constexpr auto map(F&&) const noexcept {
 				return Tuple{};
 			}
 		};
 		template<class... OTys> Tuple(OTys...) -> Tuple<UnwrapRefDecayT<OTys>...>;
-	}// namespace Tuplet
+	}
 
-	// std::pair implementation
 	namespace Tuplet {
 		template<typename First, typename Second> struct pair {
 			static constexpr size_t N = 2;
@@ -322,7 +300,7 @@ namespace Jsonifier {
 				return (std::move(*this).second);
 			}
 
-			template<OtherThan<pair> Type>// Preserves default assignments
+			template<OtherThan<pair> Type>
 			inline constexpr auto& operator=(Type&& tup) {
 				auto&& [a, b] = static_cast<Type&&>(tup);
 				first = static_cast<decltype(a)&&>(a);
@@ -339,11 +317,8 @@ namespace Jsonifier {
 			bool operator==(pair const&) const = default;
 		};
 		template<typename A, typename B> pair(A, B) -> pair<UnwrapRefDecayT<A>, UnwrapRefDecayT<B>>;
-	}// namespace Tuplet
+	}
 
-	// Tuplet::get implementation
-	// Tuplet::tie implementation
-	// Tuplet::apply implementation
 	namespace Tuplet {
 		template<size_t I, Indexable Tup> inline constexpr decltype(auto) get(Tup&& tup) {
 			return static_cast<Tup&&>(tup)[Tag<I>()];
@@ -365,25 +340,13 @@ namespace Jsonifier {
 		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, std::pair<A, B>&& pair) {
 			return static_cast<F&&>(func)(std::move(pair).first, std::move(pair).second);
 		}
-	}// namespace Tuplet
+	}
 
-	// Tuplet::tupleCat implementation
-	// Tuplet::makeTuple implementation
-	// Tuplet::forwardAsTuple implementation
 	namespace Tuplet {
 		template<BaseListTuple... OTy> inline constexpr auto tupleCat(OTy&&... ts) {
 			if constexpr (sizeof...(OTy) == 0) {
 				return Tuple<>();
 			} else {
-				/**
-             * It appears that Clang produces better assembly when
-             * TUPLET_CAT_BY_FORWARDING_TUPLE == 0, while GCC produces better assembly when
-             * TUPLET_CAT_BY_FORWARDING_TUPLE == 1. MSVC always produces terrible assembly
-             * in either case. This will set TUPLET_CAT_BY_FORWARDING_TUPLE to the correct
-             * value (0 for clang, 1 for everyone else)
-             *
-             * See: https://github.com/codeinred/Tuplet/discussions/14
-             */
 #if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
 	#if defined(__clang__)
 		#define TUPLET_CAT_BY_FORWARDING_TUPLE 0
@@ -407,7 +370,6 @@ namespace Jsonifier {
 			return Tuple<UnwrapRefDecayT<OTys>...>{ static_cast<OTys&&>(args)... };
 		}
 
-		// TODO: This version is needed for older versions of gcc, fixed in 12.2
 		template<class... OTys> inline constexpr auto copyTuple(OTys... args) {
 			return Tuple<OTys...>{ args... };
 		}
@@ -415,17 +377,13 @@ namespace Jsonifier {
 		template<typename... OTy> inline constexpr auto forwardAsTuple(OTy&&... a) noexcept {
 			return Tuple<OTy&&...>{ static_cast<OTy&&>(a)... };
 		}
-	}// namespace Tuplet
+	}
 
-	// Tuplet literals
 	namespace Tuplet::literals {
 		template<char... D> inline constexpr auto operator""_tag() noexcept -> Tag<sizetFromDigits<D...>()> {
 			return {};
 		}
-	}// namespace Tuplet::literals
-
-	// std::tuple_size specialization
-	// std::tuple_element specialization}
+	}
 }
 namespace std {
 	template<class... OTy> struct tuple_size<Jsonifier::Tuplet::Tuple<OTy...>> : std::integral_constant<size_t, sizeof...(OTy)> {};
@@ -436,13 +394,12 @@ namespace std {
 };
 namespace Jsonifier {
 
-	template<typename Tuple, std::size_t... Is> auto tupleSplit(Tuple&& tuple) {
+	template<typename Tuple, size_t... Is> auto tupleSplit(Tuple&& tuple) {
 		static constexpr auto N = std::tuple_size_v<tuple>;
 		static constexpr auto is = std::make_index_sequence<N / 2>{};
 		return std::make_pair(tupleSplitImpl<0>(tuple, is), tupleSplitImpl<1>(tuple, is));
 	}
 
-	// group builder code
 	template<size_t N> inline constexpr auto shrinkIndexArray(auto&& arr) {
 		std::array<size_t, N> res{};
 		for (size_t i = 0; i < N; ++i) {

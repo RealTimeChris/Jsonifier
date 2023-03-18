@@ -26,36 +26,35 @@ cmake_minimum_required(VERSION 3.18)
 
 set(PROJECT_NAME "Jsonifier")
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Output")
+
 project(
     "${PROJECT_NAME}"
     VERSION 1.0.1
     LANGUAGES CXX
 )
 
-set_property(GLOBAL PROPERTY USE_FOLDERS YES)
+file(GLOB_RECURSE Headers CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Include/jsonifier/*.hpp")
+source_group(TREE "${CMAKE_SOURCE_DIR}/Include" PREFIX Headers FILES ${Headers})
 
-# Done in developer mode only, so users won't be bothered by this :)
-file(GLOB_RECURSE Headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/Include/jsonifier/*.hpp")
-source_group(TREE "${PROJECT_SOURCE_DIR}/Include" PREFIX Headers FILES ${Headers})
-
-file(GLOB_RECURSE Sources CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/Source/*.cpp")
-source_group(TREE "${PROJECT_SOURCE_DIR}/Source" PREFIX Sources FILES ${Sources})
+file(GLOB_RECURSE Sources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Source/*.cpp")
+source_group(TREE "${CMAKE_SOURCE_DIR}/Source" PREFIX Sources FILES ${Sources})
 
 add_library(Jsonifier INTERFACE "${Sources}" "${Headers}")
 add_library(Jsonifier::Jsonifier ALIAS Jsonifier)
 
 if (MSVC)
    if (matched_cl)
-      target_compile_options(Jsonifier INTERFACE "/Zc:preprocessor" /GL /permissive- /Zc:lambda)
+      target_compile_options(Jsonifier INTERFACE "/Zc:preprocessor" /GL /permissive- /Zc:lambda /O3)
       target_link_options(Jsonifier INTERFACE /LTCG /INCREMENTAL:NO)
    endif()
 else()
    target_compile_options(Jsonifier INTERFACE "-Wno-missing-braces")
 endif()
 
-set_property(TARGET Jsonifier PROPERTY EXPORT_NAME "${PROJECT_NAME}")
+set_target_properties(Jsonifier PROPERTIES EXPORT_NAME "${PROJECT_NAME}" CXX_STANDARD C++23)
 
-target_compile_features(Jsonifier INTERFACE cxx_std_23)
+target_compile_features(Jsonifier INTERFACE cxx_std_20)
 
 set(CMAKE_INSTALL_INCLUDEDIR "Include/jsonifier" CACHE PATH "")
 
@@ -63,8 +62,6 @@ set(CMAKE_INSTALL_LIBDIR lib CACHE PATH "")
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
-
-set(package Jsonifier)
 
 install(
     DIRECTORY Include/
@@ -79,14 +76,14 @@ install(
 )
 
 write_basic_package_version_file(
-    "${package}ConfigVersion.cmake"
+    "${PROJECT_NAME}ConfigVersion.cmake"
     COMPATIBILITY SameMajorVersion
     ARCH_INDEPENDENT
 )
 
 # Allow package maintainers to freely override the path for the configs
 set(
-    Jsonifier_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
+    Jsonifier_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
     CACHE PATH "CMake package config location relative to the install prefix"
 )
 mark_as_advanced(Jsonifier_INSTALL_CMAKEDIR)
@@ -94,12 +91,12 @@ mark_as_advanced(Jsonifier_INSTALL_CMAKEDIR)
 install(
     FILES cmake/install-config.cmake
     DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
-    RENAME "${package}Config.cmake"
+    RENAME "${PROJECT_NAME}Config.cmake"
     COMPONENT Jsonifier_Development
 )
 
 install(
-    FILES "${PROJECT_BINARY_DIR}/${package}ConfigVersion.cmake"
+    FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
     DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
     COMPONENT Jsonifier_Development
 )
@@ -116,6 +113,5 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 target_include_directories(
-    Jsonifier ${warning_guard}
-    INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Include/>"
+    Jsonifier INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Include/>"
 )

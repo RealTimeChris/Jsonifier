@@ -27,7 +27,7 @@
 
 namespace Jsonifier {
 
-	class  SimdBase128;
+	class SimdBase128;
 
 	template<typename SimdBase128> class BackslashAndQuote {
 	  public:
@@ -51,16 +51,16 @@ namespace Jsonifier {
 		}
 
 		inline int32_t quoteIndex() {
-			return _tzcnt_u32(quoteBits);
+			return _tzcnt_u16(quoteBits);
 		}
 
 		inline int32_t backslashIndex() {
-			return _tzcnt_u32(bsBits);
+			return _tzcnt_u16(bsBits);
 		}
 
 	  protected:
-		uint32_t quoteBits{};
-		uint32_t bsBits{};
+		uint16_t quoteBits{};
+		uint16_t bsBits{};
 	};
 
 	inline uint32_t stringToUint32(StringViewPtr str) {
@@ -80,47 +80,76 @@ namespace Jsonifier {
 		return structuralOrWhitespaceNegated[c];
 	}
 
+	inline constexpr uint32_t digitToVal32[] = {
+		// 0-9
+		0x00000000,
+		0x01000000,
+		0x02000000,
+		0x03000000,
+		0x04000000,
+		0x05000000,
+		0x06000000,
+		0x07000000,
+		0x08000000,
+		0x09000000,
+		// A-F
+		0x0A000000,
+		0x0B000000,
+		0x0C000000,
+		0x0D000000,
+		0x0E000000,
+		0x0F000000,
+		// a-f
+		0x0A000000,
+		0x0B000000,
+		0x0C000000,
+		0x0D000000,
+		0x0E000000,
+		0x0F000000,
+	};
+
 	inline uint32_t hexToU32Nocheck(StringViewPtr source) {
-		uint32_t v1 = digitToVal32[630 + source[0]];
-		uint32_t v2 = digitToVal32[420 + source[1]];
-		uint32_t v3 = digitToVal32[210 + source[2]];
-		uint32_t v4 = digitToVal32[0 + source[3]];
-		return v1 | v2 | v3 | v4;
+		uint32_t v = 0;
+		for (int i = 0; i < 8; i += 2) {
+			v |= digitToVal32[630 + source[i]] | digitToVal32[420 + source[i + 1]];
+		}
+		return v;
 	}
 
+	inline constexpr uint8_t kByteMark[] = { 0x00, 0x80, 0xE0, 0xF0 };
+
 	inline size_t codePointToUtf8(uint32_t cp, StringBufferPtr c) {
-		if (cp <= 0x7F) {
-			c[0] = uint8_t(cp);
-			return 1;
+		size_t count = 1;
+		if (cp > 0x7F)
+			count += (cp > 0x7FF) + (cp > 0xFFFF) + (cp > 0x1FFFFF);
+
+		uint8_t* dst = c + count - 1;
+		switch (count) {
+			case 4:
+				*dst-- = (cp | 0x80) & 0xBF;
+				cp >>= 6;
+			case 3:
+				*dst-- = (cp | 0x80) & 0xBF;
+				cp >>= 6;
+			case 2:
+				*dst-- = (cp | 0x80) & 0xBF;
+				cp >>= 6;
+			case 1:
+				*dst-- = cp | kByteMark[count];
 		}
-		if (cp <= 0x7FF) {
-			c[0] = uint8_t((cp >> 6) + 192);
-			c[1] = uint8_t((cp & 63) + 128);
-			return 2;
-		} else if (cp <= 0xFFFF) {
-			c[0] = uint8_t((cp >> 12) + 224);
-			c[1] = uint8_t(((cp >> 6) & 63) + 128);
-			c[2] = uint8_t((cp & 63) + 128);
-			return 3;
-		} else if (cp <= 0x10FFFF) {
-			c[0] = uint8_t((cp >> 18) + 240);
-			c[1] = uint8_t(((cp >> 12) & 63) + 128);
-			c[2] = uint8_t(((cp >> 6) & 63) + 128);
-			c[3] = uint8_t((cp & 63) + 128);
-			return 4;
-		}
-		return 0;
+		return count;
 	}
 
 	inline bool handleUnicodeCodepoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
-		uint32_t codePoint = hexToU32Nocheck(*srcPtr + 2);
-		*srcPtr += 6;
+	uint32_t codePoint = digitToVal32[630 + (*srcPtr)[0]] | digitToVal32[420 + (*srcPtr)[1]] | digitToVal32[210 + (*srcPtr)[2]] | digitToVal32[0 + (*srcPtr)[3]];
+		*srcPtr += 4;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
 			StringViewPtr srcData = *srcPtr;
 			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
 				return false;
 			}
-			uint32_t codePoint2 = hexToU32Nocheck(srcData + 2);
+			uint32_t codePoint2 =
+				digitToVal32[630 + srcData[2]] | digitToVal32[420 + srcData[3]] | digitToVal32[210 + srcData[4]] | digitToVal32[0 + srcData[5]];
 			uint32_t lowBit = codePoint2 - 0xdc00;
 			if (lowBit >> 10) {
 				return false;

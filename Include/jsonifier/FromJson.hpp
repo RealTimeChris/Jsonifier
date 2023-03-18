@@ -32,8 +32,9 @@ namespace Jsonifier {
 	template<char c> inline void match(SimdIteratorCore& it) {
 		if (**it != c) [[unlikely]] {
 			throw std::runtime_error("Failed to match a character: " + std::string{ c } +
-				", it was: " + std::string{ *reinterpret_cast<const char*>(*it) } + ", at  index: " + std::to_string(it.operator->()));
+				", it was: " + std::string{ *reinterpret_cast<const char*>(*it) } + ", at  index: " + std::to_string(**it));
 		} else [[likely]] {
+			++it;
 			return;
 		}
 	}

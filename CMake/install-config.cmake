@@ -1,1 +1,1 @@
-include("${CMAKE_CURRENT_LIST_DIR}/glazeTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/JsonifierTargets.cmake")

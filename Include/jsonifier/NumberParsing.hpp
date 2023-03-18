@@ -24,7 +24,11 @@
 
 #include <jsonifier/StringParsing.hpp>
 #include <array>
+#ifndef __linux__
 #include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 namespace Jsonifier {
 
@@ -767,7 +771,7 @@ namespace Jsonifier {
 
 		void mulU32(uint32_t num) {
 			uint32_t carry = 0;
-			for (std::size_t i = 0; i < data.size(); i++) {
+			for (size_t i = 0; i < data.size(); i++) {
 				uint64_t res = uint64_t(data[i]) * uint64_t(num) + uint64_t(carry);
 				uint32_t lower_word = uint32_t(res);
 				uint32_t upper_word = uint32_t(res >> 32);
@@ -880,7 +884,7 @@ namespace Jsonifier {
 	}
 		repeat_in_1_18(expr_intg);
 #undef expr_intg
-		cur += 19; /* skip continuous 19 digits */
+		cur += 19; /* Skip continuous 19 digits */
 		if (!digiIsDigitOrFp(*cur)) {
 			val = static_cast<OTy>(sig);
 			if constexpr (!std::is_unsigned_v<OTy>) {
@@ -916,7 +920,7 @@ namespace Jsonifier {
 	}
 			repeat_in_1_18(expr_frac)
 #undef expr_frac
-				cur += 20 + frac_zeros; /* skip 19 digits and 1 decimal point */
+				cur += 20 + frac_zeros; /* Skip 19 digits and 1 decimal point */
 		if (uint8_t(*cur - zero) > 9)
 			goto digi_frac_end; /* fraction part end */
 		goto digi_frac_more; /* read more digits in fraction part */
@@ -1271,7 +1275,7 @@ namespace Jsonifier {
 	requires std::same_as<OTy, int32_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		uint32_t neg = uint32_t(-val);
-		std::size_t sign = val < 0;
+		size_t sign = val < 0;
 		*buf = '-';
 		return toChars(buf + sign, sign ? uint32_t(neg) : uint32_t(val));
 	}
@@ -1416,7 +1420,7 @@ namespace Jsonifier {
 	requires std::same_as<OTy, int64_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		uint64_t neg = uint64_t(-val);
-		std::size_t sign = val < 0;
+		size_t sign = val < 0;
 		*buf = '-';
 		return toChars(buf + sign, sign ? uint64_t(neg) : uint64_t(val));
 	}
@@ -1431,7 +1435,11 @@ namespace Jsonifier {
 #include <cstring>
 
 #if defined(_M_X64) || defined(_M_ARM64)
-	#include <intrin.h>
+	#ifndef __linux__
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 #endif
 
 	// Source: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c
@@ -2308,7 +2316,7 @@ namespace Jsonifier {
 		uint32_t bb = abb - a * 100; /* (abb % 100) */
 		uint32_t cc = abbcc - abb * 100; /* (abbcc % 100) */
 
-		/* write abbcc */
+		/* Write abbcc */
 		buf[0] = uint8_t(a + '0');
 		buf += a > 0;
 		lz = bb < 10 && a == 0;
@@ -2440,7 +2448,7 @@ namespace Jsonifier {
 			int32_t dot_pos = sig_len + exp_dec;
 
 			if (-6 < dot_pos && dot_pos <= 21) {
-				/* no need to write exponent part */
+				/* no need to Write exponent part */
 				if (dot_pos <= 0) {
 					auto num_hdr = buffer + (2 - dot_pos);
 					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
@@ -2464,7 +2472,7 @@ namespace Jsonifier {
 					return ((num_end - num_hdr) <= dot_pos) ? buffer + dot_pos : num_end;
 				}
 			} else {
-				/* write with scientific notation */
+				/* Write with scientific notation */
 				/* such as 1.234e56 */
 				auto end = writeU64Len15To17Trim(buffer + 1, sig_dec);
 				end -= (end == buffer + 2); /* remove '.0', e.g. 2.0e34 -> 2e34 */

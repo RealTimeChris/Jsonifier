@@ -39,15 +39,11 @@ namespace Jsonifier {
 		inline SimdIteratorCore(SimdStringReader* stringReaderNew) noexcept {
 			stringLength = stringReaderNew->getStringLength();
 			currentIndex = stringReaderNew->getStructurals();
-			stringReader = stringReaderNew->getStringView();
-		}
-
-		inline uint32_t operator->() noexcept {
-			return *currentIndex;
+			stringView = stringReaderNew->getStringView();
 		}
 
 		inline StringViewPtr operator*() noexcept {
-			return &stringReader[*currentIndex];
+			return reinterpret_cast<StringViewPtr>(*currentIndex);
 		}
 
 		inline SimdIteratorCore& operator++(int32_t) noexcept {
@@ -57,7 +53,7 @@ namespace Jsonifier {
 
 		inline SimdIteratorCore& operator++() noexcept {
 			++currentIndex;
-			switch (stringReader[*currentIndex]) {
+			switch (**currentIndex) {
 				case '{': {
 					++currentDepth;
 					break;
@@ -102,13 +98,13 @@ namespace Jsonifier {
 		}
 
 		inline bool operator==(const SimdIteratorCore& other) const noexcept {
-			return currentDepth == 0 || *currentIndex >= stringLength;
+			return currentDepth == 0 || (*currentIndex - stringView) >= stringLength;
 		}
 
 
 	  protected:
 		StructuralIndex currentIndex{};
-		StringViewPtr stringReader{};
+		StringViewPtr stringView{};
 		size_t currentDepth{ 1 };
 		size_t stringLength{};
 	};

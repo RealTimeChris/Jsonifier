@@ -29,7 +29,7 @@ namespace Jsonifier {
 
 	struct Read;
 
-	class  Parser {
+	class Parser {
 	  public:
 		inline Parser() = default;
 

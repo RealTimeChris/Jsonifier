@@ -25,6 +25,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <jsonifier/StringView.hpp>
+#include <jsonifier/String.hpp>
 
 namespace Jsonifier {
 
@@ -65,7 +66,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 16 };
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ull), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
+		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
 			(0x0000ffff)) {
 			return false;
 		}
@@ -79,7 +80,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 32 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ull),
+		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
 				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
@@ -96,7 +97,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 64 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
@@ -120,7 +121,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 128 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
@@ -151,7 +152,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 256 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
@@ -214,7 +215,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 16 };
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ull),
+		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll),
 				_mm_cmpeq_epi8(_mm_stream_load_si128(destVector++), _mm_stream_load_si128(sourceVector++)))) != (0x0000ffff)) {
 			return false;
 		}
@@ -229,7 +230,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 32 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ull),
+		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
 				_mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
@@ -247,7 +248,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 64 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
@@ -272,7 +273,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 128 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
@@ -304,7 +305,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 256 };
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ull) };
+		__m256i result{ _mm256_set1_epi64x(-1ll) };
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
@@ -602,7 +603,7 @@ namespace Jsonifier {
 		using value_type = OTy;
 		using pointer = OTy*;
 		using const_pointer = const OTy*;
-		using size_type = std::size_t;
+		using size_type = size_t;
 		using difference_type = std::ptrdiff_t;
 
 		MemoryPoolAllocator() = default;
@@ -725,7 +726,7 @@ namespace Jsonifier {
 		}
 	};
 
-	struct  SimdBase128 {
+	struct SimdBase128 {
 	  public:
 		inline SimdBase128(){};
 
@@ -807,7 +808,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase128 operator~() noexcept {
-			return _mm_xor_si128(*this, _mm_set1_epi64x(-1ull));
+			return _mm_xor_si128(*this, _mm_set1_epi64x(-1ll));
 		}
 
 		inline SimdBase128 bitAndNot(SimdBase128&& other) noexcept {
@@ -835,19 +836,19 @@ namespace Jsonifier {
 		}
 
 		inline void printBits(uint64_t values, const String& valuesTitle) noexcept {
-			//std::cout<< valuesTitle;
-			//std::cout<< std::bitset<64>{ values };
-			//std::cout<< std::endl;
+			std::cout << valuesTitle;
+			std::cout << std::bitset<64>{ values };
+			std::cout << std::endl;
 		}
 
 		inline SimdBase128 printBits(const String& valuesTitle) noexcept {
-			//std::cout<< valuesTitle;
+			std::cout << valuesTitle;
 			for (size_t x = 0; x < 32; ++x) {
 				for (size_t y = 0; y < 8; ++y) {
-					//std::cout<< std::bitset<1>{ static_cast<size_t>(*(static_cast<int8_t*>(&value) + x)) >> y };
+					std::cout << std::bitset<1>{ static_cast<size_t>(*(reinterpret_cast<int8_t*>(&value) + x)) >> y };
 				}
 			}
-			//std::cout<< std::endl;
+			std::cout << std::endl;
 			return *this;
 		}
 
@@ -856,7 +857,7 @@ namespace Jsonifier {
 		__m128i value{};
 	};
 
-	struct  SimdBase256 {
+	struct SimdBase256 {
 	  public:
 		inline SimdBase256(){};
 
@@ -943,7 +944,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256 operator~() noexcept {
-			return _mm256_xor_si256(*this, _mm256_set1_epi64x(-1ull));
+			return _mm256_xor_si256(*this, _mm256_set1_epi64x(-1ll));
 		}
 
 		inline void convertWhitespaceToSimdBase256(const SimdBase256* valuesNew) noexcept {
@@ -1092,19 +1093,19 @@ namespace Jsonifier {
 		}
 
 		inline void printBits(uint64_t values, const String& valuesTitle) noexcept {
-			//std::cout<< valuesTitle;
-			//std::cout<< std::bitset<64>{ values };
-			//std::cout<< std::endl;
+			std::cout << valuesTitle;
+			std::cout << std::bitset<64>{ values };
+			std::cout << std::endl;
 		}
 
 		inline SimdBase256 printBits(const String& valuesTitle) noexcept {
-			//std::cout<< valuesTitle;
+			std::cout << valuesTitle;
 			for (size_t x = 0; x < 32; ++x) {
 				for (size_t y = 0; y < 8; ++y) {
-					//std::cout<< std::bitset<1>{ static_cast<size_t>(*(static_cast<int8_t*>(&value) + x)) >> y };
+					std::cout << std::bitset<1>{ static_cast<size_t>(*(reinterpret_cast<int8_t*>(&value) + x)) >> y };
 				}
 			}
-			//std::cout<< std::endl;
+			std::cout << std::endl;
 			return *this;
 		}
 
@@ -1147,7 +1148,7 @@ namespace Jsonifier {
 		size_t index{};
 	};
 
-	class  SimdStringReader {
+	class SimdStringReader {
 	  public:
 		__forceinline SimdStringReader() noexcept {};
 
@@ -1157,7 +1158,6 @@ namespace Jsonifier {
 			stringView = stringViewNew;
 			stringIndex = 0;
 			tapeIndex = 0;
-			x = 0;
 		}
 
 		__forceinline void generateStructurals(StringViewPtr valueNew) noexcept {
@@ -1182,7 +1182,7 @@ namespace Jsonifier {
 			return this->stringLengthRaw;
 		}
 
-		__forceinline StructuralIndex getStructurals() {
+		__forceinline const uint8_t** getStructurals() {
 			return this->structuralIndices.data();
 		}
 
@@ -1191,7 +1191,7 @@ namespace Jsonifier {
 		}
 
 	  protected:
-		std::vector<uint32_t> structuralIndices{};
+		std::vector<const uint8_t*> structuralIndices{};
 		StringViewPtr stringView{};
 		SimdBase256 structurals{};
 		size_t stringLengthRaw{};
@@ -1204,28 +1204,34 @@ namespace Jsonifier {
 		bool prevEscaped{};
 		size_t tapeIndex{};
 		SimdBase256 op{};
-		int32_t x{};
 
 		uint64_t round(int64_t a, int64_t size) noexcept {
 			return (((a) + (( size )-1)) & ~(( size )-1));
 		}
 
 		__forceinline int64_t rollValuesIntoTape(size_t currentIndex, size_t y, int64_t newBits) noexcept {
-			structuralIndices[(currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[(currentIndex * 8) + tapeIndex] = &stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] =
+				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
 			return newBits;
 		}

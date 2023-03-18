@@ -6,85 +6,115 @@
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
 ---
-## [Benchmarks](https://github.com/RealTimeChris/Json-Benchmarks)
+## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
+## Usage - Serialization/Parsing
+- Create a specialization of the `Jsonifier::Core` class template as follows...
+----
+```cpp
+
+struct fixed_object_t {
+	std::vector<int> int_array;
+	std::vector<float> float_array;
+	std::vector<double> double_array;
+};
+
+struct fixed_name_object_t {
+	std::string name0{};
+	std::string name1{};
+	std::string name2{};
+	std::string name3{};
+	std::string name4{};
+};
+
+struct nested_object_t {
+	std::vector<std::array<double, 3>> v3s{};
+	std::string id{};
+};
+
+struct another_object_t {
+	std::string string{};
+	std::string another_string{};
+	bool boolean{};
+	nested_object_t nested_object{};
+};
+
+struct obj_t {
+	fixed_object_t fixed_object{};
+	fixed_name_object_t fixed_name_object{};
+	another_object_t another_object{};
+	std::vector<std::string> string_array{};
+	std::string string{};
+	double number{};
+	bool boolean{};
+	bool another_bool{};
+};
+
+template<> struct Jsonifier::Core<fixed_object_t> {
+	using T = fixed_object_t;
+	static constexpr auto value = object("int_array", &T::int_array, "float_array", &T::float_array, "double_array", &T::double_array);
+};
+
+template<> struct Jsonifier::Core<fixed_name_object_t> {
+	using T = fixed_name_object_t;
+	static constexpr auto value = object("name0", &T::name0, "name1", &T::name1, "name2", &T::name2, "name3", &T::name3, "name4", &T::name4);
+};
+
+template<> struct Jsonifier::Core<nested_object_t> {
+	using T = nested_object_t;
+	static constexpr auto value = object("v3s", &T::v3s, "id", &T::id);
+};
+
+template<> struct Jsonifier::Core<another_object_t> {
+	using T = another_object_t;
+	static constexpr auto value =
+		object("string", &T::string, "another_string", &T::another_string, "boolean", &T::boolean, "nested_object", &T::nested_object);
+};
+
+template<> struct Jsonifier::Core<obj_t> {
+	using T = obj_t;
+	static constexpr auto value =
+		object("fixed_object", &T::fixed_object, "fixed_name_object", &T::fixed_name_object, "another_object", &T::another_object, "string_array",
+			&T::string_array, "string", &T::string, "number", &T::number, "boolean", &T::boolean, "another_bool", &T::another_bool);
+};
+
+```
 ## Usage - Serialization
-- Use the square bracket operator with the desired key names, to create objects. Also, use `Jsonifier::Serializer::emplace_back()` to create and add to arrays.
-- Alternatively use the square bracket operator with numbers as keys to access array-fields. If you try to access fields that don't exist, it will append the missing number of fields as "null".
-----
+- Create an instance of the `Jsonifier::Serializer` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
+- Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
 ```cpp
+std::string buffer{ };
 
-class UpdatePresenceData {
-	std::string status{};
-	int64_t since{ 0 };
-	bool afk{ false };
-	operator Jsonifier::Serializer();
-	};
+obj_t obj{};
 
-UpdatePresenceData::operator Jsonifier::Serializer() {
-	Jsonifier::Serializer serializer{};
-	serializer["status"] = status;
-	serializer["since"] = since;
-	serializer["afk"] = afk;
-	return serializer;
-}
-
-WebSocketIdentifyData::operator std::string() {
-	Jsonifier::Serializer serializer{};
-	serializer["d"]["intents"] = intents;
-	std::map<std::string, DiscordCoreAPI::ChannelType> map{};
-	serializer["d"]["large_threshold"] = map;
-
-	UpdatePresenceData data{};
-	serializer["d"]["presence"]["activities"].emplace_back(data);
-	serializer["d"]["presence"]["activities"].emplace_back(data);
-	serializer["d"]["presence"]["activities"].emplace_back(std::move(data));
-	serializer["d"]["afk"] = presence.afk;
-	if (presence.since != 0) {
-		serializer["since"] = presence.since;
-	}
-	serializer["d"]["status"] = presence.status;
-	serializer["d"]["properties"]["browser"] = "DiscordCoreAPI";
-	serializer["d"]["properties"]["device"] = "DiscordCoreAPI";
-#ifdef _WIN32
-	serializer["d"]["properties"]["os"] = "Windows";
-#else
-	serializer["d"]["properties"]["os"] = "Linux";
-#endif
-	serializer["d"]["shard"].emplace_back(0);
-	serializer["d"]["shard"].emplace_back(1);
-	serializer["d"]["token"] = botToken;
-	serializer["parse"] = 2;
-	serializer.refreshString(Jsonifier::SerializeType::Json);
-	return serializer.operator std::string&&();
-	}
-
+Jsonifier::Serializer serializer{};
+serializer.serializeJson(obj, buffer);
 ```
-- To generate the string, call the `Jsonifier::Serializer::refreshString()` method with an argument of type `Jsonifier::JsonifierSerializeType`, set to either Json or Etf, depending on which one you would like to generate, and then call the `std::string` operator or the `std::string&&` operator of the `Jsonifier::Serializer` class to acquire the string. **(Note: The `std::string` operator copies the string out of the `Jsonifier::Serializer` class, while the `std::string&&` operator moves it out of the `Jsonifier::Serializer` class.)**
+## Usage - Parsing
+- Create an instance of the `Jsonifier::Parser` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
+- Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
 ```cpp
-serializer.refreshString(Jsonifier::JsonifierSerializeType::Json);
-return serializer.operator std::string&&();
+std::string buffer{ json0 };
+
+obj_t obj{};
+
+Jsonifier::Parser parser{ buffer };
+parser.parseJson(obj, buffer);
 ```
-- The previous inputs will generate the following output, in Json-generating mode.
-```cpp
-{"d":{"afk":false,"intents":0,"large_threshold":{},"presence":{"activities":[{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""},{"afk":false,"since":0,"status":""}]},"properties":{"browser":"DiscordCoreAPI","device":"DiscordCoreAPI","os":"Windows"},"shard":[0,1],"status":"","token":""},"parse":2}
-```   
-- Or the following, in Etf-generating mode.
-```cpp
-ât☻m☺dm♥afks♣falsemintentsamlarge_thresholdtpresencet☺m
-activitiesl♥t♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmt♥m♥afks♣falsem♣sinceam♠statusmjm
-propertiest♥mbrowsermDiscordCoreAPIm♠devicemDiscordCoreAPIm☻osmWindowsm♣shardl☻aa☺jm♠statusmm♣tokenmm☻opa☻
-```
-- Also note that the `Jsonifier::Serializer` class can accept arguments of type `Jsonifier::Serializer` to be concatenated into the string - as the `UpdatePresenceData` class above shows.
-## Installation (CMake)
+
+## Installation (CMake-FetchContent)
 - Requirements:
 	- CMake 3.20 or later.
-	- A C++20 or later compiler.
-- Steps:   
-	1. Clone this repo into a folder.
-	2. Set the installation directory if you wish, using the `CMAKE_INSTALL_PREFIX` variable in CMakeLists.txt.
-	3. Enter the directory in a terminal, and enter `cmake -S . --preset=Windows_OR_Linux-Release_OR_Debug`.
-	4. Enter within the same terminal, `cmake --build --preset=Windows_OR_Linux-Release_OR_Debug`.
-	5. Enter within the same terminal, `cmake --install ./Build/Release_OR_Debug`.
-	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE Jsonifier::Jsonifier)`.
+	- A C++20 or later compiler.	
+```cpp
+include(FetchContent)
 
+FetchContent_Declare(
+   Jsonifier
+   GIT_REPOSITORY https://github.com/RealTimeChris/Jsonifier.git
+   GIT_TAG Dev
+)
+FetchContent_MakeAvailable(Jsonifier)
+
+target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
+```

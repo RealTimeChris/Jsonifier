@@ -27,21 +27,21 @@
 
 namespace Jsonifier {
 
-	template<typename OTy> class StringReference {
+	template<typename OTy> class StringReference : public StringView {
 	  public:
 		inline constexpr StringReference(OTy& stringReference) : string{ stringReference } {
 		}
 
 		inline constexpr void writeCharacter(const char value) {
 			if (this->string.size() < this->currentSize + 1) {
-				this->string.resize((this->string.size() + 1) * 2);
+				string.resize((std::max)(string.size() * 2, string.size() + 1));
 			}
 			this->string[this->currentSize++] = value;
 		}
 
 		inline constexpr void reserveSpace(size_t length) {
 			if (this->string.size() < this->currentSize + length) {
-				this->string.resize((this->string.size() + length) * 2);
+				string.resize((std::max)(string.size() * 2, string.size() + length));
 			}
 		}
 
@@ -59,7 +59,7 @@ namespace Jsonifier {
 
 		inline constexpr void writeCharacters(const char* data, size_t length) {
 			if (this->string.size() < this->currentSize + length) {
-				this->string.resize((this->string.size() + length) * 2);
+				string.resize((std::max)(string.size() * 2, string.size() + length));
 			}
 			Jsonifier::memcpy(this->string.data() + this->currentSize, data, length);
 			this->currentSize += length;
@@ -70,16 +70,14 @@ namespace Jsonifier {
 		OTy& string{};
 	};
 
-	class  Serializer {
+	class Serializer {
 	  public:
 		inline constexpr Serializer() noexcept = default;
 
 		template<typename OTy> inline void serializeJson(OTy& data, auto& buffer) {
-			StringReference newStringRef{ buffer };
-			Write::op(data, newStringRef);
-			if (buffer.size() != newStringRef.getCurrentSize()) {
-				buffer.resize(newStringRef.getCurrentSize());
-			}
+			size_t index{};
+			Write::op(data, buffer, index);
+			buffer.resize(index);
 		}
 	};
 }
