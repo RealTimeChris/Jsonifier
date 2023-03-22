@@ -39,18 +39,10 @@ namespace Jsonifier {
 		}
 	}
 
-	template<typename OTy = void> struct FromJson {};
-
-	struct Read {
-		template<typename OTy, typename It> inline static void op(OTy& value, It& it, It& end) {
-			FromJson<std::decay_t<OTy>>::template op(value, it, end);
-		}
-	};
-
 	template<JsonifierValueT OTy> struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+		inline static void op(OTy& value, auto& it) {
 			using VTy = decltype(getMember(std::declval<OTy>(), CoreWrapperV<OTy>));
-			FromJson<VTy>::template op(getMember(value, CoreWrapperV<OTy>), it, end);
+			FromJson<VTy>::template op(getMember(value, CoreWrapperV<OTy>), it);
 		}
 	};
 

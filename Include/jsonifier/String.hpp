@@ -21,12 +21,11 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/StringView.hpp>
 #include <jsonifier/Base.hpp>
 
 namespace Jsonifier {
 
-	inline void memcpy(void* destVector, const void* sourceVector, size_t lengthNew) noexcept;
+	inline void memcpy(void* destVector, void* sourceVector, size_t lengthNew) noexcept;
 
 	class String {
 	  public:
@@ -40,9 +39,7 @@ namespace Jsonifier {
 
 		inline String& operator=(String&& other) noexcept {
 			if (this != &other) {
-				std::swap(this->sizeVal, other.sizeVal);
-				std::swap(this->string, other.string);
-				std::swap(this->m_capacity, other.m_capacity);
+				std::swap(*this, other);
 			}
 			return *this;
 		}
@@ -53,7 +50,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const String& other) {
 			reserve(other.m_capacity);
-			Jsonifier::memcpy(string, other.string, other.sizeVal);
+			JsonifierCore::memcpy(string, other.string, other.sizeVal);
 			sizeVal = other.sizeVal;
 			return *this;
 		}
@@ -63,14 +60,14 @@ namespace Jsonifier {
 		}
 
 		inline ~String() {
-			_aligned_free(string);
+			free(string);
 		}
 
 		inline char& operator[](size_t index) {
 			return string[index];
 		}
 
-		inline const char& operator[](size_t index) const {
+		inline char& operator[](size_t index) const {
 			return string[index];
 		}
 
@@ -87,7 +84,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const std::string& other) {
 			reserve(other.size());
-			Jsonifier::memcpy(string, other.data(), other.size());
+			JsonifierCore::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -98,7 +95,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const std::string_view& other) {
 			reserve(other.size());
-			Jsonifier::memcpy(string, other.data(), other.size());
+			JsonifierCore::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -109,7 +106,7 @@ namespace Jsonifier {
 
 		inline String& operator=(const StringView& other) {
 			reserve(other.size());
-			Jsonifier::memcpy(string, other.data(), other.size());
+			JsonifierCore::memcpy(string, other.data(), other.size());
 			sizeVal = other.size();
 			return *this;
 		}
@@ -118,23 +115,23 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline String& operator=(const char* stringNew) noexcept {
-			sizeVal = findSingleCharacter(stringNew, std::string::npos, '\0');
-			Jsonifier::memcpy(string, stringNew, sizeVal);
+		inline String& operator=(void* stringNew) noexcept {
+			sizeVal = findSingleCharacterAvx2(stringNew, std::string::npos, '\0');
+			JsonifierCore::memcpy(string, stringNew, sizeVal);
 			return *this;
 		}
 
-		inline explicit String(const char* stringNew) noexcept {
+		inline explicit String(void* stringNew) noexcept {
 			*this = stringNew;
 		}
 
-		inline explicit String(const char* stringNew, size_t sizeNew) noexcept {
+		inline explicit String(void* stringNew, size_t sizeNew) noexcept {
 			sizeVal = sizeNew;
-			Jsonifier::memcpy(string, stringNew, sizeVal);
+			JsonifierCore::memcpy(string, stringNew, sizeVal);
 		}
 
 		inline size_t findFirstOf(char charToFind) noexcept {
-			return findSingleCharacter(string, sizeVal, charToFind);
+			return findSingleCharacterAvx2(string, sizeVal, charToFind);
 		}
 
 		inline void push_back(char newChar) noexcept {
@@ -151,15 +148,15 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void append(const char* newString, size_t size) noexcept {
+		inline void append(void* newString, size_t size) noexcept {
 			if (this->sizeVal + size >= this->capacity()) {
 				this->resize((this->sizeVal + size) * 2);
 			}
-			Jsonifier::memcpy(this->string + sizeVal, newString, size);
+			JsonifierCore::memcpy(this->string + sizeVal, newString, size);
 			sizeVal += size;
 		}
 
-		inline void append(const char newChar) noexcept {
+		inline void append(char newChar) noexcept {
 			if (this->sizeVal + 1 >= this->capacity()) {
 				this->resize((this->sizeVal + 1) * 2);
 			}
@@ -170,7 +167,7 @@ namespace Jsonifier {
 			if (this->sizeVal + newString.size() >= this->capacity()) {
 				this->resize((this->sizeVal + newString.size()) * 2);
 			}
-			Jsonifier::memcpy(this->string + sizeVal, newString.data(), newString.size());
+			JsonifierCore::memcpy(this->string + sizeVal, newString.data(), newString.size());
 			sizeVal += newString.size();
 		}
 
@@ -178,7 +175,7 @@ namespace Jsonifier {
 			if (sizeVal != rhs.size()) {
 				return false;
 			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
+				return JsonifierCore::compare(string, reinterpret_cast<const void*>(rhs.data()), sizeVal);
 			} else if (sizeVal == 0 && rhs.size() == 0) {
 				return true;
 			} else {
@@ -190,7 +187,7 @@ namespace Jsonifier {
 			if (sizeVal != rhs.size()) {
 				return false;
 			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
+				return JsonifierCore::compare(string, reinterpret_cast<const void*>(rhs.data()), sizeVal);
 			} else if (sizeVal == 0 && rhs.size() == 0) {
 				return true;
 			} else {
@@ -202,7 +199,7 @@ namespace Jsonifier {
 			if (sizeVal != rhs.size()) {
 				return false;
 			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
+				return JsonifierCore::compare(string, reinterpret_cast<const void*>(rhs.data()), sizeVal);
 			} else if (sizeVal == 0 && rhs.size() == 0) {
 				return true;
 			} else {
@@ -235,12 +232,12 @@ namespace Jsonifier {
 		inline constexpr const size_t capacity() const noexcept {
 			return m_capacity;
 		}
-		
+
 		void reserve(size_t newCapacity) {
 			if (!string) {
-				string = static_cast<char*>(_aligned_malloc(newCapacity, 32));
+				string = static_cast<char*>(aligned_alloc(newCapacity, 32));
 			} else {
-				string = static_cast<char*>(_aligned_realloc(string, newCapacity, 32));
+				string = static_cast<char*>(realloc(string, newCapacity, 32));
 			}
 			m_capacity = newCapacity;
 		}

@@ -24,94 +24,109 @@
 
 cmake_minimum_required(VERSION 3.18)
 
-set(PROJECT_NAME "Jsonifier")
-
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Output")
-
 project(
-    "${PROJECT_NAME}"
+    "Jsonifier"
     VERSION 1.0.1
-    LANGUAGES CXX
+    LANGUAGES CXX C
 )
 
-file(GLOB_RECURSE Headers CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Include/jsonifier/*.hpp")
-source_group(TREE "${CMAKE_SOURCE_DIR}/Include" PREFIX Headers FILES ${Headers})
+file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
-file(GLOB_RECURSE Sources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Source/*.cpp")
-source_group(TREE "${CMAKE_SOURCE_DIR}/Source" PREFIX Sources FILES ${Sources})
+add_library("${PROJECT_NAME}" INTERFACE "${HEADERS}")
 
-add_library(Jsonifier INTERFACE "${Sources}" "${Headers}")
-add_library(Jsonifier::Jsonifier ALIAS Jsonifier)
+add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
-if (MSVC)
-   if (matched_cl)
-      target_compile_options(Jsonifier INTERFACE "/Zc:preprocessor" /GL /permissive- /Zc:lambda /O3)
-      target_link_options(Jsonifier INTERFACE /LTCG /INCREMENTAL:NO)
-   endif()
-else()
-   target_compile_options(Jsonifier INTERFACE "-Wno-missing-braces")
+set_target_properties(
+	"${PROJECT_NAME}" PROPERTIES
+	PUBLIC_HEADER "${HEADERS}"
+	OUTPUT_NAME "jsonifier"
+	CXX_STANDARD_REQUIRED ON
+	CXX_EXTENSIONS OFF
+)
+
+if (NOT "${VCPKG_TARGET_TRIPLET}" STREQUAL "x64_uwp")
+	include(CMake/FindAVX.cmake)
 endif()
 
-set_target_properties(Jsonifier PROPERTIES EXPORT_NAME "${PROJECT_NAME}" CXX_STANDARD C++23)
-
-target_compile_features(Jsonifier INTERFACE cxx_std_20)
-
-set(CMAKE_INSTALL_INCLUDEDIR "Include/jsonifier" CACHE PATH "")
-
-set(CMAKE_INSTALL_LIBDIR lib CACHE PATH "")
-
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
-
-install(
-    DIRECTORY Include/
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    COMPONENT Jsonifier_Development
-)
-
-install(
-    TARGETS Jsonifier
-    EXPORT JsonifierTargets
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-)
-
-write_basic_package_version_file(
-    "${PROJECT_NAME}ConfigVersion.cmake"
-    COMPATIBILITY SameMajorVersion
-    ARCH_INDEPENDENT
-)
-
-# Allow package maintainers to freely override the path for the configs
-set(
-    Jsonifier_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
-    CACHE PATH "CMake package config location relative to the install prefix"
-)
-mark_as_advanced(Jsonifier_INSTALL_CMAKEDIR)
-
-install(
-    FILES cmake/install-config.cmake
-    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
-    RENAME "${PROJECT_NAME}Config.cmake"
-    COMPONENT Jsonifier_Development
-)
-
-install(
-    FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
-    COMPONENT Jsonifier_Development
-)
-
-install(
-    EXPORT JsonifierTargets
-    NAMESPACE Jsonifier::
-    DESTINATION "${Jsonifier_INSTALL_CMAKEDIR}"
-    COMPONENT Jsonifier_Development
-)
-
-if(PROJECT_IS_TOP_LEVEL)
-  include(CPack)
+if (CXX_AVX512_FOUND)
+	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX512)
+	if (WIN32)
+		set(AVX_TYPE "AVX512")
+	elseif(UNIX)
+		set(AVX_TYPE "march=native")
+	endif()
+elseif (CXX_AVX2_FOUND)
+	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX2)
+	if (WIN32)
+		set(AVX_TYPE "AVX2")
+	elseif(UNIX)
+		set(AVX_TYPE "march=native")
+	endif()
+elseif(CXX_AVX_FOUND)
+	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX)
+	if (WIN32)
+		set(AVX_TYPE "AVX")
+	elseif(UNIX)
+		set(AVX_TYPE "march=native")
+	endif()
 endif()
 
 target_include_directories(
-    Jsonifier INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Include/>"
+	"${PROJECT_NAME}" INTERFACE
+	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+	INTERFACE
+	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
+)
+
+target_compile_options("${PROJECT_NAME}" INTERFACE 
+	"$<$<CXX_COMPILER_ID:MSVC>:/arch:${AVX_TYPE}>"
+	"$<$<CXX_COMPILER_ID:GNU>:-${AVX_TYPE}>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-march=x86-64-v4>"
+)
+
+target_compile_features(
+	"${PROJECT_NAME}" INTERFACE
+	"cxx_std_23"
+)
+
+set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
+set(EXPORTED_TARGETS_NAME "${PROJECT_NAME}Targets")
+set(EXPORTED_TARGETS_FILE_NAME "${EXPORTED_TARGETS_NAME}.cmake")
+set(EXPORTED_TARGETS_FILE_PATH "share/jsonifier/${EXPORTED_TARGETS_FILE_NAME}")
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/CMake/${CONFIG_FILE_NAME}.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
+	INSTALL_DESTINATION "share/jsonifier"
+	PATH_VARS
+	EXPORTED_TARGETS_FILE_PATH
+)
+
+set(VERSION_FILE_NAME "${PROJECT_NAME}ConfigVersion.cmake")
+
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
+	VERSION "${PRODUCT_VERSION}"
+	COMPATIBILITY AnyNewerVersion
+)
+
+install(
+	FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
+	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
+	DESTINATION "share/jsonifier"
+)
+
+install(
+	TARGETS "${PROJECT_NAME}"
+	EXPORT "${EXPORTED_TARGETS_NAME}"
+	PUBLIC_HEADER DESTINATION "include/jsonifier"
+)
+
+install(
+	EXPORT "${EXPORTED_TARGETS_NAME}"
+	FILE "${EXPORTED_TARGETS_FILE_NAME}"
+	NAMESPACE "${PROJECT_NAME}::"
+	DESTINATION "share/jsonifier"
 )

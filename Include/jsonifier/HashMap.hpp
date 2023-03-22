@@ -17,6 +17,7 @@
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
+/// NOTE: Most of the code in this header was sampled heavily from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
 #pragma once
@@ -43,7 +44,7 @@ namespace Jsonifier {
 			return *reinterpret_cast<const uint64_t*>(bytes);
 		} else {
 			uint64_t res;
-			Jsonifier::memcpy(&res, bytes, n);
+			JsonifierCore::memcpy(&res, bytes, n);
 			return res;
 		}
 	}
@@ -60,33 +61,34 @@ namespace Jsonifier {
 			return *reinterpret_cast<const uint64_t*>(bytes);
 		} else {
 			uint64_t res;
-			Jsonifier::memcpy(&res, bytes, N);
+			JsonifierCore::memcpy(&res, bytes, N);
 			return res;
 		}
 	}
 
 	inline constexpr bool stringCompare(auto&& s0, auto&& s1) noexcept {
 		if (std::is_constant_evaluated()) {
-			return StringView{ s0.data(), s0.size() } == StringView{ s0.data(), s0.size() };
+			return std::string_view{ s0.data(), s0.size() } == std::string_view{ s0.data(), s0.size() };
 		} else {
 			const auto n = s0.size();
 			if (s1.size() != n) {
 				return false;
 			}
 
-			return compare(s0.data(), s1.data(), n);
+			return JsonifierCore::compare(s0.data(), s1.data(), n);
 		}
 	}
 
-	template<const StringView& S, bool CheckSize = true> inline constexpr bool cxStringCompare(const StringView key) noexcept {
-		constexpr auto n = S.size();
+	template<const std::string_view& S, bool CheckSize = true> inline constexpr bool cxStringCompare(const std::string_view key) noexcept {
+		constexpr auto s = S;// Needed for MSVC to avoid an internal compiler error
+		constexpr auto n = s.size();
 		if (std::is_constant_evaluated()) {
-			return key == S;
+			return key == s;
 		} else {
 			if constexpr (CheckSize) {
-				return (key.size() == n) && (std::memcmp(key.data(), S.data(), n) == 0);
+				return (key.size() == n) && (JsonifierCore::compare(key.data(), s.data(), n));
 			} else {
-				return compare(key.data(), S.data(), n);
+				return JsonifierCore::compare(key.data(), s.data(), n);
 			}
 		}
 	}
@@ -113,11 +115,11 @@ namespace Jsonifier {
 		return d >> 8;
 	}
 
-	template<> struct Hash<StringView> {
-		inline constexpr size_t operator()(StringView value) const {
+	template<> struct Hash<std::string_view> {
+		inline constexpr size_t operator()(std::string_view value) const {
 			return fnv1aHash(value);
 		}
-		inline constexpr size_t operator()(StringView value, size_t seed) const {
+		inline constexpr size_t operator()(std::string_view value, size_t seed) const {
 			return fnv1aHash(value, seed);
 		}
 	};
@@ -219,7 +221,7 @@ namespace Jsonifier {
 		}
 
 		template<typename ForwardIt, size_t N> inline constexpr ForwardIt doItFast(ForwardIt first, std::integral_constant<size_t, N>) {
-			auto inline constexpr step = N / 2;
+			auto constexpr step = N / 2;
 			static_assert(N / 2 == N - N / 2 - 1, "power of two minus 1");
 			auto it = first + step;
 			auto next_it = compareisonVal(*it, value) ? it + 1 : first;
@@ -233,11 +235,11 @@ namespace Jsonifier {
 
 		template<typename ForwardIt, size_t N>
 		inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<size_t, N>, std::integral_constant<bool, false>) {
-			auto inline constexpr next_power = nextHighestPowerOfTwo(N);
-			auto inline constexpr next_start = next_power / 2 - 1;
+			auto constexpr next_power = nextHighestPowerOfTwo(N);
+			auto constexpr next_start = next_power / 2 - 1;
 			auto it = first + next_start;
 			if (compareisonVal(*it, value)) {
-				auto inline constexpr next = N - next_start - 1;
+				auto constexpr next = N - next_start - 1;
 				return doitfirst(it + 1, std::integral_constant<size_t, next>{},
 					std::integral_constant<bool, nextHighestPowerOfTwo(next) - 1 == next>{});
 			} else
@@ -314,7 +316,7 @@ namespace Jsonifier {
 	// This generator is used by default in unordered frozen containers
 	using DefaultPrgT = MinStdRand;
 
-	// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
+	// https://en.wikipedia.org/wiki/Fowlerï¿½Nollï¿½Vo_hash_function
 	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
 	static constexpr uint64_t fnv64_prime = 1099511628211;
 	static constexpr uint64_t fnv64_offset_basis = 0xcbf29ce484222325;
@@ -404,12 +406,12 @@ namespace Jsonifier {
 		return (std::numeric_limits<HashType>::max)();
 	}
 
-	template<typename Value, size_t N, typename HashType, bool allowHashCheck = false> struct NaiveMap {
+	template<typename Value, size_t N, typename HashType> struct NaiveMap {
 		static_assert(N <= 20);
 		static constexpr size_t m = naiveBucketSize<N>();
 		HashType seed{};
-		std::array<std::pair<StringView, Value>, N> items{};
-		std::array<HashType, N * allowHashCheck> hashes{};
+		std::array<std::pair<std::string_view, Value>, N> items{};
+		std::array<HashType, N * 1> hashes{};
 		std::array<uint8_t, m> table{};
 
 		inline constexpr decltype(auto) begin() const {
@@ -423,14 +425,8 @@ namespace Jsonifier {
 			const auto hash = Xsm1<HashType>{}(key, seed);
 			const auto index = table[hash % m];// modulus should be fast because m is known compile time
 			const auto& item = items[index];
-			if constexpr (allowHashCheck) {
-				if (hashes[index] != hash) [[unlikely]] {
-					return std::unexpected(ErrorCode::Unknown_Key);
-				}
-			} else {
-				if (!stringCompare(item.first, key)) [[unlikely]] {
-					return std::unexpected(ErrorCode::Unknown_Key);
-				}
+			if (hashes[index] != hash) [[unlikely]] {
+				return std::unexpected(ErrorCode::Unknown_Key);
 			}
 			return item.second;
 		}
@@ -438,28 +434,22 @@ namespace Jsonifier {
 		inline constexpr decltype(auto) find(auto&& key) const noexcept {
 			const auto hash = Xsm1<HashType>{}(key, seed);
 			const auto index = table[hash % m];
-			if constexpr (allowHashCheck) {
-				if (hashes[index] != hash) [[unlikely]]
-					return items.end();
-			} else {
-				const auto& item = items[index];
-				if (!stringCompare(item.first, key)) [[unlikely]]
-					return items.end();
-			}
+			if (hashes[index] != hash) [[unlikely]]
+				return items.end();
 			return items.begin() + index;
 		}
 	};
 
-	template<typename OTy, size_t N, typename HashType, bool allowHashCheck = false>
-	inline constexpr auto makeNaiveMap(std::initializer_list<std::pair<StringView, OTy>> pairs) {
+	template<typename OTy, size_t N, typename HashType>
+	inline constexpr auto makeNaiveMap(std::initializer_list<std::pair<std::string_view, OTy>> pairs) {
 		static_assert(N <= 20);
 		if (pairs.size() != N) {
 			throw std::runtime_error{ "pairs.size() != N" };
 		}
-		NaiveMap<OTy, N, HashType, allowHashCheck> ht{};
+		NaiveMap<OTy, N, HashType> ht{};
 		constexpr size_t m = naiveBucketSize<N>();
 
-		std::array<StringView, N> keys{};
+		std::array<std::string_view, N> keys{};
 		size_t i = 0;
 		for (const auto& pair: pairs) {
 			ht.items[i] = pair;
@@ -473,9 +463,7 @@ namespace Jsonifier {
 
 		for (i = 0; i < N; ++i) {
 			const auto hash = Xsm1<HashType>{}(keys[i], ht.seed);
-			if constexpr (allowHashCheck) {
-				ht.hashes[i] = hash;
-			}
+			ht.hashes[i] = hash;
 			ht.table[hash % m] = static_cast<uint8_t>(i);
 		}
 
@@ -491,7 +479,8 @@ namespace Jsonifier {
 		bool is_front_hash = true;
 	};
 
-	template<size_t N, bool IsFrontHash = true> inline constexpr SingleCharHashDesc singleCharHash(const std::array<StringView, N>& v) noexcept {
+	template<size_t N, bool IsFrontHash = true>
+	inline constexpr SingleCharHashDesc singleCharHash(const std::array<std::string_view, N>& v) noexcept {
 		if constexpr (N > 255) {
 			return {};
 		}
@@ -520,29 +509,29 @@ namespace Jsonifier {
 		return SingleCharHashDesc{ N, min_diff > 0, min_diff, hashes.front(), hashes.back(), IsFrontHash };
 	}
 
-	template<typename OTy, SingleCharHashDesc D> struct SingleCharMap {
+	template<class T, SingleCharHashDesc D> struct SingleCharMap {
 		static constexpr auto N = D.N;
 		static_assert(N < 256);
-		std::array<std::pair<StringView, OTy>, N> items{};
+		std::array<std::pair<std::string_view, T>, N> items{};
 		static constexpr size_t N_table = D.back - D.front + 1;
 		std::array<uint8_t, N_table> table{};
 
-		inline constexpr decltype(auto) begin() const {
+		constexpr decltype(auto) begin() const {
 			return items.begin();
 		}
-		inline constexpr decltype(auto) end() const {
+		constexpr decltype(auto) end() const {
 			return items.end();
 		}
 
-		inline constexpr std::expected<std::reference_wrapper<OTy>, ErrorCode> at(auto&& key) const noexcept {
+		constexpr std::expected<std::reference_wrapper<T>, ErrorCode> at(auto&& key) const noexcept {
 			if (key.size() == 0) [[unlikely]] {
 				return std::unexpected(ErrorCode::Unknown_Key);
 			}
 
 			if constexpr (D.is_front_hash) {
-				const auto k = static_cast<uint8_t>(key[0]) - D.front;
+				const auto k = static_cast<uint8_t>(static_cast<uint8_t>(key[0]) - D.front);
 				if (k >= N_table) [[unlikely]] {
-					throw std::runtime_error("Invalid key");
+					return std::unexpected(ErrorCode::Unknown_Key);
 				}
 				const auto index = table[k];
 				const auto& item = items[index];
@@ -551,9 +540,9 @@ namespace Jsonifier {
 				}
 				return item.second;
 			} else {
-				const auto k = static_cast<uint8_t>(key.back()) - D.front;
+				const auto k = static_cast<uint8_t>(static_cast<uint8_t>(key.back()) - D.front);
 				if (k >= N_table) [[unlikely]] {
-					throw std::runtime_error("Invalid key");
+					return std::unexpected(ErrorCode::Unknown_Key);
 				}
 				const auto index = table[k];
 				const auto& item = items[index];
@@ -564,13 +553,13 @@ namespace Jsonifier {
 			}
 		}
 
-		inline constexpr decltype(auto) find(auto&& key) const noexcept {
+		constexpr decltype(auto) find(auto&& key) const noexcept {
 			if (key.size() == 0) [[unlikely]] {
 				return items.end();
 			}
 
 			if constexpr (D.is_front_hash) {
-				const auto k = static_cast<uint8_t>(key[0]) - D.front;
+				const auto k = static_cast<uint8_t>(static_cast<uint8_t>(key[0]) - D.front);
 				if (k >= static_cast<uint8_t>(N_table)) [[unlikely]] {
 					return items.end();
 				}
@@ -580,7 +569,7 @@ namespace Jsonifier {
 					return items.end();
 				return items.begin() + index;
 			} else {
-				const auto k = static_cast<uint8_t>(key.back()) - D.front;
+				const auto k = static_cast<uint8_t>(static_cast<uint8_t>(key.back()) - D.front);
 				if (k >= static_cast<uint8_t>(N_table)) [[unlikely]] {
 					return items.end();
 				}
@@ -593,10 +582,10 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename OTy, SingleCharHashDesc D> inline constexpr auto makeSingleCharMap(std::initializer_list<std::pair<StringView, OTy>> pairs) {
+	template<class T, SingleCharHashDesc D> constexpr auto makeSingleCharMap(std::initializer_list<std::pair<std::string_view, T>> pairs) {
 		constexpr auto N = D.N;
 		static_assert(N < 256);
-		SingleCharMap<OTy, D> ht{};
+		SingleCharMap<T, D> ht{};
 
 		uint8_t i = 0;
 		for (const auto& pair: pairs) {
@@ -612,10 +601,10 @@ namespace Jsonifier {
 		return ht;
 	}
 
-	template<typename OTy, const StringView& S> struct SingleItem {
-		std::array<std::pair<StringView, OTy>, 1> items{};
+	template<typename OTy, const std::string_view& S> struct SingleItem {
+		std::array<std::pair<std::string_view, OTy>, 1> items{};
 
-		static constexpr auto S = S;
+		static constexpr auto SNew = S;
 
 		inline constexpr decltype(auto) end() const {
 			return items.end();
@@ -630,8 +619,8 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename OTy, const StringView& S0, const StringView& S1> struct DoubleItem {
-		std::array<std::pair<StringView, OTy>, 2> items{};
+	template<typename OTy, const std::string_view& S0, const std::string_view& S1> struct DoubleItem {
+		std::array<std::pair<std::string_view, OTy>, 2> items{};
 
 		static constexpr auto s0 = S0;
 		static constexpr auto s1 = S1;
@@ -1037,20 +1026,20 @@ namespace Jsonifier {
 	}
 
 	template<typename OTy, size_t I> struct CoreSV {
-		static constexpr StringView value = Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>));
+		static constexpr std::string_view value = Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>));
 	};
 
-	template<typename OTy, bool allowHashCheck, size_t... I> inline constexpr auto makeMapImpl(std::index_sequence<I...>) {
+	template<typename OTy, size_t... I> inline constexpr auto makeMapImpl(std::index_sequence<I...>) {
 		using value_t = ValueTupleVariantT<CoreT<OTy>>;
 		constexpr auto n = std::tuple_size_v<CoreT<OTy>>;
 
 		auto naive_or_normal_hash = [&] {
 			if constexpr (n <= 20) {
-				return Jsonifier::makeNaiveMap<value_t, n, uint32_t, allowHashCheck>({ std::make_pair<StringView, value_t>(
-					StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
+				return Jsonifier::makeNaiveMap<value_t, n, uint32_t>({ std::make_pair<std::string_view, value_t>(
+					std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
 			} else {
-				return makeUnorderedMap<StringView, value_t, n, Hash<StringView>, StringCompareHelper>({ std::make_pair<StringView, value_t>(
-					StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
+				return makeUnorderedMap<std::string_view, value_t, n, Hash<std::string_view>, StringCompareHelper>({ std::make_pair<std::string_view, value_t>(
+					std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
 			}
 		};
 
@@ -1058,24 +1047,24 @@ namespace Jsonifier {
 		if constexpr (n == 0) {
 			static_assert(FalseV<OTy>, "empty object in Jsonifier::Core");
 		} else if constexpr (n == 1) {
-			return SingleItem<value_t, CoreSV<OTy, I>::value...>{ std::make_pair<StringView, value_t>(
-				StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... };
+			return SingleItem<value_t, CoreSV<OTy, I>::value...>{ std::make_pair<std::string_view, value_t>(
+				std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... };
 		} else if constexpr (n == 2) {
-			return DoubleItem<value_t, CoreSV<OTy, I>::value...>{ std::make_pair<StringView, value_t>(
-				StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... };
+			return DoubleItem<value_t, CoreSV<OTy, I>::value...>{ std::make_pair<std::string_view, value_t>(
+				std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... };
 		} else if constexpr (n_128) {
-			constexpr auto front_desc = singleCharHash<n>(std::array<StringView, n>{ StringView{ Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>)) }... });
+			constexpr auto front_desc = singleCharHash<n>(std::array<std::string_view, n>{ std::string_view{ Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>)) }... });
 
 			if constexpr (front_desc.valid) {
-				return makeSingleCharMap<value_t, front_desc>({ std::make_pair<StringView, value_t>(
-					StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
+				return makeSingleCharMap<value_t, front_desc>({ std::make_pair<std::string_view, value_t>(
+					std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
 			} else {
 				constexpr auto back_desc =
-					singleCharHash<n, false>(std::array<StringView, n>{ StringView{ Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>)) }... });
+					singleCharHash<n, false>(std::array<std::string_view, n>{ std::string_view{ Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>)) }... });
 
 				if constexpr (back_desc.valid) {
-					return makeSingleCharMap<value_t, back_desc>({ std::make_pair<StringView, value_t>(
-						StringView(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
+					return makeSingleCharMap<value_t, back_desc>({ std::make_pair<std::string_view, value_t>(
+						std::string_view(Tuplet::get<0>(Tuplet::get<I>(CoreV<OTy>))), Tuplet::get<1>(Tuplet::get<I>(CoreV<OTy>)))... });
 				} else {
 					return naive_or_normal_hash();
 				}
@@ -1085,9 +1074,9 @@ namespace Jsonifier {
 		}
 	}
 
-	template<typename OTy, bool allowHashCheck = false> inline constexpr auto makeMap() {
+	template<typename OTy> inline constexpr auto makeMap() {
 		constexpr auto indices = std::make_index_sequence<std::tuple_size_v<CoreT<OTy>>>{};
-		return makeMapImpl<std::decay_t<OTy>, allowHashCheck>(indices);
+		return makeMapImpl<std::decay_t<OTy>>(indices);
 	}
 
 

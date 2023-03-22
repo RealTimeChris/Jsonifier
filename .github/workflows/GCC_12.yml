@@ -1,0 +1,36 @@
+name: Build-and-Test-GCC
+
+on:
+  push:
+    branches:
+    - main
+
+
+jobs:
+  Build:
+    runs-on: ubuntu-22.04
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc: [12]
+        build_type: [Debug, Release]
+        std: [23]
+    env:
+      CC: gcc-${{matrix.gcc}}
+      CXX: g++-${{matrix.gcc}}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      working-directory: Tests
+      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+
+    - name: Build the Test
+      working-directory: Tests
+      run: cd Build &&
+           cmake --build . --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      working-directory: Tests/Build
+      run: ./Json-Performance

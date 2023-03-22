@@ -25,6 +25,22 @@
 
 namespace Jsonifier {
 
+	class MasterIterator {
+	  public:
+		inline MasterIterator(std::string_view newString) noexcept {
+			string = newString;
+		}
+
+		size_t& getCurrentIndex() {
+			return currentIndex;
+		}
+
+	  protected:
+		SimdStringReader stringReader{};
+		size_t currentIndex{};
+		std::string_view string{};
+	};
+
 	class Parser;
 
 	class SimdIteratorCore {
@@ -105,6 +121,87 @@ namespace Jsonifier {
 	  protected:
 		StructuralIndex currentIndex{};
 		StringViewPtr stringView{};
+		size_t currentDepth{ 1 };
+		size_t stringLength{};
+	};
+		
+	class IteratorCore {
+	  public:
+		friend class Parser;
+		using iterator_category = std::contiguous_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = char;
+		using reference = char&;
+		using pointer = char*;
+
+		inline IteratorCore(SimdStringReader* stringReaderNew) noexcept {
+			stringLength = stringReaderNew->getStringLength();
+			stringView = stringReaderNew->getStringView();
+			rootIndex = stringReaderNew->getStringView();
+		}
+
+		inline StringViewPtr operator*() noexcept {
+			return stringView;
+		}
+
+		inline IteratorCore& operator++(int32_t) noexcept {
+			this->operator++();
+			return *this;
+		}
+
+		inline IteratorCore& operator++() noexcept {
+			++stringView;
+			switch (*stringView) {
+				case '{': {
+					++currentDepth;
+					break;
+				}
+				case '[': {
+					++currentDepth;
+					break;
+				}
+				case ']': {
+					--currentDepth;
+					break;
+				}
+				case '}': {
+					--currentDepth;
+					break;
+				}
+			}
+			return *this;
+		}
+
+		inline IteratorCore operator+=(int32_t indexToAdd) noexcept {
+			IteratorCore newIter{ *this };
+			for (size_t x = 0; x < indexToAdd; ++x) {
+				newIter.operator++();
+			}
+			return newIter;
+		}
+
+		inline size_t operator-(IteratorCore indexToAdd) noexcept {
+			return static_cast<size_t>(this->stringView - indexToAdd.rootIndex);
+		}
+
+		inline IteratorCore operator+(int32_t indexToAdd) noexcept {
+			for (size_t x = 0; x < indexToAdd; ++x) {
+				this->operator++();
+			}
+			return *this;
+		}
+
+		inline bool operator<(const IteratorCore& other) noexcept {
+			return stringView < other.stringView;
+		}
+
+		inline bool operator==(const IteratorCore& other) const noexcept {
+			return currentDepth == 0 || (stringView - rootIndex) >= stringLength;
+		}
+
+	  protected:
+		StringViewPtr stringView{};
+		StringViewPtr rootIndex{};
 		size_t currentDepth{ 1 };
 		size_t stringLength{};
 	};

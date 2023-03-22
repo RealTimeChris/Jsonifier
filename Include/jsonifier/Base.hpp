@@ -26,10 +26,9 @@
 #pragma warning(disable : 4251)
 
 #include <jsonifier/StringView.hpp>
-#include <jsonifier/Core.hpp>
 #include <jsonifier/Tuple.hpp>
+#include <jsonifier/Core.hpp>
 
-#include <source_location>
 #include <unordered_map>
 #include <immintrin.h>
 #include <string_view>
@@ -130,9 +129,8 @@ namespace Jsonifier {
 	concept NumT = std::floating_point<std::decay_t<OTy>> || IntT<OTy>;
 
 	template<class OTy>
-	concept StringT = !
-	ComplexT<OTy> && !std::same_as<std::nullptr_t, OTy> && (std::convertible_to<std::decay_t<OTy>, StringView> ||
-		std::convertible_to<std::decay_t<OTy>, String>);
+	concept StringT = !ComplexT<OTy> && !std::same_as<std::nullptr_t, OTy> &&
+		(std::convertible_to<std::decay_t<OTy>, std::string_view> || std::convertible_to<std::decay_t<OTy>, std::string>);
 
 	template<typename OTy> using IteratorT = decltype(std::begin(std::declval<OTy&>()));
 
@@ -188,7 +186,7 @@ namespace Jsonifier {
 		}
 	};
 
-	template<size_t N> inline constexpr auto stringLiteralFromView(StringView str) {
+	template<size_t N> inline constexpr auto stringLiteralFromView(std::string_view str) {
 		StringLiteral<N + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.value);
 		*(sl.value + N) = '\0';
@@ -199,9 +197,7 @@ namespace Jsonifier {
 		return N;
 	}
 
-	template<StringLiteral Str> struct CharsImpl {
-		static constexpr std::string_view value{ Str.value, length(Str.value) - 1 };
-	};
+	template<StringLiteral Str> struct CharsImpl { static constexpr std::string_view value{ Str.value, length(Str.value) - 1 }; };
 
 	template<StringLiteral Str> inline constexpr std::string_view Chars = CharsImpl<Str>::value;
 
@@ -442,15 +438,36 @@ namespace Jsonifier {
 		});
 	}
 
-	template<const std::string_view&... Strs> struct Join {
-		// Join all strings into a single std::array of Chars
-		inline static constexpr auto impl() noexcept {
-			// This local copy to a Tuple and avoiding of parameter pack expansion is needed to avoid MSVC internal
-			// compiler errors
+#ifdef _MSC_VER
+	// Workaround for problems with MSVC and passing refrences to stringviews as template params
+	struct svw {
+		const char* start{};
+		size_t n{};
+		constexpr svw(std::string_view sv) : start(sv.data()), n(sv.size()) {
+		}
+		constexpr auto data() const {
+			return start;
+		}
+		constexpr auto begin() const {
+			return data();
+		}
+		constexpr auto end() const {
+			return data() + n;
+		}
+		constexpr auto size() const {
+			return n;
+		}
+	};
+	template<svw... Strs>
+#else
+	template<const std::string_view&... Strs>
+#endif
+	struct Join {
+		static constexpr auto impl() noexcept {
 			constexpr size_t len = (Strs.size() + ... + 0);
 			std::array<char, len + 1> arr{};
-			auto append = [i = 0, &arr](const auto& S) mutable {
-				for (auto c: S)
+			auto append = [i = 0, &arr](const auto& s) mutable {
+				for (auto c: s)
 					arr[i++] = c;
 			};
 			(append(Strs), ...);
@@ -458,11 +475,16 @@ namespace Jsonifier {
 			return arr;
 		}
 
-		static constexpr auto arr = impl();// Give the joined string inline static storage
+		static constexpr auto arr = impl();
 		static constexpr std::string_view value{ arr.data(), arr.size() - 1 };
 	};
-	// Helper to get the value out
-	template<const std::string_view&... Strs> static constexpr auto JoinV = Join<Strs...>::value;
+#ifdef _MSC_VER
+	template<svw... Strs>
+#else
+	template<const std::string_view&... Strs>
+#endif
+	static constexpr auto JoinV = Join<Strs...>::value;
+
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
 		using VTy = std::decay_t<decltype(member_ptr)>;
@@ -509,6 +531,9 @@ namespace Jsonifier {
 	template<size_t N1, size_t N2> constexpr std::array<char const, N1 + N2 - 1> concatArrays(char const (&a1)[N1], char const (&a2)[N2]) {
 		return concat(a1, a2, gen_seq<N1 - 1>{}, gen_seq<N2>{});
 	}
+
+	template <class T, class... U>
+   concept IsAnyOf = (std::same_as<T, U> || ...);
 
 	template<typename OTy>
 	concept HasSize = requires(OTy container) {
@@ -570,7 +595,7 @@ namespace Jsonifier {
 	concept IsConvertibleToSerializer = std::convertible_to<OTy, Serializer>;
 
 	template<typename OTy>
-	concept IsEnum = std::is_enum<OTy>::value;	
+	concept IsEnum = std::is_enum<OTy>::value;
 
 	template<class T> inline auto data_ptr(T& buffer) {
 		if constexpr (Resizeable<T>) {
@@ -594,7 +619,8 @@ namespace Jsonifier {
 		Number_Error = 10,
 		No_String_Error = 11,
 		Type_Error = 12,
-		No_Such_Entity = 13
+		No_Such_Entity = 13,
+		Unknown_Key
 	};
 
 	inline std::ostream& operator<<(std::ostream& out, ErrorCode type) {
@@ -609,7 +635,7 @@ namespace Jsonifier {
 				out << "Parse Error";
 				break;
 			case String_Error:
-				out << "String Error";
+				out << "std::string Error";
 				break;
 			case Mem_Alloc_Error:
 				out << "Memory Allocation Error";
@@ -667,7 +693,7 @@ namespace Jsonifier {
 				out << "Number";
 				break;
 			case JsonType::String:
-				out << "String";
+				out << "std::string";
 				break;
 			case JsonType::Bool:
 				out << "Bool";
@@ -765,7 +791,7 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void printTimePassed(StringView stringView) noexcept {
+		inline void printTimePassed(std::string_view stringView) noexcept {
 			int64_t timePassed{ this->totalTimePassed().size() };
 			this->resetTimer();
 		}

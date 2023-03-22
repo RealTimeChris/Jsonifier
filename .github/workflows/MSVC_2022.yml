@@ -1,0 +1,34 @@
+name: Build-and-Test-MSVC
+
+on:
+  push:
+    branches:
+    - main
+
+
+jobs:
+  Build:
+    runs-on: windows-2022
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+        std: [23]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      working-directory: Tests
+      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+
+    - name: Build the Test
+      working-directory: Tests
+      run: cd Build &&
+           cmake --build . --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      working-directory: Tests
+      run: cd ./Build/${{matrix.build_type}} &&
+          ./Json-Performance.exe

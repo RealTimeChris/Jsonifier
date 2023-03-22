@@ -18,21 +18,26 @@
 	USA
 */
 /// https://github.com/RealTimeChris/Jsonifier
-/// Feb 3, 2023
+/// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/Serializer.hpp>
+#include <jsonifier/Memcpy.hpp>
+#include <jsonifier/Compare.hpp>
+#include <immintrin.h>
+#include <string_view>
+#include <iostream>
+#include <string>
 
-#include <jsonifier/IteratorCore.hpp>
-#include <jsonifier/HashMap.hpp>
-#include <jsonifier/FromJson.hpp>
-#include <jsonifier/FromJson_Impl.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/IteratorCore_Impl.hpp>
-#include <jsonifier/String.hpp>
-#include <jsonifier/Core.hpp>
-#include <jsonifier/FromJson.hpp>
-#include <jsonifier/Tuple.hpp>
-#include <jsonifier/ToJson_Impl.hpp>
+namespace Jsonifier {
+
+	class JsonifierCore {
+	  public:
+		inline static void memcpy(void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
+			memcpyFast(destVector, sourceVector, lengthNew);
+		}
+
+		inline static bool compare(const void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
+			return compareFast(destVector, sourceVector, lengthNew);
+		}
+	};
+}

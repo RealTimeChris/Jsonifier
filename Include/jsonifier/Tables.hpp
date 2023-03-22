@@ -26,20 +26,20 @@ namespace Jsonifier {
 	const double powerOfTen[24]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20,
 		1e21, 1e22 };
 
-	const uint16_t numberOfDigitsDecimalLeftShiftTableOne[65]{ 0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817, 0x181D, 0x2024,
+	constexpr uint16_t numberOfDigitsDecimalLeftShiftTableOne[65]{ 0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817, 0x181D, 0x2024,
 		0x202B, 0x2033, 0x203C, 0x2846, 0x2850, 0x285B, 0x3067, 0x3073, 0x3080, 0x388E, 0x389C, 0x38AB, 0x38BB, 0x40CC, 0x40DD, 0x40EF, 0x4902,
 		0x4915, 0x4929, 0x513E, 0x5153, 0x5169, 0x5180, 0x5998, 0x59B0, 0x59C9, 0x61E3, 0x61FD, 0x6218, 0x6A34, 0x6A50, 0x6A6D, 0x6A8B, 0x72AA,
 		0x72C9, 0x72E9, 0x7B0A, 0x7B2B, 0x7B4D, 0x8370, 0x8393, 0x83B7, 0x83DC, 0x8C02, 0x8C28, 0x8C4F, 0x9477, 0x949F, 0x94C8, 0x9CF2, 0x051C,
 		0x051C, 0x051C, 0x051C };
 
-	const uint8_t escapeMap[256]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0,
+	constexpr uint8_t escapeMap[256]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0x5c, 0, 0, 0, 0, 0, 0x08, 0, 0, 0, 0x0c, 0, 0, 0, 0, 0, 0, 0, 0x0a, 0, 0, 0, 0x0d, 0, 0x09, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	const bool structuralOrWhitespaceNegated[256]{ true, true, true, true, true, true, true, true, true, false, false, true, true, false, true, true,
+	constexpr bool structuralOrWhitespaceNegated[256]{ true, true, true, true, true, true, true, true, true, false, false, true, true, false, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true,
 		true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
@@ -52,7 +52,7 @@ namespace Jsonifier {
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 		true, true, true, true, true, true, true, true, true, true };
 
-	const bool structuralOrWhitespace[256]{ false, false, false, false, false, false, false, false, false, true, true, false, false, true, false,
+	constexpr bool structuralOrWhitespace[256]{ false, false, false, false, false, false, false, false, false, true, true, false, false, true, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false,
 		false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -67,7 +67,7 @@ namespace Jsonifier {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false };
 
-	const uint8_t integerStringFinisher[256]{ Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error,
+	constexpr uint8_t integerStringFinisher[256]{ Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error,
 		Number_Error, Number_Error, Success, Success, Number_Error, Number_Error, Success, Number_Error, Number_Error, Number_Error, Number_Error,
 		Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error,
 		Number_Error, Number_Error, Number_Error, Number_Error, Success, Number_Error, Number_Error, Number_Error, Number_Error, Number_Error,

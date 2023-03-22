@@ -21,710 +21,14 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/StringView.hpp>
+#include <jsonifier/String.hpp>
 #include <immintrin.h>
 #include <iostream>
 #include <stdlib.h>
-#include <jsonifier/StringView.hpp>
-#include <jsonifier/String.hpp>
+#include <memory>
 
 namespace Jsonifier {
-
-	inline size_t findSingleCharacter(const char* const string, size_t lengthNew, const char charToFind) noexcept {
-		size_t result{ std::string::npos };
-		size_t currentIndex{ lengthNew / 32 };
-		const auto arrayChar{ _mm256_set1_epi8(charToFind) };
-		auto newPtr = reinterpret_cast<const __m256i*>(string);
-		size_t remainder{ lengthNew % 32 };
-		int32_t mask{};
-		for (; currentIndex > 0; --currentIndex) {
-			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_load_si256(newPtr++)));
-
-			if (mask != 0) {
-				result = currentIndex + _tzcnt_u32(mask);
-				return result;
-			}
-
-			currentIndex += 32;
-		}
-
-		if (remainder > 0) {
-			char charArray[32];
-			::memcpy(charArray, string, lengthNew - remainder);
-			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_loadu_epi8(charArray)));
-
-			if (mask != 0) {
-				result = currentIndex + _tzcnt_u32(mask);
-				return result;
-			}
-			currentIndex += remainder;
-		}
-
-		return result;
-	}
-
-	inline bool compareStringsSmall16(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 16 };
-		auto* destVector = static_cast<const __m128i*>(str1);
-		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
-			(0x0000ffff)) {
-			return false;
-		}
-		if (remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		return true;
-	}
-
-	inline bool compareStringsSmall32(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 32 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
-			return false;
-		}
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder > 0) {
-			return compareStringsSmall16(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStringsSmall64(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 64 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
-			return false;
-		}
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStringsSmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStringsSmall32(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStringsSmall128(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 128 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
-			return false;
-		}
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStringsSmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return compareStringsSmall32(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStringsSmall64(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStringsSmall256(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 256 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp{};
-		uint32_t mask{};
-		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			mask = _mm256_movemask_epi8(result);
-			if (mask != (0xffffffff)) {
-				return false;
-			}
-		}
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStringsSmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return compareStringsSmall32(destVector, sourceVector, remainder);
-		}
-		if (remainder < 128 && remainder > 0) {
-			return compareStringsSmall64(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStringsSmall128(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStringsSmall(const char* str1, const char* str2, size_t length) noexcept {
-		if (length < 16) {
-			return (memcmp(str1, str2, length) == 0);
-		} else if (length < 32) {
-			return compareStringsSmall16(str1, str2, length);
-		} else if (length < 64) {
-			return compareStringsSmall32(str1, str2, length);
-		} else if (length < 128) {
-			return compareStringsSmall64(str1, str2, length);
-		} else if (length < 256) {
-			return compareStringsSmall128(str1, str2, length);
-		} else {
-			return compareStringsSmall256(str1, str2, length);
-		}
-	}
-
-	inline bool compareStrings16(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 16 };
-		auto* destVector = static_cast<const __m128i*>(str1);
-		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll),
-				_mm_cmpeq_epi8(_mm_stream_load_si128(destVector++), _mm_stream_load_si128(sourceVector++)))) != (0x0000ffff)) {
-			return false;
-		}
-		_mm_sfence();
-		if (remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		return true;
-	}
-
-	inline bool compareStrings32(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 32 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++)))) != (0xffffffff)) {
-			return false;
-		}
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder > 0) {
-			return compareStringsSmall16(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStrings64(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 64 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		_mm_sfence();
-		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
-			return false;
-		}
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStrings16(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStrings32(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStrings128(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 128 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-		result = _mm256_and_si256(result, cmp);
-		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
-			return false;
-		}
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStrings16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return compareStrings32(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStrings64(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compareStrings256(const void* str1, const void* str2, size_t lengthNew) noexcept {
-		const size_t remainder{ lengthNew % 256 };
-		auto* destVector = reinterpret_cast<const __m256i*>(str1);
-		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
-		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp{};
-		uint32_t mask{};
-		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
-			result = _mm256_and_si256(result, cmp);
-			mask = _mm256_movemask_epi8(result);
-			if (mask != (0xffffffff)) {
-				return false;
-			}
-		}
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			return (memcmp(destVector, sourceVector, remainder) == 0);
-		}
-		if (remainder < 32 && remainder > 0) {
-			return compareStrings16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return compareStrings32(destVector, sourceVector, remainder);
-		}
-		if (remainder < 128 && remainder > 0) {
-			return compareStrings64(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return compareStrings128(destVector, sourceVector, remainder);
-		}
-		return true;
-	}
-
-	inline bool compare(const char* destVector, const char* sourceVector, size_t lengthNew) noexcept {
-		if (lengthNew < 256ull * 1024ull) {
-			return compareStringsSmall(destVector, sourceVector, lengthNew);
-		} else {
-			return compareStrings256(destVector, sourceVector, lengthNew);
-		}
-	}
-
-	inline void fastMemcpySmall16(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 16 };
-		auto* destVector = static_cast<__m128i*>(dest);
-		const auto* sourceVector = static_cast<const __m128i*>(source);
-		_mm_store_si128(destVector++, _mm_load_si128(sourceVector++));
-
-		_mm_sfence();
-		if (remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-	}
-
-	inline void fastMemcpySmall32(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 32 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_store_si256(destVector++, _mm256_load_si256(sourceVector++));
-
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder > 0) {
-			return fastMemcpySmall16(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpySmall64(void* dest, const void* source, size_t lengthNew) {
-		auto remainder{ lengthNew % 64 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-		_mm256_store_si256(destVector++, _mm256_load_si256(sourceVector++));
-		_mm256_store_si256(destVector++, _mm256_load_si256(sourceVector++));
-
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpySmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpySmall32(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpySmall128(void* dest, const void* source, size_t lengthNew) {
-		auto remainder{ lengthNew % 128 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 2), _MM_HINT_T0);
-		_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpySmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return fastMemcpySmall32(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpySmall64(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpySmall256(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 256 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 2), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 2), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 2), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 2), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
-		}
-
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpySmall16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return fastMemcpySmall32(destVector, sourceVector, remainder);
-		}
-		if (remainder < 128 && remainder > 0) {
-			return fastMemcpySmall64(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpySmall128(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpySmall(void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
-		if (lengthNew < 16) {
-			::memcpy(destVector, sourceVector, lengthNew);
-		} else if (lengthNew < 32) {
-			fastMemcpySmall16(destVector, sourceVector, lengthNew);
-		} else if (lengthNew < 64) {
-			fastMemcpySmall32(destVector, sourceVector, lengthNew);
-		} else if (lengthNew < 128) {
-			fastMemcpySmall64(destVector, sourceVector, lengthNew);
-		} else if (lengthNew < 256) {
-			fastMemcpySmall128(destVector, sourceVector, lengthNew);
-		} else {
-			fastMemcpySmall256(destVector, sourceVector, lengthNew);
-		}
-	};
-
-	inline void fastMemcpy16(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 16 };
-		auto* destVector = static_cast<__m128i*>(dest);
-		const auto* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(destVector++, _mm_stream_load_si128(sourceVector++));
-		_mm_sfence();
-		if (remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpy32(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 32 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder > 0) {
-			return fastMemcpy16(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpy64(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 64 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpy16(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpy32(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpy128(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 128 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpy16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return fastMemcpy32(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpy64(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void fastMemcpy256(void* dest, const void* source, size_t lengthNew) noexcept {
-		auto remainder{ lengthNew % 256 };
-		auto* destVector = static_cast<__m256i*>(dest);
-		const auto* sourceVector = static_cast<const __m256i*>(source);
-		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		}
-		_mm_sfence();
-		if (remainder < 16 && remainder > 0) {
-			::memcpy(destVector, sourceVector, remainder);
-			return;
-		}
-		if (remainder < 32 && remainder > 0) {
-			return fastMemcpy16(destVector, sourceVector, remainder);
-		}
-		if (remainder < 64 && remainder > 0) {
-			return fastMemcpy32(destVector, sourceVector, remainder);
-		}
-		if (remainder < 128 && remainder > 0) {
-			return fastMemcpy64(destVector, sourceVector, remainder);
-		}
-		if (remainder > 0) {
-			return fastMemcpy128(destVector, sourceVector, remainder);
-		}
-	}
-
-	inline void memcpy(void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
-		if (lengthNew < 256ull * 1024ull) {
-			fastMemcpySmall(destVector, sourceVector, lengthNew);
-			return;
-		} else {
-			fastMemcpy256(destVector, sourceVector, lengthNew);
-		}
-	}
-
-	template<typename OTy> class MemoryPoolAllocator {
-	  public:
-		using value_type = OTy;
-		using pointer = OTy*;
-		using const_pointer = const OTy*;
-		using size_type = size_t;
-		using difference_type = std::ptrdiff_t;
-
-		MemoryPoolAllocator() = default;
-		MemoryPoolAllocator(const MemoryPoolAllocator&) = default;
-		MemoryPoolAllocator& operator=(const MemoryPoolAllocator&) = default;
-
-		template<typename U> MemoryPoolAllocator(const MemoryPoolAllocator<U>&) noexcept {
-		}
-
-		pointer allocate(size_type n) {
-			if (n == 0) {
-				return nullptr;
-			}
-			if (n <= MaxSize) {
-				if (auto p = static_cast<pointer>(std::malloc(n * sizeof(value_type)))) {
-					return p;
-				}
-			}
-			throw std::bad_alloc();
-		}
-
-		void deallocate(pointer p, size_type n) {
-			std::free(p);
-		}
-
-	  private:
-		static constexpr size_type MaxSize = 1024;
-	};
-
-	template<typename OTy> struct MemoryCore {
-	  public:
-		using AllocatorType = MemoryPoolAllocator<OTy>;
-		using AllocatorTraits = std::allocator_traits<AllocatorType>;
-
-		inline MemoryCore() = default;
-
-		inline MemoryCore& operator=(MemoryCore&& other) noexcept {
-			if (this != &other) {
-				currentSize = other.currentSize;
-				objects = other.objects;
-				other.objects = nullptr;
-				other.currentSize = 0;
-			}
-			return *this;
-		}
-
-		inline MemoryCore(MemoryCore&& other) noexcept {
-			*this = std::move(other);
-		}
-
-		inline MemoryCore& operator=(const MemoryCore& other) noexcept {
-			if (this != &other) {
-				this->resize(other.currentSize);
-				if (std::copyable<OTy>) {
-					Jsonifier::memcpy(objects, other.objects, other.currentSize);
-				} else {
-					for (size_t x = 0; x < currentSize; ++x) {
-						objects[x] = std::move(other.objects[x]);
-					}
-				}
-			}
-			return *this;
-		}
-
-		inline constexpr MemoryCore(OTy* data) noexcept {
-			objects = data;
-		}
-
-		inline MemoryCore(const MemoryCore& other) noexcept {
-			*this = other;
-		}
-
-		inline OTy& operator[](size_t index) noexcept {
-			return objects[index];
-		}
-
-		inline operator OTy*() noexcept {
-			return objects;
-		}
-
-		inline size_t size() const {
-			return currentSize;
-		}
-
-		inline OTy* data() const {
-			return objects;
-		}
-
-		inline constexpr void resize(size_t newSize) noexcept {
-			if (newSize != 0 && newSize != currentSize) {
-				if (this->objects) {
-					objects = static_cast<OTy*>(_aligned_realloc(objects, newSize, 32));
-				} else {
-					objects = static_cast<OTy*>(_aligned_malloc(newSize, 32));
-				}
-				currentSize = newSize;
-			} else if (newSize == 0) {
-				deallocate();
-			}
-		}
-
-		inline ~MemoryCore() noexcept {
-			deallocate();
-		}
-
-	  protected:
-		size_t currentSize{};
-		OTy* objects{};
-
-		inline void deallocate() noexcept {
-			if (currentSize > 0 && objects) {
-				AllocatorType allocator{};
-				for (size_t x = 0; x < currentSize; ++x) {
-					AllocatorTraits::destroy(allocator, &objects[x]);
-				}
-				_aligned_free(objects);
-				objects = nullptr;
-				currentSize = 0;
-			}
-		}
-	};
 
 	struct SimdBase128 {
 	  public:
@@ -761,12 +65,12 @@ namespace Jsonifier {
 			value = _mm_set1_epi8(other);
 		}
 
-		inline SimdBase128& operator=(const uint8_t* values) noexcept {
-			value = _mm_loadu_epi8(values);
+		inline SimdBase128& operator=(const uint8_t values[32]) noexcept {
+			value = _mm_loadu_si128(reinterpret_cast<const __m128i*>(values));
 			return *this;
 		}
 
-		inline SimdBase128(const uint8_t* values) noexcept {
+		inline SimdBase128(const uint8_t values[32]) noexcept {
 			*this = values;
 		}
 
@@ -832,16 +136,16 @@ namespace Jsonifier {
 		}
 
 		inline void store(uint8_t destVector[16]) noexcept {
-			_mm_store_si128(reinterpret_cast<__m128i*>(destVector), value);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector), value);
 		}
 
-		inline void printBits(uint64_t values, const String& valuesTitle) noexcept {
+		inline void printBits(uint64_t values, const std::string& valuesTitle) noexcept {
 			std::cout << valuesTitle;
 			std::cout << std::bitset<64>{ values };
 			std::cout << std::endl;
 		}
 
-		inline SimdBase128 printBits(const String& valuesTitle) noexcept {
+		inline SimdBase128 printBits(const std::string& valuesTitle) noexcept {
 			std::cout << valuesTitle;
 			for (size_t x = 0; x < 32; ++x) {
 				for (size_t y = 0; y < 8; ++y) {
@@ -851,7 +155,6 @@ namespace Jsonifier {
 			std::cout << std::endl;
 			return *this;
 		}
-
 
 	  protected:
 		__m128i value{};
@@ -898,7 +201,7 @@ namespace Jsonifier {
 		}
 
 		inline SimdBase256& operator=(const uint8_t* values) noexcept {
-			value = _mm256_loadu_epi8(values);
+			value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(values));
 			return *this;
 		}
 
@@ -948,8 +251,9 @@ namespace Jsonifier {
 		}
 
 		inline void convertWhitespaceToSimdBase256(const SimdBase256* valuesNew) noexcept {
-			SimdBase256 whitespaceTable{ { ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17,
-				100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 } };
+			uint8_t arrayNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2,
+				100, '\t', '\n', 112, 100, '\r', 100, 100 };
+			SimdBase256 whitespaceTable{ arrayNew };
 			for (size_t x = 0; x < 8; ++x) {
 				addValues(valuesNew[x].shuffle(whitespaceTable) == valuesNew[x], x);
 			}
@@ -963,7 +267,8 @@ namespace Jsonifier {
 		};
 
 		inline void convertStructuralsToSimdBase256(const SimdBase256* valuesNew) noexcept {
-			SimdBase256 opTable{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 } };
+			uint8_t arrayNew[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			SimdBase256 opTable{ arrayNew };
 			SimdBase256 chars{ char{ 0x20 } };
 			for (size_t x = 0; x < 8; ++x) {
 				addValues({ valuesNew[x].shuffle(opTable) == (valuesNew[x] | chars) }, x);
@@ -1003,7 +308,7 @@ namespace Jsonifier {
 		}
 
 		inline void store(uint8_t destVector[32]) noexcept {
-			_mm256_store_si256(reinterpret_cast<__m256i*>(destVector), value);
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(destVector), value);
 		}
 
 		inline int64_t getInt64(size_t index) noexcept {
@@ -1080,7 +385,7 @@ namespace Jsonifier {
 
 		inline bool collectCarries(SimdBase256& other1, SimdBase256& result) noexcept {
 			bool returnValue{};
-			uint64_t returnValue64{};
+			long long unsigned int returnValue64{};
 			for (size_t x = 0; x < 4; ++x) {
 				if (_addcarry_u64(0, getInt64(x), other1.getInt64(x), &returnValue64)) {
 					returnValue = true;
@@ -1092,13 +397,13 @@ namespace Jsonifier {
 			return returnValue;
 		}
 
-		inline void printBits(uint64_t values, const String& valuesTitle) noexcept {
+		inline void printBits(uint64_t values, const std::string& valuesTitle) noexcept {
 			std::cout << valuesTitle;
 			std::cout << std::bitset<64>{ values };
 			std::cout << std::endl;
 		}
 
-		inline SimdBase256 printBits(const String& valuesTitle) noexcept {
+		inline SimdBase256 printBits(const std::string& valuesTitle) noexcept {
 			std::cout << valuesTitle;
 			for (size_t x = 0; x < 32; ++x) {
 				for (size_t y = 0; y < 8; ++y) {
@@ -1115,14 +420,14 @@ namespace Jsonifier {
 
 	template<size_t StepSize> class StringBlockReader {
 	  public:
-		__forceinline StringBlockReader(StringViewPtr stringViewNew, size_t _len) noexcept {
+		inline StringBlockReader(StringViewPtr stringViewNew, size_t _len) noexcept {
 			lengthMinusStep = _len < StepSize ? 0 : _len - StepSize;
 			inString = stringViewNew;
 			length = _len;
 			index = 0;
 		}
 
-		__forceinline size_t getRemainder(StringBufferPtr dst) noexcept {
+		inline size_t getRemainder(StringBufferPtr dst) noexcept {
 			if (length == index) {
 				return 0;
 			}
@@ -1131,13 +436,13 @@ namespace Jsonifier {
 			return length - index;
 		}
 
-		__forceinline StringViewPtr fullBlock() noexcept {
+		inline StringViewPtr fullBlock() noexcept {
 			StringViewPtr newPtr = inString + index;
 			index += StepSize;
 			return newPtr;
 		}
 
-		__forceinline bool hasFullBlock() noexcept {
+		inline bool hasFullBlock() noexcept {
 			return index < lengthMinusStep;
 		}
 
@@ -1150,9 +455,9 @@ namespace Jsonifier {
 
 	class SimdStringReader {
 	  public:
-		__forceinline SimdStringReader() noexcept {};
+		inline SimdStringReader() noexcept {};
 
-		__forceinline void reset(size_t stringLengthRawNew, StringViewPtr stringViewNew) noexcept {
+		inline void reset(size_t stringLengthRawNew, StringViewPtr stringViewNew) noexcept {
 			structuralIndices.resize(round(stringLengthRawNew + 3, 256));
 			stringLengthRaw = stringLengthRawNew;
 			stringView = stringViewNew;
@@ -1160,10 +465,10 @@ namespace Jsonifier {
 			tapeIndex = 0;
 		}
 
-		__forceinline void generateStructurals(StringViewPtr valueNew) noexcept {
+		inline void generateStructurals(StringViewPtr valueNew) noexcept {
 			SimdBase256 newPtr[8];
 			for (size_t y = 0; y < 8; ++y) {
-				newPtr[y] = _mm256_loadu_epi8(valueNew + (32 * y));
+				newPtr[y] = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(valueNew + (32 * y)));
 			}
 			whitespace.convertWhitespaceToSimdBase256(newPtr);
 			backslash.convertBackslashesToSimdBase256(newPtr);
@@ -1174,19 +479,19 @@ namespace Jsonifier {
 			stringIndex += 256;
 		}
 
-		__forceinline StringViewPtr getStringView() {
+		inline StringViewPtr getStringView() {
 			return this->stringView;
 		}
 
-		__forceinline size_t getStringLength() {
+		inline size_t getStringLength() {
 			return this->stringLengthRaw;
 		}
 
-		__forceinline const uint8_t** getStructurals() {
+		inline const uint8_t** getStructurals() {
 			return this->structuralIndices.data();
 		}
 
-		__forceinline size_t getTapeLength() noexcept {
+		inline size_t getTapeLength() noexcept {
 			return tapeIndex;
 		}
 
@@ -1209,7 +514,7 @@ namespace Jsonifier {
 			return (((a) + (( size )-1)) & ~(( size )-1));
 		}
 
-		__forceinline int64_t rollValuesIntoTape(size_t currentIndex, size_t y, int64_t newBits) noexcept {
+		inline int64_t rollValuesIntoTape(size_t currentIndex, size_t y, int64_t newBits) noexcept {
 			structuralIndices[(currentIndex * 8) + tapeIndex] = &stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
 			newBits = _blsr_u64(newBits);
 			structuralIndices[1 + (currentIndex * 8) + tapeIndex] =
@@ -1236,9 +541,9 @@ namespace Jsonifier {
 			return newBits;
 		}
 
-		__forceinline void addTapeValues() noexcept {
+		inline void addTapeValues() noexcept {
 			int64_t newBits[4];
-			_mm256_storeu_epi64(newBits, structurals);
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(newBits), structurals);
 			for (size_t y = 0; y < 4; ++y) {
 				if (!newBits[y]) {
 					continue;
@@ -1272,7 +577,7 @@ namespace Jsonifier {
 			}
 		}
 
-		__forceinline void collectFinalStructurals() noexcept {
+		inline void collectFinalStructurals() noexcept {
 			backslash.setFirstBit(prevEscaped);
 			SimdBase256 followsEscape = backslash.shl<1>() | prevEscaped;
 			SimdBase256 evenBits{ _mm256_set1_epi8(0b01010101) };

@@ -17,6 +17,7 @@
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
+/// NOTE: Most of the code in this header was sampled heavily from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
 #pragma once
@@ -246,7 +247,7 @@ namespace Jsonifier {
 			using element_list = TypeList<>;
 
 			template<OtherThan<Tuple> U>
-				requires Stateless<U>
+			requires Stateless<U>
 			inline constexpr auto& operator=(U&&) noexcept {
 				return *this;
 			}
@@ -300,8 +301,7 @@ namespace Jsonifier {
 				return (std::move(*this).second);
 			}
 
-			template<OtherThan<pair> Type>
-			inline constexpr auto& operator=(Type&& tup) {
+			template<OtherThan<pair> Type> inline constexpr auto& operator=(Type&& tup) {
 				auto&& [a, b] = static_cast<Type&&>(tup);
 				first = static_cast<decltype(a)&&>(a);
 				second = static_cast<decltype(b)&&>(b);
@@ -395,7 +395,7 @@ namespace std {
 namespace Jsonifier {
 
 	template<typename Tuple, size_t... Is> auto tupleSplit(Tuple&& tuple) {
-		static constexpr auto N = std::tuple_size_v<tuple>;
+		static constexpr auto N = std::tuple_size_v<Tuple>;
 		static constexpr auto is = std::make_index_sequence<N / 2>{};
 		return std::make_pair(tupleSplitImpl<0>(tuple, is), tupleSplitImpl<1>(tuple, is));
 	}
@@ -422,7 +422,7 @@ namespace Jsonifier {
 	}
 
 	template<typename Func, typename Tuple> inline constexpr auto mapTuple(Func&& f, Tuple&& tuple) {
-		constexpr auto N = std::tuple_size_v<std::decay_t<tuple>>;
+		constexpr auto N = std::tuple_size_v<std::decay_t<Tuple>>;
 		return mapTuple(f, tuple, std::make_index_sequence<N>{});
 	}
 

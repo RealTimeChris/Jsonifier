@@ -28,9 +28,9 @@
 namespace Jsonifier {
 
 	template<typename OTy>
-		requires BoolT<OTy>
+	requires BoolT<OTy>
 	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+		inline static void op(OTy& value, auto& it) {
 			value = parseBool(*it);
 			++it;
 			return;
@@ -38,9 +38,9 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-		requires NumT<OTy>
+	requires NumT<OTy>
 	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+		inline static void op(OTy& value, auto& it) {
 			auto newPtr = *it;
 			parseNumber(value, newPtr);
 			++it;
@@ -49,9 +49,9 @@ namespace Jsonifier {
 	};
 
 	template<typename T>
-		requires StringT<T>
+	requires StringT<T>
 	struct FromJson<T> {
-		template<class It> inline static void op(auto& value, It&& it, It&& end) noexcept {
+		inline static void op(auto& value, auto& it) noexcept {
 			auto start = *it;
 			++it;
 			size_t newSize = static_cast<size_t>(*it - start) - 2;
@@ -63,7 +63,7 @@ namespace Jsonifier {
 		}
 	};
 
-	template<typename It> inline size_t countArrayElements(It& it, It& end) {
+	inline size_t countArrayElements(auto& it) {
 		if (**it == ']') [[unlikely]] {
 			return 0;
 		}
@@ -76,7 +76,7 @@ namespace Jsonifier {
 					break;
 				}
 				case '/': {
-					skip_ws(it, end);
+					skip_ws(it);
 					break;
 				}
 				case ']': {
@@ -93,24 +93,23 @@ namespace Jsonifier {
 	}
 
 	template<typename OTy>
-		requires(ArrayT<OTy> && !EmplaceBackable<OTy> && !Resizeable<OTy> && Emplaceable<OTy>)
-	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+	requires(ArrayT<OTy> && !EmplaceBackable<OTy> && !Resizeable<OTy> && Emplaceable<OTy>) struct FromJson<OTy> {
+		inline static void op(OTy& value, auto& it) {
 			match<'['>(it);
 			if (**it == ']') [[unlikely]] {
 				++it;
 				return;
 			}
 
-			while (it != end) {
+			while (it != it) {
 				using VTy = typename OTy::value_type;
 				if constexpr (sizeof(VTy) > 8) {
 					thread_local VTy v;
-					Read::op(v, it, end);
+					Read::op(v, it);
 					value.emplace(v);
 				} else {
 					VTy v{};
-					Read::op(v, it, end);
+					Read::op(v, it);
 					value.emplace(std::move(v));
 				}
 				if (**it == ']') {
@@ -123,9 +122,8 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-		requires(ArrayT<OTy> && ( EmplaceBackable<OTy> || !Resizeable<OTy> ) && !Emplaceable<OTy>)
-	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+	requires(ArrayT<OTy> && ( EmplaceBackable<OTy> || !Resizeable<OTy> )&&!Emplaceable<OTy>) struct FromJson<OTy> {
+		inline static void op(OTy& value, auto& it) {
 			match<'['>(it);
 			if (**it == ']') [[unlikely]] {
 				++it;
@@ -136,7 +134,7 @@ namespace Jsonifier {
 			auto value_it = value.begin();
 
 			for (size_t i = 0; i < n; ++i) {
-				Read::op(*value_it++, it, end);
+				Read::op(*value_it++, it);
 
 				if (**it == ',') [[likely]] {
 					++it;
@@ -148,8 +146,8 @@ namespace Jsonifier {
 				}
 			}
 			if constexpr (EmplaceBackable<OTy>) {
-				while (it != end) {
-					Read::op(value.emplace_back(), it, end);
+				while (it != it) {
+					Read::op(value.emplace_back(), it);
 					if (**it == ',') [[likely]] {
 						++it;
 					} else if (**it == ']') {
@@ -164,19 +162,18 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-		requires ArrayT<OTy> && ( !EmplaceBackable<OTy> && Resizeable<OTy> )
-	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+	requires ArrayT<OTy> &&( !EmplaceBackable<OTy> && Resizeable<OTy> )struct FromJson<OTy> {
+		inline static void op(OTy& value, auto& it) {
 			match<'['>(it);
 			if (**it == ']') [[unlikely]] {
 				++it;
 				return;
 			}
-			const auto n = countArrayElements(it, end);
+			const auto n = countArrayElements(it);
 			value.resize(n);
 			size_t i = 0;
 			for (auto& x: value) {
-				Read::op(x, it, end);
+				Read::op(x, it);
 				if (i < n - 1) {
 					match<','>(it);
 				}
@@ -186,9 +183,9 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-		requires ArrayT<OTy>
+	requires ArrayT<OTy>
 	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+		inline static void op(OTy& value, auto& it) {
 			match<'['>(it);
 			if (**it == ']') [[unlikely]] {
 				++it;
@@ -200,7 +197,8 @@ namespace Jsonifier {
 				} else {
 					return std::tuple_size_v<OTy>;
 				}
-			}();
+			}
+			();
 
 			forEach<N>([&](auto I) {
 				if (**it == ']') {
@@ -211,23 +209,23 @@ namespace Jsonifier {
 					match<','>(it);
 				}
 				if constexpr (IsStdTuple<OTy>) {
-					Read::op(std::get<I>(value), it, end);
+					Read::op(std::get<I>(value), it);
 				} else if constexpr (JsonifierArrayT<OTy>) {
-					Read::op(getMember(value, Tuplet::get<I>(CoreV<OTy>)), it, end);
+					Read::op(getMember(value, Tuplet::get<I>(CoreV<OTy>)), it);
 				} else {
-					Read::op(Tuplet::get<I>(value), it, end);
+					Read::op(Tuplet::get<I>(value), it);
 				}
 			});
 		}
 	};
 
 	template<typename OTy>
-		requires MapT<OTy> || JsonifierObjectT<OTy>
+	requires MapT<OTy> || JsonifierObjectT<OTy>
 	struct FromJson<OTy> {
-		template<typename It> inline static void op(OTy& value, It& it, It& end) {
+		inline static void op(OTy& value, auto& it) {
 			match<'{'>(it);
 			bool first{ true };
-			while (it != end) {
+			while (it != it) {
 				if (first) [[unlikely]] {
 					first = false;
 				} else [[likely]] {
@@ -235,21 +233,21 @@ namespace Jsonifier {
 				}
 				auto start = it;
 				match<'"'>(it);
-				StringView key = StringView{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*it - *start) - 2 };
+				std::string_view key = std::string_view{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*it - *start) - 2 };
 
 				match<':'>(it);
-				constexpr auto frozen_map = makeMap<OTy, true>();
+				constexpr auto frozen_map = makeMap<OTy>();
 				const auto& member_it = frozen_map.find(key);
 				if (member_it != frozen_map.end()) [[likely]] {
 					std::visit(
 						[&](auto&& member_ptr) {
-							Read::op(getMember(value, member_ptr), it, end);
+							Read::op(getMember(value, member_ptr), it);
 						},
 						member_it->second);
 				} else [[unlikely]] {
-					skipValue(it, end);
+					skipValue(it);
 				}
-				if (it == end) [[unlikely]] {
+				if (it == it) [[unlikely]] {
 					return;
 				}
 				if (**it == '}') {

@@ -21,10 +21,22 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <string>
+#include <jsonifier/IsaDetection.hpp>
+
+#ifdef _WIN32
+	#define aligned_alloc(y, x) _aligned_malloc(x, y)
+	#define realloc(x, y, z) _aligned_realloc(x, y, z)
+	#define free(x) _aligned_free(x)
+#else
+	#define aligned_alloc(y, x) std::aligned_alloc(x, y)
+	#define realloc(x, y, z) std::realloc(x, y)
+	#define free(x) std::free(x)
+#endif
+
+#include <string_view>
 #include <immintrin.h>
 #include <iostream>
-#include <string_view>
+#include <string>
 
 namespace Jsonifier {
 
@@ -34,9 +46,7 @@ namespace Jsonifier {
 
 	class String;
 
-	inline size_t findSingleCharacter(const char* const string, size_t lengthNew, const char charToFind) noexcept;
-
-	inline bool compare(const char* destVector, const char* sourceVector, size_t lengthNew) noexcept;
+	inline size_t findSingleCharacterAvx2(const void* string, size_t lengthNew, const char charToFind) noexcept;
 
 	class StringViewIterator {
 	  public:
@@ -108,7 +118,7 @@ namespace Jsonifier {
 		}
 
 		inline StringView& operator=(const String& stringNew) noexcept;
-		
+
 		inline constexpr StringView(const String& stringNew) noexcept;
 
 		inline constexpr StringView(const char*& stringNew) noexcept {
@@ -147,7 +157,7 @@ namespace Jsonifier {
 			if (sizeVal != rhs.sizeVal) {
 				return false;
 			} else if (sizeVal) {
-				return compare(string, reinterpret_cast<const char*>(rhs.data()), sizeVal);
+				return JsonifierCore::compare(static_cast<const void*>(string), static_cast<const void*>(rhs.data()), sizeVal);
 			} else if (sizeVal == 0 && rhs.size() == 0) {
 				return true;
 			} else {
@@ -176,10 +186,10 @@ namespace Jsonifier {
 		}
 
 	  protected:
-		mutable size_t sizeVal{};
+		size_t sizeVal{};
 		const char* string{};
 
-		template<size_t Size> size_t inline constexpr findSingleCharacter(const char (&stringNew)[Size], char charToFind) {
+		template<size_t Size> size_t inline constexpr findSingleCharacterAvx2(const char (&stringNew)[Size], char charToFind) {
 			for (size_t x = 0; x < Size; ++x) {
 				if (stringNew[x] == charToFind) {
 					return x;

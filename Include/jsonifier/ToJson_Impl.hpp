@@ -30,8 +30,8 @@ namespace Jsonifier {
 
 	template<class T>
 	concept Accessible = requires(T container) {
-							 { container[size_t{}] };
-						 };
+		{ container[size_t{}] };
+	};
 
 	template<class T>
 	concept VectorLike = Resizeable<T> && Accessible<T> && HasData<T>;
@@ -286,7 +286,7 @@ namespace Jsonifier {
 		template<class B> static void op(NumT auto& value, B&& b, auto& ix) noexcept {
 			using V = std::decay_t<decltype(value)>;
 
-			if constexpr (std::_Is_any_of_v<V, float, double, int32_t, uint32_t, int64_t, uint64_t>) {
+			if constexpr (IsAnyOf<V, float, double, int32_t, uint32_t, int64_t, uint64_t>) {
 			} else if constexpr (std::integral<V>) {
 				using X = std::decay_t<decltype(sized_integer_conversion<V>())>;
 				auto start = data_ptr(b) + ix;
@@ -314,7 +314,7 @@ namespace Jsonifier {
 	};
 
 	template<class T>
-		requires StringT<T> || CharT<T>
+	requires StringT<T> || CharT<T>
 	struct ToJson<T> {
 		template<class B> inline static void op(auto& value, B&& b, auto& ix) noexcept {
 			if constexpr (CharT<T>) {
@@ -496,7 +496,7 @@ namespace Jsonifier {
 	};
 
 	template<class T>
-		requires JsonifierArrayT<std::decay_t<T>> || TupleT<std::decay_t<T>>
+	requires JsonifierArrayT<std::decay_t<T>> || TupleT<std::decay_t<T>>
 	struct ToJson<T> {
 		template<class... Args> inline static void op(auto& value, Args&&... args) noexcept {
 			static constexpr auto N = []() constexpr {
@@ -505,7 +505,8 @@ namespace Jsonifier {
 				} else {
 					return std::tuple_size_v<std::decay_t<T>>;
 				}
-			}();
+			}
+			();
 
 			dump<'['>(std::forward<Args>(args)...);
 			using V = std::decay_t<T>;
@@ -525,7 +526,7 @@ namespace Jsonifier {
 	};
 
 	template<class T>
-		requires IsStdTuple<std::decay_t<T>>
+	requires IsStdTuple<std::decay_t<T>>
 	struct ToJson<T> {
 		template<class... Args> inline static void op(auto& value, Args&&... args) noexcept {
 			static constexpr auto N = []() constexpr {
@@ -534,7 +535,8 @@ namespace Jsonifier {
 				} else {
 					return std::tuple_size_v<std::decay_t<T>>;
 				}
-			}();
+			}
+			();
 
 			dump<'['>(std::forward<Args>(args)...);
 			using V = std::decay_t<T>;
@@ -571,7 +573,7 @@ namespace Jsonifier {
 	}
 
 	template<class T>
-		requires JsonifierObjectT<T>
+	requires JsonifierObjectT<T>
 	struct ToJson<T> {
 		inline static void op(auto& value, auto&& b, auto& ix) noexcept {
 			dump<'{'>(b, ix);

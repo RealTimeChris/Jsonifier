@@ -30,13 +30,13 @@ namespace Jsonifier {
 	template<typename OTy = void> struct ToJson {};
 
 	struct Write {
-		template<class OTy> inline static void op(OTy& value, auto& buffer,auto& ix) {
+		template<class OTy> inline static void op(OTy& value, auto& buffer, auto& ix) {
 			ToJson<std::decay_t<OTy>>::template op(value, buffer, ix);
 		}
 	};
 
 	template<JsonifierValueT OTy> struct ToJson<OTy> {
-		template<typename OTy> inline static void op(OTy& value, auto& buffer) {
+		template<typename OTy2> inline static void op(OTy& value, auto& buffer) {
 			using VTy = decltype(getMember(std::declval<OTy>(), CoreWrapperV<OTy>));
 			ToJson<VTy>::template op(getMember(value, CoreWrapperV<OTy>), buffer);
 		}

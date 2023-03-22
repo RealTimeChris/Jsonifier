@@ -27,15 +27,21 @@
 
 namespace Jsonifier {
 
-	struct Read;
+	template<typename OTy = void> struct FromJson {};
+
+	struct Read {
+		template<typename OTy, typename It> inline static void op(OTy& value, It& it) {
+			FromJson<std::decay_t<OTy>>::template op(value, it);
+		}
+	};
 
 	class Parser {
 	  public:
 		inline Parser() = default;
 
 		inline Parser& operator=(Parser&& other) noexcept {
-			this->inString = std::move(other.inString);
-			this->section = std::move(other.section);
+			std::swap(this->inString, other.inString);
+			std::swap(this->section, other.section);
 			return *this;
 		};
 
@@ -54,26 +60,17 @@ namespace Jsonifier {
 			this->reset(string);
 		}
 
-		inline SimdIteratorCore begin() noexcept {
-			return { &section };
-		}
-
-		inline SimdIteratorCore end() noexcept {
-			return { &section };
-		}
-
-		template<typename OTy, typename OTy2> void parseJson(OTy& json, OTy2& inStringNew) {
+		template<typename OTy, StringT OTy2> void parseJson(OTy& json, OTy2& inStringNew) {
 			if (inString != inStringNew && inStringNew.size() != 0) {
 				reset(inStringNew);
 			}
 			auto newIter = this->begin();
-			auto endIter = this->end();
-			Read::op<OTy>(json, newIter, endIter);
+			Read::op<OTy>(json, newIter);
 		}
 
 	  protected:
 		SimdStringReader section{};
-		StringView inString{};
+		std::string_view inString{};
 
 		void generateJsonIndices() noexcept {
 			if (inString.data()) {
@@ -91,7 +88,7 @@ namespace Jsonifier {
 			if (string.size() == 0) {
 				return;
 			}
-			inString = StringView{ string.data(), string.size() };
+			inString = std::string_view{ string.data(), string.size() };
 			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
 			this->generateJsonIndices();
 		}
@@ -100,13 +97,21 @@ namespace Jsonifier {
 			if (string.size() == 0) {
 				return;
 			}
-			inString = StringView{ string.data(), string.size() };
+			inString = std::string_view{ string.data(), string.size() };
 			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
 			this->generateJsonIndices();
 		}
+		
+		inline SimdIteratorCore begin() noexcept {
+			return { &section };
+		}
+
+		inline SimdIteratorCore end() noexcept {
+			return { &section };
+		}
 	};
 
-	inline void skipObject(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+	inline void skipObject(auto& it) noexcept {
 		++it;
 		size_t openCount{ 1 };
 		size_t closeCount{};
@@ -114,7 +119,7 @@ namespace Jsonifier {
 			++it;
 			return;
 		}
-		while (openCount > closeCount && it != end) {
+		while (openCount > closeCount && it != it) {
 			++it;
 			switch (**it) {
 				case '{': {
@@ -141,7 +146,7 @@ namespace Jsonifier {
 		++it;
 	}
 
-	inline void skipArray(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+	inline void skipArray(auto& it) noexcept {
 		++it;
 		size_t openCount{ 1 };
 		size_t closeCount{};
@@ -149,7 +154,7 @@ namespace Jsonifier {
 			++it;
 			return;
 		}
-		while (openCount > closeCount && it != end) {
+		while (openCount > closeCount && it != it) {
 			++it;
 			switch (**it) {
 				case '{': {
@@ -176,20 +181,14 @@ namespace Jsonifier {
 		++it;
 	}
 
-	inline void skipWhitespace(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
-		while (std::isspace(**it)) {
-			++it;
-		}
-	}
-
-	inline void skipValue(SimdIteratorCore& it, SimdIteratorCore& end) noexcept {
+	inline void skipValue(auto& it) noexcept {
 		switch (**it) {
 			case '{': {
-				skipObject(it, end);
+				skipObject(it);
 				break;
 			}
 			case '[': {
-				skipArray(it, end);
+				skipArray(it);
 				break;
 			}
 			case '"': {
@@ -212,7 +211,6 @@ namespace Jsonifier {
 				break;
 			}
 			default: {
-				++it;
 				++it;
 			}
 		}
