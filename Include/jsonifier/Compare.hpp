@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -28,7 +28,7 @@
 namespace Jsonifier {
 
 #ifdef INSTRUCTION_SET_TYPE_AVX512
-	inline size_t findSingleCharacterAvx(const void* string, size_t lengthNew, const char charToFind) noexcept {
+	inline size_t findSingleCharacterFast(const void* string, size_t lengthNew, const char charToFind) noexcept {
 		size_t result{ std::string::npos };
 		size_t currentIndex{ lengthNew / 32 };
 		const auto arrayChar{ _mm256_set1_epi8(charToFind) };
@@ -36,7 +36,7 @@ namespace Jsonifier {
 		size_t remainder{ lengthNew % 32 };
 		int32_t mask{};
 		for (; currentIndex > 0; --currentIndex) {
-			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_loadu_si256(newPtr++)));
+			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_load_si256(newPtr++)));
 
 			if (mask != 0) {
 				result = currentIndex + _tzcnt_u32(mask);
@@ -65,7 +65,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 16 };
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++)))) !=
+		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
 			(0x0000ffff)) {
 			return false;
 		}
@@ -80,7 +80,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++)))) != (0xffffffff)) {
+				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
 		if (remainder < 16 && remainder > 0) {
@@ -97,7 +97,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m512i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m512i*>(str2);
 		__mmask64 result{ std::numeric_limits<uint64_t>::max() };
-		auto cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+		auto cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 		result = result & cmp;
 		if (result != -1) {
 			return false;
@@ -119,9 +119,9 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m512i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m512i*>(str2);
 		__mmask64 result{ std::numeric_limits<uint64_t>::max() };
-		auto cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+		auto cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 		result = result & cmp;
-		cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+		cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 		result = result & cmp;
 		if (result != -1) {
 			return false;
@@ -148,13 +148,13 @@ namespace Jsonifier {
 		__mmask64 result{ std::numeric_limits<uint64_t>::max() };
 		__mmask64 cmp{};
 		for (size_t x = lengthNew / (sizeof(__m512i) * 8); x > 0; --x) {
-			cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+			cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 			result = result & cmp;
-			cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+			cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 			result = result & cmp;
-			cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+			cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 			result = result & cmp;
-			cmp = _mm512_cmpeq_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++));
+			cmp = _mm512_cmpeq_epi8_mask(_mm512_load_si512(destVector++), _mm512_load_si512(sourceVector++));
 			result = result & cmp;
 			if (result != -1) {
 				return false;
@@ -199,7 +199,7 @@ namespace Jsonifier {
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
 		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll),
-				_mm_cmpeq_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_loadu_si128(sourceVector++)))) != (0x0000ffff)) {
+				_mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_load_si128(sourceVector++)))) != (0x0000ffff)) {
 			return false;
 		}
 		_mm_sfence();
@@ -324,7 +324,7 @@ namespace Jsonifier {
 		}
 	}
 #elif INSTRUCTION_SET_TYPE_AVX2
-	inline size_t findSingleCharacterAvx(const void* string, size_t lengthNew, const char charToFind) noexcept {
+	inline size_t findSingleCharacterFast(const void* string, size_t lengthNew, const char charToFind) noexcept {
 		size_t result{ std::string::npos };
 		size_t currentIndex{ lengthNew / 32 };
 		const auto arrayChar{ _mm256_set1_epi8(charToFind) };
@@ -332,7 +332,7 @@ namespace Jsonifier {
 		size_t remainder{ lengthNew % 32 };
 		int32_t mask{};
 		for (; currentIndex > 0; --currentIndex) {
-			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_loadu_si256(newPtr++)));
+			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_load_si256(newPtr++)));
 
 			if (mask != 0) {
 				result = currentIndex + _tzcnt_u32(mask);
@@ -361,7 +361,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 16 };
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++)))) !=
+		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
 			(0x0000ffff)) {
 			return false;
 		}
@@ -376,7 +376,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++)))) != (0xffffffff)) {
+				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
 		if (remainder < 16 && remainder > 0) {
@@ -393,9 +393,9 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -417,13 +417,13 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -451,21 +451,21 @@ namespace Jsonifier {
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
 			mask = _mm256_movemask_epi8(result);
 			if (mask != (0xffffffff)) {
@@ -511,7 +511,7 @@ namespace Jsonifier {
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
 		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll),
-				_mm_cmpeq_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_loadu_si128(sourceVector++)))) != (0x0000ffff)) {
+				_mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_load_si128(sourceVector++)))) != (0x0000ffff)) {
 			return false;
 		}
 		_mm_sfence();
@@ -526,7 +526,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++)))) != (0xffffffff)) {
+				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
 		_mm_sfence();
@@ -544,9 +544,9 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		_mm_sfence();
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
@@ -569,13 +569,13 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -604,21 +604,21 @@ namespace Jsonifier {
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
 			mask = _mm256_movemask_epi8(result);
 			if (mask != (0xffffffff)) {
@@ -652,7 +652,7 @@ namespace Jsonifier {
 		}
 	}
 #elif INSTRUCTION_SET_TYPE_AVX
-	inline size_t findSingleCharacterAvx(const void* string, size_t lengthNew, const char charToFind) noexcept {
+	inline size_t findSingleCharacterFast(const void* string, size_t lengthNew, const char charToFind) noexcept {
 		size_t result{ std::string::npos };
 		size_t currentIndex{ lengthNew / 32 };
 		const auto arrayChar{ _mm256_set1_epi8(charToFind) };
@@ -660,7 +660,7 @@ namespace Jsonifier {
 		size_t remainder{ lengthNew % 32 };
 		int32_t mask{};
 		for (; currentIndex > 0; --currentIndex) {
-			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_loadu_si256(newPtr++)));
+			mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(arrayChar, _mm256_load_si256(newPtr++)));
 
 			if (mask != 0) {
 				result = currentIndex + _tzcnt_u32(mask);
@@ -689,7 +689,7 @@ namespace Jsonifier {
 		const size_t remainder{ lengthNew % 16 };
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++)))) !=
+		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_load_si128(destVector++), _mm_load_si128(sourceVector++)))) !=
 			(0x0000ffff)) {
 			return false;
 		}
@@ -704,7 +704,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++)))) != (0xffffffff)) {
+				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
 		if (remainder < 16 && remainder > 0) {
@@ -721,9 +721,9 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -745,13 +745,13 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -779,21 +779,21 @@ namespace Jsonifier {
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
 			mask = _mm256_movemask_epi8(result);
 			if (mask != (0xffffffff)) {
@@ -839,7 +839,7 @@ namespace Jsonifier {
 		auto* destVector = static_cast<const __m128i*>(str1);
 		const auto* sourceVector = static_cast<const __m128i*>(str2);
 		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll),
-				_mm_cmpeq_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_loadu_si128(sourceVector++)))) != (0x0000ffff)) {
+				_mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(destVector++)), _mm_load_si128(sourceVector++)))) != (0x0000ffff)) {
 			return false;
 		}
 		_mm_sfence();
@@ -854,7 +854,7 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		if (_mm256_movemask_epi8(_mm256_and_si256(_mm256_set1_epi64x(-1ll),
-				_mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++)))) != (0xffffffff)) {
+				_mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++)))) != (0xffffffff)) {
 			return false;
 		}
 		_mm_sfence();
@@ -872,9 +872,9 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		_mm_sfence();
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
@@ -897,13 +897,13 @@ namespace Jsonifier {
 		auto* destVector = reinterpret_cast<const __m256i*>(str1);
 		const auto* sourceVector = reinterpret_cast<const __m256i*>(str2);
 		__m256i result{ _mm256_set1_epi64x(-1ll) };
-		__m256i cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		__m256i cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
-		cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+		cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 		result = _mm256_and_si256(result, cmp);
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
@@ -932,21 +932,21 @@ namespace Jsonifier {
 		__m256i cmp{};
 		uint32_t mask{};
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
-			cmp = _mm256_cmpeq_epi8(_mm256_stream_load_si256(destVector++), _mm256_stream_load_si256(sourceVector++));
+			cmp = _mm256_cmpeq_epi8(_mm256_load_si256(destVector++), _mm256_load_si256(sourceVector++));
 			result = _mm256_and_si256(result, cmp);
 			mask = _mm256_movemask_epi8(result);
 			if (mask != (0xffffffff)) {

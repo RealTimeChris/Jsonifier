@@ -5,7 +5,7 @@ Latest results (March 18, 2023):
 
 Single Iteration Test Results:
 
-| Library                                           | Test       | Write (MB/s) | Read (MB/s) |
+| Library                                           | Test       | Serialize (MB/s) | Parse (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |
 | [**glaze**](https://github.com/stephenberry/glaze) | **Mixed** | **133** | **25** |
 | [**Jsonifier**](https://github.com/RealTimechris/Jsonifier) | **Mixed** | **409** | **48** |
@@ -13,7 +13,7 @@ Single Iteration Test Results:
 
 Multi Iteration Test Results:
 
-| Library                                           | Test       | Write (MB/s) | Read (MB/s) |
+| Library                                           | Test       | Serialize (MB/s) | Parse (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |
 | [**glaze**](https://github.com/stephenberry/glaze) | **Mixed** | **545** | **551** |
 | [**glaze**](https://github.com/stephenberry/glaze) | **Double** | **568** | **1053** |
@@ -186,7 +186,7 @@ This test demonstrates problems with `simdjson` and iterative parsers that canno
 
 Hash based solutions avoid this problem and do not suffer performance loss as the JSON document grows in size.
 
-| Library                                           | Test       | Write (MB/s) | Read (MB/s) |
+| Library                                           | Test       | Serialize (MB/s) | Parse (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |
 | [**glaze**](https://github.com/stephenberry/glaze) | **Double** | **575** | **941** |
 | [**glaze**](https://github.com/stephenberry/glaze) | **String** | **539** | **1297** |
@@ -208,31 +208,31 @@ Hash based solutions avoid this problem and do not suffer performance loss as th
 
 ```c++
 template<> struct Jsonifier::Core<fixed_object_t> {
-	using T = fixed_object_t;
-	static constexpr auto value = object("int_array", &T::int_array, "float_array", &T::float_array, "double_array", &T::double_array);
+	using OTy = fixed_object_t;
+	static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
-	using T = fixed_name_object_t;
-	static constexpr auto value = object("name0", &T::name0, "name1", &T::name1, "name2", &T::name2, "name3", &T::name3, "name4", &T::name4);
+	using OTy = fixed_name_object_t;
+	static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
-	using T = nested_object_t;
-	static constexpr auto value = object("v3s", &T::v3s, "id", &T::id);
+	using OTy = nested_object_t;
+	static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
-	using T = another_object_t;
+	using OTy = another_object_t;
 	static constexpr auto value =
-		object("string", &T::string, "another_string", &T::another_string, "boolean", &T::boolean, "nested_object", &T::nested_object);
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
-	using T = obj_t;
+	using OTy = obj_t;
 	static constexpr auto value =
-		object("fixed_object", &T::fixed_object, "fixed_name_object", &T::fixed_name_object, "another_object", &T::another_object, "string_array",
-			&T::string_array, "string", &T::string, "number", &T::number, "boolean", &T::boolean, "another_bool", &T::another_bool);
+		object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
+			&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 };
 ```
 
@@ -240,31 +240,31 @@ template<> struct Jsonifier::Core<obj_t> {
 
 ```c++
 template<> struct glz::meta<fixed_object_t> {
-	using T = fixed_object_t;
-	static constexpr auto value = object("int_array", &T::int_array, "float_array", &T::float_array, "double_array", &T::double_array);
+	using OTy = fixed_object_t;
+	static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
-	using T = fixed_name_object_t;
-	static constexpr auto value = object("name0", &T::name0, "name1", &T::name1, "name2", &T::name2, "name3", &T::name3, "name4", &T::name4);
+	using OTy = fixed_name_object_t;
+	static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
-	using T = nested_object_t;
-	static constexpr auto value = object("v3s", &T::v3s, "id", &T::id);
+	using OTy = nested_object_t;
+	static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct glz::meta<another_object_t> {
-	using T = another_object_t;
+	using OTy = another_object_t;
 	static constexpr auto value =
-		object("string", &T::string, "another_string", &T::another_string, "boolean", &T::boolean, "nested_object", &T::nested_object);
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
-	using T = obj_t;
+	using OTy = obj_t;
 	static constexpr auto value =
-		object("fixed_object", &T::fixed_object, "fixed_name_object", &T::fixed_name_object, "another_object", &T::another_object, "string_array",
-			&T::string_array, "string", &T::string, "number", &T::number, "boolean", &T::boolean, "another_bool", &T::another_bool);
+		object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
+			&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 };
 ```
 

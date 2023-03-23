@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -21,8 +21,8 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/Memcpy.hpp>
 #include <jsonifier/Compare.hpp>
+#include <jsonifier/Memcpy.hpp>
 #include <immintrin.h>
 #include <string_view>
 #include <iostream>
@@ -30,14 +30,14 @@
 
 namespace Jsonifier {
 
-	class JsonifierCore {
+	class JsonifierCoreInternal {
 	  public:
-		inline static void memcpy(void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
-			memcpyFast(destVector, sourceVector, lengthNew);
-		}
-
 		inline static bool compare(const void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
 			return compareFast(destVector, sourceVector, lengthNew);
+		}
+
+		inline static void memcpy(void* dest, const void* src, size_t length) {
+			return memcpyFast(dest, src, length);
 		}
 	};
 }

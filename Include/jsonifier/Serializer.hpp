@@ -22,7 +22,7 @@
 #pragma once
 
 #include <jsonifier/Base.hpp>
-#include <jsonifier/ToJson.hpp>
+#include <jsonifier/Serialize.hpp>
 #include <jsonifier/String.hpp>
 
 namespace Jsonifier {
@@ -31,9 +31,9 @@ namespace Jsonifier {
 	  public:
 		inline constexpr Serializer() noexcept = default;
 
-		template<typename OTy> inline void serializeJson(const OTy& data, auto& buffer) {
-			int32_t index{};
-			Write::op(data, buffer, index);
+		template<typename OTy, typename OTy2> inline void serializeJson(OTy& data, OTy2& buffer) {
+			size_t index{};
+			Serialize::op(data, buffer, index);
 			buffer.resize(index);
 		}
 	};

@@ -105,59 +105,59 @@ struct obj_t {
 };
 
 template<> struct glz::meta<fixed_object_t> {
-	using T = fixed_object_t;
-	static constexpr auto value = object("int_array", &T::int_array, "float_array", &T::float_array, "double_array", &T::double_array);
+	using OTy = fixed_object_t;
+	static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
-	using T = fixed_name_object_t;
-	static constexpr auto value = object("name0", &T::name0, "name1", &T::name1, "name2", &T::name2, "name3", &T::name3, "name4", &T::name4);
+	using OTy = fixed_name_object_t;
+	static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
-	using T = nested_object_t;
-	static constexpr auto value = object("v3s", &T::v3s, "id", &T::id);
+	using OTy = nested_object_t;
+	static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct glz::meta<another_object_t> {
-	using T = another_object_t;
+	using OTy = another_object_t;
 	static constexpr auto value =
-		object("string", &T::string, "another_string", &T::another_string, "boolean", &T::boolean, "nested_object", &T::nested_object);
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
-	using T = obj_t;
+	using OTy = obj_t;
 	static constexpr auto value =
-		object("fixed_object", &T::fixed_object, "fixed_name_object", &T::fixed_name_object, "another_object", &T::another_object, "string_array",
-			&T::string_array, "string", &T::string, "number", &T::number, "boolean", &T::boolean, "another_bool", &T::another_bool);
+		object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
+			&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 };
 
 template<> struct Jsonifier::Core<fixed_object_t> {
-	using T = fixed_object_t;
-	static constexpr auto value = object("int_array", &T::int_array, "float_array", &T::float_array, "double_array", &T::double_array);
+	using OTy = fixed_object_t;
+	static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
-	using T = fixed_name_object_t;
-	static constexpr auto value = object("name0", &T::name0, "name1", &T::name1, "name2", &T::name2, "name3", &T::name3, "name4", &T::name4);
+	using OTy = fixed_name_object_t;
+	static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
-	using T = nested_object_t;
-	static constexpr auto value = object("v3s", &T::v3s, "id", &T::id);
+	using OTy = nested_object_t;
+	static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
-	using T = another_object_t;
+	using OTy = another_object_t;
 	static constexpr auto value =
-		object("string", &T::string, "another_string", &T::another_string, "boolean", &T::boolean, "nested_object", &T::nested_object);
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
-	using T = obj_t;
+	using OTy = obj_t;
 	static constexpr auto value =
-		object("fixed_object", &T::fixed_object, "fixed_name_object", &T::fixed_name_object, "another_object", &T::another_object, "string_array",
-			&T::string_array, "string", &T::string, "number", &T::number, "boolean", &T::boolean, "another_bool", &T::another_bool);
+		object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
+			&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 };
 
 template<typename OTy> struct Test {
@@ -167,7 +167,11 @@ template<typename OTy> struct Test {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				v[x] = static_cast<OTy>(1000000000000000000);
+				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
+					v[x] = std::to_string(1000000000000000000);
+				} else {
+					v[x] = static_cast<OTy>(1000000000000000000);
+				}
 			}
 		};
 
@@ -246,31 +250,31 @@ GLZ_META(Test<int64_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s,
 GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 
 template<> struct Jsonifier::Core<Test<std::string>> {
-	using T = Test<std::string>;
-	static constexpr auto value = object("a", &T::a, "b", &T::b, "c", &T::c, "d", &T::d, "e", &T::e, "f", &T::f, "g", &T::g, "h", &T::h, "i", &T::i,
-		"j", &T::j, "k", &T::k, "l", &T::l, "m", &T::m, "n", &T::n, "o", &T::o, "p", &T::p, "q", &T::q, "r", &T::r, "s", &T::s, "t", &T::t, "u",
-		&T::u, "v", &T::v, "w", &T::w, "x", &T::x, "y", &T::y, "z", &T::z);
+	using OTy = Test<std::string>;
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
+		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<uint64_t>> {
-	using T = Test<uint64_t>;
-	static constexpr auto value = object("a", &T::a, "b", &T::b, "c", &T::c, "d", &T::d, "e", &T::e, "f", &T::f, "g", &T::g, "h", &T::h, "i", &T::i,
-		"j", &T::j, "k", &T::k, "l", &T::l, "m", &T::m, "n", &T::n, "o", &T::o, "p", &T::p, "q", &T::q, "r", &T::r, "s", &T::s, "t", &T::t, "u",
-		&T::u, "v", &T::v, "w", &T::w, "x", &T::x, "y", &T::y, "z", &T::z);
+	using OTy = Test<uint64_t>;
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
+		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
-	using T = Test<int64_t>;
-	static constexpr auto value = object("a", &T::a, "b", &T::b, "c", &T::c, "d", &T::d, "e", &T::e, "f", &T::f, "g", &T::g, "h", &T::h, "i", &T::i,
-		"j", &T::j, "k", &T::k, "l", &T::l, "m", &T::m, "n", &T::n, "o", &T::o, "p", &T::p, "q", &T::q, "r", &T::r, "s", &T::s, "t", &T::t, "u",
-		&T::u, "v", &T::v, "w", &T::w, "x", &T::x, "y", &T::y, "z", &T::z);
+	using OTy = Test<int64_t>;
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
+		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
-	using T = Test<double>;
-	static constexpr auto value = object("a", &T::a, "b", &T::b, "c", &T::c, "d", &T::d, "e", &T::e, "f", &T::f, "g", &T::g, "h", &T::h, "i", &T::i,
-		"j", &T::j, "k", &T::k, "l", &T::l, "m", &T::m, "n", &T::n, "o", &T::o, "p", &T::p, "q", &T::q, "r", &T::r, "s", &T::s, "t", &T::t, "u",
-		&T::u, "v", &T::v, "w", &T::w, "x", &T::x, "y", &T::y, "z", &T::z);
+	using OTy = Test<double>;
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
+		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<typename OTy> struct AbcTest {
@@ -280,7 +284,11 @@ template<typename OTy> struct AbcTest {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				v[x] = static_cast<OTy>(1000000000000000000);
+				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
+					v[x] = std::to_string(1000000000000000000);
+				} else {
+					v[x] = static_cast<OTy>(1000000000000000000);
+				}
 			}
 		};
 
@@ -359,31 +367,31 @@ GLZ_META(AbcTest<int64_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i,
 GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
-	using T = AbcTest<std::string>;
-	static constexpr auto value = object("z", &T::z, "y", &T::y, "x", &T::x, "w", &T::w, "v", &T::v, "u", &T::u, "t", &T::t, "s", &T::s, "r", &T::r,
-		"q", &T::q, "p", &T::p, "o", &T::o, "n", &T::n, "m", &T::m, "l", &T::l, "k", &T::k, "j", &T::j, "i", &T::i, "h", &T::h, "g", &T::g, "f",
-		&T::f, "e", &T::e, "d", &T::d, "c", &T::c, "b", &T::b, "a", &T::a);
+	using OTy = AbcTest<std::string>;
+	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
+		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<uint64_t>> {
-	using T = AbcTest<uint64_t>;
-	static constexpr auto value = object("z", &T::z, "y", &T::y, "x", &T::x, "w", &T::w, "v", &T::v, "u", &T::u, "t", &T::t, "s", &T::s, "r", &T::r,
-		"q", &T::q, "p", &T::p, "o", &T::o, "n", &T::n, "m", &T::m, "l", &T::l, "k", &T::k, "j", &T::j, "i", &T::i, "h", &T::h, "g", &T::g, "f",
-		&T::f, "e", &T::e, "d", &T::d, "c", &T::c, "b", &T::b, "a", &T::a);
+	using OTy = AbcTest<uint64_t>;
+	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
+		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
-	using T = AbcTest<int64_t>;
-	static constexpr auto value = object("z", &T::z, "y", &T::y, "x", &T::x, "w", &T::w, "v", &T::v, "u", &T::u, "t", &T::t, "s", &T::s, "r", &T::r,
-		"q", &T::q, "p", &T::p, "o", &T::o, "n", &T::n, "m", &T::m, "l", &T::l, "k", &T::k, "j", &T::j, "i", &T::i, "h", &T::h, "g", &T::g, "f",
-		&T::f, "e", &T::e, "d", &T::d, "c", &T::c, "b", &T::b, "a", &T::a);
+	using OTy = AbcTest<int64_t>;
+	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
+		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
-	using T = AbcTest<double>;
-	static constexpr auto value = object("z", &T::z, "y", &T::y, "x", &T::x, "w", &T::w, "v", &T::v, "u", &T::u, "t", &T::t, "s", &T::s, "r", &T::r,
-		"q", &T::q, "p", &T::p, "o", &T::o, "n", &T::n, "m", &T::m, "l", &T::l, "k", &T::k, "j", &T::j, "i", &T::i, "h", &T::h, "g", &T::g, "f",
-		&T::f, "e", &T::e, "d", &T::d, "c", &T::c, "b", &T::b, "a", &T::a);
+	using OTy = AbcTest<double>;
+	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
+		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 #ifdef NDEBUG
@@ -571,6 +579,10 @@ auto glaze_test() {
 	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations };
 	r.json_byte_length = buffer.size();
 
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	auto t0 = std::chrono::steady_clock::now();
 	try {
 		for (size_t i = 0; i < iterations; ++i) {
@@ -584,7 +596,9 @@ auto glaze_test() {
 
 	auto t1 = std::chrono::steady_clock::now();
 
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	glz::write_json(obj, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < iterations; ++i) {
@@ -593,9 +607,10 @@ auto glaze_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_write = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 	Test<uint64_t> uint64Test{};
+	glz::write_json(uint64Test, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -605,7 +620,11 @@ auto glaze_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	if (auto error = glz::read_json(uint64Test, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -617,10 +636,13 @@ auto glaze_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
+
+	glz::write_json(int64Test, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -630,7 +652,11 @@ auto glaze_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	if (auto error = glz::read_json(int64Test, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -642,10 +668,13 @@ auto glaze_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
+
+	glz::write_json(stringTest, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -655,7 +684,11 @@ auto glaze_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	if (auto error = glz::read_json(stringTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -667,10 +700,13 @@ auto glaze_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<double> doubleTest{};
+
+	glz::write_json(doubleTest, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -680,7 +716,11 @@ auto glaze_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	if (auto error = glz::read_json(doubleTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -692,7 +732,7 @@ auto glaze_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	r.print();
@@ -708,6 +748,10 @@ auto glaze_single_test() {
 	results r{ "glaze", "https://github.com/stephenberry/glaze", 1 };
 	r.json_byte_length = buffer.size();
 
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	auto t0 = std::chrono::steady_clock::now();
 	try {
 		for (size_t i = 0; i < 1; ++i) {
@@ -721,7 +765,9 @@ auto glaze_single_test() {
 
 	auto t1 = std::chrono::steady_clock::now();
 
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	glz::write_json(obj, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < 1; ++i) {
@@ -730,7 +776,7 @@ auto glaze_single_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_write = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	r.print();
 
@@ -743,6 +789,9 @@ auto glaze_abc_test() {
 	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations_abc };
 
 	AbcTest<uint64_t> uint64AbcTestWrite{};
+
+	glz::write_json(uint64AbcTestWrite, buffer);
+
 	auto t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -752,9 +801,14 @@ auto glaze_abc_test() {
 	auto t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	Test<uint64_t> uint64AbcTest{};
+
+	if (auto error = glz::read_json(uint64AbcTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < iterations_abc; ++i) {
 		if (auto error = glz::read_json(uint64AbcTest, buffer); error) {
@@ -764,10 +818,13 @@ auto glaze_abc_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<int64_t> int64AbcTestWrite{};
+
+	glz::write_json(int64AbcTestWrite, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -777,8 +834,13 @@ auto glaze_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<int64_t> int64AbcTest{};
+
+	if (auto error = glz::read_json(int64AbcTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -789,10 +851,13 @@ auto glaze_abc_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<std::string> stringAbcTestWrite{};
+
+	glz::write_json(stringAbcTestWrite, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -802,8 +867,13 @@ auto glaze_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<std::string> stringAbcTest{};
+
+	if (auto error = glz::read_json(stringAbcTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -814,10 +884,13 @@ auto glaze_abc_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<double> doubleAbcTestWrite{};
+
+	glz::write_json(doubleAbcTestWrite, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -827,8 +900,13 @@ auto glaze_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<double> doubleAbcTest{};
+
+	if (auto error = glz::read_json(doubleAbcTest, buffer); error) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
@@ -839,7 +917,7 @@ auto glaze_abc_test() {
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	r.print();
@@ -852,13 +930,15 @@ auto Jsonifier_test() {
 	obj_t obj{};
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations };
-	Jsonifier::Serializer serializer{};
-	Jsonifier::Parser parser{ buffer };
+	Jsonifier::JsonifierCore jsonifier{};
+
+	jsonifier.parseJson(obj, buffer);
+
 	auto t0 = std::chrono::steady_clock::now();
 
 	try {
 		for (size_t i = 0; i < iterations; ++i) {
-			parser.parseJson(obj, buffer);
+			jsonifier.parseJson(obj, buffer);
 		}
 	} catch (std::runtime_error& e) {
 		std::cout << "Jsonifier Error: " << e.what() << std::endl;
@@ -867,104 +947,128 @@ auto Jsonifier_test() {
 	auto t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.serializeJson(obj, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < iterations; ++i) {
-		serializer.serializeJson(obj, buffer);
+		jsonifier.serializeJson(obj, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_write = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 	Test<uint64_t> uint64Test{};
+
+	jsonifier.serializeJson(uint64Test, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		serializer.serializeJson(uint64Test, buffer);
+		jsonifier.serializeJson(uint64Test, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.parseJson(uint64Test, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		parser.parseJson(uint64Test, buffer);
+		jsonifier.parseJson(uint64Test, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
+
+	jsonifier.serializeJson(int64Test, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		serializer.serializeJson(int64Test, buffer);
+		jsonifier.serializeJson(int64Test, buffer);
 	}
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.parseJson(int64Test, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		parser.parseJson(int64Test, buffer);
+		jsonifier.parseJson(int64Test, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
+
+	jsonifier.serializeJson(stringTest, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		serializer.serializeJson(stringTest, buffer);
+		jsonifier.serializeJson(stringTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.parseJson(stringTest, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		parser.parseJson(stringTest, buffer);
+		jsonifier.parseJson(stringTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	Test<double> doubleTest{};
+
+	jsonifier.serializeJson(doubleTest, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		serializer.serializeJson(doubleTest, buffer);
+		jsonifier.serializeJson(doubleTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.parseJson(doubleTest, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		parser.parseJson(doubleTest, buffer);
+		jsonifier.parseJson(doubleTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	r.print();
@@ -978,13 +1082,15 @@ auto Jsonifier_single_test() {
 	obj_t obj{};
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", 1 };
-	Jsonifier::Serializer serializer{};
-	Jsonifier::Parser parser{ buffer };
+	Jsonifier::JsonifierCore jsonifier{};
+
+	jsonifier.parseJson(obj, buffer);
+
 	auto t0 = std::chrono::steady_clock::now();
 
 	try {
 		for (size_t i = 0; i < 1; ++i) {
-			parser.parseJson(obj, buffer);
+			jsonifier.parseJson(obj, buffer);
 		}
 	} catch (std::runtime_error& e) {
 		std::cout << "Jsonifier Error: " << e.what() << std::endl;
@@ -993,16 +1099,19 @@ auto Jsonifier_single_test() {
 	auto t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+
+	jsonifier.serializeJson(obj, buffer);
+	jsonifier.serializeJson(obj, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < 1; ++i) {
-		serializer.serializeJson(obj, buffer);
+		jsonifier.serializeJson(obj, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_write = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	r.print();
 
 	return r;
@@ -1011,102 +1120,112 @@ auto Jsonifier_single_test() {
 auto Jsonifier_abc_test() {
 	std::string buffer{};
 
-	Jsonifier::Serializer serializer{};
+	Jsonifier::JsonifierCore jsonifier{};
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations_abc };
 
-	Jsonifier::Parser parser{ buffer };
-
 	AbcTest<uint64_t> uint64AbcTestWrite{};
+
+	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
+
 	auto t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		serializer.serializeJson(uint64AbcTestWrite, buffer);
+		jsonifier.serializeJson(uint64AbcTestWrite, buffer);
 	}
 
 	auto t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<uint64_t> uint64AbcTest{};
+	jsonifier.parseJson(uint64AbcTest, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		parser.parseJson(uint64AbcTest, buffer);
+		jsonifier.parseJson(uint64AbcTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<int64_t> int64AbcTestWrite{};
+
+	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
+
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		serializer.serializeJson(int64AbcTestWrite, buffer);
+		jsonifier.serializeJson(int64AbcTestWrite, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<int64_t> int64AbcTest{};
+	jsonifier.parseJson(int64AbcTest, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		parser.parseJson(int64AbcTest, buffer);
+		jsonifier.parseJson(int64AbcTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<std::string> stringAbcTestWrite{};
+	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		serializer.serializeJson(stringAbcTestWrite, buffer);
+		jsonifier.serializeJson(stringAbcTestWrite, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<std::string> stringAbcTest{};
+	jsonifier.parseJson(stringAbcTest, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		parser.parseJson(stringAbcTest, buffer);
+		jsonifier.parseJson(stringAbcTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	AbcTest<double> doubleAbcTestWrite{};
+	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		serializer.serializeJson(doubleAbcTestWrite, buffer);
+		jsonifier.serializeJson(doubleAbcTestWrite, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	Test<double> doubleAbcTest{};
+	jsonifier.parseJson(doubleAbcTest, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations_abc; ++i) {
-		parser.parseJson(doubleAbcTest, buffer);
+		jsonifier.parseJson(doubleAbcTest, buffer);
 	}
 
 	t1 = std::chrono::steady_clock::now();
 
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
 
 	r.print();
@@ -1386,6 +1505,8 @@ auto simdjson_test() {
 
 	obj_t obj{};
 
+	auto error = parser.read_in_order(obj, buffer);
+
 	auto t0 = std::chrono::steady_clock::now();
 
 	try {
@@ -1404,11 +1525,13 @@ auto simdjson_test() {
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations };
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	Test<double> objDouble{};
 	buffer.clear();
 	buffer = glz::write_json(objDouble);
+
+	error = parser.readDouble(objDouble, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -1426,11 +1549,13 @@ auto simdjson_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_double = buffer.size();
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	Test<std::string> objString{};
 	buffer.clear();
 	buffer = glz::write_json(objString);
+
+	error = parser.readString(objString, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -1448,11 +1573,13 @@ auto simdjson_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	Test<int64_t> objInt64{};
 	buffer.clear();
 	buffer = glz::write_json(objInt64);
+
+	error = parser.readInt64(objInt64, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -1470,11 +1597,13 @@ auto simdjson_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	Test<uint64_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
+
+	error = parser.readUint64(objUint64, buffer);
 
 	t0 = std::chrono::steady_clock::now();
 
@@ -1492,7 +1621,7 @@ auto simdjson_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	r.print();
 
@@ -1505,6 +1634,8 @@ auto simdjson_single_test() {
 	on_demand parser{};
 
 	obj_t obj{};
+
+	const auto error = parser.read_in_order(obj, buffer);
 
 	auto t0 = std::chrono::steady_clock::now();
 
@@ -1524,7 +1655,7 @@ auto simdjson_single_test() {
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", 1 };
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	r.print();
 
@@ -1696,7 +1827,7 @@ auto simdjson_abc_test() {
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations_abc };
 
 	r.json_byte_length_double = buffer.size();
-	r.json_read_double = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	AbcTest<std::string> objString{};
 	buffer.clear();
@@ -1718,7 +1849,7 @@ auto simdjson_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_string = buffer.size();
-	r.json_read_string = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	AbcTest<int64_t> objInt64{};
 	buffer.clear();
@@ -1740,7 +1871,7 @@ auto simdjson_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	AbcTest<uint64_t> objUint64{};
 	buffer.clear();
@@ -1762,7 +1893,7 @@ auto simdjson_abc_test() {
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() * 1e-6;
+	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	r.print();
 
@@ -1770,7 +1901,7 @@ auto simdjson_abc_test() {
 }
 
 static std::string table_header = R"(
-| Library                                           | Test       | Write (MB/s) | Read (MB/s) |
+| Library                                           | Test       | Serialize (MB/s) | Parse (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |)";
 
 std::string regular_test() {
@@ -1811,8 +1942,8 @@ std::string abc_test() {
 
 std::string single_test() {
 	std::vector<results> results;
-	results.emplace_back(glaze_single_test());
 	results.emplace_back(Jsonifier_single_test());
+	results.emplace_back(glaze_single_test());
 	results.emplace_back(simdjson_single_test());
 
 	std::string table{};

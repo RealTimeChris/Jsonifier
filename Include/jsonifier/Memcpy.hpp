@@ -32,7 +32,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
 		const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 
 		_mm_sfence();
 		if (remainder > 0) {
@@ -82,8 +82,8 @@ namespace Jsonifier {
 		__m512i* destVector = static_cast<__m512i*>(dest);
 		const __m512i* sourceVector = static_cast<const __m512i*>(source);
 		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-		_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
-		_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+		_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+		_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
 
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -107,11 +107,11 @@ namespace Jsonifier {
 		const __m512i* sourceVector = static_cast<const __m512i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m512i) * 8); x > 0; --x) {
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
-			_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
-			_mm512_stream_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_loadu_si512(sourceVector++));
 		}
 
 		_mm_sfence();
@@ -153,7 +153,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
 		const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 		_mm_sfence();
 		if (remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -164,7 +164,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 32 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_load_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -179,7 +179,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 64 };
 		__m512i* destVector = static_cast<__m512i*>(dest);
 		const __m512i* sourceVector = static_cast<const __m512i*>(source);
-		_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
+		_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -197,8 +197,8 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 128 };
 		__m512i* destVector = static_cast<__m512i*>(dest);
 		const __m512i* sourceVector = static_cast<const __m512i*>(source);
-		_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
-		_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
+		_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
+		_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -220,10 +220,10 @@ namespace Jsonifier {
 		__m512i* destVector = static_cast<__m512i*>(dest);
 		const __m512i* sourceVector = static_cast<const __m512i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m512i) * 8); x > 0; --x) {
-			_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
-			_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
-			_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
-			_mm512_stream_si512(destVector++, _mm512_load_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
+			_mm512_storeu_si512(destVector++, _mm512_load_si512(sourceVector++));
 		}
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -257,7 +257,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
 		const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 
 		_mm_sfence();
 		if (remainder > 0) {
@@ -270,7 +270,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 32 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_store_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -287,8 +287,8 @@ namespace Jsonifier {
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-		_mm256_store_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_store_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -308,10 +308,10 @@ namespace Jsonifier {
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -335,17 +335,17 @@ namespace Jsonifier {
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		}
 
 		_mm_sfence();
@@ -367,7 +367,7 @@ namespace Jsonifier {
 		}
 	}
 
-	inline void fastMemcpySmallAvx2(void* destVector,const void* sourceVector, size_t lengthNew) noexcept {
+	inline void fastMemcpySmallAvx2(void* destVector, const void* sourceVector, size_t lengthNew) noexcept {
 		if (lengthNew < 16) {
 			::memcpy(destVector, sourceVector, lengthNew);
 		} else if (lengthNew < 32) {
@@ -386,8 +386,8 @@ namespace Jsonifier {
 	inline void fastMemcpy16Avx2(void* dest, const void* source, size_t lengthNew) noexcept {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
-		 const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		const __m128i* sourceVector = static_cast<const __m128i*>(source);
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 		_mm_sfence();
 		if (remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -398,7 +398,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 32 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -413,8 +413,8 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 64 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -432,10 +432,10 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 128 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -457,14 +457,14 @@ namespace Jsonifier {
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		}
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -497,8 +497,8 @@ namespace Jsonifier {
 	inline void fastMemcpySmall16Avx(void* dest, const void* source, size_t lengthNew) noexcept {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
-		 const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		const __m128i* sourceVector = static_cast<const __m128i*>(source);
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 
 		_mm_sfence();
 		if (remainder > 0) {
@@ -549,10 +549,10 @@ namespace Jsonifier {
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
@@ -576,17 +576,17 @@ namespace Jsonifier {
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 			_mm_prefetch(reinterpret_cast<const char*>(sourceVector + 1), _MM_HINT_T0);
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		}
 
 		_mm_sfence();
@@ -627,8 +627,8 @@ namespace Jsonifier {
 	inline void fastMemcpy16Avx(void* dest, const void* source, size_t lengthNew) noexcept {
 		auto remainder{ lengthNew % 16 };
 		__m128i* destVector = static_cast<__m128i*>(dest);
-		 const __m128i* sourceVector = static_cast<const __m128i*>(source);
-		_mm_stream_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
+		const __m128i* sourceVector = static_cast<const __m128i*>(source);
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector++), _mm_loadu_si128(sourceVector++));
 		_mm_sfence();
 		if (remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -639,7 +639,7 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 32 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -654,8 +654,8 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 64 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -673,10 +673,10 @@ namespace Jsonifier {
 		auto remainder{ lengthNew % 128 };
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-		_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+		_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {
 			::memcpy(destVector, sourceVector, remainder);
@@ -698,14 +698,14 @@ namespace Jsonifier {
 		__m256i* destVector = static_cast<__m256i*>(dest);
 		const __m256i* sourceVector = static_cast<const __m256i*>(source);
 		for (size_t x = lengthNew / (sizeof(__m256i) * 8); x > 0; --x) {
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
-			_mm256_stream_si256(destVector++, _mm256_stream_load_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
+			_mm256_storeu_si256(destVector++, _mm256_loadu_si256(sourceVector++));
 		}
 		_mm_sfence();
 		if (remainder < 16 && remainder > 0) {

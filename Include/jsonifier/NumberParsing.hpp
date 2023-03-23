@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -491,7 +491,7 @@ namespace Jsonifier {
 		word |= uint64_t(am.power2) << mantissaExplicitBits;
 		word = negative ? word | (uint64_t(1) << signIndex) : word;
 		double value;
-		JsonifierCore::memcpy(&value, &word, sizeof(double));
+		std::memcpy(&value, &word, sizeof(double));
 		return value;
 	}
 
@@ -509,54 +509,6 @@ namespace Jsonifier {
 		return true;
 	}
 
-	inline uint64_t parseUnsigned(StringViewPtr const source) {
-		StringViewPtr p = source;
-		StringViewPtr const startDigits = p;
-		uint64_t i = 0;
-		while (parseDigit(*p, i)) {
-			p++;
-		}
-
-		size_t digitCount = size_t(p - startDigits);
-		if ((digitCount == 0) || (digitCount > 20)) {
-			throw Incorrect_Type;
-		}
-		if (('0' == *startDigits) && (digitCount > 1)) {
-			throw Number_Error;
-		}
-
-		if (digitCount == 20) {
-			if (source[0] != uint8_t('1') || i <= uint64_t(std::numeric_limits<int64_t>::max())) {
-				throw Incorrect_Type;
-			}
-		}
-
-		return i;
-	};
-
-	inline int64_t parseInteger(StringViewPtr source) {
-		bool negative = (*source == '-');
-		StringViewPtr p = source + uint8_t(negative);
-		StringViewPtr const startDigits = p;
-		uint64_t i = 0;
-		while (parseDigit(*p, i)) {
-			p++;
-		}
-
-		size_t digitCount = size_t(p - startDigits);
-		size_t longestDigitCount = 19;
-		if ((digitCount == 0) || (digitCount > longestDigitCount)) {
-			throw Incorrect_Type;
-		}
-		if (('0' == *startDigits) && (digitCount > 1)) {
-			throw Number_Error;
-		}
-		if (i > uint64_t(std::numeric_limits<int64_t>::max()) + uint64_t(negative)) {
-			throw Incorrect_Type;
-		}
-		return negative ? (~i + 1) : i;
-	}
-
 	// Based on yyjson: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c with some changes to rounding and
 	// dirrect for floats
 	// TODO: Subnormals are not handled right now.
@@ -572,33 +524,31 @@ namespace Jsonifier {
 
 // https://stackoverflow.com/questions/28868367/getting-the-high-part-of-64-bit-integer-multiplication
 #ifdef __SIZEOF_INT128__
-   inline uint64_t mulhi64(uint64_t a, uint64_t b)
-   {
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-      unsigned __int128 prod = a * static_cast<unsigned __int128>(b);
-#pragma GCC diagnostic pop
-#endif
-      return prod >> 64;
-   }
+	inline uint64_t mulhi64(uint64_t a, uint64_t b) {
+	#if defined(__GNUC__) || defined(__GNUG__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpedantic"
+		unsigned __int128 prod = a * static_cast<unsigned __int128>(b);
+		#pragma GCC diagnostic pop
+	#endif
+		return prod >> 64;
+	}
 #elif defined(_M_X64) || defined(_M_ARM64)
-#define mulhi64 __umulh
+	#define mulhi64 __umulh
 #else
-   uint64_t mulhi64(uint64_t a, uint64_t b)
-   {
-      uint64_t a_lo = (uint32_t)a;
-      uint64_t a_hi = a >> 32;
-      uint64_t b_lo = (uint32_t)b;
-      uint64_t b_hi = b >> 32;
-      uint64_t a_x_b_hi = a_hi * b_hi;
-      uint64_t a_x_b_mid = a_hi * b_lo;
-      uint64_t b_x_a_mid = b_hi * a_lo;
-      uint64_t a_x_b_lo = a_lo * b_lo;
-      uint64_t carry_bit = ((uint64_t)(uint32_t)a_x_b_mid + (uint64_t)(uint32_t)b_x_a_mid + (a_x_b_lo >> 32)) >> 32;
-      uint64_t multhi = a_x_b_hi + (a_x_b_mid >> 32) + (b_x_a_mid >> 32) + carry_bit;
-      return multhi;
-   }
+	uint64_t mulhi64(uint64_t a, uint64_t b) {
+		uint64_t a_lo = ( uint32_t )a;
+		uint64_t a_hi = a >> 32;
+		uint64_t b_lo = ( uint32_t )b;
+		uint64_t b_hi = b >> 32;
+		uint64_t a_x_b_hi = a_hi * b_hi;
+		uint64_t a_x_b_mid = a_hi * b_lo;
+		uint64_t b_x_a_mid = b_hi * a_lo;
+		uint64_t a_x_b_lo = a_lo * b_lo;
+		uint64_t carry_bit = (( uint64_t )( uint32_t )a_x_b_mid + ( uint64_t )( uint32_t )b_x_a_mid + (a_x_b_lo >> 32)) >> 32;
+		uint64_t multhi = a_x_b_hi + (a_x_b_mid >> 32) + (b_x_a_mid >> 32) + carry_bit;
+		return multhi;
+	}
 #endif
 
 	// Min decimal exponent in pow10SigTable.
@@ -863,7 +813,7 @@ namespace Jsonifier {
 		}
 	};
 
-	#pragma once
+#pragma once
 
 #include <array>
 #include <concepts>
@@ -882,73 +832,70 @@ namespace Jsonifier {
 
 	/** Multiplies two 64-bit unsigned integers (a * b),
        returns the 128-bit result as 'hi' and 'lo'. */
-	inline void u128_mul(uint64_t a, uint64_t b, uint64_t *hi, uint64_t *lo)
-   {
+	inline void u128_mul(uint64_t a, uint64_t b, uint64_t* hi, uint64_t* lo) {
 #ifdef __SIZEOF_INT128__
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-      unsigned __int128 m = static_cast<unsigned __int128>(a) * b;
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
-      *hi = uint64_t(m >> 64);
-      *lo = uint64_t(m);
+	#if defined(__GNUC__) || defined(__GNUG__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpedantic"
+	#endif
+		unsigned __int128 m = static_cast<unsigned __int128>(a) * b;
+	#if defined(__GNUC__) || defined(__GNUG__)
+		#pragma GCC diagnostic pop
+	#endif
+		*hi = uint64_t(m >> 64);
+		*lo = uint64_t(m);
 #elif defined(_M_X64)
-      *lo = _umul128(a, b, hi);
+		*lo = _umul128(a, b, hi);
 #elif defined(_M_ARM64)
-      *hi = __umulh(a, b);
-      *lo = a * b;
+		*hi = __umulh(a, b);
+		*lo = a * b;
 #else
-      uint32_t a0 = (uint32_t)(a), a1 = (uint32_t)(a >> 32);
-      uint32_t b0 = (uint32_t)(b), b1 = (uint32_t)(b >> 32);
-      uint64_t p00 = (uint64_t)a0 * b0, p01 = (uint64_t)a0 * b1;
-      uint64_t p10 = (uint64_t)a1 * b0, p11 = (uint64_t)a1 * b1;
-      uint64_t m0 = p01 + (p00 >> 32);
-      uint32_t m00 = (uint32_t)(m0), m01 = (uint32_t)(m0 >> 32);
-      uint64_t m1 = p10 + m00;
-      uint32_t m10 = (uint32_t)(m1), m11 = (uint32_t)(m1 >> 32);
-      *hi = p11 + m01 + m11;
-      *lo = ((uint64_t)m10 << 32) | (uint32_t)p00;
+		uint32_t a0 = ( uint32_t )(a), a1 = ( uint32_t )(a >> 32);
+		uint32_t b0 = ( uint32_t )(b), b1 = ( uint32_t )(b >> 32);
+		uint64_t p00 = ( uint64_t )a0 * b0, p01 = ( uint64_t )a0 * b1;
+		uint64_t p10 = ( uint64_t )a1 * b0, p11 = ( uint64_t )a1 * b1;
+		uint64_t m0 = p01 + (p00 >> 32);
+		uint32_t m00 = ( uint32_t )(m0), m01 = ( uint32_t )(m0 >> 32);
+		uint64_t m1 = p10 + m00;
+		uint32_t m10 = ( uint32_t )(m1), m11 = ( uint32_t )(m1 >> 32);
+		*hi = p11 + m01 + m11;
+		*lo = (( uint64_t )m10 << 32) | ( uint32_t )p00;
 #endif
-   }
+	}
 
-   /** Multiplies two 64-bit unsigned integers and add a value (a * b + c),
+	/** Multiplies two 64-bit unsigned integers and add a value (a * b + c),
        returns the 128-bit result as 'hi' and 'lo'. */
-   inline void u128_mul_add(uint64_t a, uint64_t b, uint64_t c, uint64_t *hi, uint64_t *lo)
-   {
+	inline void u128_mul_add(uint64_t a, uint64_t b, uint64_t c, uint64_t* hi, uint64_t* lo) {
 #ifdef __SIZEOF_INT128__
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-      unsigned __int128 m = static_cast<unsigned __int128>(a) * b + c;
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
-      *hi = uint64_t(m >> 64);
-      *lo = uint64_t(m);
+	#if defined(__GNUC__) || defined(__GNUG__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpedantic"
+	#endif
+		unsigned __int128 m = static_cast<unsigned __int128>(a) * b + c;
+	#if defined(__GNUC__) || defined(__GNUG__)
+		#pragma GCC diagnostic pop
+	#endif
+		*hi = uint64_t(m >> 64);
+		*lo = uint64_t(m);
 #else
-      uint64_t h, l, t;
-      u128_mul(a, b, &h, &l);
-      t = l + c;
-      h += ((t < l) | (t < c));
-      *hi = h;
-      *lo = t;
+		uint64_t h, l, t;
+		u128_mul(a, b, &h, &l);
+		t = l + c;
+		h += ((t < l) | (t < c));
+		*hi = h;
+		*lo = t;
 #endif
-   }
+	}
 
-   /** Multiplies 128-bit integer and returns highest 64-bit rounded value. */
-   inline uint64_t roundToOdd(uint64_t hi, uint64_t lo, uint64_t cp)
-   {
-      uint64_t x_hi, x_lo, y_hi, y_lo;
-      u128_mul(cp, lo, &x_hi, &x_lo);
-      u128_mul_add(cp, hi, x_hi, &y_hi, &y_lo);
-      return y_hi | (y_lo > 1);
-   }
+	/** Multiplies 128-bit integer and returns highest 64-bit rounded value. */
+	inline uint64_t roundToOdd(uint64_t hi, uint64_t lo, uint64_t cp) {
+		uint64_t x_hi, x_lo, y_hi, y_lo;
+		u128_mul(cp, lo, &x_hi, &x_lo);
+		u128_mul_add(cp, hi, x_hi, &y_hi, &y_lo);
+		return y_hi | (y_lo > 1);
+	}
 
-	template<class OTy> inline bool parseNumber(OTy& val, auto*& cur) noexcept {
+	template<typename OTy> inline bool parseNumber(OTy& val, auto*& cur) noexcept {
 		const uint8_t* sig_cut = nullptr; /* significant part cutting position for long number */
 		[[maybe_unused]] const uint8_t* sig_end = nullptr; /* significant part ending position */
 		const uint8_t* dot_pos = nullptr; /* decimal point position */
@@ -1185,7 +1132,7 @@ namespace Jsonifier {
 			}
 			return true;
 		} else {
-			if constexpr (std::is_same_v<double, OTy>) {
+			if constexpr (std::same_as<double, OTy>) {
 				// numbers must be exactly representable in this fast path
 				if (sig < (uint64_t(1) << 53) && std::abs(exp) <= 22) {
 					val = static_cast<OTy>(sig);
@@ -1216,10 +1163,10 @@ namespace Jsonifier {
 
 			static_assert(std::numeric_limits<OTy>::is_iec559);
 			static_assert(std::numeric_limits<OTy>::radix == 2);
-			static_assert(std::is_same_v<float, std::decay_t<OTy>> || std::is_same_v<double, std::decay_t<OTy>>);
+			static_assert(std::same_as<float, std::decay_t<OTy>> || std::same_as<double, std::decay_t<OTy>>);
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-			using raw_t = std::conditional_t<std::is_same_v<float, std::decay_t<OTy>>, uint32_t, uint64_t>;
+			using raw_t = std::conditional_t<std::same_as<float, std::decay_t<OTy>>, uint32_t, uint64_t>;
 			const auto sig_leading_zeros = std::countl_zero(sig);
 			const auto sig_norm = sig << sig_leading_zeros;
 			const auto sig2_norm = sig2FromExp10(exp);
@@ -1283,7 +1230,7 @@ namespace Jsonifier {
 			auto num = raw_t(sign) << (sizeof(raw_t) * 8 - 1) | raw_t(mantisa >> mantisa_shift) |
 				(raw_t(exp2 + std::numeric_limits<OTy>::max_exponent - 1) << (std::numeric_limits<OTy>::digits - 1));
 			num += raw_t(round);
-			JsonifierCore::memcpy(&val, &num, sizeof(OTy));
+			std::memcpy(&val, &num, sizeof(OTy));
 			return true;
 		}
 	}
@@ -1299,18 +1246,18 @@ namespace Jsonifier {
 
 	/* This struct can help compiler generate 2-byte load/store */
 	/* instructions on platforms that support unaligned access. */
-	struct pair {
+	struct Pair {
 		char c1, c2;
 	};
 
-	template<class OTy>
-	requires std::same_as<OTy, uint32_t>
+	template<typename OTy>
+		requires std::same_as<OTy, uint32_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		/* The maximum value of uint32_t is 4294967295 (10 digits), */
 		/* these digits are named as 'aabbccddee' here.             */
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 
-		/* Leading zero count in the first pair.                    */
+		/* Leading zero count in the first Pair.                    */
 		uint32_t lz;
 
 		/* Although most compilers may convert the "division by     */
@@ -1320,7 +1267,7 @@ namespace Jsonifier {
 
 		if (val < 100) { /* 1-2 digits: aa */
 			lz = val < 10;
-			JsonifierCore::memcpy(&buf[0], &charTable[val * 2 + lz], 2);
+			std::memcpy(&buf[0], &charTable[val * 2 + lz], 2);
 			buf -= lz;
 			return buf + 2;
 
@@ -1328,9 +1275,9 @@ namespace Jsonifier {
 			aa = (val * 5243) >> 19; /* (val / 100) */
 			bb = val - aa * 100; /* (val % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(&buf[0], &charTable[aa * 2 + lz], 2);
+			std::memcpy(&buf[0], &charTable[aa * 2 + lz], 2);
 			buf -= lz;
-			JsonifierCore::memcpy(&buf[2], &charTable[2 * bb], 2);
+			std::memcpy(&buf[2], &charTable[2 * bb], 2);
 
 			return buf + 4;
 
@@ -1340,10 +1287,10 @@ namespace Jsonifier {
 			bb = (bbcc * 5243) >> 19; /* (bbcc / 100) */
 			cc = bbcc - bb * 100; /* (bbcc % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 
 		} else if (val < 100000000) { /* 7~8 digits: aabbccdd */
@@ -1355,11 +1302,11 @@ namespace Jsonifier {
 			bb = aabb - aa * 100; /* (aabb % 100) */
 			dd = ccdd - cc * 100; /* (ccdd % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
-			JsonifierCore::memcpy(buf + 6, charTable + dd * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 
 		} else { /* 9~10 digits: aabbccddee */
@@ -1374,18 +1321,18 @@ namespace Jsonifier {
 			cc = bbcc - bb * 100; /* (bbcc % 100) */
 			ee = ddee - dd * 100; /* (ddee % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
-			JsonifierCore::memcpy(buf + 6, charTable + dd * 2, 2);
-			JsonifierCore::memcpy(buf + 8, charTable + ee * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
+			std::memcpy(buf + 8, charTable + ee * 2, 2);
 			return buf + 10;
 		}
 	}
 
-	template<class OTy>
-	requires std::same_as<OTy, int32_t>
+	template<typename OTy>
+		requires std::same_as<OTy, int32_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		uint32_t neg = uint32_t(-val);
 		size_t sign = val < 0;
@@ -1402,10 +1349,10 @@ namespace Jsonifier {
 		cc = (ccdd * 5243) >> 19; /* (ccdd / 100) */
 		bb = aabb - aa * 100; /* (aabb % 100) */
 		dd = ccdd - cc * 100; /* (ccdd % 100) */
-		JsonifierCore::memcpy(buf, charTable + aa * 2, 2);
-		JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-		JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
-		JsonifierCore::memcpy(buf + 6, charTable + dd * 2, 2);
+		std::memcpy(buf, charTable + aa * 2, 2);
+		std::memcpy(buf + 2, charTable + bb * 2, 2);
+		std::memcpy(buf + 4, charTable + cc * 2, 2);
+		std::memcpy(buf + 6, charTable + dd * 2, 2);
 		return buf + 8;
 	}
 
@@ -1414,8 +1361,8 @@ namespace Jsonifier {
 		uint32_t aa, bb;
 		aa = (val * 5243) >> 19; /* (val / 100) */
 		bb = val - aa * 100; /* (val % 100) */
-		JsonifierCore::memcpy(buf, charTable + aa * 2, 2);
-		JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
+		std::memcpy(buf, charTable + aa * 2, 2);
+		std::memcpy(buf + 2, charTable + bb * 2, 2);
 		return buf + 4;
 	}
 
@@ -1424,7 +1371,7 @@ namespace Jsonifier {
 
 		if (val < 100) { /* 1-2 digits: aa */
 			lz = val < 10;
-			JsonifierCore::memcpy(buf, charTable + val * 2 + lz, 2);
+			std::memcpy(buf, charTable + val * 2 + lz, 2);
 			buf -= lz;
 			return buf + 2;
 
@@ -1432,9 +1379,9 @@ namespace Jsonifier {
 			aa = (val * 5243) >> 19; /* (val / 100) */
 			bb = val - aa * 100; /* (val % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
 			return buf + 4;
 
 		} else if (val < 1000000) { /* 5-6 digits: aabbcc */
@@ -1443,10 +1390,10 @@ namespace Jsonifier {
 			bb = (bbcc * 5243) >> 19; /* (bbcc / 100) */
 			cc = bbcc - bb * 100; /* (bbcc % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 
 		} else { /* 7-8 digits: aabbccdd */
@@ -1458,11 +1405,11 @@ namespace Jsonifier {
 			bb = aabb - aa * 100; /* (aabb % 100) */
 			dd = ccdd - cc * 100; /* (ccdd % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
-			JsonifierCore::memcpy(buf + 6, charTable + dd * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 		}
 	}
@@ -1476,10 +1423,10 @@ namespace Jsonifier {
 			bb = (bbcc * 5243) >> 19; /* (bbcc / 100) */
 			cc = bbcc - bb * 100; /* (bbcc % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 
 		} else { /* 7-8 digits: aabbccdd */
@@ -1491,17 +1438,17 @@ namespace Jsonifier {
 			bb = aabb - aa * 100; /* (aabb % 100) */
 			dd = ccdd - cc * 100; /* (ccdd % 100) */
 			lz = aa < 10;
-			JsonifierCore::memcpy(buf, charTable + aa * 2 + lz, 2);
+			std::memcpy(buf, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			JsonifierCore::memcpy(buf + 2, charTable + bb * 2, 2);
-			JsonifierCore::memcpy(buf + 4, charTable + cc * 2, 2);
-			JsonifierCore::memcpy(buf + 6, charTable + dd * 2, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 		}
 	}
 
-	template<class OTy>
-	requires std::same_as<OTy, uint64_t>
+	template<typename OTy>
+		requires std::same_as<OTy, uint64_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		uint64_t tmp, hgh;
 		uint32_t mid, low;
@@ -1529,8 +1476,8 @@ namespace Jsonifier {
 		}
 	}
 
-	template<class OTy>
-	requires std::same_as<OTy, int64_t>
+	template<typename OTy>
+		requires std::same_as<OTy, int64_t>
 	inline auto* toChars(auto* buf, OTy val) noexcept {
 		uint64_t neg = uint64_t(-val);
 		size_t sign = val < 0;
@@ -2330,7 +2277,7 @@ namespace Jsonifier {
 		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	/**
-    Write an unsigned integer with a length of 15 to 17 with trailing zero trimmed.
+    Serialize an unsigned integer with a length of 15 to 17 with trailing zero trimmed.
     These digits are named as "aabbccddeeffgghhii" here.
     For example, input 1234567890123000, output "1234567890123".
     */
@@ -2347,13 +2294,13 @@ namespace Jsonifier {
 		uint32_t bb = abb - a * 100; /* (abb % 100) */
 		uint32_t cc = abbcc - abb * 100; /* (abbcc % 100) */
 
-		/* Write abbcc */
+		/* Serialize abbcc */
 		buf[0] = uint8_t(a + '0');
 		buf += a > 0;
 		lz = bb < 10 && a == 0;
-		JsonifierCore::memcpy(buf, charTable + (bb * 2ull + lz), 2ull);
+		std::memcpy(buf, charTable + (bb * 2ull + lz), 2ull);
 		buf -= lz;
-		JsonifierCore::memcpy(buf + 2ull, charTable + 2ull * cc, 2ull);
+		std::memcpy(buf + 2ull, charTable + 2ull * cc, 2ull);
 
 		if (ffgghhii) {
 			uint32_t dd = (ddee * 5243) >> 19; /* (ddee / 100) */
@@ -2363,20 +2310,20 @@ namespace Jsonifier {
 			uint32_t ff = (ffgg * 5243) >> 19; /* (aabb / 100) */
 			uint32_t gg = ffgg - ff * 100; /* (aabb % 100) */
 			//((uint16_t *)buf)[2] = ((const uint16_t *)charTable)[dd];
-			JsonifierCore::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
+			std::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
 			//((uint16_t *)buf)[3] = ((const uint16_t *)charTable)[ee];
-			JsonifierCore::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
+			std::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
 			//((uint16_t *)buf)[4] = ((const uint16_t *)charTable)[ff];
-			JsonifierCore::memcpy(buf + 8ull, charTable + 2ull * ff, 2ull);
+			std::memcpy(buf + 8ull, charTable + 2ull * ff, 2ull);
 			//((uint16_t *)buf)[5] = ((const uint16_t *)charTable)[gg];
-			JsonifierCore::memcpy(buf + 10ull, charTable + 2ull * gg, 2ull);
+			std::memcpy(buf + 10ull, charTable + 2ull * gg, 2ull);
 			if (hhii) {
 				uint32_t hh = (hhii * 5243) >> 19; /* (ccdd / 100) */
 				uint32_t ii = hhii - hh * 100; /* (ccdd % 100) */
 				//((uint16_t *)buf)[6] = ((const uint16_t *)charTable)[hh];
-				JsonifierCore::memcpy(buf + 12ull, charTable + 2ull * hh, 2ull);
+				std::memcpy(buf + 12ull, charTable + 2ull * hh, 2ull);
 				//((uint16_t *)buf)[7] = ((const uint16_t *)charTable)[ii];
-				JsonifierCore::memcpy(buf + 14ull, charTable + 2ull * ii, 2ull);
+				std::memcpy(buf + 14ull, charTable + 2ull * ii, 2ull);
 				tz1 = dec_trailing_zero_table[hh];
 				tz2 = dec_trailing_zero_table[ii];
 				tz = ii ? tz2 : (tz1 + 2);
@@ -2394,9 +2341,9 @@ namespace Jsonifier {
 				uint32_t dd = (ddee * 5243) >> 19; /* (ddee / 100) */
 				uint32_t ee = ddee - dd * 100; /* (ddee % 100) */
 				//((uint16_t *)buf)[2] = ((const uint16_t *)charTable)[dd];
-				JsonifierCore::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
+				std::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
 				//((uint16_t *)buf)[3] = ((const uint16_t *)charTable)[ee];
-				JsonifierCore::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
+				std::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
 				tz1 = dec_trailing_zero_table[dd];
 				tz2 = dec_trailing_zero_table[ee];
 				tz = ee ? tz2 : (tz1 + 2);
@@ -2417,16 +2364,16 @@ namespace Jsonifier {
 	}
 
 	template<typename OTy>
-	requires std::same_as<OTy, float> || std::same_as<OTy, double>
+		requires std::same_as<OTy, float> || std::same_as<OTy, double>
 	inline char* toChars(char* buffer, OTy val) noexcept {
 		static_assert(std::numeric_limits<OTy>::is_iec559);
 		static_assert(std::numeric_limits<OTy>::radix == 2);
-		static_assert(std::is_same_v<float, OTy> || std::is_same_v<double, OTy>);
+		static_assert(std::same_as<float, OTy> || std::same_as<double, OTy>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-		using raw_t = std::conditional_t<std::is_same_v<float, OTy>, uint32_t, uint64_t>;
+		using raw_t = std::conditional_t<std::same_as<float, OTy>, uint32_t, uint64_t>;
 
 		raw_t raw;
-		JsonifierCore::memcpy(&raw, &val, sizeof(OTy));
+		std::memcpy(&raw, &val, sizeof(OTy));
 
 		/* decode from raw bytes from IEEE-754 double format. */
 		constexpr uint32_t exponent_bits = numbits(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
@@ -2437,7 +2384,7 @@ namespace Jsonifier {
 
 		if (exp_raw == (uint32_t(1) << exponent_bits) - 1) [[unlikely]] {
 			// NaN or Infinity
-			JsonifierCore::memcpy(buffer, "null", 4);
+			std::memcpy(buffer, "null", 4);
 			return buffer + 4;
 		}
 		if (sign) {
@@ -2479,7 +2426,7 @@ namespace Jsonifier {
 			int32_t dot_pos = sig_len + exp_dec;
 
 			if (-6 < dot_pos && dot_pos <= 21) {
-				/* no need to Write exponent part */
+				/* no need to Serialize exponent part */
 				if (dot_pos <= 0) {
 					auto num_hdr = buffer + (2 - dot_pos);
 					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
@@ -2503,7 +2450,7 @@ namespace Jsonifier {
 					return ((num_end - num_hdr) <= dot_pos) ? buffer + dot_pos : num_end;
 				}
 			} else {
-				/* Write with scientific notation */
+				/* Serialize with scientific notation */
 				/* such as 1.234e56 */
 				auto end = writeU64Len15To17Trim(buffer + 1, sig_dec);
 				end -= (end == buffer + 2); /* remove '.0', e.g. 2.0e34 -> 2e34 */
@@ -2518,13 +2465,13 @@ namespace Jsonifier {
 				if (exp_dec < 100) {
 					uint32_t lz = exp_dec < 10;
 					//*(uint16_t *)buffer = *(const uint16_t *)(charTable + (exp_dec * 2 + lz));
-					JsonifierCore::memcpy(buffer, charTable + (exp_dec * 2 + lz), 2);
+					std::memcpy(buffer, charTable + (exp_dec * 2 + lz), 2);
 					return buffer + 2 - lz;
 				} else {
 					uint32_t hi = (uint32_t(exp_dec) * 656) >> 16; /* exp / 100 */
 					uint32_t lo = uint32_t(exp_dec) - hi * 100; /* exp % 100 */
 					buffer[0] = uint8_t(hi) + '0';
-					JsonifierCore::memcpy(&buffer[1], charTable + (lo * 2), 2);
+					std::memcpy(&buffer[1], charTable + (lo * 2), 2);
 					return buffer + 3;
 				}
 			}

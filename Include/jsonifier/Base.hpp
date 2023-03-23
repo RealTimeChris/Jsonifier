@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -28,6 +28,7 @@
 #include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
 #include <jsonifier/Core.hpp>
+#include <jsonifier/Error.hpp>
 
 #include <unordered_map>
 #include <immintrin.h>
@@ -35,6 +36,7 @@
 #include <type_traits>
 #include <functional>
 #include <concepts>
+#include <memory>
 #include <iostream>
 #include <variant>
 #include <vector>
@@ -50,6 +52,12 @@
 	#undef min
 #endif
 
+#define JsonifierType(...) \
+	[] { \
+		constexpr auto map = object(__VA_ARGS__); \
+		return map; \
+	}()
+
 namespace Jsonifier {
 
 	class SimdIteratorCore;
@@ -63,11 +71,11 @@ namespace Jsonifier {
 
 		inline constexpr size_t operator()(OTy const& value, size_t seed) const {
 			size_t key = seed ^ static_cast<size_t>(value);
-			key = (~key) + (key << 21);// key = (key << 21) - key - 1;
+			key = (~key) + (key << 21);
 			key = key ^ (key >> 24);
-			key = (key + (key << 3)) + (key << 8);// key * 265
+			key = (key + (key << 3)) + (key << 8);
 			key = key ^ (key >> 14);
-			key = (key + (key << 2)) + (key << 4);// key * 21
+			key = (key + (key << 2)) + (key << 4);
 			key = key ^ (key >> 28);
 			key = key + (key << 31);
 			return key;
@@ -93,15 +101,14 @@ namespace Jsonifier {
 		requires !std::same_as<void, decltype(t.end())>;
 	};
 
-	template<class OTy>
+	template<typename OTy>
 	concept ComplexT = JsonifierT<std::decay_t<OTy>>;
 
 	template<typename OTy>
 	concept TupleT = requires(OTy t) {
 		std::tuple_size<OTy>::value;
 		Tuplet::get<0>(t);
-	}
-	&&!ComplexT<OTy> && !Range<OTy>;
+	} && !ComplexT<OTy> && !Range<OTy>;
 
 	template<typename OTy>
 	concept MapSubscriptable = requires(OTy container) {
@@ -109,28 +116,27 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	concept PairT = requires(OTy pair) {
-		{ pair.first } -> std::same_as<typename OTy::first_type&>;
-		{ pair.second } -> std::same_as<typename OTy::second_type&>;
+	concept PairT = requires(OTy Pair) {
+		{ Pair.first } -> std::same_as<typename OTy::first_type&>;
+		{ Pair.second } -> std::same_as<typename OTy::second_type&>;
 	};
 
-	template<class OTy>
-	concept CharT = std::same_as < std::decay_t<OTy>,
-	char > || std::same_as<std::decay_t<OTy>, char16_t> || std::same_as<std::decay_t<OTy>, char32_t> || std::same_as<std::decay_t<OTy>, char>;
+	template<typename OTy>
+	concept CharT = std::same_as<std::decay_t<OTy>, char> || std::same_as<std::decay_t<OTy>, char16_t> || std::same_as<std::decay_t<OTy>, char32_t> ||
+		std::same_as<std::decay_t<OTy>, char>;
 
-	template<class OTy>
-	concept BoolT = std::same_as < std::decay_t<OTy>,
-	bool > || std::same_as<std::decay_t<OTy>, std::vector<bool>::reference>;
+	template<typename OTy>
+	concept BoolT = std::same_as<std::decay_t<OTy>, bool> || std::same_as<std::decay_t<OTy>, std::vector<bool>::reference>;
 
-	template<class OTy>
+	template<typename OTy>
 	concept IntT = std::integral<std::decay_t<OTy>> && !CharT<std::decay_t<OTy>> && !BoolT<OTy>;
 
-	template<class OTy>
+	template<typename OTy>
 	concept NumT = std::floating_point<std::decay_t<OTy>> || IntT<OTy>;
 
-	template<class OTy>
+	template<typename OTy>
 	concept StringT = !ComplexT<OTy> && !std::same_as<std::nullptr_t, OTy> &&
-		(std::convertible_to<std::decay_t<OTy>, std::string_view> || std::convertible_to<std::decay_t<OTy>, std::string>);
+		(std::same_as<OTy, std::string_view> || std::same_as<OTy, std::string> || std::same_as<OTy, String> || std::same_as<OTy, StringView>);
 
 	template<typename OTy> using IteratorT = decltype(std::begin(std::declval<OTy&>()));
 
@@ -142,11 +148,21 @@ namespace Jsonifier {
 	template<typename OTy>
 	concept ArrayT = (!ComplexT<OTy> && !StringT<OTy> && !MapT<OTy> && Range<OTy>);
 
-	template<typename OTy> struct Array { OTy value; };
+	template<typename OTy> struct IsUniquePtr : std::false_type {};
+
+	template<typename OTy, typename D> struct IsUniquePtr<std::unique_ptr<OTy, D>> : std::true_type {};
+
+	template<typename OTy> inline constexpr bool IsUniquePtrV = IsUniquePtr<OTy>::value;
+
+	template<typename OTy> struct Array {
+		OTy value;
+	};
 
 	template<typename OTy> Array(OTy) -> Array<OTy>;
 
-	template<typename OTy> struct Object { OTy value; };
+	template<typename OTy> struct Object {
+		OTy value;
+	};
 
 	template<typename OTy> Object(OTy) -> Object<OTy>;
 
@@ -159,45 +175,50 @@ namespace Jsonifier {
 		return i;
 	}
 
-	template<class... Args> struct FalseT : std::false_type {};
-	namespace detail {
-		struct aggressive_unicorn_type;// Do not unleash
-	}
-	template<> struct FalseT<detail::aggressive_unicorn_type> : std::true_type {};
+	template<typename OTy>
+	concept Nullable = std::same_as<OTy, nullptr_t>;
 
-	template<class... Args> inline constexpr bool FalseV = FalseT<Args...>::value;
+	template<typename... Args> struct FalseT : std::false_type {};
+
+	struct aggressive_unicorn_type;
+
+	template<> struct FalseT<aggressive_unicorn_type> : std::true_type {};
+
+	template<typename... Args> inline constexpr bool FalseV = FalseT<Args...>::value;
 
 	template<size_t N> struct StringLiteral {
 		static constexpr size_t size = (N > 0) ? (N - 1) : 0;
 
-		inline constexpr StringLiteral() = default;
+		constexpr StringLiteral() = default;
 
-		inline constexpr StringLiteral(const char (&str)[N]) {
+		constexpr StringLiteral(const char (&str)[N]) {
 			std::copy_n(str, N, value);
 		}
 
 		char value[N];
-		inline constexpr const char* end() const noexcept {
+		constexpr const char* end() const noexcept {
 			return value + size;
 		}
 
-		inline constexpr const std::string_view string_view() const noexcept {
+		constexpr const std::string_view sv() const noexcept {
 			return { value, size };
 		}
 	};
 
-	template<size_t N> inline constexpr auto stringLiteralFromView(std::string_view str) {
+	template<size_t N> constexpr auto stringLiteralFromView(std::string_view str) {
 		StringLiteral<N + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.value);
 		*(sl.value + N) = '\0';
 		return sl;
 	}
 
-	template<size_t N> inline constexpr size_t length(char const (&)[N]) noexcept {
+	template<size_t N> constexpr size_t length(const char (&)[N]) noexcept {
 		return N;
 	}
 
-	template<StringLiteral Str> struct CharsImpl { static constexpr std::string_view value{ Str.value, length(Str.value) - 1 }; };
+	template<StringLiteral Str> struct CharsImpl {
+		static constexpr std::string_view value{ Str.value, length(Str.value) - 1 };
+	};
 
 	template<StringLiteral Str> inline constexpr std::string_view Chars = CharsImpl<Str>::value;
 
@@ -205,11 +226,10 @@ namespace Jsonifier {
 	concept IsStdTuple = IsSpecializationV<OTy, std::tuple>::value || IsSpecializationV<OTy, std::pair>::value;
 
 	template<typename OTy, size_t N> class RawVector {
-		OTy data[N] = {};// zero-initialization for scalar type OTy, default-initialized otherwise
+		OTy data[N] = {};
 		size_t dsize = 0;
 
 	  public:
-		// Container typdefs
 		using value_type = OTy;
 		using reference = value_type&;
 		using const_reference = const value_type&;
@@ -220,30 +240,28 @@ namespace Jsonifier {
 		using size_type = size_t;
 		using difference_type = std::ptrdiff_t;
 
-		// Constructors
 		inline constexpr RawVector(void) = default;
 		inline constexpr RawVector(size_type count, const auto& value) : dsize(count) {
 			for (size_t i = 0; i < N; ++i)
 				data[i] = value;
 		}
 
-		// Iterators
 		inline constexpr iterator begin() noexcept {
 			return data;
 		}
+
 		inline constexpr iterator end() noexcept {
 			return data + dsize;
 		}
 
-		// Capacity
 		inline constexpr size_type size() const {
 			return dsize;
 		}
 
-		// Element access
 		inline constexpr reference operator[](size_t index) {
 			return data[index];
 		}
+
 		inline constexpr const_reference operator[](size_t index) const {
 			return data[index];
 		}
@@ -251,17 +269,19 @@ namespace Jsonifier {
 		inline constexpr reference back() {
 			return data[dsize - 1];
 		}
+
 		inline constexpr const_reference back() const {
 			return data[dsize - 1];
 		}
 
-		// Modifiers
 		inline constexpr void push_back(const OTy& a) {
 			data[dsize++] = a;
 		}
+
 		inline constexpr void push_back(OTy&& a) {
 			data[dsize++] = std::move(a);
 		}
+
 		inline constexpr void pop_back() {
 			--dsize;
 		}
@@ -272,7 +292,7 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy, size_t N> class RawArray {
-		OTy data_[N] = {};// zero-initialization for scalar type OTy, default-initialized otherwise
+		OTy data_[N] = {};
 
 		template<size_t M, size_t... I> inline constexpr RawArray(OTy const (&init)[M], std::index_sequence<I...>) : data_{ init[I]... } {
 		}
@@ -280,7 +300,6 @@ namespace Jsonifier {
 		}
 
 	  public:
-		// Container typdefs
 		using value_type = OTy;
 		using reference = value_type&;
 		using const_reference = const value_type&;
@@ -293,33 +312,37 @@ namespace Jsonifier {
 		using size_type = size_t;
 		using difference_type = std::ptrdiff_t;
 
-		// Constructors
 		inline constexpr RawArray(void) = default;
 		template<size_t M> inline constexpr RawArray(OTy const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
-			static_assert(M >= N, "Cannot initialize a RawArray with an smaller array");
+			static_assert(M >= N);
 		}
 		template<size_t M> inline constexpr RawArray(std::array<OTy, M> const& init) : RawArray(&init[0], std::make_index_sequence<N>()) {
-			static_assert(M >= N, "Cannot initialize a RawArray with an smaller array");
+			static_assert(M >= N);
 		}
+
 		inline constexpr RawArray(std::initializer_list<OTy> init) : RawArray(init.begin(), std::make_index_sequence<N>()) {
 		}
 
-		// Iterators
 		inline constexpr iterator begin() noexcept {
 			return data_;
 		}
+
 		inline constexpr const_iterator begin() const noexcept {
 			return data_;
 		}
+
 		inline constexpr const_iterator cbegin() const noexcept {
 			return data_;
 		}
+
 		inline constexpr iterator end() noexcept {
 			return data_ + N;
 		}
+
 		inline constexpr const_iterator end() const noexcept {
 			return data_ + N;
 		}
+
 		inline constexpr const_iterator cend() const noexcept {
 			return data_ + N;
 		}
@@ -327,34 +350,39 @@ namespace Jsonifier {
 		inline constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator(end());
 		}
+
 		inline constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator(end());
 		}
+
 		inline constexpr const_reverse_iterator crbegin() const noexcept {
 			return const_reverse_iterator(end());
 		}
+
 		inline constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator(begin());
 		}
+
 		inline constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator(begin());
 		}
+
 		inline constexpr const_reverse_iterator crend() const noexcept {
 			return const_reverse_iterator(begin());
 		}
 
-		// Capacity
 		inline constexpr size_type size() const {
 			return N;
 		}
+
 		inline constexpr size_type maxSize() const {
 			return N;
 		}
 
-		// Element access
 		inline constexpr reference operator[](size_t index) {
 			return data_[index];
 		}
+
 		inline constexpr const_reference operator[](size_t index) const {
 			return data_[index];
 		}
@@ -365,6 +393,7 @@ namespace Jsonifier {
 			}
 			return data_[index];
 		}
+
 		inline constexpr const_reference at(size_t index) const noexcept {
 			if (index > N) {
 				std::abort();
@@ -375,6 +404,7 @@ namespace Jsonifier {
 		inline constexpr reference front() {
 			return data_[0];
 		}
+
 		inline constexpr const_reference front() const {
 			return data_[0];
 		}
@@ -382,6 +412,7 @@ namespace Jsonifier {
 		inline constexpr reference back() {
 			return data_[N - 1];
 		}
+
 		inline constexpr const_reference back() const {
 			return data_[N - 1];
 		}
@@ -389,11 +420,11 @@ namespace Jsonifier {
 		inline constexpr value_type* data() noexcept {
 			return data_;
 		}
+
 		inline constexpr const value_type* data() const noexcept {
 			return data_;
 		}
 
-		// Modifiers
 		inline constexpr void fill(const value_type& val) {
 			for (size_t i = 0; i < N; ++i)
 				data_[i] = val;
@@ -401,7 +432,6 @@ namespace Jsonifier {
 	};
 	template<typename OTy> class RawArray<OTy, 0> {
 	  public:
-		// Container typdefs
 		using value_type = OTy;
 		using reference = value_type&;
 		using const_reference = const value_type&;
@@ -414,36 +444,43 @@ namespace Jsonifier {
 		using size_type = size_t;
 		using difference_type = std::ptrdiff_t;
 
-		// Constructors
 		inline constexpr RawArray(void) = default;
 	};
 
-
-	template<class = void, size_t... Is> constexpr auto indexer(std::index_sequence<Is...>) {
+	template<typename = void, size_t... Is> constexpr auto indexer(std::index_sequence<Is...>) {
 		return [](auto&& f) -> decltype(auto) {
 			return decltype(f)(f)(std::integral_constant<size_t, Is>{}...);
 		};
 	}
 
-	// takes a number N
-	// returns a function object that, when passed a function object f
-	// passes it compile-time values from 0 to N-1 inclusive.
 	template<size_t N> constexpr auto indexer() {
 		return indexer(std::make_index_sequence<N>{});
 	}
 
-	template<size_t N, class Func> constexpr auto forEach(Func&& f) {
+	template<size_t N, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<N>()([&](auto&&... i) {
 			(std::forward<Func>(f)(i), ...);
 		});
 	}
 
+	template<typename OTy>
+	concept IsVariant = IsSpecializationV<OTy, std::variant>::value;
+
+	namespace detail {
+		template<IsVariant OTy> inline constexpr auto runtimeVariantMap() {
+			constexpr auto N = std::variant_size_v<OTy>;
+			std::array<OTy, N> ret{};
+			forEach<N>([&](auto I) {
+				ret[I] = std::variant_alternative_t<I, OTy>{};
+			});
+			return ret;
+		}
+	}
 #ifdef _MSC_VER
-	// Workaround for problems with MSVC and passing refrences to stringviews as template params
-	struct svw {
+	struct SView {
 		const char* start{};
 		size_t n{};
-		constexpr svw(std::string_view sv) : start(sv.data()), n(sv.size()) {
+		constexpr SView(std::string_view sv) : start(sv.data()), n(sv.size()) {
 		}
 		constexpr auto data() const {
 			return start;
@@ -458,7 +495,7 @@ namespace Jsonifier {
 			return n;
 		}
 	};
-	template<svw... Strs>
+	template<SView... Strs>
 #else
 	template<const std::string_view&... Strs>
 #endif
@@ -478,13 +515,13 @@ namespace Jsonifier {
 		static constexpr auto arr = impl();
 		static constexpr std::string_view value{ arr.data(), arr.size() - 1 };
 	};
+
 #ifdef _MSC_VER
-	template<svw... Strs>
+	template<SView... Strs>
 #else
 	template<const std::string_view&... Strs>
 #endif
 	static constexpr auto JoinV = Join<Strs...>::value;
-
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
 		using VTy = std::decay_t<decltype(member_ptr)>;
@@ -510,30 +547,30 @@ namespace Jsonifier {
 		{ container.emplace_back() } -> std::same_as<typename OTy::reference>;
 	};
 
-	template<class OTy, class mptr_t> using MemberT = decltype(getMember(std::declval<OTy>(), std::declval<std::decay_t<mptr_t>&>()));
+	template<typename OTy, typename mptr_t> using MemberT = decltype(getMember(std::declval<OTy>(), std::declval<std::decay_t<mptr_t>&>()));
 
-	template<class OTy>
+	template<typename OTy>
 	concept NullableT = !ComplexT<OTy> && !StringT<OTy> && requires(OTy t) {
 		bool(t);
 		{ *t };
 	};
 
 
-	template<size_t... Is> struct seq {};
-	template<size_t N, size_t... Is> struct gen_seq : gen_seq<N - 1, N - 1, Is...> {};
-	template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...> {};
+	template<size_t... Is> struct Sequence {};
+	template<size_t N, size_t... Is> struct GenerateSequence : GenerateSequence<N - 1, N - 1, Is...> {};
+	template<size_t... Is> struct GenerateSequence<0, Is...> : Sequence<Is...> {};
 
 	template<size_t N1, size_t... I1, size_t N2, size_t... I2>
-	constexpr std::array<char const, N1 + N2 - 1> concat(char const (&a1)[N1], char const (&a2)[N2], seq<I1...>, seq<I2...>) {
+	constexpr std::array<char const, N1 + N2 - 1> concat(char const (&a1)[N1], char const (&a2)[N2], Sequence<I1...>, Sequence<I2...>) {
 		return { { a1[I1]..., a2[I2]... } };
 	}
 
 	template<size_t N1, size_t N2> constexpr std::array<char const, N1 + N2 - 1> concatArrays(char const (&a1)[N1], char const (&a2)[N2]) {
-		return concat(a1, a2, gen_seq<N1 - 1>{}, gen_seq<N2>{});
+		return concat(a1, a2, GenerateSequence<N1 - 1>{}, GenerateSequence<N2>{});
 	}
 
-	template <class T, class... U>
-   concept IsAnyOf = (std::same_as<T, U> || ...);
+	template<typename OTy, typename... U>
+	concept IsAnyOf = (std::same_as<OTy, U> || ...);
 
 	template<typename OTy>
 	concept HasSize = requires(OTy container) {
@@ -556,14 +593,7 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	concept Resizeable = requires(OTy container) {
-		container.resize(0);
-	};
-
-	template<auto& GroupStartArr, auto& GroupSizeArr, typename Tuple, size_t... GroupNumber>
-	inline constexpr auto makeGroupsImpl(Tuple&& t, std::index_sequence<GroupNumber...>) {
-		return Tuplet::copyTuple(makeGroup<get<GroupNumber>(GroupStartArr)>(t, std::make_index_sequence<std::get<GroupNumber>(GroupSizeArr)>{})...);
-	}
+	concept Resizeable = requires(OTy container) { container.resize(0); };
 
 	inline constexpr auto array(auto&&... args) {
 		return Array{ Tuplet::copyTuple(args...) };
@@ -577,13 +607,13 @@ namespace Jsonifier {
 		}
 	}
 
-	template<class OTy>
+	template<typename OTy>
 	concept JsonifierArrayT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Array>::value;
 
-	template<class OTy>
+	template<typename OTy>
 	concept JsonifierObjectT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Object>::value;
 
-	template<class OTy>
+	template<typename OTy>
 	concept JsonifierValueT = JsonifierT<OTy> && !(JsonifierArrayT<OTy> || JsonifierObjectT<OTy>);
 
 	template<typename OTy>
@@ -597,161 +627,12 @@ namespace Jsonifier {
 	template<typename OTy>
 	concept IsEnum = std::is_enum<OTy>::value;
 
-	template<class T> inline auto data_ptr(T& buffer) {
-		if constexpr (Resizeable<T>) {
+	template<typename OTy> inline auto dataPtr(OTy& buffer) {
+		if constexpr (Resizeable<OTy>) {
 			return buffer.data();
 		} else {
 			return buffer;
 		}
-	}
-
-	enum ErrorCode {
-		Success = 0,
-		Empty = 1,
-		Parse_Error = 2,
-		String_Error = 3,
-		Mem_Alloc_Error = 4,
-		Invalid_Number = 5,
-		Incorrect_Type = 6,
-		Uninitialized = 7,
-		Out_Of_Bounds = 8,
-		No_Such_JsonDataPtr = 9,
-		Number_Error = 10,
-		No_String_Error = 11,
-		Type_Error = 12,
-		No_Such_Entity = 13,
-		Unknown_Key
-	};
-
-	inline std::ostream& operator<<(std::ostream& out, ErrorCode type) {
-		switch (type) {
-			case Success:
-				out << "Success";
-				break;
-			case Empty:
-				out << "Empty";
-				break;
-			case Parse_Error:
-				out << "Parse Error";
-				break;
-			case String_Error:
-				out << "std::string Error";
-				break;
-			case Mem_Alloc_Error:
-				out << "Memory Allocation Error";
-				break;
-			case Invalid_Number:
-				out << "Invalid Number Error";
-				break;
-			case Incorrect_Type:
-				out << "Incorrect Type Error";
-				break;
-			case Uninitialized:
-				out << "Uninitialized Error";
-				break;
-			case Out_Of_Bounds:
-				out << "Out of Bounds Error";
-				break;
-			case No_Such_JsonDataPtr:
-				out << "No Such JsonData Error";
-				break;
-			case Number_Error:
-				out << "Number Error";
-				break;
-			case No_String_Error:
-				out << "No String Error";
-				break;
-			case Type_Error:
-				out << "Type Error";
-				break;
-		}
-		return out;
-	}
-
-	enum class JsonType : uint16_t {
-		Unset = 1 << 0,
-		Object = 1 << 1,
-		Array = 1 << 2,
-		String = 1 << 3,
-		Float = 1 << 4,
-		Uint64 = 1 << 5,
-		Int64 = 1 << 6,
-		Bool = 1 << 7,
-		Null = 1 << 8,
-		Number = Float | Uint64 | Int64,
-	};
-
-	inline std::ostream& operator<<(std::ostream& out, JsonType type) {
-		switch (type) {
-			case JsonType::Object:
-				out << "Object";
-				break;
-			case JsonType::Array:
-				out << "Array";
-				break;
-			case JsonType::Number:
-				out << "Number";
-				break;
-			case JsonType::String:
-				out << "std::string";
-				break;
-			case JsonType::Bool:
-				out << "Bool";
-				break;
-			case JsonType::Null:
-				out << "Null";
-				break;
-			default:
-				out << "Unset";
-				break;
-		}
-		return out;
-	}
-
-	inline JsonType getType(auto&& iterator) noexcept {
-		JsonType type{};
-		switch (**iterator) {
-			case '{': {
-				type = JsonType::Object;
-				break;
-			}
-			case '[': {
-				type = JsonType::Array;
-				break;
-			}
-			case '"': {
-				type = JsonType::String;
-				break;
-			}
-			case 't':
-			case 'f': {
-				type = JsonType::Bool;
-				break;
-			}
-			case 'n': {
-				type = JsonType::Null;
-				break;
-			}
-			case '-':
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9': {
-				type = JsonType::Number;
-				break;
-			}
-			default: {
-				break;
-				type = JsonType::Unset;
-			}
-		}
-		return type;
 	}
 
 	template<typename TTy> class StopWatch {

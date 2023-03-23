@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -141,12 +141,15 @@ namespace Jsonifier {
 			case 4:
 				*dst-- = (codePoint | 0x80) & 0xBF;
 				codePoint >>= 6;
+				[[fallthrough]];
 			case 3:
 				*dst-- = (codePoint | 0x80) & 0xBF;
 				codePoint >>= 6;
+				[[fallthrough]];
 			case 2:
 				*dst-- = (codePoint | 0x80) & 0xBF;
 				codePoint >>= 6;
+				[[fallthrough]];
 			case 1:
 				*dst-- = codePoint | kByteMark[count];
 		}
@@ -179,35 +182,70 @@ namespace Jsonifier {
 		return offset > 0;
 	}
 
-	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest) {
-		while (1) {
-			BackslashAndQuote<SimdBase128> bsQuote = BackslashAndQuote<SimdBase128>::copyAndFind(source, dest);
-			if (bsQuote.hasQuoteFirst()) {
-				return dest + bsQuote.quoteIndex();
-			}
-			if (bsQuote.hasBackslash()) {
-				uint32_t bsDist = bsQuote.backslashIndex();
-				uint8_t escapeChar = source[bsDist + 1];
-				if (escapeChar == 'u') {
-					source += bsDist;
-					dest += bsDist;
-					if (!handleUnicodeCodepoint(&source, &dest)) {
-						return nullptr;
+	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, size_t length) {
+		if (*(source - 1) == 'n') {
+			return dest;
+		}
+		if (length < 32) {
+			while (1) {
+				BackslashAndQuote<SimdBase128> bsQuote = BackslashAndQuote<SimdBase128>::copyAndFind(source, dest);
+				if (bsQuote.hasQuoteFirst()) {
+					return dest + bsQuote.quoteIndex();
+				}
+				if (bsQuote.hasBackslash()) {
+					uint32_t bsDist = bsQuote.backslashIndex();
+					uint8_t escapeChar = source[bsDist + 1];
+					if (escapeChar == 'u') {
+						source += bsDist;
+						dest += bsDist;
+						if (!handleUnicodeCodepoint(&source, &dest)) {
+							return nullptr;
+						}
+					} else {
+						uint8_t escapeResult = escapeMap[escapeChar];
+						if (escapeResult == 0u) {
+							return nullptr;
+						}
+						dest[bsDist] = escapeResult;
+						source += bsDist + 2ull;
+						dest += bsDist + 1ull;
 					}
 				} else {
-					uint8_t escapeResult = escapeMap[escapeChar];
-					if (escapeResult == 0u) {
-						return nullptr;
-					}
-					dest[bsDist] = escapeResult;
-					source += bsDist + 2ull;
-					dest += bsDist + 1ull;
+					source += BackslashAndQuote<SimdBase128>::bytesProcessed;
+					dest += BackslashAndQuote<SimdBase128>::bytesProcessed;
 				}
-			} else {
-				source += BackslashAndQuote<SimdBase128>::bytesProcessed;
-				dest += BackslashAndQuote<SimdBase128>::bytesProcessed;
+			}
+		} else {
+			while (1) {
+				BackslashAndQuote<SimdBase256> bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(source, dest);
+				if (bsQuote.hasQuoteFirst()) {
+					return dest + bsQuote.quoteIndex();
+				}
+				if (bsQuote.hasBackslash()) {
+					uint32_t bsDist = bsQuote.backslashIndex();
+					uint8_t escapeChar = source[bsDist + 1];
+					if (escapeChar == 'u') {
+						source += bsDist;
+						dest += bsDist;
+						if (!handleUnicodeCodepoint(&source, &dest)) {
+							return nullptr;
+						}
+					} else {
+						uint8_t escapeResult = escapeMap[escapeChar];
+						if (escapeResult == 0u) {
+							return nullptr;
+						}
+						dest[bsDist] = escapeResult;
+						source += bsDist + 2ull;
+						dest += bsDist + 1ull;
+					}
+				} else {
+					source += BackslashAndQuote<SimdBase256>::bytesProcessed;
+					dest += BackslashAndQuote<SimdBase256>::bytesProcessed;
+				}
 			}
 		}
+
 		return nullptr;
 	}
 

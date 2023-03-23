@@ -13,7 +13,7 @@
         Lesser General Public License for more details.
 
         You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, Write to the Free Software
+        License along with this library; if not, Serialize to the Free Software
         Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
         USA
 */
@@ -27,24 +27,12 @@
 
 namespace Jsonifier {
 
-	void skipValue(SimdIteratorCore& it, SimdIteratorCore& end) noexcept;
+	template<typename OTy = void> struct ParseImpl {};
 
-	template<char c> inline void match(SimdIteratorCore& it) {
-		if (**it != c) [[unlikely]] {
-			throw std::runtime_error("Failed to match a character: " + std::string{ c } +
-				", it was: " + std::string{ *reinterpret_cast<const char*>(*it) } + ", at  index: " + std::to_string(**it));
-		} else [[likely]] {
-			++it;
-			return;
-		}
-	}
-
-	template<JsonifierValueT OTy> struct FromJson<OTy> {
-		inline static void op(OTy& value, auto& it) {
-			using VTy = decltype(getMember(std::declval<OTy>(), CoreWrapperV<OTy>));
-			FromJson<VTy>::template op(getMember(value, CoreWrapperV<OTy>), it);
+	struct Parse {
+		template<typename OTy, std::forward_iterator It> inline static void op(OTy& value, It& it) {
+			ParseImpl<std::decay_t<OTy>>::template op(value, it);
 		}
 	};
-
 
 }

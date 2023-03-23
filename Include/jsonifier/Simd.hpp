@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -27,6 +27,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <memory>
+#include <random>
 
 namespace Jsonifier {
 
@@ -65,16 +66,16 @@ namespace Jsonifier {
 			value = _mm_set1_epi8(other);
 		}
 
-		inline SimdBase128& operator=(const uint8_t values[32]) noexcept {
+		inline SimdBase128& operator=(const uint8_t values[16]) noexcept {
 			value = _mm_loadu_si128(reinterpret_cast<const __m128i*>(values));
 			return *this;
 		}
 
-		inline SimdBase128(const uint8_t values[32]) noexcept {
+		inline SimdBase128(const uint8_t values[16]) noexcept {
 			*this = values;
 		}
 
-		inline SimdBase128& operator=(uint64_t* values) noexcept {
+		inline SimdBase128& operator=(uint64_t values[4]) noexcept {
 			this->value = _mm_loadu_epi64(values);
 			return *this;
 		}
@@ -136,7 +137,7 @@ namespace Jsonifier {
 		}
 
 		inline void store(uint8_t destVector[16]) noexcept {
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(destVector), value);
+			_mm_store_si128(reinterpret_cast<__m128i*>(destVector), value);
 		}
 
 		inline void printBits(uint64_t values, const std::string& valuesTitle) noexcept {
@@ -200,7 +201,7 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline SimdBase256& operator=(const uint8_t* values) noexcept {
+		inline SimdBase256& operator=(const uint8_t values[32]) noexcept {
 			value = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(values));
 			return *this;
 		}
@@ -308,7 +309,7 @@ namespace Jsonifier {
 		}
 
 		inline void store(uint8_t destVector[32]) noexcept {
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(destVector), value);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(destVector), value);
 		}
 
 		inline int64_t getInt64(size_t index) noexcept {
@@ -455,10 +456,14 @@ namespace Jsonifier {
 
 	class SimdStringReader {
 	  public:
-		inline SimdStringReader() noexcept {};
+		inline SimdStringReader() noexcept = default;
 
 		inline void reset(size_t stringLengthRawNew, StringViewPtr stringViewNew) noexcept {
-			structuralIndices.resize(round(stringLengthRawNew + 3, 256));
+			if (stringLengthRawNew > stringLengthRaw) {
+				structuralIndices.resize(round(stringLengthRawNew + 3, 256));
+			} else {
+				std::fill(structuralIndices.data(), structuralIndices.data() + structuralIndices.size(), 0);
+			}
 			stringLengthRaw = stringLengthRawNew;
 			stringView = stringViewNew;
 			stringIndex = 0;
@@ -487,7 +492,11 @@ namespace Jsonifier {
 			return this->stringLengthRaw;
 		}
 
-		inline const uint8_t** getStructurals() {
+		inline uint32_t* getStructurals() {
+			if (this->structuralIndices[tapeIndex - 1] >= this->stringLengthRaw) {
+				throw JsonifierError<"String Index">{ std::string{ "Sorry,but that index is beyond the end of the string " }.c_str(),
+					std::string::npos };
+			}
 			return this->structuralIndices.data();
 		}
 
@@ -496,7 +505,7 @@ namespace Jsonifier {
 		}
 
 	  protected:
-		std::vector<const uint8_t*> structuralIndices{};
+		std::vector<uint32_t> structuralIndices{};
 		StringViewPtr stringView{};
 		SimdBase256 structurals{};
 		size_t stringLengthRaw{};
@@ -515,35 +524,28 @@ namespace Jsonifier {
 		}
 
 		inline int64_t rollValuesIntoTape(size_t currentIndex, size_t y, int64_t newBits) noexcept {
-			structuralIndices[(currentIndex * 8) + tapeIndex] = &stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[(currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] =
-				&stringView[static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex)];
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(_tzcnt_u64(newBits) + (y * 64ull) + stringIndex);
 			newBits = _blsr_u64(newBits);
 			return newBits;
 		}
 
 		inline void addTapeValues() noexcept {
-			int64_t newBits[4];
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(newBits), structurals);
+			alignas(32) int64_t newBits[4];
+			_mm256_store_si256(reinterpret_cast<__m256i*>(newBits), structurals);
 			for (size_t y = 0; y < 4; ++y) {
 				if (!newBits[y]) {
 					continue;

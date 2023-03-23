@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -21,19 +21,13 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Simd.hpp>
 #include <jsonifier/IteratorCore.hpp>
+#include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
+#include <jsonifier/Parse.hpp>
+#include <jsonifier/Simd.hpp>
 
 namespace Jsonifier {
-
-	template<typename OTy = void> struct FromJson {};
-
-	struct Read {
-		template<typename OTy, typename It> inline static void op(OTy& value, It& it) {
-			FromJson<std::decay_t<OTy>>::template op(value, it);
-		}
-	};
 
 	class Parser {
 	  public:
@@ -52,20 +46,14 @@ namespace Jsonifier {
 		inline Parser& operator=(const Parser&) = delete;
 		inline Parser(const Parser&) = delete;
 
-		inline Parser(std::string_view string) {
-			this->reset(string);
-		}
-
-		inline Parser(const std::string& string) {
-			this->reset(string);
-		}
-
 		template<typename OTy, StringT OTy2> void parseJson(OTy& json, OTy2& inStringNew) {
 			if (inString != inStringNew && inStringNew.size() != 0) {
 				reset(inStringNew);
+			} else if (inStringNew.size() == 0) {
+				return;
 			}
 			auto newIter = this->begin();
-			Read::op<OTy>(json, newIter);
+			Parse::op<OTy, SimdIteratorCore>(json, newIter);
 		}
 
 	  protected:
@@ -84,24 +72,15 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void reset(std::string_view string) {
+		template<typename OTy> inline void reset(OTy& string) {
 			if (string.size() == 0) {
 				return;
 			}
+			this->section.reset(string.size(), reinterpret_cast<StringViewPtr>(string.data()));
 			inString = std::string_view{ string.data(), string.size() };
-			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
 			this->generateJsonIndices();
 		}
 
-		inline void reset(const std::string& string) {
-			if (string.size() == 0) {
-				return;
-			}
-			inString = std::string_view{ string.data(), string.size() };
-			this->section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
-			this->generateJsonIndices();
-		}
-		
 		inline SimdIteratorCore begin() noexcept {
 			return { &section };
 		}
@@ -110,110 +89,4 @@ namespace Jsonifier {
 			return { &section };
 		}
 	};
-
-	inline void skipObject(auto& it) noexcept {
-		++it;
-		size_t openCount{ 1 };
-		size_t closeCount{};
-		if (**it == '}') {
-			++it;
-			return;
-		}
-		while (openCount > closeCount && it != it) {
-			++it;
-			switch (**it) {
-				case '{': {
-					++openCount;
-					break;
-				}
-				case '[': {
-					++openCount;
-					break;
-				}
-				case ']': {
-					++closeCount;
-					break;
-				}
-				case '}': {
-					++closeCount;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-		}
-		++it;
-	}
-
-	inline void skipArray(auto& it) noexcept {
-		++it;
-		size_t openCount{ 1 };
-		size_t closeCount{};
-		if (**it == ']') {
-			++it;
-			return;
-		}
-		while (openCount > closeCount && it != it) {
-			++it;
-			switch (**it) {
-				case '{': {
-					++openCount;
-					break;
-				}
-				case '[': {
-					++openCount;
-					break;
-				}
-				case ']': {
-					++closeCount;
-					break;
-				}
-				case '}': {
-					++closeCount;
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-		}
-		++it;
-	}
-
-	inline void skipValue(auto& it) noexcept {
-		switch (**it) {
-			case '{': {
-				skipObject(it);
-				break;
-			}
-			case '[': {
-				skipArray(it);
-				break;
-			}
-			case '"': {
-				++it;
-				break;
-			}
-			case 'n': {
-				++it;
-				break;
-			}
-			case 'f': {
-				++it;
-				break;
-			}
-			case 't': {
-				++it;
-				break;
-			}
-			case '\0': {
-				break;
-			}
-			default: {
-				++it;
-			}
-		}
-	}
-
 };

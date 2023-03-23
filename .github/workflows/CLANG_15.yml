@@ -1,8 +1,8 @@
-name: Build-and-Test-Clang
+name: Build-and-Test-CLANG
 on:
   push:
     branches:
-    - main
+    - notmain
 jobs:
   Build:
     runs-on: macos-12

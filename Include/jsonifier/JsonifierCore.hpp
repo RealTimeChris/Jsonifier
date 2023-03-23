@@ -13,7 +13,7 @@
         Lesser General Public License for more details.
 
         You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, Write to the Free Software
+        License along with this library; if not, Serialize to the Free Software
         Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
         USA
 */
@@ -21,26 +21,11 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/NumberParsing.hpp>
-#include <jsonifier/StringParsing.hpp>
-#include <variant>
+#include <jsonifier/Serializer.hpp>
+#include <jsonifier/Parser.hpp>
 
 namespace Jsonifier {
 
-	template<typename OTy = void> struct ToJson {};
-
-	struct Write {
-		template<class OTy> inline static void op(OTy& value, auto& buffer, auto& ix) {
-			ToJson<std::decay_t<OTy>>::template op(value, buffer, ix);
-		}
-	};
-
-	template<JsonifierValueT OTy> struct ToJson<OTy> {
-		template<typename OTy2> inline static void op(OTy& value, auto& buffer) {
-			using VTy = decltype(getMember(std::declval<OTy>(), CoreWrapperV<OTy>));
-			ToJson<VTy>::template op(getMember(value, CoreWrapperV<OTy>), buffer);
-		}
-	};
-
+	class JsonifierCore : public Parser, public Serializer {};
 
 }

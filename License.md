@@ -425,8 +425,8 @@ the Free Software Foundation.
 
   14. If you wish to incorporate parts of the Library into other free
 programs whose distribution conditions are incompatible with these,
-Write to the author to ask for permission.  For software which is
-copyrighted by the Free Software Foundation, Write to the Free
+Serialize to the author to ask for permission.  For software which is
+copyrighted by the Free Software Foundation, Serialize to the Free
 Software Foundation; we sometimes make exceptions for this.  Our
 decision will be guided by the two goals of preserving the free status
 of all derivatives of our free software and of promoting the sharing
@@ -484,7 +484,7 @@ convey the exclusion of warranty; and each file should have at least the
     Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, Write to the Free Software
+    License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
     USA
 

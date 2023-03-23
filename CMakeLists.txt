@@ -14,7 +14,7 @@
 #	Lesser General Public License for more details.
 #
 #	You should have received a copy of the GNU Lesser General Public
-#	License along with this library; if not, Write to the Free Software
+#	License along with this library; if not, write to the Free Software
 #	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 #	USA
 #
@@ -78,10 +78,25 @@ target_include_directories(
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
 )
 
-target_compile_options("${PROJECT_NAME}" INTERFACE 
+target_compile_options(
+	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:/arch:${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:GNU>:-${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-march=x86-64-v4>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/Zi>>"
+)
+
+target_link_options(
+	"${PROJECT_NAME}" INTERFACE 
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/OPT:ICF>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/OPT:REF>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/DEBUG>>"
+)
+
+set_target_properties(
+	"${PROJECT_NAME}" PROPERTIES 
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:COMPILE_PDB_NAME ${PROJECT_NAME}>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR}>>" 
 )
 
 target_compile_features(

@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -23,16 +23,6 @@
 
 #include <jsonifier/IsaDetection.hpp>
 
-#ifdef _WIN32
-	#define aligned_alloc(y, x) _aligned_malloc(x, y)
-	#define realloc(x, y, z) _aligned_realloc(x, y, z)
-	#define free(x) _aligned_free(x)
-#else
-	#define aligned_alloc(y, x) std::aligned_alloc(x, y)
-	#define realloc(x, y, z) std::realloc(x, y)
-	#define free(x) std::free(x)
-#endif
-
 #include <string_view>
 #include <immintrin.h>
 #include <iostream>
@@ -40,13 +30,13 @@
 
 namespace Jsonifier {
 
-	using StructuralIndex = const uint8_t**;
+	using StructuralIndex = uint32_t*;
 	using StringViewPtr = const uint8_t*;
 	using StringBufferPtr = uint8_t*;
 
 	class String;
 
-	inline size_t findSingleCharacterAvx2(const void* string, size_t lengthNew, const char charToFind) noexcept;
+	inline size_t findSingleCharacterFast(const void* string, size_t lengthNew, const char charToFind) noexcept;
 
 	class StringViewIterator {
 	  public:
@@ -157,7 +147,7 @@ namespace Jsonifier {
 			if (sizeVal != rhs.sizeVal) {
 				return false;
 			} else if (sizeVal) {
-				return JsonifierCore::compare(static_cast<const void*>(string), static_cast<const void*>(rhs.data()), sizeVal);
+				return JsonifierCoreInternal::compare(static_cast<const void*>(string), static_cast<const void*>(rhs.data()), sizeVal);
 			} else if (sizeVal == 0 && rhs.size() == 0) {
 				return true;
 			} else {
@@ -189,7 +179,7 @@ namespace Jsonifier {
 		size_t sizeVal{};
 		const char* string{};
 
-		template<size_t Size> size_t inline constexpr findSingleCharacterAvx2(const char (&stringNew)[Size], char charToFind) {
+		template<size_t Size> size_t inline constexpr findSingleCharacter(const char (&stringNew)[Size], char charToFind) {
 			for (size_t x = 0; x < Size; ++x) {
 				if (stringNew[x] == charToFind) {
 					return x;

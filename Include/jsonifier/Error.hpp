@@ -21,18 +21,32 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/IsaDetection.hpp>
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/JsonifierCore.hpp>
+#include <unordered_map>
+#include <exception>
 
-#include <jsonifier/Simd.hpp>
-#include <jsonifier/IteratorCore.hpp>
-#include <jsonifier/HashMap.hpp>
-#include <jsonifier/Parse_Impl.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/String.hpp>
-#include <jsonifier/Core.hpp>
-#include <jsonifier/Tuple.hpp>
-#include <jsonifier/Serialize_Impl.hpp>
+namespace Jsonifier {
+
+	template<size_t N> struct StringLiteral;
+
+	enum class ErrorCode { Success = 0, Parse_Error = 1, Number_Error = 2, Unknown_Key = 3, Incorrect_Type = 4, Setup_Error = 5 };
+
+	template<StringLiteral string> class JsonifierError : public std::exception {
+	  public:
+		JsonifierError(const char* const stringError, uint64_t indexNew = std::string::npos) {
+			errorMessage = static_cast<std::string>(string.sv()) + " Error";
+			if (indexNew != std::string::npos) {
+				errorMessage += ", at index: " + std::to_string(indexNew);
+			}
+			if (stringError) {
+				errorMessage += std::string{ ", " } + stringError;
+			}
+		}
+
+		const char* what() const noexcept override {
+			return errorMessage.c_str();
+		}
+
+	  protected:
+		std::string errorMessage{};
+	};
+}

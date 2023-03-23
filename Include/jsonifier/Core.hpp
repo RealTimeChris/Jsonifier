@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
+	License along with this library; if not, Serialize to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -27,52 +27,42 @@
 
 namespace Jsonifier {
 
-	template<class OTy> struct Core {};
+	/// A class to aid in registering a class/struct to be parsed/serialized.
+	template<typename OTy> struct Core {};
 
-	template<class OTy>
-	concept LocalConstructT = requires {
-		OTy::construct;
-	};
+	template<typename OTy>
+	concept LocalConstructT = requires { OTy::construct; };
 
-	template<class OTy>
-	concept GlobalConstructT = requires {
-		Core<OTy>::construct;
-	};
+	template<typename OTy>
+	concept GlobalConstructT = requires { Core<OTy>::construct; };
 
-	template<class OTy>
-	concept LocalCoreT = requires {
-		OTy::value;
-	};
+	template<typename OTy>
+	concept LocalCoreT = requires { OTy::value; };
 
-	template<class OTy>
-	concept GlobalCoreT = requires {
-		Core<OTy>::value;
-	};
+	template<typename OTy>
+	concept GlobalCoreT = requires { Core<OTy>::value; };
 
-	template<class OTy>
-	concept JsonifierT = requires {
-		Core<std::decay_t<OTy>>::value;
-	}
-	|| LocalCoreT<std::decay_t<OTy>>;
+	template<typename OTy>
+	concept JsonifierT = requires { Core<std::decay_t<OTy>>::value; } || LocalCoreT<std::decay_t<OTy>>;
 
-	struct Empty {
+	struct EmptyVal {
 		static constexpr Tuplet::Tuple<> value{};
 	};
 
-	template<class OTy> inline constexpr auto CoreWrapperV = [] {
+	template<typename OTy> inline constexpr auto CoreWrapperV = [] {
 		if constexpr (LocalCoreT<OTy>) {
 			return OTy::value;
 		} else if constexpr (GlobalCoreT<OTy>) {
 			return Core<OTy>::value;
 		} else {
-			return Empty{};
+			return EmptyVal{};
 		}
 	}();
 
-	template<class OTy> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<OTy>>.value;
+	template<typename OTy> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<OTy>>.value;
 
-	template<class OTy> using CoreT = std::decay_t<decltype(CoreV<OTy>)>;
+	template<typename OTy> using CoreT = std::decay_t<decltype(CoreV<OTy>)>;
 
-	template<class OTy> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<OTy>>)>;
+	template<typename OTy> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<OTy>>)>;
 
 }

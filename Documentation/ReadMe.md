@@ -1,18 +1,19 @@
-# Jsonifier
+\mainpage Jsonifier
 ![Commit Activity](https://img.shields.io/github/commit-activity/m/RealTimeChris/Jsonifier?color=999EE0&label=Commits)
-[![Lines of Code](https://sloc.xyz/github/boyter/scc/)](https://github.com/RealTimeChris/Jsonifier/)
+![Lines of Code](https://sloc.xyz/github/boyter/scc/)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
-## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
+### *It achieves this through the usage of simd-instructions as well as compile-time hash-maps for the keys of the data being parsed.*
+## ![Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
 
 ## Compiler Support
 ![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
 ![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
 
-## Usage - Serialization/Parsing
-- Create a specialization of the `Jsonifier::Core` class template, within the Jsonifier namespace as follows...
+## Usage - Serialization/Parsing   
+Create a specialization of the `Jsonifier::Core` class template, within the Jsonifier namespace as follows
+
 ----
 ```cpp
 
@@ -115,7 +116,7 @@ parser.parseJson(obj, buffer);
 	1. Install vcpkg, if need be.
 	2. Make sure to run vcpkg integrate install.
 	3. Enter within a terminal vcpkg install jsonifier:x64-windows_OR_linux.
-	4. Set up a console project in your IDE and make sure to set the C++ standard to C++23 or later - and include jsonifier/Index.hpp.
+	4. Set up a console project in your IDE and make sure to set the C++ standard to C++23 or later - and include jsonifier/jsonifier.hpp.
 	5. Build and run!
 	
 ## Installation (CMake-FetchContent)
