@@ -13,7 +13,7 @@
 	Lesser General Public License for more details.
 
 	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
+	License along with this library; if not, Write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
@@ -28,8 +28,8 @@
 
 namespace Jsonifier {
 
-	class SimdBase128;
-	class SimdBase256;
+	struct SimdBase128;
+	struct SimdBase256;
 	template<typename SimdBase> class BackslashAndQuote;
 
 	template<> class BackslashAndQuote<SimdBase128> {
@@ -37,11 +37,11 @@ namespace Jsonifier {
 		static const uint32_t bytesProcessed = 16;
 
 		BackslashAndQuote<SimdBase128> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase128 values(reinterpret_cast<const uint8_t*>(source));
+			SimdBase128 values(reinterpret_cast<StringViewPtr>(source));
 			values.store(dest);
 			BackslashAndQuote returnData{};
 			returnData.bsBits = static_cast<uint16_t>((values == '\\').toBitMask());
-			returnData.quoteBits = static_cast<uint16_t>((values == '"').toBitMask());
+			returnData.quoteBits = static_cast<uint16_t>((values == '\"').toBitMask());
 			return returnData;
 		}
 
@@ -71,11 +71,11 @@ namespace Jsonifier {
 		static const uint32_t bytesProcessed = 32;
 
 		BackslashAndQuote<SimdBase256> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase256 values(reinterpret_cast<const uint8_t*>(source));
+			SimdBase256 values(reinterpret_cast<StringViewPtr>(source));
 			values.store(dest);
 			BackslashAndQuote returnData{};
 			returnData.bsBits = static_cast<uint32_t>((values == '\\').toBitMask());
-			returnData.quoteBits = static_cast<uint32_t>((values == '"').toBitMask());
+			returnData.quoteBits = static_cast<uint32_t>((values == '\"').toBitMask());
 			return returnData;
 		}
 
@@ -100,156 +100,124 @@ namespace Jsonifier {
 		uint32_t bsBits{};
 	};
 
-	inline uint32_t stringToUint32(StringViewPtr str) {
+	inline static uint32_t stringToUint32(StringViewPtr str) {
 		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
 		return val;
 	}
 
-	inline uint32_t str4ncmp(StringViewPtr source, const char* atom) {
+	inline static uint32_t str4ncmp(StringViewPtr source, const char* atom) {
 		return stringToUint32(reinterpret_cast<StringViewPtr>(source)) ^ stringToUint32(reinterpret_cast<StringViewPtr>(atom));
 	}
 
-	inline constexpr uint32_t isStructuralOrWhitespace(uint8_t c) {
+	inline static constexpr uint32_t isStructuralOrWhitespace(uint8_t c) {
 		return structuralOrWhitespace[c];
 	}
 
-	inline constexpr uint32_t isNotStructuralOrWhitespace(uint8_t c) {
+	inline static constexpr uint32_t isNotStructuralOrWhitespace(uint8_t c) {
 		return structuralOrWhitespaceNegated[c];
 	}
 
-	inline constexpr uint32_t digitToVal32[] = { 0x00000000, 0x01000000, 0x02000000, 0x03000000, 0x04000000, 0x05000000, 0x06000000, 0x07000000,
-		0x08000000, 0x09000000, 0x0A000000, 0x0B000000, 0x0C000000, 0x0D000000, 0x0E000000, 0x0F000000, 0x0A000000, 0x0B000000, 0x0C000000,
-		0x0D000000, 0x0E000000, 0x0F000000 };
-
-	inline uint32_t hexToU32Nocheck(StringViewPtr source) {
-		uint32_t value = 0;
-		for (int i = 0; i < 8; i += 2) {
-			value |= digitToVal32[630 + source[i]] | digitToVal32[420 + source[i + 1]];
+	inline static size_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
+		if (codePoint <= 0x7F) {
+			c[0] = uint8_t(codePoint);
+			return 1;
 		}
-		return value;
+		if (codePoint <= 0x7FF) {
+			c[0] = uint8_t((codePoint >> 6) + 192);
+			c[1] = uint8_t((codePoint & 63) + 128);
+			return 2;
+		} else if (codePoint <= 0xFFFF) {
+			c[0] = uint8_t((codePoint >> 12) + 224);
+			c[1] = uint8_t(((codePoint >> 6) & 63) + 128);
+			c[2] = uint8_t((codePoint & 63) + 128);
+			return 3;
+		} else if (codePoint <= 0x10FFFF) {
+			c[0] = uint8_t((codePoint >> 18) + 240);
+			c[1] = uint8_t(((codePoint >> 12) & 63) + 128);
+			c[2] = uint8_t(((codePoint >> 6) & 63) + 128);
+			c[3] = uint8_t((codePoint & 63) + 128);
+			return 4;
+		}
+		return 0;
 	}
 
-	inline constexpr uint8_t kByteMark[] = { 0x00, 0x80, 0xE0, 0xF0 };
-
-	inline size_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
-		size_t count = 1;
-		if (codePoint > 0x7F)
-			count += (codePoint > 0x7FF) + (codePoint > 0xFFFF) + (codePoint > 0x1FFFFF);
-
-		uint8_t* dst = c + count - 1;
-		switch (count) {
-			case 4:
-				*dst-- = (codePoint | 0x80) & 0xBF;
-				codePoint >>= 6;
-				[[fallthrough]];
-			case 3:
-				*dst-- = (codePoint | 0x80) & 0xBF;
-				codePoint >>= 6;
-				[[fallthrough]];
-			case 2:
-				*dst-- = (codePoint | 0x80) & 0xBF;
-				codePoint >>= 6;
-				[[fallthrough]];
-			case 1:
-				*dst-- = codePoint | kByteMark[count];
-		}
-		return count;
+	inline static uint32_t hexToU32NoCheck(StringViewPtr src) {
+		uint32_t v1 = digitToVal32[630 + src[0]];
+		uint32_t v2 = digitToVal32[420 + src[1]];
+		uint32_t v3 = digitToVal32[210 + src[2]];
+		uint32_t v4 = digitToVal32[0 + src[3]];
+		return v1 | v2 | v3 | v4;
 	}
 
-	inline bool handleUnicodeCodepoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
-		uint32_t codePoint =
-			digitToVal32[630 + (*srcPtr)[0]] | digitToVal32[420 + (*srcPtr)[1]] | digitToVal32[210 + (*srcPtr)[2]] | digitToVal32[0 + (*srcPtr)[3]];
-		*srcPtr += 4;
+	inline static bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr, bool allowReplacement) {
+		constexpr uint32_t substitutionCodePoint = 0xfffd;
+		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
+		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			StringViewPtr srcData = *srcPtr;
+			const uint8_t* srcData = *srcPtr;
 			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
-				return false;
+				if (!allowReplacement) {
+					return false;
+				}
+				codePoint = substitutionCodePoint;
+			} else {
+				uint32_t codePoint2 = hexToU32NoCheck(srcData + 2);
+				uint32_t lowBit = codePoint2 - 0xdc00;
+				if (lowBit >> 10) {
+					if (!allowReplacement) {
+						return false;
+					}
+					codePoint = substitutionCodePoint;
+				} else {
+					codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
+					*srcPtr += 6;
+				}
 			}
-			uint32_t codePoint2 =
-				digitToVal32[630 + srcData[2]] | digitToVal32[420 + srcData[3]] | digitToVal32[210 + srcData[4]] | digitToVal32[0 + srcData[5]];
-			uint32_t lowBit = codePoint2 - 0xdc00;
-			if (lowBit >> 10) {
-				return false;
-			}
-
-			codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
-			*srcPtr += 6;
 		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
-			return false;
+			if (!allowReplacement) {
+				return false;
+			}
+			codePoint = substitutionCodePoint;
 		}
 		size_t offset = codePointToUtf8(codePoint, *dstPtr);
 		*dstPtr += offset;
 		return offset > 0;
 	}
 
-	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, size_t length) {
-		if (*(source - 1) == 'n') {
-			return dest;
-		}
-		if (length < 32) {
-			while (1) {
-				BackslashAndQuote<SimdBase128> bsQuote = BackslashAndQuote<SimdBase128>::copyAndFind(source, dest);
-				if (bsQuote.hasQuoteFirst()) {
-					return dest + bsQuote.quoteIndex();
-				}
-				if (bsQuote.hasBackslash()) {
-					uint32_t bsDist = bsQuote.backslashIndex();
-					uint8_t escapeChar = source[bsDist + 1];
-					if (escapeChar == 'u') {
-						source += bsDist;
-						dest += bsDist;
-						if (!handleUnicodeCodepoint(&source, &dest)) {
-							return nullptr;
-						}
-					} else {
-						uint8_t escapeResult = escapeMap[escapeChar];
-						if (escapeResult == 0u) {
-							return nullptr;
-						}
-						dest[bsDist] = escapeResult;
-						source += bsDist + 2ull;
-						dest += bsDist + 1ull;
+	inline static StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, size_t length) {
+		while (length > 0) {
+			BackslashAndQuote<SimdBase256> bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(source, dest);
+			if (bsQuote.hasQuoteFirst()) {
+				return dest + bsQuote.quoteIndex();
+			}
+			if (bsQuote.hasBackslash()) {
+				uint32_t bsDist = bsQuote.backslashIndex();
+				uint8_t escapeChar = source[bsDist + 1];
+				if (escapeChar == 'u') {
+					source += bsDist;
+					dest += bsDist;
+					if (!handleUnicodeCodePoint(&source, &dest, false)) {
+						return dest;
 					}
 				} else {
-					source += BackslashAndQuote<SimdBase128>::bytesProcessed;
-					dest += BackslashAndQuote<SimdBase128>::bytesProcessed;
-				}
-			}
-		} else {
-			while (1) {
-				BackslashAndQuote<SimdBase256> bsQuote = BackslashAndQuote<SimdBase256>::copyAndFind(source, dest);
-				if (bsQuote.hasQuoteFirst()) {
-					return dest + bsQuote.quoteIndex();
-				}
-				if (bsQuote.hasBackslash()) {
-					uint32_t bsDist = bsQuote.backslashIndex();
-					uint8_t escapeChar = source[bsDist + 1];
-					if (escapeChar == 'u') {
-						source += bsDist;
-						dest += bsDist;
-						if (!handleUnicodeCodepoint(&source, &dest)) {
-							return nullptr;
-						}
-					} else {
-						uint8_t escapeResult = escapeMap[escapeChar];
-						if (escapeResult == 0u) {
-							return nullptr;
-						}
-						dest[bsDist] = escapeResult;
-						source += bsDist + 2ull;
-						dest += bsDist + 1ull;
+					uint8_t escapeResult = escapeMap[escapeChar];
+					if (escapeResult == 0u) {
+						return dest;
 					}
-				} else {
-					source += BackslashAndQuote<SimdBase256>::bytesProcessed;
-					dest += BackslashAndQuote<SimdBase256>::bytesProcessed;
+					dest[bsDist] = escapeResult;
+					source += bsDist + 2ull;
+					dest += bsDist + 1ull;
 				}
+			} else {
+				source += BackslashAndQuote<SimdBase256>::bytesProcessed;
+				dest += BackslashAndQuote<SimdBase256>::bytesProcessed;
 			}
+			length -= BackslashAndQuote<SimdBase256>::bytesProcessed;
 		}
-
-		return nullptr;
+		return dest;
 	}
 
-	inline bool parseBool(const uint8_t* json) noexcept {
+	inline static bool parseBool(StringViewPtr json) noexcept {
 		uint32_t notTrue = str4ncmp(json, "true");
 		uint32_t notFalse = str4ncmp(json, "fals") | (json[4] ^ 'e');
 		bool error = (notTrue && notFalse) || isNotStructuralOrWhitespace(json[notTrue ? 5 : 4]);

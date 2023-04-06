@@ -1,33 +1,44 @@
+
 name: Build-and-Test-CLANG
+
 on:
   push:
     branches:
-    - notmain
+    - main
+    - dev
+
 jobs:
   Build:
-    runs-on: macos-12
+    runs-on: ubuntu-22.04
     
     strategy:
       fail-fast: false
       matrix:
+        clang: [15]
         build_type: [Debug, Release]
-        os: [macos-12]
-        cpp: [clang-15.0.0]
-        gcc: [15]
         std: [23]
-    env:
-      CC: clang-${{matrix.gcc}}
-      CXX: clang++-${{matrix.gcc}}
+
     steps:
     - uses: actions/checkout@v3
+
+    - name: Update stuff
+      working-directory: Tests
+      run: sudo apt-get update
+
+    - name: Install Clang15
+      working-directory: Tests
+      run: sudo apt-get install clang-15
+
     - name: Configure CMake
       working-directory: Tests
-      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-15
+
     - name: Build the Test
       working-directory: Tests
       run: cd Build &&
            cmake --build . --config=${{matrix.build_type}}
+
     - name: Run the Test
-      working-directory: Tests
-      run: cd ./Build/${{matrix.build_type}} &&
-          ./Json-Performance
+      working-directory: Tests/Build
+      run: ./Json-Performance
+      

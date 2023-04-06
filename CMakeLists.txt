@@ -42,6 +42,7 @@ set_target_properties(
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
+	CXX_STANDARD 23
 )
 
 if (NOT "${VCPKG_TARGET_TRIPLET}" STREQUAL "x64_uwp")
@@ -52,23 +53,25 @@ if (CXX_AVX512_FOUND)
 	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX512)
 	if (WIN32)
 		set(AVX_TYPE "AVX512")
-	elseif(UNIX)
+	else()
 		set(AVX_TYPE "march=native")
 	endif()
 elseif (CXX_AVX2_FOUND)
 	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX2)
 	if (WIN32)
 		set(AVX_TYPE "AVX2")
-	elseif(UNIX)
+	else()
 		set(AVX_TYPE "march=native")
 	endif()
 elseif(CXX_AVX_FOUND)
 	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX)
 	if (WIN32)
 		set(AVX_TYPE "AVX")
-	elseif(UNIX)
+	else()
 		set(AVX_TYPE "march=native")
 	endif()
+else()	
+	set(AVX_TYPE "march=native")
 endif()
 
 target_include_directories(
@@ -82,8 +85,9 @@ target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:/arch:${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:GNU>:-${AVX_TYPE}>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-march=x86-64-v4>"
+	"$<$<CXX_COMPILER_ID:Clang>:-${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/Zi>>"
+	"$<$<CXX_COMPILER_ID:Clang>:-std=c++2b>"
 )
 
 target_link_options(
@@ -101,7 +105,8 @@ set_target_properties(
 
 target_compile_features(
 	"${PROJECT_NAME}" INTERFACE
-	"cxx_std_23"
+	"$<$<CXX_COMPILER_ID:MSVC>:cxx_std_23>"
+	"$<$<CXX_COMPILER_ID:GNU>:cxx_std_23>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

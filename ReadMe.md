@@ -10,73 +10,78 @@
 ## Compiler Support
 ![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
 ![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
+![CLANG_15](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_15.yml?color=00ff90&label=CLANG_15)
 
 ## Usage - Serialization/Parsing
 - Create a specialization of the `Jsonifier::Core` class template, within the Jsonifier namespace as follows...
 ----
 ```cpp
+namespace TestNS {
 
-struct fixed_object_t {
-	std::vector<int> int_array;
-	std::vector<float> float_array;
-	std::vector<double> double_array;
-};
+	struct fixed_object_t {
+		std::vector<int> int_array;
+		std::vector<float> float_array;
+		std::vector<double> double_array;
+	};
 
-struct fixed_name_object_t {
-	std::string name0{};
-	std::string name1{};
-	std::string name2{};
-	std::string name3{};
-	std::string name4{};
-};
+	struct fixed_name_object_t {
+		std::string name0{};
+		std::string name1{};
+		std::string name2{};
+		std::string name3{};
+		std::string name4{};
+	};
 
-struct nested_object_t {
-	std::vector<std::array<double, 3>> v3s{};
-	std::string id{};
-};
+	struct nested_object_t {
+		std::vector<std::array<double, 3>> v3s{};
+		std::string id{};
+	};
 
-struct another_object_t {
-	std::string string{};
-	std::string another_string{};
-	bool boolean{};
-	nested_object_t nested_object{};
-};
+	struct another_object_t {
+		std::string string{};
+		std::string another_string{};
+		bool boolean{};
+		nested_object_t nested_object{};
+	};
 
-struct obj_t {
-	fixed_object_t fixed_object{};
-	fixed_name_object_t fixed_name_object{};
-	another_object_t another_object{};
-	std::vector<std::string> string_array{};
-	std::string string{};
-	double number{};
-	bool boolean{};
-	bool another_bool{};
-};
+	struct obj_t {
+		fixed_object_t fixed_object{};
+		fixed_name_object_t fixed_name_object{};
+		another_object_t another_object{};
+		std::vector<std::string> string_array{};
+		std::string string{};
+		double number{};
+		bool boolean{};
+		bool another_bool{};
+	};
+}
+
 namespace Jsonifier {
-	template<> struct Core<fixed_object_t> {
-		using OTy = fixed_object_t;
-		static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+
+	template<> struct Core<TestNS::fixed_object_t> {
+		using OTy = TestNS::fixed_object_t;
+		static constexpr auto parseValue = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 	};
 
-	template<> struct Core<fixed_name_object_t> {
-		using OTy = fixed_name_object_t;
-		static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
+	template<> struct Core<TestNS::fixed_name_object_t> {
+		using OTy = TestNS::fixed_name_object_t;
+		static constexpr auto parseValue = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 	};
 
-	template<> struct Core<nested_object_t> {
-		using OTy = nested_object_t;
-		static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
+	template<> struct Core<TestNS::nested_object_t> {
+		using OTy = TestNS::nested_object_t;
+		static constexpr auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
 	};
 
-	template<> struct Core<another_object_t> {
-		using OTy = another_object_t;
-		static constexpr auto value =
+	template<> struct Core<TestNS::another_object_t> {
+		using OTy = TestNS::another_object_t;
+		static constexpr auto parseValue =
 			object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 	};
 
-	template<> struct Core<obj_t> {
-		using OTy = obj_t;
-		static constexpr auto value =
+	template<> struct Core<TestNS::obj_t> {
+		using OTy = TestNS::obj_t;
+		static constexpr auto parseValue =
 			object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
 				&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 	};
@@ -105,7 +110,32 @@ obj_t obj{};
 Jsonifier::JsonifierCore parser{ buffer };
 parser.parseJson(obj, buffer);
 ```
-
+## Excluding Keys from Parsing/Serialization
+- So you might want to exclude keys from being parsed/serialized at runtime, despite having setup a compile-time hash-map containing the keys - and here is how you do that:
+```cpp
+std::unordered_set<std::string> keysToExclude{};
+if (attachments.size() == 0) {
+	keysToExclude.emplace("attachments");
+}
+if (allowedMentions.parse.size() == 0 && allowedMentions.roles.size() == 0 && allowedMentions.users.size() == 0) {
+	keysToExclude.emplace("allowed_mentions");
+}
+if (files.size() == 0) {
+	keysToExclude.emplace("files");
+}
+if (customId == "") {
+	keysToExclude.emplace("custom_id");
+}
+if (title == "") {
+	keysToExclude.emplace("title");
+}
+if (content == "") {
+	keysToExclude.emplace("content");
+}
+Jsonifier::JsonifierCore parser{};
+parser.serializeJson(dataPackage, workload.content, keysToExclude);
+parser.parseJson(dataPackage, workload.content, keysToExclude);
+```
 
 ## Installation (Vcpkg)
 - Requirements:
@@ -115,7 +145,7 @@ parser.parseJson(obj, buffer);
 	1. Install vcpkg, if need be.
 	2. Make sure to run vcpkg integrate install.
 	3. Enter within a terminal vcpkg install jsonifier:x64-windows_OR_linux.
-	4. Set up a console project in your IDE and make sure to set the C++ standard to C++23 or later - and include jsonifier/Index.hpp.
+	4. Set up a project in your IDE and make sure to set the C++ standard to C++23 or later - and include jsonifier/Index.hpp.
 	5. Build and run!
 	
 ## Installation (CMake-FetchContent)

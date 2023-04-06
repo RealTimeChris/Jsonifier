@@ -155,9 +155,9 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
         // ./Vcpkg/ports/jsonifier/vcpkg.json
         $versionFileContent = '{
   "name": "jsonifier",
-  "version": "0.9.0",
+  "version": ' . json_encode($this->getVersion()) . ',
   "description": "A few classes for parsing and serializing json - very rapidly.",
-  "homepage": "https://https://github.com/realtimechris/jsonifier",
+  "homepage": "https://github.com/realtimechris/jsonifier",
   "license": "LGPL-2.1-or-later",
   "supports": "(windows & x64 & !uwp) | (linux & x64) | (osx & x64)",
   "dependencies": [

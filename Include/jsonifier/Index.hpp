@@ -21,18 +21,15 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/IsaDetection.hpp>
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/Serializer.hpp>
+#include <jsonifier/StructuralIterator.hpp>
+#include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/JsonifierCore.hpp>
-
-#include <jsonifier/Simd.hpp>
-#include <jsonifier/IteratorCore.hpp>
-#include <jsonifier/HashMap.hpp>
 #include <jsonifier/Parse_Impl.hpp>
+#include <jsonifier/Serializer.hpp>
+#include <jsonifier/HashMap.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>
-#include <jsonifier/Core.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Serialize_Impl.hpp>
+#include <jsonifier/Base.hpp>
+#include <jsonifier/Simd.hpp>
+#include <jsonifier/Core.hpp>

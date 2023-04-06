@@ -17,7 +17,6 @@
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 	USA
 */
-/// NOTE: Most of the code in this header was sampled heavily from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
 #pragma once
@@ -31,35 +30,29 @@ namespace Jsonifier {
 	template<typename OTy> struct Core {};
 
 	template<typename OTy>
-	concept LocalConstructT = requires { OTy::construct; };
+	concept LocalCoreT = requires { OTy::parseValue; };
 
 	template<typename OTy>
-	concept GlobalConstructT = requires { Core<OTy>::construct; };
+	concept GlobalCoreT = requires { Core<OTy>::parseValue; };
 
 	template<typename OTy>
-	concept LocalCoreT = requires { OTy::value; };
-
-	template<typename OTy>
-	concept GlobalCoreT = requires { Core<OTy>::value; };
-
-	template<typename OTy>
-	concept JsonifierT = requires { Core<std::decay_t<OTy>>::value; } || LocalCoreT<std::decay_t<OTy>>;
+	concept JsonifierT = requires { Core<std::decay_t<OTy>>::parseValue; } || LocalCoreT<std::decay_t<OTy>>;
 
 	struct EmptyVal {
-		static constexpr Tuplet::Tuple<> value{};
+		inline static constexpr Tuplet::Tuple<> parseValue{};
 	};
 
 	template<typename OTy> inline constexpr auto CoreWrapperV = [] {
 		if constexpr (LocalCoreT<OTy>) {
-			return OTy::value;
+			return OTy::parseValue;
 		} else if constexpr (GlobalCoreT<OTy>) {
-			return Core<OTy>::value;
+			return Core<OTy>::parseValue;
 		} else {
 			return EmptyVal{};
 		}
 	}();
 
-	template<typename OTy> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<OTy>>.value;
+	template<typename OTy> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<OTy>>.parseValue;
 
 	template<typename OTy> using CoreT = std::decay_t<decltype(CoreV<OTy>)>;
 

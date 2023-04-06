@@ -21,32 +21,51 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <source_location>
 #include <unordered_map>
 #include <exception>
+#include <string>
 
 namespace Jsonifier {
 
-	template<size_t N> struct StringLiteral;
-
 	enum class ErrorCode { Success = 0, Parse_Error = 1, Number_Error = 2, Unknown_Key = 3, Incorrect_Type = 4, Setup_Error = 5 };
 
-	template<StringLiteral string> class JsonifierError : public std::exception {
+	inline std::unordered_map<ErrorCode, String> errorCodes{ { ErrorCode::Success, String{ "Success" } },
+		{ ErrorCode::Parse_Error, String{ "Parse" } }, { ErrorCode::Number_Error, String{ "Number" } },
+		{ ErrorCode::Unknown_Key, String{ "Unknown Key" } }, { ErrorCode::Incorrect_Type, String{ "Incorrect Type" } },
+		{ ErrorCode::Setup_Error, String{ "Setup" } } };
+
+	template<ErrorCode errorCode> class JsonifierError : public std::exception {
 	  public:
-		JsonifierError(const char* const stringError, uint64_t indexNew = std::string::npos) {
-			errorMessage = static_cast<std::string>(string.sv()) + " Error";
-			if (indexNew != std::string::npos) {
+		inline constexpr JsonifierError(const String& stringError, uint64_t indexNew = String::npos,
+			std::source_location location = std::source_location::current()) {
+			errorMessage = errorCodes[errorCode] + " Error at: " + String{ location.file_name() } + ":" + std::to_string(location.line()) + ":" +
+				std::to_string(location.column());
+			if (indexNew != String::npos) {
 				errorMessage += ", at index: " + std::to_string(indexNew);
 			}
-			if (stringError) {
-				errorMessage += std::string{ ", " } + stringError;
+			if (stringError.size() != 0) {
+				errorMessage += String{ ", " } + String{ stringError };
 			}
 		}
 
-		const char* what() const noexcept override {
+		inline constexpr JsonifierError(String&& stringError, uint64_t indexNew = String::npos,
+			std::source_location location = std::source_location::current()) {
+			errorMessage = errorCodes[errorCode] + " Error at: " + String{ location.file_name() } + ":" + std::to_string(location.line()) + ":" +
+				std::to_string(location.column());
+			if (indexNew != String::npos) {
+				errorMessage += ", at index: " + std::to_string(indexNew);
+			}
+			if (stringError.size() != 0) {
+				errorMessage += String{ ", " } + String{ stringError };
+			}
+		}
+
+		inline constexpr const char* what() const noexcept override {
 			return errorMessage.c_str();
 		}
 
 	  protected:
-		std::string errorMessage{};
+		String errorMessage{};
 	};
 }

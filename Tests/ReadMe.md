@@ -180,9 +180,9 @@ template<> struct Test<std::string> {
 
 ## ABC Test (Out of Sequence Performance)
 
-In this test the JSON document has keys from "a" to "z", where each key refers to an array of values. The document orders the keys from "z" to "a", in reverse order to the expected "a" to "z" layout.
+In this test the JSON document has keys from "a" to "z", where each key refers to an array of values. The document orders the keys from "z" to "a", in reverse order to the Expected "a" to "z" layout.
 
-This test demonstrates problems with `simdjson` and iterative parsers that cannot hash for memory locations. If keys are not in the expected sequence performance seriously suffers, and the problem increases as the size of the document increases.
+This test demonstrates problems with `simdjson` and iterative parsers that cannot hash for memory locations. If keys are not in the Expected sequence performance seriously suffers, and the problem increases as the size of the document increases.
 
 Hash based solutions avoid this problem and do not suffer performance loss as the JSON document grows in size.
 

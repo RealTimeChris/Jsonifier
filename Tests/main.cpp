@@ -3,8 +3,7 @@
 #include "glaze/glaze.hpp"
 #include <jsonifier/Index.hpp>
 
-static constexpr std::string_view json0 = R"({
-   "fixed_object": {
+static constexpr std::string_view json0 = R"({"fixed_object": {
       "int_array": [0, 1, 2, 3, 4, 5, 6],
       "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
       "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
@@ -34,27 +33,23 @@ static constexpr std::string_view json0 = R"({
          "id": "298728949872"
       }
    },
-   "string_array": ["Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger",
-					"Cat", "Dog", "Elephant", "Tiger"],
+   "string_array": ["Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring"],
    "string": "Hello world",
    "number": 3.14,
    "boolean": true,
@@ -134,28 +129,28 @@ template<> struct glz::meta<obj_t> {
 
 template<> struct Jsonifier::Core<fixed_object_t> {
 	using OTy = fixed_object_t;
-	static constexpr auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+	static constexpr auto parseValue = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
 	using OTy = fixed_name_object_t;
-	static constexpr auto value = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
+	static constexpr auto parseValue = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
 	using OTy = nested_object_t;
-	static constexpr auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
+	static constexpr auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
 	using OTy = another_object_t;
-	static constexpr auto value =
+	static constexpr auto parseValue =
 		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
 	using OTy = obj_t;
-	static constexpr auto value =
+	static constexpr auto parseValue =
 		object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
 			&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
 };
@@ -168,7 +163,8 @@ template<typename OTy> struct Test {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
-					v[x] = std::to_string(1000000000000000000);
+					v[x] = std::to_string(1000000000000000000) + std::to_string(1000000000000000000) + std::to_string(1000000000000000000) +
+						std::to_string(1000000000000000000) + std::to_string(1000000000000000000);
 				} else {
 					v[x] = static_cast<OTy>(1000000000000000000);
 				}
@@ -211,7 +207,8 @@ template<> struct Test<std::string> {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				v[x] = std::to_string(1000000000000000000);
+				v[x] = std::to_string(1000000000000000000) + std::to_string(1000000000000000000) + std::to_string(1000000000000000000) +
+					std::to_string(1000000000000000000) + std::to_string(1000000000000000000);
 			}
 		};
 
@@ -251,30 +248,30 @@ GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, 
 
 template<> struct Jsonifier::Core<Test<std::string>> {
 	using OTy = Test<std::string>;
-	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
-		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t,
+		"u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<uint64_t>> {
 	using OTy = Test<uint64_t>;
-	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
-		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t,
+		"u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
 	using OTy = Test<int64_t>;
-	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
-		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t,
+		"u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
 	using OTy = Test<double>;
-	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
-		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t,
+		"u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<typename OTy> struct AbcTest {
@@ -285,7 +282,8 @@ template<typename OTy> struct AbcTest {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
-					v[x] = std::to_string(1000000000000000000);
+					v[x] = std::to_string(1000000000000000000) + std::to_string(1000000000000000000) + std::to_string(1000000000000000000) +
+						std::to_string(1000000000000000000) + std::to_string(1000000000000000000);
 				} else {
 					v[x] = static_cast<OTy>(1000000000000000000);
 				}
@@ -328,7 +326,8 @@ template<> struct AbcTest<std::string> {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				v[x] = std::to_string(1000000000000000000);
+				v[x] = std::to_string(1000000000000000000) + std::to_string(1000000000000000000) + std::to_string(1000000000000000000) +
+					std::to_string(1000000000000000000) + std::to_string(1000000000000000000);
 			}
 		};
 
@@ -368,30 +367,30 @@ GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, 
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
 	using OTy = AbcTest<std::string>;
-	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
-		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
-		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	static constexpr auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
+		&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g,
+		"f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<uint64_t>> {
 	using OTy = AbcTest<uint64_t>;
-	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
-		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
-		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	static constexpr auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
+		&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g,
+		"f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
 	using OTy = AbcTest<int64_t>;
-	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
-		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
-		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	static constexpr auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
+		&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g,
+		"f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
 	using OTy = AbcTest<double>;
-	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
-		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
-		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	static constexpr auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
+		&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g,
+		"f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 #ifdef NDEBUG
@@ -514,7 +513,7 @@ struct results {
 			write = json_write_string ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_string / (*json_write_string * 1048576)))
 									  : "N/A";
 			read = fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_string / (*json_read_string * 1048576)));
-			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "String", write, read);
+			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "std::string", write, read);
 			wasThereOneBeforeThis = true;
 		}
 		if (json_read_uint64) {
@@ -548,7 +547,7 @@ class FileLoader {
 		auto theStream = std::ofstream{ filePath, std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
-		this->fileContents = inputStream.str();
+		fileContents = inputStream.str();
 	}
 
 	void saveFile(std::string fileToSave) {
@@ -558,7 +557,7 @@ class FileLoader {
 	}
 
 	operator std::string() {
-		return this->fileContents;
+		return fileContents;
 	}
 
 	~FileLoader() {
@@ -935,7 +934,6 @@ auto Jsonifier_test() {
 	jsonifier.parseJson(obj, buffer);
 
 	auto t0 = std::chrono::steady_clock::now();
-
 	try {
 		for (size_t i = 0; i < iterations; ++i) {
 			jsonifier.parseJson(obj, buffer);
@@ -948,9 +946,9 @@ auto Jsonifier_test() {
 
 	r.json_byte_length = buffer.size();
 	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	buffer.clear();
 
 	jsonifier.serializeJson(obj, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < iterations; ++i) {
 		jsonifier.serializeJson(obj, buffer);
@@ -963,7 +961,6 @@ auto Jsonifier_test() {
 	Test<uint64_t> uint64Test{};
 
 	jsonifier.serializeJson(uint64Test, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -991,7 +988,6 @@ auto Jsonifier_test() {
 	Test<int64_t> int64Test{};
 
 	jsonifier.serializeJson(int64Test, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -1018,7 +1014,6 @@ auto Jsonifier_test() {
 	Test<std::string> stringTest{};
 
 	jsonifier.serializeJson(stringTest, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -1046,7 +1041,6 @@ auto Jsonifier_test() {
 	Test<double> doubleTest{};
 
 	jsonifier.serializeJson(doubleTest, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -1070,7 +1064,6 @@ auto Jsonifier_test() {
 
 	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
-
 	r.print();
 
 	return r;
@@ -1080,12 +1073,10 @@ auto Jsonifier_single_test() {
 	std::string buffer{ json0 };
 
 	obj_t obj{};
-
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", 1 };
 	Jsonifier::JsonifierCore jsonifier{};
 
 	jsonifier.parseJson(obj, buffer);
-
 	auto t0 = std::chrono::steady_clock::now();
 
 	try {
@@ -1095,20 +1086,16 @@ auto Jsonifier_single_test() {
 	} catch (std::runtime_error& e) {
 		std::cout << "Jsonifier Error: " << e.what() << std::endl;
 	}
-
 	auto t1 = std::chrono::steady_clock::now();
 
 	r.json_byte_length = buffer.size();
 	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	jsonifier.serializeJson(obj, buffer);
-	jsonifier.serializeJson(obj, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < 1; ++i) {
 		jsonifier.serializeJson(obj, buffer);
 	}
-
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
@@ -1243,7 +1230,7 @@ struct on_demand {
 	bool readInt64(Test<int64_t>& obj, const padded_string& json);
 	bool readString(Test<std::string>& obj, const padded_string& json);
 
-  private:
+  protected:
 	ondemand::parser parser{};
 };
 
@@ -1668,7 +1655,7 @@ struct on_demand_abc {
 	bool readInt64(AbcTest<int64_t>& obj, const padded_string& json);
 	bool readString(AbcTest<std::string>& obj, const padded_string& json);
 
-  private:
+  protected:
 	ondemand::parser parser{};
 };
 
@@ -1901,11 +1888,11 @@ auto simdjson_abc_test() {
 }
 
 static std::string table_header = R"(
-| Library                                           | Test       | Serialize (MB/s) | Parse (MB/s) |
+| Library                                           | Test       | Write (MB/s) | Read (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |)";
 
 std::string regular_test() {
-	std::vector<results> results;
+	std::vector<results> results{};
 	results.emplace_back(glaze_test());
 	results.emplace_back(Jsonifier_test());
 	results.emplace_back(simdjson_test());
@@ -1923,7 +1910,7 @@ std::string regular_test() {
 }
 
 std::string abc_test() {
-	std::vector<results> results;
+	std::vector<results> results{};
 	results.emplace_back(glaze_abc_test());
 	results.emplace_back(Jsonifier_abc_test());
 	results.emplace_back(simdjson_abc_test());
@@ -1941,9 +1928,9 @@ std::string abc_test() {
 }
 
 std::string single_test() {
-	std::vector<results> results;
-	results.emplace_back(Jsonifier_single_test());
+	std::vector<results> results{};
 	results.emplace_back(glaze_single_test());
+	results.emplace_back(Jsonifier_single_test());
 	results.emplace_back(simdjson_single_test());
 
 	std::string table{};

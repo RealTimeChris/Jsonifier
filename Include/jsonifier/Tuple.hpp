@@ -34,7 +34,7 @@ namespace Jsonifier {
 
 		template<size_t I> using Tag = std::integral_constant<size_t, I>;
 
-		template<size_t I> constexpr Tag<I> TagV{};
+		template<size_t I> inline constexpr Tag<I> TagV{};
 
 		template<size_t N> using TagRange = std::make_index_sequence<N>;
 
@@ -53,18 +53,18 @@ namespace Jsonifier {
 		concept Stateless = std::is_empty_v<std::decay_t<OTy>>;
 
 		template<typename OTy>
-		concept Indexable = Stateless<OTy> || requires(OTy t) { t[Tag<0>()]; };
+		concept Indexable = Stateless<OTy> || requires(OTy value) { value[Tag<0>()]; };
 
 		template<typename U, typename OTy>
-		concept AssignableTo = requires(U u, OTy t) { t = u; };
+		concept AssignableTo = requires(U u, OTy object) { object = u; };
 
 		template<typename OTy>
-		concept Ordered = requires(OTy const& t) {
-			{ t <=> t };
+		concept Ordered = requires(OTy const& object) {
+			{ object <=> object };
 		};
 		template<typename OTy>
-		concept EqualityComparable = requires(OTy const& t) {
-			{ t == t } -> SameAs<bool>;
+		concept EqualityComparable = requires(OTy const& object) {
+			{ object == object } -> SameAs<bool>;
 		};
 
 		template<typename... OTy> struct Tuple;
@@ -124,8 +124,8 @@ namespace Jsonifier {
 			using type = TypeMap<TupleElem<I, OTy>...>;
 		};
 
-		template<typename F, typename OTy, typename... Bases> inline constexpr decltype(auto) applyImpl(F&& f, OTy&& t, TypeList<Bases...>) {
-			return static_cast<F&&>(f)(static_cast<OTy&&>(t).IdentityT<Bases>::value...);
+		template<typename F, typename OTy, typename... Bases> inline constexpr decltype(auto) applyImpl(F&& f, OTy&& object, TypeList<Bases...>) {
+			return static_cast<F&&>(f)(static_cast<OTy&&>(object).IdentityT<Bases>::value...);
 		}
 		template<char... D> inline constexpr size_t sizetFromDigits() {
 			static_assert((('0' <= D && D <= '9') && ...), "Must be integral literal");
@@ -152,7 +152,7 @@ namespace Jsonifier {
 		template<typename... OTy> using TupleBaseT = typename GetTupleBase<TagRange<sizeof...(OTy)>, OTy...>::type;
 
 		template<typename... OTy> struct Tuple : TupleBaseT<OTy...> {
-			static constexpr size_t N = sizeof...(OTy);
+			inline static constexpr size_t N = sizeof...(OTy);
 			using super = TupleBaseT<OTy...>;
 			using super::operator[];
 			using base_list = typename super::base_list;
@@ -184,10 +184,10 @@ namespace Jsonifier {
 				return static_cast<Tuple&&>(*this).mapImpl(base_list(), static_cast<F&&>(func));
 			}
 
-		  private:
+		  protected:
 			template<typename U, typename... B1, typename... B2> inline constexpr void eqImpl(U&& u, TypeList<B1...>, TypeList<B2...>) {
 				// See:
-				// https://developercommunity.visualstudio.com/t/fold-expressions-unreliable-in-171-with-c20/1676476
+				// https://developercommunity.visualstudio.com/object/fold-expressions-unreliable-in-171-with-c20/1676476
 				(void(B1::value = static_cast<U&&>(u).B2::value), ...);
 			}
 
@@ -212,7 +212,7 @@ namespace Jsonifier {
 		};
 
 		template<> struct Tuple<> : TupleBaseT<> {
-			static constexpr size_t N = 0;
+			inline static constexpr size_t N = 0;
 			using super = TupleBaseT<>;
 			using base_list = TypeList<>;
 			using element_list = TypeList<>;
@@ -253,27 +253,27 @@ namespace Jsonifier {
 			Second second;
 
 			inline constexpr decltype(auto) operator[](Tag<0>) & {
-				return (first);
+				return first;
 			}
 
 			inline constexpr decltype(auto) operator[](Tag<0>) const& {
-				return (first);
+				return first;
 			}
 
 			inline constexpr decltype(auto) operator[](Tag<0>) && {
-				return (std::move(*this).first);
+				return std::move(first);
 			}
 
 			inline constexpr decltype(auto) operator[](Tag<1>) & {
-				return (second);
+				return second;
 			}
 
 			inline constexpr decltype(auto) operator[](Tag<1>) const& {
-				return (second);
+				return second;
 			}
 
 			inline constexpr decltype(auto) operator[](Tag<1>) && {
-				return (std::move(*this).second);
+				return std::move(second);
 			}
 
 			template<OtherThan<Pair> Type> inline constexpr auto& operator=(Type&& tup) {
@@ -291,14 +291,15 @@ namespace Jsonifier {
 			auto operator<=>(Pair const&) const = default;
 			bool operator==(Pair const&) const = default;
 		};
+
 		template<typename A, typename B> Pair(A, B) -> Pair<UnwrapRefDecayT<A>, UnwrapRefDecayT<B>>;
 
 		template<size_t I, Indexable Tup> inline constexpr decltype(auto) get(Tup&& tup) {
 			return static_cast<Tup&&>(tup)[Tag<I>()];
 		}
 
-		template<typename... OTy> inline constexpr Tuple<OTy&...> tie(OTy&... t) {
-			return { t... };
+		template<typename... OTy> inline constexpr Tuple<OTy&...> tie(OTy&... object) {
+			return { object... };
 		}
 
 		template<typename F, BaseListTuple Tup> inline constexpr decltype(auto) apply(F&& func, Tup&& tup) {
@@ -381,10 +382,10 @@ namespace Jsonifier {
 		return std::make_pair(tupleSplitImpl<0>(tuple, is), tupleSplitImpl<1>(tuple, is));
 	}
 
-	template<size_t N> inline constexpr auto shrinkIndexArray(auto& arr) {
+	template<size_t N> inline constexpr auto shrinkIndexArray(auto& arrayNew) {
 		std::array<size_t, N> res{};
-		for (size_t i = 0; i < N; ++i) {
-			res[i] = arr[i];
+		for (size_t x = 0; x < N; ++x) {
+			res[x] = arrayNew[x];
 		}
 		return res;
 	}
@@ -392,14 +393,14 @@ namespace Jsonifier {
 	template<typename Tuple> inline constexpr auto filter() {
 		constexpr auto n = std::tuple_size_v<Tuple>;
 		std::array<size_t, n> indices{};
-		size_t i = 0;
+		size_t x = 0;
 		forEach<n>([&](auto I) {
 			using VTy = std::decay_t<std::tuple_element_t<I, Tuple>>;
-			if constexpr (!std::convertible_to<VTy, std::string_view>) {
-				indices[i++] = I - 1;
+			if constexpr (!std::convertible_to<VTy, StringView>) {
+				indices[x++] = I - 1;
 			}
 		});
-		return std::make_pair(indices, i);
+		return std::make_pair(indices, x);
 	}
 
 	template<typename Func, typename Tuple> inline constexpr auto mapTuple(Func&& f, Tuple&& tuple) {
@@ -410,20 +411,20 @@ namespace Jsonifier {
 	template<size_t n_groups> inline constexpr auto groupSizes(const std::array<size_t, n_groups>& indices, size_t n_total) {
 		std::array<size_t, n_groups> diffs;
 
-		for (size_t i = 0; i < n_groups - 1; ++i) {
-			diffs[i] = indices[i + 1] - indices[i];
+		for (size_t x = 0; x < n_groups - 1; ++x) {
+			diffs[x] = indices[x + 1] - indices[x];
 		}
 		diffs[n_groups - 1] = n_total - indices[n_groups - 1];
 		return diffs;
 	}
 
-	template<size_t Start, typename Tuple, size_t... Is> inline constexpr auto makeGroup(Tuple&& t, std::index_sequence<Is...>) {
-		auto get_elem = [&](auto i) {
-			constexpr auto I = decltype(i)::value;
+	template<size_t Start, typename Tuple, size_t... Is> inline constexpr auto makeGroup(Tuple&& object, std::index_sequence<Is...>) {
+		auto get_elem = [&](auto x) {
+			constexpr auto I = decltype(x)::value;
 			if constexpr (I == 1) {
-				return Tuplet::get<Start + I>(t);
+				return Tuplet::get<Start + I>(object);
 			} else {
-				return std::string_view(Tuplet::get<Start + I>(t));
+				return StringView(Tuplet::get<Start + I>(object));
 			}
 		};
 		auto r = Tuplet::copyTuple(get_elem(std::integral_constant<size_t, Is>{})...);
@@ -431,8 +432,9 @@ namespace Jsonifier {
 	}
 
 	template<auto& GroupStartArr, auto& GroupSizeArr, typename Tuple, size_t... GroupNumber>
-	inline constexpr auto makeGroupsImpl(Tuple&& t, std::index_sequence<GroupNumber...>) {
-		return Tuplet::copyTuple(makeGroup<get<GroupNumber>(GroupStartArr)>(t, std::make_index_sequence<std::get<GroupNumber>(GroupSizeArr)>{})...);
+	inline constexpr auto makeGroupsImpl(Tuple&& object, std::index_sequence<GroupNumber...>) {
+		return Tuplet::copyTuple(
+			makeGroup<get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<std::get<GroupNumber>(GroupSizeArr)>{})...);
 	}
 
 	template<typename Tuple> inline constexpr auto makeGroupsHelper() {
@@ -450,9 +452,9 @@ namespace Jsonifier {
 		static constexpr auto starts = Tuplet::get<0>(h);
 		static constexpr auto sizes = Tuplet::get<1>(h);
 
-		inline static constexpr auto op(Tuple&& t) {
+		inline static constexpr auto op(Tuple&& object) {
 			constexpr auto n_groups = starts.size();
-			return makeGroupsImpl<starts, sizes>(std::forward<Tuple>(t), std::make_index_sequence<n_groups>{});
+			return makeGroupsImpl<starts, sizes>(std::forward<Tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};
 

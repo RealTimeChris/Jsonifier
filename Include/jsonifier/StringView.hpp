@@ -21,189 +21,237 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/IsaDetection.hpp>
+#include <jsonifier/String.hpp>
 
 #include <string_view>
 #include <immintrin.h>
+#include <type_traits>
 #include <iostream>
 #include <string>
 
 namespace Jsonifier {
 
-	using StructuralIndex = uint32_t*;
 	using StringViewPtr = const uint8_t*;
+	using StructuralIndex = uint32_t*;
 	using StringBufferPtr = uint8_t*;
 
-	class String;
-
-	inline size_t findSingleCharacterFast(const void* string, size_t lengthNew, const char charToFind) noexcept;
-
-	class StringViewIterator {
+	class StringView {
 	  public:
-		inline constexpr StringViewIterator(const char* ptrNew) noexcept {
-			ptr = ptrNew;
+		using traits_type = std::char_traits<char>;
+		using value_type = char;
+		using pointer = char*;
+		using const_pointer = const char*;
+		using reference = char&;
+		using const_reference = const char&;
+		using iterator = StringIterator;
+		using const_iterator = const iterator;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = const reverse_iterator;
+		using size_type = size_t;
+		using difference_type = ptrdiff_t;
+
+		inline static constexpr auto npos{ static_cast<size_type>(-1) };
+
+		inline constexpr StringView() noexcept : dataVal(), sizeVal(0) {
 		}
 
-		inline constexpr char operator*() noexcept {
-			return *this->ptr;
-		}
+		inline constexpr StringView(const StringView&) noexcept = default;
+		inline constexpr StringView& operator=(const StringView&) noexcept = default;
 
-		inline constexpr StringViewIterator& operator++() noexcept {
-			++ptr;
+		inline constexpr StringView& operator=(const String& other) noexcept {
+			dataVal = other.data();
+			sizeVal = other.size();
 			return *this;
 		}
 
-		inline constexpr friend bool operator==(const StringViewIterator& lhs, const StringViewIterator& rhs) {
-			return lhs.ptr == rhs.ptr;
+		inline constexpr StringView(const String& other) noexcept {
+			*this = other;
+		};
+
+		inline constexpr StringView& operator=(const std::string& other) noexcept {
+			dataVal = other.data();
+			sizeVal = other.size();
+			return *this;
 		}
+
+		inline constexpr StringView(const std::string& other) noexcept {
+			*this = other;
+		};
+
+		inline constexpr StringView& operator=(const std::string_view& other) noexcept {
+			dataVal = other.data();
+			sizeVal = other.size();
+			return *this;
+		}
+
+		inline constexpr StringView(const std::string_view& other) noexcept {
+			*this = other;
+		};
+
+		inline constexpr StringView(const const_pointer _Ntcts) noexcept : dataVal(_Ntcts), sizeVal(traits_type::length(_Ntcts)) {
+		}
+
+		inline constexpr StringView(const const_pointer _Cts, const size_type countNew) noexcept : dataVal(_Cts), sizeVal(countNew){};
+
+		inline constexpr const_iterator begin() const noexcept {
+			return const_iterator(dataVal, sizeVal, 0);
+		}
+
+		inline constexpr const_iterator end() const noexcept {
+			return const_iterator(dataVal, sizeVal, sizeVal);
+		}
+
+		inline constexpr size_type size() const noexcept {
+			return sizeVal;
+		}
+
+		inline constexpr size_type length() const noexcept {
+			return sizeVal;
+		}
+
+		inline constexpr bool empty() const noexcept {
+			return sizeVal == 0;
+		}
+
+		inline constexpr const_pointer data() const noexcept {
+			return dataVal;
+		}
+
+		inline constexpr size_type max_size() const noexcept {
+			return (std::min)(static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<size_t>(-1) / sizeof(char));
+		}
+
+		inline constexpr const_reference operator[](const size_type offsetNew) const noexcept {
+			return dataVal[offsetNew];
+		}
+
+		inline constexpr const_reference front() const noexcept {
+			return dataVal[0];
+		}
+
+		inline constexpr const_reference back() const noexcept {
+			return dataVal[sizeVal - 1];
+		}
+
+		inline constexpr void swap(StringView& other) noexcept {
+			const StringView temp{ other };
+			other = *this;
+			*this = temp;
+		}
+
+		inline constexpr StringView substr(const size_type offsetNew = 0, size_type countNew = npos) const noexcept {
+			return StringView(dataVal + offsetNew, countNew);
+		}
+
+		inline constexpr explicit operator std::string() const noexcept {
+			std::string returnValue{};
+			returnValue.resize(sizeVal);
+			std::copy(data(), data() + returnValue.size(), returnValue.data());
+			return returnValue;
+		}
+
+		inline constexpr explicit operator std::string_view() const noexcept {
+			return std::string_view{ data(), size() };
+		}
+
+		inline constexpr friend bool operator==(const StringView& lhs, const StringView& rhs) {
+			if (lhs.size() != rhs.size()) {
+				return false;
+			}
+			if (std::is_constant_evaluated()) {
+				return stringConstCompare(lhs, rhs);
+			} else {
+				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
+			}
+		}
+
+		inline constexpr friend bool operator!=(const StringView& lhs, const StringView& rhs) {
+			return !(lhs == rhs);
+		}
+
+		template<typename OTy> inline constexpr friend bool operator==(const StringView& lhs, const OTy& rhs) {
+			if (lhs.size() != rhs.size()) {
+				return false;
+			}
+			if (std::is_constant_evaluated()) {
+				return stringConstCompare(lhs, rhs);
+			} else {
+				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
+			}
+		}
+
+		template<typename OTy> inline constexpr friend bool operator!=(const StringView& lhs, const OTy& rhs) {
+			return !(lhs == rhs);
+		}
+
+		template<typename OTy> inline constexpr friend bool operator==(const OTy& lhs, const StringView& rhs) {
+			if (lhs.size() != rhs.size()) {
+				return false;
+			}
+			if (std::is_constant_evaluated()) {
+				return stringConstCompare(lhs, rhs);
+			} else {
+				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
+			}
+		}
+
+		template<typename OTy> inline constexpr friend bool operator!=(const OTy& lhs, const StringView& rhs) {
+			return !(lhs == rhs);
+		}
+
+		inline constexpr ~StringView() noexcept = default;
 
 	  protected:
-		const char* ptr{};
+		const_pointer dataVal{};
+		size_type sizeVal{};
 	};
 
-	struct StringView {
+	inline std::ostream& operator<<(std::ostream& os, const StringView& string) {
+		os << string.data();
+		return os;
+	}
+
+	inline constexpr String& String::operator=(const StringView& other) {
+		resize(other.size());
+		std::copy(other.data(), other.data() + capacityVal, ptr.get());
+		return *this;
+	}
+
+	inline constexpr String::String(const StringView& other) {
+		*this = other;
+	}
+
+	template<size_t strLength> class StringLiteral {
 	  public:
-		using difference_type = std::ptrdiff_t;
-		using value_type = char;
-		using pointer = value_type*;
-		using reference = value_type&;
+		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
-		inline constexpr StringView& operator=(StringView&& other) noexcept {
-			if (this != &other) {
-				this->sizeVal = other.sizeVal;
-				this->string = other.string;
-				other.string = nullptr;
-				other.sizeVal = 0;
-			}
-			return *this;
-		}
+		inline constexpr StringLiteral() noexcept = default;
 
-		inline constexpr StringView(StringView&& other) noexcept {
-			*this = std::move(other);
-		}
-
-		inline constexpr StringView& operator=(const StringView& other) {
-			if (this != &other) {
-				this->sizeVal = other.sizeVal;
-				this->string = other.string;
-			}
-			return *this;
-		}
-
-		inline constexpr StringView(const StringView& other) {
-			*this = other;
-		}
-
-		inline constexpr StringView() noexcept = default;
-
-		inline StringView& operator=(const std::string& stringNew) noexcept {
-			string = stringNew.data();
-			sizeVal = stringNew.size();
-			return *this;
-		}
-
-		inline constexpr StringView(const std::string& stringNew) noexcept {
-			string = stringNew.data();
-			sizeVal = stringNew.size();
-		}
-
-		inline StringView& operator=(const String& stringNew) noexcept;
-
-		inline constexpr StringView(const String& stringNew) noexcept;
-
-		inline constexpr StringView(const char*& stringNew) noexcept {
-			sizeVal = std::char_traits<char>::length(stringNew);
-			string = stringNew;
-		}
-
-		inline constexpr StringView(const std::string_view& stringNew) noexcept {
-			string = stringNew.data();
-			sizeVal = stringNew.size();
-		}
-
-		inline constexpr StringView(const char* stringNew, size_t sizeNew) noexcept : sizeVal{ sizeNew } {
-			string = stringNew;
-		}
-
-		template<size_t Size> inline constexpr StringView(const char (&stringNew)[Size]) noexcept : sizeVal{ Size } {
-			string = stringNew;
-		}
-
-		inline constexpr char operator[](size_t index) const noexcept {
-			return string[index];
-		}
-
-		inline constexpr operator std::string_view() const noexcept {
-			return { string, sizeVal };
-		}
-
-		inline bool operator<(const StringView& other) const noexcept {
-			size_t count01{ operator()(*this) };
-			size_t count02{ operator()(other) };
-			return count01 < count02;
-		}
-
-		inline constexpr bool operator==(const StringView& rhs) const noexcept {
-			if (sizeVal != rhs.sizeVal) {
-				return false;
-			} else if (sizeVal) {
-				return JsonifierCoreInternal::compare(static_cast<const void*>(string), static_cast<const void*>(rhs.data()), sizeVal);
-			} else if (sizeVal == 0 && rhs.size() == 0) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		inline constexpr StringViewIterator begin() const {
-			return this->string;
-		}
-
-		inline constexpr StringViewIterator end() const {
-			return &this->string[sizeVal];
+		inline constexpr StringLiteral(const char (&str)[strLength]) {
+			std::copy_n(str, strLength, string);
 		}
 
 		inline constexpr const char* data() const noexcept {
 			return string;
 		}
 
-		inline constexpr const char& back() const {
-			return this->string[sizeVal - 1];
+		inline constexpr const char* begin() const noexcept {
+			return string;
+		}
+
+		inline constexpr const char* end() const noexcept {
+			return string + sizeVal;
 		}
 
 		inline constexpr size_t size() const noexcept {
 			return sizeVal;
 		}
 
-	  protected:
-		size_t sizeVal{};
-		const char* string{};
-
-		template<size_t Size> size_t inline constexpr findSingleCharacter(const char (&stringNew)[Size], char charToFind) {
-			for (size_t x = 0; x < Size; ++x) {
-				if (stringNew[x] == charToFind) {
-					return x;
-				}
-			}
-			return std::string::npos;
+		inline constexpr const StringView stringView() const noexcept {
+			return { string, sizeVal };
 		}
 
-		static constexpr uint64_t fnvOffsetBasis{ 14695981039346656037ULL };
-		static constexpr uint64_t fnvPrime{ 1099511628211ULL };
-
-		inline size_t operator()(const StringView& string) const noexcept {
-			size_t value{ fnvOffsetBasis };
-			for (size_t i = 0; i < string.size(); ++i) {
-				value ^= static_cast<std::uint64_t>(string.data()[i]);
-				value *= fnvPrime;
-			}
-			return value;
-		}
+		char string[strLength];
 	};
-
-	inline std::ostream& operator<<(std::ostream& out, const StringView& string) noexcept {
-		out << string.operator std::basic_string_view<char, std::char_traits<char>>();
-		return out;
-	}
 
 }
