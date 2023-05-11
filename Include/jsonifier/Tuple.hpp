@@ -22,10 +22,14 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/RawArray.hpp>
+#include <jsonifier/Pair.hpp>
 #include <type_traits>
 #include <concepts>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
+
+	template<typename OTy> using RefUnwrap = std::decay_t<std::remove_const_t<OTy>>;
 
 	namespace Tuplet {
 		template<typename OTy> using IdentityT = OTy;
@@ -42,15 +46,15 @@ namespace Jsonifier {
 		concept SameAs = std::same_as<OTy, U> && std::same_as<U, OTy>;
 
 		template<typename OTy, typename U>
-		concept OtherThan = !std::same_as<std::decay_t<OTy>, U>;
+		concept OtherThan = !std::same_as<RefUnwrap<OTy>, U>;
 
-		template<typename Tup> using BaseListT = typename std::decay_t<Tup>::base_list;
+		template<typename Tup> using BaseListT = typename RefUnwrap<Tup>::base_list;
 
 		template<typename Tuple>
-		concept BaseListTuple = requires() { typename std::decay_t<Tuple>::base_list; };
+		concept BaseListTuple = requires() { typename RefUnwrap<Tuple>::base_list; };
 
 		template<typename OTy>
-		concept Stateless = std::is_empty_v<std::decay_t<OTy>>;
+		concept Stateless = std::is_empty_v<RefUnwrap<OTy>>;
 
 		template<typename OTy>
 		concept Indexable = Stateless<OTy> || requires(OTy value) { value[Tag<0>()]; };
@@ -116,8 +120,6 @@ namespace Jsonifier {
 			}
 		};
 
-		template<typename OTy> using UnwrapRefDecayT = typename std::unwrap_ref_decay<OTy>::type;
-
 		template<typename A, typename... OTy> struct GetTupleBase;
 
 		template<size_t... I, typename... OTy> struct GetTupleBase<std::index_sequence<I...>, OTy...> {
@@ -160,7 +162,7 @@ namespace Jsonifier {
 			using super::declElem;
 
 			template<OtherThan<Tuple> U> inline constexpr auto& operator=(U&& tup) {
-				using tuple2 = std::decay_t<U>;
+				using tuple2 = RefUnwrap<U>;
 				if (BaseListTuple<tuple2>) {
 					eqImpl(static_cast<U&&>(tup), base_list(), typename tuple2::base_list());
 				} else {
@@ -248,52 +250,6 @@ namespace Jsonifier {
 
 		template<typename... OTys> Tuple(OTys...) -> Tuple<UnwrapRefDecayT<OTys>...>;
 
-		template<typename First, typename Second> struct Pair {
-			First first;
-			Second second;
-
-			inline constexpr decltype(auto) operator[](Tag<0>) & {
-				return first;
-			}
-
-			inline constexpr decltype(auto) operator[](Tag<0>) const& {
-				return first;
-			}
-
-			inline constexpr decltype(auto) operator[](Tag<0>) && {
-				return std::move(first);
-			}
-
-			inline constexpr decltype(auto) operator[](Tag<1>) & {
-				return second;
-			}
-
-			inline constexpr decltype(auto) operator[](Tag<1>) const& {
-				return second;
-			}
-
-			inline constexpr decltype(auto) operator[](Tag<1>) && {
-				return std::move(second);
-			}
-
-			template<OtherThan<Pair> Type> inline constexpr auto& operator=(Type&& tup) {
-				auto& [a, b] = static_cast<Type&&>(tup);
-				first = static_cast<decltype(a)&&>(a);
-				second = static_cast<decltype(b)&&>(b);
-				return *this;
-			}
-
-			template<AssignableTo<First> F2, AssignableTo<Second> S2> inline constexpr auto& assign(F2&& f, S2&& S) {
-				first = static_cast<F2&&>(f);
-				second = static_cast<S2&&>(S);
-				return *this;
-			}
-			auto operator<=>(Pair const&) const = default;
-			bool operator==(Pair const&) const = default;
-		};
-
-		template<typename A, typename B> Pair(A, B) -> Pair<UnwrapRefDecayT<A>, UnwrapRefDecayT<B>>;
-
 		template<size_t I, Indexable Tup> inline constexpr decltype(auto) get(Tup&& tup) {
 			return static_cast<Tup&&>(tup)[Tag<I>()];
 		}
@@ -303,15 +259,15 @@ namespace Jsonifier {
 		}
 
 		template<typename F, BaseListTuple Tup> inline constexpr decltype(auto) apply(F&& func, Tup&& tup) {
-			return applyImpl(static_cast<F&&>(func), static_cast<Tup&&>(tup), typename std::decay_t<Tup>::base_list());
+			return applyImpl(static_cast<F&&>(func), static_cast<Tup&&>(tup), typename RefUnwrap<Tup>::base_list());
 		}
-		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, std::pair<A, B>& Pair) {
+		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, Pair<A, B>& Pair) {
 			return static_cast<F&&>(func)(Pair.first, Pair.second);
 		}
-		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, std::pair<A, B> const& Pair) {
+		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, Pair<A, B> const& Pair) {
 			return static_cast<F&&>(func)(Pair.first, Pair.second);
 		}
-		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, std::pair<A, B>&& Pair) {
+		template<typename F, typename A, typename B> inline constexpr decltype(auto) apply(F&& func, Pair<A, B>&& Pair) {
 			return static_cast<F&&>(func)(std::move(Pair).first, std::move(Pair).second);
 		}
 
@@ -329,7 +285,7 @@ namespace Jsonifier {
 #if TUPLET_CAT_BY_FORWARDING_TUPLE
 				using big_tuple = Tuple<OTy&&...>;
 #else
-				using big_tuple = Tuple<std::decay_t<OTy>...>;
+				using big_tuple = Tuple<RefUnwrap<OTy>...>;
 #endif
 				using outer_bases = BaseListT<big_tuple>;
 				constexpr auto outer = getOuterBases(outer_bases{});
@@ -359,22 +315,22 @@ namespace Jsonifier {
 }
 
 namespace std {
-	template<typename... OTy> struct tuple_size<Jsonifier::Tuplet::Tuple<OTy...>> : std::integral_constant<size_t, sizeof...(OTy)> {};
+	template<typename... OTy> struct tuple_size<JsonifierInternal::Tuplet::Tuple<OTy...>> : std::integral_constant<size_t, sizeof...(OTy)> {};
 
-	template<size_t I, typename... OTy> struct tuple_element<I, Jsonifier::Tuplet::Tuple<OTy...>> {
-		using type = decltype(Jsonifier::Tuplet::Tuple<OTy...>::declElem(Jsonifier::Tuplet::Tag<I>()));
+	template<size_t I, typename... OTy> struct tuple_element<I, JsonifierInternal::Tuplet::Tuple<OTy...>> {
+		using type = decltype(JsonifierInternal::Tuplet::Tuple<OTy...>::declElem(JsonifierInternal::Tuplet::Tag<I>()));
 	};
 
-	template<typename A, typename B> struct tuple_size<Jsonifier::Tuplet::Pair<A, B>> : std::integral_constant<size_t, 2> {};
+	template<typename A, typename B> struct tuple_size<JsonifierInternal::Pair<A, B>> : std::integral_constant<size_t, 2> {};
 
-	template<size_t I, typename A, typename B> struct tuple_element<I, Jsonifier::Tuplet::Pair<A, B>> {
+	template<size_t I, typename A, typename B> struct tuple_element<I, JsonifierInternal::Pair<A, B>> {
 		static_assert(I < 2, "tuplet::pair only has 2 elements");
 		using type = std::conditional_t<I == 0, A, B>;
 	};
 
 };
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	template<typename Tuple, size_t... Is> auto tupleSplit(Tuple&& tuple) {
 		static constexpr auto N = std::tuple_size_v<Tuple>;
@@ -383,7 +339,7 @@ namespace Jsonifier {
 	}
 
 	template<size_t N> inline constexpr auto shrinkIndexArray(auto& arrayNew) {
-		std::array<size_t, N> res{};
+		RawArray<size_t, N> res{};
 		for (size_t x = 0; x < N; ++x) {
 			res[x] = arrayNew[x];
 		}
@@ -392,11 +348,11 @@ namespace Jsonifier {
 
 	template<typename Tuple> inline constexpr auto filter() {
 		constexpr auto n = std::tuple_size_v<Tuple>;
-		std::array<size_t, n> indices{};
+		RawArray<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
-			using VTy = std::decay_t<std::tuple_element_t<I, Tuple>>;
-			if constexpr (!std::convertible_to<VTy, StringView>) {
+			using VTy = RefUnwrap<std::tuple_element_t<I, Tuple>>;
+			if constexpr (!std::convertible_to<VTy, Jsonifier::StringView>) {
 				indices[x++] = I - 1;
 			}
 		});
@@ -404,12 +360,12 @@ namespace Jsonifier {
 	}
 
 	template<typename Func, typename Tuple> inline constexpr auto mapTuple(Func&& f, Tuple&& tuple) {
-		constexpr auto N = std::tuple_size_v<std::decay_t<Tuple>>;
+		constexpr auto N = std::tuple_size_v<RefUnwrap<Tuple>>;
 		return mapTuple(f, tuple, std::make_index_sequence<N>{});
 	}
 
-	template<size_t n_groups> inline constexpr auto groupSizes(const std::array<size_t, n_groups>& indices, size_t n_total) {
-		std::array<size_t, n_groups> diffs;
+	template<size_t n_groups> inline constexpr auto groupSizes(const RawArray<size_t, n_groups>& indices, size_t n_total) {
+		RawArray<size_t, n_groups> diffs;
 
 		for (size_t x = 0; x < n_groups - 1; ++x) {
 			diffs[x] = indices[x + 1] - indices[x];
@@ -424,7 +380,7 @@ namespace Jsonifier {
 			if constexpr (I == 1) {
 				return Tuplet::get<Start + I>(object);
 			} else {
-				return StringView(Tuplet::get<Start + I>(object));
+				return Jsonifier::StringView(Tuplet::get<Start + I>(object));
 			}
 		};
 		auto r = Tuplet::copyTuple(get_elem(std::integral_constant<size_t, Is>{})...);
@@ -434,7 +390,7 @@ namespace Jsonifier {
 	template<auto& GroupStartArr, auto& GroupSizeArr, typename Tuple, size_t... GroupNumber>
 	inline constexpr auto makeGroupsImpl(Tuple&& object, std::index_sequence<GroupNumber...>) {
 		return Tuplet::copyTuple(
-			makeGroup<get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<std::get<GroupNumber>(GroupSizeArr)>{})...);
+			makeGroup<Tuplet::get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<Tuplet::get<GroupNumber>(GroupSizeArr)>{})...);
 	}
 
 	template<typename Tuple> inline constexpr auto makeGroupsHelper() {

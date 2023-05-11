@@ -23,21 +23,21 @@
 
 #include <utility>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
-	template<class ETy> class Unexpected;
+	template<typename ETy> class Unexpected;
 
 	struct UnexpectT {
 		explicit inline constexpr UnexpectT() noexcept = default;
 	};
 
-	template<class OTy, class ETy> class Expected;
+	template<typename OTy, typename ETy> class Expected;
 
-	template<class OTy, class ETy>
+	template<typename OTy, typename ETy>
 		requires std::is_void_v<OTy>
 	class Expected<OTy, ETy>;
 
-	template<class ETy> class Unexpected {
+	template<typename ETy> class Unexpected {
 	  public:
 		inline constexpr Unexpected& operator=(Unexpected&&) noexcept = default;
 		inline constexpr Unexpected(Unexpected&& other) noexcept = default;
@@ -90,14 +90,14 @@ namespace Jsonifier {
 		ETy unex{};
 	};
 
-	template<class ETy> Unexpected(ETy) -> Unexpected<ETy>;
+	template<typename ETy> Unexpected(ETy) -> Unexpected<ETy>;
 
-	template<class OTy, class ETy> class Expected {
+	template<typename OTy, typename ETy> class Expected {
 	  public:
 		using value_type = OTy;
 		using error_type = ETy;
 		using unexpected_type = Unexpected<ETy>;
-		template<class U> using rebind = Expected<U, error_type>;
+		template<typename U> using rebind = Expected<U, error_type>;
 
 		inline constexpr Expected() noexcept = default;
 
@@ -106,21 +106,21 @@ namespace Jsonifier {
 		inline constexpr Expected& operator=(const Expected&) noexcept = default;
 		inline constexpr Expected(const Expected&) noexcept = default;
 
-		template<class G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
+		template<typename G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
 			hasValue = false;
 			return *this;
 		};
 
-		template<class G> inline constexpr Expected(Unexpected<G>&& other) {
+		template<typename G> inline constexpr Expected(Unexpected<G>&& other) {
 			*this = std::move(other);
 		};
 
-		template<class G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
+		template<typename G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
 			hasValue = false;
 			return *this;
 		};
 
-		template<class G> inline constexpr Expected(const Unexpected<G>& other) {
+		template<typename G> inline constexpr Expected(const Unexpected<G>& other) {
 			*this = other;
 		};
 
@@ -221,7 +221,7 @@ namespace Jsonifier {
 		};
 	};
 
-	template<class OTy, class ETy>
+	template<typename OTy, typename ETy>
 		requires std::is_void_v<OTy>
 	class Expected<OTy, ETy> {
 	  public:
@@ -229,7 +229,7 @@ namespace Jsonifier {
 		using error_type = ETy;
 		using unexpected_type = Unexpected<ETy>;
 
-		template<class U> using rebind = Expected<U, error_type>;
+		template<typename U> using rebind = Expected<U, error_type>;
 
 		inline constexpr Expected() noexcept = default;
 
@@ -238,19 +238,19 @@ namespace Jsonifier {
 		inline constexpr Expected& operator=(const Expected&) noexcept = default;
 		inline constexpr explicit Expected(const Expected&) noexcept = default;
 
-		template<class G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
+		template<typename G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
 			return *this;
 		};
 
-		template<class G> inline constexpr Expected(Unexpected<G>&& other) {
+		template<typename G> inline constexpr Expected(Unexpected<G>&& other) {
 			*this = std::move(other);
 		};
 
-		template<class G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
+		template<typename G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
 			return *this;
 		};
 
-		template<class G> inline constexpr Expected(const Unexpected<G>& other) {
+		template<typename G> inline constexpr Expected(const Unexpected<G>& other) {
 			*this = other;
 		};
 
@@ -282,7 +282,7 @@ namespace Jsonifier {
 			return unex;
 		}
 
-		template<class T2, class E2> friend inline constexpr bool operator==(const Expected& x, const Expected<T2, E2>& y) {
+		template<typename T2, typename E2> friend inline constexpr bool operator==(const Expected& x, const Expected<T2, E2>& y) {
 			return x.unex == y.unex;
 		}
 

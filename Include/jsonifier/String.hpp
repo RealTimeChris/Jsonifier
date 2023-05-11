@@ -21,141 +21,36 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/Compare.hpp>
-#include <limits>
+#include <jsonifier/Vector.hpp>
 
-namespace Jsonifier {
+#include <algorithm>
 
-	class StringView;
+namespace JsonifierInternal {
 
-	template<typename OTy1, typename OTy2> inline constexpr bool stringConstCompare(const OTy1& s0, const OTy2& s1) noexcept {
-		if (s0.size() != s1.size()) [[unlikely]] {
+	using StringViewPtr = const uint8_t*;
+	using StructuralIndex = uint32_t*;
+	using StringBufferPtr = uint8_t*;
+
+	template<typename OTy1, typename OTy2> inline constexpr bool stringConstCompare(const OTy1& S0, const OTy2& S1) noexcept {
+		if (S0.size() != S1.size()) [[unlikely]] {
 			return false;
 		}
-		for (size_t x = 0; x < s0.size(); ++x) {
-			if (s0[x] != s1[x]) [[unlikely]] {
+		for (size_t x = 0; x < S0.size(); ++x) {
+			if (S0[x] != S1[x]) [[unlikely]] {
 				return false;
 			}
 		}
 		return true;
 	}
+}
 
-	template<typename OTy, const OTy& S> inline constexpr bool cxStringCompare(const OTy& key) noexcept {
-		constexpr auto s = S;
-		constexpr auto n = s.size();
-		return (key.size() == n) && (key == s);
-	}
+namespace Jsonifier {
 
-	class StringIterator {
-	  public:
-		friend class StringView;
-		friend class String;
+	class StringView;
 
-		using iterator_concept = std::bidirectional_iterator_tag;
-		using value_type = char;
-		using difference_type = ptrdiff_t;
-		using pointer = const value_type*;
-		using reference = const value_type&;
+	inline static constexpr size_t BufSize = 16 / sizeof(char) < 1 ? 1 : 16 / sizeof(char);
 
-		inline constexpr StringIterator() noexcept = default;
-
-		inline constexpr reference operator*() const noexcept {
-			return dataVal[offset];
-		}
-
-		inline constexpr pointer operator->() const noexcept {
-			return dataVal + offset;
-		}
-
-		inline constexpr StringIterator& operator++() noexcept {
-			++offset;
-			return *this;
-		}
-
-		inline constexpr StringIterator operator++(int) noexcept {
-			StringIterator temp{ *this };
-			++*this;
-			return temp;
-		}
-
-		inline constexpr StringIterator& operator--() noexcept {
-			--offset;
-			return *this;
-		}
-
-		inline constexpr StringIterator operator--(int) noexcept {
-			StringIterator temp{ *this };
-			--*this;
-			return temp;
-		}
-
-		inline constexpr StringIterator& operator+=(const difference_type offsetNew) noexcept {
-			offset += static_cast<size_t>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr StringIterator operator+(const difference_type offsetNew) const noexcept {
-			StringIterator temp{ *this };
-			temp += offsetNew;
-			return temp;
-		}
-
-		friend inline constexpr StringIterator operator+(const difference_type offsetNew, StringIterator _Right) noexcept {
-			_Right += offsetNew;
-			return _Right;
-		}
-
-		inline constexpr StringIterator& operator-=(const difference_type offsetNew) noexcept {
-			offset -= static_cast<size_t>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr StringIterator operator-(const difference_type offsetNew) const noexcept {
-			StringIterator temp{ *this };
-			temp -= offsetNew;
-			return temp;
-		}
-
-		inline constexpr difference_type operator-(const StringIterator& _Right) const noexcept {
-			return static_cast<difference_type>(offset - _Right.offset);
-		}
-
-		inline constexpr reference operator[](const difference_type offsetNew) const noexcept {
-			return *(*this + offsetNew);
-		}
-
-		inline constexpr bool operator==(const StringIterator& _Right) const noexcept {
-			return offset == _Right.offset;
-		}
-
-		inline constexpr bool operator!=(const StringIterator& _Right) const noexcept {
-			return !(*this == _Right);
-		}
-
-		inline constexpr bool operator<(const StringIterator& _Right) const noexcept {
-			return offset < _Right.offset;
-		}
-
-		inline constexpr bool operator>(const StringIterator& _Right) const noexcept {
-			return _Right < *this;
-		}
-
-		inline constexpr bool operator<=(const StringIterator& _Right) const noexcept {
-			return !(_Right < *this);
-		}
-
-		inline constexpr bool operator>=(const StringIterator& _Right) const noexcept {
-			return !(*this < _Right);
-		}
-
-	  protected:
-		pointer dataVal = nullptr;
-		size_t offset = 0;
-
-		inline constexpr StringIterator(const pointer _Data, const size_t _Size, const size_t offsetNew) noexcept
-			: dataVal(_Data), offset(offsetNew) {
-		}
-	};
+	inline static constexpr size_t AllocMask = sizeof(char) <= 1 ? 15 : sizeof(char) <= 2 ? 7 : sizeof(char) <= 4 ? 3 : sizeof(char) <= 8 ? 1 : 0;
 
 	class String {
 	  public:
@@ -165,12 +60,13 @@ namespace Jsonifier {
 		using const_pointer = const char*;
 		using reference = char&;
 		using const_reference = const char&;
-		using iterator = StringIterator;
+		using iterator = Iterator<char>;
 		using const_iterator = const iterator;
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = const reverse_iterator;
 		using size_type = size_t;
 		using difference_type = ptrdiff_t;
+		using allocator = std::pmr::polymorphic_allocator<char>;
 
 		inline constexpr String() noexcept = default;
 
@@ -178,9 +74,12 @@ namespace Jsonifier {
 
 		inline constexpr String& operator=(String&& other) noexcept {
 			if (this != &other) {
-				std::swap(capacityVal, other.capacityVal);
-				std::swap(sizeVal, other.sizeVal);
-				std::swap(ptr, other.ptr);
+				capacityVal = other.capacityVal;
+				other.capacityVal = 0;
+				sizeVal = other.sizeVal;
+				other.sizeVal = 0;
+				values = other.values;
+				other.values = nullptr;
 			}
 			return *this;
 		}
@@ -191,46 +90,44 @@ namespace Jsonifier {
 
 		inline constexpr String& operator=(const String& other) noexcept {
 			if (this != &other) {
-				resize(other.size());
-				std::copy(other.ptr.get(), other.ptr.get() + capacityVal, ptr.get());
+				reserve(other.capacityVal);
+				std::copy_n(other.data(), other.size(), this->values);
+				this->sizeVal = other.sizeVal;
 			}
 			return *this;
 		}
 
-		inline constexpr String(const String& other) noexcept {
+		inline String(const String& other) noexcept {
 			*this = other;
 		}
 
 		inline constexpr String& operator=(value_type other) noexcept {
 			if (other == '\0') {
-				emplace_back(' ');
+				pushBack(' ');
 			} else {
-				emplace_back(other);
+				pushBack(other);
 			}
 			return *this;
 		}
 
-		inline constexpr String(value_type other) noexcept {
+		inline String(value_type other) noexcept {
 			*this = other;
 		}
 
-		inline constexpr String& operator=(const std::string& other) noexcept {
-			resize(other.size());
-			std::copy(other.data(), other.data() + capacityVal, ptr.get());
-			return *this;
-		}
-
-		inline constexpr String(const std::string& other) noexcept {
-			*this = other;
+		inline String(const std::string& other) noexcept {
+			reserve(other.capacity());
+			std::copy_n(other.data(), other.size(), this->values);
+			this->sizeVal = other.size();
 		}
 
 		inline constexpr String& operator=(const std::string_view& other) noexcept {
-			resize(other.size());
-			std::copy(other.data(), other.data() + capacityVal, ptr.get());
+			reserve(other.size());
+			std::copy(other.data(), other.data() + other.size(), this->values);
+			this->sizeVal = other.size();
 			return *this;
 		}
 
-		inline constexpr String(const std::string_view& other) noexcept {
+		inline String(const std::string_view& other) noexcept {
 			*this = other;
 		}
 
@@ -238,47 +135,142 @@ namespace Jsonifier {
 
 		inline constexpr explicit String(const StringView& other);
 
+		template<size_t strLength> inline constexpr String(const char (&str)[strLength]) {
+			std::copy_n(str, strLength, values);
+		}
+
 		inline constexpr String& operator=(const_pointer other) noexcept {
-			resize(std::char_traits<value_type>::length(other));
-			std::copy(other, other + capacityVal, ptr.get());
+			auto newSize = traits_type::length(other) + 1;
+			reserve(newSize);
+			if (capacityVal > 0) {
+				std::copy_n(other, newSize, this->values);
+			}
+			sizeVal = newSize - 1;
+			values[sizeVal] = '\0';
 			return *this;
 		}
 
-		inline constexpr String(const_pointer other) noexcept {
+		inline String(const_pointer other) noexcept {
 			*this = other;
 		}
 
-		inline constexpr String substr(const size_t offset, size_t length) noexcept {
-			return {};
+		inline constexpr String(const_pointer other, size_t sizeNew) noexcept {
+			reserve(sizeNew);
+			if (capacityVal > 0) {
+				std::copy_n(other, sizeNew, this->values);
+			}
+			sizeVal = sizeNew - 1;
+			values[sizeVal] = '\0';
+		}
+
+		inline constexpr void insert(const char* newValues, size_t position) {
+			auto amount = traits_type::length(newValues);
+			if (position > 0 && amount > 0) {
+				size_t newSize = sizeVal + amount;
+				if (newSize + 1 >= capacityVal) {
+					reserve(newSize + 1);
+				}
+				std::copy_n(values + position, sizeVal - position, values + amount + position);
+				std::copy_n(newValues, amount, values + position);
+				sizeVal = newSize;
+				values[sizeVal] = '\0';
+			}
 		}
 
 		inline constexpr const_iterator begin() const noexcept {
-			return const_iterator(ptr.get(), sizeVal, 0);
+			return const_iterator(values, sizeVal, 0);
 		}
 
 		inline constexpr const_iterator end() const noexcept {
-			return const_iterator(ptr.get(), sizeVal, sizeVal);
+			return const_iterator(values, sizeVal, sizeVal);
 		}
 
 		inline constexpr value_type& operator[](size_t index) const noexcept {
-			return ptr[index];
+			return values[index];
 		}
 
 		inline constexpr const_pointer c_str() const noexcept {
-			return ptr.get();
+			return values;
 		}
 
-		inline constexpr explicit operator std::string() const noexcept {
-			return std::string(data(), size());
-		}
-
-		inline constexpr void emplace_back(value_type arg) {
-			if (sizeVal + 1 >= capacityVal) {
-				reserve((capacityVal + 1) * 2);
+		inline String substr(size_type pos, size_type count) const {
+			if (pos >= sizeVal) {
+				return String();
 			}
-			ptr[sizeVal] = arg;
-			++sizeVal;
-			ptr[sizeVal] = '\0';
+
+			count = (pos + count > sizeVal) ? (sizeVal - pos) : count;
+
+			String result{};
+			result.reserve(count + 1);
+
+			std::copy_n(values + pos, count * sizeof(value_type), result.values);
+			result.sizeVal = count;
+			result.values[count] = '\0';
+			return result;
+		}
+
+		inline explicit operator std::string() const noexcept {
+			return std::string{ data(), size() };
+		}
+
+		inline constexpr void pushBack(value_type c) {
+			if (sizeVal + 2 >= capacityVal) {
+				reserve(capacityVal * 2 + 2);
+			}
+			values[sizeVal++] = c;
+			values[sizeVal] = '\0';
+		}
+
+		inline constexpr size_t maxSize() {
+			return std::numeric_limits<uint64_t>::max();
+		}
+
+		inline constexpr String& append(const size_type count, const value_type newChar) {
+			const size_type oldSize = size();
+			if (count <= capacity() - oldSize) {
+				sizeVal = oldSize + count;
+				value_type* const oldPtr = values;
+				traits_type::assign(oldPtr + oldSize, count, newChar);
+				traits_type::assign(oldPtr[oldSize + count], value_type{});
+				return *this;
+			}
+			return reallocateGrowBy(
+				count,
+				[](value_type* const newPtr, const value_type* const oldPtr, const size_type oldSize, const size_type count,
+					const value_type newChar) {
+					traits_type::copy(newPtr, oldPtr, oldSize);
+					traits_type::assign(newPtr + oldSize, count, newChar);
+					traits_type::assign(newPtr[oldSize + count], value_type{});
+				},
+				count, newChar);
+		}
+
+		inline constexpr void resize(const size_type newSize) {
+			const size_type oldSize = size();
+			if (newSize <= oldSize) {
+				eos(newSize);
+			} else {
+				append(newSize - oldSize, value_type{});
+			}
+		}
+
+		inline constexpr void reserve(size_t newCapacity) {
+			if (std::is_constant_evaluated()) {
+				std::allocator<char> alloc{};
+				char* newBuffer = alloc.allocate(newCapacity);
+				std::copy(values, values + sizeVal, newBuffer);
+				newBuffer[sizeVal] = '\0';
+				alloc.deallocate(values, capacityVal);
+				values = newBuffer;
+				capacityVal = newCapacity;
+			} else {
+				char* newBuffer = allocator{}.allocate(newCapacity + 1);
+				std::copy(values, values + sizeVal, newBuffer);
+				newBuffer[sizeVal] = '\0';
+				allocator{}.deallocate(values, capacityVal);
+				values = newBuffer;
+				capacityVal = newCapacity;
+			}
 		}
 
 		inline constexpr size_type capacity() const noexcept {
@@ -290,131 +282,178 @@ namespace Jsonifier {
 		}
 
 		inline constexpr pointer data() const noexcept {
-			return ptr.get();
+			return values;
 		}
 
-		inline constexpr void reserve(size_type newCapacity) {
-			if (newCapacity <= capacityVal) {
-				return;
-			}
-			std::unique_ptr<value_type[]> new_ptr{ new value_type[newCapacity] };
-			std::copy(begin(), end(), new_ptr.get());
-			ptr = std::move(new_ptr);
-			capacityVal = newCapacity;
-		}
-
-		inline constexpr void resize(size_type count) {
-			if (count < sizeVal) {
-				ptr[count] = '\0';
-				sizeVal = count;
-				return;
-			}
-			reserve(count + 1);
-			std::fill(ptr.get() + sizeVal, ptr.get() + count + 1, value_type{});
-			sizeVal = count;
-		}
-
-		inline constexpr void resize(size_type count, value_type ch) {
-			if (count < sizeVal) {
-				ptr[count] = '\0';
-				sizeVal = count;
-				return;
-			}
-			reserve(count + 1);
-			std::fill(ptr.get() + sizeVal, ptr.get() + count, ch);
-			ptr[count] = '\0';
-			sizeVal = count;
-		}
-
-		inline constexpr friend bool operator==(const String& lhs, const String& rhs) noexcept {
-			if (lhs.size() != rhs.size()) {
+		template<typename OTy> inline constexpr bool operator==(const OTy& rhs) const noexcept {
+			if (rhs.size() != size()) {
 				return false;
 			}
-			if (std::is_constant_evaluated()) {
-				return stringConstCompare(lhs, rhs);
-			} else {
-				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
-			}
+			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), data(), rhs.size());
 		}
 
-		inline constexpr friend bool operator!=(const String& lhs, const String& rhs) noexcept {
-			return !(lhs == rhs);
-		}
-
-		template<typename OTy> inline constexpr friend bool operator==(const String& lhs, const OTy& rhs) noexcept {
-			if (lhs.size() != rhs.size()) {
-				return false;
-			}
-			if (std::is_constant_evaluated()) {
-				return stringConstCompare(lhs, rhs);
-			} else {
-				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
-			}
-		}
-
-		template<typename OTy> inline constexpr friend bool operator!=(const String& lhs, const OTy& rhs) noexcept {
-			return !(lhs == rhs);
-		}
-
-		template<typename OTy> inline constexpr friend bool operator==(const OTy& lhs, const String& rhs) noexcept {
-			if (lhs.size() != rhs.size()) {
-				return false;
-			}
-			if (std::is_constant_evaluated()) {
-				return stringConstCompare(lhs, rhs);
-			} else {
-				return JsonifierCoreInternal::compare(lhs.data(), rhs.data(), lhs.size());
-			}
-		}
-
-		template<typename OTy> inline constexpr friend bool operator!=(const OTy& lhs, const String& rhs) noexcept {
-			return !(lhs == rhs);
+		template<typename OTy> inline constexpr bool operator!=(const OTy& rhs) const noexcept {
+			return !(rhs == *this);
 		}
 
 		inline constexpr String& operator+=(const String& rhs) noexcept {
 			auto oldSize = size();
-			resize(oldSize + rhs.size());
-			std::copy(rhs.data(), rhs.data() + rhs.size(), data() + oldSize);
+			resize(oldSize + size());
+			std::copy_n(data(), size(), data() + oldSize);
 			return *this;
 		}
 
-		inline constexpr String& operator+=(const char* rhs) noexcept {
-			auto rhsSize = std::char_traits<char>::length(rhs);
+		inline constexpr String& operator+=(const value_type* rhs) noexcept {
+			auto rhsSize = std::char_traits<value_type>::length(rhs);
 			auto oldSize = size();
 			resize(oldSize + rhsSize);
-			std::copy(rhs, rhs + rhsSize, data() + oldSize);
+			std::copy_n(rhs, rhsSize, data() + oldSize);
 			return *this;
 		}
 
-		inline constexpr ~String(){};
+		inline constexpr ~String() {
+			if (values && capacityVal) {
+				allocator{}.deallocate(values, capacityVal);
+			}
+		};
 
 	  protected:
-		std::unique_ptr<value_type[]> ptr{};
 		size_type capacityVal{};
 		size_type sizeVal{};
+		pointer values{};
+
+		template<typename OTy, typename... Types>
+		inline constexpr void constructInPlace(OTy& object, Types&&... args) noexcept(std::is_nothrow_constructible_v<OTy, Types...>) {
+			if (std::is_constant_evaluated()) {
+				std::construct_at(std::addressof(object), std::forward<Types>(args)...);
+			} else {
+				::new (static_cast<void*>(std::addressof(object))) OTy(std::forward<Types>(args)...);
+			}
+		}
+
+		inline constexpr static size_type calculateGrowth(const size_type requested, const size_type old, const size_type max) noexcept {
+			const size_type masked = requested | AllocMask;
+			if (masked > max) {
+				return max;
+			}
+
+			if (old > max - old / 2) {
+				return max;
+			}
+
+			return (std::max)(masked, old + old / 2);
+		}
+
+		template<typename FTy, typename... ArgTypes>
+		inline constexpr String& reallocateGrowBy(const size_type sizeIncrease, FTy function, ArgTypes... args) {
+			auto& myData = values;
+			const size_type oldSize = size();
+			if (maxSize() - oldSize < sizeIncrease) {
+				throw "String too long.";
+			}
+
+			const size_type newSize = oldSize + sizeIncrease;
+			const size_type oldCapacity = capacityVal;
+			const size_type newCapacity = calculateGrowth(newSize);
+			auto alloc = allocator{};
+			const pointer newPtr = allocator{}.allocate(newCapacity + 1);
+
+			if (std::is_constant_evaluated()) {
+				traits_type::assign(newPtr, newCapacity + 1, value_type{});
+			}
+
+			sizeVal = newSize;
+			capacityVal = newCapacity;
+			value_type* const rawNew = newPtr;
+			if (BufSize <= oldCapacity) {
+				const pointer oldPtr = values;
+				function(rawNew, oldPtr, oldSize, args...);
+				allocator{}.deallocate(oldPtr, oldCapacity + 1);
+				values = newPtr;
+			} else {
+				function(rawNew, values, oldSize, args...);
+				constructInPlace(values, newPtr);
+			}
+			return *this;
+		}
+
+		inline constexpr size_type calculateGrowth(const size_type requested) noexcept {
+			return calculateGrowth(requested, capacityVal, maxSize());
+		}
+
+		inline constexpr void eos(const size_type newSize) {
+			traits_type::assign(values[sizeVal = newSize], value_type{});
+		}
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, const String& string) noexcept {
-		os << string.data();
-		return os;
+	template<typename OTy, typename Traits, typename SizeType>
+	std::basic_ostream<OTy, Traits>& insertString(std::basic_ostream<OTy, Traits>& oStream, const OTy* const data, const SizeType size) {
+		using OstreamType = std::basic_ostream<OTy, Traits>;
+		typename OstreamType::iostate state = OstreamType::goodbit;
+
+		SizeType pad;
+		if (oStream.width() <= 0 || static_cast<SizeType>(oStream.width()) <= size) {
+			pad = 0;
+		} else {
+			pad = static_cast<SizeType>(oStream.width()) - size;
+		}
+
+		const typename OstreamType::sentry ok(oStream);
+
+		if (!ok) {
+			state |= OstreamType::badbit;
+		} else {
+			try {
+				if ((oStream.flags() & OstreamType::adjustfield) != OstreamType::left) {
+					for (; 0 < pad; --pad) {
+						if (Traits::eq_int_type(Traits::eof(), oStream.rdbuf()->sputc(oStream.fill()))) {
+							state |= OstreamType::badbit;
+							break;
+						}
+					}
+				}
+
+				if (state == OstreamType::goodbit &&
+					oStream.rdbuf()->sputn(data, static_cast<std::streamsize>(size)) != static_cast<std::streamsize>(size)) {
+					state |= OstreamType::badbit;
+				} else {
+					for (; 0 < pad; --pad) {
+						if (Traits::eq_int_type(Traits::eof(), oStream.rdbuf()->sputc(oStream.fill()))) {
+							state |= OstreamType::badbit;
+							break;
+						}
+					}
+				}
+				oStream.width(0);
+			} catch (...) {
+				oStream.setstate(OstreamType::badbit);
+			}
+		}
+		oStream.setstate(state);
+		return oStream;
 	}
 
-	inline constexpr String operator+(const String& lhs, const String& rhs) noexcept {
-		String newString(lhs);
-		newString += rhs;
-		return newString;
+	inline std::basic_ostream<Jsonifier::String::value_type, Jsonifier::String::traits_type>& operator<<(
+		std::basic_ostream<Jsonifier::String::value_type, Jsonifier::String::traits_type>& oStream, const Jsonifier::String& string) {
+		return insertString<Jsonifier::String::value_type, Jsonifier::String::traits_type>(oStream, string.data(), string.size());
 	}
 
-	inline constexpr String operator+(const String& lhs, const char* rhs) noexcept {
-		String newString(lhs);
-		newString += rhs;
-		return newString;
-	}
+}
 
-	inline constexpr String operator+(const char* lhs, const String& rhs) noexcept {
-		String newString(lhs);
-		newString += rhs;
-		return newString;
-	}
+inline Jsonifier::String operator+(const Jsonifier::String& lhs, const Jsonifier::String& rhs) noexcept {
+	Jsonifier::String newString(rhs);
+	newString += rhs;
+	return newString;
+}
 
+inline Jsonifier::String operator+(const Jsonifier::String& lhs, const char* rhs) noexcept {
+	Jsonifier::String newString(rhs);
+	newString += rhs;
+	return newString;
+}
+
+inline Jsonifier::String operator+(const char* lhs, const Jsonifier::String& rhs) noexcept {
+	Jsonifier::String newString(rhs);
+	newString += rhs;
+	return newString;
 }

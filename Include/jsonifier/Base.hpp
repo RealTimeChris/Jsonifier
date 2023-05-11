@@ -25,10 +25,12 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4251)
 
+#include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Core.hpp>
+#include <jsonifier/Pair.hpp>
 
 #include <unordered_map>
 #include <immintrin.h>
@@ -44,19 +46,9 @@
 #include <span>
 #include <map>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
-	class StructuralIterator;
 	class Serializer;
-	class StringView;
-	class String;
-	class Parser;
-
-	template<typename OTy> inline void swapF(OTy& object01, OTy& object02) {
-		OTy temp = std::move(object01);
-		object01 = std::move(object02);
-		object02 = std::move(temp);
-	}
 
 	template<typename OTy = void> struct Hash {
 		static_assert(std::is_integral<OTy>::value || std::is_enum<OTy>::value, "Hash only supports integral types, specialize for other types.");
@@ -74,12 +66,6 @@ namespace Jsonifier {
 		}
 	};
 
-	template<> struct Hash<void> {
-		template<typename OTy> inline constexpr size_t operator()(OTy const& value, size_t seed) const {
-			return Hash<OTy>{}(value, seed);
-		}
-	};
-
 	// From:
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename Test, template<typename...> class Ref> struct IsSpecializationV : std::false_type {};
@@ -94,7 +80,7 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	concept ComplexT = JsonifierT<std::decay_t<OTy>>;
+	concept ComplexT = JsonifierT<RefUnwrap<OTy>>;
 
 	template<typename OTy>
 	concept TupleT = requires(OTy value) {
@@ -134,22 +120,21 @@ namespace Jsonifier {
 	};
 
 	template<typename OTy>
-	concept CharT = std::same_as<std::decay_t<OTy>, char> || std::same_as<std::decay_t<OTy>, char16_t> || std::same_as<std::decay_t<OTy>, char32_t> ||
-		std::same_as<std::decay_t<OTy>, char8_t>;
+	concept CharT = std::same_as<RefUnwrap<OTy>, char> || std::same_as<RefUnwrap<OTy>, char16_t> || std::same_as<RefUnwrap<OTy>, char32_t> ||
+		std::same_as<RefUnwrap<OTy>, char8_t>;
 
 	template<typename OTy>
-	concept BoolT = std::same_as<std::decay_t<OTy>, bool> || std::same_as<std::decay_t<OTy>, std::vector<bool>::reference>;
+	concept BoolT = std::same_as<RefUnwrap<OTy>, bool>;
 
 	template<typename OTy>
-	concept IntT = std::integral<std::decay_t<OTy>> && !CharT<std::decay_t<OTy>> && !BoolT<OTy>;
+	concept IntT = std::integral<RefUnwrap<OTy>> && !CharT<RefUnwrap<OTy>> && !BoolT<OTy>;
 
 	template<typename OTy>
-	concept NumT = std::floating_point<std::decay_t<OTy>> || IntT<OTy>;
+	concept NumT = std::floating_point<RefUnwrap<OTy>> || IntT<OTy>;
 
 	template<typename OTy>
-	concept StringT = HasSubstr<OTy> && HasData<OTy> && HasSize<OTy> && !std::same_as<char, OTy>;
-
-	template<typename OTy> using IteratorT = decltype(std::begin(std::declval<OTy&>()));
+	concept StringT = HasSubstr<std::remove_const_t<OTy>> && HasData<std::remove_const_t<OTy>> && HasSize<std::remove_const_t<OTy>> &&
+		!std::same_as<char, std::remove_const_t<OTy>>;
 
 	template<typename OTy>
 	concept MapT = !ComplexT<OTy> && !StringT<OTy> && MapSubscriptable<OTy>;
@@ -162,13 +147,9 @@ namespace Jsonifier {
 	template<typename T>
 	concept UniquePtrT = std::is_same_v<T, std::unique_ptr<typename T::element_type>>;
 
-	template<typename OTy> struct Array {
-		OTy parseValue;
-	};
-
 	template<typename Container>
-	concept Findable = requires(Container c, const typename Container::key_type& val) {
-		{ c.find(val) } -> std::same_as<typename Container::const_iterator>;
+	concept HasFind = requires(Container c, const typename Container::key_type& val) {
+		{ c.find(val) };
 	};
 
 	template<typename OTy>
@@ -176,16 +157,8 @@ namespace Jsonifier {
 		{ value.excludedKeys };
 	};
 
-	template<typename OTy> Array(OTy) -> Array<OTy>;
-
-	template<typename OTy> struct Object {
-		OTy parseValue;
-	};
-
-	template<typename OTy> Object(OTy) -> Object<OTy>;
-
 	template<typename OTy>
-	concept Nullable = std::same_as<OTy, std::nullptr_t>;
+	concept NullT = std::same_as<OTy, std::nullptr_t>;
 
 	template<typename... Args> struct FalseT : std::false_type {};
 
@@ -199,15 +172,47 @@ namespace Jsonifier {
 		return n;
 	}
 
-	template<StringLiteral Str> struct CharsImpl {
-		static constexpr StringView value{ Str.string, length(Str.string) - 1 };
+	template<size_t strLength> class StringLiteral {
+	  public:
+		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
+
+		inline constexpr StringLiteral() noexcept = default;
+
+		inline constexpr StringLiteral(const char (&str)[strLength]) {
+			std::copy_n(str, strLength, string);
+		}
+
+		inline constexpr const char* data() const noexcept {
+			return string;
+		}
+
+		inline constexpr const char* begin() const noexcept {
+			return string;
+		}
+
+		inline constexpr const char* end() const noexcept {
+			return string + sizeVal;
+		}
+
+		inline constexpr size_t size() const noexcept {
+			return sizeVal;
+		}
+
+		inline constexpr const Jsonifier::StringView stringView() const noexcept {
+			return { string, sizeVal };
+		}
+
+		char string[strLength];
 	};
 
-	template<StringLiteral Str> inline constexpr StringView Chars = CharsImpl<Str>::value;
+	template<StringLiteral str> struct CharsImpl {
+		static constexpr Jsonifier::StringView value{ str.string, length(str.string) - 1 };
+	};
 
+	template<StringLiteral str> inline constexpr Jsonifier::StringView Chars = CharsImpl<str>::value;
 
 	template<typename OTy>
-	concept StdTupleT = IsSpecializationV<OTy, std::tuple>::value || IsSpecializationV<OTy, std::pair>::value;
+	concept StdTupleT = IsSpecializationV<OTy, Tuplet::Tuple>::value || IsSpecializationV<OTy, Pair>::value;
 
 	template<typename = void, size_t... Is> inline constexpr auto indexer(std::index_sequence<Is...>) {
 		return [](auto&& f) -> decltype(auto) {
@@ -225,55 +230,41 @@ namespace Jsonifier {
 		});
 	}
 
-	template<typename OTy>
-	concept IsVariant = IsSpecializationV<OTy, std::variant>::value;
-
-	namespace detail {
-		template<IsVariant OTy> inline constexpr auto runtimeVariantMap() {
-			constexpr auto n = std::variant_size_v<OTy>;
-			std::array<OTy, n> ret{};
-			forEach<n>([&](auto x) {
-				ret[x] = std::variant_alternative_t<x, OTy>{};
-			});
-			return ret;
-		}
-	}
-
-	template<std::array newArr> struct MakeStatic {
+	template<RawArray newArr> struct MakeStatic {
 		static constexpr auto value = newArr;
 	};
 
 	struct StringViewTwo {
 		size_t sizeVal{};
-		const char* string{};
+		const char* str{};
 
-		constexpr StringViewTwo(const StringView& stringNew) {
+		constexpr StringViewTwo(const Jsonifier::StringView& stringNew) {
 			sizeVal = stringNew.size();
-			string = stringNew.data();
+			str = stringNew.data();
 		}
 
 		constexpr const char* begin() const noexcept {
-			return string;
+			return str;
 		}
 
 		constexpr const char* end() const noexcept {
-			return string + sizeVal;
+			return str + sizeVal;
 		}
 
-		constexpr size_t size() const noexcept{
+		constexpr size_t size() const noexcept {
 			return sizeVal;
 		}
-
 	};
 
 #ifdef _MSC_VER
-	template<StringViewTwo... Strings> inline constexpr StringView Join() {
+	template<StringViewTwo... Strings>
 #else
-	template<const StringView&... Strings> inline constexpr StringView Join() {
+	template<const Jsonifier::StringView&... Strings>
 #endif
+	inline constexpr Jsonifier::StringView Join() {
 		constexpr auto joinedArr = []() {
 			constexpr size_t len = (Strings.size() + ... + 0);
-			std::array<char, len + 1> arr{};
+			RawArray<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
 					arr[i++] = c;
@@ -287,20 +278,21 @@ namespace Jsonifier {
 	}
 
 #ifdef _MSC_VER
-	template<StringViewTwo... Strings> constexpr auto JoinV = Join<Strings...>();
+	template<StringViewTwo... Strings>
 #else
-	template<const StringView&... Strings> constexpr auto JoinV = Join<Strings...>();
+	template<const Jsonifier::StringView&... Strings>
 #endif
+	constexpr auto JoinV = Join<Strings...>();
 
-	template<size_t strLength> inline constexpr auto stringLiteralFromView(StringView str) {
+	template<size_t strLength> inline constexpr auto stringLiteralFromView(Jsonifier::StringView str) {
 		StringLiteral<strLength + 1> sl{};
-		std::copy_n(str.data(), str.size(), sl.string);
-		*(sl.string + strLength) = '\0';
+		std::copy_n(str.data(), str.size(), sl.str);
+		*(sl.str + strLength) = '\0';
 		return sl;
 	}
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using VTy = std::decay_t<decltype(member_ptr)>;
+		using VTy = RefUnwrap<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<VTy>) {
 			return value.*member_ptr;
 		} else if constexpr (std::is_member_function_pointer_v<VTy>) {
@@ -318,25 +310,18 @@ namespace Jsonifier {
 		}
 	}
 
-	template<typename OTy, typename mptr_t> using MemberT = decltype(getMember(std::declval<OTy>(), std::declval<std::decay_t<mptr_t>&>()));
-
-	template<typename OTy>
-	concept NullableT = !ComplexT<OTy> && !StringT<OTy> && requires(OTy value) {
-		bool(value);
-		{ *value };
-	};
-
+	template<typename OTy, typename mptr_t> using MemberT = decltype(getMember(std::declval<OTy>(), std::declval<RefUnwrap<mptr_t>&>()));
 
 	template<size_t... Is> struct Sequence {};
 	template<size_t n, size_t... Is> struct GenerateSequence : GenerateSequence<n - 1, n - 1, Is...> {};
 	template<size_t... Is> struct GenerateSequence<0, Is...> : Sequence<Is...> {};
 
 	template<size_t N1, size_t... I1, size_t N2, size_t... I2>
-	inline constexpr std::array<char const, N1 + N2 - 1> concat(char const (&a1)[N1], char const (&a2)[N2], Sequence<I1...>, Sequence<I2...>) {
+	inline constexpr RawArray<char const, N1 + N2 - 1> concat(char const (&a1)[N1], char const (&a2)[N2], Sequence<I1...>, Sequence<I2...>) {
 		return { { a1[I1]..., a2[I2]... } };
 	}
 
-	template<size_t N1, size_t N2> inline constexpr std::array<char const, N1 + N2 - 1> concatArrays(char const (&a1)[N1], char const (&a2)[N2]) {
+	template<size_t N1, size_t N2> inline constexpr RawArray<char const, N1 + N2 - 1> concatArrays(char const (&a1)[N1], char const (&a2)[N2]) {
 		return concat(a1, a2, GenerateSequence<N1 - 1>{}, GenerateSequence<N2>{});
 	}
 
@@ -355,30 +340,53 @@ namespace Jsonifier {
 
 	template<typename OTy>
 	concept Resizeable = requires(OTy value) { value.resize(0); };
+}
+
+namespace Jsonifier {
+
+	template<typename OTy> struct Array {
+		OTy parseValue;
+	};
+
+	template<typename OTy> Array(OTy) -> Array<OTy>;
+
+	template<typename OTy> struct Object {
+		OTy parseValue;
+	};
+
+	template<typename OTy> Object(OTy) -> Object<OTy>;
 
 	inline constexpr auto array(auto&&... args) {
-		return Array{ Tuplet::copyTuple(args...) };
+		return Array{ JsonifierInternal::Tuplet::copyTuple(args...) };
 	}
 
 	inline constexpr auto object(auto&&... args) {
 		if constexpr (sizeof...(args) == 0) {
-			return Object{ Tuplet::Tuple{} };
+			return Object{ JsonifierInternal::Tuplet::Tuple{} };
 		} else {
-			return Object{ GroupBuilder<std::decay_t<decltype(Tuplet::copyTuple(args...))>>::op(Tuplet::copyTuple(args...)) };
+			return Object{ JsonifierInternal::GroupBuilder<JsonifierInternal::RefUnwrap<decltype(JsonifierInternal::Tuplet::copyTuple(args...))>>::op(
+				JsonifierInternal::Tuplet::copyTuple(args...)) };
 		}
 	}
 
-	template<typename OTy>
-	concept JsonifierArrayT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Array>::value;
+}
+
+namespace JsonifierInternal {
 
 	template<typename OTy>
-	concept JsonifierObjectT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Object>::value;
+	concept RawJsonT = std::same_as<OTy, Jsonifier::RawJsonData> && !StringT<OTy>;
+
+	template<typename OTy>
+	concept JsonifierArrayT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Jsonifier::Array>::value;
+
+	template<typename OTy>
+	concept JsonifierObjectT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Jsonifier::Object>::value;
 
 	template<typename OTy>
 	concept JsonifierValueT = JsonifierT<OTy> && !(JsonifierArrayT<OTy> || JsonifierObjectT<OTy>);
 
 	template<typename OTy>
-	concept ArrayTupleT = JsonifierArrayT<OTy> || TupleT<std::decay_t<OTy>>;
+	concept ArrayTupleT = JsonifierArrayT<OTy> || TupleT<RefUnwrap<OTy>>;
 
 	template<typename OTy>
 	concept ObjectT = MapT<OTy> || JsonifierObjectT<OTy>;
@@ -403,19 +411,19 @@ namespace Jsonifier {
 	}
 
 	template<typename OTy>
-	concept VectorT = ( !ComplexT<OTy> && !StringT<OTy> && !MapT<OTy> && VectorSubscriptable<OTy> && HasData<OTy> &&
-						  EmplaceBackable<OTy> )&&!JsonifierArrayT<OTy> &&
-		!TupleT<OTy>;
+	concept VectorT = ( !ComplexT<OTy> && !MapT<OTy> && VectorSubscriptable<OTy> && HasData<OTy> && EmplaceBackable<OTy> )&&!JsonifierArrayT<OTy> &&
+		!TupleT<OTy> && !HasSubstr<OTy>;
 
 	template<typename OTy>
 	concept RawArrayT =
-		!VectorT<OTy> && ( !EmplaceBackable<OTy> || !Resizeable<OTy> )&&!Emplaceable<OTy> && HasSize<OTy> && !StringT<OTy> && Range<OTy>;
+		( !ComplexT<OTy> && !MapT<OTy> && VectorSubscriptable<OTy> && HasData<OTy> && !EmplaceBackable<OTy> )&&!JsonifierArrayT<OTy> &&
+		!TupleT<OTy> && !HasSubstr<OTy> && !Resizeable<OTy>;
 
 	template<typename OTy>
 	concept VectorLike = Resizeable<OTy> && VectorSubscriptable<OTy> && HasData<OTy>;
 
 	template<typename OTy>
-	concept CoreType = IsSpecializationV<Core<OTy>, Core>::value;
+	concept CoreType = IsSpecializationV<Jsonifier::Core<OTy>, Jsonifier::Core>::value;
 
 	template<typename TTy> class StopWatch {
 	  public:

@@ -25,7 +25,7 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Base.hpp>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	enum class TypeOfMisread { Wrong_Type = 0, Damaged_Input = 1 };
 
@@ -55,7 +55,7 @@ namespace Jsonifier {
 			}
 		};
 
-		template<std::forward_iterator ITy> inline static void skipValue(ITy& iter) noexcept {
+		inline static void skipValue(StructuralIterator& iter) noexcept {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -74,8 +74,43 @@ namespace Jsonifier {
 			}
 		}
 
+		inline static size_t countArrayElements(StructuralIterator iter) noexcept {
+			size_t currentDepth{ 1 };
+			size_t currentCount{ 1 };
+			if (iter == ']') {
+				++iter;
+				return {};
+			}
+			while (currentDepth > 0 && iter != iter) {
+				switch (**iter) {
+					case '[': {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case ']': {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					case ',': {
+						if (currentDepth == 1) {
+							++currentCount;
+						}
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
+				}
+			}
+			return currentCount;
+		}
+
 	  protected:
-		template<std::forward_iterator ITy> inline static void skipObject(ITy& iter) noexcept {
+		inline static void skipObject(StructuralIterator& iter) noexcept {
 			++iter;
 			size_t currentDepth{ 1 };
 			if (iter == '}') {
@@ -102,7 +137,7 @@ namespace Jsonifier {
 			}
 		}
 
-		template<std::forward_iterator ITy> inline static void skipArray(ITy& iter) noexcept {
+		inline static void skipArray(StructuralIterator& iter) noexcept {
 			++iter;
 			size_t currentDepth{ 1 };
 			if (iter == ']') {
@@ -129,6 +164,21 @@ namespace Jsonifier {
 			}
 		}
 
+		inline static bool isTypeType(uint8_t c) {
+			__m256i valueToCheck{ _mm256_set1_epi8(c) };
+			__m256i valuesToCheckFor{ _mm256_set_epi8('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'f', 't', 'n', '"', '{', '[', 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) };
+			__m256i comparison = _mm256_cmpeq_epi8(valuesToCheckFor, valueToCheck);
+			return _mm256_movemask_epi8(comparison) != 0;
+		}
+
+		inline static bool isDigitType(uint8_t c) {
+			__m128i valueToCheck{ _mm_set1_epi8(c) };
+			__m128i valuesToCheckFor{ _mm_set_epi8('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 0, 0, 0, 0, 0) };
+			__m128i comparison = _mm_cmpeq_epi8(valuesToCheckFor, valueToCheck);
+			return _mm_movemask_epi8(comparison) != 0;
+		}
+
 		template<uint8_t c> inline static bool skipToNextValue(StructuralIterator& iter) {
 			while (iter != iter) {
 				if (iter == c) {
@@ -140,15 +190,14 @@ namespace Jsonifier {
 			return false;
 		};
 
-		inline static StringView getValueType(uint8_t charToCheck) {
-			static constexpr StringView array{ "Array" };
-			static constexpr StringView object{ "Object" };
-			static constexpr StringView boolean{ "Bool" };
-			static constexpr StringView number{ "Number" };
-			static constexpr StringView string{ "String" };
-			static constexpr StringView null{ "Null" };
-			if (charToCheck == '0' || charToCheck == '1' || charToCheck == '2' || charToCheck == '3' || charToCheck == '4' || charToCheck == '5' ||
-				charToCheck == '6' || charToCheck == '7' || charToCheck == '8' || charToCheck == '9' || charToCheck == '-') {
+		inline static Jsonifier::StringView getValueType(uint8_t charToCheck) {
+			static constexpr Jsonifier::StringView array{ "Array" };
+			static constexpr Jsonifier::StringView object{ "Object" };
+			static constexpr Jsonifier::StringView boolean{ "Bool" };
+			static constexpr Jsonifier::StringView number{ "Number" };
+			static constexpr Jsonifier::StringView str{ "String" };
+			static constexpr Jsonifier::StringView null{ "Null" };
+			if (isDigitType(charToCheck)) {
 				return number;
 			} else if (charToCheck == 't' || charToCheck == 'f') {
 				return boolean;
@@ -157,7 +206,7 @@ namespace Jsonifier {
 			} else if (charToCheck == '[') {
 				return array;
 			} else if (charToCheck == '"') {
-				return string;
+				return str;
 			} else if (charToCheck == 'n') {
 				return null;
 			} else {
@@ -181,11 +230,7 @@ namespace Jsonifier {
 		}
 
 		template<uint8_t c> inline static TypeOfMisread collectMisReadType(StructuralIterator& iter) {
-			if ((iter == '"' || iter == '-' || iter == '1' || iter == '2' || iter == '3' || iter == '4' || iter == '5' || iter == '6' ||
-					iter == '7' || iter == '8' || iter == '9' || iter == '0' || iter == 't' || iter == 'f' || iter == 'n' || iter == '[' ||
-					iter == '{' || iter == '2' || iter == '2' || iter == '2') &&
-				(c == '"' || c == '-' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' ||
-					c == '0' || c == 't' || c == 'f' || c == 'n' || c == '{' || c == '[')) {
+			if (isTypeType(**iter) && isTypeType(c)) {
 				return TypeOfMisread::Wrong_Type;
 			} else {
 				return TypeOfMisread::Damaged_Input;

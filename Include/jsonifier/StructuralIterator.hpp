@@ -24,15 +24,12 @@
 #include <jsonifier/Simd.hpp>
 #include <iterator>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	class StructuralIterator {
 	  public:
 		using iterator_category = std::forward_iterator_tag;
-		using difference_type = std::ptrdiff_t;
 		using value_type = StringViewPtr;
-		using reference = StringViewPtr&;
-		using pointer = StringViewPtr*;
 
 		inline StructuralIterator() noexcept = default;
 
@@ -41,16 +38,10 @@ namespace Jsonifier {
 			currentIndex = stringReaderNew->getStructurals();
 			rootIndex = stringReaderNew->getStructurals();
 			stringView = stringReaderNew->getStringView();
-			tapeLength = stringReaderNew->getTapeLength();
 		}
 
 		inline value_type operator*() const noexcept {
-			return &stringView[*currentIndex];
-		}
-
-		inline StructuralIterator operator++(int32_t) noexcept {
-			operator++();
-			return *this;
+			return stringView + *currentIndex;
 		}
 
 		inline StructuralIterator& operator++() {
@@ -58,32 +49,16 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline StringViewPtr getStringView() const noexcept {
-			return stringView;
-		}
-
-		inline size_t getStringLength() const noexcept {
-			return stringLength;
-		}
-
 		inline uint32_t getCurrentIndex() const noexcept {
 			return *currentIndex;
 		}
 
 		inline bool operator==(const StructuralIterator& other) const noexcept {
-			return checkForNullIndex() || checkForTapeOverRun() || checkForStringOverRun();
-		}
-
-		inline bool operator!=(const StructuralIterator& other) const noexcept {
-			return !(*this == other);
+			return checkForNullIndex() || checkForStringOverRun();
 		}
 
 		inline bool operator==(const uint8_t& other) const noexcept {
 			return ***this == other;
-		}
-
-		inline bool operator!=(const uint8_t& other) const noexcept {
-			return !(***this == other);
 		}
 
 	  protected:
@@ -91,18 +66,9 @@ namespace Jsonifier {
 		StructuralIndex rootIndex{};
 		StringViewPtr stringView{};
 		size_t stringLength{};
-		size_t tapeLength{};
-
-		inline uint32_t getCurrentTapeIndex() const noexcept {
-			return currentIndex - rootIndex;
-		}
 
 		inline bool checkForNullIndex() const noexcept {
 			return !currentIndex;
-		}
-
-		inline bool checkForTapeOverRun() const noexcept {
-			return getCurrentTapeIndex() >= tapeLength;
 		}
 
 		inline bool checkForStringOverRun() const noexcept {

@@ -23,7 +23,7 @@
 
 #include <iterator>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	template<typename OTy, size_t N> class RawVector {
 	  public:

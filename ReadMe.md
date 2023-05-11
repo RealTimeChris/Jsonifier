@@ -2,7 +2,7 @@
 ![Commit Activity](https://img.shields.io/github/commit-activity/m/RealTimeChris/Jsonifier?color=999EE0&label=Commits)
 [![Lines of Code](https://sloc.xyz/github/boyter/scc/)](https://github.com/RealTimeChris/Jsonifier/)
 
-## A few classes for serializing and parsing objects into/from JSON strings - very rapidly (more rapidly than any other library).
+## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
 ### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
 ## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
@@ -10,10 +10,10 @@
 ## Compiler Support
 ![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
 ![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
-![CLANG_15](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_15.yml?color=00ff90&label=CLANG_15)
+![CLANG_17](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_17.yml?color=00ff90&label=CLANG_17)
 
 ## Usage - Serialization/Parsing
-- Create a specialization of the `Jsonifier::Core` class template, within the Jsonifier namespace as follows...
+- Create a specialization of the `Jsonifier::Core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
 ----
 ```cpp
 namespace TestNS {
@@ -88,17 +88,6 @@ namespace Jsonifier {
 }
 
 ```
-## Usage - Serialization
-- Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
-- Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
-```cpp
-std::string buffer{ };
-
-obj_t obj{};
-
-Jsonifier::JsonifierCore serializer{};
-serializer.serializeJson(obj, buffer);
-```
 ## Usage - Parsing
 - Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
 - Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
@@ -107,35 +96,55 @@ std::string buffer{ json0 };
 
 obj_t obj{};
 
-Jsonifier::JsonifierCore parser{ buffer };
+Jsonifier::JsonifierCore parser{};
 parser.parseJson(obj, buffer);
 ```
-## Excluding Keys from Parsing/Serialization
-- So you might want to exclude keys from being parsed/serialized at runtime, despite having setup a compile-time hash-map containing the keys - and here is how you do that:
+## Usage - Serialization
+- Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
+- Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
 ```cpp
-std::unordered_set<std::string> keysToExclude{};
-if (attachments.size() == 0) {
-	keysToExclude.emplace("attachments");
-}
-if (allowedMentions.parse.size() == 0 && allowedMentions.roles.size() == 0 && allowedMentions.users.size() == 0) {
-	keysToExclude.emplace("allowed_mentions");
-}
-if (files.size() == 0) {
-	keysToExclude.emplace("files");
-}
-if (customId == "") {
-	keysToExclude.emplace("custom_id");
-}
-if (title == "") {
-	keysToExclude.emplace("title");
-}
-if (content == "") {
-	keysToExclude.emplace("content");
-}
-Jsonifier::JsonifierCore parser{};
-parser.serializeJson(dataPackage, workload.content, keysToExclude);
-parser.parseJson(dataPackage, workload.content, keysToExclude);
+std::string buffer{};
+
+obj_t obj{};
+
+Jsonifier::JsonifierCore serializer{};
+serializer.serializeJson(obj, buffer);
 ```
+## Excluding Keys from Serialization at Runtime
+To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called excludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `Jsonifier::JsonifierCore` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `excludedKeys` set.
+
+Here's an example of how you can do this:
+```c++
+#include <jsonifier/Index.hpp>
+#include <set>
+
+class MyObject {
+public:
+  std::string name;
+  int age;
+  std::set<std::string> excludedKeys;
+
+  MyObject(const std::string& n, int a) : name(n), age(a) {
+    excludedKeys.insert("age"); // add "age" key to excludedKeys set
+  }
+};
+
+int main() {
+  MyObject obj("John", 30);
+  Jsonifier::JsonifierCore jsonifier{};
+  std::string jsonBuffer{};
+  jsonifier.serializeJson<true>(obj, jsonBuffer); // {"name":"John"}
+  return 0;
+}
+```
+
+In this example, we have a class called `MyObject` with three member variables: `name`, `age`, and `excludedKeys`. The `excludedKeys` variable is a set of strings that will contain the keys we want to exclude from the serialized output.
+
+In the constructor of `MyObject`, we add the key "age" to the `excludedKeys` set using the `insert` function. This means that when we serialize this object using the `serializeJson` member function of the `Jsonifier::JsonifierCore` class, the "age" key will be excluded from the resulting JSON string.
+
+In the `main` function, we create an instance of `MyObject` with the name "John" and age 30. We then create an instance of `Jsonifier::JsonifierCore` and call its `serializeJson` member function to serialize the object to a JSON string. Since we added the "age" key to the `excludedKeys` set in the constructor, the resulting JSON string only contains the "name" key.
+
+By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `Jsonifier::JsonifierCore` class, you can easily serialize objects with excluded keys to JSON strings.
 
 ## Installation (Vcpkg)
 - Requirements:

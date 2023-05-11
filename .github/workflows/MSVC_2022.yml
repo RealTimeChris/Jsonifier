@@ -21,7 +21,7 @@ jobs:
 
     - name: Configure CMake
       working-directory: Tests
-      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+      run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DGITHUB_BRANCH_TYPE=${{github.ref}}
 
     - name: Build the Test
       working-directory: Tests

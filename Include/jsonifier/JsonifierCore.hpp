@@ -26,6 +26,6 @@
 
 namespace Jsonifier {
 
-	class JsonifierCore : public Parser, public Serializer {};
+	class JsonifierCore : public JsonifierInternal::Parser, public JsonifierInternal::Serializer {};
 
 }

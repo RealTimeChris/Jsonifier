@@ -24,9 +24,11 @@
 #include <jsonifier/NumberParsing.hpp>
 #include <jsonifier/StringParsing.hpp>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	struct SerializeNoKeys {
+		template<NullT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
+
 		template<BoolT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
 		template<NumT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
@@ -36,6 +38,8 @@ namespace Jsonifier {
 		template<CharT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
 		template<StringT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
+
+		template<RawJsonT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
 		template<RawArrayT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
@@ -51,6 +55,8 @@ namespace Jsonifier {
 	};
 
 	struct SerializeWithKeys {
+		template<NullT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
+
 		template<BoolT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
 		template<NumT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
@@ -61,6 +67,8 @@ namespace Jsonifier {
 
 		template<StringT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
+		template<RawJsonT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
+
 		template<RawArrayT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
 		template<VectorT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
@@ -69,7 +77,7 @@ namespace Jsonifier {
 
 		template<StdTupleT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
-		template<ObjectT OTy, VectorLike BTy, Findable KTy> static void op(OTy& value, BTy& buffer, size_t& index, const KTy& excludedKeys);
+		template<ObjectT OTy, VectorLike BTy, HasFind KTy> static void op(OTy& value, BTy& buffer, size_t& index, const KTy& excludedKeys);
 
 		template<ObjectT OTy, VectorLike BTy> static void op(OTy& value, BTy& buffer, size_t& index);
 
@@ -84,13 +92,13 @@ namespace Jsonifier {
 			size_t index{};
 			using OTy = decltype(data);
 			using BTy = decltype(buffer);
-			if constexpr (excludeKeys) [[unlikely]] {
-				if (HasExcludedKeys<OTy>) [[unlikely]] {
+			if constexpr (excludeKeys) {
+				if constexpr (HasExcludedKeys<OTy>) {
 					SerializeWithKeys::op(data, stringBuffer, index, data.excludedKeys);
-				} else [[likely]] {
+				} else {
 					SerializeWithKeys::op(data, stringBuffer, index);
 				}
-			} else [[likely]] {
+			} else {
 				SerializeNoKeys::op(data, stringBuffer, index);
 			}
 			if (buffer.size() != index) [[unlikely]] {
@@ -100,7 +108,7 @@ namespace Jsonifier {
 		}
 
 	  protected:
-		String stringBuffer{};
+		Jsonifier::String stringBuffer{};
 	};
 
 }

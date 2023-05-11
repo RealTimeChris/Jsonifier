@@ -25,28 +25,25 @@
 #include <variant>
 
 namespace Jsonifier {
-
 	/// A class to aid in registering a class/struct to be parsed/serialized.
 	template<typename OTy> struct Core {};
+}
+
+namespace JsonifierInternal {
 
 	template<typename OTy>
-	concept LocalCoreT = requires { OTy::parseValue; };
+	concept GlobalCoreT = requires { Jsonifier::Core<OTy>::parseValue; };
 
 	template<typename OTy>
-	concept GlobalCoreT = requires { Core<OTy>::parseValue; };
-
-	template<typename OTy>
-	concept JsonifierT = requires { Core<std::decay_t<OTy>>::parseValue; } || LocalCoreT<std::decay_t<OTy>>;
+	concept JsonifierT = requires { Jsonifier::Core<std::decay_t<OTy>>::parseValue; } || GlobalCoreT<std::decay_t<OTy>>;
 
 	struct EmptyVal {
 		inline static constexpr Tuplet::Tuple<> parseValue{};
 	};
 
 	template<typename OTy> inline constexpr auto CoreWrapperV = [] {
-		if constexpr (LocalCoreT<OTy>) {
-			return OTy::parseValue;
-		} else if constexpr (GlobalCoreT<OTy>) {
-			return Core<OTy>::parseValue;
+		if constexpr (GlobalCoreT<OTy>) {
+			return Jsonifier::Core<OTy>::parseValue;
 		} else {
 			return EmptyVal{};
 		}
@@ -57,5 +54,4 @@ namespace Jsonifier {
 	template<typename OTy> using CoreT = std::decay_t<decltype(CoreV<OTy>)>;
 
 	template<typename OTy> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<OTy>>)>;
-
 }

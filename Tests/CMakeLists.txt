@@ -8,12 +8,17 @@ project(
 
 set(CMAKE_CXX_STANDARD 23)
 
+if (GITHUB_BRANCH_TYPE STREQUAL "refs/heads/dev")
+    set(BRANCH "dev")
+else()
+    set(BRANCH "main")
+endif()
 include(FetchContent)
 
 FetchContent_Declare(
    Jsonifier
    GIT_REPOSITORY https://github.com/RealTimeChris/Jsonifier.git
-   GIT_TAG main
+   GIT_TAG "${BRANCH}"
 )
 FetchContent_MakeAvailable(Jsonifier)
 
@@ -41,5 +46,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fmt)
 
 add_executable("${PROJECT_NAME}" "main.cpp")
-target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier glaze::glaze simdjson fmt::fmt)
+target_link_libraries("${PROJECT_NAME}" PRIVATE 
+Jsonifier glaze::glaze simdjson fmt::fmt)
 target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_23)

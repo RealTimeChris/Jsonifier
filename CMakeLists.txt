@@ -30,6 +30,8 @@ project(
     LANGUAGES CXX C
 )
 
+set(CXX_STANDARD 23)
+
 file(GLOB HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
 add_library("${PROJECT_NAME}" INTERFACE "${HEADERS}")
@@ -54,23 +56,24 @@ if (CXX_AVX512_FOUND)
 	if (WIN32)
 		set(AVX_TYPE "AVX512")
 	else()
-		set(AVX_TYPE "march=native")
+		set(AVX_TYPE "march=skylake-avx512")
 	endif()
 elseif (CXX_AVX2_FOUND)
 	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX2)
 	if (WIN32)
 		set(AVX_TYPE "AVX2")
 	else()
-		set(AVX_TYPE "march=native")
+		set(AVX_TYPE "march=core-avx2")
 	endif()
 elseif(CXX_AVX_FOUND)
 	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_AVX)
 	if (WIN32)
 		set(AVX_TYPE "AVX")
 	else()
-		set(AVX_TYPE "march=native")
+		set(AVX_TYPE "march=core-i-avx")
 	endif()
 else()	
+	target_compile_definitions("${PROJECT_NAME}" INTERFACE INSTRUCTION_SET_TYPE_X64)
 	set(AVX_TYPE "march=native")
 endif()
 
@@ -83,30 +86,30 @@ target_include_directories(
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/Zi>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/arch:${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:GNU>:-${AVX_TYPE}>"
 	"$<$<CXX_COMPILER_ID:Clang>:-${AVX_TYPE}>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/Zi>>"
 	"$<$<CXX_COMPILER_ID:Clang>:-std=c++2b>"
 )
 
 target_link_options(
 	"${PROJECT_NAME}" INTERFACE 
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/OPT:ICF>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/OPT:REF>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:/DEBUG>>"
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:COMPILE_PDB_NAME ${PROJECT_NAME}>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR}>>" 
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Release>:COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR}>>"
 )
 
 target_compile_features(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:cxx_std_23>"
 	"$<$<CXX_COMPILER_ID:GNU>:cxx_std_23>"
+	"$<$<CXX_COMPILER_ID:CLANG>:cxx_std_23>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

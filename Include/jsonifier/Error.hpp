@@ -21,43 +21,83 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <source_location>
+#ifndef __APPLE__
+	#include <source_location>
+#else
+
+namespace std {
+
+	class source_location {
+	  public:
+		constexpr source_location() noexcept = default;
+
+		constexpr source_location(int32_t lineNew = __LINE__, const char* const fileNew = __FILE__) : file{ fileNew } {
+			lineVal = lineNew;
+		}
+
+		constexpr static std::source_location current(int32_t lineNew = __LINE__, const char* const fileNew = __FILE__) {
+			return { lineNew, fileNew };
+		}
+
+		constexpr int32_t column() {
+			return this->columnVal;
+		}
+
+		constexpr const char* const file_name() {
+			return this->file;
+		}
+
+		constexpr const char* const function_name() {
+			return nullptr;
+		}
+
+		constexpr int32_t line() {
+			return this->lineVal;
+		}
+
+	  protected:
+		int32_t columnVal{};
+		int32_t lineVal{};
+		const char* const file{};
+	};
+}
+#endif
 #include <unordered_map>
 #include <exception>
 #include <string>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	enum class ErrorCode { Success = 0, Parse_Error = 1, Number_Error = 2, Unknown_Key = 3, Incorrect_Type = 4, Setup_Error = 5 };
 
-	inline std::unordered_map<ErrorCode, String> errorCodes{ { ErrorCode::Success, String{ "Success" } },
-		{ ErrorCode::Parse_Error, String{ "Parse" } }, { ErrorCode::Number_Error, String{ "Number" } },
-		{ ErrorCode::Unknown_Key, String{ "Unknown Key" } }, { ErrorCode::Incorrect_Type, String{ "Incorrect Type" } },
-		{ ErrorCode::Setup_Error, String{ "Setup" } } };
+	inline std::unordered_map<ErrorCode, Jsonifier::String> errorCodes{ { ErrorCode::Success, Jsonifier::String{ "Success" } },
+		{ ErrorCode::Parse_Error, Jsonifier::String{ "Parse" } }, { ErrorCode::Number_Error, Jsonifier::String{ "Number" } },
+		{ ErrorCode::Unknown_Key, Jsonifier::String{ "Unknown Key" } }, { ErrorCode::Incorrect_Type, Jsonifier::String{ "Incorrect Type" } },
+		{ ErrorCode::Setup_Error, Jsonifier::String{ "Setup" } } };
 
 	template<ErrorCode errorCode> class JsonifierError : public std::exception {
 	  public:
-		inline constexpr JsonifierError(const String& stringError, uint64_t indexNew = String::npos,
+		inline constexpr JsonifierError(const Jsonifier::String& stringError, uint64_t indexNew = Jsonifier::String::npos,
 			std::source_location location = std::source_location::current()) {
-			errorMessage = errorCodes[errorCode] + " Error at: " + String{ location.file_name() } + ":" + std::to_string(location.line()) + ":" +
-				std::to_string(location.column());
-			if (indexNew != String::npos) {
+			errorMessage = errorCodes[errorCode] + " Error at: " + Jsonifier::String{ location.file_name() } + ":" + std::to_string(location.line()) +
+				":" + std::to_string(location.column());
+			if (indexNew != Jsonifier::String::npos) {
 				errorMessage += ", at index: " + std::to_string(indexNew);
 			}
 			if (stringError.size() != 0) {
-				errorMessage += String{ ", " } + String{ stringError };
+				errorMessage += Jsonifier::String{ ", " } + Jsonifier::String{ stringError };
 			}
 		}
 
-		inline constexpr JsonifierError(String&& stringError, uint64_t indexNew = String::npos,
+		inline constexpr JsonifierError(Jsonifier::String&& stringError, uint64_t indexNew = Jsonifier::String::npos,
 			std::source_location location = std::source_location::current()) {
-			errorMessage = errorCodes[errorCode] + " Error at: " + String{ location.file_name() } + ":" + std::to_string(location.line()) + ":" +
-				std::to_string(location.column());
-			if (indexNew != String::npos) {
+			errorMessage = errorCodes[errorCode] + " Error at: " + Jsonifier::String{ location.file_name() } + ":" + std::to_string(location.line()) +
+				":" + std::to_string(location.column());
+			if (indexNew != Jsonifier::String::npos) {
 				errorMessage += ", at index: " + std::to_string(indexNew);
 			}
 			if (stringError.size() != 0) {
-				errorMessage += String{ ", " } + String{ stringError };
+				errorMessage += Jsonifier::String{ ", " } + Jsonifier::String{ stringError };
 			}
 		}
 
@@ -66,6 +106,6 @@ namespace Jsonifier {
 		}
 
 	  protected:
-		String errorMessage{};
+		Jsonifier::String errorMessage{};
 	};
 }

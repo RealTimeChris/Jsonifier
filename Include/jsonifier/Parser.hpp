@@ -26,53 +26,56 @@
 #include <jsonifier/String.hpp>
 #include <jsonifier/Simd.hpp>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
 	struct ParseNoKeys {
-		template<bool printErrors, BoolT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, BoolT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, NumT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, NumT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, EnumT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, EnumT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, UniquePtrT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& it);
+		template<bool printErrors, UniquePtrT OTy> static void op(OTy& value, StructuralIterator& it);
 
-		template<bool printErrors, StringT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, RawJsonT OTy> static void op(OTy& value, StructuralIterator& it);
 
-		template<bool printErrors, RawArrayT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, StringT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, VectorT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, RawArrayT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, StdTupleT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, VectorT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, ObjectT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, StdTupleT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, typename OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, ObjectT OTy> static void op(OTy& value, StructuralIterator& buffer);
+
+		template<bool printErrors, typename OTy> static void op(OTy& value, StructuralIterator& buffer);
 	};
 
 	struct ParseWithKeys {
-		template<bool printErrors, BoolT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, BoolT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, NumT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, NumT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, EnumT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, EnumT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, UniquePtrT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& it);
+		template<bool printErrors, UniquePtrT OTy> static void op(OTy& value, StructuralIterator& it);
 
-		template<bool printErrors, StringT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, RawJsonT OTy> static void op(OTy& value, StructuralIterator& it);
 
-		template<bool printErrors, RawArrayT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, StringT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, VectorT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, RawArrayT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, StdTupleT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, VectorT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, ObjectT OTy, std::forward_iterator ITy, Findable KTy>
-		static void op(OTy& value, ITy& buffer, const KTy& excludedKeys);
+		template<bool printErrors, StdTupleT OTy> static void op(OTy& value, StructuralIterator& buffer);
 
-		template<bool printErrors, ObjectT OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, ObjectT OTy, HasFind KTy> static void op(OTy& value, StructuralIterator& buffer, const KTy& excludedKeys);
 
-		template<bool printErrors, typename OTy, std::forward_iterator ITy> static void op(OTy& value, ITy& buffer);
+		template<bool printErrors, ObjectT OTy> static void op(OTy& value, StructuralIterator& buffer);
+
+		template<bool printErrors, typename OTy> static void op(OTy& value, StructuralIterator& buffer);
 	};
 
 	class Parser {
@@ -103,26 +106,26 @@ namespace Jsonifier {
 			if (!*newIter) {
 				return;
 			}
-			if constexpr (excludeKeys) [[unlikely]] {
-				if constexpr (HasExcludedKeys<decltype(data)>) [[unlikely]] {
+			if constexpr (excludeKeys) {
+				if constexpr (HasExcludedKeys<decltype(data)>) {
 					ParseWithKeys::op<printErrors>(data, newIter, data.excludedKeys);
-				} else [[likely]] {
+				} else {
 					ParseWithKeys::op<printErrors>(data, newIter);
 				}
-			} else [[likely]] {
+			} else {
 				ParseNoKeys::op<printErrors>(data, newIter);
 			}
 		}
 
 	  protected:
+		Jsonifier::StringView inString{};
 		SimdStringReader section{};
-		StringView inString{};
 
-		template<typename OTy> inline void reset(OTy& string) {
-			if (string.size() == 0) [[unlikely]] {
+		template<typename OTy> inline void reset(OTy& str) {
+			if (str.size() == 0) [[unlikely]] {
 				return;
 			}
-			inString = StringView{ string.data(), string.size() };
+			inString = Jsonifier::StringView{ str.data(), str.size() };
 			section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
 			section.generateJsonIndices();
 		}

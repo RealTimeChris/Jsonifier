@@ -1,216 +1,179 @@
-{
-  "buildPresets": [
-    {
-      "configuration": "Release",
-      "configurePreset": "Windows-Release-With-ASAN",
-      "description": "Target Windows with the Visual Studio development environment, with address sanitizer.",
-      "displayName": "Windows x64 Release With ASAN - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Release-With-ASAN",
-      "verbose": true
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "Windows-Debug-With-ASAN",
-      "description": "Target Windows with the Visual Studio development environment, with address sanitizer.",
-      "displayName": "Windows x64 Debug With ASAN - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Debug-With-ASAN",
-      "verbose": true
-    },
-    {
-      "configuration": "Release",
-      "configurePreset": "Windows-Release",
-      "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Release - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Release",
-      "verbose": true
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "Windows-Debug",
-      "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Debug - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Debug",
-      "verbose": true
-    },
-    {
-      "configuration": "Release",
-      "configurePreset": "Linux-Release-With-ASAN",
-      "description": "Target Linux with the g++-11 compiler, with address sanitizer.",
-      "displayName": "Linux x64 Release With ASAN - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Release-With-ASAN",
-      "verbose": true
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "Linux-Debug-With-ASAN",
-      "description": "Target Linux with the g++-11 compiler, with address sanitizer.",
-      "displayName": "Linux x64 Debug With ASAN - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Debug-With-ASAN",
-      "verbose": true
-    },
-    {
-      "configuration": "Release",
-      "configurePreset": "Linux-Release",
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Release - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Release",
-      "verbose": true
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "Linux-Debug",
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Debug - Build",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Debug",
-      "verbose": true
-    }
-  ],
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 2,
-    "patch": 0
-  },
+﻿{
+  "version": 3,
   "configurePresets": [
     {
-      "architecture": {
-        "strategy": "set",
-        "value": "x64"
+      "binaryDir": "${sourceDir}/Build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe"
       },
-      "binaryDir": "${sourceDir}/Build/Release-With-ASAN",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
       "condition": {
         "lhs": "${hostSystemName}",
         "rhs": "Windows",
         "type": "equals"
       },
+      "installDir": "${sourceDir}/Install/${presetName}",
       "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Release With ASAN - Config",
-      "environment": { "EnableASAN": "true" },
-      "generator": "Visual Studio 17 2022",
-      "name": "Windows-Release-With-ASAN",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "generator": "Ninja",
+      "hidden": true,
+      "name": "Windows-Base"
     },
     {
       "architecture": {
-        "strategy": "set",
-        "value": "x64"
+        "value": "x64",
+        "strategy": "external"
       },
-      "binaryDir": "${sourceDir}/Build/Debug-With-ASAN",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows",
-        "type": "equals"
-      },
-      "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Debug With ASAN - Config",
-      "environment": { "EnableASAN": "true" },
-      "generator": "Visual Studio 17 2022",
-      "name": "Windows-Debug-With-ASAN",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (Release)",
+      "inherits": "Windows-Base",
+      "name": "x64-msvc-release"
     },
     {
       "architecture": {
-        "strategy": "set",
+        "strategy": "external",
         "value": "x64"
       },
-      "binaryDir": "${sourceDir}/Build/Release",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows",
-        "type": "equals"
-      },
-      "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Release - Config",
-      "generator": "Visual Studio 17 2022",
-      "name": "Windows-Release",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (Debug)",
+      "inherits": "Windows-Base",
+      "name": "x64-msvc-debug"
     },
     {
       "architecture": {
-        "strategy": "set",
+        "strategy": "external",
         "value": "x64"
       },
-      "binaryDir": "${sourceDir}/Build/Debug",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows",
-        "type": "equals"
+      "cacheVariables": {
+        "ASAN_ENABLED": "TRUE",
+        "CMAKE_BUILD_TYPE": "Release"
       },
-      "description": "Target Windows with the Visual Studio development environment.",
-      "displayName": "Windows x64 Debug - Config",
-      "generator": "Visual Studio 17 2022",
-      "name": "Windows-Debug",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (Release)",
+      "inherits": "Windows-Base",
+      "name": "x64-msvc-release-asan"
     },
     {
-      "binaryDir": "${sourceDir}/Build/Release-With-ASAN",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "ASAN_ENABLED": "TRUE",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "description": "Target Windows (64-bit) with the Visual Studio development environment. (Debug)",
+      "inherits": "Windows-Base",
+      "name": "x64-msvc-debug-asan"
+    },
+    {
+      "binaryDir": "${sourceDir}/Build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++-11"
+      },
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux",
+        "type": "equals"
+      },
+      "description": "Target Linux with the Visual Studio development environment.",
+      "generator": "Unix Makefiles",
+      "hidden": true,
+      "name": "Linux-Base"
+    },
+    {
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux",
-        "type": "equals"
-      },
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Release - Config",
-      "environment": { "EnableASAN": "true" },
-      "generator": "Unix Makefiles",
-      "name": "Linux-Release-With-ASAN",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+      "description": "Target Linux (64-bit) with the Visual Studio development environment. (Release)",
+      "inherits": "Linux-Base",
+      "name": "x64-gnu-release"
     },
     {
-      "binaryDir": "${sourceDir}/Build/Debug-With-ASAN",
+      "architecture": {
+        "strategy": "external",
+        "value": "x64"
+      },
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux",
-        "type": "equals"
-      },
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Debug - Config",
-      "environment": { "EnableASAN": "true" },
-      "generator": "Unix Makefiles",
-      "name": "Linux-Debug-With-ASAN",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+      "description": "Target Linux (64-bit) with the Visual Studio development environment. (Debug)",
+      "inherits": "Linux-Base",
+      "name": "x64-gnu-debug"
     },
     {
-      "binaryDir": "${sourceDir}/Build/Release",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux",
-        "type": "equals"
+      "architecture": {
+        "strategy": "external",
+        "value": "x64"
       },
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Release - Config",
-      "generator": "Unix Makefiles",
-      "name": "Linux-Release",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+      "cacheVariables": {
+        "ASAN_ENABLED": "TRUE",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "description": "Target Linux (64-bit) with the Visual Studio development environment. (Release)",
+      "inherits": "Linux-Base",
+      "name": "x64-gnu-release-asan"
     },
     {
-      "binaryDir": "${sourceDir}/Build/Debug",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux",
-        "type": "equals"
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
       },
-      "description": "Target Linux with the g++-11 compiler.",
-      "displayName": "Linux x64 Debug - Config",
-      "generator": "Unix Makefiles",
-      "name": "Linux-Debug",
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] } }
+      "cacheVariables": {
+        "ASAN_ENABLED": "TRUE",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "description": "Target Linux (64-bit) with the Visual Studio development environment. (Debug)",
+      "inherits": "Linux-Base",
+      "name": "x64-gnu-debug-asan"
     }
   ],
-  "version": 3
+  "buildPresets": [
+    {
+      "configurePreset": "x64-msvc-release",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-MSVC-Release",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-msvc-debug",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-MSVC-Debug",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-msvc-release-asan",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-MSVC-Release-Asan",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-msvc-debug-asan",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-MSVC-Debug-Asan",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-gnu-release",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-GNU-Release",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-gnu-debug",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-GNU-Debug",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-gnu-release-asan",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-GNU-Release-Asan",
+      "verbose": true
+    },
+    {
+      "configurePreset": "x64-gnu-debug-asan",
+      "inheritConfigureEnvironment": true,
+      "name": "x64-GNU-Debug-Asan",
+      "verbose": true
+    }
+  ]
 }

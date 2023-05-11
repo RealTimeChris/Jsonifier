@@ -37,11 +37,12 @@
 	#endif
 #endif
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
-	// Based on yyjson: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c with some changes to rounding andS
+	// Based on yyjson: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c with some changes to rounding and
+	// dirrect for floats
 
-// https://stackoverflow.com/questions/28868367/getting-the-high-part-of-64-bit-integer-multiplication
+	// https://stackoverflow.com/questions/28868367/getting-the-high-part-of-64-bit-integer-multiplication
 #ifdef __SIZEOF_INT128__
 	inline static uint64_t mulhi64(uint64_t a, uint64_t b) {
 	#if defined(__GNUC__) || defined(__GNUG__)
@@ -70,10 +71,10 @@ namespace Jsonifier {
 	}
 #endif
 
-	constexpr auto pow10SigTableMinExp = -343;
-	constexpr auto pow10SigTableMaxExp = 324;
-	constexpr auto pow10SigTableMinExact = 0;
-	constexpr auto pow10SigTableMaxExact = 27;
+	static constexpr auto pow10SigTableMinExp = -343;
+	static constexpr auto pow10SigTableMaxExp = 324;
+	static constexpr auto pow10SigTableMinExact = 0;
+	static constexpr auto pow10SigTableMaxExact = 27;
 
 	inline static uint64_t sig2FromExp10(int32_t exp10) noexcept {
 		return pow10SigTable[static_cast<size_t>(exp10) - pow10SigTableMinExp];
@@ -83,12 +84,12 @@ namespace Jsonifier {
 		return (((exp10 * 217706 - 4128768) >> 16) + 126);
 	}
 
-	constexpr uint8_t digiTypeZero = 1 << 0;
-	constexpr uint8_t digiTypeNonZero = 1 << 1;
-	constexpr uint8_t digiTypePos = 1 << 2;
-	constexpr uint8_t digiTypeNeg = 1 << 3;
-	constexpr uint8_t digiTypeDot = 1 << 4;
-	constexpr uint8_t digiTypeExp = 1 << 5;
+	static constexpr uint8_t digiTypeZero = 1 << 0;
+	static constexpr uint8_t digiTypeNonZero = 1 << 1;
+	static constexpr uint8_t digiTypePos = 1 << 2;
+	static constexpr uint8_t digiTypeNeg = 1 << 3;
+	static constexpr uint8_t digiTypeDot = 1 << 4;
+	static constexpr uint8_t digiTypeExp = 1 << 5;
 
 	inline static bool digiIsType(uint8_t d, uint8_t type) noexcept {
 		return (digiTable[d] & type) != 0;
@@ -105,16 +106,16 @@ namespace Jsonifier {
 #define repeatIIn_1_18(x) \
 	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
-	constexpr auto e_bit = static_cast<uint8_t>('E' ^ 'e');
-	constexpr auto f64MaxDecExp = 308;
-	constexpr auto f64MinDecExp = (-324);
+	static constexpr auto eBit = static_cast<uint8_t>('E' ^ 'e');
+	static constexpr auto f64MaxDecExp = 308;
+	static constexpr auto f64MinDecExp = (-324);
 
-	inline consteval uint32_t ceillog2(uint32_t x) {
+	inline static consteval uint32_t ceillog2(uint32_t x) {
 		return x < 2 ? x : 1 + ceillog2(x >> 1);
 	}
 
 	struct BigIntT {
-		std::vector<uint32_t> data = {};
+		Jsonifier::Vector<uint32_t> data = {};
 
 		inline BigIntT(uint64_t num) {
 			uint32_t lowerWord = uint32_t(num);
@@ -285,7 +286,7 @@ namespace Jsonifier {
 				cur += 4;
 				val = std::numeric_limits<OTy>::quiet_NaN();
 				return true;
-			} else if ((*cur | e_bit) == 'n' && (cur[1] | e_bit) == 'a' && (cur[2] | e_bit) == 'n') {
+			} else if ((*cur | eBit) == 'n' && (cur[1] | eBit) == 'a' && (cur[2] | eBit) == 'n') {
 				cur += 3;
 				val = sign ? -std::numeric_limits<OTy>::quiet_NaN() : std::numeric_limits<OTy>::quiet_NaN();
 				return true;
@@ -293,7 +294,7 @@ namespace Jsonifier {
 				return false;
 			}
 		}
-		constexpr auto zero = static_cast<uint8_t>('0');
+		static constexpr auto zero = static_cast<uint8_t>('0');
 #define expr_intg(x) \
 	if ((numTmp = cur[x] - zero) <= 9) [[likely]] \
 		sig = numTmp + sig * 10; \
@@ -359,7 +360,7 @@ namespace Jsonifier {
 				}
 			}
 		}
-		if ((e_bit | *cur) == 'e') {
+		if ((eBit | *cur) == 'e') {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
@@ -394,13 +395,13 @@ namespace Jsonifier {
 		} else {
 			sigEnd = cur;
 		}
-		if ((e_bit | *cur) == 'e')
+		if ((eBit | *cur) == 'e')
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		sigEnd = cur;
 		expSig = -int32_t((cur - dotPos) - 1);
-		if ((e_bit | *cur) != 'e') [[likely]] {
+		if ((eBit | *cur) != 'e') [[likely]] {
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
 				val = applySign(0);
 				return true;
@@ -507,19 +508,19 @@ namespace Jsonifier {
 
 			static_assert(std::numeric_limits<OTy>::is_iec559);
 			static_assert(std::numeric_limits<OTy>::radix == 2);
-			static_assert(std::same_as<float, std::decay_t<OTy>> || std::same_as<double, std::decay_t<OTy>>);
+			static_assert(std::same_as<float, RefUnwrap<OTy>> || std::same_as<double, RefUnwrap<OTy>>);
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-			using raw_t = std::conditional_t<std::same_as<float, std::decay_t<OTy>>, uint32_t, uint64_t>;
+			using raw_t = std::conditional_t<std::same_as<float, RefUnwrap<OTy>>, uint32_t, uint64_t>;
 			const auto sigLeadingZeros = std::countl_zero(sig);
 			const auto sigNorm = sig << sigLeadingZeros;
 			const auto sig2Norm = sig2FromExp10(exp);
 			const auto sigProduct = mulhi64(sigNorm, sig2Norm) + 1;
 			const auto sigProductStartsWith1 = sigProduct >> 63;
 			auto mantisa = sigProduct << (2 - sigProductStartsWith1);
-			constexpr uint64_t roundMask = uint64_t(1) << 63 >> (std::numeric_limits<OTy>::digits - 1);
-			constexpr uint32_t exponentBits = ceillog2(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
-			constexpr uint32_t mantissaShift = exponentBits + 1 + 64 - 8 * sizeof(raw_t);
+			static constexpr uint64_t roundMask = uint64_t(1) << 63 >> (std::numeric_limits<OTy>::digits - 1);
+			static constexpr uint32_t exponentBits = ceillog2(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
+			static constexpr uint32_t mantissaShift = exponentBits + 1 + 64 - 8 * sizeof(raw_t);
 			int32_t exp2 = exp2FromExp10(exp) + static_cast<uint32_t>(-sigLeadingZeros + sigProductStartsWith1);
 
 			if (exp2 < std::numeric_limits<OTy>::min_exponent - 1) [[unlikely]] {
@@ -568,10 +569,6 @@ namespace Jsonifier {
 			return true;
 		}
 	}
-
-	struct Pair {
-		char c1, c2;
-	};
 
 	template<typename OTy>
 		requires std::same_as<OTy, uint32_t> || std::same_as<OTy, uint16_t> || std::same_as<OTy, uint8_t>
@@ -783,12 +780,12 @@ namespace Jsonifier {
 	}
 
 	//Source: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c
-	constexpr auto pow10SigTable128MinExp = -343;
-	constexpr auto pow10SigTable128MaxExp = 324;
-	constexpr auto pow10SigTable128MinExactExp = 0;
-	constexpr auto pow10SigTable128MaxExactExp = 55;
+	static constexpr auto pow10SigTable128MinExp = -343;
+	static constexpr auto pow10SigTable128MaxExp = 324;
+	static constexpr auto pow10SigTable128MinExactExp = 0;
+	static constexpr auto pow10SigTable128MaxExactExp = 55;
 
-	inline void pow10TableGetSig128(int32_t exp10, uint64_t* hi, uint64_t* lo) {
+	inline static void pow10TableGetSig128(int32_t exp10, uint64_t* hi, uint64_t* lo) {
 		int32_t idx = exp10 - (pow10SigTable128MinExp);
 		*hi = pow10SigTable128[idx * 2ull];
 		*lo = pow10SigTable128[idx * 2ull + 1ull];
@@ -805,7 +802,7 @@ namespace Jsonifier {
     https://github.com/jk-jeon/dragonbox/blob/master/other_files/Dragonbox.pdf
     https://github.com/jk-jeon/dragonbox
     */
-	inline void f64BinToDec(uint64_t sigRaw, int32_t expRaw, uint64_t sigBin, int32_t expBin, uint64_t* sigDec, int32_t* expDec) {
+	inline static void f64BinToDec(uint64_t sigRaw, int32_t expRaw, uint64_t sigBin, int32_t expBin, uint64_t* sigDec, int32_t* expDec) {
 		bool isEven, lowerBoundCloser, uInside, wInside, round_up;
 		uint64_t s, sp, cb, cbl, cbr, vb, vbl, vbr, pow10hi, pow10lo, upper, lower, mid;
 		int32_t k, h, exp10;
@@ -938,8 +935,8 @@ namespace Jsonifier {
 		raw_t raw;
 		std::memcpy(&raw, &val, sizeof(OTy));
 
-		constexpr uint32_t exponentBits = numbits(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
-		constexpr raw_t sigMask = raw_t(-1) >> (exponentBits + 1);
+		static constexpr uint32_t exponentBits = numbits(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
+		static constexpr raw_t sigMask = raw_t(-1) >> (exponentBits + 1);
 		bool sign = (raw >> (sizeof(OTy) * 8 - 1));
 		uint64_t sigRaw = raw & sigMask;
 		int32_t expRaw = raw << 1 >> (sizeof(raw_t) * 8 - exponentBits);
@@ -993,7 +990,7 @@ namespace Jsonifier {
 					memset(buffer + 16, '0', 8);
 					auto numHdr = buffer + 1;
 					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-					for (int x = 0; x < dotPos; x++)
+					for (int32_t x = 0; x < dotPos; x++)
 						buffer[x] = buffer[x + 1];
 					buffer[dotPos] = '.';
 					return ((numEnd - numHdr) <= dotPos) ? buffer + dotPos : numEnd;

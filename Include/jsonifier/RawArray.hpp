@@ -23,9 +23,9 @@
 
 #include <iterator>
 
-namespace Jsonifier {
+namespace JsonifierInternal {
 
-	template<typename OTy, size_t N> class RawArray {
+	template<typename OTy, size_t N> struct RawArray {
 	  public:
 		using value_type = OTy;
 		using reference = value_type&;
@@ -45,6 +45,12 @@ namespace Jsonifier {
 
 		template<size_t M> inline constexpr RawArray(OTy const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
 			static_assert(M >= N);
+		}
+
+		inline constexpr RawArray(const std::initializer_list<OTy>& other) {
+			for (size_t x = 0; x < other.size(); ++x) {
+				operator[](x) = std::move(other.begin()[x]);
+			}
 		}
 
 		inline constexpr iterator begin() noexcept {
@@ -118,11 +124,11 @@ namespace Jsonifier {
 		}
 
 		inline constexpr void fill(const value_type& val) {
-			for (size_t x = 0; x < N; ++x)
+			for (size_t x = 0; x < N; ++x) {
 				dataVal[x] = val;
+			}
 		}
 
-	  protected:
 		OTy dataVal[N] = {};
 
 		template<size_t M, size_t... I> inline constexpr RawArray(OTy const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {};
