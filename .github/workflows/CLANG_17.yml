@@ -20,12 +20,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Update stuff.
-      run: |             
+    - name: Update Vcpkg and install other dependencies.
+      run: |
             sudo apt-get upgrade
+            sudo apt-get update
+            sudo apt-get install nasm
+            cd /usr/local/share/vcpkg
+            ./bootstrap-vcpkg.sh
+            git stash
+            git pull
+            vcpkg update
 
     - name: Install Clang17
-      working-directory: Tests
       run: |
             sudo apt remove clang-14
             wget https://apt.llvm.org/llvm.sh
@@ -46,5 +52,4 @@ jobs:
       working-directory: Tests/Build
       run: |
            ./Json-Performance
-      continue-on-error: true
       
