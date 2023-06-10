@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
@@ -50,10 +52,11 @@ namespace JsonifierInternal {
 
 	class Serializer;
 
-	template<typename OTy = void> struct Hash {
-		static_assert(std::is_integral<OTy>::value || std::is_enum<OTy>::value, "Hash only supports integral types, specialize for other types.");
+	template<typename ValueType = void> struct Hash {
+		static_assert(std::is_integral<ValueType>::value || std::is_enum<ValueType>::value,
+			"Hash only supports integral types, specialize for other types.");
 
-		inline constexpr size_t operator()(OTy const& value, size_t seed) const {
+		inline constexpr size_t operator()(ValueType const& value, size_t seed) const {
 			size_t key = seed ^ static_cast<size_t>(value);
 			key = (~key) + (key << 21);
 			key = key ^ (key >> 24);
@@ -72,76 +75,76 @@ namespace JsonifierInternal {
 
 	template<template<typename...> class Ref, typename... Args> struct IsSpecializationV<Ref<Args...>, Ref> : std::true_type {};
 
-	template<typename OTy>
-	concept Range = requires(OTy& value) {
-		typename OTy::value_type;
+	template<typename ValueType>
+	concept Range = requires(ValueType& value) {
+		typename ValueType::value_type;
 		requires !std::same_as<void, decltype(value.begin())>;
 		requires !std::same_as<void, decltype(value.end())>;
 	};
 
-	template<typename OTy>
-	concept ComplexT = JsonifierT<RefUnwrap<OTy>>;
+	template<typename ValueType>
+	concept ComplexT = JsonifierT<RefUnwrap<ValueType>>;
 
-	template<typename OTy>
-	concept TupleT = requires(OTy value) {
-		std::tuple_size<OTy>::value;
+	template<typename ValueType>
+	concept TupleT = requires(ValueType value) {
+		std::tuple_size<ValueType>::value;
 		Tuplet::get<0>(value);
-	} && !ComplexT<OTy> && !Range<OTy>;
+	} && !ComplexT<ValueType> && !Range<ValueType>;
 
-	template<typename OTy>
-	concept MapSubscriptable = requires(OTy value) {
-		{ value[std::declval<typename OTy::key_type>()] } -> std::same_as<typename OTy::mapped_type&>;
+	template<typename ValueType>
+	concept MapSubscriptable = requires(ValueType value) {
+		{ value[std::declval<typename ValueType::key_type>()] } -> std::same_as<typename ValueType::mapped_type&>;
 	};
 
-	template<typename OTy>
-	concept VectorSubscriptable = requires(OTy value) {
-		{ value[size_t{}] } -> std::same_as<typename OTy::value_type&>;
+	template<typename ValueType>
+	concept VectorSubscriptable = requires(ValueType value) {
+		{ value[size_t{}] } -> std::same_as<typename ValueType::value_type&>;
 	};
 
-	template<typename OTy>
-	concept PairT = requires(OTy value) {
-		{ value.first } -> std::same_as<typename OTy::first_type&>;
-		{ value.second } -> std::same_as<typename OTy::second_type&>;
+	template<typename ValueType>
+	concept PairT = requires(ValueType value) {
+		{ value.first } -> std::same_as<typename ValueType::first_type&>;
+		{ value.second } -> std::same_as<typename ValueType::second_type&>;
 	};
 
-	template<typename OTy>
-	concept HasSize = requires(OTy value) {
+	template<typename ValueType>
+	concept HasSize = requires(ValueType value) {
 		{ value.size() } -> std::same_as<size_t>;
 	};
 
-	template<typename OTy>
-	concept HasData = requires(OTy value) {
+	template<typename ValueType>
+	concept HasData = requires(ValueType value) {
 		{ value.data() };
 	};
 
-	template<typename OTy>
-	concept HasSubstr = requires(OTy value, const size_t pos, size_t len) {
-		{ value.substr(pos, len) } -> std::same_as<OTy>;
+	template<typename ValueType>
+	concept HasSubstr = requires(ValueType value, const size_t pos, size_t len) {
+		{ value.substr(pos, len) } -> std::same_as<ValueType>;
 	};
 
-	template<typename OTy>
-	concept CharT = std::same_as<RefUnwrap<OTy>, char> || std::same_as<RefUnwrap<OTy>, char16_t> || std::same_as<RefUnwrap<OTy>, char32_t> ||
-		std::same_as<RefUnwrap<OTy>, char8_t>;
+	template<typename ValueType>
+	concept CharT = std::same_as<RefUnwrap<ValueType>, char> || std::same_as<RefUnwrap<ValueType>, char16_t> ||
+		std::same_as<RefUnwrap<ValueType>, char32_t> || std::same_as<RefUnwrap<ValueType>, char8_t>;
 
-	template<typename OTy>
-	concept BoolT = std::same_as<RefUnwrap<OTy>, bool>;
+	template<typename ValueType>
+	concept BoolT = std::same_as<RefUnwrap<ValueType>, bool>;
 
-	template<typename OTy>
-	concept IntT = std::integral<RefUnwrap<OTy>> && !CharT<RefUnwrap<OTy>> && !BoolT<OTy>;
+	template<typename ValueType>
+	concept IntT = std::integral<RefUnwrap<ValueType>> && !CharT<RefUnwrap<ValueType>> && !BoolT<ValueType>;
 
-	template<typename OTy>
-	concept NumT = std::floating_point<RefUnwrap<OTy>> || IntT<OTy>;
+	template<typename ValueType>
+	concept NumT = std::floating_point<RefUnwrap<ValueType>> || IntT<ValueType>;
 
-	template<typename OTy>
-	concept StringT = HasSubstr<std::remove_const_t<OTy>> && HasData<std::remove_const_t<OTy>> && HasSize<std::remove_const_t<OTy>> &&
-		!std::same_as<char, std::remove_const_t<OTy>>;
+	template<typename ValueType>
+	concept StringT = HasSubstr<std::remove_const_t<ValueType>> && HasData<std::remove_const_t<ValueType>> &&
+		HasSize<std::remove_const_t<ValueType>> && !std::same_as<char, std::remove_const_t<ValueType>>;
 
-	template<typename OTy>
-	concept MapT = !ComplexT<OTy> && !StringT<OTy> && MapSubscriptable<OTy>;
+	template<typename ValueType>
+	concept MapT = !ComplexT<ValueType> && !StringT<ValueType> && MapSubscriptable<ValueType>;
 
-	template<typename OTy>
-	concept EmplaceBackable = requires(OTy value) {
-		{ value.emplace_back(std::declval<typename OTy::value_type&>()) };
+	template<typename ValueType>
+	concept EmplaceBackable = requires(ValueType value) {
+		{ value.emplace_back(std::declval<typename ValueType::value_type&>()) };
 	};
 
 	template<typename T>
@@ -152,13 +155,13 @@ namespace JsonifierInternal {
 		{ c.find(val) };
 	};
 
-	template<typename OTy>
-	concept HasExcludedKeys = requires(OTy value) {
+	template<typename ValueType>
+	concept HasExcludedKeys = requires(ValueType value) {
 		{ value.excludedKeys };
 	};
 
-	template<typename OTy>
-	concept NullT = std::same_as<OTy, std::nullptr_t>;
+	template<typename ValueType>
+	concept NullT = std::same_as<ValueType, std::nullptr_t>;
 
 	template<typename... Args> struct FalseT : std::false_type {};
 
@@ -168,10 +171,6 @@ namespace JsonifierInternal {
 
 	template<typename... Args> inline constexpr bool FalseV = FalseT<Args...>::value;
 
-	template<size_t n> inline constexpr size_t length(const char (&)[n]) noexcept {
-		return n;
-	}
-
 	template<size_t strLength> class StringLiteral {
 	  public:
 		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
@@ -179,7 +178,7 @@ namespace JsonifierInternal {
 		inline constexpr StringLiteral() noexcept = default;
 
 		inline constexpr StringLiteral(const char (&str)[strLength]) {
-			std::copy_n(str, strLength, string);
+			std::copy(str, str + strLength, string);
 		}
 
 		inline constexpr const char* data() const noexcept {
@@ -206,13 +205,13 @@ namespace JsonifierInternal {
 	};
 
 	template<StringLiteral str> struct CharsImpl {
-		static constexpr Jsonifier::StringView value{ str.string, length(str.string) - 1 };
+		static constexpr Jsonifier::StringView value{ str.string, std::char_traits<char>::length(str.string) };
 	};
 
 	template<StringLiteral str> inline constexpr Jsonifier::StringView Chars = CharsImpl<str>::value;
 
-	template<typename OTy>
-	concept StdTupleT = IsSpecializationV<OTy, Tuplet::Tuple>::value || IsSpecializationV<OTy, Pair>::value;
+	template<typename ValueType>
+	concept StdTupleT = IsSpecializationV<ValueType, Tuplet::Tuple>::value || IsSpecializationV<ValueType, Pair>::value;
 
 	template<typename = void, size_t... Is> inline constexpr auto indexer(std::index_sequence<Is...>) {
 		return [](auto&& f) -> decltype(auto) {
@@ -234,34 +233,7 @@ namespace JsonifierInternal {
 		static constexpr auto value = newArr;
 	};
 
-	struct StringViewTwo {
-		size_t sizeVal{};
-		const char* str{};
-
-		constexpr StringViewTwo(const Jsonifier::StringView& stringNew) {
-			sizeVal = stringNew.size();
-			str = stringNew.data();
-		}
-
-		constexpr const char* begin() const noexcept {
-			return str;
-		}
-
-		constexpr const char* end() const noexcept {
-			return str + sizeVal;
-		}
-
-		constexpr size_t size() const noexcept {
-			return sizeVal;
-		}
-	};
-
-#ifdef _MSC_VER
-	template<StringViewTwo... Strings>
-#else
-	template<const Jsonifier::StringView&... Strings>
-#endif
-	inline constexpr Jsonifier::StringView Join() {
+	template<const Jsonifier::StringView&... Strings> inline constexpr Jsonifier::StringView Join() {
 		constexpr auto joinedArr = []() {
 			constexpr size_t len = (Strings.size() + ... + 0);
 			RawArray<char, len + 1> arr{};
@@ -277,19 +249,7 @@ namespace JsonifierInternal {
 		return { staticArr.data(), staticArr.size() - 1 };
 	}
 
-#ifdef _MSC_VER
-	template<StringViewTwo... Strings>
-#else
-	template<const Jsonifier::StringView&... Strings>
-#endif
-	constexpr auto JoinV = Join<Strings...>();
-
-	template<size_t strLength> inline constexpr auto stringLiteralFromView(Jsonifier::StringView str) {
-		StringLiteral<strLength + 1> sl{};
-		std::copy_n(str.data(), str.size(), sl.str);
-		*(sl.str + strLength) = '\0';
-		return sl;
-	}
+	template<const Jsonifier::StringView&... Strings> constexpr auto JoinV = Join<Strings...>();
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
 		using VTy = RefUnwrap<decltype(member_ptr)>;
@@ -304,57 +264,35 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<size_t n, size_t x = 0, typename Func, typename Value> inline constexpr void forEachValue(Func&& f, Value&& v) {
-		if constexpr (x != n) {
-			forEachValue<n, x + 1>(f, f(std::integral_constant<size_t, x>{}, v));
-		}
-	}
+	template<typename ValueType, typename mptr_t> using MemberT = decltype(getMember(std::declval<ValueType>(), std::declval<RefUnwrap<mptr_t>&>()));
 
-	template<typename OTy, typename mptr_t> using MemberT = decltype(getMember(std::declval<OTy>(), std::declval<RefUnwrap<mptr_t>&>()));
-
-	template<size_t... Is> struct Sequence {};
-	template<size_t n, size_t... Is> struct GenerateSequence : GenerateSequence<n - 1, n - 1, Is...> {};
-	template<size_t... Is> struct GenerateSequence<0, Is...> : Sequence<Is...> {};
-
-	template<size_t N1, size_t... I1, size_t N2, size_t... I2>
-	inline constexpr RawArray<char const, N1 + N2 - 1> concat(char const (&a1)[N1], char const (&a2)[N2], Sequence<I1...>, Sequence<I2...>) {
-		return { { a1[I1]..., a2[I2]... } };
-	}
-
-	template<size_t N1, size_t N2> inline constexpr RawArray<char const, N1 + N2 - 1> concatArrays(char const (&a1)[N1], char const (&a2)[N2]) {
-		return concat(a1, a2, GenerateSequence<N1 - 1>{}, GenerateSequence<N2>{});
-	}
-
-	template<typename OTy, typename... U>
-	concept IsAnyOf = (std::same_as<OTy, U> || ...);
-
-	template<typename OTy>
-	concept Emplaceable = requires(OTy value) {
-		{ value.emplace(std::declval<typename OTy::value_type>()) };
+	template<typename ValueType>
+	concept Emplaceable = requires(ValueType value) {
+		{ value.emplace(std::declval<typename ValueType::value_type>()) };
 	};
 
-	template<typename OTy>
-	concept PushBackable = requires(OTy value) {
-		{ value.push_back(std::declval<typename OTy::value_type>()) };
+	template<typename ValueType>
+	concept PushBackable = requires(ValueType value) {
+		{ value.push_back(std::declval<typename ValueType::value_type>()) };
 	};
 
-	template<typename OTy>
-	concept Resizeable = requires(OTy value) { value.resize(0); };
+	template<typename ValueType>
+	concept Resizeable = requires(ValueType value) { value.resize(0); };
 }
 
 namespace Jsonifier {
 
-	template<typename OTy> struct Array {
-		OTy parseValue;
+	template<typename ValueType> struct Array {
+		ValueType parseValue;
 	};
 
-	template<typename OTy> Array(OTy) -> Array<OTy>;
+	template<typename ValueType> Array(ValueType) -> Array<ValueType>;
 
-	template<typename OTy> struct Object {
-		OTy parseValue;
+	template<typename ValueType> struct Object {
+		ValueType parseValue;
 	};
 
-	template<typename OTy> Object(OTy) -> Object<OTy>;
+	template<typename ValueType> Object(ValueType) -> Object<ValueType>;
 
 	inline constexpr auto array(auto&&... args) {
 		return Array{ JsonifierInternal::Tuplet::copyTuple(args...) };
@@ -373,101 +311,99 @@ namespace Jsonifier {
 
 namespace JsonifierInternal {
 
-	template<typename OTy>
-	concept RawJsonT = std::same_as<OTy, Jsonifier::RawJsonData> && !StringT<OTy>;
+	template<typename ValueType>
+	concept RawJsonT = std::same_as<ValueType, Jsonifier::RawJsonData> && !StringT<ValueType>;
 
-	template<typename OTy>
-	concept JsonifierArrayT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Jsonifier::Array>::value;
+	template<typename ValueType>
+	concept JsonifierArrayT = JsonifierT<ValueType> && IsSpecializationV<CoreWrapperT<ValueType>, Jsonifier::Array>::value;
 
-	template<typename OTy>
-	concept JsonifierObjectT = JsonifierT<OTy> && IsSpecializationV<CoreWrapperT<OTy>, Jsonifier::Object>::value;
+	template<typename ValueType>
+	concept JsonifierObjectT = JsonifierT<ValueType> && IsSpecializationV<CoreWrapperT<ValueType>, Jsonifier::Object>::value;
 
-	template<typename OTy>
-	concept JsonifierValueT = JsonifierT<OTy> && !(JsonifierArrayT<OTy> || JsonifierObjectT<OTy>);
+	template<typename ValueType>
+	concept ArrayTupleT = JsonifierArrayT<ValueType> || TupleT<RefUnwrap<ValueType>>;
 
-	template<typename OTy>
-	concept ArrayTupleT = JsonifierArrayT<OTy> || TupleT<RefUnwrap<OTy>>;
+	template<typename ValueType>
+	concept ObjectT = MapT<ValueType> || JsonifierObjectT<ValueType>;
 
-	template<typename OTy>
-	concept ObjectT = MapT<OTy> || JsonifierObjectT<OTy>;
+	template<typename ValueType>
+	concept TimeT = std::same_as<ValueType, std::chrono::nanoseconds> || std::same_as<ValueType, std::chrono::microseconds> ||
+		std::same_as<ValueType, std::chrono::milliseconds> || std::same_as<ValueType, std::chrono::minutes> ||
+		std::same_as<ValueType, std::chrono::hours> || std::same_as<ValueType, std::chrono::days>;
 
-	template<typename OTy>
-	concept IsTimeType =
-		std::same_as<OTy, std::chrono::nanoseconds> || std::same_as<OTy, std::chrono::microseconds> || std::same_as<OTy, std::chrono::milliseconds> ||
-		std::same_as<OTy, std::chrono::minutes> || std::same_as<OTy, std::chrono::hours> || std::same_as<OTy, std::chrono::days>;
+	template<typename ValueType>
+	concept EnumT = std::is_enum<ValueType>::value;
 
-	template<typename OTy>
-	concept IsConvertibleToSerializer = std::convertible_to<OTy, Serializer>;
-
-	template<typename OTy>
-	concept EnumT = std::is_enum<OTy>::value;
-
-	template<typename OTy> inline auto dataPtr(OTy& buffer) {
-		if constexpr (Resizeable<OTy>) {
+	template<typename ValueType> inline auto dataPtr(ValueType& buffer) {
+		if constexpr (Resizeable<ValueType>) {
 			return buffer.data();
 		} else {
 			return buffer;
 		}
 	}
 
-	template<typename OTy>
-	concept VectorT = ( !ComplexT<OTy> && !MapT<OTy> && VectorSubscriptable<OTy> && HasData<OTy> && EmplaceBackable<OTy> )&&!JsonifierArrayT<OTy> &&
-		!TupleT<OTy> && !HasSubstr<OTy>;
+	template<typename ValueType>
+	concept VectorT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
+						  EmplaceBackable<ValueType> )&&!JsonifierArrayT<ValueType> &&
+		!TupleT<ValueType> && !HasSubstr<ValueType>;
 
-	template<typename OTy>
-	concept RawArrayT =
-		( !ComplexT<OTy> && !MapT<OTy> && VectorSubscriptable<OTy> && HasData<OTy> && !EmplaceBackable<OTy> )&&!JsonifierArrayT<OTy> &&
-		!TupleT<OTy> && !HasSubstr<OTy> && !Resizeable<OTy>;
+	template<typename ValueType>
+	concept RawArrayT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
+							!EmplaceBackable<ValueType> )&&!JsonifierArrayT<ValueType> &&
+		!TupleT<ValueType> && !HasSubstr<ValueType> && !Resizeable<ValueType>;
 
-	template<typename OTy>
-	concept VectorLike = Resizeable<OTy> && VectorSubscriptable<OTy> && HasData<OTy>;
+	template<typename ValueType>
+	concept VectorLike = Resizeable<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType>;
 
-	template<typename OTy>
-	concept CoreType = IsSpecializationV<Jsonifier::Core<OTy>, Jsonifier::Core>::value;
+	template<typename ValueType>
+	concept CoreType = IsSpecializationV<Jsonifier::Core<ValueType>, Jsonifier::Core>::value;
 
-	template<typename TTy> class StopWatch {
+	template<TimeT TimeType> class StopWatch {
 	  public:
 		using HRClock = std::chrono::high_resolution_clock;
 
 		inline StopWatch() = delete;
 
-		inline StopWatch<TTy>& operator=(StopWatch<TTy>&& data) {
-			maxNumberOfMs.store(data.maxNumberOfMs.load());
+		inline StopWatch<TimeType>& operator=(StopWatch<TimeType>&& data) noexcept {
+			maxNumberOfTimeUnits.store(data.maxNumberOfTimeUnits.load());
 			startTime.store(data.startTime.load());
 			return *this;
 		}
 
-		inline StopWatch(StopWatch<TTy>&& data) {
-			*this = std::move(data);
+		inline StopWatch(StopWatch<TimeType>&& other) noexcept = default;
+
+		inline StopWatch(TimeType maxNumberOfMsNew) noexcept {
+			maxNumberOfTimeUnits.store(maxNumberOfMsNew);
+			resetTimer();
 		}
 
-		inline StopWatch(TTy maxNumberOfMsNew) {
-			maxNumberOfMs.store(maxNumberOfMsNew);
-			startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
+		inline StopWatch(int64_t maxNumberOfMsNew) noexcept {
+			maxNumberOfTimeUnits.store(TimeType{ maxNumberOfMsNew });
+			resetTimer();
 		}
 
-		inline TTy totalTimePassed() {
-			return std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()) - startTime.load();
+		inline TimeType totalTimePassed() noexcept {
+			return std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()) - startTime.load();
 		}
 
-		inline TTy getTotalWaitTime() {
-			return maxNumberOfMs.load();
+		inline TimeType getTotalWaitTime() noexcept {
+			return maxNumberOfTimeUnits.load();
 		}
 
-		inline bool hasTimePassed() {
-			if (std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()) - startTime.load() >= maxNumberOfMs.load()) {
+		inline bool hasTimePassed() noexcept {
+			if (std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()) - startTime.load() >= maxNumberOfTimeUnits.load()) {
 				return true;
 			} else {
 				return false;
 			}
 		}
 
-		inline void resetTimer() {
-			startTime.store(std::chrono::duration_cast<TTy>(HRClock::now().time_since_epoch()));
+		inline void resetTimer() noexcept {
+			startTime.store(std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()));
 		}
 
 	  protected:
-		std::atomic<TTy> maxNumberOfMs{ TTy{ 0 } };
-		std::atomic<TTy> startTime{ TTy{ 0 } };
+		std::atomic<TimeType> maxNumberOfTimeUnits{ TimeType{ 0 } };
+		std::atomic<TimeType> startTime{ TimeType{ 0 } };
 	};
 }

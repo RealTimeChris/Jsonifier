@@ -8,11 +8,13 @@
 ----
 
 ## Compiler Support
+----
 ![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
 ![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
 ![CLANG_17](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_17.yml?color=00ff90&label=CLANG_17)
 
 ## Usage - Serialization/Parsing
+----
 - Create a specialization of the `Jsonifier::Core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
 ----
 ```cpp
@@ -59,36 +61,36 @@ namespace TestNS {
 namespace Jsonifier {
 
 	template<> struct Core<TestNS::fixed_object_t> {
-		using OTy = TestNS::fixed_object_t;
-		static constexpr auto parseValue = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+		using ValueType = TestNS::fixed_object_t;
+		static constexpr auto parseValue = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 	};
 
 	template<> struct Core<TestNS::fixed_name_object_t> {
-		using OTy = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
+		using ValueType = TestNS::fixed_name_object_t;
+		static constexpr auto parseValue = object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 	};
 
 	template<> struct Core<TestNS::nested_object_t> {
-		using OTy = TestNS::nested_object_t;
-		static constexpr auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
+		using ValueType = TestNS::nested_object_t;
+		static constexpr auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
 	};
 
 	template<> struct Core<TestNS::another_object_t> {
-		using OTy = TestNS::another_object_t;
+		using ValueType = TestNS::another_object_t;
 		static constexpr auto parseValue =
-			object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
+			object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 	};
 
 	template<> struct Core<TestNS::obj_t> {
-		using OTy = TestNS::obj_t;
+		using ValueType = TestNS::obj_t;
 		static constexpr auto parseValue =
-			object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object, "another_object", &OTy::another_object, "string_array",
-				&OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean", &OTy::boolean, "another_bool", &OTy::another_bool);
+			object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object, "another_object", &ValueType::another_object, "string_array",
+				&ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean", &ValueType::boolean, "another_bool", &ValueType::another_bool);
 	};
 }
 
 ```
-## Usage - Parsing
+### Usage - Parsing
 - Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
 - Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
 ```cpp
@@ -99,7 +101,7 @@ obj_t obj{};
 Jsonifier::JsonifierCore parser{};
 parser.parseJson(obj, buffer);
 ```
-## Usage - Serialization
+### Usage - Serialization
 - Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
 - Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
 ```cpp
@@ -111,6 +113,7 @@ Jsonifier::JsonifierCore serializer{};
 serializer.serializeJson(obj, buffer);
 ```
 ## Excluding Keys from Serialization at Runtime
+----
 To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called excludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `Jsonifier::JsonifierCore` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `excludedKeys` set.
 
 Here's an example of how you can do this:
@@ -146,6 +149,90 @@ In the `main` function, we create an instance of `MyObject` with the name "John"
 
 By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `Jsonifier::JsonifierCore` class, you can easily serialize objects with excluded keys to JSON strings.
 
+## Enabling Error Message Output in Jsonifier
+----
+Jsonifier is a powerful JSON parsing library that allows you to easily parse JSON data in your C++ applications. By default, Jsonifier does not output detailed error messages during the parsing process. However, you can enable error message output to aid in debugging and understanding parsing issues.
+
+To enable error message output in Jsonifier, you need to set a specific template parameter when calling the parseJson function. By setting this parameter to true, Jsonifier will generate detailed error messages if any parsing errors occur. Follow the steps below to enable error message output:
+
+Locate the code block where you invoke the parseJson function.
+
+Look for the following line of code:
+```cpp
+parser.parseJson(/* ... */);
+```
+Modify the code to include the template parameter set to true, as shown below:
+
+```cpp
+parser.parseJson<true>(/* ... */);
+```
+Save the changes.
+
+Rebuild and run your application.
+
+### Interpreting Error Messages:
+With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
+
+```ruby
+Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\DiscordCoreAPI\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+```
+In the provided error message:
+
+ #### Failed to collect a:
+ Indicates that a comma was expected at a particular point in the JSON data.
+ #### At index: 
+ 486 instead found a 'i': Specifies the index in the JSON data where the error occurred and the actual character found instead of the expected comma.
+ #### In file: 
+ Gives the file path where the parsing error was encountered.
+ #### At: 182:44: 
+ Specifies the line number and column number within the file where the error occurred.
+ #### In function: 
+ Provides information about the specific function where the parsing error occurred.
+
+ When you receive an error message, carefully review the provided information to understand the cause of the parsing error. Use this information to identify the part of the JSON data that caused the issue and take appropriate steps to resolve it.
+
+ #### Conclusion
+ Enabling error message output in Jsonifier can greatly assist in debugging and resolving parsing issues in your C++ applications. By following the steps outlined above, you can easily set the template parameter to true and gain access to detailed error messages during the JSON parsing process.
+
+If you have any further questions or require additional assistance, please refer to the Jsonifier documentation or reach out to our support team.
+
+Happy parsing with Jsonifier!
+
+## CPU Architecture Selection
+----
+Jsonifier is a JSON parsing library that supports various CPU architectures to optimize code generation and enhance performance. This page explains the relevant portion of the CMakeLists.txt file in Jsonifier, which detects the CPU architecture and sets the appropriate compiler flags for the supported architectures: x64, AVX, AVX2, and AVX-512.
+
+### CPU Architecture Detection Configuration
+The CPU architecture detection and configuration in Jsonifier's CMakeLists.txt file is designed to support the following architectures: x64, AVX, AVX2, and AVX-512. Let's explore each architecture in detail:
+
+#### x64 Architecture
+The x64 architecture, also known as x86-64 or AMD64, is a 64-bit extension of the x86 instruction set architecture. It provides increased memory addressability and larger general-purpose registers, enabling more efficient processing of 64-bit data. The x64 architecture is widely used in modern CPUs, offering improved performance and expanded capabilities compared to its 32-bit predecessor.
+
+#### AVX (Advanced Vector Extensions)
+AVX, short for Advanced Vector Extensions, is an extension to the x86 instruction set architecture. AVX provides SIMD (Single Instruction, Multiple Data) instructions for performing parallel processing on vectors of data. It introduces 128-bit vector registers (XMM registers) and new instructions to accelerate floating-point and integer calculations. AVX is supported by many modern CPUs and offers significant performance benefits for applications that can utilize parallel processing.
+
+#### AVX2 (Advanced Vector Extensions 2)
+AVX2 is an extension of the AVX instruction set architecture. It builds upon the foundation of AVX and introduces additional instructions and capabilities for SIMD processing. AVX2 expands the vector register size to 256 bits (YMM registers) and introduces new integer and floating-point operations, enabling further optimization of vectorized code. CPUs that support AVX2 offer enhanced performance for applications that leverage these advanced instructions.
+
+#### AVX-512
+AVX-512 is an extension of the AVX instruction set architecture, designed to provide even higher levels of vector parallelism. AVX-512 introduces 512-bit vector registers (ZMM registers) and a broad range of new instructions for both floating-point and integer operations. With AVX-512, CPUs can process larger amounts of data in parallel, offering significant performance improvements for applications that can effectively utilize these capabilities.
+
+### Configuration Explanation
+The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures:
+
+If the detected architecture is AVX-512 (AVX_TYPE EQUAL 124), the script sets the AVX_FLAG variable to "/arch:AVX512" for MSVC or "-mavx512bw;-mavx512f" for other compilers. A status message is displayed indicating the detected architecture as AVX512.
+
+If the detected architecture is AVX2 (AVX_TYPE EQUAL 125), the script sets the AVX_FLAG variable to "/arch:AVX2" for MSVC or "-mavx2" for other compilers. A status message is displayed indicating the detected architecture as AVX2.
+
+If the detected architecture is AVX (AVX_TYPE EQUAL 126), the script sets the AVX_FLAG variable to "/arch:AVX" for MSVC or "-mavx" for other compilers. A status message is displayed indicating the detected architecture as AVX.
+
+If none of the above cases match, it indicates a fallback architecture. The AVX_FLAG variable is set to an empty value, and a status message is displayed indicating the detected architecture as FALLBACK.
+
+For each supported architecture, the script sets the appropriate compiler flags to enable the compiler to generate optimized code for that specific architecture.
+
+Conclusion
+Jsonifier's CMakeLists.txt file incorporates CPU architecture detection and configuration to optimize code generation for different supported architectures: x64, AVX, AVX2, and AVX-512. By detecting the architecture at compile time and setting the corresponding compiler flags, Jsonifier ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU.
+
 ## Installation (Vcpkg)
 - Requirements:
 	- CMake 3.18 or later.
@@ -154,7 +241,7 @@ By using the `excludedKeys` member variable and adding keys to the set, you can 
 	1. Install vcpkg, if need be.
 	2. Make sure to run vcpkg integrate install.
 	3. Enter within a terminal vcpkg install jsonifier:x64-windows_OR_linux.
-	4. Set up a project in your IDE and make sure to set the C++ standard to C++23 or later - and include jsonifier/Index.hpp.
+	4. Set up a project in your IDE and make sure to set the C++ standard to C++23 or later - and include `<jsonifier/Index.hpp>`.
 	5. Build and run!
 	
 ## Installation (CMake-FetchContent)

@@ -6,5 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Jsonifier\\' => array($baseDir . '/classes'),
+    'Jsonifier\\' => array($baseDir . '/Classes'),
 );

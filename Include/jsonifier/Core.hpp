@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Serialize to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
@@ -26,32 +28,29 @@
 
 namespace Jsonifier {
 	/// A class to aid in registering a class/struct to be parsed/serialized.
-	template<typename OTy> struct Core {};
+	template<typename ValueType> struct Core {};
 }
 
 namespace JsonifierInternal {
 
-	template<typename OTy>
-	concept GlobalCoreT = requires { Jsonifier::Core<OTy>::parseValue; };
-
-	template<typename OTy>
-	concept JsonifierT = requires { Jsonifier::Core<std::decay_t<OTy>>::parseValue; } || GlobalCoreT<std::decay_t<OTy>>;
+	template<typename ValueType>
+	concept JsonifierT = requires { Jsonifier::Core<std::decay_t<ValueType>>::parseValue; };
 
 	struct EmptyVal {
 		inline static constexpr Tuplet::Tuple<> parseValue{};
 	};
 
-	template<typename OTy> inline constexpr auto CoreWrapperV = [] {
-		if constexpr (GlobalCoreT<OTy>) {
-			return Jsonifier::Core<OTy>::parseValue;
+	template<typename ValueType> inline constexpr auto CoreWrapperV = [] {
+		if constexpr (JsonifierT<ValueType>) {
+			return Jsonifier::Core<ValueType>::parseValue;
 		} else {
 			return EmptyVal{};
 		}
 	}();
 
-	template<typename OTy> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<OTy>>.parseValue;
+	template<typename ValueType> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<ValueType>>.parseValue;
 
-	template<typename OTy> using CoreT = std::decay_t<decltype(CoreV<OTy>)>;
+	template<typename ValueType> using CoreT = std::decay_t<decltype(CoreV<ValueType>)>;
 
-	template<typename OTy> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<OTy>>)>;
+	template<typename ValueType> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<ValueType>>)>;
 }

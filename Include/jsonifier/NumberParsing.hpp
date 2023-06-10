@@ -1,25 +1,27 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
-/// Most of the code in this header was sampled heavily from Glaze library - https://github.com/stephenberry/glaze
+/// Most of the code in this header was sampled from Glaze library - https://github.com/stephenberry/glaze
 #pragma once
 
 #include <jsonifier/StringParsing.hpp>
@@ -44,7 +46,7 @@ namespace JsonifierInternal {
 
 	// https://stackoverflow.com/questions/28868367/getting-the-high-part-of-64-bit-integer-multiplication
 #ifdef __SIZEOF_INT128__
-	inline static uint64_t mulhi64(uint64_t a, uint64_t b) {
+	inline static size_t mulhi64(size_t a, size_t b) {
 	#if defined(__GNUC__) || defined(__GNUG__)
 		#pragma GCC diagnostic push
 		#pragma GCC diagnostic ignored "-Wpedantic"
@@ -56,17 +58,17 @@ namespace JsonifierInternal {
 #elif defined(_M_X64) || defined(_M_ARM64)
 	#define mulhi64 __umulh
 #else
-	inline static uint64_t mulhi64(uint64_t a, uint64_t b) {
-		uint64_t aLo = ( uint32_t )a;
-		uint64_t aHi = a >> 32;
-		uint64_t bLo = ( uint32_t )b;
-		uint64_t bHi = b >> 32;
-		uint64_t axbHi = aHi * bHi;
-		uint64_t axbMid = aHi * bLo;
-		uint64_t bxaMid = bHi * aLo;
-		uint64_t axbLo = aLo * bLo;
-		uint64_t carryBit = (( uint64_t )( uint32_t )axbMid + ( uint64_t )( uint32_t )bxaMid + (axbLo >> 32)) >> 32;
-		uint64_t multhi = axbHi + (axbMid >> 32) + (bxaMid >> 32) + carryBit;
+	inline static size_t mulhi64(size_t a, size_t b) {
+		size_t aLo = ( uint32_t )a;
+		size_t aHi = a >> 32;
+		size_t bLo = ( uint32_t )b;
+		size_t bHi = b >> 32;
+		size_t axbHi = aHi * bHi;
+		size_t axbMid = aHi * bLo;
+		size_t bxaMid = bHi * aLo;
+		size_t axbLo = aLo * bLo;
+		size_t carryBit = (( size_t )( uint32_t )axbMid + ( size_t )( uint32_t )bxaMid + (axbLo >> 32)) >> 32;
+		size_t multhi = axbHi + (axbMid >> 32) + (bxaMid >> 32) + carryBit;
 		return multhi;
 	}
 #endif
@@ -76,7 +78,7 @@ namespace JsonifierInternal {
 	static constexpr auto pow10SigTableMinExact = 0;
 	static constexpr auto pow10SigTableMaxExact = 27;
 
-	inline static uint64_t sig2FromExp10(int32_t exp10) noexcept {
+	inline static size_t sig2FromExp10(int32_t exp10) noexcept {
 		return pow10SigTable[static_cast<size_t>(exp10) - pow10SigTableMinExp];
 	}
 
@@ -117,7 +119,7 @@ namespace JsonifierInternal {
 	struct BigIntT {
 		Jsonifier::Vector<uint32_t> data = {};
 
-		inline BigIntT(uint64_t num) {
+		inline BigIntT(size_t num) {
 			uint32_t lowerWord = uint32_t(num);
 			uint32_t upperWord = uint32_t(num >> 32);
 			if (upperWord > 0) {
@@ -130,7 +132,7 @@ namespace JsonifierInternal {
 		inline void mulU32(uint32_t num) {
 			uint32_t carry = 0;
 			for (size_t x = 0; x < data.size(); x++) {
-				uint64_t res = uint64_t(data[x]) * uint64_t(num) + uint64_t(carry);
+				size_t res = size_t(data[x]) * size_t(num) + size_t(carry);
 				uint32_t lowerWord = uint32_t(res);
 				uint32_t upperWord = uint32_t(res >> 32);
 				data[x] = lowerWord;
@@ -195,7 +197,7 @@ namespace JsonifierInternal {
 
 	// Source: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c
 
-	inline static void u128_mul(uint64_t a, uint64_t b, uint64_t* hi, uint64_t* lo) {
+	inline static void u128_mul(size_t a, size_t b, size_t* hi, size_t* lo) {
 #ifdef __SIZEOF_INT128__
 	#if defined(__GNUC__) || defined(__GNUG__)
 		#pragma GCC diagnostic push
@@ -205,8 +207,8 @@ namespace JsonifierInternal {
 	#if defined(__GNUC__) || defined(__GNUG__)
 		#pragma GCC diagnostic pop
 	#endif
-		*hi = uint64_t(m >> 64);
-		*lo = uint64_t(m);
+		*hi = size_t(m >> 64);
+		*lo = size_t(m);
 #elif defined(_M_X64)
 		*lo = _umul128(a, b, hi);
 #elif defined(_M_ARM64)
@@ -215,18 +217,18 @@ namespace JsonifierInternal {
 #else
 		uint32_t a0 = ( uint32_t )(a), a1 = ( uint32_t )(a >> 32);
 		uint32_t b0 = ( uint32_t )(b), b1 = ( uint32_t )(b >> 32);
-		uint64_t p00 = ( uint64_t )a0 * b0, p01 = ( uint64_t )a0 * b1;
-		uint64_t p10 = ( uint64_t )a1 * b0, p11 = ( uint64_t )a1 * b1;
-		uint64_t m0 = p01 + (p00 >> 32);
+		size_t p00 = ( size_t )a0 * b0, p01 = ( size_t )a0 * b1;
+		size_t p10 = ( size_t )a1 * b0, p11 = ( size_t )a1 * b1;
+		size_t m0 = p01 + (p00 >> 32);
 		uint32_t m00 = ( uint32_t )(m0), m01 = ( uint32_t )(m0 >> 32);
-		uint64_t m1 = p10 + m00;
+		size_t m1 = p10 + m00;
 		uint32_t m10 = ( uint32_t )(m1), m11 = ( uint32_t )(m1 >> 32);
 		*hi = p11 + m01 + m11;
-		*lo = (( uint64_t )m10 << 32) | ( uint32_t )p00;
+		*lo = (( size_t )m10 << 32) | ( uint32_t )p00;
 #endif
 	}
 
-	inline static void u128_mul_add(uint64_t a, uint64_t b, uint64_t c, uint64_t* hi, uint64_t* lo) {
+	inline static void u128_mul_add(size_t a, size_t b, size_t c, size_t* hi, size_t* lo) {
 #ifdef __SIZEOF_INT128__
 	#if defined(__GNUC__) || defined(__GNUG__)
 		#pragma GCC diagnostic push
@@ -236,10 +238,10 @@ namespace JsonifierInternal {
 	#if defined(__GNUC__) || defined(__GNUG__)
 		#pragma GCC diagnostic pop
 	#endif
-		*hi = uint64_t(m >> 64);
-		*lo = uint64_t(m);
+		*hi = size_t(m >> 64);
+		*lo = size_t(m);
 #else
-		uint64_t h, l, t;
+		size_t h, l, t;
 		u128_mul(a, b, &h, &l);
 		t = l + c;
 		h += ((t < l) | (t < c));
@@ -248,47 +250,47 @@ namespace JsonifierInternal {
 #endif
 	}
 
-	inline static uint64_t roundToOdd(uint64_t hi, uint64_t lo, uint64_t codePoint) {
-		uint64_t xHi, xLo, yHi, yLo;
+	inline static size_t roundToOdd(size_t hi, size_t lo, size_t codePoint) {
+		size_t xHi, xLo, yHi, yLo;
 		u128_mul(codePoint, lo, &xHi, &xLo);
 		u128_mul_add(codePoint, hi, xHi, &yHi, &yLo);
 		return yHi | (yLo > 1);
 	}
 
-	template<typename OTy> inline static bool parseNumber(OTy& val, auto* cur) noexcept {
+	template<typename ValueType> inline static bool parseNumber(ValueType& val, auto* cur) noexcept {
 		StringViewPtr sigCut = nullptr;
 		[[maybe_unused]] StringViewPtr sigEnd = nullptr;
 		StringViewPtr dotPos = nullptr;
 		uint32_t fracZeros = 0;
-		uint64_t sig = 0;
+		size_t sig = 0;
 		int32_t exp = 0;
 		bool expSign;
 		int32_t expSig = 0;
 		int32_t expLit = 0;
-		uint64_t numTmp;
+		size_t numTmp;
 		StringViewPtr tmp;
 		StringViewPtr hdr = cur;
 		bool sign;
 		sign = (*hdr == '-');
 		cur += sign;
-		auto applySign = [&](auto&& val) -> OTy {
-			if constexpr (std::is_unsigned_v<OTy>) {
-				return static_cast<OTy>(val);
+		auto applySign = [&](auto&& val) -> ValueType {
+			if constexpr (std::is_unsigned_v<ValueType>) {
+				return static_cast<ValueType>(val);
 			} else {
-				return sign ? -static_cast<OTy>(val) : static_cast<OTy>(val);
+				return sign ? -static_cast<ValueType>(val) : static_cast<ValueType>(val);
 			}
 		};
-		sig = uint64_t(*cur - '0');
+		sig = size_t(*cur - '0');
 		if (sig > 9) {
-			if constexpr (std::integral<OTy>) {
+			if constexpr (std::integral<ValueType>) {
 				return false;
 			} else if (*cur == 'n' && cur[1] == 'u' && cur[2] == 'l' && cur[3] == 'l') {
 				cur += 4;
-				val = std::numeric_limits<OTy>::quiet_NaN();
+				val = std::numeric_limits<ValueType>::quiet_NaN();
 				return true;
 			} else if ((*cur | eBit) == 'n' && (cur[1] | eBit) == 'a' && (cur[2] | eBit) == 'n') {
 				cur += 3;
-				val = sign ? -std::numeric_limits<OTy>::quiet_NaN() : std::numeric_limits<OTy>::quiet_NaN();
+				val = sign ? -std::numeric_limits<ValueType>::quiet_NaN() : std::numeric_limits<ValueType>::quiet_NaN();
 				return true;
 			} else {
 				return false;
@@ -305,8 +307,8 @@ namespace JsonifierInternal {
 #undef expr_intg
 		cur += 19;
 		if (!digiIsDigitOrFp(*cur)) {
-			val = static_cast<OTy>(sig);
-			if constexpr (!std::is_unsigned_v<OTy>) {
+			val = static_cast<ValueType>(sig);
+			if constexpr (!std::is_unsigned_v<ValueType>) {
 				val *= sign ? -1 : 1;
 			}
 			return true;
@@ -331,7 +333,7 @@ namespace JsonifierInternal {
 		repeatIIn_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(x) \
-	digi_frac_##x : if (((numTmp = static_cast<uint64_t>(cur[x + 1 + fracZeros] - zero)) <= 9)) [[likely]] sig = numTmp + sig * 10; \
+	digi_frac_##x : if (((numTmp = static_cast<size_t>(cur[x + 1 + fracZeros] - zero)) <= 9)) [[likely]] sig = numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##x; \
 	}
@@ -346,14 +348,14 @@ namespace JsonifierInternal {
 	goto digi_frac_end;
 		repeatIIn_1_18(expr_stop)
 #undef expr_stop
-			digi_intg_more : static constexpr uint64_t u64Max = (std::numeric_limits<uint64_t>::max)();
+			digi_intg_more : static constexpr size_t u64Max = (std::numeric_limits<size_t>::max)();
 		if ((numTmp = *cur - zero) < 10) {
 			if (!digiIsDigitOrFp(cur[1])) {
 				if ((sig < (u64Max / 10)) || (sig == (u64Max / 10) && numTmp <= (u64Max % 10))) {
 					sig = numTmp + sig * 10;
 					++cur;
-					val = static_cast<OTy>(sig);
-					if constexpr (!std::is_unsigned_v<OTy>) {
+					val = static_cast<ValueType>(sig);
+					if constexpr (!std::is_unsigned_v<ValueType>) {
 						val *= sign ? -1 : 1;
 					}
 					return true;
@@ -428,60 +430,60 @@ namespace JsonifierInternal {
 		if ((cur - tmp >= 6)) [[unlikely]] {
 			if (sig == 0 || expSign) {
 				val = applySign(0);
-				val = static_cast<OTy>(sig);
+				val = static_cast<ValueType>(sig);
 				return true;
 			} else {
-				val = applySign(std::numeric_limits<OTy>::infinity());
+				val = applySign(std::numeric_limits<ValueType>::infinity());
 				return true;
 			}
 		}
 		expSig += expSign ? -expLit : expLit;
 	digi_exp_finish:
-		if constexpr (std::integral<OTy>) {
+		if constexpr (std::integral<ValueType>) {
 			if (sig == 0) {
-				val = ((sign && !std::is_unsigned_v<OTy>) ? -0 : 0);
+				val = ((sign && !std::is_unsigned_v<ValueType>) ? -0 : 0);
 				return true;
 			}
 			if (expSig < -20) {
 				val = applySign(0);
 				return true;
 			} else if (expSig > 20) {
-				val = applySign(std::numeric_limits<OTy>::infinity());
+				val = applySign(std::numeric_limits<ValueType>::infinity());
 				return true;
 			}
 			exp = expSig;
 		} else {
 			if (sig == 0) {
-				val = (sign ? -OTy{ 0 } : OTy{ 0 });
+				val = (sign ? -ValueType{ 0 } : ValueType{ 0 });
 				return true;
 			}
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
-				val = (sign ? -OTy{ 0 } : OTy{ 0 });
+				val = (sign ? -ValueType{ 0 } : ValueType{ 0 });
 				return true;
 			} else if ((expSig > f64MaxDecExp)) [[unlikely]] {
-				val = sign ? -std::numeric_limits<OTy>::infinity() : std::numeric_limits<OTy>::infinity();
+				val = sign ? -std::numeric_limits<ValueType>::infinity() : std::numeric_limits<ValueType>::infinity();
 				return true;
 			}
 			exp = expSig;
 		}
 	digi_finish:
 
-		if constexpr (std::integral<OTy>) {
-			val = static_cast<OTy>(sig);
-			if constexpr (!std::is_unsigned_v<OTy>) {
+		if constexpr (std::integral<ValueType>) {
+			val = static_cast<ValueType>(sig);
+			if constexpr (!std::is_unsigned_v<ValueType>) {
 				val *= sign ? -1 : 1;
 			}
 			if (exp >= 0) {
-				val *= OTy(powersOfTenInt[exp]);
+				val *= ValueType(powersOfTenInt[exp]);
 			} else {
-				val /= OTy(powersOfTenInt[-exp]);
+				val /= ValueType(powersOfTenInt[-exp]);
 			}
 			return true;
 		} else {
-			if constexpr (std::same_as<double, OTy>) {
-				if (sig < (uint64_t(1) << 53) && std::abs(exp) <= 22) {
-					val = static_cast<OTy>(sig);
-					if constexpr (!std::is_unsigned_v<OTy>) {
+			if constexpr (std::same_as<double, ValueType>) {
+				if (sig < (size_t(1) << 53) && std::abs(exp) <= 22) {
+					val = static_cast<ValueType>(sig);
+					if constexpr (!std::is_unsigned_v<ValueType>) {
 						val *= sign ? -1 : 1;
 					}
 					if (exp >= 0) {
@@ -492,50 +494,51 @@ namespace JsonifierInternal {
 					return true;
 				}
 			} else {
-				if (sig < (uint64_t(1) << 24) && std::abs(exp) <= 8) {
-					val = static_cast<OTy>(sig);
-					if constexpr (!std::is_unsigned_v<OTy>) {
+				if (sig < (size_t(1) << 24) && std::abs(exp) <= 8) {
+					val = static_cast<ValueType>(sig);
+					if constexpr (!std::is_unsigned_v<ValueType>) {
 						val *= sign ? -1 : 1;
 					}
 					if (exp >= 0) {
-						val *= static_cast<OTy>(powersOfTenFloat[exp]);
+						val *= static_cast<ValueType>(powersOfTenFloat[exp]);
 					} else {
-						val /= static_cast<OTy>(powersOfTenFloat[-exp]);
+						val /= static_cast<ValueType>(powersOfTenFloat[-exp]);
 					}
 					return true;
 				}
 			}
 
-			static_assert(std::numeric_limits<OTy>::is_iec559);
-			static_assert(std::numeric_limits<OTy>::radix == 2);
-			static_assert(std::same_as<float, RefUnwrap<OTy>> || std::same_as<double, RefUnwrap<OTy>>);
+			static_assert(std::numeric_limits<ValueType>::is_iec559);
+			static_assert(std::numeric_limits<ValueType>::radix == 2);
+			static_assert(std::same_as<float, RefUnwrap<ValueType>> || std::same_as<double, RefUnwrap<ValueType>>);
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-			using raw_t = std::conditional_t<std::same_as<float, RefUnwrap<OTy>>, uint32_t, uint64_t>;
+			using raw_t = std::conditional_t<std::same_as<float, RefUnwrap<ValueType>>, uint32_t, size_t>;
 			const auto sigLeadingZeros = std::countl_zero(sig);
 			const auto sigNorm = sig << sigLeadingZeros;
 			const auto sig2Norm = sig2FromExp10(exp);
 			const auto sigProduct = mulhi64(sigNorm, sig2Norm) + 1;
 			const auto sigProductStartsWith1 = sigProduct >> 63;
 			auto mantisa = sigProduct << (2 - sigProductStartsWith1);
-			static constexpr uint64_t roundMask = uint64_t(1) << 63 >> (std::numeric_limits<OTy>::digits - 1);
-			static constexpr uint32_t exponentBits = ceillog2(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
+			static constexpr size_t roundMask = size_t(1) << 63 >> (std::numeric_limits<ValueType>::digits - 1);
+			static constexpr uint32_t exponentBits =
+				ceillog2(std::numeric_limits<ValueType>::max_exponent - std::numeric_limits<ValueType>::min_exponent + 1);
 			static constexpr uint32_t mantissaShift = exponentBits + 1 + 64 - 8 * sizeof(raw_t);
 			int32_t exp2 = exp2FromExp10(exp) + static_cast<uint32_t>(-sigLeadingZeros + sigProductStartsWith1);
 
-			if (exp2 < std::numeric_limits<OTy>::min_exponent - 1) [[unlikely]] {
-				val = sign ? -OTy(0) : OTy(0);
+			if (exp2 < std::numeric_limits<ValueType>::min_exponent - 1) [[unlikely]] {
+				val = sign ? -ValueType(0) : ValueType(0);
 				return true;
-			} else if (exp2 > std::numeric_limits<OTy>::max_exponent - 1) [[unlikely]] {
-				val = sign ? -std::numeric_limits<OTy>::infinity() : std::numeric_limits<OTy>::infinity();
+			} else if (exp2 > std::numeric_limits<ValueType>::max_exponent - 1) [[unlikely]] {
+				val = sign ? -std::numeric_limits<ValueType>::infinity() : std::numeric_limits<ValueType>::infinity();
 				return true;
 			}
 
-			uint64_t round = 0;
+			size_t round = 0;
 			if (roundMask & mantisa) {
-				if (mantisa << (std::numeric_limits<OTy>::digits) == 0) {
-					auto sigUpper = (mantisa >> (mantissaShift - 1)) | (uint64_t(1) << 63 >> (mantissaShift - 2)) | 1;
-					int32_t exp2Upper = exp2 - std::numeric_limits<OTy>::digits;
+				if (mantisa << (std::numeric_limits<ValueType>::digits) == 0) {
+					auto sigUpper = (mantisa >> (mantissaShift - 1)) | (size_t(1) << 63 >> (mantissaShift - 2)) | 1;
+					int32_t exp2Upper = exp2 - std::numeric_limits<ValueType>::digits;
 
 					BigIntT bigComp{ sigUpper };
 					BigIntT bigFull{ sig };
@@ -557,22 +560,22 @@ namespace JsonifierInternal {
 					}
 				} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (roundMask << 1)) ||
 					(static_cast<size_t>(std::countr_zero(sigNorm) + std::countr_zero(sig2Norm)) <
-						128 - std::numeric_limits<OTy>::digits - (2 - sigProductStartsWith1))) {
+						128 - std::numeric_limits<ValueType>::digits - (2 - sigProductStartsWith1))) {
 					round = 1;
 				}
 			}
 
 			auto num = raw_t(sign) << (sizeof(raw_t) * 8 - 1) | raw_t(mantisa >> mantissaShift) |
-				(raw_t(exp2 + std::numeric_limits<OTy>::max_exponent - 1) << (std::numeric_limits<OTy>::digits - 1));
+				(raw_t(exp2 + std::numeric_limits<ValueType>::max_exponent - 1) << (std::numeric_limits<ValueType>::digits - 1));
 			num += raw_t(round);
-			std::memcpy(&val, &num, sizeof(OTy));
+			std::memcpy(&val, &num, sizeof(ValueType));
 			return true;
 		}
 	}
 
-	template<typename OTy>
-		requires std::same_as<OTy, uint32_t> || std::same_as<OTy, uint16_t> || std::same_as<OTy, uint8_t>
-	inline static auto* toChars(auto* buf, OTy val) noexcept {
+	template<typename ValueType>
+		requires std::same_as<ValueType, uint32_t> || std::same_as<ValueType, uint16_t> || std::same_as<ValueType, uint8_t>
+	inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 		uint32_t lz;
 
@@ -591,7 +594,7 @@ namespace JsonifierInternal {
 
 			return buf + 4;
 		} else if (val < 1000000) {
-			aa = uint32_t((uint64_t(val) * 429497) >> 32);
+			aa = uint32_t((size_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb = (bbcc * 5243) >> 19;
 			cc = bbcc - bb * 100;
@@ -602,7 +605,7 @@ namespace JsonifierInternal {
 			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 		} else if (val < 100000000) {
-			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
+			aabb = uint32_t((size_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa = (aabb * 5243) >> 19;
 			cc = (ccdd * 5243) >> 19;
@@ -616,8 +619,8 @@ namespace JsonifierInternal {
 			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 		} else {
-			aabbcc = uint32_t((uint64_t(val) * 3518437209ul) >> 45);
-			aa = uint32_t((uint64_t(aabbcc) * 429497) >> 32);
+			aabbcc = uint32_t((size_t(val) * 3518437209ul) >> 45);
+			aa = uint32_t((size_t(aabbcc) * 429497) >> 32);
 			ddee = val - aabbcc * 10000;
 			bbcc = aabbcc - aa * 10000;
 			bb = (bbcc * 5243) >> 19;
@@ -635,9 +638,9 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename OTy>
-		requires std::same_as<OTy, int32_t> || std::same_as<OTy, int16_t> || std::same_as<OTy, int8_t>
-	inline static auto* toChars(auto* buf, OTy val) noexcept {
+	template<typename ValueType>
+		requires std::same_as<ValueType, int32_t> || std::same_as<ValueType, int16_t> || std::same_as<ValueType, int8_t>
+	inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		uint32_t neg = uint32_t(-val);
 		size_t sign = val < 0;
 		*buf = '-';
@@ -646,7 +649,7 @@ namespace JsonifierInternal {
 
 	inline static auto* toCharsU64Len8(auto* buf, uint32_t val) noexcept {
 		uint32_t aa, bb, cc, dd, aabb, ccdd;
-		aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
+		aabb = uint32_t((size_t(val) * 109951163) >> 40);
 		ccdd = val - aabb * 10000;
 		aa = (aabb * 5243) >> 19;
 		cc = (ccdd * 5243) >> 19;
@@ -685,7 +688,7 @@ namespace JsonifierInternal {
 			std::memcpy(buf + 2, charTable + bb * 2, 2);
 			return buf + 4;
 		} else if (val < 1000000) {
-			aa = uint32_t((uint64_t(val) * 429497) >> 32);
+			aa = uint32_t((size_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb = (bbcc * 5243) >> 19;
 			cc = bbcc - bb * 100;
@@ -696,7 +699,7 @@ namespace JsonifierInternal {
 			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 		} else {
-			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
+			aabb = uint32_t((size_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa = (aabb * 5243) >> 19;
 			cc = (ccdd * 5243) >> 19;
@@ -716,7 +719,7 @@ namespace JsonifierInternal {
 		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, lz;
 
 		if (val < 1000000) {
-			aa = uint32_t((uint64_t(val) * 429497) >> 32);
+			aa = uint32_t((size_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb = (bbcc * 5243) >> 19;
 			cc = bbcc - bb * 100;
@@ -727,7 +730,7 @@ namespace JsonifierInternal {
 			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 		} else {
-			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
+			aabb = uint32_t((size_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa = (aabb * 5243) >> 19;
 			cc = (ccdd * 5243) >> 19;
@@ -743,10 +746,10 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename OTy>
-		requires std::same_as<OTy, uint64_t>
-	inline static auto* toChars(auto* buf, OTy val) noexcept {
-		uint64_t tmp, hgh;
+	template<typename ValueType>
+		requires std::same_as<ValueType, size_t>
+	inline static auto* toChars(auto* buf, ValueType val) noexcept {
+		size_t tmp, hgh;
 		uint32_t mid, low;
 
 		if (val < 100000000) {
@@ -770,13 +773,13 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename OTy>
-		requires std::same_as<OTy, int64_t>
-	inline static auto* toChars(auto* buf, OTy val) noexcept {
-		uint64_t neg = uint64_t(-val);
+	template<typename ValueType>
+		requires std::same_as<ValueType, int64_t>
+	inline static auto* toChars(auto* buf, ValueType val) noexcept {
+		size_t neg = size_t(-val);
 		size_t sign = val < 0;
 		*buf = '-';
-		return toChars(buf + sign, sign ? uint64_t(neg) : uint64_t(val));
+		return toChars(buf + sign, sign ? size_t(neg) : size_t(val));
 	}
 
 	//Source: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c
@@ -785,7 +788,7 @@ namespace JsonifierInternal {
 	static constexpr auto pow10SigTable128MinExactExp = 0;
 	static constexpr auto pow10SigTable128MaxExactExp = 55;
 
-	inline static void pow10TableGetSig128(int32_t exp10, uint64_t* hi, uint64_t* lo) {
+	inline static void pow10TableGetSig128(int32_t exp10, size_t* hi, size_t* lo) {
 		int32_t idx = exp10 - (pow10SigTable128MinExp);
 		*hi = pow10SigTable128[idx * 2ull];
 		*lo = pow10SigTable128[idx * 2ull + 1ull];
@@ -802,9 +805,9 @@ namespace JsonifierInternal {
     https://github.com/jk-jeon/dragonbox/blob/master/other_files/Dragonbox.pdf
     https://github.com/jk-jeon/dragonbox
     */
-	inline static void f64BinToDec(uint64_t sigRaw, int32_t expRaw, uint64_t sigBin, int32_t expBin, uint64_t* sigDec, int32_t* expDec) {
+	inline static void f64BinToDec(size_t sigRaw, int32_t expRaw, size_t sigBin, int32_t expBin, size_t* sigDec, int32_t* expDec) {
 		bool isEven, lowerBoundCloser, uInside, wInside, round_up;
-		uint64_t s, sp, cb, cbl, cbr, vb, vbl, vbr, pow10hi, pow10lo, upper, lower, mid;
+		size_t s, sp, cb, cbl, cbr, vb, vbl, vbr, pow10hi, pow10lo, upper, lower, mid;
 		int32_t k, h, exp10;
 
 		isEven = !(sigBin & 1);
@@ -850,15 +853,15 @@ namespace JsonifierInternal {
 		*expDec = k;
 	}
 
-	inline static char* writeU64Len15To17Trim(char* buf, uint64_t sig) {
+	inline static char* writeU64Len15To17Trim(char* buf, size_t sig) {
 		bool lz;
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = uint32_t(sig / 100000000);
-		uint32_t ffgghhii = uint32_t(sig - uint64_t(abbccddee) * 100000000);
+		uint32_t ffgghhii = uint32_t(sig - size_t(abbccddee) * 100000000);
 		uint32_t abbcc = abbccddee / 10000;
 		uint32_t ddee = abbccddee - abbcc * 10000;
-		uint32_t abb = uint32_t((uint64_t(abbcc) * 167773) >> 24);
+		uint32_t abb = uint32_t((size_t(abbcc) * 167773) >> 24);
 		uint32_t a = (abb * 41) >> 12;
 		uint32_t bb = abb - a * 100;
 		uint32_t cc = abbcc - abb * 100;
@@ -873,7 +876,7 @@ namespace JsonifierInternal {
 		if (ffgghhii) {
 			uint32_t dd = (ddee * 5243) >> 19;
 			uint32_t ee = ddee - dd * 100;
-			uint32_t ffgg = uint32_t((uint64_t(ffgghhii) * 109951163) >> 40);
+			uint32_t ffgg = uint32_t((size_t(ffgghhii) * 109951163) >> 40);
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff = (ffgg * 5243) >> 19;
 			uint32_t gg = ffgg - ff * 100;
@@ -923,22 +926,23 @@ namespace JsonifierInternal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<typename OTy>
-		requires std::same_as<OTy, float> || std::same_as<OTy, double>
-	inline static char* toChars(char* buffer, OTy val) noexcept {
-		static_assert(std::numeric_limits<OTy>::is_iec559);
-		static_assert(std::numeric_limits<OTy>::radix == 2);
-		static_assert(std::same_as<float, OTy> || std::same_as<double, OTy>);
+	template<typename ValueType>
+		requires std::same_as<ValueType, float> || std::same_as<ValueType, double>
+	inline static char* toChars(char* buffer, ValueType val) noexcept {
+		static_assert(std::numeric_limits<ValueType>::is_iec559);
+		static_assert(std::numeric_limits<ValueType>::radix == 2);
+		static_assert(std::same_as<float, ValueType> || std::same_as<double, ValueType>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-		using raw_t = std::conditional_t<std::same_as<float, OTy>, uint32_t, uint64_t>;
+		using raw_t = std::conditional_t<std::same_as<float, ValueType>, uint32_t, size_t>;
 
 		raw_t raw;
-		std::memcpy(&raw, &val, sizeof(OTy));
+		std::memcpy(&raw, &val, sizeof(ValueType));
 
-		static constexpr uint32_t exponentBits = numbits(std::numeric_limits<OTy>::max_exponent - std::numeric_limits<OTy>::min_exponent + 1);
+		static constexpr uint32_t exponentBits =
+			numbits(std::numeric_limits<ValueType>::max_exponent - std::numeric_limits<ValueType>::min_exponent + 1);
 		static constexpr raw_t sigMask = raw_t(-1) >> (exponentBits + 1);
-		bool sign = (raw >> (sizeof(OTy) * 8 - 1));
-		uint64_t sigRaw = raw & sigMask;
+		bool sign = (raw >> (sizeof(ValueType) * 8 - 1));
+		size_t sigRaw = raw & sigMask;
 		int32_t expRaw = raw << 1 >> (sizeof(raw_t) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
@@ -950,20 +954,20 @@ namespace JsonifierInternal {
 			++buffer;
 		}
 		if ((raw << 1) != 0) [[likely]] {
-			uint64_t sigBin;
+			size_t sigBin;
 			int32_t expBin;
 			if (expRaw == 0) [[unlikely]] {
 				sigBin = sigRaw;
-				expBin = 1 - (std::numeric_limits<OTy>::max_exponent - 1) - (std::numeric_limits<OTy>::digits - 1);
+				expBin = 1 - (std::numeric_limits<ValueType>::max_exponent - 1) - (std::numeric_limits<ValueType>::digits - 1);
 			} else {
-				sigBin = sigRaw | uint64_t(1ull << (std::numeric_limits<OTy>::digits - 1));
-				expBin = int32_t(expRaw) - (std::numeric_limits<OTy>::max_exponent - 1) - (std::numeric_limits<OTy>::digits - 1);
+				sigBin = sigRaw | size_t(1ull << (std::numeric_limits<ValueType>::digits - 1));
+				expBin = int32_t(expRaw) - (std::numeric_limits<ValueType>::max_exponent - 1) - (std::numeric_limits<ValueType>::digits - 1);
 			}
 
-			uint64_t sigDec;
+			size_t sigDec;
 			int32_t expDec;
 			f64BinToDec(sigRaw, expRaw, sigBin, expBin, &sigDec, &expDec);
-			if constexpr (std::same_as<OTy, float>) {
+			if constexpr (std::same_as<ValueType, float>) {
 				sigDec *= 100000000;
 				expDec -= 8;
 			}

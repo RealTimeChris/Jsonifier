@@ -1,67 +1,29 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
 #pragma once
 
-#ifndef __APPLE__
-	#include <source_location>
-#else
-
-namespace std {
-
-	class source_location {
-	  public:
-		constexpr source_location() noexcept = default;
-
-		constexpr source_location(int32_t lineNew = __LINE__, const char* const fileNew = __FILE__) : file{ fileNew } {
-			lineVal = lineNew;
-		}
-
-		constexpr static std::source_location current(int32_t lineNew = __LINE__, const char* const fileNew = __FILE__) {
-			return { lineNew, fileNew };
-		}
-
-		constexpr int32_t column() {
-			return this->columnVal;
-		}
-
-		constexpr const char* const file_name() {
-			return this->file;
-		}
-
-		constexpr const char* const function_name() {
-			return nullptr;
-		}
-
-		constexpr int32_t line() {
-			return this->lineVal;
-		}
-
-	  protected:
-		int32_t columnVal{};
-		int32_t lineVal{};
-		const char* const file{};
-	};
-}
-#endif
+#include <source_location>
 #include <unordered_map>
 #include <exception>
 #include <string>
@@ -77,7 +39,7 @@ namespace JsonifierInternal {
 
 	template<ErrorCode errorCode> class JsonifierError : public std::exception {
 	  public:
-		inline constexpr JsonifierError(const Jsonifier::String& stringError, uint64_t indexNew = Jsonifier::String::npos,
+		inline constexpr JsonifierError(const Jsonifier::String& stringError, size_t indexNew = Jsonifier::String::npos,
 			std::source_location location = std::source_location::current()) {
 			errorMessage = errorCodes[errorCode] + " Error at: " + Jsonifier::String{ location.file_name() } + ":" + std::to_string(location.line()) +
 				":" + std::to_string(location.column());
@@ -89,7 +51,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline constexpr JsonifierError(Jsonifier::String&& stringError, uint64_t indexNew = Jsonifier::String::npos,
+		inline constexpr JsonifierError(Jsonifier::String&& stringError, size_t indexNew = Jsonifier::String::npos,
 			std::source_location location = std::source_location::current()) {
 			errorMessage = errorCodes[errorCode] + " Error at: " + Jsonifier::String{ location.file_name() } + ":" + std::to_string(location.line()) +
 				":" + std::to_string(location.column());

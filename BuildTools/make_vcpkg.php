@@ -4,9 +4,9 @@
  * Automatic CI process for generating new vcpkg releases.
  * Based loosely on RealTimeChris's shell script version.
  * 
- * This updates the content of ./vcpkg directory within the DPP
- * repository on the master branch, which can then be diffed into
- * the microsoft/vcpkg master branch to build a PR for the new
+ * This updates the content of ./vcpkg directory within the Jsonifier
+ * repository on the main branch, which can then be diffed into
+ * the microsoft/vcpkg main branch to build a PR for the new
  * release.
  * 
  * The procedure for this is:
@@ -18,16 +18,16 @@
  *    correct SHA512 sum in the error output. Inability to get the
  *    SHA512 sum here will return nonzero from the script, failing
  *    the CI action.
- * 3) Capture the SHA512 from the error output, switch to master
+ * 3) Capture the SHA512 from the error output, switch to main
  * 4) Copy the correct configuration into both the systemwide
  *    vcpkg install in the container, and into the vcpkg directory
- *    of master branch.
+ *    of main branch.
  * 5) Rerun the `vcpkg install` process again to verify it is working.
  *    A build failure here will return a nonzero return code from
  *    the script, failing the CI action.
  */
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/Vendor/autoload.php';
 use Jsonifier\Packager\Vcpkg;
 
 $vcpkg = new Vcpkg();
@@ -42,11 +42,10 @@ $sha512 = $vcpkg->firstBuild(
     $vcpkg->constructPortAndVersionFile()
 );
 if (!empty($sha512)) {
-    /* Now check out master */
+    /* Now check out main */
     if (!$vcpkg->checkoutRepository()) {
         exit(1);
     }
-
     /* Attempt second build with the valid SHA512 sum. Program exit
      * status is the exit status of `vcpkg install`
      */

@@ -63,7 +63,7 @@ inline constexpr static std::string_view json0 = R"({"fixed_object": {
 #include "fmt/format.h"
 
 struct fixed_object_t {
-	std::vector<uint64_t> int_array;
+	std::vector<size_t> int_array;
 	std::vector<float> float_array;
 	std::vector<double> double_array;
 };
@@ -100,77 +100,77 @@ struct obj_t {
 };
 
 template<> struct glz::meta<fixed_object_t> {
-	using OTy = fixed_object_t;
-	inline constexpr static auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+	using ValueType = fixed_object_t;
+	inline constexpr static auto value = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
-	using OTy = fixed_name_object_t;
+	using ValueType = fixed_name_object_t;
 	inline constexpr static auto value =
-		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
+		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
-	using OTy = nested_object_t;
-	inline constexpr static auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
+	using ValueType = nested_object_t;
+	inline constexpr static auto value = object("v3s", &ValueType::v3s, "id", &ValueType::id);
 };
 
 template<> struct glz::meta<another_object_t> {
-	using OTy = another_object_t;
+	using ValueType = another_object_t;
 	inline constexpr static auto value =
-		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
+		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
-	using OTy = obj_t;
-	inline constexpr static auto value = glz::object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
-		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
-		&OTy::boolean, "another_bool", &OTy::another_bool);
+	using ValueType = obj_t;
+	inline constexpr static auto value = glz::object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
+		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
+		&ValueType::boolean, "another_bool", &ValueType::another_bool);
 };
 
 template<> struct Jsonifier::Core<fixed_object_t> {
-	using OTy = fixed_object_t;
+	using ValueType = fixed_object_t;
 	inline constexpr static auto parseValue =
-		object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+		object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
-	using OTy = fixed_name_object_t;
+	using ValueType = fixed_name_object_t;
 	inline constexpr static auto parseValue =
-		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
+		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
-	using OTy = nested_object_t;
-	inline constexpr static auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
+	using ValueType = nested_object_t;
+	inline constexpr static auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
-	using OTy = another_object_t;
+	using ValueType = another_object_t;
 	inline constexpr static auto parseValue =
-		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
+		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
-	using OTy = obj_t;
-	inline constexpr static auto parseValue = object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
-		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
-		&OTy::boolean, "another_bool", &OTy::another_bool);
+	using ValueType = obj_t;
+	inline constexpr static auto parseValue = object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
+		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
+		&ValueType::boolean, "another_bool", &ValueType::another_bool);
 };
 
-template<typename OTy> struct Test {
-	std::vector<OTy> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+template<typename ValueType> struct Test {
+	std::vector<ValueType> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 
 	Test() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
+				if constexpr (std::same_as<ValueType, std::string> || std::same_as<ValueType, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000);
 				} else {
-					v[x] = static_cast<OTy>(100000000000000000);
+					v[x] = static_cast<ValueType>(100000000000000000);
 				}
 			}
 		};
@@ -205,51 +205,51 @@ template<typename OTy> struct Test {
 };
 
 GLZ_META(Test<std::string>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
-GLZ_META(Test<uint64_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
+GLZ_META(Test<size_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 GLZ_META(Test<int64_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 
 template<> struct Jsonifier::Core<Test<std::string>> {
-	using OTy = Test<std::string>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
-		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
-		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	using ValueType = Test<std::string>;
+	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
+		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
-template<> struct Jsonifier::Core<Test<uint64_t>> {
-	using OTy = Test<uint64_t>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
-		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
-		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+template<> struct Jsonifier::Core<Test<size_t>> {
+	using ValueType = Test<size_t>;
+	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
+		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
-	using OTy = Test<int64_t>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
-		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
-		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	using ValueType = Test<int64_t>;
+	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
+		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
-	using OTy = Test<double>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
-		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
-		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	using ValueType = Test<double>;
+	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
+		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
-template<typename OTy> struct AbcTest {
-	std::vector<OTy> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
+template<typename ValueType> struct AbcTest {
+	std::vector<ValueType> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
 
 	AbcTest() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
+				if constexpr (std::same_as<ValueType, std::string> || std::same_as<ValueType, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000);
 				} else {
-					v[x] = static_cast<OTy>(100000000000000000);
+					v[x] = static_cast<ValueType>(100000000000000000);
 				}
 			}
 		};
@@ -284,36 +284,36 @@ template<typename OTy> struct AbcTest {
 };
 
 GLZ_META(AbcTest<std::string>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
-GLZ_META(AbcTest<uint64_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
+GLZ_META(AbcTest<size_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 GLZ_META(AbcTest<int64_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
-	using OTy = AbcTest<std::string>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
-		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
-		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	using ValueType = AbcTest<std::string>;
+	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
+		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
-template<> struct Jsonifier::Core<AbcTest<uint64_t>> {
-	using OTy = AbcTest<uint64_t>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
-		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
-		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+template<> struct Jsonifier::Core<AbcTest<size_t>> {
+	using ValueType = AbcTest<size_t>;
+	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
+		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
-	using OTy = AbcTest<int64_t>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
-		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
-		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	using ValueType = AbcTest<int64_t>;
+	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
+		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
-	using OTy = AbcTest<double>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
-		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
-		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	using ValueType = AbcTest<double>;
+	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
+		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 #ifdef NDEBUG
@@ -385,7 +385,7 @@ struct results {
 
 		if (json_write_uint64) {
 			const auto MBs = iterations * *json_byte_length_uint64 / (*json_write_uint64 * 1048576);
-			std::cout << name << " json uint64_t length: " << *json_byte_length_uint64 << std::endl;
+			std::cout << name << " json size_t length: " << *json_byte_length_uint64 << std::endl;
 			std::cout << name << " json uint64 write: " << *json_write_uint64 << " s, " << MBs << " MB/s\n";
 		}
 
@@ -470,7 +470,7 @@ class FileLoader {
 		auto theStream = std::ofstream{ filePath, std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
-		this->fileContents = inputStream.str();
+		fileContents = inputStream.str();
 	}
 
 	void saveFile(std::string fileToSave) {
@@ -480,7 +480,7 @@ class FileLoader {
 	}
 
 	operator std::string() {
-		return this->fileContents;
+		return fileContents;
 	}
 
 	~FileLoader() {
@@ -532,7 +532,7 @@ auto glaze_test() {
 
 	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
-	Test<uint64_t> uint64Test{};
+	Test<size_t> uint64Test{};
 	glz::write_json(uint64Test, buffer);
 	t0 = std::chrono::steady_clock::now();
 
@@ -696,7 +696,7 @@ auto glaze_single_test() {
 
 	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
-	Test<uint64_t> uint64Test{};
+	Test<size_t> uint64Test{};
 	glz::write_json(uint64Test, buffer);
 	t0 = std::chrono::steady_clock::now();
 
@@ -825,7 +825,7 @@ auto glaze_abc_test() {
 
 
 
-	AbcTest<uint64_t> uint64AbcTestWrite{};
+	AbcTest<size_t> uint64AbcTestWrite{};
 
 	glz::write_json(uint64AbcTestWrite, buffer);
 
@@ -840,7 +840,7 @@ auto glaze_abc_test() {
 	r.json_byte_length_uint64 = buffer.size();
 	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
-	Test<uint64_t> uint64AbcTest{};
+	Test<size_t> uint64AbcTest{};
 
 	if (auto error = glz::read_json(uint64AbcTest, buffer); error) {
 		std::cout << "glaze Error: " << error << std::endl;
@@ -968,7 +968,6 @@ auto Jsonifier_test() {
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations };
 	Jsonifier::JsonifierCore jsonifier{};
-
 	jsonifier.parseJson<true>(obj, buffer);
 
 	auto t0 = std::chrono::steady_clock::now();
@@ -991,12 +990,11 @@ auto Jsonifier_test() {
 	for (size_t i = 0; i < iterations; ++i) {
 		jsonifier.serializeJson(obj, buffer);
 	}
-
 	t1 = std::chrono::steady_clock::now();
 
 	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
-	Test<uint64_t> uint64Test{};
+	Test<size_t> uint64Test{};
 	jsonifier.serializeJson(uint64Test, buffer);
 	t0 = std::chrono::steady_clock::now();
 
@@ -1010,7 +1008,6 @@ auto Jsonifier_test() {
 	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
 	jsonifier.parseJson<true>(uint64Test, buffer);
-
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < iterations; ++i) {
@@ -1112,7 +1109,6 @@ auto Jsonifier_single_test() {
 	obj_t obj{};
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", 1 };
 	Jsonifier::JsonifierCore jsonifier{};
-
 	jsonifier.parseJson<true>(obj, buffer);
 	auto t0 = std::chrono::steady_clock::now();
 	try {
@@ -1136,14 +1132,13 @@ auto Jsonifier_single_test() {
 
 	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 	buffer.clear();
-	Test<uint64_t> uint64Test{};
+	Test<size_t> uint64Test{};
 	jsonifier.serializeJson(uint64Test, buffer);
 	t0 = std::chrono::steady_clock::now();
 
 	for (size_t i = 0; i < 1; ++i) {
 		jsonifier.serializeJson(uint64Test, buffer);
 	}
-
 	t1 = std::chrono::steady_clock::now();
 	r.json_byte_length_uint64 = buffer.size();
 	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
@@ -1250,7 +1245,7 @@ auto Jsonifier_abc_test() {
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations_abc };
 
-	AbcTest<uint64_t> uint64AbcTestWrite{};
+	AbcTest<size_t> uint64AbcTestWrite{};
 
 	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
 
@@ -1264,7 +1259,7 @@ auto Jsonifier_abc_test() {
 
 	r.json_byte_length_uint64 = buffer.size();
 	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<uint64_t> uint64AbcTest{};
+	Test<size_t> uint64AbcTest{};
 	jsonifier.parseJson<true>(uint64AbcTest, buffer);
 	t0 = std::chrono::steady_clock::now();
 
@@ -1365,7 +1360,7 @@ using namespace simdjson;
 struct on_demand {
 	bool read_in_order(obj_t& obj, const padded_string& json);
 	bool readDouble(Test<double>& obj, const padded_string& json);
-	bool readUint64(Test<uint64_t>& obj, const padded_string& json);
+	bool readUint64(Test<size_t>& obj, const padded_string& json);
 	bool readInt64(Test<int64_t>& obj, const padded_string& json);
 	bool readString(Test<std::string>& obj, const padded_string& json);
 
@@ -1373,9 +1368,9 @@ struct on_demand {
 	ondemand::parser parser{};
 };
 
-template<typename OTy, typename OTy2> void simdPull(const char* x, OTy2& obj, simdjson::ondemand::document& doc) {
+template<typename ValueType, typename OTy2> void simdPull(const char* x, OTy2& obj, simdjson::ondemand::document& doc) {
 	ondemand::array xNew = doc[x];
-	for (const OTy& value: xNew) {
+	for (const ValueType& value: xNew) {
 		obj.x.emplace_back(value);
 	}
 }
@@ -1400,7 +1395,7 @@ template<typename OTy, typename OTy2> void simdPull(const char* x, OTy2& obj, si
 			obj.x.resize(1000); \
 		} \
 		int32_t currentIndex{}; \
-		for (uint64_t value: newX) { \
+		for (size_t value: newX) { \
 			obj.x[currentIndex] = value; \
 			++currentIndex; \
 		} \
@@ -1463,7 +1458,7 @@ bool on_demand::readDouble(Test<double>& obj, const padded_string& json) {
 	return false;
 }
 
-bool on_demand::readUint64(Test<uint64_t>& obj, const padded_string& json) {
+bool on_demand::readUint64(Test<size_t>& obj, const padded_string& json) {
 	ondemand::document doc = parser.iterate(json).value();
 
 	SIMD_UINT64_PULL(a);
@@ -1725,7 +1720,7 @@ auto simdjson_test() {
 	r.json_byte_length_int64 = buffer.size();
 	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
-	Test<uint64_t> objUint64{};
+	Test<size_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
@@ -1855,7 +1850,7 @@ auto simdjson_single_test() {
 	r.json_byte_length_int64 = buffer.size();
 	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
-	Test<uint64_t> objUint64{};
+	Test<size_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
@@ -1887,7 +1882,7 @@ auto simdjson_single_test() {
 
 struct on_demand_abc {
 	bool readDouble(AbcTest<double>& obj, const padded_string& json);
-	bool readUint64(AbcTest<uint64_t>& obj, const padded_string& json);
+	bool readUint64(AbcTest<size_t>& obj, const padded_string& json);
 	bool readInt64(AbcTest<int64_t>& obj, const padded_string& json);
 	bool readString(AbcTest<std::string>& obj, const padded_string& json);
 
@@ -1926,7 +1921,7 @@ bool on_demand_abc::readDouble(AbcTest<double>& obj, const padded_string& json) 
 	return false;
 }
 
-bool on_demand_abc ::readUint64(AbcTest<uint64_t>& obj, const padded_string& json) {
+bool on_demand_abc ::readUint64(AbcTest<size_t>& obj, const padded_string& json) {
 	ondemand::document doc = parser.iterate(json).value();
 
 	SIMD_UINT64_PULL(a);
@@ -2104,7 +2099,7 @@ auto simdjson_abc_test() {
 	r.json_byte_length_int64 = buffer.size();
 	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
 
-	AbcTest<uint64_t> objUint64{};
+	AbcTest<size_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 

@@ -1,23 +1,25 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
-/// NOTE: Most of the code in this header was sampled heavily from Glaze library: https://github.com/stephenberry/glaze
+/// NOTE: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
 #pragma once
@@ -29,12 +31,12 @@
 
 namespace JsonifierInternal {
 
-	template<typename OTy> using RefUnwrap = std::decay_t<std::remove_const_t<OTy>>;
+	template<typename ValueType> using RefUnwrap = std::decay_t<std::remove_const_t<ValueType>>;
 
 	namespace Tuplet {
-		template<typename OTy> using IdentityT = OTy;
+		template<typename ValueType> using IdentityT = ValueType;
 
-		template<typename OTy> using TypeT = typename OTy::type;
+		template<typename ValueType> using TypeT = typename ValueType::type;
 
 		template<size_t I> using Tag = std::integral_constant<size_t, I>;
 
@@ -42,38 +44,38 @@ namespace JsonifierInternal {
 
 		template<size_t N> using TagRange = std::make_index_sequence<N>;
 
-		template<typename OTy, typename U>
-		concept SameAs = std::same_as<OTy, U> && std::same_as<U, OTy>;
+		template<typename ValueType, typename U>
+		concept SameAs = std::same_as<ValueType, U> && std::same_as<U, ValueType>;
 
-		template<typename OTy, typename U>
-		concept OtherThan = !std::same_as<RefUnwrap<OTy>, U>;
+		template<typename ValueType, typename U>
+		concept OtherThan = !std::same_as<RefUnwrap<ValueType>, U>;
 
 		template<typename Tup> using BaseListT = typename RefUnwrap<Tup>::base_list;
 
 		template<typename Tuple>
 		concept BaseListTuple = requires() { typename RefUnwrap<Tuple>::base_list; };
 
-		template<typename OTy>
-		concept Stateless = std::is_empty_v<RefUnwrap<OTy>>;
+		template<typename ValueType>
+		concept Stateless = std::is_empty_v<RefUnwrap<ValueType>>;
 
-		template<typename OTy>
-		concept Indexable = Stateless<OTy> || requires(OTy value) { value[Tag<0>()]; };
+		template<typename ValueType>
+		concept Indexable = Stateless<ValueType> || requires(ValueType value) { value[Tag<0>()]; };
 
-		template<typename U, typename OTy>
-		concept AssignableTo = requires(U u, OTy object) { object = u; };
+		template<typename U, typename ValueType>
+		concept AssignableTo = requires(U u, ValueType object) { object = u; };
 
-		template<typename OTy>
-		concept Ordered = requires(OTy const& object) {
+		template<typename ValueType>
+		concept Ordered = requires(ValueType const& object) {
 			{ object <=> object };
 		};
-		template<typename OTy>
-		concept EqualityComparable = requires(OTy const& object) {
+		template<typename ValueType>
+		concept EqualityComparable = requires(ValueType const& object) {
 			{ object == object } -> SameAs<bool>;
 		};
 
-		template<typename... OTy> struct Tuple;
+		template<typename... ValueType> struct Tuple;
 
-		template<typename... OTy> struct TypeList {};
+		template<typename... ValueType> struct TypeList {};
 
 		template<typename... Ls, typename... Rs> inline constexpr auto operator+(TypeList<Ls...>, TypeList<Rs...>) {
 			return TypeList<Ls..., Rs...>{};
@@ -87,11 +89,11 @@ namespace JsonifierInternal {
 			bool operator==(TypeMap const&) const = default;
 		};
 
-		template<size_t I, typename OTy> struct TupleElem {
-			inline static OTy declElem(Tag<I>);
-			using type = OTy;
+		template<size_t I, typename ValueType> struct TupleElem {
+			inline static ValueType declElem(Tag<I>);
+			using type = ValueType;
 
-			OTy value;
+			ValueType value;
 
 			inline constexpr decltype(auto) operator[](Tag<I>) & {
 				return (value);
@@ -108,26 +110,27 @@ namespace JsonifierInternal {
 			bool operator==(TupleElem const&) const = default;
 
 			inline constexpr auto operator<=>(TupleElem const& other) const noexcept(noexcept(value <=> other.value))
-				requires(std::is_reference_v<OTy> && Ordered<OTy>)
+				requires(std::is_reference_v<ValueType> && Ordered<ValueType>)
 			{
 				return value <=> other.value;
 			}
 
 			inline constexpr bool operator==(TupleElem const& other) const noexcept(noexcept(value == other.value))
-				requires(std::is_reference_v<OTy> && EqualityComparable<OTy>)
+				requires(std::is_reference_v<ValueType> && EqualityComparable<ValueType>)
 			{
 				return value == other.value;
 			}
 		};
 
-		template<typename A, typename... OTy> struct GetTupleBase;
+		template<typename A, typename... ValueType> struct GetTupleBase;
 
-		template<size_t... I, typename... OTy> struct GetTupleBase<std::index_sequence<I...>, OTy...> {
-			using type = TypeMap<TupleElem<I, OTy>...>;
+		template<size_t... I, typename... ValueType> struct GetTupleBase<std::index_sequence<I...>, ValueType...> {
+			using type = TypeMap<TupleElem<I, ValueType>...>;
 		};
 
-		template<typename F, typename OTy, typename... Bases> inline constexpr decltype(auto) applyImpl(F&& f, OTy&& object, TypeList<Bases...>) {
-			return static_cast<F&&>(f)(static_cast<OTy&&>(object).IdentityT<Bases>::value...);
+		template<typename F, typename ValueType, typename... Bases>
+		inline constexpr decltype(auto) applyImpl(F&& f, ValueType&& object, TypeList<Bases...>) {
+			return static_cast<F&&>(f)(static_cast<ValueType&&>(object).IdentityT<Bases>::value...);
 		}
 		template<char... D> inline constexpr size_t sizetFromDigits() {
 			static_assert((('0' <= D && D <= '9') && ...), "Must be integral literal");
@@ -136,8 +139,8 @@ namespace JsonifierInternal {
 		}
 		template<typename First, typename> using first_t = First;
 
-		template<typename OTy, typename... Q> inline constexpr auto repeatType(TypeList<Q...>) {
-			return TypeList<first_t<OTy, Q>...>{};
+		template<typename ValueType, typename... Q> inline constexpr auto repeatType(TypeList<Q...>) {
+			return TypeList<first_t<ValueType, Q>...>{};
 		}
 		template<typename... Outer> inline constexpr auto getOuterBases(TypeList<Outer...>) {
 			return (repeatType<Outer>(BaseListT<TypeT<Outer>>{}) + ...);
@@ -146,19 +149,19 @@ namespace JsonifierInternal {
 			return (BaseListT<TypeT<Outer>>{} + ...);
 		}
 
-		template<typename OTy, typename... Outer, typename... Inner> inline constexpr auto catImpl(OTy tup, TypeList<Outer...>, TypeList<Inner...>)
-			-> Tuple<TypeT<Inner>...> {
+		template<typename ValueType, typename... Outer, typename... Inner>
+		inline constexpr auto catImpl(ValueType tup, TypeList<Outer...>, TypeList<Inner...>) -> Tuple<TypeT<Inner>...> {
 			return { static_cast<TypeT<Outer>&&>(tup.IdentityT<Outer>::value).IdentityT<Inner>::value... };
 		}
 
-		template<typename... OTy> using TupleBaseT = typename GetTupleBase<TagRange<sizeof...(OTy)>, OTy...>::type;
+		template<typename... ValueType> using TupleBaseT = typename GetTupleBase<TagRange<sizeof...(ValueType)>, ValueType...>::type;
 
-		template<typename... OTy> struct Tuple : TupleBaseT<OTy...> {
-			inline static constexpr size_t N = sizeof...(OTy);
-			using super = TupleBaseT<OTy...>;
+		template<typename... ValueType> struct Tuple : TupleBaseT<ValueType...> {
+			inline static constexpr size_t N = sizeof...(ValueType);
+			using super = TupleBaseT<ValueType...>;
 			using super::operator[];
 			using base_list = typename super::base_list;
-			using element_list = TypeList<OTy...>;
+			using element_list = TypeList<ValueType...>;
 			using super::declElem;
 
 			template<OtherThan<Tuple> U> inline constexpr auto& operator=(U&& tup) {
@@ -194,7 +197,7 @@ namespace JsonifierInternal {
 			}
 
 			template<typename U, size_t... I> inline constexpr void eqImpl(U&& u, std::index_sequence<I...>) {
-				(void(TupleElem<I, OTy>::value = get<I>(static_cast<U&&>(u))), ...);
+				(void(TupleElem<I, ValueType>::value = get<I>(static_cast<U&&>(u))), ...);
 			}
 
 			template<typename F, typename... B>
@@ -207,9 +210,9 @@ namespace JsonifierInternal {
 				return { func(B::value)... };
 			}
 
-			template<typename F, typename... B>
-			inline constexpr auto mapImpl(TypeList<B...>, F&& func) && -> Tuple<UnwrapRefDecayT<decltype(func(static_cast<OTy&&>(B::value)))>...> {
-				return { func(static_cast<OTy&&>(B::value))... };
+			template<typename F, typename... B> inline constexpr auto mapImpl(TypeList<B...>,
+				F&& func) && -> Tuple<UnwrapRefDecayT<decltype(func(static_cast<ValueType&&>(B::value)))>...> {
+				return { func(static_cast<ValueType&&>(B::value))... };
 			}
 		};
 
@@ -254,7 +257,7 @@ namespace JsonifierInternal {
 			return static_cast<Tup&&>(tup)[Tag<I>()];
 		}
 
-		template<typename... OTy> inline constexpr Tuple<OTy&...> tie(OTy&... object) {
+		template<typename... ValueType> inline constexpr Tuple<ValueType&...> tie(ValueType&... object) {
 			return { object... };
 		}
 
@@ -271,8 +274,8 @@ namespace JsonifierInternal {
 			return static_cast<F&&>(func)(std::move(Pair).first, std::move(Pair).second);
 		}
 
-		template<BaseListTuple... OTy> inline constexpr auto tupleCat(OTy&&... ts) {
-			if constexpr (sizeof...(OTy) == 0) {
+		template<BaseListTuple... ValueType> inline constexpr auto tupleCat(ValueType&&... ts) {
+			if constexpr (sizeof...(ValueType) == 0) {
 				return Tuple<>();
 			} else {
 #if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
@@ -283,14 +286,14 @@ namespace JsonifierInternal {
 	#endif
 #endif
 #if TUPLET_CAT_BY_FORWARDING_TUPLE
-				using big_tuple = Tuple<OTy&&...>;
+				using big_tuple = Tuple<ValueType&&...>;
 #else
-				using big_tuple = Tuple<RefUnwrap<OTy>...>;
+				using big_tuple = Tuple<RefUnwrap<ValueType>...>;
 #endif
 				using outer_bases = BaseListT<big_tuple>;
 				constexpr auto outer = getOuterBases(outer_bases{});
 				constexpr auto inner = getInnerBases(outer_bases{});
-				return catImpl(big_tuple{ static_cast<OTy&&>(ts)... }, outer, inner);
+				return catImpl(big_tuple{ static_cast<ValueType&&>(ts)... }, outer, inner);
 			}
 		}
 
@@ -302,8 +305,8 @@ namespace JsonifierInternal {
 			return Tuple<OTys...>{ args... };
 		}
 
-		template<typename... OTy> inline constexpr auto forwardAsTuple(OTy&&... a) noexcept {
-			return Tuple<OTy&&...>{ static_cast<OTy&&>(a)... };
+		template<typename... ValueType> inline constexpr auto forwardAsTuple(ValueType&&... a) noexcept {
+			return Tuple<ValueType&&...>{ static_cast<ValueType&&>(a)... };
 		}
 	}
 
@@ -315,10 +318,11 @@ namespace JsonifierInternal {
 }
 
 namespace std {
-	template<typename... OTy> struct tuple_size<JsonifierInternal::Tuplet::Tuple<OTy...>> : std::integral_constant<size_t, sizeof...(OTy)> {};
+	template<typename... ValueType> struct tuple_size<JsonifierInternal::Tuplet::Tuple<ValueType...>>
+		: std::integral_constant<size_t, sizeof...(ValueType)> {};
 
-	template<size_t I, typename... OTy> struct tuple_element<I, JsonifierInternal::Tuplet::Tuple<OTy...>> {
-		using type = decltype(JsonifierInternal::Tuplet::Tuple<OTy...>::declElem(JsonifierInternal::Tuplet::Tag<I>()));
+	template<size_t I, typename... ValueType> struct tuple_element<I, JsonifierInternal::Tuplet::Tuple<ValueType...>> {
+		using type = decltype(JsonifierInternal::Tuplet::Tuple<ValueType...>::declElem(JsonifierInternal::Tuplet::Tag<I>()));
 	};
 
 	template<typename A, typename B> struct tuple_size<JsonifierInternal::Pair<A, B>> : std::integral_constant<size_t, 2> {};
@@ -351,8 +355,8 @@ namespace JsonifierInternal {
 		RawArray<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
-			using VTy = RefUnwrap<std::tuple_element_t<I, Tuple>>;
-			if constexpr (!std::convertible_to<VTy, Jsonifier::StringView>) {
+			using ValueType = RefUnwrap<std::tuple_element_t<I, Tuple>>;
+			if constexpr (!std::convertible_to<ValueType, Jsonifier::StringView>) {
 				indices[x++] = I - 1;
 			}
 		});

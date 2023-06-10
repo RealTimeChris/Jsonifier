@@ -1,21 +1,23 @@
 /*
-        Jsonifier - For parsing and serializing Json - very rapidly.
-        Copyright (C) 2023 Chris M. (RealTimeChris)
+    MIT License
 
-        This library is free software; you can redistribute it and/or
-        modify it under the terms of the GNU Lesser General Public
-        License as published by the Free Software Foundation; either
-        version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-        This library is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-        Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-        You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, Write to the Free Software
-        Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
-        USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
@@ -31,11 +33,11 @@ namespace JsonifierInternal {
 		explicit inline constexpr UnexpectT() noexcept = default;
 	};
 
-	template<typename OTy, typename ETy> class Expected;
+	template<typename ValueType, typename ETy> class Expected;
 
-	template<typename OTy, typename ETy>
-		requires std::is_void_v<OTy>
-	class Expected<OTy, ETy>;
+	template<typename ValueType, typename ETy>
+		requires std::is_void_v<ValueType>
+	class Expected<ValueType, ETy>;
 
 	template<typename ETy> class Unexpected {
 	  public:
@@ -92,9 +94,9 @@ namespace JsonifierInternal {
 
 	template<typename ETy> Unexpected(ETy) -> Unexpected<ETy>;
 
-	template<typename OTy, typename ETy> class Expected {
+	template<typename ValueType, typename ETy> class Expected {
 	  public:
-		using value_type = OTy;
+		using value_type = ValueType;
 		using error_type = ETy;
 		using unexpected_type = Unexpected<ETy>;
 		template<typename U> using rebind = Expected<U, error_type>;
@@ -124,13 +126,13 @@ namespace JsonifierInternal {
 			*this = other;
 		};
 
-		inline constexpr Expected& operator=(OTy&& other) {
+		inline constexpr Expected& operator=(ValueType&& other) {
 			val = std::move(other);
 			hasValue = true;
 			return *this;
 		};
 
-		inline constexpr Expected(OTy&& v) {
+		inline constexpr Expected(ValueType&& v) {
 			*this = std::move(v);
 		}
 
@@ -143,27 +145,27 @@ namespace JsonifierInternal {
 			swapF(hasValue, other.hasValue);
 		}
 
-		inline constexpr const OTy* operator->() const noexcept {
+		inline constexpr const ValueType* operator->() const noexcept {
 			return &val;
 		}
 
-		inline constexpr OTy* operator->() noexcept {
+		inline constexpr ValueType* operator->() noexcept {
 			return &val;
 		}
 
-		inline constexpr const OTy&& operator*() const&& noexcept {
+		inline constexpr const ValueType&& operator*() const&& noexcept {
 			return std::move(val);
 		}
 
-		inline constexpr OTy&& operator*() && noexcept {
+		inline constexpr ValueType&& operator*() && noexcept {
 			return std::move(val);
 		}
 
-		inline constexpr const OTy& operator*() const& noexcept {
+		inline constexpr const ValueType& operator*() const& noexcept {
 			return val;
 		}
 
-		inline constexpr OTy& operator*() & noexcept {
+		inline constexpr ValueType& operator*() & noexcept {
 			return val;
 		}
 
@@ -175,19 +177,19 @@ namespace JsonifierInternal {
 			return hasValue;
 		}
 
-		inline constexpr const OTy&& value() const&& {
+		inline constexpr const ValueType&& value() const&& {
 			return std::move(val);
 		}
 
-		inline constexpr OTy&& value() && {
+		inline constexpr ValueType&& value() && {
 			return std::move(val);
 		}
 
-		inline constexpr const OTy& value() const& {
+		inline constexpr const ValueType& value() const& {
 			return val;
 		}
 
-		inline constexpr OTy& value() & {
+		inline constexpr ValueType& value() & {
 			return val;
 		}
 
@@ -207,7 +209,7 @@ namespace JsonifierInternal {
 			return unex;
 		}
 
-		friend inline constexpr bool operator==(const Expected& x, const Expected<OTy, ETy>& y) {
+		friend inline constexpr bool operator==(const Expected& x, const Expected<ValueType, ETy>& y) {
 			return x.hasValue == y.hasValue && x.unex == y.unex && x.val == y.val;
 		}
 
@@ -216,16 +218,16 @@ namespace JsonifierInternal {
 	  protected:
 		bool hasValue{};
 		union {
-			OTy val{};
+			ValueType val{};
 			ETy unex;
 		};
 	};
 
-	template<typename OTy, typename ETy>
-		requires std::is_void_v<OTy>
-	class Expected<OTy, ETy> {
+	template<typename ValueType, typename ETy>
+		requires std::is_void_v<ValueType>
+	class Expected<ValueType, ETy> {
 	  public:
-		using value_type = OTy;
+		using value_type = ValueType;
 		using error_type = ETy;
 		using unexpected_type = Unexpected<ETy>;
 
