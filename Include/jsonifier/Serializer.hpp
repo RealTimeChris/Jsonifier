@@ -29,62 +29,62 @@
 namespace JsonifierInternal {
 
 	struct SerializeNoKeys {
-		template<NullT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<NullT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<BoolT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<BoolT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<NumT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<NumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<EnumT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<EnumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<CharT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<CharT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<StringT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<StringT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<RawJsonT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<RawJsonT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<RawArrayT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<VectorT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<VectorT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<ArrayTupleT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<StdTupleT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<StdTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<ObjectT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<ObjectT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<typename ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<typename ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 	};
 
 	struct SerializeWithKeys {
-		template<NullT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<NullT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<BoolT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<BoolT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<NumT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<NumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<EnumT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<EnumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<CharT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<CharT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<StringT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<StringT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<RawJsonT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<RawJsonT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<RawArrayT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<VectorT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<VectorT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<ArrayTupleT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<StdTupleT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<StdTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<ObjectT ValueType, VectorLike BTy, HasFind KeyType>
-		static void op(ValueType& value, BTy& buffer, size_t& index, const KeyType& excludedKeys);
+		template<ObjectT ValueType, VectorLike BufferType, HasFind KeyType>
+		static void op(ValueType& value, BufferType& buffer, size_t& index, const KeyType& excludedKeys);
 
-		template<ObjectT ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<ObjectT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<typename ValueType, VectorLike BTy> static void op(ValueType& value, BTy& buffer, size_t& index);
+		template<typename ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 	};
 
 	class Serializer {
@@ -94,7 +94,6 @@ namespace JsonifierInternal {
 		template<bool excludeKeys = false> inline void serializeJson(CoreType auto& data, VectorLike auto& buffer) {
 			size_t index{};
 			using ValueType = decltype(data);
-			using BTy = decltype(buffer);
 			if constexpr (excludeKeys) {
 				if constexpr (HasExcludedKeys<ValueType>) {
 					SerializeWithKeys::op(data, stringBuffer, index, data.excludedKeys);

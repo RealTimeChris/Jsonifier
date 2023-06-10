@@ -164,18 +164,13 @@ namespace JsonifierInternal {
 		}
 
 		inline static bool isTypeType(uint8_t c) {
-			__m256i valueToCheck{ _mm256_set1_epi8(c) };
-			__m256i valuesToCheckFor{ _mm256_set_epi8('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 'f', 't', 'n', '"', '{', '[', 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) };
-			__m256i comparison = _mm256_cmpeq_epi8(valuesToCheckFor, valueToCheck);
-			return _mm256_movemask_epi8(comparison) != 0;
+			const char array01[]{ "0123456789-ftn\"{[" };
+			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 
 		inline static bool isDigitType(uint8_t c) {
-			__m128i valueToCheck{ _mm_set1_epi8(c) };
-			__m128i valuesToCheckFor{ _mm_set_epi8('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', 0, 0, 0, 0, 0) };
-			__m128i comparison = _mm_cmpeq_epi8(valuesToCheckFor, valueToCheck);
-			return _mm_movemask_epi8(comparison) != 0;
+			const char array01[]{ "0123456789-" };
+			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 
 		template<uint8_t c> inline static void skipToNextValue(StructuralIterator& iter) {

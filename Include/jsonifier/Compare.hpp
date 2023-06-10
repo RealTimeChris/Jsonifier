@@ -39,9 +39,40 @@
 
 namespace JsonifierInternal {
 
-#if AVX_TYPE == 124
+#if AVX_TYPE == 127
 
-	inline bool compareStrings16(const void* string1, const void* string2, size_t length) noexcept {
+	inline uint64_t findSingleCharacter(const void* str, size_t length, char target) {
+		__m512i targetVec = _mm512_set1_epi8(target);
+		const __m512i* strVec = static_cast<const __m512i*>(str);
+		const uint64_t vecSize = sizeof(__m512i);
+		size_t remainingBytes = length;
+
+		size_t index = 0;
+		while (remainingBytes >= vecSize) {
+			__m512i currentVec = _mm512_loadu_si512(strVec);
+			uint64_t mask = _mm512_cmp_epi8_mask(targetVec, currentVec, _MM_CMPINT_EQ);
+
+			if (mask != 0) {
+				uint64_t matchingIndex = _tzcnt_u64(static_cast<uint64_t>(mask));
+				return index + matchingIndex;
+			}
+
+			++strVec;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		const char* remainingStr = reinterpret_cast<const char*>(strVec);
+		for (size_t i = 0; i < remainingBytes; i++) {
+			if (remainingStr[i] == target) {
+				return index + i;
+			}
+		}
+
+		return -1;
+	}
+
+	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
@@ -54,7 +85,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings32(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues32(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 32 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
@@ -62,7 +93,7 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 16) {
-			return compareStrings16(++destVector, ++sourceVector, remainder);
+			return compareValues16(++destVector, ++sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
@@ -70,7 +101,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings64(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues64(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 64 };
 		auto destVector = static_cast<const __m512i*>(string1);
 		auto sourceVector = static_cast<const __m512i*>(string2);
@@ -78,10 +109,10 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 32) {
-			return compareStrings32(++destVector, ++sourceVector, remainder);
+			return compareValues32(++destVector, ++sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(++destVector, ++sourceVector, remainder);
+			return compareValues16(++destVector, ++sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
@@ -89,7 +120,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings128(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues128(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 128 };
 		auto destVector = static_cast<const __m512i*>(string1);
 		auto sourceVector = static_cast<const __m512i*>(string2);
@@ -102,13 +133,13 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -116,7 +147,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings256(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues256(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 256 };
 		auto destVector = static_cast<const __m512i*>(string1);
 		auto sourceVector = static_cast<const __m512i*>(string2);
@@ -133,16 +164,16 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 128) {
-			return compareStrings128(destVector, sourceVector, remainder);
+			return compareValues128(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -150,7 +181,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings512(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues512(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 512 };
 		size_t intervalCount{ length / 512 };
 		auto destVector = static_cast<const __m512i*>(string1);
@@ -179,19 +210,19 @@ namespace JsonifierInternal {
 			}
 		}
 		if (remainder >= 256) {
-			return compareStrings256(destVector, sourceVector, remainder);
+			return compareValues256(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 128) {
-			return compareStrings128(destVector, sourceVector, remainder);
+			return compareValues128(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -199,31 +230,60 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings(const char* string1, const char* string2, size_t length) noexcept {
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept {
 		if (length >= 512) {
-			return compareStrings512(string1, string2, length);
+			return compareValues512(string1, string2, length);
 		} else if (length >= 256) {
-			return compareStrings256(string1, string2, length);
+			return compareValues256(string1, string2, length);
 		} else if (length >= 128) {
-			return compareStrings128(string1, string2, length);
+			return compareValues128(string1, string2, length);
 		} else if (length >= 64) {
-			return compareStrings64(string1, string2, length);
+			return compareValues64(string1, string2, length);
 		} else if (length >= 32) {
-			return compareStrings32(string1, string2, length);
+			return compareValues32(string1, string2, length);
 		} else if (length >= 16) {
-			return compareStrings16(string1, string2, length);
+			return compareValues16(string1, string2, length);
 		} else {
 			return (std::memcmp(string1, string2, length) == 0);
 		}
 	}
 
-	inline bool compareFast(const char* destVector, const char* sourceVector, size_t length) noexcept {
-		return compareStrings(destVector, sourceVector, length);
+#elif AVX_TYPE == 126
+
+	inline uint64_t findSingleCharacter(const void* str, size_t length, char target) {
+		__m256i targetVec = _mm256_set1_epi8(target);
+		const __m256i* strVec = static_cast<const __m256i*>(str);
+		const uint32_t vecSize = sizeof(__m256i);
+		size_t remainingBytes = length;
+
+		size_t index = 0;
+		while (remainingBytes >= vecSize) {
+			__m256i currentVec = _mm256_loadu_si256(strVec);
+			__m256i compareResult = _mm256_cmpeq_epi8(targetVec, currentVec);
+			uint32_t mask = _mm256_movemask_epi8(compareResult);
+
+
+			if (mask != 0) {
+				uint32_t matchingIndex = _tzcnt_u32(static_cast<uint32_t>(mask));
+				return index + matchingIndex;
+			}
+
+			++strVec;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		const char* remainingStr = reinterpret_cast<const char*>(strVec);
+		for (size_t i = 0; i < remainingBytes; i++) {
+			if (remainingStr[i] == target) {
+				return index + i;
+			}
+		}
+
+		return -1;
 	}
 
-#elif AVX_TYPE == 125
-
-	inline bool compareStrings16(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
@@ -236,7 +296,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings32(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues32(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 32 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
@@ -244,7 +304,7 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 16) {
-			return compareStrings16(++destVector, ++sourceVector, remainder);
+			return compareValues16(++destVector, ++sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
@@ -252,7 +312,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings64(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues64(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 64 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
@@ -265,10 +325,10 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -276,7 +336,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings128(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues128(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 128 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
@@ -293,13 +353,13 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -307,7 +367,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings256(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues256(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t intervalCount{ length / 256 };
 		const size_t remainder{ length % 256 };
 		auto destVector = static_cast<const __m256i*>(string1);
@@ -336,16 +396,16 @@ namespace JsonifierInternal {
 			}
 		}
 		if (remainder >= 128) {
-			return compareStrings128(destVector, sourceVector, remainder);
+			return compareValues128(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -353,29 +413,57 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings(const char* string1, const char* string2, size_t length) noexcept {
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept {
 		if (length >= 256) {
-			return compareStrings256(string1, string2, length);
+			return compareValues256(string1, string2, length);
 		} else if (length >= 128) {
-			return compareStrings128(string1, string2, length);
+			return compareValues128(string1, string2, length);
 		} else if (length >= 64) {
-			return compareStrings64(string1, string2, length);
+			return compareValues64(string1, string2, length);
 		} else if (length >= 32) {
-			return compareStrings32(string1, string2, length);
+			return compareValues32(string1, string2, length);
 		} else if (length >= 16) {
-			return compareStrings16(string1, string2, length);
+			return compareValues16(string1, string2, length);
 		} else {
 			return (std::memcmp(string1, string2, length) == 0);
 		}
 	}
 
-	inline bool compareFast(const char* destVector, const char* sourceVector, size_t length) noexcept {
-		return compareStrings(destVector, sourceVector, length);
+#elif AVX_TYPE == 125
+
+	inline uint64_t findSingleCharacter(const void* str, size_t length, char target) {
+		__m128i targetVec = _mm_set1_epi8(target);
+		const __m128i* strVec = static_cast<const __m128i*>(str);
+		const uint32_t vecSize = sizeof(__m128i);
+		size_t remainingBytes = length;
+
+		size_t index = 0;
+		while (remainingBytes >= vecSize) {
+			__m128i currentVec = _mm_loadu_si128(strVec);
+			__m128i compareResult = _mm_cmpeq_epi8(targetVec, currentVec);
+			uint16_t mask = _mm_movemask_epi8(compareResult);
+
+			if (mask != 0) {
+				uint32_t matchingIndex = _tzcnt_u16(static_cast<uint16_t>(mask));
+				return index + matchingIndex;
+			}
+
+			++strVec;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		const char* remainingStr = reinterpret_cast<const char*>(strVec);
+		for (size_t i = 0; i < remainingBytes; i++) {
+			if (remainingStr[i] == target) {
+				return index + i;
+			}
+		}
+
+		return -1;
 	}
 
-#elif AVX_TYPE == 126
-
-	inline bool compareStrings16(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
@@ -389,7 +477,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings32(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues32(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 32 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
@@ -402,7 +490,7 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -410,7 +498,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings64(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues64(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 64 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
@@ -427,10 +515,10 @@ namespace JsonifierInternal {
 			return false;
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -438,7 +526,7 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings128(const void* string1, const void* string2, size_t length) noexcept {
+	inline bool compareValues128(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t intervalCount{ length / 128 };
 		const size_t remainder{ length % 128 };
 		auto destVector = static_cast<const __m128i*>(string1);
@@ -467,13 +555,13 @@ namespace JsonifierInternal {
 			}
 		}
 		if (remainder >= 64) {
-			return compareStrings64(destVector, sourceVector, remainder);
+			return compareValues64(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 32) {
-			return compareStrings32(destVector, sourceVector, remainder);
+			return compareValues32(destVector, sourceVector, remainder);
 		}
 		if (remainder >= 16) {
-			return compareStrings16(destVector, sourceVector, remainder);
+			return compareValues16(destVector, sourceVector, remainder);
 		}
 		if (remainder > 0) {
 			return (std::memcmp(destVector, sourceVector, remainder) == 0);
@@ -481,33 +569,37 @@ namespace JsonifierInternal {
 		return true;
 	}
 
-	inline bool compareStrings(const char* string1, const char* string2, size_t length) noexcept {
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept {
 		if (length >= 128) {
-			return compareStrings128(string1, string2, length);
+			return compareValues128(string1, string2, length);
 		} else if (length >= 64) {
-			return compareStrings64(string1, string2, length);
+			return compareValues64(string1, string2, length);
 		} else if (length >= 32) {
-			return compareStrings32(string1, string2, length);
+			return compareValues32(string1, string2, length);
 		} else if (length >= 16) {
-			return compareStrings16(string1, string2, length);
+			return compareValues16(string1, string2, length);
 		} else {
 			return (std::memcmp(string1, string2, length) == 0);
 		}
 	}
 
-	inline bool compareFast(const char* destVector, const char* sourceVector, size_t length) noexcept {
-		return compareStrings(destVector, sourceVector, length);
-	}
 #else
-	inline bool compareFast(const void* destVector, const void* sourceVector, size_t length) noexcept {
-		return std::string_view{ static_cast<const char*>(destVector), length } == std::string_view{ static_cast<const char*>(sourceVector), length };
+
+	inline uint64_t findSingleCharacter(const void* str, size_t length, char target) {
+		return std::string_view{ reinterpret_cast<const char*>(str), length }.find(target);
 	}
+
+	inline bool compareValues(const void* destVector, const void* sourceVector, size_t length) noexcept {
+		return std::string_view{ reinterpret_cast<const char*>(destVector), length } ==
+			std::string_view{ reinterpret_cast<const char*>(sourceVector), length };
+	}
+
 #endif
 
 	class JsonifierCoreInternal {
 	  public:
-		inline static bool compare(const char* destVector, const char* sourceVector, size_t length) noexcept {
-			return compareFast(destVector, sourceVector, length);
+		template<typename ValueType> inline static bool compare(const ValueType* destVector, const ValueType* sourceVector, size_t length) noexcept {
+			return compareValues(reinterpret_cast<const void*>(destVector), reinterpret_cast<const void*>(sourceVector), length * sizeof(ValueType));
 		}
 	};
 

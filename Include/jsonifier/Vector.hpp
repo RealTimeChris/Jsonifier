@@ -25,6 +25,7 @@
 
 #include <jsonifier/Compare.hpp>
 #include <memory_resource>
+#include <source_location>
 
 #ifndef NO_UNIQUE_ADDRESS
 	#ifdef __has_cpp_attribute
@@ -58,31 +59,14 @@ namespace JsonifierInternal {
 		rhs = std::move(temp);
 	}
 
-	template<class PtrType> inline constexpr auto unfancy(PtrType ptr) noexcept {// converts from a fancy pointer to a plain pointer
-		return std::addressof(*ptr);
-	}
+	template<typename OTy> struct Relational {
+		inline friend bool operator!=(const OTy& lhs, const OTy& rhs) {
+			return !(lhs == rhs);
+		}
 
-	template<class Type> struct IsCharacter : std::false_type {};
-
-	template<> struct IsCharacter<char> : std::true_type {};
-
-	template<> struct IsCharacter<signed char> : std::true_type {};
-
-	template<> struct IsCharacter<unsigned char> : std::true_type {};
-
-#ifdef __cpp_char8_t
-	template<> struct IsCharacter<char8_t> : std::true_type {};
-#endif
-
-	template<class Type> struct IsCharacterOrBool : IsCharacter<Type>::type {};
-
-	template<> struct IsCharacterOrBool<bool> : std::true_type {};
-
-	template<class Type> struct IsCharacterOrByteOrBool : IsCharacterOrBool<Type>::type {};
-
-}
-
-namespace Jsonifier {
+	  protected:
+		Relational() noexcept = default;
+	};
 
 	template<typename ValueType> class Iterator {
 	  public:
@@ -193,26 +177,70 @@ namespace Jsonifier {
 		size_type offset = 0;
 	};
 
-	template<typename ValueType> class Vector {
+	template<typename ValueType> class AllocWrapper {
+	  public:
+		using value_type = ValueType;
+		using pointer = value_type*;
+		using size_type = size_t;
+		using allocator = std::pmr::polymorphic_allocator<value_type>;
+		using allocator_traits = std::allocator_traits<allocator>;
+
+		inline constexpr AllocWrapper() noexcept = default;
+
+		inline constexpr AllocWrapper& operator=(AllocWrapper&& other) noexcept {
+			return *this;
+		};
+
+		inline constexpr AllocWrapper(AllocWrapper&& other) noexcept {};
+
+		inline constexpr AllocWrapper& operator=(const AllocWrapper& other) noexcept {
+			return *this;
+		};
+
+		inline constexpr AllocWrapper(const AllocWrapper& other) noexcept {};
+
+		inline constexpr pointer allocate(size_type count) noexcept {
+			return allocTraits.allocate(alloc, count);
+		}
+
+		inline constexpr void deallocate(pointer ptr, size_type count) noexcept {
+			allocTraits.deallocate(alloc, ptr, count);
+		}
+
+		template<typename... Args> inline constexpr void construct(pointer ptr, Args... args) noexcept {
+			allocTraits.construct(alloc, ptr, args...);
+		}
+
+		inline constexpr void destroy(pointer ptr) noexcept {
+			allocTraits.destroy(alloc, ptr);
+		}
+
+	  protected:
+		NO_UNIQUE_ADDRESS allocator_traits allocTraits{};
+		NO_UNIQUE_ADDRESS allocator alloc{};
+	};
+}
+
+namespace Jsonifier {
+
+	template<typename ValueType> class Vector : public JsonifierInternal::Relational<Vector<ValueType>> {
 	  public:
 		using value_type = ValueType;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
 		using reference = value_type&;
-		using iterator = Iterator<value_type>;
+		using const_reference = const value_type&;
+		using iterator = JsonifierInternal::Iterator<value_type>;
 		using const_iterator = const iterator;
 		using size_type = size_t;
-		using allocator_type = std::pmr::polymorphic_allocator<value_type>;
+		using allocator = JsonifierInternal::AllocWrapper<value_type>;
 
 		inline constexpr Vector() noexcept = default;
 
 		inline Vector& operator=(Vector&& other) noexcept {
-			capacityVal = other.capacityVal;
-			other.capacityVal = 0;
-			sizeVal = other.sizeVal;
-			other.sizeVal = 0;
-			values = other.values;
-			other.values = nullptr;
+			JsonifierInternal::swapF(capacityVal, other.capacityVal);
+			JsonifierInternal::swapF(sizeVal, other.sizeVal);
+			JsonifierInternal::swapF(values, other.values);
 			return *this;
 		}
 
@@ -232,7 +260,7 @@ namespace Jsonifier {
 
 		inline constexpr Vector& operator=(std::initializer_list<value_type>&& initList) {
 			resize(initList.size());
-			for (size_t x = 0; x < sizeVal; ++x) {
+			for (size_type x = 0; x < sizeVal; ++x) {
 				values[x] = std::move(initList.begin()[x]);
 			}
 			return *this;
@@ -250,7 +278,7 @@ namespace Jsonifier {
 		inline Vector& operator=(const Vector& other) noexcept {
 			if (this != &other) {
 				reserve(other.size());
-				for (size_t x = 0; x < capacityVal; ++x) {
+				for (size_type x = 0; x < capacityVal; ++x) {
 					emplace_back(other[x]);
 				}
 			}
@@ -311,13 +339,14 @@ namespace Jsonifier {
 		}
 
 		inline constexpr size_type maxSize() const noexcept {
-			return std::numeric_limits<size_t>::max() / sizeof(value_type);
+			return std::numeric_limits<size_type>::max() / sizeof(value_type);
 		}
 
-		inline constexpr void emplace_back(const value_type& c) {
+		inline constexpr void emplace_back(const_reference c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
+			allocator alloc{};
 			alloc.construct(&values[sizeVal++], c);
 		}
 
@@ -325,21 +354,51 @@ namespace Jsonifier {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
+			allocator alloc{};
 			alloc.construct(&values[sizeVal++], std::forward<value_type>(c));
 		}
 
-		inline constexpr void resize(size_t newSize) {
-			value_type fillChar{};
-			resize(newSize, fillChar);
+		inline void resize(size_type sizeNew) {
+			if (sizeNew > 0) {
+				if (sizeNew > capacityVal) {
+					allocator alloc{};
+					pointer newPtr = alloc.allocate(sizeNew);
+					try {
+						if (values) {
+							std::uninitialized_move(values, values + sizeVal, newPtr);
+							alloc.deallocate(values, capacityVal);
+						}
+					} catch (...) {
+						alloc.deallocate(newPtr, sizeNew);
+						throw;
+					}
+					capacityVal = sizeNew;
+					values = newPtr;
+					std::uninitialized_default_construct(values + sizeVal, values + sizeVal + (sizeNew - sizeVal));
+				} else if (sizeNew > sizeVal) {
+					std::uninitialized_default_construct(values + sizeVal, values + sizeVal + (sizeNew - sizeVal));
+				}
+				sizeVal = sizeNew;
+			} else {
+				sizeVal = 0;
+			}
 		}
 
-		inline constexpr void reserve(size_t newCapacity) {
-			if (newCapacity > capacityVal) {
-				value_type* newBuffer = alloc.allocate(newCapacity);
-				std::memcpy(newBuffer, values, sizeVal);
-				alloc.deallocate(values, capacityVal);
-				values = newBuffer;
-				capacityVal = newCapacity;
+		inline void reserve(size_type capacityNew) {
+			if (capacityNew > capacityVal) {
+				allocator alloc{};
+				pointer newPtr = alloc.allocate(capacityNew);
+				try {
+					if (values) {
+						std::uninitialized_move(values, values + sizeVal, newPtr);
+						alloc.deallocate(values, capacityVal);
+					}
+				} catch (...) {
+					alloc.deallocate(newPtr, capacityNew);
+					throw;
+				}
+				capacityVal = capacityNew;
+				values = newPtr;
 			}
 		}
 
@@ -347,116 +406,24 @@ namespace Jsonifier {
 			std::fill(values, values + capacityVal, value_type{});
 		}
 
-		inline constexpr bool operator==(const Vector& rhs) noexcept {
+		inline constexpr bool operator==(const Vector<value_type>& rhs) const noexcept {
 			if (rhs.size() != size()) {
 				return false;
 			}
-			for (size_type x = 0; x < rhs.size(); ++x) {
-				if (operator[](x) != rhs[x]) {
-					return false;
-				}
-			}
-			return true;
-		}
-
-		inline constexpr bool operator!=(const Vector& rhs) noexcept {
-			return !(rhs == *this);
+			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), this->data(), this->size());
 		}
 
 		inline constexpr ~Vector() {
 			if (values && capacityVal) {
+				allocator alloc{};
 				alloc.deallocate(values, capacityVal);
 			}
 		};
 
 	  protected:
-		NO_UNIQUE_ADDRESS allocator_type alloc{};
 		size_type capacityVal{};
 		size_type sizeVal{};
 		pointer values{};
-
-		inline constexpr void destroyRange(pointer firstVal, const_pointer last) noexcept {
-			if constexpr (!std::is_trivially_destructible<value_type>::value) {
-				for (; firstVal != last; ++firstVal) {
-					alloc.destroy(JsonifierInternal::unfancy(firstVal));
-				}
-			}
-		}
-
-		inline constexpr void changeArray(const pointer newVector, const size_type newSize, const size_type newCapacity) {
-			if (values) {
-				destroyRange(values, values + sizeVal);
-				alloc.deallocate(values, sizeVal);
-			}
-			values = newVector;
-			capacityVal = newCapacity;
-			sizeVal = newSize;
-		}
-
-		inline constexpr auto fillMemset(pointer dest, const value_type newValue, const size_t count) {
-			std::memset(static_cast<void*>(dest), static_cast<unsigned char>(newValue), count);
-			return dest + count;
-		}
-
-		inline constexpr auto fillMemsetZero(pointer dest, const size_t count) {
-			std::memset(static_cast<void*>(dest), 0, count);
-			return dest + count;
-		}
-
-		inline constexpr void resizeReallocate(const size_type newSize) {
-			if (newSize > maxSize()) {
-				throw std::runtime_error{ "Sorry, but that length is too long." };
-			}
-			const value_type value{};
-
-			pointer& firstVal = values;
-
-			const auto oldSize = sizeVal;
-			const size_type newCapacity = newSize;
-			const pointer newVector = alloc.allocate(newCapacity);
-			const pointer appendedFirst = newVector + oldSize;
-			pointer appendedLast = appendedFirst;
-
-			try {
-				if constexpr (JsonifierInternal::IsCharacterOrByteOrBool<value_type>::value) {
-					appendedLast = fillMemset(appendedFirst, value, newSize - oldSize);
-				} else {
-					appendedLast = fillMemsetZero(appendedFirst, newSize - oldSize);
-				}
-
-				if constexpr (std::is_nothrow_move_constructible_v<ValueType> || !std::is_copy_constructible_v<ValueType>) {
-					std::memmove(newVector, firstVal, sizeVal);
-				} else {
-					std::memcpy(newVector, firstVal, sizeVal);
-				}
-			} catch (...) {
-				destroyRange(appendedFirst, appendedLast);
-				alloc.deallocate(newVector, newCapacity);
-			}
-
-			changeArray(newVector, newSize, newCapacity);
-		}
-
-		inline constexpr void resize(const size_type newSize, const value_type& value) {
-			pointer& firstVal = values;
-			const auto oldSize = sizeVal;
-			if (newSize < oldSize) {
-				const pointer newLast = firstVal + newSize;
-				destroyRange(newLast, (firstVal + sizeVal));
-				sizeVal = newSize;
-				return;
-			}
-
-			if (newSize > oldSize) {
-				const auto oldCapacity = capacityVal;
-				if (newSize > oldCapacity) {
-					resizeReallocate(newSize);
-					sizeVal = newSize;
-					return;
-				}
-				sizeVal = newSize;
-			}
-		}
 	};
 
 }

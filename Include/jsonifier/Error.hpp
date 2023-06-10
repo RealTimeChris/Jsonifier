@@ -64,7 +64,7 @@ namespace JsonifierInternal {
 		}
 
 		inline constexpr const char* what() const noexcept override {
-			return errorMessage.c_str();
+			return errorMessage.data();
 		}
 
 	  protected:

@@ -30,7 +30,7 @@
 
 namespace JsonifierInternal {
 
-	inline void writeCharacter(char c, VectorLike auto& buffer, auto& index) {
+	inline void writeCharacter(char c, VectorLike auto& buffer, size_t& index) {
 		if (index >= buffer.size()) [[unlikely]] {
 			buffer.resize((buffer.size() + 1) * 2);
 		}
@@ -39,12 +39,12 @@ namespace JsonifierInternal {
 		++index;
 	}
 
-	inline void writeCharacterUnChecked(char c, VectorLike auto& buffer, auto& index) {
+	inline void writeCharacterUnChecked(char c, VectorLike auto& buffer, size_t& index) {
 		buffer[index] = c;
 		++index;
 	}
 
-	template<const Jsonifier::StringView& str> inline void writeCharacters(VectorLike auto& buffer, auto& index) {
+	template<const Jsonifier::StringView& str> inline void writeCharacters(VectorLike auto& buffer, size_t& index) {
 		static constexpr auto s = str;
 		static constexpr auto n = s.size();
 
@@ -56,7 +56,7 @@ namespace JsonifierInternal {
 		index += n;
 	}
 
-	template<StringLiteral str> inline void writeCharacters(VectorLike auto& buffer, auto& index) {
+	template<StringLiteral str> inline void writeCharacters(VectorLike auto& buffer, size_t& index) {
 		static constexpr auto s = str;
 		static constexpr auto n = s.size();
 
@@ -68,7 +68,7 @@ namespace JsonifierInternal {
 		index += n;
 	}
 
-	inline void writeCharacters(const Jsonifier::StringView str, VectorLike auto& buffer, auto& index) {
+	inline void writeCharacters(const Jsonifier::StringView str, VectorLike auto& buffer, size_t& index) {
 		const auto n = str.size();
 		if (index + n > buffer.size()) [[unlikely]] {
 			buffer.resize(std::max(buffer.size() * 2, index + n));
@@ -78,11 +78,11 @@ namespace JsonifierInternal {
 		index += n;
 	}
 
-	template<NullT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<NullT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacters<"null">(buffer, index);
 	}
 
-	template<BoolT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<BoolT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (value) {
 			writeCharacters<"true">(buffer, index);
 		} else {
@@ -90,25 +90,25 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<NumT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<NumT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (index + 32 > buffer.size()) [[unlikely]] {
-			buffer.resize((std::max)(buffer.size() * 2, index + 64));
+			buffer.resize(std::max(buffer.size() * 2, index + 64));
 		}
 		auto start = dataPtr(buffer) + index;
 		auto end = toChars(start, value);
 		index += std::distance(start, end);
 	}
 
-	template<EnumT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<EnumT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (index + 32 > buffer.size()) [[unlikely]] {
-			buffer.resize((std::max)(buffer.size() * 2, index + 64));
+			buffer.resize(std::max(buffer.size() * 2, index + 64));
 		}
 		auto start = dataPtr(buffer) + index;
 		auto end = toChars(start, static_cast<int64_t>(value));
 		index += std::distance(start, end);
 	}
 
-	template<CharT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<CharT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('"', buffer, index);
 		switch (value) {
 			case '"':
@@ -138,10 +138,10 @@ namespace JsonifierInternal {
 		writeCharacter('"', buffer, index);
 	}
 
-	template<StringT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<StringT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 
-		if constexpr (Resizeable<BTy>) {
+		if constexpr (Resizeable<BufferType>) {
 			if ((index + (4 * n)) >= buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + (4 * n)));
 			}
@@ -187,12 +187,12 @@ namespace JsonifierInternal {
 		writeCharacterUnChecked('"', buffer, index);
 	}
 
-	template<RawJsonT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<RawJsonT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		Jsonifier::String newValue = static_cast<Jsonifier::String>(value);
 		SerializeNoKeys::op(newValue, buffer, index);
 	}
 
-	template<ArrayTupleT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<ArrayTupleT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		static constexpr auto N = []() constexpr {
 			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
 				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
@@ -217,7 +217,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<RawArrayT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<RawArrayT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 		writeCharacter('[', buffer, index);
 		for (size_t x = 0; x < n; ++x) {
@@ -230,7 +230,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<VectorT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<VectorT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
 		const auto isEmpty = [&]() -> bool {
 			return value.size() ? false : true;
@@ -249,7 +249,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<StdTupleT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<StdTupleT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		static constexpr auto n = []() constexpr {
 			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
 				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
@@ -283,7 +283,7 @@ namespace JsonifierInternal {
 		return false;
 	}
 
-	template<ObjectT ValueType, VectorLike BTy> void SerializeNoKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<ObjectT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('{', buffer, index);
 		using V = RefUnwrap<ValueType>;
 		static constexpr auto n = std::tuple_size_v<CoreT<V>>;
@@ -333,11 +333,11 @@ namespace JsonifierInternal {
 		writeCharacter('}', buffer, index);
 	}
 
-	template<NullT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<NullT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacters<"null">(buffer, index);
 	}
 
-	template<BoolT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<BoolT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (value) {
 			writeCharacters<"true">(buffer, index);
 		} else {
@@ -345,25 +345,25 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<NumT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<NumT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (index + 32 > buffer.size()) [[unlikely]] {
-			buffer.resize((std::max)(buffer.size() * 2, index + 64));
+			buffer.resize(std::max(buffer.size() * 2, index + 64));
 		}
 		auto start = dataPtr(buffer) + index;
 		auto end = toChars(start, value);
 		index += std::distance(start, end);
 	}
 
-	template<EnumT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<EnumT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		if (index + 32 > buffer.size()) [[unlikely]] {
-			buffer.resize((std::max)(buffer.size() * 2, index + 64));
+			buffer.resize(std::max(buffer.size() * 2, index + 64));
 		}
 		auto start = dataPtr(buffer) + index;
 		auto end = toChars(start, static_cast<int64_t>(value));
 		index += std::distance(start, end);
 	}
 
-	template<CharT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<CharT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('"', buffer, index);
 		switch (value) {
 			case '"':
@@ -393,10 +393,10 @@ namespace JsonifierInternal {
 		writeCharacter('"', buffer, index);
 	}
 
-	template<StringT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<StringT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 
-		if constexpr (Resizeable<BTy>) {
+		if constexpr (Resizeable<BufferType>) {
 			if ((index + (4 * n)) >= buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + (4 * n)));
 			}
@@ -442,12 +442,12 @@ namespace JsonifierInternal {
 		writeCharacterUnChecked('"', buffer, index);
 	}
 
-	template<RawJsonT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<RawJsonT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		Jsonifier::String newValue = static_cast<Jsonifier::String>(value);
 		SerializeWithKeys::op(newValue, buffer, index);
 	}
 
-	template<ArrayTupleT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<ArrayTupleT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		static constexpr auto N = []() constexpr {
 			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
 				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
@@ -484,7 +484,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<RawArrayT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<RawArrayT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 		writeCharacter('[', buffer, index);
 		for (size_t x = 0; x < n; ++x) {
@@ -503,7 +503,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<VectorT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<VectorT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
 		const auto isEmpty = [&]() -> bool {
 			if constexpr (HasSize<ValueType>) {
@@ -538,7 +538,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<StdTupleT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<StdTupleT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		static constexpr auto n = []() constexpr {
 			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
 				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
@@ -575,8 +575,8 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<ObjectT ValueType, VectorLike BTy, HasFind KeyType>
-	void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index, const KeyType& excludedKeys) {
+	template<ObjectT ValueType, VectorLike BufferType, HasFind KeyType>
+	void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index, const KeyType& excludedKeys) {
 		writeCharacter('{', buffer, index);
 		using V = RefUnwrap<ValueType>;
 		static constexpr auto n = std::tuple_size_v<CoreT<V>>;
@@ -635,7 +635,7 @@ namespace JsonifierInternal {
 		writeCharacter('}', buffer, index);
 	}
 
-	template<ObjectT ValueType, VectorLike BTy> void SerializeWithKeys::op(ValueType& value, BTy& buffer, size_t& index) {
+	template<ObjectT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('{', buffer, index);
 		using V = RefUnwrap<ValueType>;
 		static constexpr auto n = std::tuple_size_v<CoreT<V>>;

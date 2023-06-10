@@ -66,7 +66,6 @@ namespace JsonifierInternal {
 		StringParsingType quoteBits{};
 		StringParsingType bsBits{};
 	};
-	using BackslashAndQuoteType = BackslashAndQuote<SimdBaseReal>;
 
 	inline static uint32_t stringToUint32(StringViewPtr str) {
 		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
@@ -81,76 +80,94 @@ namespace JsonifierInternal {
 		return structuralOrWhitespaceNegated[c];
 	}
 
-	inline static unsigned char hex2dec(uint8_t hex) {
-		return ((hex & 0xf) + (hex >> 6) * 9);
+	inline static uint32_t hexToU32NoCheck(const uint8_t* source) {
+		uint32_t v1 = digitToVal32[630ull + source[0]];
+		uint32_t v2 = digitToVal32[420ull + source[1]];
+		uint32_t v3 = digitToVal32[210ull + source[2]];
+		uint32_t v4 = digitToVal32[0ull + source[3]];
+		return v1 | v2 | v3 | v4;
 	}
 
-	inline static char32_t hex4ToChar32(const uint8_t* hex) {
-		uint32_t value = hex2dec(hex[3]);
-		value |= hex2dec(hex[2]) << 4;
-		value |= hex2dec(hex[1]) << 8;
-		value |= hex2dec(hex[0]) << 12;
-		return value;
+	inline size_t codePointToUtf8(uint32_t codePoint, uint8_t* c) {
+		if (codePoint <= 0x7F) {
+			c[0] = uint8_t(codePoint);
+			return 1;
+		}
+		if (codePoint <= 0x7FF) {
+			c[0] = uint8_t((codePoint >> 6) + 192);
+			c[1] = uint8_t((codePoint & 63) + 128);
+			return 2;
+		} else if (codePoint <= 0xFFFF) {
+			c[0] = uint8_t((codePoint >> 12) + 224);
+			c[1] = uint8_t(((codePoint >> 6) & 63) + 128);
+			c[2] = uint8_t((codePoint & 63) + 128);
+			return 3;
+		} else if (codePoint <= 0x10FFFF) {
+			c[0] = uint8_t((codePoint >> 18) + 240);
+			c[1] = uint8_t(((codePoint >> 12) & 63) + 128);
+			c[2] = uint8_t(((codePoint >> 6) & 63) + 128);
+			c[3] = uint8_t((codePoint & 63) + 128);
+			return 4;
+		}
+		return 0;
 	}
 
-	template<typename ValueType> inline static bool readEscapedUnicode(ValueType** value, auto** it) {
-		char8_t buffer[4];
-		char32_t codepoint = hex4ToChar32(*it);
-		auto& facet = std::use_facet<std::codecvt<char32_t, char8_t, mbstate_t>>(std::locale());
-		std::mbstate_t mbstate{};
-		const char32_t* fromNext;
-		char8_t* toNext;
-		const auto result = facet.out(mbstate, &codepoint, &codepoint + 1, fromNext, buffer, buffer + 4, toNext);
-
-		if (result != std::codecvt_base::ok) {
-			return false;
+	inline bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
+		constexpr uint32_t subCodePoint = 0xfffd;
+		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
+		*srcPtr += 6;
+		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
+			const uint8_t* srcData = *srcPtr;
+			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
+				codePoint = subCodePoint;
+			} else {
+				uint32_t codePoint2 = hexToU32NoCheck(srcData + 2);
+				uint32_t lowBit = codePoint2 - 0xdc00;
+				if (lowBit >> 10) {
+					codePoint = subCodePoint;
+				} else {
+					codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
+					*srcPtr += 6;
+				}
+			}
+		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+			codePoint = subCodePoint;
 		}
-
-		if ((toNext - buffer) != 1) [[unlikely]] {
-			return false;
-		}
-		**value = static_cast<char>(buffer[0]);
-		++(*value);
-		for (size_t x = 0; x < facet.encoding(); ++x) {
-			++(*it);
-		}
-		std::advance(it, 4);
-		return true;
+		size_t offset = codePointToUtf8(codePoint, *dstPtr);
+		*dstPtr += offset;
+		return offset > 0;
 	}
 
-	inline static StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, size_t length) {
-		while (length > 0) {
-			BackslashAndQuoteType bsQuote = BackslashAndQuoteType::copyAndFind(source, dest);
+	inline static StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest) {
+		while (1) {
+			auto bsQuote = BackslashAndQuote<SimdBaseReal>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
 			}
 			if (bsQuote.hasBackslash()) {
 				auto bsDist = bsQuote.backslashIndex();
-				uint8_t escapeChar = source[bsDist + 1];
-				if (escapeChar == 'u') {
+				uint8_t escape_char = source[bsDist + 1];
+				if (escape_char == 'u') {
 					source += bsDist;
 					dest += bsDist;
-					length -= bsDist;
-					if (!readEscapedUnicode(&dest, &source)) {
-						return dest;
+					if (!handleUnicodeCodePoint(&source, &dest)) {
+						return nullptr;
 					}
 				} else {
-					uint8_t escapeResult = escapeMap[escapeChar];
+					uint8_t escapeResult = escapeMap[escape_char];
 					if (escapeResult == 0u) {
-						return dest;
+						return nullptr;
 					}
 					dest[bsDist] = escapeResult;
-					source += (bsDist + 2ull);
-					dest += (bsDist + 1ull);
-					length -= (bsDist + 2ull);
+					source += bsDist + 2ull;
+					dest += bsDist + 1ull;
 				}
 			} else {
-				source += BackslashAndQuoteType::bytesProcessed;
-				dest += BackslashAndQuoteType::bytesProcessed;
-				length -= BackslashAndQuoteType::bytesProcessed;
+				source += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
+				dest += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
 			}
 		}
-		return dest;
+		return nullptr;
 	}
 
 	inline static bool parseBool(StringViewPtr json) noexcept {
