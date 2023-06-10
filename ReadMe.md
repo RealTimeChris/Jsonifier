@@ -203,35 +203,28 @@ Happy parsing with Jsonifier!
 Jsonifier is a JSON parsing library that supports various CPU architectures to optimize code generation and enhance performance. This page explains the relevant portion of the CMakeLists.txt file in Jsonifier, which detects the CPU architecture and sets the appropriate compiler flags for the supported architectures: x64, AVX, AVX2, and AVX-512.
 
 ### CPU Architecture Detection Configuration
-The CPU architecture detection and configuration in Jsonifier's CMakeLists.txt file is designed to support the following architectures: x64, AVX, AVX2, and AVX-512. Let's explore each architecture in detail:
+
+The CPU architecture detection and configuration in Jsonifier's CMakeLists.txt file are designed to support the following architectures: x64, AVX, AVX2, and AVX-512. Let's explore each architecture in detail:
 
 #### x64 Architecture
+
 The x64 architecture, also known as x86-64 or AMD64, is a 64-bit extension of the x86 instruction set architecture. It provides increased memory addressability and larger general-purpose registers, enabling more efficient processing of 64-bit data. The x64 architecture is widely used in modern CPUs, offering improved performance and expanded capabilities compared to its 32-bit predecessor.
 
 #### AVX (Advanced Vector Extensions)
+
 AVX, short for Advanced Vector Extensions, is an extension to the x86 instruction set architecture. AVX provides SIMD (Single Instruction, Multiple Data) instructions for performing parallel processing on vectors of data. It introduces 128-bit vector registers (XMM registers) and new instructions to accelerate floating-point and integer calculations. AVX is supported by many modern CPUs and offers significant performance benefits for applications that can utilize parallel processing.
 
 #### AVX2 (Advanced Vector Extensions 2)
+
 AVX2 is an extension of the AVX instruction set architecture. It builds upon the foundation of AVX and introduces additional instructions and capabilities for SIMD processing. AVX2 expands the vector register size to 256 bits (YMM registers) and introduces new integer and floating-point operations, enabling further optimization of vectorized code. CPUs that support AVX2 offer enhanced performance for applications that leverage these advanced instructions.
 
 #### AVX-512
+
 AVX-512 is an extension of the AVX instruction set architecture, designed to provide even higher levels of vector parallelism. AVX-512 introduces 512-bit vector registers (ZMM registers) and a broad range of new instructions for both floating-point and integer operations. With AVX-512, CPUs can process larger amounts of data in parallel, offering significant performance improvements for applications that can effectively utilize these capabilities.
 
 ### Configuration Explanation
-The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures:
 
-If the detected architecture is AVX-512 (AVX_TYPE EQUAL 124), the script sets the AVX_FLAG variable to "/arch:AVX512" for MSVC or "-mavx512bw;-mavx512f" for other compilers. A status message is displayed indicating the detected architecture as AVX512.
-
-If the detected architecture is AVX2 (AVX_TYPE EQUAL 125), the script sets the AVX_FLAG variable to "/arch:AVX2" for MSVC or "-mavx2" for other compilers. A status message is displayed indicating the detected architecture as AVX2.
-
-If the detected architecture is AVX (AVX_TYPE EQUAL 126), the script sets the AVX_FLAG variable to "/arch:AVX" for MSVC or "-mavx" for other compilers. A status message is displayed indicating the detected architecture as AVX.
-
-If none of the above cases match, it indicates a fallback architecture. The AVX_FLAG variable is set to an empty value, and a status message is displayed indicating the detected architecture as FALLBACK.
-
-For each supported architecture, the script sets the appropriate compiler flags to enable the compiler to generate optimized code for that specific architecture.
-
-Conclusion
-Jsonifier's CMakeLists.txt file incorporates CPU architecture detection and configuration to optimize code generation for different supported architectures: x64, AVX, AVX2, and AVX-512. By detecting the architecture at compile time and setting the corresponding compiler flags, Jsonifier ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU.
+The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures. It ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU.
 
 ## Installation (Vcpkg)
 - Requirements:

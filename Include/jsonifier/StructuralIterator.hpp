@@ -46,7 +46,7 @@ namespace JsonifierInternal {
 			return stringView + *currentIndex;
 		}
 
-		inline StructuralIterator& operator++() {
+		inline StructuralIterator& operator++() noexcept {
 			++currentIndex;
 			return *this;
 		}

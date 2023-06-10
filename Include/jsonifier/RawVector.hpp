@@ -46,7 +46,7 @@ namespace JsonifierInternal {
 		inline constexpr RawVector(const RawVector&) noexcept = default;
 
 		inline constexpr RawVector(size_type count, const auto& value) : dsize(count) {
-			for (size_t x = 0; x < N; ++x)
+			for (size_type x = 0; x < N; ++x)
 				data[x] = value;
 		}
 
@@ -62,28 +62,36 @@ namespace JsonifierInternal {
 			return dsize;
 		}
 
-		inline constexpr reference operator[](size_t index) {
+		inline constexpr reference operator[](size_type index) {
 			return data[index];
 		}
 
-		inline constexpr const_reference operator[](size_t index) const noexcept {
+		inline constexpr const_reference operator[](size_type index) const noexcept {
 			return data[index];
+		}
+
+		inline constexpr reference front() {
+			return data[0];
 		}
 
 		inline constexpr reference back() {
 			return data[dsize - 1];
 		}
 
+		inline constexpr const_reference front() const noexcept {
+			return data[0];
+		}
+
 		inline constexpr const_reference back() const noexcept {
 			return data[dsize - 1];
 		}
 
-		inline constexpr void push_back(const ValueType& a) {
+		inline constexpr void push_back(const value_type& a) {
 			data[dsize++] = a;
 		}
 
-		inline constexpr void push_back(ValueType&& a) {
-			data[dsize++] = std::move(a);
+		inline constexpr void push_back(value_type&& a) {
+			data[dsize++] = std::forward<value_type>(a);
 		}
 
 		inline constexpr void pop_back() {
@@ -95,8 +103,8 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		ValueType data[N] = {};
-		size_t dsize = 0;
+		value_type data[N] = {};
+		size_type dsize = 0;
 	};
 
 }

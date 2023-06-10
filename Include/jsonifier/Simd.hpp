@@ -24,15 +24,6 @@
 #pragma once
 
 #include <jsonifier/StringView.hpp>
-#include <jsonifier/String.hpp>
-
-#include <immintrin.h>
-#include <iostream>
-#include <stdlib.h>
-#include <memory>
-#include <random>
-#include <bitset>
-
 #include <jsonifier/ISADetection.hpp>
 
 namespace JsonifierInternal {
@@ -46,12 +37,12 @@ namespace JsonifierInternal {
 			index = 0;
 		}
 
-		inline size_t getRemainder(StringBufferPtr dst) const noexcept {
+		inline size_t getRemainder(StringBufferPtr dest) const noexcept {
 			if (length == index) {
 				return 0;
 			}
-			memset(dst, 0x20, StepSize);
-			memmove(dst, inString + index, (length - index));
+			memset(dest, 0x20, StepSize);
+			memmove(dest, inString + index, (length - index));
 			return length - index;
 		}
 
@@ -74,8 +65,6 @@ namespace JsonifierInternal {
 
 	class SimdStringReader {
 	  public:
-		using allocator = std::pmr::polymorphic_allocator<uint32_t>;
-
 		inline SimdStringReader() noexcept = default;
 		inline SimdStringReader& operator=(SimdStringReader&& other) noexcept = default;
 		inline SimdStringReader(SimdStringReader&& other) noexcept = default;
@@ -83,17 +72,11 @@ namespace JsonifierInternal {
 		inline SimdStringReader(const SimdStringReader& other) noexcept = delete;
 
 		inline void reset(Jsonifier::StringView stringViewNew) noexcept {
-			auto doWeAllocate{ stringViewNew.size() > stringView.size() };
-			if (currentlyAllocated && doWeAllocate) {
-				allocator{}.deallocate(structuralIndices, currentlyAllocated);
-				currentlyAllocated = stringViewNew.size();
-			} 
-			if (doWeAllocate) {
-				currentlyAllocated = stringViewNew.size();
-				structuralIndices = allocator{}.allocate(currentlyAllocated);
-			} else {
-				std::fill(structuralIndices, structuralIndices + currentlyAllocated, 0);
+			size_t sizeNew{ roundUpToMultipleOfEight(stringViewNew.size()) };
+			if (sizeNew > structuralIndices.size()) {
+				structuralIndices.resize(sizeNew);
 			}
+			structuralIndices.reset();
 			stringView = stringViewNew;
 			storedLSB01 = false;
 			storedLSB02 = false;
@@ -129,20 +112,15 @@ namespace JsonifierInternal {
 			return stringView.size();
 		}
 
-		inline StructuralIndex getStructurals() const noexcept {
-			return structuralIndices;
+		inline StructuralIndex getStructurals() noexcept {
+			return structuralIndices.data();
 		}
 
-		inline ~SimdStringReader() noexcept {
-			if (structuralIndices && !stringView.empty()) {
-				allocator{}.deallocate(structuralIndices, stringView.size());
-			}
-		}
+		inline ~SimdStringReader() noexcept {};
 
 	  protected:
-		StructuralIndex structuralIndices{};
+		Jsonifier::Vector<uint32_t> structuralIndices{};
 		Jsonifier::StringView stringView{};
-		size_t currentlyAllocated{};
 		SimdBaseReal prevEscaped{};
 		SimdBaseReal structurals{};
 		SimdBaseReal whitespace{};
@@ -155,8 +133,12 @@ namespace JsonifierInternal {
 		size_t tapeIndex{};
 		SimdBaseReal op{};
 
-		inline uint64_t round(uint64_t a, uint64_t size) const noexcept {
-			return (((a) + (( size )-1)) & ~(( size )-1));
+		size_t roundUpToMultipleOfEight(size_t num) {
+			size_t remainder = num % 8;
+			if (remainder == 0) {
+				return num;
+			}
+			return num + (8 - remainder);
 		}
 
 		inline int64_t rollValuesIntoTape(size_t currentIndex, size_t x, int64_t newBits) noexcept {

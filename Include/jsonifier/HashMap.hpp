@@ -52,19 +52,19 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<size_t N> inline constexpr size_t toUint64N(const char* bytes) noexcept {
-		static_assert(N <= 8);
+	template<size_t n> inline constexpr size_t toUint64N(const char* bytes) noexcept {
+		static_assert(n <= 8);
 		if (std::is_constant_evaluated()) {
 			size_t res{};
-			for (size_t x = 0; x < N; ++x) {
+			for (size_t x = 0; x < n; ++x) {
 				res |= static_cast<size_t>(bytes[x]) << (8 * x);
 			}
 			return res;
-		} else if constexpr (N == 8) {
+		} else if constexpr (n == 8) {
 			return *reinterpret_cast<const size_t*>(bytes);
 		} else {
 			size_t res;
-			std::memcpy(&res, bytes, N);
+			std::memcpy(&res, bytes, n);
 			return res;
 		}
 	}
@@ -129,12 +129,12 @@ namespace JsonifierInternal {
 			(static_cast<size_t>(n <= 8ull) * sizeof(unsigned long long)) + (n <= 128ull);
 	}
 
-	template<size_t N> inline unsigned long long selectUintLeast(std::integral_constant<size_t, N>) {
-		static_assert(N < 2, "Unsupported type size.");
+	template<size_t n> inline unsigned long long selectUintLeast(std::integral_constant<size_t, n>) {
+		static_assert(n < 2, "Unsupported type size.");
 		return {};
 	}
 
-	template<size_t N> using SelectUintLeastT = decltype(selectUintLeast(std::integral_constant<size_t, bitWeight(N)>()));
+	template<size_t n> using SelectUintLeastT = decltype(selectUintLeast(std::integral_constant<size_t, bitWeight(n)>()));
 
 	template<typename ValueType> inline constexpr void primitiveSwap(ValueType&& a, ValueType&& b) {
 		auto tmp = std::move(a);
@@ -179,9 +179,9 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType, size_t N, typename Compare>
-	inline constexpr RawArray<ValueType, N> quicksort(RawArray<ValueType, N> const& array, const Compare& compare) {
-		RawArray<ValueType, N> res = array;
+	template<typename ValueType, size_t n, typename Compare>
+	inline constexpr RawArray<ValueType, n> quicksort(RawArray<ValueType, n> const& array, const Compare& compare) {
+		RawArray<ValueType, n> res = array;
 		quicksort(res.begin(), res.end() - 1, compare);
 		return res;
 	}
@@ -202,8 +202,8 @@ namespace JsonifierInternal {
 			return static_cast<UintType>(val);
 		}
 
-		template<typename ValueType, UintType M> inline static constexpr UintType modulo(ValueType val, std::integral_constant<UintType, M>) {
-			return static_cast<UintType>(val % M);
+		template<typename ValueType, UintType m2> inline static constexpr UintType modulo(ValueType val, std::integral_constant<UintType, m2>) {
+			return static_cast<UintType>(val % m2);
 		}
 
 	  public:
@@ -304,15 +304,15 @@ namespace JsonifierInternal {
 		return false;
 	}
 
-	template<size_t N> inline constexpr auto naiveBucketSize() noexcept {
-		return N < 8 ? 2 * N : 4 * N;
+	template<size_t n> inline constexpr auto naiveBucketSize() noexcept {
+		return n < 8 ? 2 * n : 4 * n;
 	}
 
-	template<size_t N> inline constexpr uint32_t naivePerfectHash(auto&& keys) noexcept {
-		static_assert(N <= 20);
-		constexpr size_t m = naiveBucketSize<N>();
-		RawArray<size_t, N> hashes{};
-		RawArray<size_t, N> buckets{};
+	template<size_t n> inline constexpr uint32_t naivePerfectHash(auto&& keys) noexcept {
+		static_assert(n <= 20);
+		constexpr size_t m = naiveBucketSize<n>();
+		RawArray<size_t, n> hashes{};
+		RawArray<size_t, n> buckets{};
 
 
 		DefaultPrgT gen{};
@@ -333,19 +333,19 @@ namespace JsonifierInternal {
 				++index;
 			}
 
-			if (index == N)
+			if (index == n)
 				return seed;
 		}
 
 		return (std::numeric_limits<uint32_t>::max)();
 	}
 
-	template<typename Value, size_t N> struct NaiveMap {
-		static_assert(N <= 20);
-		static constexpr size_t m = naiveBucketSize<N>();
+	template<typename Value, size_t n> struct NaiveMap {
+		static_assert(n <= 20);
+		static constexpr size_t m = naiveBucketSize<n>();
 		uint32_t seed{};
-		RawArray<Pair<Jsonifier::StringView, Value>, N> items{};
-		RawArray<uint32_t, N * 1> hashes{};
+		RawArray<Pair<Jsonifier::StringView, Value>, n> items{};
+		RawArray<uint32_t, n * 1> hashes{};
 		RawArray<uint8_t, m> table{};
 
 		inline constexpr decltype(auto) begin() const noexcept {
@@ -375,27 +375,27 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename ValueType, size_t N> inline constexpr auto makeNaiveMap(std::initializer_list<Pair<Jsonifier::StringView, ValueType>> pairs) {
-		static_assert(N <= 20);
-		if (pairs.size() != N) {
-			throw std::runtime_error{ "pairs.size() != N" };
+	template<typename ValueType, size_t n> inline constexpr auto makeNaiveMap(std::initializer_list<Pair<Jsonifier::StringView, ValueType>> pairs) {
+		static_assert(n <= 20);
+		if (pairs.size() != n) {
+			throw std::runtime_error{ "pairs.size() != n" };
 		}
-		NaiveMap<ValueType, N> ht{};
-		constexpr size_t m = naiveBucketSize<N>();
+		NaiveMap<ValueType, n> ht{};
+		constexpr size_t m = naiveBucketSize<n>();
 
-		RawArray<Jsonifier::StringView, N> keys{};
+		RawArray<Jsonifier::StringView, n> keys{};
 		size_t x = 0;
 		for (const auto& pair: pairs) {
 			ht.items[x] = pair;
 			keys[x] = pair.first;
 			++x;
 		}
-		ht.seed = naivePerfectHash<N>(keys);
+		ht.seed = naivePerfectHash<n>(keys);
 		if (ht.seed == std::numeric_limits<uint32_t>::max()) {
 			throw std::runtime_error{ "Unable to find perfect hash." };
 		}
 
-		for (x = 0; x < N; ++x) {
+		for (x = 0; x < n; ++x) {
 			const auto hash = Xsm1<uint32_t>{}(keys[x], ht.seed);
 			ht.hashes[x] = hash;
 			ht.table[hash % m] = static_cast<uint8_t>(x);
@@ -405,7 +405,7 @@ namespace JsonifierInternal {
 	}
 
 	struct SingleCharHashDesc {
-		size_t N{};
+		size_t n{};
 		bool valid{};
 		uint8_t min_diff{};
 		uint8_t front{};
@@ -413,14 +413,14 @@ namespace JsonifierInternal {
 		bool is_front_hash = true;
 	};
 
-	template<size_t N, bool IsFrontHash = true>
-	inline constexpr SingleCharHashDesc singleCharHash(const RawArray<Jsonifier::StringView, N>& v) noexcept {
-		if constexpr (N > 255) {
+	template<size_t n, bool IsFrontHash = true>
+	inline constexpr SingleCharHashDesc singleCharHash(const RawArray<Jsonifier::StringView, n>& v) noexcept {
+		if constexpr (n > 255) {
 			return {};
 		}
 
-		RawArray<uint8_t, N> hashes;
-		for (size_t x = 0; x < N; ++x) {
+		RawArray<uint8_t, n> hashes;
+		for (size_t x = 0; x < n; ++x) {
 			if (v[x].size() == 0) {
 				return {};
 			}
@@ -434,19 +434,19 @@ namespace JsonifierInternal {
 		std::sort(hashes.begin(), hashes.end());
 
 		uint8_t min_diff = (std::numeric_limits<uint8_t>::max)();
-		for (size_t x = 0; x < N - 1; ++x) {
+		for (size_t x = 0; x < n - 1; ++x) {
 			if ((hashes[x + 1] - hashes[x]) < min_diff) {
 				min_diff = hashes[x + 1] - hashes[x];
 			}
 		}
 
-		return SingleCharHashDesc{ N, min_diff > 0, min_diff, hashes.front(), hashes.back(), IsFrontHash };
+		return SingleCharHashDesc{ n, min_diff > 0, min_diff, hashes.front(), hashes.back(), IsFrontHash };
 	}
 
 	template<typename ValueType, SingleCharHashDesc D> struct SingleCharMap {
-		static constexpr auto N = D.N;
-		static_assert(N < 256);
-		RawArray<Pair<Jsonifier::StringView, ValueType>, N> items{};
+		static constexpr auto n = D.n;
+		static_assert(n < 256);
+		RawArray<Pair<Jsonifier::StringView, ValueType>, n> items{};
 		static constexpr size_t N_table = D.back - D.front + 1;
 		RawArray<uint8_t, N_table> table{};
 
@@ -518,7 +518,7 @@ namespace JsonifierInternal {
 
 	template<typename ValueType, SingleCharHashDesc D>
 	inline constexpr auto makeSingleCharMap(std::initializer_list<Pair<Jsonifier::StringView, ValueType>> pairs) {
-		static_assert(D.N < 256);
+		static_assert(D.n < 256);
 		SingleCharMap<ValueType, D> ht{};
 
 		uint8_t x = 0;
@@ -616,11 +616,11 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<size_t M> struct PmhBuckets {
-		inline static constexpr auto bucket_max = 2 * (1u << (log(M) / 2));
+	template<size_t m> struct PmhBuckets {
+		inline static constexpr auto bucket_max = 2 * (1u << (log(m) / 2));
 
 		using bucket_t = RawVector<size_t, bucket_max>;
-		RawArray<bucket_t, M> buckets;
+		RawArray<bucket_t, m> buckets;
 		size_t seed;
 
 		struct BucketRef {
@@ -646,20 +646,20 @@ namespace JsonifierInternal {
 			}
 		};
 
-		template<size_t... Is> RawArray<BucketRef, M> inline constexpr makeBucketRefs(std::index_sequence<Is...>) const noexcept {
+		template<size_t... Is> RawArray<BucketRef, m> inline constexpr makeBucketRefs(std::index_sequence<Is...>) const noexcept {
 			return { { BucketRef{ Is, &buckets[Is] }... } };
 		}
 
-		RawArray<BucketRef, M> inline constexpr getSortedBuckets() const noexcept {
-			RawArray<BucketRef, M> result{ makeBucketRefs(std::make_index_sequence<M>()) };
+		RawArray<BucketRef, m> inline constexpr getSortedBuckets() const noexcept {
+			RawArray<BucketRef, m> result{ makeBucketRefs(std::make_index_sequence<m>()) };
 			quicksort(result.begin(), result.end() - 1, BucketSizeCompare{});
 			return result;
 		}
 	};
 
-	template<size_t M, typename Item, size_t N, typename Hash, typename Key>
-	PmhBuckets<M> inline constexpr makePmhBuckets(const RawArray<Item, N>& items, Hash const& hash, Key const& key, DefaultPrgT& prg) {
-		using result_t = PmhBuckets<M>;
+	template<size_t m, typename Item, size_t n, typename Hash, typename Key>
+	PmhBuckets<m> inline constexpr makePmhBuckets(const RawArray<Item, n>& items, Hash const& hash, Key const& key, DefaultPrgT& prg) {
+		using result_t = PmhBuckets<m>;
 		result_t result{};
 		bool rejected = false;
 		while (1) {
@@ -668,8 +668,8 @@ namespace JsonifierInternal {
 			}
 			result.seed = prg();
 			rejected = false;
-			for (size_t x = 0; x < N; ++x) {
-				auto& bucket = result.buckets[hash(key(items[x]), static_cast<size_t>(result.seed)) % M];
+			for (size_t x = 0; x < n; ++x) {
+				auto& bucket = result.buckets[hash(key(items[x]), static_cast<size_t>(result.seed)) % m];
 				if (bucket.size() >= result_t::bucket_max) [[unlikely]] {
 					rejected = true;
 					break;
@@ -682,7 +682,7 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType, size_t N> inline constexpr bool allDifferentFrom(RawVector<ValueType, N>& data, ValueType& a) {
+	template<typename ValueType, size_t n> inline constexpr bool allDifferentFrom(RawVector<ValueType, n>& data, ValueType& a) {
 		for (size_t x = 0; x < data.size(); ++x)
 			if (data[x] == a) [[unlikely]] {
 				return false;
@@ -694,8 +694,8 @@ namespace JsonifierInternal {
 		using value_type = size_t;
 
 	  protected:
-		static constexpr value_type MINUS_ONE = (std::numeric_limits<value_type>::max)();
-		static constexpr value_type HIGH_BIT = ~(MINUS_ONE >> 1);
+		static constexpr value_type MinusOne = (std::numeric_limits<value_type>::max)();
+		static constexpr value_type HighBit = ~(MinusOne >> 1);
 
 		value_type val = 0;
 
@@ -705,10 +705,10 @@ namespace JsonifierInternal {
 		}
 
 		inline constexpr bool isSeed() const noexcept {
-			return val & HIGH_BIT;
+			return val & HighBit;
 		}
 
-		inline constexpr SeedOrIndex(bool isSeed, value_type value) : val(isSeed ? (value | HIGH_BIT) : (value & ~HIGH_BIT)) {
+		inline constexpr SeedOrIndex(bool isSeed, value_type value) : val(isSeed ? (value | HighBit) : (value & ~HighBit)) {
 		}
 
 		inline constexpr SeedOrIndex() noexcept = default;
@@ -716,10 +716,10 @@ namespace JsonifierInternal {
 		inline constexpr SeedOrIndex& operator=(const SeedOrIndex&) noexcept = default;
 	};
 
-	template<size_t M> struct PmhTables {
+	template<size_t m> struct PmhTables {
 		size_t firstSeed;
-		RawArray<SeedOrIndex, M> firstTable;
-		RawArray<size_t, M> secondTable;
+		RawArray<SeedOrIndex, m> firstTable;
+		RawArray<size_t, m> secondTable;
 		Hash<Jsonifier::StringView> hash;
 
 		template<typename KeyType> inline constexpr size_t lookup(const KeyType& key) const noexcept {
@@ -727,24 +727,24 @@ namespace JsonifierInternal {
 		}
 
 		template<typename KeyType> inline constexpr size_t lookup(const KeyType& key, const Hash<Jsonifier::StringView>& hasher) const noexcept {
-			auto const d = firstTable[hasher(key, static_cast<size_t>(firstSeed)) % M];
+			auto const d = firstTable[hasher(key, static_cast<size_t>(firstSeed)) % m];
 			if (!d.isSeed()) [[unlikely]] {
 				return static_cast<size_t>(d.value());
 			} else [[likely]] {
-				return secondTable[hasher(key, static_cast<size_t>(d.value())) % M];
+				return secondTable[hasher(key, static_cast<size_t>(d.value())) % m];
 			}
 		}
 	};
 
-	template<size_t M, typename Item, size_t N, typename Key> PmhTables<M> inline constexpr makePmhTables(const RawArray<Item, N>& items,
+	template<size_t m, typename Item, size_t n, typename Key> PmhTables<m> inline constexpr makePmhTables(const RawArray<Item, n>& items,
 		Hash<Jsonifier::StringView> const& hash, Key const& key, DefaultPrgT prg) {
-		auto step_one = makePmhBuckets<M>(items, hash, key, prg);
+		auto step_one = makePmhBuckets<m>(items, hash, key, prg);
 		auto buckets = step_one.getSortedBuckets();
 
-		RawArray<SeedOrIndex, M> G;
+		RawArray<SeedOrIndex, m> G;
 
 		constexpr size_t UNUSED = (std::numeric_limits<size_t>::max)();
-		RawArray<size_t, M> H;
+		RawArray<size_t, m> H;
 		H.fill(UNUSED);
 
 		for (const auto& bucket: buckets) {
@@ -757,7 +757,7 @@ namespace JsonifierInternal {
 				RawVector<size_t, decltype(step_one)::bucket_max> bucket_slots;
 
 				while (bucket_slots.size() < bsize) {
-					auto slot = hash(key(items[bucket[bucket_slots.size()]]), d.value()) % M;
+					auto slot = hash(key(items[bucket[bucket_slots.size()]]), d.value()) % m;
 
 					if (H[slot] != UNUSED || !allDifferentFrom(bucket_slots, slot)) {
 						bucket_slots.clear();
@@ -774,7 +774,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		for (size_t x = 0; x < M; ++x)
+		for (size_t x = 0; x < m; ++x)
 			if (H[x] == UNUSED)
 				H[x] = 0;
 
@@ -787,9 +787,9 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename Key, typename Value, size_t N> class UnorderedMap {
-		inline static constexpr size_t storage_size = nextHighestPowerOfTwo(N) * (N < 32 ? 2 : 1);
-		using container_type = RawArray<Pair<Key, Value>, N>;
+	template<typename Key, typename Value, size_t n> class UnorderedMap {
+		inline static constexpr size_t storage_size = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
+		using container_type = RawArray<Pair<Key, Value>, n>;
 		using tables_type = PmhTables<storage_size>;
 
 		StringCompareHelper const equal;
@@ -797,7 +797,7 @@ namespace JsonifierInternal {
 		tables_type tables;
 
 	  public:
-		using Self = UnorderedMap<Key, Value, N>;
+		using Self = UnorderedMap<Key, Value, n>;
 		using key_type = Key;
 		using mapped_type = Value;
 		using value_type = typename container_type::value_type;
@@ -828,7 +828,7 @@ namespace JsonifierInternal {
 
 		inline constexpr UnorderedMap(std::initializer_list<value_type> items, hasher const& hash, StringCompareHelper const& equalNew)
 			: UnorderedMap{ container_type{ items }, hash, equalNew } {
-			constexpr_assert(items.size() == N, "Inconsistent initializer_list size and type size argument.");
+			constexpr_assert(items.size() == n, "Inconsistent initializer_list size and type size argument.");
 		};
 
 		inline constexpr UnorderedMap(std::initializer_list<value_type> items) : UnorderedMap{ items, hasher{}, StringCompareHelper{} } {
@@ -851,15 +851,15 @@ namespace JsonifierInternal {
 		}
 
 		inline constexpr bool empty() const noexcept {
-			return !N;
+			return !n;
 		}
 
 		inline constexpr size_type size() const noexcept {
-			return N;
+			return n;
 		}
 
 		inline constexpr size_type maxSize() const noexcept {
-			return N;
+			return n;
 		}
 
 		inline constexpr size_t count(const key_type& key, const hasher& hash, const key_equal& equal) const noexcept {
@@ -961,9 +961,9 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename ValueType, typename U, size_t N> inline constexpr auto makeUnorderedMap(Pair<ValueType, U> const (&items)[N],
+	template<typename ValueType, typename U, size_t n> inline constexpr auto makeUnorderedMap(Pair<ValueType, U> const (&items)[n],
 		const Hash<ValueType>& hash = Hash<ValueType>{}, const StringCompareHelper& equal = StringCompareHelper{}) {
-		return UnorderedMap<ValueType, U, N>{ items, hash, equal };
+		return UnorderedMap<ValueType, U, n>{ items, hash, equal };
 	}
 
 	template<typename ValueType, size_t I> struct CoreSV {

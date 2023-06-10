@@ -27,7 +27,7 @@
 
 namespace Jsonifier {
 
-	struct RawJsonData {
+	struct RawJsonData : public JsonifierInternal::Relational<RawJsonData> {
 		inline RawJsonData() noexcept = default;
 
 		inline RawJsonData& operator=(bool value) noexcept {
@@ -74,8 +74,8 @@ namespace Jsonifier {
 			return jsonData.data();
 		}
 
-		inline void resize(size_t newSize) noexcept {
-			jsonData.resize(newSize);
+		inline void resize(size_t sizeNew) noexcept {
+			jsonData.resize(sizeNew);
 		}
 
 		inline explicit operator StringView() noexcept {
@@ -95,10 +95,6 @@ namespace Jsonifier {
 
 		inline bool operator==(const RawJsonData& other) const {
 			return jsonData == other.jsonData;
-		}
-
-		inline bool operator!=(const RawJsonData& other) const {
-			return !(*this == other);
 		}
 
 		inline RawJsonData operator+(const String& other) {

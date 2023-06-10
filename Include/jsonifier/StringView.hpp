@@ -41,7 +41,7 @@ namespace Jsonifier {
 		using const_pointer = const char*;
 		using reference = char&;
 		using const_reference = const char&;
-		using iterator = Iterator<char>;
+		using iterator = JsonifierInternal::Iterator<char>;
 		using const_iterator = const iterator;
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = const reverse_iterator;
@@ -119,7 +119,7 @@ namespace Jsonifier {
 		}
 
 		inline constexpr size_type max_size() const noexcept {
-			return (std::min)(static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<size_t>(-1) / sizeof(char));
+			return std::min(static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<size_t>(-1) / sizeof(char));
 		}
 
 		inline constexpr const_reference operator[](const size_type offsetNew) const noexcept {

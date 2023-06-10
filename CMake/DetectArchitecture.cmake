@@ -1,111 +1,58 @@
-INCLUDE(CheckCXXSourceRuns)
+include(CheckCXXSourceRuns)
 
-SET(BMI_CODE "
-  #include <immintrin.h>
-  #include <stdint.h>
-  int main()
-  {
-    int64_t a{};
-    auto result = _blsmsk_u64(a);
-    return 0;
- }
-")
+function(check_instruction_set INSTRUCTION_SET_NAME INSTRUCTION_SET_FLAG INSTRUCTION_SET_INTRINSIC)
 
-set(PCLMULQDQ_CODE "
-  #include <immintrin.h>
-  #include <stdint.h>
-  int main()
-  {
-    const int8_t c{};
-    __m128i a{};
-    __m128i b{};
-    auto result = _mm_clmulepi64_si128(a, b, c);
-    return 0;
- }
-")
- 
-SET(AVX_CODE "
-  #include <immintrin.h>
+    set(INSTRUCTION_SET_CODE "
+        #include <immintrin.h>
+        #include <stdint.h>
+        int main()
+        {
+            ${INSTRUCTION_SET_INTRINSIC};
+            return 0;
+        }
+    ")
 
-  int main()
-  {
-    auto result = _mm_testz_ps(__m128{}, __m128{});
-    return 0;
- }
-")
+    set(CMAKE_REQUIRED_FLAGS "${INSTRUCTION_SET_FLAG}")
+    CHECK_CXX_SOURCE_RUNS("${INSTRUCTION_SET_CODE}" "${INSTRUCTION_SET_NAME}")
+    if(${INSTRUCTION_SET_NAME})
+        math(EXPR AVX_TYPE "${AVX_TYPE} + 1")
+        set(AVX_TYPE "${AVX_TYPE}" PARENT_SCOPE)
+        set(AVX_FLAG "${INSTRUCTION_SET_FLAG}" PARENT_SCOPE)
+        set(AVX_NAME "${INSTRUCTION_SET_NAME}" PARENT_SCOPE)
+    else()
+        message(STATUS "Instruction set ${INSTRUCTION_SET_NAME} not supported. Falling back to the previous instruction set.")
+        return()
+    endif()
+endfunction()
 
-SET(AVX2_CODE "
-  #include <immintrin.h>
-
-  int main()
-  {
-    auto result = _mm256_extract_epi64(__m256i{}, 0);
-    return 0;
- }
-")
-
-SET(AVX512F_CODE "
-  #include <immintrin.h>
-
-  int main()
-  {
-    auto result = _mm512_add_ps(__m512i{}, __m512i{});
-    return 0;
- }
-")
-
-SET(AVX512BW_CODE "
-  #include <immintrin.h>
-
-  int main()
-  {
-    auto result = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{});
-    return 0;
- }
-")
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(PCLMULQDQ_FLAG "/arch:AVX")
-    set(BMI_FLAG "/arch:AVX")  
-    set(AVX_FLAG "/arch:AVX")
-    set(AVX2_FLAG "/arch:AVX2")
-    set(AVX512F_FLAG "/arch:AVX512")
-    set(AVX512BW_FLAG "/arch:AVX512")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(INSTRUCTION_SETS
+        "AVX?/arch:AVX?auto result = _mm_testz_ps(__m128{}, __m128{})"
+        "AVX2?/arch:AVX2?auto result = _mm256_extract_epi64(__m256i{}, 0)"
+        "AVX512?/arch:AVX512?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{})"
+    )
 else()
-    set(PCLMULQDQ_FLAG "-mpclmul")
-    set(BMI_FLAG "-mbmi")  
-    set(AVX_FLAG "-mavx")
-    set(AVX2_FLAG "-mavx2")
-    set(AVX512F_FLAG "-mavx512f")
-    set(AVX512BW_FLAG "-mavx512bw")
+    set(INSTRUCTION_SETS
+        "AVX?-mavx.-mpclmul.-mbmi?auto result = _mm_testz_ps(__m128{}, __m128{})"
+        "AVX2?-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm256_extract_epi64(__m256i{}, 0)"
+        "AVX512?-mavx512bw.-mavx512f.-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{})"
+    )
 endif()
 
-SET(CMAKE_REQUIRED_FLAGS_SAVE "${CMAKE_REQUIRED_FLAGS}")
-SET(CMAKE_REQUIRED_FLAGS "${PCLMULQDQ_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${PCLMULQDQ_CODE}" HAS_PCLMULQDQ)
-SET(CMAKE_REQUIRED_FLAGS "${BMI_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${BMI_CODE}" HAS_BMI)
-SET(CMAKE_REQUIRED_FLAGS "${AVX_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${AVX_CODE}" HAS_AVX)
-SET(CMAKE_REQUIRED_FLAGS "${AVX2_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${AVX2_CODE}" HAS_AVX2)
-SET(CMAKE_REQUIRED_FLAGS "${AVX512F_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${AVX512F_CODE}" HAS_AVX512F)
-SET(CMAKE_REQUIRED_FLAGS "${AVX512BW_FLAG}")
-CHECK_CXX_SOURCE_RUNS("${AVX512BW_CODE}" HAS_AVX512BW)
-SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_SAVE}")
+set(CMAKE_REQUIRED_FLAGS_SAVE "${CMAKE_REQUIRED_FLAGS}")
 
-if (NOT HAS_AVX OR NOT HAS_BMI OR NOT HAS_PCLMULQDQ)
-    set(AVX_TYPE 127 PARENT_DIRECTORY)
-    return()
-endif()
-if(NOT HAS_AVX2)
-    set(AVX_TYPE 126 PARENT_DIRECTORY)
-    return()
-endif()
-if(NOT HAS_AVX512F OR NOT HAS_AVX512BW)
-    set(AVX_TYPE 125 PARENT_DIRECTORY)
-    return()
-endif()
-set(AVX_TYPE 124 PARENT_DIRECTORY)
-return()
+set(AVX_NAME "Fallback")
+set(AVX_TYPE 124)
+
+foreach(INSTRUCTION_SET IN LISTS INSTRUCTION_SETS)
+    string(REPLACE "?" ";" CURRENT_LIST "${INSTRUCTION_SET}")
+    list(GET CURRENT_LIST 0 INSTRUCTION_SET_NAME)
+    list(GET CURRENT_LIST 1 INSTRUCTION_SET_FLAG)
+    string(REPLACE "." ";" INSTRUCTION_SET_FLAG "${INSTRUCTION_SET_FLAG}")
+    list(GET CURRENT_LIST 2 INSTRUCTION_SET_INTRINSIC)
+    string(REPLACE "." ";" INSTRUCTION_SET_INTRINSIC "${INSTRUCTION_SET_INTRINSIC}")
+    check_instruction_set("${INSTRUCTION_SET_NAME}" "${INSTRUCTION_SET_FLAG}" "${INSTRUCTION_SET_INTRINSIC}")
+endforeach()
+
+message(STATUS "Detected CPU Architecture: ${AVX_NAME}")
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_SAVE}")

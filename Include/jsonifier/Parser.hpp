@@ -31,50 +31,50 @@
 namespace JsonifierInternal {
 
 	struct ParseNoKeys {
-		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& it);
+		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& it);
+		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 	};
 
 	struct ParseWithKeys {
-		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& it);
+		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& it);
+		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, ObjectT ValueType, HasFind KeyType>
-		static void op(ValueType& value, StructuralIterator& buffer, const KeyType& excludedKeys);
+		static void op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys);
 
-		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
+		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 	};
 
 	class Parser {

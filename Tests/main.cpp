@@ -3,7 +3,7 @@
 #include "glaze/glaze.hpp"
 #include "jsonifier/Index.hpp"
 
-inline constexpr static std::string_view json0 = R"({"fixed_object": {
+inline static constexpr std::string_view json0 = R"({"fixed_object": {
       "int_array": [0, 1, 2, 3, 4, 5, 6],
       "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
       "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
@@ -101,59 +101,59 @@ struct obj_t {
 
 template<> struct glz::meta<fixed_object_t> {
 	using ValueType = fixed_object_t;
-	inline constexpr static auto value = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+	inline static constexpr auto value = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
 	using ValueType = fixed_name_object_t;
-	inline constexpr static auto value =
+	inline static constexpr auto value =
 		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
 	using ValueType = nested_object_t;
-	inline constexpr static auto value = object("v3s", &ValueType::v3s, "id", &ValueType::id);
+	inline static constexpr auto value = object("v3s", &ValueType::v3s, "id", &ValueType::id);
 };
 
 template<> struct glz::meta<another_object_t> {
 	using ValueType = another_object_t;
-	inline constexpr static auto value =
+	inline static constexpr auto value =
 		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
 	using ValueType = obj_t;
-	inline constexpr static auto value = glz::object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
+	inline static constexpr auto value = glz::object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
 		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
 		&ValueType::boolean, "another_bool", &ValueType::another_bool);
 };
 
 template<> struct Jsonifier::Core<fixed_object_t> {
 	using ValueType = fixed_object_t;
-	inline constexpr static auto parseValue =
+	inline static constexpr auto parseValue =
 		object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
 	using ValueType = fixed_name_object_t;
-	inline constexpr static auto parseValue =
+	inline static constexpr auto parseValue =
 		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
 	using ValueType = nested_object_t;
-	inline constexpr static auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
+	inline static constexpr auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
 	using ValueType = another_object_t;
-	inline constexpr static auto parseValue =
+	inline static constexpr auto parseValue =
 		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
 	using ValueType = obj_t;
-	inline constexpr static auto parseValue = object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
+	inline static constexpr auto parseValue = object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
 		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
 		&ValueType::boolean, "another_bool", &ValueType::another_bool);
 };
@@ -211,28 +211,28 @@ GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, 
 
 template<> struct Jsonifier::Core<Test<std::string>> {
 	using ValueType = Test<std::string>;
-	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
 		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
 		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
 template<> struct Jsonifier::Core<Test<size_t>> {
 	using ValueType = Test<size_t>;
-	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
 		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
 		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
 	using ValueType = Test<int64_t>;
-	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
 		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
 		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
 	using ValueType = Test<double>;
-	inline constexpr static auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
+	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
 		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
 		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
 };
@@ -290,38 +290,38 @@ GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, 
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
 	using ValueType = AbcTest<std::string>;
-	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
 		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
 		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<size_t>> {
 	using ValueType = AbcTest<size_t>;
-	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
 		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
 		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
 	using ValueType = AbcTest<int64_t>;
-	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
 		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
 		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
 	using ValueType = AbcTest<double>;
-	inline constexpr static auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
+	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
 		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
 		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
 };
 
 #ifdef NDEBUG
-constexpr static size_t iterations = 1000;
-constexpr static size_t iterations_abc = 1000;
+static constexpr size_t iterations = 1000;
+static constexpr size_t iterations_abc = 1000;
 #else
-constexpr static size_t iterations = 1;
-constexpr static size_t iterations_abc = 1;
+static constexpr size_t iterations = 1;
+static constexpr size_t iterations_abc = 1;
 #endif
 
 struct results {

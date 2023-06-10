@@ -38,7 +38,7 @@ namespace JsonifierInternal {
 
 	template<size_t StepSize> struct SimdBase {};
 
-#if AVX_TYPE == 124
+#if AVX_TYPE == 127
 
 	constexpr int32_t StepSize{ 512 };
 	constexpr int32_t BytesPerStep{ StepSize / 8 };
@@ -242,7 +242,7 @@ namespace JsonifierInternal {
 		}
 
 		inline bool collectCarries(const SimdBase& other1, SimdBase& result) const noexcept {
-			__m512i carry = _mm512_set1_epi64(0 ? 1 : 0);
+			__m512i carry = _mm512_set1_epi64(0);
 			__m512i sum = _mm512_add_epi64(*this, other1);
 			sum = _mm512_add_epi64(sum, carry);
 			result = std::move(sum);
@@ -280,7 +280,7 @@ namespace JsonifierInternal {
 	#define set(x) _mm512_set1_epi8(x)
 	#define tzCount(x) _tzcnt_u64(x)
 
-#elif AVX_TYPE == 125
+#elif AVX_TYPE == 126
 
 	constexpr int32_t StepSize{ 256 };
 	constexpr int32_t BytesPerStep{ StepSize / 8 };
@@ -469,7 +469,7 @@ namespace JsonifierInternal {
 		}
 
 		inline bool collectCarries(const SimdBase& other1, SimdBase& result) const noexcept {
-			__m256i carry = _mm256_set1_epi64x(0 ? 1 : 0);
+			__m256i carry = _mm256_set1_epi64x(0);
 			__m256i sum = _mm256_add_epi64(*this, other1);
 			sum = _mm256_add_epi64(sum, carry);
 			result = std::move(sum);
@@ -507,7 +507,7 @@ namespace JsonifierInternal {
 	#define set(x) _mm256_set1_epi8(x)
 	#define tzCount(x) _tzcnt_u32(x)
 
-#elif AVX_TYPE == 126
+#elif AVX_TYPE == 125
 
 	constexpr int32_t StepSize{ 128 };
 	constexpr int32_t BytesPerStep{ StepSize / 8 };
@@ -660,7 +660,7 @@ namespace JsonifierInternal {
 		}
 
 		inline bool collectCarries(const SimdBase& other1, SimdBase& result) const noexcept {
-			__m128i carry = _mm_set1_epi64x(0 ? 1 : 0);
+			__m128i carry = _mm_set1_epi64x(0);
 			__m128i sum = _mm_add_epi64(*this, other1);
 			sum = _mm_add_epi64(sum, carry);
 			result = std::move(sum);
@@ -748,8 +748,8 @@ namespace JsonifierInternal {
 		return *value;
 	}
 
-	inline void _mm64_store_si64(int64_t* dest, int64_t src) {
-		*dest = src;
+	inline void _mm64_store_si64(int64_t* dest, int64_t source) {
+		*dest = source;
 	}
 
 	inline uint8_t _tzcnt_u8(uint8_t value) {
@@ -966,7 +966,7 @@ namespace JsonifierInternal {
 	  protected:
 		size_t value{};
 
-		inline int64_t _mm64_loadu_epi8(const uint8_t* value) const {
+		inline int64_t _mm64_loadu_epi8(StringViewPtr value) const {
 			int64_t returnValue{};
 			std::memcpy(&returnValue, value, sizeof(int64_t));
 			return returnValue;

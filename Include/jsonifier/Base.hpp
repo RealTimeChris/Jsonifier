@@ -147,8 +147,11 @@ namespace JsonifierInternal {
 		{ value.emplace_back(std::declval<typename ValueType::value_type&>()) };
 	};
 
-	template<typename T>
-	concept UniquePtrT = std::is_same_v<T, std::unique_ptr<typename T::element_type>>;
+	template<typename ValueType>
+	concept UniquePtrT = requires(ValueType other) {
+		typename ValueType::element_type;
+		{ other.release() } -> std::same_as<typename ValueType::element_type*>;
+	};
 
 	template<typename Container>
 	concept HasFind = requires(Container c, const typename Container::key_type& val) {

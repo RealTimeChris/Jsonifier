@@ -25,7 +25,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 set(PROJECT_NAME  "Jsonifier")
-set(PRODUCT_VERSION 0.9.3)
+set(PRODUCT_VERSION 0.9.4)
 
 project(
     "${PROJECT_NAME}"
@@ -40,37 +40,6 @@ add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/DetectArchitecture.cmake")
-
-if(AVX_TYPE EQUAL 124)
-	message(STATUS "Detected CPU Architecture: AVX512")
-	if (MSVC)
-		set(AVX_FLAG "/arch:AVX512")
-	else()
-		set(AVX_FLAG "-mavx512bw;-mavx512f;-mavx2;-mavx;-mpclmul;-mbmi")
-	endif()
-elseif(AVX_TYPE EQUAL 125)
-	message(STATUS "Detected CPU Architecture: AVX2")
-	if (MSVC)
-		set(AVX_FLAG "/arch:AVX2")
-	else()
-		set(AVX_FLAG "-mavx2;-mavx;-mpclmul;-mbmi")
-	endif()
-elseif (AVX_TYPE EQUAL 126)
-	message(STATUS "Detected CPU Architecture: AVX")
-	if (MSVC)
-		set(AVX_FLAG "/arch:AVX")
-	else()
-		set(AVX_FLAG "-mavx;-mpclmul;-mbmi")
-	endif()
-else()
-	set(AVX_TYPE 127)
-	message(STATUS "Detected CPU Architecture: FALLBACK")
-	if (MSVC)
-		set(AVX_FLAG "")
-	else()
-		set(AVX_FLAG "")
-	endif()
-endif()
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES
@@ -95,6 +64,7 @@ target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/Zi>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
 	"${AVX_FLAG}"
 )
 
