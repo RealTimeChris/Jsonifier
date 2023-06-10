@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
@@ -24,18 +26,20 @@
 #include <jsonifier/Compare.hpp>
 #include <memory_resource>
 
-#ifdef __has_cpp_attribute
-	#if __has_cpp_attribute(no_unique_address)
-		#ifdef _MSC_VER
-			#define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#ifndef NO_UNIQUE_ADDRESS
+	#ifdef __has_cpp_attribute
+		#if __has_cpp_attribute(no_unique_address)
+			#ifdef _MSC_VER
+				#define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+			#else
+				#define NO_UNIQUE_ADDRESS [[no_unique_address]]
+			#endif
 		#else
-			#define NO_UNIQUE_ADDRESS [[no_unique_address]]
+			#define NO_UNIQUE_ADDRESS
 		#endif
 	#else
 		#define NO_UNIQUE_ADDRESS
 	#endif
-#else
-	#define NO_UNIQUE_ADDRESS
 #endif
 
 #ifdef __linux__
@@ -46,21 +50,44 @@
 
 namespace JsonifierInternal {
 
-	template<typename OTy, std::enable_if_t<std::is_move_constructible_v<OTy> && std::is_move_assignable_v<OTy>, int> = 0>
-	constexpr void swapF(OTy& lhs, OTy& rhs) noexcept(std::is_nothrow_move_constructible_v<OTy>&& std::is_nothrow_move_assignable_v<OTy>) {
-		OTy temp = std::move(lhs);
+	template<typename ValueType, std::enable_if_t<std::is_move_constructible_v<ValueType> && std::is_move_assignable_v<ValueType>, int> = 0>
+	constexpr void swapF(ValueType& lhs, ValueType& rhs) noexcept(
+		std::is_nothrow_move_constructible_v<ValueType>&& std::is_nothrow_move_assignable_v<ValueType>) {
+		ValueType temp = std::move(lhs);
 		lhs = std::move(rhs);
 		rhs = std::move(temp);
 	}
+
+	template<class PtrType> inline constexpr auto unfancy(PtrType ptr) noexcept {// converts from a fancy pointer to a plain pointer
+		return std::addressof(*ptr);
+	}
+
+	template<class Type> struct IsCharacter : std::false_type {};
+
+	template<> struct IsCharacter<char> : std::true_type {};
+
+	template<> struct IsCharacter<signed char> : std::true_type {};
+
+	template<> struct IsCharacter<unsigned char> : std::true_type {};
+
+#ifdef __cpp_char8_t
+	template<> struct IsCharacter<char8_t> : std::true_type {};
+#endif
+
+	template<class Type> struct IsCharacterOrBool : IsCharacter<Type>::type {};
+
+	template<> struct IsCharacterOrBool<bool> : std::true_type {};
+
+	template<class Type> struct IsCharacterOrByteOrBool : IsCharacterOrBool<Type>::type {};
 
 }
 
 namespace Jsonifier {
 
-	template<typename OTy> class Iterator {
+	template<typename ValueType> class Iterator {
 	  public:
 		using iterator_concept = std::bidirectional_iterator_tag;
-		using value_type = OTy;
+		using value_type = ValueType;
 		using difference_type = ptrdiff_t;
 		using pointer = const value_type*;
 		using reference = const value_type&;
@@ -166,29 +193,25 @@ namespace Jsonifier {
 		size_type offset = 0;
 	};
 
-	template<typename OTy> class Vector {
+	template<typename ValueType> class Vector {
 	  public:
-		using value_type = OTy;
+		using value_type = ValueType;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
 		using reference = value_type&;
-		using const_reference = const value_type&;
 		using iterator = Iterator<value_type>;
 		using const_iterator = const iterator;
-		using reverse_iterator = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = const reverse_iterator;
 		using size_type = size_t;
-		using difference_type = ptrdiff_t;
-		using allocator = std::pmr::polymorphic_allocator<value_type>;
+		using allocator_type = std::pmr::polymorphic_allocator<value_type>;
 
 		inline constexpr Vector() noexcept = default;
 
 		inline Vector& operator=(Vector&& other) noexcept {
-			this->capacityVal = other.capacityVal;
+			capacityVal = other.capacityVal;
 			other.capacityVal = 0;
-			this->sizeVal = other.sizeVal;
+			sizeVal = other.sizeVal;
 			other.sizeVal = 0;
-			this->values = other.values;
+			values = other.values;
 			other.values = nullptr;
 			return *this;
 		}
@@ -210,7 +233,7 @@ namespace Jsonifier {
 		inline constexpr Vector& operator=(std::initializer_list<value_type>&& initList) {
 			resize(initList.size());
 			for (size_t x = 0; x < sizeVal; ++x) {
-				this->values[x] = std::move(initList.begin()[x]);
+				values[x] = std::move(initList.begin()[x]);
 			}
 			return *this;
 		}
@@ -287,39 +310,34 @@ namespace Jsonifier {
 			return values;
 		}
 
+		inline constexpr size_type maxSize() const noexcept {
+			return std::numeric_limits<size_t>::max() / sizeof(value_type);
+		}
+
 		inline constexpr void emplace_back(const value_type& c) {
 			if (sizeVal + 1 >= capacityVal) {
-				reserve(capacityVal * 2 + 2);
+				reserve(capacityVal * 8 + 1);
 			}
-			allocator{}.construct(&values[sizeVal++], c);
+			alloc.construct(&values[sizeVal++], c);
 		}
 
 		inline constexpr void emplace_back(value_type&& c) {
 			if (sizeVal + 1 >= capacityVal) {
-				reserve(capacityVal * 2 + 2);
+				reserve(capacityVal * 8 + 1);
 			}
-			allocator{}.construct(&values[sizeVal++], std::forward<value_type>(c));
+			alloc.construct(&values[sizeVal++], std::forward<value_type>(c));
 		}
 
-		inline constexpr void resize(size_t newSize, value_type fillChar = value_type{}) {
-			if (newSize > sizeVal) {
-				if (newSize > capacityVal) {
-					reserve(newSize);
-				}
-				for (size_t x = sizeVal; x < newSize; ++x) {
-					allocator{}.construct(&values[x], fillChar);
-				}
-				sizeVal = newSize;
-			} else if (newSize < sizeVal) {
-				sizeVal = newSize;
-			}
+		inline constexpr void resize(size_t newSize) {
+			value_type fillChar{};
+			resize(newSize, fillChar);
 		}
 
 		inline constexpr void reserve(size_t newCapacity) {
 			if (newCapacity > capacityVal) {
-				value_type* newBuffer = allocator{}.allocate(newCapacity);
-				std::copy(values, values + sizeVal, newBuffer);
-				allocator{}.deallocate(values, capacityVal);
+				value_type* newBuffer = alloc.allocate(newCapacity);
+				std::memcpy(newBuffer, values, sizeVal);
+				alloc.deallocate(values, capacityVal);
 				values = newBuffer;
 				capacityVal = newCapacity;
 			}
@@ -347,14 +365,98 @@ namespace Jsonifier {
 
 		inline constexpr ~Vector() {
 			if (values && capacityVal) {
-				allocator{}.deallocate(values, capacityVal);
+				alloc.deallocate(values, capacityVal);
 			}
 		};
 
 	  protected:
+		NO_UNIQUE_ADDRESS allocator_type alloc{};
 		size_type capacityVal{};
-		value_type* values{};
 		size_type sizeVal{};
+		pointer values{};
+
+		inline constexpr void destroyRange(pointer firstVal, const_pointer last) noexcept {
+			if constexpr (!std::is_trivially_destructible<value_type>::value) {
+				for (; firstVal != last; ++firstVal) {
+					alloc.destroy(JsonifierInternal::unfancy(firstVal));
+				}
+			}
+		}
+
+		inline constexpr void changeArray(const pointer newVector, const size_type newSize, const size_type newCapacity) {
+			if (values) {
+				destroyRange(values, values + sizeVal);
+				alloc.deallocate(values, sizeVal);
+			}
+			values = newVector;
+			capacityVal = newCapacity;
+			sizeVal = newSize;
+		}
+
+		inline constexpr auto fillMemset(pointer dest, const value_type newValue, const size_t count) {
+			std::memset(static_cast<void*>(dest), static_cast<unsigned char>(newValue), count);
+			return dest + count;
+		}
+
+		inline constexpr auto fillMemsetZero(pointer dest, const size_t count) {
+			std::memset(static_cast<void*>(dest), 0, count);
+			return dest + count;
+		}
+
+		inline constexpr void resizeReallocate(const size_type newSize) {
+			if (newSize > maxSize()) {
+				throw std::runtime_error{ "Sorry, but that length is too long." };
+			}
+			const value_type value{};
+
+			pointer& firstVal = values;
+
+			const auto oldSize = sizeVal;
+			const size_type newCapacity = newSize;
+			const pointer newVector = alloc.allocate(newCapacity);
+			const pointer appendedFirst = newVector + oldSize;
+			pointer appendedLast = appendedFirst;
+
+			try {
+				if constexpr (JsonifierInternal::IsCharacterOrByteOrBool<value_type>::value) {
+					appendedLast = fillMemset(appendedFirst, value, newSize - oldSize);
+				} else {
+					appendedLast = fillMemsetZero(appendedFirst, newSize - oldSize);
+				}
+
+				if constexpr (std::is_nothrow_move_constructible_v<ValueType> || !std::is_copy_constructible_v<ValueType>) {
+					std::memmove(newVector, firstVal, sizeVal);
+				} else {
+					std::memcpy(newVector, firstVal, sizeVal);
+				}
+			} catch (...) {
+				destroyRange(appendedFirst, appendedLast);
+				alloc.deallocate(newVector, newCapacity);
+			}
+
+			changeArray(newVector, newSize, newCapacity);
+		}
+
+		inline constexpr void resize(const size_type newSize, const value_type& value) {
+			pointer& firstVal = values;
+			const auto oldSize = sizeVal;
+			if (newSize < oldSize) {
+				const pointer newLast = firstVal + newSize;
+				destroyRange(newLast, (firstVal + sizeVal));
+				sizeVal = newSize;
+				return;
+			}
+
+			if (newSize > oldSize) {
+				const auto oldCapacity = capacityVal;
+				if (newSize > oldCapacity) {
+					resizeReallocate(newSize);
+					sizeVal = newSize;
+					return;
+				}
+				sizeVal = newSize;
+			}
+		}
 	};
 
 }

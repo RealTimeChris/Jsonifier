@@ -1,6 +1,6 @@
 <?php
 
-namespace jsonifier\Packager;
+namespace Jsonifier\Packager;
 
 use \RuntimeException;
 
@@ -99,10 +99,10 @@ class Vcpkg
         global $argv;
 
         if (empty($tag)) {
-            /* EmptyVal tag means use the main branch */
+            /* Empty tag means use the main branch */
             $tag = `{$this->git} config --get init.defaultBranch || echo main`;
         }
-	$repositoryUrl = 'https://' . urlencode($argv[1]) . ':' . urlencode($argv[2]) . '@github.com/realtimechris/jsonifier';
+	$repositoryUrl = 'https://' . urlencode($argv[1]) . ':' . urlencode($argv[2]) . '@github.com/realtimechris/Jsonifier';
 
         echo GREEN . "Check out repository: $tag (user: ". $argv[1] . " branch: " . $tag . ")\n" . WHITE;
 
@@ -133,7 +133,8 @@ class Vcpkg
     {
         echo GREEN . "Construct portfile for " . $this->getVersion() . ", sha512: $sha512\n" . WHITE;
         chdir(getenv("HOME") . '/jsonifier');
-
+        $date=date_create();
+        ;
         $portFileContent = 'vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO realtimechris/jsonifier
@@ -157,9 +158,9 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
   "name": "jsonifier",
   "version": ' . json_encode($this->getVersion()) . ',
   "description": "A few classes for parsing and serializing json - very rapidly.",
-  "homepage": "https://https://github.com/realtimechris/jsonifier",
-  "license": "LGPL-2.1-or-later",
-  "supports": "(windows & x64 & !uwp) | (linux & x64) | (osx & x64)",
+  "homepage": "https://github.com/realtimechris/jsonifier",
+  "license": "MIT",
+  "supports": "(windows & x64 & !uwp & !xbox) | (linux & x64) | (osx & x64)",
   "dependencies": [
     {
       "name": "vcpkg-cmake",
@@ -171,6 +172,7 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
     }
   ]
 }
+
 ';
         echo GREEN . "Writing portfile...\n" . WHITE;
         file_put_contents('./Vcpkg/ports/jsonifier/vcpkg.json', $versionFileContent);
@@ -211,7 +213,7 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
 
     /**
      * Second build using a valid SHA512 sum. This attempt should succeed, allowing us to push
-     * the changed vcpkg portfiles into the master branch, where they can be used in a PR to
+     * the changed vcpkg portfiles into the main branch, where they can be used in a PR to
      * microsoft/vcpkg repository later.
      * 
      * @param string $portFileContent the contents of the portfile, containing a valid SHA512
@@ -238,18 +240,17 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
         $this->sudo('./vcpkg format-manifest ./ports/jsonifier/vcpkg.json');
         /* Note: We commit this in /usr/local, but we never push it (we can't) */
         $this->git('add .', true);
-        $this->git('commit -m "VCPKG info update"', true);
+        $this->git('commit -m "[bot] VCPKG info update"', true);
         $this->sudo('/usr/local/share/vcpkg/vcpkg x-add-version jsonifier');
 
         echo GREEN . "Copy back port files from /usr/local/share...\n" . WHITE;
         chdir(getenv('HOME') . '/jsonifier');
-        system('cp -v -R /usr/local/share/vcpkg/ports/jsonifier/vcpkg.json ./Vcpkg/ports/jsonifier/vcpkg.json');
-        system('cp -v -R /usr/local/share/vcpkg/versions/baseline.json ./Vcpkg/versions/baseline.json');
         system('cp -v -R /usr/local/share/vcpkg/versions/j-/jsonifier.json ./Vcpkg/versions/j-/jsonifier.json');
+        system('cp -v -R /usr/local/share/vcpkg/versions/baseline.json ./Vcpkg/versions/baseline.json');
 
         echo GREEN . "Commit and push changes to main branch\n" . WHITE;
         $this->git('add .');
-        $this->git('commit -m "VCPKG info update [skip ci]"');
+        $this->git('commit -m "[bot] VCPKG info update [skip ci]"');
         $this->git('config pull.rebase false');
         $this->git('pull');
         $this->git('push origin main');

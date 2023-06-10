@@ -476,7 +476,7 @@ class ClassLoader
     }
 
     /**
-     * Returns the currently registered loaders indexed by their corresponding vendor directories.
+     * Returns the currently registered loaders indexed by their corresponding Vendor directories.
      *
      * @return self[]
      */

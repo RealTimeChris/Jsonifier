@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+		MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Serialize to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
@@ -26,27 +28,27 @@
 
 namespace JsonifierInternal {
 
-	template<typename FOTy, typename SOTy> class Pair {
+	template<typename FirstType, typename SecondType> class Pair {
 	  public:
-		using first_type = FOTy;
-		using second_type = SOTy;
+		using first_type = FirstType;
+		using second_type = SecondType;
 
-		FOTy first{};
-		SOTy second{};
+		FirstType first{};
+		SecondType second{};
 
 		inline constexpr Pair() noexcept = default;
 
-		inline constexpr Pair(FOTy&& firstNew, SOTy&& secondNew) {
-			first = std::forward<FOTy>(firstNew);
-			second = std::forward<SOTy>(secondNew);
+		inline constexpr Pair(FirstType&& firstNew, SecondType&& secondNew) {
+			first = std::forward<FirstType>(firstNew);
+			second = std::forward<SecondType>(secondNew);
 		}
 
-		inline constexpr Pair(const FOTy& firstNew, const SOTy& secondNew) {
+		inline constexpr Pair(const FirstType& firstNew, const SecondType& secondNew) {
 			first = firstNew;
 			second = secondNew;
 		}
 
-		inline constexpr void swap(Pair<FOTy, SOTy>& other) noexcept {
+		inline constexpr void swap(Pair<FirstType, SecondType>& other) noexcept {
 			swapF(first, other.first);
 			swapF(second, other.second);
 		}
@@ -56,7 +58,7 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename OTy> using UnwrapRefDecayT = typename std::unwrap_ref_decay<OTy>::type;
+	template<typename ValueType> using UnwrapRefDecayT = typename std::unwrap_ref_decay<ValueType>::type;
 
 	template<typename A, typename B> Pair(A, B) -> Pair<UnwrapRefDecayT<A>, UnwrapRefDecayT<B>>;
 }

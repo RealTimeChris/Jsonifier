@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
@@ -29,53 +31,50 @@
 namespace JsonifierInternal {
 
 	struct ParseNoKeys {
-		template<bool printErrors, BoolT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, NumT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, EnumT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, UniquePtrT OTy> static void op(OTy& value, StructuralIterator& it);
+		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, RawJsonT OTy> static void op(OTy& value, StructuralIterator& it);
+		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& it);
 
-		template<bool printErrors, StringT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& it);
 
-		template<bool printErrors, RawArrayT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, VectorT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, StdTupleT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, ObjectT OTy> static void op(OTy& value, StructuralIterator& buffer);
-
-		template<bool printErrors, typename OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 	};
 
 	struct ParseWithKeys {
-		template<bool printErrors, BoolT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, NumT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, EnumT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, UniquePtrT OTy> static void op(OTy& value, StructuralIterator& it);
+		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, RawJsonT OTy> static void op(OTy& value, StructuralIterator& it);
+		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& it);
 
-		template<bool printErrors, StringT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& it);
 
-		template<bool printErrors, RawArrayT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, VectorT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, StdTupleT OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 
-		template<bool printErrors, ObjectT OTy, HasFind KTy> static void op(OTy& value, StructuralIterator& buffer, const KTy& excludedKeys);
+		template<bool printErrors, ObjectT ValueType, HasFind KeyType>
+		static void op(ValueType& value, StructuralIterator& buffer, const KeyType& excludedKeys);
 
-		template<bool printErrors, ObjectT OTy> static void op(OTy& value, StructuralIterator& buffer);
-
-		template<bool printErrors, typename OTy> static void op(OTy& value, StructuralIterator& buffer);
+		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& buffer);
 	};
 
 	class Parser {
@@ -83,7 +82,6 @@ namespace JsonifierInternal {
 		inline Parser() noexcept = default;
 
 		inline Parser& operator=(Parser&& other) noexcept {
-			swapF(inString, other.inString);
 			swapF(section, other.section);
 			return *this;
 		};
@@ -95,11 +93,12 @@ namespace JsonifierInternal {
 		inline Parser& operator=(const Parser&) = delete;
 		inline Parser(const Parser&) = delete;
 
-		template<bool printErrors = false, bool excludeKeys = false> void parseJson(CoreType auto& data, StringT auto& inStringNew) {
+		template<bool printErrors = false, bool refreshString = false, bool excludeKeys = false>
+		void parseJson(CoreType auto& data, StringT auto& inStringNew) {
 			if (inStringNew.empty()) {
 				return;
 			}
-			if (inString != inStringNew && inStringNew.size() != 0) [[unlikely]] {
+			if (refreshString || (inStringNew.size() != section.getStringView().size() && section.getStringView() != inStringNew)) {
 				reset(inStringNew);
 			}
 			auto newIter = begin();
@@ -118,16 +117,10 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		Jsonifier::StringView inString{};
 		SimdStringReader section{};
 
-		template<typename OTy> inline void reset(OTy& str) {
-			if (str.size() == 0) [[unlikely]] {
-				return;
-			}
-			inString = Jsonifier::StringView{ str.data(), str.size() };
-			section.reset(inString.size(), reinterpret_cast<StringViewPtr>(inString.data()));
-			section.generateJsonIndices();
+		template<typename ValueType> inline void reset(ValueType& stringNew) {
+			section.reset(stringNew);
 		}
 
 		inline StructuralIterator begin() noexcept {

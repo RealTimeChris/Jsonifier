@@ -4,3 +4,6 @@ Build/
 Output Files/
 Output/
 Documentation/docs
+Install/
+DetectArchitecture.exe
+DetectArchitecture.obj

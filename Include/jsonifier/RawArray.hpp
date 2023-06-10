@@ -1,21 +1,23 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+		MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Serialize to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
@@ -25,9 +27,9 @@
 
 namespace JsonifierInternal {
 
-	template<typename OTy, size_t N> struct RawArray {
+	template<typename ValueType, size_t N> struct RawArray {
 	  public:
-		using value_type = OTy;
+		using value_type = ValueType;
 		using reference = value_type&;
 		using const_reference = const value_type&;
 		using pointer = value_type*;
@@ -43,11 +45,11 @@ namespace JsonifierInternal {
 		inline constexpr RawArray& operator=(const RawArray&) noexcept = default;
 		inline constexpr RawArray(const RawArray&) noexcept = default;
 
-		template<size_t M> inline constexpr RawArray(OTy const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
+		template<size_t M> inline constexpr RawArray(ValueType const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
 			static_assert(M >= N);
 		}
 
-		inline constexpr RawArray(const std::initializer_list<OTy>& other) {
+		inline constexpr RawArray(const std::initializer_list<ValueType>& other) {
 			for (size_t x = 0; x < other.size(); ++x) {
 				operator[](x) = std::move(other.begin()[x]);
 			}
@@ -129,14 +131,14 @@ namespace JsonifierInternal {
 			}
 		}
 
-		OTy dataVal[N] = {};
+		ValueType dataVal[N] = {};
 
-		template<size_t M, size_t... I> inline constexpr RawArray(OTy const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {};
+		template<size_t M, size_t... I> inline constexpr RawArray(ValueType const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {};
 	};
 
-	template<typename OTy> class RawArray<OTy, 0> {
+	template<typename ValueType> class RawArray<ValueType, 0> {
 	  public:
-		using value_type = OTy;
+		using value_type = ValueType;
 		using reference = value_type&;
 		using const_reference = const value_type&;
 		using pointer = value_type*;

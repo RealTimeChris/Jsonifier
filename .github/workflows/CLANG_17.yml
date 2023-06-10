@@ -20,12 +20,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Update stuff.
-      run: |             
-            sudo apt-get upgrade
+    - name: Update Vcpkg and install other dependencies.
+      run: |
+            sudo apt-get update --fix-missing
+            sudo apt-get upgrade --fix-missing
+            cd /usr/local/share/vcpkg
+            ./bootstrap-vcpkg.sh
+            git stash
+            git pull
+            vcpkg update
 
     - name: Install Clang17
-      working-directory: Tests
       run: |
             sudo apt remove clang-14
             wget https://apt.llvm.org/llvm.sh
@@ -46,5 +51,4 @@ jobs:
       working-directory: Tests/Build
       run: |
            ./Json-Performance
-      continue-on-error: true
       

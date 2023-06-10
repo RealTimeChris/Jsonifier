@@ -1,25 +1,27 @@
 /*
-	Jsonifier - For parsing and serializing Json - very rapidly.
-	Copyright (C) 2023 Chris M. (RealTimeChris)
+	MIT License
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+	Copyright (c) 2023 RealTimeChris
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+	software and associated documentation files (the "Software"), to deal in the Software 
+	without restriction, including without limitation the rights to use, copy, modify, merge, 
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, Write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-	USA
+	The above copyright notice and this permission notice shall be included in all copies or 
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
-/// Most of the code in this header was copied from Simdjson - https://github.com/simdjson
+/// Most of the code in this header was sampled fromSimdjson - https://github.com/simdjson
 #pragma once
 
 #include <jsonifier/Base.hpp>
@@ -29,22 +31,18 @@
 
 namespace JsonifierInternal {
 
-	struct SimdBase64;
-	struct SimdBase128;
-	struct SimdBase256;
 	template<typename SimdBase> class BackslashAndQuote;
 
-#if defined(INSTRUCTION_SET_TYPE_AVX512)
-	template<> class BackslashAndQuote<SimdBase512> {
+	template<> class BackslashAndQuote<SimdBaseReal> {
 	  public:
-		static const uint32_t bytesProcessed = 64;
+		static const uint32_t bytesProcessed = BytesPerStep;
 
-		BackslashAndQuote<SimdBase512> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase512 values(reinterpret_cast<StringViewPtr>(source));
+		BackslashAndQuote<SimdBaseReal> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
+			SimdBaseReal values(reinterpret_cast<StringViewPtr>(source));
 			values.store(dest);
 			BackslashAndQuote returnData{};
-			returnData.bsBits = values == '\\';
-			returnData.quoteBits = values == '\"';
+			returnData.bsBits = { values == char{ '\\' } };
+			returnData.quoteBits = { values == char{ '\"' } };
 			return returnData;
 		}
 
@@ -56,129 +54,19 @@ namespace JsonifierInternal {
 			return ((quoteBits - 1) & bsBits) != 0;
 		}
 
-		inline int64_t quoteIndex() {
-			return _tzcnt_u32(quoteBits);
+		inline StringParsingType quoteIndex() {
+			return tzCount(quoteBits);
 		}
 
-		inline int64_t backslashIndex() {
-			return _tzcnt_u32(bsBits);
-		}
-
-	  protected:
-		uint64_t quoteBits{};
-		uint64_t bsBits{};
-	};
-	constexpr int32_t stringParseLength{ 64 };
-	using BackslashAndQuoteType = BackslashAndQuote<SimdBase512>;
-#elif defined(INSTRUCTION_SET_TYPE_AVX2)
-	template<> class BackslashAndQuote<SimdBase256> {
-	  public:
-		static const uint32_t bytesProcessed = 32;
-
-		BackslashAndQuote<SimdBase256> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase256 values(reinterpret_cast<StringViewPtr>(source));
-			values.store(dest);
-			BackslashAndQuote returnData{};
-			returnData.bsBits = static_cast<uint32_t>((values == '\\').toBitMask());
-			returnData.quoteBits = static_cast<uint32_t>((values == '\"').toBitMask());
-			return returnData;
-		}
-
-		inline bool hasQuoteFirst() {
-			return ((bsBits - 1) & quoteBits) != 0;
-		}
-
-		inline bool hasBackslash() {
-			return ((quoteBits - 1) & bsBits) != 0;
-		}
-
-		inline int32_t quoteIndex() {
-			return _tzcnt_u32(quoteBits);
-		}
-
-		inline int32_t backslashIndex() {
-			return _tzcnt_u32(bsBits);
+		inline StringParsingType backslashIndex() {
+			return tzCount(bsBits);
 		}
 
 	  protected:
-		uint32_t quoteBits{};
-		uint32_t bsBits{};
+		StringParsingType quoteBits{};
+		StringParsingType bsBits{};
 	};
-	constexpr int32_t stringParseLength{ 32 };
-	using BackslashAndQuoteType = BackslashAndQuote<SimdBase256>;
-#elif defined(INSTRUCTION_SET_TYPE_AVX)
-	template<> class BackslashAndQuote<SimdBase128> {
-	  public:
-		static const uint32_t bytesProcessed = 16;
-
-		BackslashAndQuote<SimdBase128> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase128 values(reinterpret_cast<StringViewPtr>(source));
-			values.store(dest);
-			BackslashAndQuote returnData{};
-			returnData.bsBits = static_cast<uint16_t>((values == '\\').toBitMask());
-			returnData.quoteBits = static_cast<uint16_t>((values == '\"').toBitMask());
-			return returnData;
-		}
-
-		inline bool hasQuoteFirst() {
-			return ((bsBits - 1) & quoteBits) != 0;
-		}
-
-		inline bool hasBackslash() {
-			return ((quoteBits - 1) & bsBits) != 0;
-		}
-
-		inline int16_t quoteIndex() {
-			return _tzcnt_u16(quoteBits);
-		}
-
-		inline int16_t backslashIndex() {
-			return _tzcnt_u16(bsBits);
-		}
-
-	  protected:
-		uint16_t quoteBits{};
-		uint16_t bsBits{};
-	};
-	constexpr int32_t stringParseLength{ 16 };
-	using BackslashAndQuoteType = BackslashAndQuote<SimdBase128>;
-#else
-	template<> class BackslashAndQuote<SimdBase64> {
-	  public:
-		static const uint32_t bytesProcessed = 8;
-
-		BackslashAndQuote<SimdBase64> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase64 values(reinterpret_cast<StringViewPtr>(source));
-			values.store(dest);
-			BackslashAndQuote returnData{};
-			returnData.bsBits = static_cast<uint8_t>((values == '\\').toBitMask());
-			returnData.quoteBits = static_cast<uint8_t>((values == '\"').toBitMask());
-			return returnData;
-		}
-
-		inline bool hasQuoteFirst() {
-			return ((bsBits - 1) & quoteBits) != 0;
-		}
-
-		inline bool hasBackslash() {
-			return ((quoteBits - 1) & bsBits) != 0;
-		}
-
-		inline int8_t quoteIndex() {
-			return _tzcnt_u16(quoteBits);
-		}
-
-		inline int8_t backslashIndex() {
-			return _tzcnt_u16(bsBits);
-		}
-
-	  protected:
-		uint8_t quoteBits{};
-		uint8_t bsBits{};
-	};
-	constexpr int32_t stringParseLength{ 8 };
-	using BackslashAndQuoteType = BackslashAndQuote<SimdBase64>;
-#endif	
+	using BackslashAndQuoteType = BackslashAndQuote<SimdBaseReal>;
 
 	inline static uint32_t stringToUint32(StringViewPtr str) {
 		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
@@ -205,7 +93,7 @@ namespace JsonifierInternal {
 		return value;
 	}
 
-	template<typename OTy> inline static bool readEscapedUnicode(OTy** value, auto** it) {
+	template<typename ValueType> inline static bool readEscapedUnicode(ValueType** value, auto** it) {
 		char8_t buffer[4];
 		char32_t codepoint = hex4ToChar32(*it);
 		auto& facet = std::use_facet<std::codecvt<char32_t, char8_t, mbstate_t>>(std::locale());
