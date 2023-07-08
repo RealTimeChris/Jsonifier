@@ -232,11 +232,8 @@ namespace JsonifierInternal {
 
 	template<VectorT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
-		const auto isEmpty = [&]() -> bool {
-			return value.size() ? false : true;
-		}();
 
-		if (!isEmpty) {
+		if (value.size()) {
 			auto it = value.begin();
 			SerializeNoKeys::op(*it, buffer, index);
 			++it;
@@ -246,31 +243,6 @@ namespace JsonifierInternal {
 				SerializeNoKeys::op(*it, buffer, index);
 			}
 		}
-		writeCharacter(']', buffer, index);
-	}
-
-	template<StdTupleT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
-		static constexpr auto n = []() constexpr {
-			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
-				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
-			} else {
-				return std::tuple_size_v<RefUnwrap<ValueType>>;
-			}
-		}();
-
-		writeCharacter('[', buffer, index);
-		using V = RefUnwrap<ValueType>;
-		forEach<n>([&](auto x) {
-			if constexpr (JsonifierArrayT<V>) {
-				SerializeNoKeys::op(value.*Tuplet::get<x>(CoreV<V>), buffer, index);
-			} else {
-				SerializeNoKeys::op(Tuplet::get<x>(value), buffer, index);
-			}
-			constexpr bool needsComma = x < n - 1;
-			if constexpr (needsComma) {
-				writeCharacter(',', buffer, index);
-			}
-		});
 		writeCharacter(']', buffer, index);
 	}
 
@@ -505,15 +477,8 @@ namespace JsonifierInternal {
 
 	template<VectorT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
-		const auto isEmpty = [&]() -> bool {
-			if constexpr (HasSize<ValueType>) {
-				return value.size() ? false : true;
-			} else {
-				return value.empty();
-			}
-		}();
 
-		if (!isEmpty) {
+		if (value.size()) {
 			auto it = value.begin();
 			auto newMember = *it;
 			using MemberType = decltype(newMember);
@@ -535,43 +500,6 @@ namespace JsonifierInternal {
 				}
 			}
 		}
-		writeCharacter(']', buffer, index);
-	}
-
-	template<StdTupleT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
-		static constexpr auto n = []() constexpr {
-			if constexpr (JsonifierArrayT<RefUnwrap<ValueType>>) {
-				return std::tuple_size_v<CoreT<RefUnwrap<ValueType>>>;
-			} else {
-				return std::tuple_size_v<RefUnwrap<ValueType>>;
-			}
-		}();
-
-		writeCharacter('[', buffer, index);
-		using V = RefUnwrap<ValueType>;
-		forEach<n>([&](auto x) {
-			if constexpr (JsonifierArrayT<V>) {
-				auto newMember = value.*Tuplet::get<x>(CoreV<V>);
-				using MemberType = decltype(newMember);
-				if constexpr (HasExcludedKeys<MemberType>) {
-					SerializeWithKeys::op(newMember, buffer, index, newMember.excludedKeys);
-				} else {
-					SerializeWithKeys::op(newMember, buffer, index);
-				}
-			} else {
-				auto newMember = Tuplet::get<x>(value);
-				using MemberType = decltype(newMember);
-				if constexpr (HasExcludedKeys<MemberType>) {
-					SerializeWithKeys::op(newMember, buffer, index, newMember.excludedKeys);
-				} else {
-					SerializeWithKeys::op(newMember, buffer, index);
-				}
-			}
-			constexpr bool needsComma = x < n - 1;
-			if constexpr (needsComma) {
-				writeCharacter(',', buffer, index);
-			}
-		});
 		writeCharacter(']', buffer, index);
 	}
 

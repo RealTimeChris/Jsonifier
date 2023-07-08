@@ -89,6 +89,11 @@ namespace Jsonifier {
 			*this = other;
 		};
 
+		template<size_t strLength> inline StringView(const char (&other)[strLength]) noexcept {
+			dataVal = other;
+			sizeVal = strLength;
+		};
+
 		inline constexpr StringView(const_pointer _Ntcts) noexcept : dataVal(_Ntcts), sizeVal(traits_type::length(_Ntcts)) {
 		}
 

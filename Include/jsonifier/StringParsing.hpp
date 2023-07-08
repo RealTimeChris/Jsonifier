@@ -67,19 +67,6 @@ namespace JsonifierInternal {
 		StringParsingType bsBits{};
 	};
 
-	inline static uint32_t stringToUint32(StringViewPtr str) {
-		uint32_t val{ *reinterpret_cast<const uint32_t*>(str) };
-		return val;
-	}
-
-	inline static uint32_t str4ncmp(StringViewPtr source, const char* atom) {
-		return stringToUint32(reinterpret_cast<StringViewPtr>(source)) ^ stringToUint32(reinterpret_cast<StringViewPtr>(atom));
-	}
-
-	inline static constexpr uint32_t isNotStructuralOrWhitespace(uint8_t c) {
-		return structuralOrWhitespaceNegated[c];
-	}
-
 	inline static uint32_t hexToU32NoCheck(const uint8_t* source) {
 		uint32_t v1 = digitToVal32[630ull + source[0]];
 		uint32_t v2 = digitToVal32[420ull + source[1]];
@@ -139,7 +126,7 @@ namespace JsonifierInternal {
 	}
 
 	inline static StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest) {
-		while (1) {
+		while (true) {
 			auto bsQuote = BackslashAndQuote<SimdBaseReal>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
@@ -171,12 +158,11 @@ namespace JsonifierInternal {
 	}
 
 	inline static bool parseBool(StringViewPtr json) noexcept {
-		uint32_t notTrue = str4ncmp(json, "true");
-		uint32_t notFalse = str4ncmp(json, "fals") | (json[4] ^ 'e');
-		bool error = (notTrue && notFalse) || isNotStructuralOrWhitespace(json[notTrue ? 5 : 4]);
-		if (error) {
-			return {};
+		char valueNew[5]{ "true" };
+		if (*reinterpret_cast<const uint32_t*>(json) == *reinterpret_cast<uint32_t*>(valueNew)) {
+			return true;
+		} else {
+			return false;
 		}
-		return !notTrue;
 	}
 }

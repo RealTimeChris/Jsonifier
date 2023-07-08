@@ -65,6 +65,7 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/Zi>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest>"
 	"${AVX_FLAG}"
 )
 
@@ -75,7 +76,6 @@ target_link_options(
 
 target_compile_features(
 	"${PROJECT_NAME}" INTERFACE
-	"$<$<CXX_COMPILER_ID:MSVC>:cxx_std_23>"
 	"$<$<CXX_COMPILER_ID:GNU>:cxx_std_23>"
 	"$<$<CXX_COMPILER_ID:CLANG>:cxx_std_23>"
 )

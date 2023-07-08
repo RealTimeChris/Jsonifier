@@ -27,6 +27,8 @@
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Simd.hpp>
+#include <type_traits>
+#include <utility>
 
 namespace JsonifierInternal {
 
@@ -44,6 +46,8 @@ namespace JsonifierInternal {
 		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+
+		template<bool printErrors, CharT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
@@ -66,6 +70,8 @@ namespace JsonifierInternal {
 		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+
+		template<bool printErrors, CharT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 

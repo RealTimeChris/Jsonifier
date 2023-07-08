@@ -150,6 +150,7 @@ namespace JsonifierInternal {
 	template<typename ValueType>
 	concept UniquePtrT = requires(ValueType other) {
 		typename ValueType::element_type;
+		typename ValueType::deleter_type;
 		{ other.release() } -> std::same_as<typename ValueType::element_type*>;
 	};
 
@@ -236,7 +237,7 @@ namespace JsonifierInternal {
 		static constexpr auto value = newArr;
 	};
 
-	template<const Jsonifier::StringView&... Strings> inline constexpr Jsonifier::StringView Join() {
+	template<const Jsonifier::StringView&... Strings> inline constexpr Jsonifier::StringView join() {
 		constexpr auto joinedArr = []() {
 			constexpr size_t len = (Strings.size() + ... + 0);
 			RawArray<char, len + 1> arr{};
@@ -252,19 +253,10 @@ namespace JsonifierInternal {
 		return { staticArr.data(), staticArr.size() - 1 };
 	}
 
-	template<const Jsonifier::StringView&... Strings> constexpr auto JoinV = Join<Strings...>();
+	template<const Jsonifier::StringView&... Strings> constexpr auto JoinV = join<Strings...>();
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using VTy = RefUnwrap<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<VTy>) {
-			return value.*member_ptr;
-		} else if constexpr (std::is_member_function_pointer_v<VTy>) {
-			return member_ptr;
-		} else if constexpr (std::invocable<decltype(member_ptr), decltype(value)>) {
-			return std::invoke(member_ptr, value);
-		} else {
-			return member_ptr;
-		}
+		return value.*member_ptr;
 	}
 
 	template<typename ValueType, typename mptr_t> using MemberT = decltype(getMember(std::declval<ValueType>(), std::declval<RefUnwrap<mptr_t>&>()));

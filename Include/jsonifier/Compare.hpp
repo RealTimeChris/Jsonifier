@@ -72,15 +72,17 @@ namespace JsonifierInternal {
 		return -1;
 	}
 
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept;
+
 	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
-		if (_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(destVector), _mm_loadu_si128(sourceVector))) != (0x0000ffff)) {
+		if (_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++))) != (0x0000ffff)) {
 			return false;
 		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -89,14 +91,11 @@ namespace JsonifierInternal {
 		const size_t remainder{ length % 32 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
-		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector), _mm256_loadu_si256(sourceVector))) != (0xffffffff)) {
+		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++))) != (0xffffffff)) {
 			return false;
 		}
-		if (remainder >= 16) {
-			return compareValues16(++destVector, ++sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -105,17 +104,11 @@ namespace JsonifierInternal {
 		const size_t remainder{ length % 64 };
 		auto destVector = static_cast<const __m512i*>(string1);
 		auto sourceVector = static_cast<const __m512i*>(string2);
-		if (_mm512_cmp_epi8_mask(_mm512_loadu_si512(destVector), _mm512_loadu_si512(sourceVector), _MM_CMPINT_EQ) != (0xffffffffffffffff)) {
+		if (_mm512_cmp_epi8_mask(_mm512_loadu_si512(destVector++), _mm512_loadu_si512(sourceVector++), _MM_CMPINT_EQ) != (0xffffffffffffffff)) {
 			return false;
 		}
-		if (remainder >= 32) {
-			return compareValues32(++destVector, ++sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(++destVector, ++sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -132,17 +125,8 @@ namespace JsonifierInternal {
 		if (result != (0xffffffffffffffff)) {
 			return false;
 		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -163,20 +147,8 @@ namespace JsonifierInternal {
 		if (result != (0xffffffffffffffff)) {
 			return false;
 		}
-		if (remainder >= 128) {
-			return compareValues128(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -209,23 +181,8 @@ namespace JsonifierInternal {
 				return false;
 			}
 		}
-		if (remainder >= 256) {
-			return compareValues256(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 128) {
-			return compareValues128(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -283,15 +240,17 @@ namespace JsonifierInternal {
 		return -1;
 	}
 
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept;
+
 	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
-		if (_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(destVector), _mm_loadu_si128(sourceVector))) != (0x0000ffff)) {
+		if (_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++))) != (0x0000ffff)) {
 			return false;
 		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -300,14 +259,11 @@ namespace JsonifierInternal {
 		const size_t remainder{ length % 32 };
 		auto destVector = static_cast<const __m256i*>(string1);
 		auto sourceVector = static_cast<const __m256i*>(string2);
-		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector), _mm256_loadu_si256(sourceVector))) != (0xffffffff)) {
+		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(destVector++), _mm256_loadu_si256(sourceVector++))) != (0xffffffff)) {
 			return false;
 		}
-		if (remainder >= 16) {
-			return compareValues16(++destVector, ++sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -324,14 +280,8 @@ namespace JsonifierInternal {
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
 		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -352,17 +302,8 @@ namespace JsonifierInternal {
 		if (_mm256_movemask_epi8(result) != (0xffffffff)) {
 			return false;
 		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -395,20 +336,8 @@ namespace JsonifierInternal {
 				return false;
 			}
 		}
-		if (remainder >= 128) {
-			return compareValues128(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -463,16 +392,17 @@ namespace JsonifierInternal {
 		return -1;
 	}
 
+	inline bool compareValues(const void* string1, const void* string2, size_t length) noexcept;
+
 	inline bool compareValues16(const void* string1, const void* string2, size_t length) noexcept {
 		const size_t remainder{ length % 16 };
 		auto destVector = static_cast<const __m128i*>(string1);
 		auto sourceVector = static_cast<const __m128i*>(string2);
-		if (_mm_movemask_epi8(_mm_and_si128(_mm_set1_epi64x(-1ll), _mm_cmpeq_epi8(_mm_loadu_si128(destVector), _mm_loadu_si128(sourceVector)))) !=
-			(0x0000ffff)) {
+		if (_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(destVector++), _mm_loadu_si128(sourceVector++))) != (0x0000ffff)) {
 			return false;
 		}
 		if (remainder > 0) {
-			return (std::memcmp(++destVector, ++sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -489,11 +419,8 @@ namespace JsonifierInternal {
 		if (_mm_movemask_epi8(result) != (0x0000ffff)) {
 			return false;
 		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -514,14 +441,8 @@ namespace JsonifierInternal {
 		if (_mm_movemask_epi8(result) != (0x0000ffff)) {
 			return false;
 		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -554,17 +475,8 @@ namespace JsonifierInternal {
 				return false;
 			}
 		}
-		if (remainder >= 64) {
-			return compareValues64(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 32) {
-			return compareValues32(destVector, sourceVector, remainder);
-		}
-		if (remainder >= 16) {
-			return compareValues16(destVector, sourceVector, remainder);
-		}
 		if (remainder > 0) {
-			return (std::memcmp(destVector, sourceVector, remainder) == 0);
+			return compareValues(destVector, sourceVector, remainder);
 		}
 		return true;
 	}
@@ -586,12 +498,11 @@ namespace JsonifierInternal {
 #else
 
 	inline uint64_t findSingleCharacter(const void* str, size_t length, char target) {
-		return std::string_view{ reinterpret_cast<const char*>(str), length }.find(target);
+		return std::string_view{ static_cast<const char*>(str), length }.find(target);
 	}
 
 	inline bool compareValues(const void* destVector, const void* sourceVector, size_t length) noexcept {
-		return std::string_view{ reinterpret_cast<const char*>(destVector), length } ==
-			std::string_view{ reinterpret_cast<const char*>(sourceVector), length };
+		return std::string_view{ static_cast<const char*>(destVector), length } == std::string_view{ static_cast<const char*>(sourceVector), length };
 	}
 
 #endif
@@ -599,7 +510,7 @@ namespace JsonifierInternal {
 	class JsonifierCoreInternal {
 	  public:
 		template<typename ValueType> inline static bool compare(const ValueType* destVector, const ValueType* sourceVector, size_t length) noexcept {
-			return compareValues(reinterpret_cast<const void*>(destVector), reinterpret_cast<const void*>(sourceVector), length * sizeof(ValueType));
+			return compareValues(static_cast<const void*>(destVector), static_cast<const void*>(sourceVector), length * sizeof(ValueType));
 		}
 	};
 
