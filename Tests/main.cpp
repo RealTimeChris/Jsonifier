@@ -1,9 +1,9 @@
 
 #include "glaze/core/macros.hpp"
 #include "glaze/glaze.hpp"
-#include "jsonifier/Index.hpp"
+#include <jsonifier/Index.hpp>
 
-inline static constexpr std::string_view json0 = R"({"fixed_object": {
+inline constexpr static std::string_view json0 = R"({"fixed_object": {
       "int_array": [0, 1, 2, 3, 4, 5, 6],
       "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
       "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
@@ -63,7 +63,7 @@ inline static constexpr std::string_view json0 = R"({"fixed_object": {
 #include "fmt/format.h"
 
 struct fixed_object_t {
-	std::vector<size_t> int_array;
+	std::vector<uint64_t> int_array;
 	std::vector<float> float_array;
 	std::vector<double> double_array;
 };
@@ -100,77 +100,77 @@ struct obj_t {
 };
 
 template<> struct glz::meta<fixed_object_t> {
-	using ValueType = fixed_object_t;
-	inline static constexpr auto value = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+	using OTy = fixed_object_t;
+	inline constexpr static auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
-	using ValueType = fixed_name_object_t;
-	inline static constexpr auto value =
-		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
+	using OTy = fixed_name_object_t;
+	inline constexpr static auto value =
+		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
-	using ValueType = nested_object_t;
-	inline static constexpr auto value = object("v3s", &ValueType::v3s, "id", &ValueType::id);
+	using OTy = nested_object_t;
+	inline constexpr static auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct glz::meta<another_object_t> {
-	using ValueType = another_object_t;
-	inline static constexpr auto value =
-		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
+	using OTy = another_object_t;
+	inline constexpr static auto value =
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
-	using ValueType = obj_t;
-	inline static constexpr auto value = glz::object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
-		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
-		&ValueType::boolean, "another_bool", &ValueType::another_bool);
+	using OTy = obj_t;
+	inline constexpr static auto value = glz::object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
+		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
+		&OTy::boolean, "another_bool", &OTy::another_bool);
 };
 
 template<> struct Jsonifier::Core<fixed_object_t> {
-	using ValueType = fixed_object_t;
-	inline static constexpr auto parseValue =
-		object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+	using OTy = fixed_object_t;
+	inline constexpr static auto parseValue =
+		object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
-	using ValueType = fixed_name_object_t;
-	inline static constexpr auto parseValue =
-		object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
+	using OTy = fixed_name_object_t;
+	inline constexpr static auto parseValue =
+		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
-	using ValueType = nested_object_t;
-	inline static constexpr auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
+	using OTy = nested_object_t;
+	inline constexpr static auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
-	using ValueType = another_object_t;
-	inline static constexpr auto parseValue =
-		object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
+	using OTy = another_object_t;
+	inline constexpr static auto parseValue =
+		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
-	using ValueType = obj_t;
-	inline static constexpr auto parseValue = object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object,
-		"another_object", &ValueType::another_object, "string_array", &ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean",
-		&ValueType::boolean, "another_bool", &ValueType::another_bool);
+	using OTy = obj_t;
+	inline constexpr static auto parseValue = object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
+		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
+		&OTy::boolean, "another_bool", &OTy::another_bool);
 };
 
-template<typename ValueType> struct Test {
-	std::vector<ValueType> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+template<typename OTy> struct Test {
+	std::vector<OTy> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 
 	Test() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				if constexpr (std::same_as<ValueType, std::string> || std::same_as<ValueType, std::string>) {
+				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000);
 				} else {
-					v[x] = static_cast<ValueType>(100000000000000000);
+					v[x] = static_cast<OTy>(100000000000000000);
 				}
 			}
 		};
@@ -205,51 +205,51 @@ template<typename ValueType> struct Test {
 };
 
 GLZ_META(Test<std::string>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
-GLZ_META(Test<size_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
+GLZ_META(Test<uint64_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 GLZ_META(Test<int64_t>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 
 template<> struct Jsonifier::Core<Test<std::string>> {
-	using ValueType = Test<std::string>;
-	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
-		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
-		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
+	using OTy = Test<std::string>;
+	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
+		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
-template<> struct Jsonifier::Core<Test<size_t>> {
-	using ValueType = Test<size_t>;
-	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
-		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
-		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
+template<> struct Jsonifier::Core<Test<uint64_t>> {
+	using OTy = Test<uint64_t>;
+	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
+		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
-	using ValueType = Test<int64_t>;
-	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
-		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
-		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
+	using OTy = Test<int64_t>;
+	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
+		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
-	using ValueType = Test<double>;
-	inline static constexpr auto parseValue = object("a", &ValueType::a, "b", &ValueType::b, "c", &ValueType::c, "d", &ValueType::d, "e", &ValueType::e, "f", &ValueType::f, "g", &ValueType::g,
-		"h", &ValueType::h, "i", &ValueType::i, "j", &ValueType::j, "k", &ValueType::k, "l", &ValueType::l, "m", &ValueType::m, "n", &ValueType::n, "o", &ValueType::o, "p", &ValueType::p, "q", &ValueType::q,
-		"r", &ValueType::r, "s", &ValueType::s, "t", &ValueType::t, "u", &ValueType::u, "v", &ValueType::v, "w", &ValueType::w, "x", &ValueType::x, "y", &ValueType::y, "z", &ValueType::z);
+	using OTy = Test<double>;
+	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
+		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
-template<typename ValueType> struct AbcTest {
-	std::vector<ValueType> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
+template<typename OTy> struct AbcTest {
+	std::vector<OTy> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
 
 	AbcTest() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
 			for (size_t x = 0; x < 1000; ++x) {
-				if constexpr (std::same_as<ValueType, std::string> || std::same_as<ValueType, std::string>) {
+				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000);
 				} else {
-					v[x] = static_cast<ValueType>(100000000000000000);
+					v[x] = static_cast<OTy>(100000000000000000);
 				}
 			}
 		};
@@ -284,44 +284,44 @@ template<typename ValueType> struct AbcTest {
 };
 
 GLZ_META(AbcTest<std::string>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
-GLZ_META(AbcTest<size_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
+GLZ_META(AbcTest<uint64_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 GLZ_META(AbcTest<int64_t>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
-	using ValueType = AbcTest<std::string>;
-	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
-		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
-		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
+	using OTy = AbcTest<std::string>;
+	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
+		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
-template<> struct Jsonifier::Core<AbcTest<size_t>> {
-	using ValueType = AbcTest<size_t>;
-	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
-		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
-		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
+template<> struct Jsonifier::Core<AbcTest<uint64_t>> {
+	using OTy = AbcTest<uint64_t>;
+	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
+		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
-	using ValueType = AbcTest<int64_t>;
-	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
-		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
-		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
+	using OTy = AbcTest<int64_t>;
+	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
+		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
-	using ValueType = AbcTest<double>;
-	inline static constexpr auto parseValue = object("z", &ValueType::z, "y", &ValueType::y, "x", &ValueType::x, "w", &ValueType::w, "v", &ValueType::v, "u", &ValueType::u, "t", &ValueType::t,
-		"s", &ValueType::s, "r", &ValueType::r, "q", &ValueType::q, "p", &ValueType::p, "o", &ValueType::o, "n", &ValueType::n, "m", &ValueType::m, "l", &ValueType::l, "k", &ValueType::k, "j", &ValueType::j,
-		"i", &ValueType::i, "h", &ValueType::h, "g", &ValueType::g, "f", &ValueType::f, "e", &ValueType::e, "d", &ValueType::d, "c", &ValueType::c, "b", &ValueType::b, "a", &ValueType::a);
+	using OTy = AbcTest<double>;
+	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
+		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 #ifdef NDEBUG
-static constexpr size_t iterations = 1000;
-static constexpr size_t iterations_abc = 1000;
+constexpr static size_t iterations = 1000;
+constexpr static size_t iterations_abc = 1000;
 #else
-static constexpr size_t iterations = 1;
-static constexpr size_t iterations_abc = 1;
+constexpr static size_t iterations = 1;
+constexpr static size_t iterations_abc = 1;
 #endif
 
 struct results {
@@ -351,58 +351,58 @@ struct results {
 				"|\n";
 
 		if (json_write) {
-			const auto MBs = iterations * *json_byte_length / (*json_write * 1048576);
+			const auto MBs = *json_byte_length / (*json_write) * 1000.0f;
 			std::cout << name << " json length: " << *json_byte_length << std::endl;
-			std::cout << name << " json write: " << *json_write << " s, " << MBs << " MB/s\n";
+			std::cout << name << " json write: " << *json_write << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_read) {
-			const auto MBs = iterations * *json_byte_length / (*json_read * 1048576);
-			std::cout << name << " json read: " << *json_read << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length / (*json_read) * 1000.0f;
+			std::cout << name << " json read: " << *json_read << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_write_double) {
-			const auto MBs = iterations * *json_byte_length_double / (*json_write_double * 1048576);
+			const auto MBs = *json_byte_length_double / (*json_write_double) * 1000.0f;
 			std::cout << name << " json double length: " << *json_byte_length_double << std::endl;
-			std::cout << name << " json double write: " << *json_write_double << " s, " << MBs << " MB/s\n";
+			std::cout << name << " json double write: " << *json_write_double << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_read_double) {
-			const auto MBs = iterations * *json_byte_length_double / (*json_read_double * 1048576);
-			std::cout << name << " json double read: " << *json_read_double << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length_double / (*json_read_double) * 1000.0f;
+			std::cout << name << " json double read: " << *json_read_double << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_write_string) {
-			const auto MBs = iterations * *json_byte_length_string / (*json_write_string * 1048576);
+			const auto MBs = *json_byte_length_string / (*json_write_string) * 1000.0f;
 			std::cout << name << " json std::string length: " << *json_byte_length_string << std::endl;
-			std::cout << name << " json std::string write: " << *json_write_string << " s, " << MBs << " MB/s\n";
+			std::cout << name << " json std::string write: " << *json_write_string << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_read_string) {
-			const auto MBs = iterations * *json_byte_length_string / (*json_read_string * 1048576);
-			std::cout << name << " json std::string read: " << *json_read_string << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length_string / (*json_read_string) * 1000.0f;
+			std::cout << name << " json std::string read: " << *json_read_string << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_write_uint64) {
-			const auto MBs = iterations * *json_byte_length_uint64 / (*json_write_uint64 * 1048576);
-			std::cout << name << " json size_t length: " << *json_byte_length_uint64 << std::endl;
-			std::cout << name << " json uint64 write: " << *json_write_uint64 << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length_uint64 / (*json_write_uint64) * 1000.0f;
+			std::cout << name << " json uint64_t length: " << *json_byte_length_uint64 << std::endl;
+			std::cout << name << " json uint64 write: " << *json_write_uint64 << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_read_uint64) {
-			const auto MBs = iterations * *json_byte_length_uint64 / (*json_read_uint64 * 1048576);
-			std::cout << name << " json uint64 read: " << *json_read_uint64 << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length_uint64 / (*json_read_uint64) * 1000.0f;
+			std::cout << name << " json uint64 read: " << *json_read_uint64 << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_write_int64) {
-			const auto MBs = iterations * *json_byte_length_int64 / (*json_write_int64 * 1048576);
+			const auto MBs = *json_byte_length_int64 / (*json_write_int64) * 1000.0f;
 			std::cout << name << " json int64_t length: " << *json_byte_length_int64 << std::endl;
-			std::cout << name << " json int64 write: " << *json_write_int64 << " s, " << MBs << " MB/s\n";
+			std::cout << name << " json int64 write: " << *json_write_int64 << "ns, " << MBs << " MB/s\n";
 		}
 
 		if (json_read_int64) {
-			const auto MBs = iterations * *json_byte_length_int64 / (*json_read_int64 * 1048576);
-			std::cout << name << " json int64 read: " << *json_read_int64 << " s, " << MBs << " MB/s\n";
+			const auto MBs = *json_byte_length_int64 / (*json_read_int64) * 1000.0f;
+			std::cout << name << " json int64 read: " << *json_read_int64 << "ns, " << MBs << " MB/s\n";
 		}
 
 		std::cout << "\n---" << std::endl;
@@ -414,8 +414,8 @@ struct results {
 		std::string finalString{};
 		bool wasThereOneBeforeThis{ false };
 		if (json_read) {
-			write = json_write ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length / (*json_write * 1048576))) : "N/A";
-			read = json_read ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length / (*json_read * 1048576))) : "N/A";
+			write = json_write ? fmt::format("{}", static_cast<size_t>(*json_byte_length / (*json_write) * 1000.0f)) : "N/A";
+			read = json_read ? fmt::format("{}", static_cast<size_t>(*json_byte_length / (*json_read) * 1000.0f)) : "N/A";
 			finalString = fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Mixed", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -423,9 +423,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_double ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_double / (*json_write_double * 1048576)))
-									  : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_double / (*json_read_double * 1048576)));
+			write = json_write_double ? fmt::format("{}", static_cast<size_t>(*json_byte_length_double / (*json_write_double) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_double / (*json_read_double) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Double", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -433,9 +432,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_string ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_string / (*json_write_string * 1048576)))
-									  : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_string / (*json_read_string * 1048576)));
+			write = json_write_string ? fmt::format("{}", static_cast<size_t>(*json_byte_length_string / (*json_write_string) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_string / (*json_read_string) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "String", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -443,9 +441,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_uint64 ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_uint64 / (*json_write_uint64 * 1048576)))
-									  : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_uint64 / (*json_read_uint64 * 1048576)));
+			write = json_write_uint64 ? fmt::format("{}", static_cast<size_t>(*json_byte_length_uint64 / (*json_write_uint64) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_uint64 / (*json_read_uint64) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Uint64", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -453,15 +450,15 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_int64 ? fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_int64 / (*json_write_int64 * 1048576)))
-									 : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(iterations * *json_byte_length_int64 / (*json_read_int64 * 1048576)));
+			write = json_write_int64 ? fmt::format("{}", static_cast<size_t>(*json_byte_length_int64 / (*json_write_int64) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_int64 / (*json_read_int64) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Int64", write, read);
 			wasThereOneBeforeThis = true;
 		}
 		return finalString;
 	}
 };
+
 
 class FileLoader {
   public:
@@ -470,7 +467,7 @@ class FileLoader {
 		auto theStream = std::ofstream{ filePath, std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
-		fileContents = inputStream.str();
+		this->fileContents = inputStream.str();
 	}
 
 	void saveFile(std::string fileToSave) {
@@ -480,7 +477,7 @@ class FileLoader {
 	}
 
 	operator std::string() {
-		return fileContents;
+		return this->fileContents;
 	}
 
 	~FileLoader() {
@@ -493,172 +490,208 @@ class FileLoader {
 	std::ofstream theStream{};
 };
 
+template<typename Function> size_t benchmark(Function function, size_t iterationCount) {
+	size_t currentLowestTime{ std::numeric_limits<uint64_t>::max() };
+	for (size_t x = 0; x < iterationCount; ++x) {
+		auto startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+		function();
+		auto endTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+		auto newTime = endTime - startTime;
+		if (newTime.count() < currentLowestTime) {
+			currentLowestTime = newTime.count();
+		}
+	}
+	return currentLowestTime;
+}
+
 auto glaze_test() {
-	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations };
 	std::string buffer{ json0 };
 
 	obj_t obj{};
 
-
-	r.json_byte_length = buffer.size();
+	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations };
 
 	if (auto error = glz::read_json(obj, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
-
-	auto t0 = std::chrono::steady_clock::now();
-	try {
-		for (size_t i = 0; i < iterations; ++i) {
-			if (auto error = glz::read_json(obj, buffer)) {
-				std::cout << "glaze Error: " << error << std::endl;
+	auto result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(obj, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
 			}
-		}
-	} catch (std::runtime_error& e) {
-		std::cout << "glaze Error: " << e.what() << std::endl;
-	}
+		},
+		iterations);
 
-	auto t1 = std::chrono::steady_clock::now();
-
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_byte_length = buffer.size();
+	r.json_read = result;
+	buffer.clear();
 
 	glz::write_json(obj, buffer);
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t0 = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < iterations; ++i) {
-		glz::write_json(obj, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write = result;
 	buffer.clear();
-	Test<size_t> uint64Test{};
+	Test<uint64_t> uint64Test{};
 	glz::write_json(uint64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		glz::write_json(uint64Test, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_uint64 = result;
 
-	if (auto error = glz::read_json(uint64Test, buffer); error) {
+	if (auto error = glz::read_json(uint64Test, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(uint64Test, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		if (auto error = glz::read_json(uint64Test, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
 
 	glz::write_json(int64Test, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(int64Test, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		glz::write_json(int64Test, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_int64 = result;
 
-	if (auto error = glz::read_json(int64Test, buffer); error) {
+	if (auto error = glz::read_json(int64Test, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(int64Test, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < iterations; ++i) {
-		if (auto error = glz::read_json(int64Test, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
 
 	glz::write_json(stringTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(stringTest, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		glz::write_json(stringTest, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_string = result;
 
-	if (auto error = glz::read_json(stringTest, buffer); error) {
+	if (auto error = glz::read_json(stringTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(stringTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < iterations; ++i) {
-		if (auto error = glz::read_json(stringTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
 	Test<double> doubleTest{};
 
 	glz::write_json(doubleTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(doubleTest, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		glz::write_json(doubleTest, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_double = result;
 
-	if (auto error = glz::read_json(doubleTest, buffer); error) {
+	if (auto error = glz::read_json(doubleTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(doubleTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < iterations; ++i) {
-		if (auto error = glz::read_json(doubleTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
+	r.json_read_double = result;
 	buffer.clear();
-
 	r.print();
+
 	return r;
 }
 
@@ -666,298 +699,344 @@ auto glaze_single_test() {
 	std::string buffer{ json0 };
 
 	obj_t obj{};
-	results r{ "glaze", "https://github.com/stephenberry/glaze", 1 };
 
-	if (auto error = glz::read_json(obj, buffer); error) {
+	results r{ "glaze", "https://github.com/RealTimeChris/glaze", 1 };
+
+	if (auto error = glz::read_json(obj, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
-
-	auto t0 = std::chrono::steady_clock::now();
-	try {
-		for (size_t i = 0; i < 1; ++i) {
-			if (auto error = glz::read_json(obj, buffer); error) {
-				std::cout << "glaze Error: " << error << std::endl;
+	auto result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(obj, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
 			}
-		}
-	} catch (std::runtime_error& e) {
-		std::cout << "glaze Error: " << e.what() << std::endl;
-	}
-	auto t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read = result;
+	buffer.clear();
 
 	glz::write_json(obj, buffer);
-	t0 = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < 1; ++i) {
-		glz::write_json(obj, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write = result;
 	buffer.clear();
-	Test<size_t> uint64Test{};
+	Test<uint64_t> uint64Test{};
 	glz::write_json(uint64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		glz::write_json(uint64Test, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	t1 = std::chrono::steady_clock::now();
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_uint64 = result;
 
-	if (auto error = glz::read_json(uint64Test, buffer); error) {
+	if (auto error = glz::read_json(uint64Test, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(uint64Test, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	for (size_t i = 0; i < 1; ++i) {
-		if (auto error = glz::read_json(uint64Test, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
-	glz::write_json(int64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		glz::write_json(int64Test, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	glz::write_json(int64Test, buffer);
+
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(int64Test, buffer);
+
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_int64 = result;
 
-	if (auto error = glz::read_json(int64Test, buffer); error) {
+	if (auto error = glz::read_json(int64Test, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(int64Test, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < 1; ++i) {
-		if (auto error = glz::read_json(int64Test, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
+
 	glz::write_json(stringTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		glz::write_json(stringTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(stringTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_string = result;
 
-	if (auto error = glz::read_json(stringTest, buffer); error) {
+	if (auto error = glz::read_json(stringTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(stringTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < 1; ++i) {
-		if (auto error = glz::read_json(stringTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
 	Test<double> doubleTest{};
+
 	glz::write_json(doubleTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		glz::write_json(doubleTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(doubleTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_double = result;
 
-	if (auto error = glz::read_json(doubleTest, buffer); error) {
+	if (auto error = glz::read_json(doubleTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
-
-	for (size_t i = 0; i < 1; ++i) {
-		if (auto error = glz::read_json(doubleTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(doubleTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		1);
+	r.json_read_double = result;
 	buffer.clear();
-
 	r.print();
 
 	return r;
 }
 
 auto glaze_abc_test() {
-	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations_abc };
 	std::string buffer{};
 
+	results r{ "glaze", "https://github.com/RealTimeChris/glaze", iterations_abc };
+	AbcTest<uint64_t> uint64AbcTest{};
+	glz::write_json(uint64AbcTest, buffer);
 
-
-	AbcTest<size_t> uint64AbcTestWrite{};
-
-	glz::write_json(uint64AbcTestWrite, buffer);
-
-	auto t0 = std::chrono::steady_clock::now();
-
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		glz::write_json(uint64AbcTestWrite, buffer);
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+	auto result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(uint64AbcTest, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_uint64 = result;
 
-	Test<size_t> uint64AbcTest{};
-
-	if (auto error = glz::read_json(uint64AbcTest, buffer); error) {
+	if (auto error = glz::read_json(uint64AbcTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		if (auto error = glz::read_json(uint64AbcTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(uint64AbcTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
-	AbcTest<int64_t> int64AbcTestWrite{};
+	AbcTest<int64_t> int64AbcTest{};
 
-	glz::write_json(int64AbcTestWrite, buffer);
+	glz::write_json(int64AbcTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(int64AbcTest, buffer);
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		glz::write_json(int64AbcTestWrite, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<int64_t> int64AbcTest{};
+	r.json_write_int64 = result;
 
-	if (auto error = glz::read_json(int64AbcTest, buffer); error) {
+	if (auto error = glz::read_json(int64AbcTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(int64AbcTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		if (auto error = glz::read_json(int64AbcTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
-	AbcTest<std::string> stringAbcTestWrite{};
+	AbcTest<std::string> stringAbcTest{};
 
-	glz::write_json(stringAbcTestWrite, buffer);
+	glz::write_json(stringAbcTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(stringAbcTest, buffer);
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		glz::write_json(stringAbcTestWrite, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<std::string> stringAbcTest{};
+	r.json_write_string = result;
 
-	if (auto error = glz::read_json(stringAbcTest, buffer); error) {
+	if (auto error = glz::read_json(stringAbcTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(stringAbcTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		if (auto error = glz::read_json(stringAbcTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
-	AbcTest<double> doubleAbcTestWrite{};
+	AbcTest<double> doubleAbcTest{};
 
-	glz::write_json(doubleAbcTestWrite, buffer);
+	glz::write_json(doubleAbcTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				glz::write_json(doubleAbcTest, buffer);
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		glz::write_json(doubleAbcTestWrite, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<double> doubleAbcTest{};
+	r.json_write_double = result;
 
-	if (auto error = glz::read_json(doubleAbcTest, buffer); error) {
+	if (auto error = glz::read_json(doubleAbcTest, buffer)) {
 		std::cout << "glaze Error: " << error << std::endl;
 	}
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				if (auto error = glz::read_json(doubleAbcTest, buffer)) {
+					std::cout << "glaze Error: " << error << std::endl;
+				}
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		if (auto error = glz::read_json(doubleAbcTest, buffer); error) {
-			std::cout << "glaze Error: " << error << std::endl;
-		}
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+			} catch (std::runtime_error& e) {
+				std::cout << "glaze Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
+	r.json_read_double = result;
 	buffer.clear();
-
 	r.print();
+
 	return r;
 }
 
@@ -968,135 +1047,165 @@ auto Jsonifier_test() {
 
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations };
 	Jsonifier::JsonifierCore jsonifier{};
+
 	jsonifier.parseJson<true>(obj, buffer);
-
-	auto t0 = std::chrono::steady_clock::now();
-	try {
-		for (size_t i = 0; i < iterations; ++i) {
-			jsonifier.parseJson<true>(obj, buffer);
-		}
-	} catch (std::runtime_error& e) {
-		std::cout << "Jsonifier Error: " << e.what() << std::endl;
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+	auto result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read = result;
 	buffer.clear();
 
 	jsonifier.serializeJson(obj, buffer);
-	t0 = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.serializeJson(obj, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write = result;
 	buffer.clear();
-	Test<size_t> uint64Test{};
+	Test<uint64_t> uint64Test{};
 	jsonifier.serializeJson(uint64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.serializeJson(uint64Test, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_uint64 = result;
 
 	jsonifier.parseJson<true>(uint64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.parseJson<true>(uint64Test, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
 
 	jsonifier.serializeJson(int64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.serializeJson(int64Test, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(int64Test, buffer);
+
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_int64 = result;
 
 	jsonifier.parseJson<true>(int64Test, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(int64Test, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.parseJson<true>(int64Test, buffer);
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
 
 	jsonifier.serializeJson(stringTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.serializeJson(stringTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(stringTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_string = result;
 
 	jsonifier.parseJson<true>(stringTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(stringTest, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.parseJson<true>(stringTest, buffer);
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
 	Test<double> doubleTest{};
 
 	jsonifier.serializeJson(doubleTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.serializeJson(doubleTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(doubleTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_double = result;
 
 	jsonifier.parseJson<true>(doubleTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(doubleTest, buffer);
 
-	for (size_t i = 0; i < iterations; ++i) {
-		jsonifier.parseJson<true>(doubleTest, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations);
+	r.json_read_double = result;
 	buffer.clear();
 	r.print();
 
@@ -1107,132 +1216,169 @@ auto Jsonifier_single_test() {
 	std::string buffer{ json0 };
 
 	obj_t obj{};
+
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", 1 };
 	Jsonifier::JsonifierCore jsonifier{};
+
 	jsonifier.parseJson<true>(obj, buffer);
-	auto t0 = std::chrono::steady_clock::now();
-	try {
-		for (size_t i = 0; i < 1; ++i) {
-			jsonifier.parseJson<true>(obj, buffer);
-		}
-	} catch (std::runtime_error& e) {
-		std::cout << "Jsonifier Error: " << e.what() << std::endl;
-	}
-	auto t1 = std::chrono::steady_clock::now();
+	auto result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read = result;
+	buffer.clear();
 
 	jsonifier.serializeJson(obj, buffer);
-	t0 = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.serializeJson(obj, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(obj, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	r.json_write = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write = result;
 	buffer.clear();
-	Test<size_t> uint64Test{};
+	Test<uint64_t> uint64Test{};
 	jsonifier.serializeJson(uint64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.serializeJson(uint64Test, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
+
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_uint64 = result;
 
 	jsonifier.parseJson<true>(uint64Test, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(uint64Test, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.parseJson<true>(uint64Test, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
 	Test<int64_t> int64Test{};
-	jsonifier.serializeJson(int64Test, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.serializeJson(int64Test, buffer);
-	}
-	t1 = std::chrono::steady_clock::now();
+	jsonifier.serializeJson(int64Test, buffer);
+
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(int64Test, buffer);
+
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_int64 = result;
 
 	jsonifier.parseJson<true>(int64Test, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(int64Test, buffer);
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.parseJson<true>(int64Test, buffer);
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
 	Test<std::string> stringTest{};
+
 	jsonifier.serializeJson(stringTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.serializeJson(stringTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(stringTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_string = result;
 
 	jsonifier.parseJson<true>(stringTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(stringTest, buffer);
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.parseJson<true>(stringTest, buffer);
-	}
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
 	Test<double> doubleTest{};
+
 	jsonifier.serializeJson(doubleTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.serializeJson(doubleTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(doubleTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_write_double = result;
 
 	jsonifier.parseJson<true>(doubleTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(doubleTest, buffer);
 
-	for (size_t i = 0; i < 1; ++i) {
-		jsonifier.parseJson<true>(doubleTest, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		1);
+	r.json_read_double = result;
 	buffer.clear();
-
 	r.print();
 
 	return r;
@@ -1241,115 +1387,141 @@ auto Jsonifier_single_test() {
 auto Jsonifier_abc_test() {
 	std::string buffer{};
 
-	Jsonifier::JsonifierCore jsonifier{};
-
 	results r{ "Jsonifier", "https://github.com/RealTimeChris/Jsonifier", iterations_abc };
+	Jsonifier::JsonifierCore jsonifier{};
+	AbcTest<uint64_t> uint64AbcTest{};
+	jsonifier.serializeJson(uint64AbcTest, buffer);
 
-	AbcTest<size_t> uint64AbcTestWrite{};
-
-	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
-
-	auto t0 = std::chrono::steady_clock::now();
-
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.serializeJson(uint64AbcTestWrite, buffer);
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+	auto result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(uint64AbcTest, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_write_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<size_t> uint64AbcTest{};
+	r.json_write_uint64 = result;
+
 	jsonifier.parseJson<true>(uint64AbcTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.parseJson<true>(uint64AbcTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(uint64AbcTest, buffer);
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 	buffer.clear();
 
-	AbcTest<int64_t> int64AbcTestWrite{};
+	AbcTest<int64_t> int64AbcTest{};
 
-	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
+	jsonifier.serializeJson(int64AbcTest, buffer);
 
-	t0 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(int64AbcTest, buffer);
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.serializeJson(int64AbcTestWrite, buffer);
-	}
-
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_write_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<int64_t> int64AbcTest{};
+	r.json_write_int64 = result;
+
 	jsonifier.parseJson<true>(int64AbcTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.parseJson<true>(int64AbcTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(int64AbcTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 	buffer.clear();
 
-	AbcTest<std::string> stringAbcTestWrite{};
-	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
-	t0 = std::chrono::steady_clock::now();
+	AbcTest<std::string> stringAbcTest{};
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.serializeJson(stringAbcTestWrite, buffer);
-	}
+	jsonifier.serializeJson(stringAbcTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(stringAbcTest, buffer);
+
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_write_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<std::string> stringAbcTest{};
+	r.json_write_string = result;
+
 	jsonifier.parseJson<true>(stringAbcTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.parseJson<true>(stringAbcTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(stringAbcTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 	buffer.clear();
 
-	AbcTest<double> doubleAbcTestWrite{};
-	jsonifier.serializeJson(uint64AbcTestWrite, buffer);
-	t0 = std::chrono::steady_clock::now();
+	AbcTest<double> doubleAbcTest{};
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.serializeJson(doubleAbcTestWrite, buffer);
-	}
+	jsonifier.serializeJson(doubleAbcTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.serializeJson(doubleAbcTest, buffer);
+
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_write_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
-	Test<double> doubleAbcTest{};
+	r.json_write_double = result;
+
 	jsonifier.parseJson<true>(doubleAbcTest, buffer);
-	t0 = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iterations_abc; ++i) {
-		jsonifier.parseJson<true>(doubleAbcTest, buffer);
-	}
+	result = benchmark(
+		[&]() {
+			try {
+				jsonifier.parseJson<true>(doubleAbcTest, buffer);
 
-	t1 = std::chrono::steady_clock::now();
-
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+			} catch (std::runtime_error& e) {
+				std::cout << "Jsonifier Error: " << e.what() << std::endl;
+			}
+		},
+		iterations_abc);
+	r.json_read_double = result;
 	buffer.clear();
-
 	r.print();
+
 	return r;
 }
 
@@ -1360,7 +1532,7 @@ using namespace simdjson;
 struct on_demand {
 	bool read_in_order(obj_t& obj, const padded_string& json);
 	bool readDouble(Test<double>& obj, const padded_string& json);
-	bool readUint64(Test<size_t>& obj, const padded_string& json);
+	bool readUint64(Test<uint64_t>& obj, const padded_string& json);
 	bool readInt64(Test<int64_t>& obj, const padded_string& json);
 	bool readString(Test<std::string>& obj, const padded_string& json);
 
@@ -1368,9 +1540,9 @@ struct on_demand {
 	ondemand::parser parser{};
 };
 
-template<typename ValueType, typename OTy2> void simdPull(const char* x, OTy2& obj, simdjson::ondemand::document& doc) {
+template<typename OTy, typename OTy2> void simdPull(const char* x, OTy2& obj, simdjson::ondemand::document& doc) {
 	ondemand::array xNew = doc[x];
-	for (const ValueType& value: xNew) {
+	for (const OTy& value: xNew) {
 		obj.x.emplace_back(value);
 	}
 }
@@ -1395,7 +1567,7 @@ template<typename ValueType, typename OTy2> void simdPull(const char* x, OTy2& o
 			obj.x.resize(1000); \
 		} \
 		int32_t currentIndex{}; \
-		for (size_t value: newX) { \
+		for (uint64_t value: newX) { \
 			obj.x[currentIndex] = value; \
 			++currentIndex; \
 		} \
@@ -1458,7 +1630,7 @@ bool on_demand::readDouble(Test<double>& obj, const padded_string& json) {
 	return false;
 }
 
-bool on_demand::readUint64(Test<size_t>& obj, const padded_string& json) {
+bool on_demand::readUint64(Test<uint64_t>& obj, const padded_string& json) {
 	ondemand::document doc = parser.iterate(json).value();
 
 	SIMD_UINT64_PULL(a);
@@ -1628,25 +1800,19 @@ auto simdjson_test() {
 
 	auto error = parser.read_in_order(obj, buffer);
 
-	auto t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations; ++i) {
+	auto result = benchmark(
+		[&]() {
 			const auto error = parser.read_in_order(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+		},
+		iterations);
 
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations };
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read = result;
 
 	Test<double> objDouble{};
 	buffer.clear();
@@ -1654,23 +1820,17 @@ auto simdjson_test() {
 
 	error = parser.readDouble(objDouble, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readDouble(objDouble, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_double = result;
 
 	Test<std::string> objString{};
 	buffer.clear();
@@ -1678,23 +1838,17 @@ auto simdjson_test() {
 
 	error = parser.readString(objString, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 
 	Test<int64_t> objInt64{};
 	buffer.clear();
@@ -1702,47 +1856,35 @@ auto simdjson_test() {
 
 	error = parser.readInt64(objInt64, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 
-	Test<size_t> objUint64{};
+	Test<uint64_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
 	error = parser.readUint64(objUint64, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 
 	r.print();
 
@@ -1758,25 +1900,19 @@ auto simdjson_single_test() {
 
 	const auto error = parser.read_in_order(obj, buffer);
 
-	auto t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < 1; ++i) {
+	auto result = benchmark(
+		[&]() {
 			const auto error = parser.read_in_order(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", 1 };
 
 	r.json_byte_length = buffer.size();
-	r.json_read = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read = result;
 
 	Test<double> objDouble{};
 	buffer.clear();
@@ -1784,23 +1920,17 @@ auto simdjson_single_test() {
 
 	auto errorNew = parser.readDouble(objDouble, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < 1; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readDouble(objDouble, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	r.json_byte_length_double = buffer.size();
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_double = result;
 
 	Test<std::string> objString{};
 	buffer.clear();
@@ -1808,23 +1938,17 @@ auto simdjson_single_test() {
 
 	errorNew = parser.readString(objString, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < 1; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 
 	Test<int64_t> objInt64{};
 	buffer.clear();
@@ -1832,47 +1956,35 @@ auto simdjson_single_test() {
 
 	errorNew = parser.readInt64(objInt64, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < 1; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 
-	Test<size_t> objUint64{};
+	Test<uint64_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
 	errorNew = parser.readUint64(objUint64, buffer);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < 1; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		1);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 
 
 	r.print();
@@ -1882,7 +1994,7 @@ auto simdjson_single_test() {
 
 struct on_demand_abc {
 	bool readDouble(AbcTest<double>& obj, const padded_string& json);
-	bool readUint64(AbcTest<size_t>& obj, const padded_string& json);
+	bool readUint64(AbcTest<uint64_t>& obj, const padded_string& json);
 	bool readInt64(AbcTest<int64_t>& obj, const padded_string& json);
 	bool readString(AbcTest<std::string>& obj, const padded_string& json);
 
@@ -1921,7 +2033,7 @@ bool on_demand_abc::readDouble(AbcTest<double>& obj, const padded_string& json) 
 	return false;
 }
 
-bool on_demand_abc ::readUint64(AbcTest<size_t>& obj, const padded_string& json) {
+bool on_demand_abc ::readUint64(AbcTest<uint64_t>& obj, const padded_string& json) {
 	ondemand::document doc = parser.iterate(json).value();
 
 	SIMD_UINT64_PULL(a);
@@ -2020,14 +2132,6 @@ bool on_demand_abc ::readString(AbcTest<std::string>& obj, const padded_string& 
 	return false;
 }
 
-template<typename Function> void benchmark(const std::string& testName, Function function) {
-	auto startTime = std::chrono::high_resolution_clock::now();
-	function();
-	auto endTime = std::chrono::high_resolution_clock::now();
-	auto newTime = endTime - startTime;
-	std::cout << "It took: " << newTime.count() << " to complete the: " << testName << " test." << std::endl;
-}
-
 auto simdjson_abc_test() {
 	on_demand_abc parser{};
 
@@ -2035,91 +2139,67 @@ auto simdjson_abc_test() {
 
 	std::string buffer = glz::write_json(obj);
 
-	auto t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	auto result = benchmark(
+		[&]() {
 			const auto error = parser.readDouble(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	auto t1 = std::chrono::steady_clock::now();
+		},
+		iterations_abc);
 
 	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations_abc };
 
 	r.json_byte_length_double = buffer.size();
-	r.json_read_double = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_double = result;
 
 	AbcTest<std::string> objString{};
 	buffer.clear();
 	buffer = glz::write_json(objString);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: )" << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations_abc);
 
 	r.json_byte_length_string = buffer.size();
-	r.json_read_string = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_string = result;
 
 	AbcTest<int64_t> objInt64{};
 	buffer.clear();
 	buffer = glz::write_json(objInt64);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations_abc);
 
 	r.json_byte_length_int64 = buffer.size();
-	r.json_read_int64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_int64 = result;
 
-	AbcTest<size_t> objUint64{};
+	AbcTest<uint64_t> objUint64{};
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
-	t0 = std::chrono::steady_clock::now();
-
-	try {
-		for (size_t i = 0; i < iterations_abc; ++i) {
+	result = benchmark(
+		[&]() {
 			const auto error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
-		}
-	} catch (const std::exception& e) {
-		std::cout << "simdjson exception error: " << e.what() << '\n';
-	}
-
-	t1 = std::chrono::steady_clock::now();
+		},
+		iterations_abc);
 
 	r.json_byte_length_uint64 = buffer.size();
-	r.json_read_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() * 1e-9;
+	r.json_read_uint64 = result;
 
 	r.print();
 
@@ -2184,29 +2264,54 @@ std::string single_test() {
 	return table;
 }
 
-template<typename FTy> void benchMark(FTy function, const std::string& title) {
-	auto start = std::chrono::high_resolution_clock::now();
-	function();
-	auto finish = std::chrono::high_resolution_clock::now();
-	std::cout << "TOTAL TIME PASSED: " << std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count() << ", FOR BENCHMARK: " << title
-			  << std::endl;
-}
-
 int main() {
 	try {
+		bool result{};
+		std::vector<std::string> vector01{};
+		vector01.resize(1024 * 1024);
+		vector01[1024 * 1024 - 2] = "TESTING";
+		std::vector<std::string> vector02{};
+		vector02.resize(1024 * 1024);
+		std::cout << "BENCHMARK 01: std::vector<std::string> of size 1024*1024: "
+				  << benchmark(
+						 [&] {
+							 result = vector01 == vector02;
+						 },
+						 1024)
+				  << std::endl;
+		std::cout << "EQUALS: " << result << std::endl;
+
+		Jsonifier::Vector<std::string> vector03{};
+		vector03.resize(1024 * 1024);
+		vector03[1024 * 1024 - 2] = "TESTING";
+		Jsonifier::Vector<std::string> vector04{};
+		vector04.resize(1024 * 1024);
+		std::cout << "BENCHMARK 02: Jsonifier::Vector<std::string> of size 1024*1024: "
+				  << benchmark(
+						 [&] {
+							 result = vector03 == vector04;
+						 },
+						 1024)
+				  << std::endl;
+		std::cout << "EQUALS: " << result << std::endl;
 		auto singlTestResults = single_test();
 		auto multiTestResults = regular_test();
 		auto abcTestResults = abc_test();
-		FileLoader fileLoader{ "../../ReadMe.md" };
+#ifdef _WIN32
+		FileLoader fileLoader{ "../../../ReadMe.md" };
+#else
+		FileLoader fileLoader{ "../ReadMe.md" };
+#endif
 		std::string newString = fileLoader;
-		auto newValue = newString.find("Single Iteration Test Results:") + std::string("Single Iteration Test Results:").size() + 1;
-		std::string section01 = newString.substr(0, newValue);
-		auto section02 = newString.substr(newString.find(">  1000 iterations on a 6 core (Intel i7 8700k)"),
-			newString.find("JSON document grows in size.") + std::string{ "JSON document grows in size." }.size() -
-				newString.find(">  1000 iterations on a 6 core (Intel i7 8700k)"));
-		auto section03 = newString.substr(newString.find(">  1001 iterations on a 6 core"));
+		std::string section01 =
+			newString.substr(0, newString.find("Single Iteration Test Results:") + std::string("Single Iteration Test Results:").size() + 1);
+		auto section02 = newString.substr(newString.find("> 1000 iterations on a 6 core (Intel i7 8700k)"),
+			newString.find("performance regardless of the JSON document's scale.") +
+				std::string{ "performance regardless of the JSON document's scale." }.size() -
+				newString.find("> 1000 iterations on a 6 core (Intel i7 8700k)"));
+
 		std::string newerString = section01 + singlTestResults + "\n\nMulti Iteration Test Results:\n" + multiTestResults + "\n" + section02;
-		newerString += "\n" + abcTestResults + "\n" + section03;
+		newerString += "\n" + abcTestResults + "\n> 1001 iterations on a 6 core (Intel i7 8700k)";
 		fileLoader.saveFile(newerString);
 	} catch (std::exception& e) {
 		std::cout << e.what() << std::endl;

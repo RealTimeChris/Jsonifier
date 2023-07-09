@@ -50,8 +50,8 @@ namespace JsonifierInternal {
 	}
 
 	template<bool printErrors, EnumT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue = std::to_underlying(value);
-		auto newValueOld = std::to_underlying(value);
+		auto newValue = static_cast<int64_t>(value);
+		auto newValueOld = static_cast<int64_t>(value);
 		parseNumber(newValue, *iter);
 		newValue |= newValueOld;
 		value = static_cast<ValueType>(newValue);
@@ -85,6 +85,12 @@ namespace JsonifierInternal {
 			value.resize(newerSize);
 			std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
 		}
+	}
+
+	template<bool printErrors, CharT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
+		auto newPtr = *iter;
+		value = static_cast<ValueType>(*(newPtr + 1));
+		++iter;
 	}
 
 	template<bool printErrors, RawArrayT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
@@ -219,8 +225,8 @@ namespace JsonifierInternal {
 	}
 
 	template<bool printErrors, EnumT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue = std::to_underlying(value);
-		auto newValueOld = std::to_underlying(value);
+		auto newValue = static_cast<int64_t>(value);
+		auto newValueOld = static_cast<int64_t>(value);
 		parseNumber(newValue, *iter);
 		newValue |= newValueOld;
 		value = static_cast<ValueType>(newValue);
@@ -256,6 +262,12 @@ namespace JsonifierInternal {
 		}
 	}
 
+	template<bool printErrors, CharT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
+		auto newPtr = *iter;
+		value = static_cast<ValueType>(*(newPtr + 1));
+		++iter;
+	}
+
 	template<bool printErrors, RawArrayT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
 		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 			return;
@@ -284,6 +296,9 @@ namespace JsonifierInternal {
 
 	template<bool printErrors, VectorT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
 		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
+			return;
+		}
+		if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
 			return;
 		}
 		const auto m = value.size();

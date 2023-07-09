@@ -662,7 +662,7 @@ namespace JsonifierInternal {
 		using result_t = PmhBuckets<m>;
 		result_t result{};
 		bool rejected = false;
-		while (1) {
+		while (true) {
 			for (auto& b: result.buckets) {
 				b.clear();
 			}
