@@ -50,6 +50,15 @@ add_executable(
     "main.cpp"
 )
 
+target_compile_options(
+    "${PROJECT_NAME}" PRIVATE 
+    "$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+)
+
 target_link_libraries(
     "${PROJECT_NAME}" PRIVATE 
     Jsonifier glaze::glaze simdjson fmt::fmt

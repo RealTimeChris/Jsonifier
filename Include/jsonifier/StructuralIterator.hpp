@@ -38,12 +38,11 @@ namespace JsonifierInternal {
 		inline StructuralIterator(SimdStringReader* stringReaderNew) noexcept {
 			stringLength = stringReaderNew->getStringLength();
 			currentIndex = stringReaderNew->getStructurals();
-			rootIndex = stringReaderNew->getStructurals();
-			stringView = reinterpret_cast<StringViewPtr>(stringReaderNew->getStringView().data());
+			rootIndex = currentIndex;
 		}
 
 		inline value_type operator*() const noexcept {
-			return stringView + *currentIndex;
+			return *currentIndex;
 		}
 
 		inline StructuralIterator& operator++() noexcept {
@@ -51,30 +50,30 @@ namespace JsonifierInternal {
 			return *this;
 		}
 
-		inline uint32_t getCurrentIndex() const noexcept {
-			return *currentIndex;
+		inline int64_t getCurrentIndex() const noexcept {
+			return *currentIndex - *rootIndex;
 		}
 
-		inline bool operator==(const StructuralIterator& other) const noexcept {
+		inline bool operator==(const StructuralIterator&) const noexcept {
 			return checkForNullIndex() || checkForStringOverRun();
 		}
 
-		inline bool operator==(const uint8_t& other) const noexcept {
+		inline bool operator==(uint8_t other) const noexcept {
 			return ***this == other;
 		}
 
 	  protected:
-		StructuralIndex currentIndex{};
-		StructuralIndex rootIndex{};
-		StringViewPtr stringView{};
-		size_t stringLength{};
+		StructuralIndex* currentIndex{};
+		StructuralIndex* rootIndex{};
+		int64_t stringLength{};
 
 		inline bool checkForNullIndex() const noexcept {
 			return !currentIndex;
 		}
 
 		inline bool checkForStringOverRun() const noexcept {
-			return *currentIndex >= stringLength;
+			auto currentIndexTemp = getCurrentIndex();
+			return currentIndexTemp <= 0 || currentIndexTemp >= stringLength;
 		}
 	};
 }

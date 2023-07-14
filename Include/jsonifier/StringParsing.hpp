@@ -38,11 +38,11 @@ namespace JsonifierInternal {
 		static const uint32_t bytesProcessed = BytesPerStep;
 
 		BackslashAndQuote<SimdBaseReal> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBaseReal values(reinterpret_cast<StringViewPtr>(source));
+			SimdBaseReal values(source);
 			values.store(dest);
 			BackslashAndQuote returnData{};
-			returnData.bsBits = { values == char{ '\\' } };
-			returnData.quoteBits = { values == char{ '\"' } };
+			returnData.bsBits = { values == uint8_t{ '\\' } };
+			returnData.quoteBits = { values == uint8_t{ '\"' } };
 			return returnData;
 		}
 
@@ -67,7 +67,7 @@ namespace JsonifierInternal {
 		StringParsingType bsBits{};
 	};
 
-	inline static uint32_t hexToU32NoCheck(const uint8_t* source) {
+	inline static uint32_t hexToU32NoCheck(StringViewPtr source) {
 		uint32_t v1 = digitToVal32[630ull + source[0]];
 		uint32_t v2 = digitToVal32[420ull + source[1]];
 		uint32_t v3 = digitToVal32[210ull + source[2]];
@@ -75,7 +75,7 @@ namespace JsonifierInternal {
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline size_t codePointToUtf8(uint32_t codePoint, uint8_t* c) {
+	inline size_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
 		if (codePoint <= 0x7F) {
 			c[0] = uint8_t(codePoint);
 			return 1;
@@ -99,7 +99,7 @@ namespace JsonifierInternal {
 		return 0;
 	}
 
-	inline bool handleUnicodeCodePoint(const uint8_t** srcPtr, uint8_t** dstPtr) {
+	inline bool handleUnicodeCodePoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
 		constexpr uint32_t subCodePoint = 0xfffd;
 		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
@@ -158,11 +158,7 @@ namespace JsonifierInternal {
 	}
 
 	inline static bool parseBool(StringViewPtr json) noexcept {
-		char valueNew[5]{ "true" };
-		if (*reinterpret_cast<const uint32_t*>(json) == *reinterpret_cast<uint32_t*>(valueNew)) {
-			return true;
-		} else {
-			return false;
-		}
+		uint8_t valueNew[5]{ "true" };
+		return std::memcmp(valueNew, json, 5) == 0;
 	}
 }

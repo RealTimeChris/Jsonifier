@@ -78,7 +78,7 @@ namespace JsonifierInternal {
 		index += n;
 	}
 
-	template<NullT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
+	template<NullT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType&, BufferType& buffer, size_t& index) {
 		writeCharacters<"null">(buffer, index);
 	}
 
@@ -141,7 +141,7 @@ namespace JsonifierInternal {
 	template<StringT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 
-		if constexpr (Resizeable<BufferType>) {
+		if constexpr (HasResize<BufferType>) {
 			if ((index + (4 * n)) >= buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + (4 * n)));
 			}
@@ -230,7 +230,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<VectorT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
+	template<ArrayT ValueType, VectorLike BufferType> void SerializeNoKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
 
 		if (value.size()) {
@@ -305,7 +305,7 @@ namespace JsonifierInternal {
 		writeCharacter('}', buffer, index);
 	}
 
-	template<NullT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
+	template<NullT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType&, BufferType& buffer, size_t& index) {
 		writeCharacters<"null">(buffer, index);
 	}
 
@@ -368,7 +368,7 @@ namespace JsonifierInternal {
 	template<StringT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		const auto n = value.size();
 
-		if constexpr (Resizeable<BufferType>) {
+		if constexpr (HasResize<BufferType>) {
 			if ((index + (4 * n)) >= buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + (4 * n)));
 			}
@@ -475,7 +475,7 @@ namespace JsonifierInternal {
 		writeCharacter(']', buffer, index);
 	}
 
-	template<VectorT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
+	template<ArrayT ValueType, VectorLike BufferType> void SerializeWithKeys::op(ValueType& value, BufferType& buffer, size_t& index) {
 		writeCharacter('[', buffer, index);
 
 		if (value.size()) {
@@ -491,7 +491,7 @@ namespace JsonifierInternal {
 			const auto end = value.end();
 			for (; it != end; ++it) {
 				writeCharacter(',', buffer, index);
-				auto newMember = *it;
+				newMember = *it;
 				using MemberType = decltype(newMember);
 				if constexpr (HasExcludedKeys<MemberType>) {
 					SerializeWithKeys::op(newMember, buffer, index, newMember.excludedKeys);

@@ -32,8 +32,8 @@
 
 namespace JsonifierInternal {
 
-	inline static Jsonifier::String& getCurrentStringBuffer() noexcept {
-		static thread_local Jsonifier::String currentStringBuffer{};
+	inline static Jsonifier::StringBase<uint8_t>& getCurrentStringBuffer() noexcept {
+		static thread_local Jsonifier::StringBase<uint8_t> currentStringBuffer{};
 		return currentStringBuffer;
 	}
 
@@ -79,9 +79,9 @@ namespace JsonifierInternal {
 		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
 		auto newerSize = sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
 		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, reinterpret_cast<StringBufferPtr>(getCurrentStringBuffer().data()));
+		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data());
 		if (newPtr) {
-			newerSize = reinterpret_cast<typename ValueType::value_type*>(newerPtr) - getCurrentStringBuffer().data();
+			newerSize = newerPtr - getCurrentStringBuffer().data();
 			value.resize(newerSize);
 			std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
 		}
@@ -119,7 +119,7 @@ namespace JsonifierInternal {
 		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
 	}
 
-	template<bool printErrors, VectorT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
+	template<bool printErrors, ArrayT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
 		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 			return;
 		}
@@ -178,7 +178,7 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					continue;
 				}
-				const Jsonifier::StringView key{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					continue;
 				}
@@ -254,9 +254,9 @@ namespace JsonifierInternal {
 		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
 		auto newerSize = sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
 		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, reinterpret_cast<StringBufferPtr>(getCurrentStringBuffer().data()));
+		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data());
 		if (newPtr) {
-			newerSize = reinterpret_cast<typename ValueType::value_type*>(newerPtr) - getCurrentStringBuffer().data();
+			newerSize = newerPtr - getCurrentStringBuffer().data();
 			value.resize(newerSize);
 			std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
 		}
@@ -294,7 +294,7 @@ namespace JsonifierInternal {
 		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
 	}
 
-	template<bool printErrors, VectorT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
+	template<bool printErrors, ArrayT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
 		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 			return;
 		}
@@ -353,7 +353,7 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					continue;
 				}
-				const Jsonifier::StringView key{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					continue;
 				}
@@ -409,7 +409,7 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					return;
 				}
-				const Jsonifier::StringView key{ reinterpret_cast<const char*>(*start) + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					return;
 				}
@@ -437,17 +437,17 @@ namespace JsonifierInternal {
 					Derailleur<printErrors>::skipValue(iter);
 				}
 			} else {
-				ParseNoKeys::op<printErrors>(getCurrentStringBuffer(), iter);
+				ParseWithKeys::op<printErrors>(getCurrentStringBuffer(), iter);
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					return;
 				}
 
 				if constexpr (StringT<typename ValueType::key_type>) {
-					ParseNoKeys::op<printErrors>(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+					ParseWithKeys::op<printErrors>(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
 				} else {
 					static thread_local typename ValueType::key_type key_value{};
-					ParseNoKeys::op<printErrors>(key_value, iter);
-					ParseNoKeys::op<printErrors>(value[key_value], iter);
+					ParseWithKeys::op<printErrors>(key_value, iter);
+					ParseWithKeys::op<printErrors>(value[key_value], iter);
 				}
 			}
 		}
