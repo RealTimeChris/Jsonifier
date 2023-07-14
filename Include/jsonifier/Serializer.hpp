@@ -45,7 +45,7 @@ namespace JsonifierInternal {
 
 		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<VectorT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
+		template<ArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
 		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
@@ -71,7 +71,7 @@ namespace JsonifierInternal {
 
 		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
-		template<VectorT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
+		template<ArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 
 		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, size_t& index);
 

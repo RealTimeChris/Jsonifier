@@ -27,7 +27,7 @@
 
 namespace Jsonifier {
 
-	struct RawJsonData : public JsonifierInternal::Relational<RawJsonData> {
+	struct RawJsonData {
 		inline RawJsonData() noexcept = default;
 
 		inline RawJsonData& operator=(bool value) noexcept {

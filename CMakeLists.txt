@@ -33,13 +33,17 @@ project(
     LANGUAGES CXX
 )
 
+set(CMAKE_CXX_STANDARD 20)
+
 add_library("${PROJECT_NAME}" INTERFACE)
 
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/DetectArchitecture.cmake")
+if(NOT DEFINED AVX_TYPE)
+	include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/DetectArchitecture.cmake")
+endif()
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES
@@ -57,27 +61,24 @@ target_include_directories(
 
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
-	"AVX_TYPE=${AVX_TYPE}"
+	"${AVX_TYPE}"
 )
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/Zi>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
 	"${AVX_FLAG}"
 )
 
 target_link_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-)
-
-target_compile_features(
-	"${PROJECT_NAME}" INTERFACE
-	"$<$<CXX_COMPILER_ID:GNU>:cxx_std_23>"
-	"$<$<CXX_COMPILER_ID:CLANG>:cxx_std_23>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

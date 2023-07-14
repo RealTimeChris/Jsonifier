@@ -23,9 +23,10 @@
 /// Feb 3, 2023
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4251)
+#ifndef __GNUC__
+	#pragma warning(push)
+	#pragma warning(disable : 4244)
+#endif
 
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/StringView.hpp>
@@ -42,6 +43,7 @@
 #include <concepts>
 #include <iostream>
 #include <variant>
+#include <utility>
 #include <vector>
 #include <chrono>
 #include <bitset>
@@ -56,8 +58,8 @@ namespace JsonifierInternal {
 		static_assert(std::is_integral<ValueType>::value || std::is_enum<ValueType>::value,
 			"Hash only supports integral types, specialize for other types.");
 
-		inline constexpr size_t operator()(ValueType const& value, size_t seed) const {
-			size_t key = seed ^ static_cast<size_t>(value);
+		inline constexpr uint64_t operator()(ValueType const& value, uint64_t seed) const {
+			uint64_t key = seed ^ static_cast<uint64_t>(value);
 			key = (~key) + (key << 21);
 			key = key ^ (key >> 24);
 			key = (key + (key << 3)) + (key << 8);
@@ -92,13 +94,13 @@ namespace JsonifierInternal {
 	} && !ComplexT<ValueType> && !Range<ValueType>;
 
 	template<typename ValueType>
-	concept MapSubscriptable = requires(ValueType value) {
-		{ value[std::declval<typename ValueType::key_type>()] } -> std::same_as<typename ValueType::mapped_type&>;
+	concept MapSubscriptable = requires(ValueType value, typename ValueType::key_type keyNew) {
+		{ value[keyNew] } -> std::same_as<typename ValueType::mapped_type&>;
 	};
 
 	template<typename ValueType>
 	concept VectorSubscriptable = requires(ValueType value) {
-		{ value[size_t{}] } -> std::same_as<typename ValueType::value_type&>;
+		{ value[uint64_t{}] } -> std::same_as<typename ValueType::value_type&>;
 	};
 
 	template<typename ValueType>
@@ -109,7 +111,7 @@ namespace JsonifierInternal {
 
 	template<typename ValueType>
 	concept HasSize = requires(ValueType value) {
-		{ value.size() } -> std::same_as<size_t>;
+		{ value.size() } -> std::same_as<uint64_t>;
 	};
 
 	template<typename ValueType>
@@ -118,7 +120,7 @@ namespace JsonifierInternal {
 	};
 
 	template<typename ValueType>
-	concept HasSubstr = requires(ValueType value, const size_t pos, size_t len) {
+	concept HasSubstr = requires(ValueType value, const uint64_t pos, uint64_t len) {
 		{ value.substr(pos, len) } -> std::same_as<ValueType>;
 	};
 
@@ -130,21 +132,31 @@ namespace JsonifierInternal {
 	concept BoolT = std::same_as<RefUnwrap<ValueType>, bool>;
 
 	template<typename ValueType>
-	concept IntT = std::integral<RefUnwrap<ValueType>> && !CharT<RefUnwrap<ValueType>> && !BoolT<ValueType>;
+	concept FloatT = std::floating_point<std::decay_t<ValueType>> && !BoolT<std::decay_t<ValueType>>;
 
 	template<typename ValueType>
-	concept NumT = std::floating_point<RefUnwrap<ValueType>> || IntT<ValueType>;
+	concept SignedT = std::signed_integral<std::decay_t<ValueType>> && !BoolT<std::decay_t<ValueType>>;
+
+	template<typename ValueType>
+	concept UnsignedT = std::unsigned_integral<std::decay_t<ValueType>> && !BoolT<std::decay_t<ValueType>> && !SignedT<ValueType>;
+
+	template<typename ValueType>
+	concept NumT = FloatT<ValueType> || UnsignedT<ValueType> || SignedT<ValueType>;
 
 	template<typename ValueType>
 	concept StringT = HasSubstr<std::remove_const_t<ValueType>> && HasData<std::remove_const_t<ValueType>> &&
-		HasSize<std::remove_const_t<ValueType>> && !std::same_as<char, std::remove_const_t<ValueType>>;
+			HasSize<std::remove_const_t<ValueType>> && !std::same_as<char, std::remove_const_t<ValueType>> ||
+		std::derived_from<ValueType, std::string>;
 
 	template<typename ValueType>
-	concept MapT = !ComplexT<ValueType> && !StringT<ValueType> && MapSubscriptable<ValueType>;
+	concept MapT = requires(ValueType data) {
+		typename ValueType::mapped_type;
+		typename ValueType::key_type;
+	} && Range<ValueType> && MapSubscriptable<ValueType> && !StringT<ValueType> && !ComplexT<ValueType>;
 
 	template<typename ValueType>
-	concept EmplaceBackable = requires(ValueType value) {
-		{ value.emplace_back(std::declval<typename ValueType::value_type&>()) };
+	concept HasEmplaceBack = requires(ValueType data, typename ValueType::value_type&& valueNew) {
+		{ data.emplace_back(valueNew) } -> std::same_as<typename ValueType::value_type&>;
 	};
 
 	template<typename ValueType>
@@ -175,9 +187,9 @@ namespace JsonifierInternal {
 
 	template<typename... Args> inline constexpr bool FalseV = FalseT<Args...>::value;
 
-	template<size_t strLength> class StringLiteral {
+	template<uint64_t strLength> class StringLiteral {
 	  public:
-		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
+		static constexpr uint64_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
 		inline constexpr StringLiteral() noexcept = default;
 
@@ -197,7 +209,7 @@ namespace JsonifierInternal {
 			return string + sizeVal;
 		}
 
-		inline constexpr size_t size() const noexcept {
+		inline constexpr uint64_t size() const noexcept {
 			return sizeVal;
 		}
 
@@ -217,19 +229,19 @@ namespace JsonifierInternal {
 	template<typename ValueType>
 	concept StdTupleT = IsSpecializationV<ValueType, Tuplet::Tuple>::value || IsSpecializationV<ValueType, Pair>::value;
 
-	template<typename = void, size_t... Is> inline constexpr auto indexer(std::index_sequence<Is...>) {
-		return [](auto&& f) -> decltype(auto) {
-			return decltype(f)(f)(std::integral_constant<size_t, Is>{}...);
+	template<class = void, std::size_t... Is> inline constexpr auto indexer(std::index_sequence<Is...>) noexcept {
+		return [](auto&& f) noexcept -> decltype(auto) {
+			return decltype(f)(f)(std::integral_constant<std::size_t, Is>{}...);
 		};
 	}
 
-	template<size_t n> inline constexpr auto indexer() {
-		return indexer(std::make_index_sequence<n>());
+	template<uint64_t n> inline constexpr auto indexer() {
+		return indexer(std::make_index_sequence<n>{});
 	}
 
-	template<size_t n, typename Func> inline constexpr auto forEach(Func&& f) {
-		return indexer<n>()([&](auto&&... x) {
-			(std::forward<Func>(f)(x), ...);
+	template<uint64_t n, typename Func> inline constexpr auto forEach(Func&& f) {
+		return indexer<n>()([&](auto&&... i) {
+			(std::forward<Func>(f)(i), ...);
 		});
 	}
 
@@ -239,7 +251,7 @@ namespace JsonifierInternal {
 
 	template<const Jsonifier::StringView&... Strings> inline constexpr Jsonifier::StringView join() {
 		constexpr auto joinedArr = []() {
-			constexpr size_t len = (Strings.size() + ... + 0);
+			constexpr uint64_t len = (Strings.size() + ... + 0);
 			RawArray<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
@@ -256,23 +268,24 @@ namespace JsonifierInternal {
 	template<const Jsonifier::StringView&... Strings> constexpr auto JoinV = join<Strings...>();
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		return value.*member_ptr;
+		using ValueType = std::decay_t<decltype(member_ptr)>;
+		if constexpr (std::is_member_object_pointer_v<ValueType>) {
+			return value.*member_ptr;
+		} else if constexpr (std::is_member_function_pointer_v<ValueType>) {
+			return member_ptr;
+		} else if constexpr (std::invocable<ValueType, decltype(value)>) {
+			return std::invoke(member_ptr, value);
+		} else if constexpr (std::is_pointer_v<ValueType>) {
+			return *member_ptr;
+		} else {
+			return member_ptr;
+		}
 	}
 
 	template<typename ValueType, typename mptr_t> using MemberT = decltype(getMember(std::declval<ValueType>(), std::declval<RefUnwrap<mptr_t>&>()));
 
 	template<typename ValueType>
-	concept Emplaceable = requires(ValueType value) {
-		{ value.emplace(std::declval<typename ValueType::value_type>()) };
-	};
-
-	template<typename ValueType>
-	concept PushBackable = requires(ValueType value) {
-		{ value.push_back(std::declval<typename ValueType::value_type>()) };
-	};
-
-	template<typename ValueType>
-	concept Resizeable = requires(ValueType value) { value.resize(0); };
+	concept HasResize = requires(ValueType value) { value.resize(0); };
 }
 
 namespace Jsonifier {
@@ -330,7 +343,7 @@ namespace JsonifierInternal {
 	concept EnumT = std::is_enum<ValueType>::value;
 
 	template<typename ValueType> inline auto dataPtr(ValueType& buffer) {
-		if constexpr (Resizeable<ValueType>) {
+		if constexpr (HasResize<ValueType>) {
 			return buffer.data();
 		} else {
 			return buffer;
@@ -338,54 +351,54 @@ namespace JsonifierInternal {
 	}
 
 	template<typename ValueType>
-	concept VectorT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
-						  EmplaceBackable<ValueType> )&&!JsonifierArrayT<ValueType> &&
-		!TupleT<ValueType> && !HasSubstr<ValueType>;
+	concept ArrayT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
+						 HasEmplaceBack<ValueType> )&&!JsonifierArrayT<ValueType> &&
+		!TupleT<ValueType> && !HasSubstr<ValueType> && requires(ValueType data) { typename ValueType::value_type; };
 
 	template<typename ValueType>
 	concept RawArrayT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
-							!EmplaceBackable<ValueType> )&&!JsonifierArrayT<ValueType> &&
-		!TupleT<ValueType> && !HasSubstr<ValueType> && !Resizeable<ValueType>;
+							!HasEmplaceBack<ValueType> )&&!JsonifierArrayT<ValueType> &&
+		!TupleT<ValueType> && !HasSubstr<ValueType> && !HasResize<ValueType>;
 
 	template<typename ValueType>
-	concept VectorLike = Resizeable<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType>;
+	concept VectorLike = HasResize<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType>;
 
 	template<typename ValueType>
 	concept CoreType = IsSpecializationV<Jsonifier::Core<ValueType>, Jsonifier::Core>::value;
 
 	template<TimeT TimeType> class StopWatch {
 	  public:
+		inline StopWatch() = default;
+
 		using HRClock = std::chrono::high_resolution_clock;
 
-		inline StopWatch() = delete;
-
-		inline StopWatch<TimeType>& operator=(StopWatch<TimeType>&& data) noexcept {
+		inline StopWatch& operator=(StopWatch&& data) noexcept {
 			maxNumberOfTimeUnits.store(data.maxNumberOfTimeUnits.load());
 			startTime.store(data.startTime.load());
 			return *this;
 		}
 
-		inline StopWatch(StopWatch<TimeType>&& other) noexcept = default;
+		inline StopWatch(StopWatch&& other) noexcept {
+			*this = std::move(other);
+		}
 
-		inline StopWatch(TimeType maxNumberOfMsNew) noexcept {
-			maxNumberOfTimeUnits.store(maxNumberOfMsNew);
+		StopWatch& operator=(const StopWatch& data) = delete;
+		StopWatch(const StopWatch& other) = delete;
+
+		inline StopWatch(TimeType maxNumberOfTimeUnitsNew) {
+			maxNumberOfTimeUnits.store(maxNumberOfTimeUnitsNew);
 			resetTimer();
 		}
 
-		inline StopWatch(int64_t maxNumberOfMsNew) noexcept {
-			maxNumberOfTimeUnits.store(TimeType{ maxNumberOfMsNew });
-			resetTimer();
-		}
-
-		inline TimeType totalTimePassed() noexcept {
+		inline TimeType totalTimePassed() {
 			return std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()) - startTime.load();
 		}
 
-		inline TimeType getTotalWaitTime() noexcept {
+		inline TimeType getTotalWaitTime() {
 			return maxNumberOfTimeUnits.load();
 		}
 
-		inline bool hasTimePassed() noexcept {
+		inline bool hasTimePassed() {
 			if (std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()) - startTime.load() >= maxNumberOfTimeUnits.load()) {
 				return true;
 			} else {
@@ -393,7 +406,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline void resetTimer() noexcept {
+		inline void resetTimer() {
 			startTime.store(std::chrono::duration_cast<TimeType>(HRClock::now().time_since_epoch()));
 		}
 
@@ -401,4 +414,6 @@ namespace JsonifierInternal {
 		std::atomic<TimeType> maxNumberOfTimeUnits{ TimeType{ 0 } };
 		std::atomic<TimeType> startTime{ TimeType{ 0 } };
 	};
+
+	template<TimeT TimeType> StopWatch(TimeType) -> StopWatch<TimeType>;
 }

@@ -164,12 +164,12 @@ namespace JsonifierInternal {
 		}
 
 		inline static bool isTypeType(uint8_t c) {
-			const char array01[]{ "0123456789-ftn\"{[" };
+			const uint8_t array01[]{ "0123456789-ftn\"{[" };
 			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 
 		inline static bool isDigitType(uint8_t c) {
-			const char array01[]{ "0123456789-" };
+			const uint8_t array01[]{ "0123456789-" };
 			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 

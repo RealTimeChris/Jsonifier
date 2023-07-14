@@ -23,25 +23,11 @@
 /// Feb 20, 2023
 #pragma once
 
+#include <jsonifier/Allocator.hpp>
+#include <jsonifier/Iterator.hpp>
 #include <jsonifier/Compare.hpp>
 #include <memory_resource>
 #include <source_location>
-
-#ifndef NO_UNIQUE_ADDRESS
-	#ifdef __has_cpp_attribute
-		#if __has_cpp_attribute(no_unique_address)
-			#ifdef _MSC_VER
-				#define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-			#else
-				#define NO_UNIQUE_ADDRESS [[no_unique_address]]
-			#endif
-		#else
-			#define NO_UNIQUE_ADDRESS
-		#endif
-	#else
-		#define NO_UNIQUE_ADDRESS
-	#endif
-#endif
 
 #ifdef __linux__
 	#ifndef _tzcnt_u16
@@ -58,172 +44,11 @@ namespace JsonifierInternal {
 		lhs = std::move(rhs);
 		rhs = std::move(temp);
 	}
-
-	template<typename OTy> struct Relational {
-		inline friend bool operator!=(const OTy& lhs, const OTy& rhs) {
-			return !(lhs == rhs);
-		}
-
-	  protected:
-		Relational() noexcept = default;
-	};
-
-	template<typename ValueType> class Iterator {
-	  public:
-		using iterator_concept = std::bidirectional_iterator_tag;
-		using value_type = ValueType;
-		using difference_type = ptrdiff_t;
-		using pointer = const value_type*;
-		using reference = const value_type&;
-		using size_type = size_t;
-
-		inline constexpr Iterator() noexcept = default;
-
-		inline constexpr Iterator(const pointer _Data, const size_type _Size, const size_type offsetNew) noexcept
-			: dataVal(_Data), offset(offsetNew) {
-		}
-
-		inline constexpr reference operator*() const noexcept {
-			return dataVal[offset];
-		}
-
-		inline constexpr pointer operator->() const noexcept {
-			return dataVal + offset;
-		}
-
-		inline constexpr Iterator& operator++() noexcept {
-			++offset;
-			return *this;
-		}
-
-		inline constexpr Iterator operator++(int32_t) noexcept {
-			Iterator temp{ *this };
-			++*this;
-			return temp;
-		}
-
-		inline constexpr Iterator& operator--() noexcept {
-			--offset;
-			return *this;
-		}
-
-		inline constexpr Iterator operator--(int32_t) noexcept {
-			Iterator temp{ *this };
-			--*this;
-			return temp;
-		}
-
-		inline constexpr Iterator& operator+=(const difference_type offsetNew) noexcept {
-			offset += static_cast<size_type>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr Iterator operator+(const difference_type offsetNew) const noexcept {
-			Iterator temp{ *this };
-			temp += offsetNew;
-			return temp;
-		}
-
-		inline constexpr Iterator operator+(const difference_type offsetNew) noexcept {
-			*this += offsetNew;
-			return *this;
-		}
-
-		inline constexpr Iterator& operator-=(const difference_type offsetNew) noexcept {
-			offset -= static_cast<size_type>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr Iterator operator-(const difference_type offsetNew) const noexcept {
-			Iterator temp{ *this };
-			temp -= offsetNew;
-			return temp;
-		}
-
-		inline constexpr difference_type operator-(const Iterator& rhs) const noexcept {
-			return static_cast<difference_type>(offset - rhs.offset);
-		}
-
-		inline constexpr reference operator[](const difference_type offsetNew) const noexcept {
-			return *(*this + offsetNew);
-		}
-
-		inline constexpr bool operator==(const Iterator& rhs) const noexcept {
-			return offset == rhs.offset;
-		}
-
-		inline constexpr bool operator!=(const Iterator& rhs) const noexcept {
-			return !(*this == rhs);
-		}
-
-		inline constexpr bool operator<(const Iterator& rhs) const noexcept {
-			return offset < rhs.offset;
-		}
-
-		inline constexpr bool operator>(const Iterator& rhs) const noexcept {
-			return rhs < *this;
-		}
-
-		inline constexpr bool operator<=(const Iterator& rhs) const noexcept {
-			return !(rhs < *this);
-		}
-
-		inline constexpr bool operator>=(const Iterator& rhs) const noexcept {
-			return !(*this < rhs);
-		}
-
-	  protected:
-		pointer dataVal = nullptr;
-		size_type offset = 0;
-	};
-
-	template<typename ValueType> class AllocWrapper {
-	  public:
-		using value_type = ValueType;
-		using pointer = value_type*;
-		using size_type = size_t;
-		using allocator = std::pmr::polymorphic_allocator<value_type>;
-		using allocator_traits = std::allocator_traits<allocator>;
-
-		inline constexpr AllocWrapper() noexcept = default;
-
-		inline constexpr AllocWrapper& operator=(AllocWrapper&& other) noexcept {
-			return *this;
-		};
-
-		inline constexpr AllocWrapper(AllocWrapper&& other) noexcept {};
-
-		inline constexpr AllocWrapper& operator=(const AllocWrapper& other) noexcept {
-			return *this;
-		};
-
-		inline constexpr AllocWrapper(const AllocWrapper& other) noexcept {};
-
-		inline constexpr pointer allocate(size_type count) noexcept {
-			return allocTraits.allocate(alloc, count);
-		}
-
-		inline constexpr void deallocate(pointer ptr, size_type count) noexcept {
-			allocTraits.deallocate(alloc, ptr, count);
-		}
-
-		template<typename... Args> inline constexpr void construct(pointer ptr, Args... args) noexcept {
-			allocTraits.construct(alloc, ptr, args...);
-		}
-
-		inline constexpr void destroy(pointer ptr) noexcept {
-			allocTraits.destroy(alloc, ptr);
-		}
-
-	  protected:
-		NO_UNIQUE_ADDRESS allocator_traits allocTraits{};
-		NO_UNIQUE_ADDRESS allocator alloc{};
-	};
 }
 
 namespace Jsonifier {
 
-	template<typename ValueType> class Vector : public JsonifierInternal::Relational<Vector<ValueType>> {
+	template<typename ValueType> class Vector : public JsonifierInternal::AllocWrapper<ValueType> {
 	  public:
 		using value_type = ValueType;
 		using pointer = value_type*;
@@ -248,17 +73,7 @@ namespace Jsonifier {
 			*this = std::move(other);
 		}
 
-		inline constexpr Vector& operator=(const std::initializer_list<value_type>& initList) {
-			resize(initList.size());
-			std::memcpy(data(), initList.begin(), sizeof(value_type) * sizeVal);
-			return *this;
-		}
-
-		inline constexpr explicit Vector(const std::initializer_list<value_type>& initList) {
-			*this = initList;
-		}
-
-		inline constexpr Vector& operator=(std::initializer_list<value_type>&& initList) {
+		inline constexpr Vector& operator=(std::initializer_list<value_type> initList) {
 			resize(initList.size());
 			for (size_type x = 0; x < sizeVal; ++x) {
 				values[x] = std::move(initList.begin()[x]);
@@ -266,8 +81,8 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline constexpr explicit Vector(std::initializer_list<value_type>&& initList) {
-			*this = std::forward<std::initializer_list<value_type>>(initList);
+		inline constexpr explicit Vector(std::initializer_list<value_type> initList) {
+			*this = initList;
 		}
 
 		inline explicit Vector(value_type&& other, size_type sizeNew) noexcept {
@@ -299,19 +114,19 @@ namespace Jsonifier {
 		}
 
 		inline constexpr const_iterator begin() const noexcept {
-			return const_iterator(values, sizeVal, 0);
+			return const_iterator(values, 0);
 		}
 
 		inline constexpr const_iterator end() const noexcept {
-			return const_iterator(values, sizeVal, sizeVal);
+			return const_iterator(values, sizeVal);
 		}
 
 		inline constexpr iterator begin() noexcept {
-			return iterator(values, sizeVal, 0);
+			return iterator(values, 0);
 		}
 
 		inline constexpr iterator end() noexcept {
-			return iterator(values, sizeVal, sizeVal);
+			return iterator(values, sizeVal);
 		}
 
 		inline constexpr reference front() noexcept {
@@ -346,30 +161,27 @@ namespace Jsonifier {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
-			allocator alloc{};
-			alloc.construct(&values[sizeVal++], c);
+			allocator::construct(&values[sizeVal++], c);
 		}
 
 		inline constexpr void emplace_back(value_type&& c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
-			allocator alloc{};
-			alloc.construct(&values[sizeVal++], std::forward<value_type>(c));
+			allocator::construct(&values[sizeVal++], std::forward<value_type>(c));
 		}
 
 		inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) {
 				if (sizeNew > capacityVal) {
-					allocator alloc{};
-					pointer newPtr = alloc.allocate(sizeNew);
+					pointer newPtr = allocator::allocate(sizeNew);
 					try {
 						if (values) {
 							std::uninitialized_move(values, values + sizeVal, newPtr);
-							alloc.deallocate(values, capacityVal);
+							allocator::deallocate(values, capacityVal);
 						}
 					} catch (...) {
-						alloc.deallocate(newPtr, sizeNew);
+						allocator::deallocate(newPtr, sizeNew);
 						throw;
 					}
 					capacityVal = sizeNew;
@@ -386,15 +198,14 @@ namespace Jsonifier {
 
 		inline void reserve(size_type capacityNew) {
 			if (capacityNew > capacityVal) {
-				allocator alloc{};
-				pointer newPtr = alloc.allocate(capacityNew);
+				pointer newPtr = allocator::allocate(capacityNew);
 				try {
 					if (values) {
 						std::uninitialized_move(values, values + sizeVal, newPtr);
-						alloc.deallocate(values, capacityVal);
+						allocator::deallocate(values, capacityVal);
 					}
 				} catch (...) {
-					alloc.deallocate(newPtr, capacityNew);
+					allocator::deallocate(newPtr, capacityNew);
 					throw;
 				}
 				capacityVal = capacityNew;
@@ -415,8 +226,7 @@ namespace Jsonifier {
 
 		inline constexpr ~Vector() {
 			if (values && capacityVal) {
-				allocator alloc{};
-				alloc.deallocate(values, capacityVal);
+				allocator::deallocate(values, capacityVal);
 			}
 		};
 

@@ -164,7 +164,7 @@ template<typename OTy> struct Test {
 	Test() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
-			for (size_t x = 0; x < 1000; ++x) {
+			for (uint64_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
@@ -243,7 +243,7 @@ template<typename OTy> struct AbcTest {
 	AbcTest() {
 		auto fill = [](auto& v) {
 			v.resize(1000);
-			for (size_t x = 0; x < 1000; ++x) {
+			for (uint64_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, std::string> || std::same_as<OTy, std::string>) {
 					v[x] = std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
 						std::to_string(1000000000000000) + std::to_string(1000000000000000) + std::to_string(1000000000000000) +
@@ -317,31 +317,31 @@ template<> struct Jsonifier::Core<AbcTest<double>> {
 };
 
 #ifdef NDEBUG
-constexpr static size_t iterations = 1000;
-constexpr static size_t iterations_abc = 1000;
+constexpr static uint64_t iterations = 1000;
+constexpr static uint64_t iterations_abc = 1000;
 #else
-constexpr static size_t iterations = 1;
-constexpr static size_t iterations_abc = 1;
+constexpr static uint64_t iterations = 1;
+constexpr static uint64_t iterations_abc = 1;
 #endif
 
 struct results {
 	std::string name{};
 	std::string url{};
-	size_t iterations{};
+	uint64_t iterations{};
 
-	std::optional<size_t> json_byte_length_uint64{};
+	std::optional<uint64_t> json_byte_length_uint64{};
 	std::optional<double> json_read_uint64{};
 	std::optional<double> json_write_uint64{};
-	std::optional<size_t> json_byte_length_double{};
+	std::optional<uint64_t> json_byte_length_double{};
 	std::optional<double> json_read_double{};
 	std::optional<double> json_write_double{};
-	std::optional<size_t> json_byte_length_int64{};
+	std::optional<uint64_t> json_byte_length_int64{};
 	std::optional<double> json_read_int64{};
 	std::optional<double> json_write_int64{};
-	std::optional<size_t> json_byte_length_string{};
+	std::optional<uint64_t> json_byte_length_string{};
 	std::optional<double> json_read_string{};
 	std::optional<double> json_write_string{};
-	std::optional<size_t> json_byte_length{};
+	std::optional<uint64_t> json_byte_length{};
 	std::optional<double> json_read{};
 	std::optional<double> json_write{};
 
@@ -414,8 +414,8 @@ struct results {
 		std::string finalString{};
 		bool wasThereOneBeforeThis{ false };
 		if (json_read) {
-			write = json_write ? fmt::format("{}", static_cast<size_t>(*json_byte_length / (*json_write) * 1000.0f)) : "N/A";
-			read = json_read ? fmt::format("{}", static_cast<size_t>(*json_byte_length / (*json_read) * 1000.0f)) : "N/A";
+			write = json_write ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length / (*json_write) * 1000.0f)) : "N/A";
+			read = json_read ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length / (*json_read) * 1000.0f)) : "N/A";
 			finalString = fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Mixed", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -423,8 +423,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_double ? fmt::format("{}", static_cast<size_t>(*json_byte_length_double / (*json_write_double) * 1000.0f)) : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_double / (*json_read_double) * 1000.0f));
+			write = json_write_double ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length_double / (*json_write_double) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<uint64_t>(*json_byte_length_double / (*json_read_double) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Double", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -432,8 +432,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_string ? fmt::format("{}", static_cast<size_t>(*json_byte_length_string / (*json_write_string) * 1000.0f)) : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_string / (*json_read_string) * 1000.0f));
+			write = json_write_string ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length_string / (*json_write_string) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<uint64_t>(*json_byte_length_string / (*json_read_string) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "String", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -441,8 +441,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_uint64 ? fmt::format("{}", static_cast<size_t>(*json_byte_length_uint64 / (*json_write_uint64) * 1000.0f)) : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_uint64 / (*json_read_uint64) * 1000.0f));
+			write = json_write_uint64 ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length_uint64 / (*json_write_uint64) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<uint64_t>(*json_byte_length_uint64 / (*json_read_uint64) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Uint64", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -450,8 +450,8 @@ struct results {
 			if (wasThereOneBeforeThis) {
 				finalString += +"\n";
 			}
-			write = json_write_int64 ? fmt::format("{}", static_cast<size_t>(*json_byte_length_int64 / (*json_write_int64) * 1000.0f)) : "N/A";
-			read = fmt::format("{}", static_cast<size_t>(*json_byte_length_int64 / (*json_read_int64) * 1000.0f));
+			write = json_write_int64 ? fmt::format("{}", static_cast<uint64_t>(*json_byte_length_int64 / (*json_write_int64) * 1000.0f)) : "N/A";
+			read = fmt::format("{}", static_cast<uint64_t>(*json_byte_length_int64 / (*json_read_int64) * 1000.0f));
 			finalString += fmt::format("| [**{}**]({}) | **{}** | **{}** | **{}** |", name, url, "Int64", write, read);
 			wasThereOneBeforeThis = true;
 		}
@@ -468,12 +468,14 @@ class FileLoader {
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
 		this->fileContents = inputStream.str();
+		theStream.close();
 	}
 
 	void saveFile(std::string fileToSave) {
 		auto theStream = std::ofstream{ filePath, std::ios::out | std::ios::in };
 		theStream << "";
 		theStream.write(fileToSave.data(), fileToSave.size());
+		theStream.close();
 	}
 
 	operator std::string() {
@@ -481,24 +483,22 @@ class FileLoader {
 	}
 
 	~FileLoader() {
-		theStream.close();
 	}
 
   protected:
-	std::string filePath{};
 	std::string fileContents{};
-	std::ofstream theStream{};
+	std::string filePath{};
 };
 
-template<typename Function> size_t benchmark(Function function, size_t iterationCount) {
-	size_t currentLowestTime{ std::numeric_limits<uint64_t>::max() };
-	for (size_t x = 0; x < iterationCount; ++x) {
+template<typename Function> double benchmark(Function function, int64_t iterationCount) {
+	int64_t currentLowestTime{ std::numeric_limits<int64_t>::max() };
+	for (int64_t x = 0; x < iterationCount; ++x) {
 		auto startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 		function();
 		auto endTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 		auto newTime = endTime - startTime;
-		if (newTime.count() < currentLowestTime) {
-			currentLowestTime = newTime.count();
+		if (static_cast<double>(newTime.count()) < currentLowestTime) {
+			currentLowestTime = static_cast<double>(newTime.count());
 		}
 	}
 	return currentLowestTime;
@@ -1593,7 +1593,7 @@ template<typename OTy, typename OTy2> void simdPull(const char* x, OTy2& obj, si
 			obj.x.resize(1000); \
 		} \
 		int32_t currentIndex{}; \
-		for (std::string_view value: newX) { \
+		for (const std::string_view& value: newX) { \
 			obj.x[currentIndex] = static_cast<std::string>(value); \
 			++currentIndex; \
 		} \
@@ -1735,19 +1735,19 @@ bool on_demand::read_in_order(obj_t& obj, const padded_string& json) {
 
 	ondemand::array int_array = fixed_object["int_array"];
 	obj.fixed_object.int_array.clear();
-	for (int64_t x: int_array) {
+	for (const int64_t& x: int_array) {
 		obj.fixed_object.int_array.emplace_back(x);
 	}
 
 	ondemand::array float_array = fixed_object["float_array"];
 	obj.fixed_object.float_array.clear();
-	for (double x: float_array) {
+	for (const double& x: float_array) {
 		obj.fixed_object.float_array.emplace_back(static_cast<float>(x));
 	}
 
 	ondemand::array double_array = fixed_object["double_array"];
 	obj.fixed_object.double_array.clear();
-	for (double x: double_array) {
+	for (const double& x: double_array) {
 		obj.fixed_object.double_array.emplace_back(x);
 	}
 
@@ -1767,7 +1767,7 @@ bool on_demand::read_in_order(obj_t& obj, const padded_string& json) {
 	ondemand::array v3s = nested_object["v3s"];
 	obj.another_object.nested_object.v3s.clear();
 	for (ondemand::array v3: v3s) {
-		size_t i = 0;
+		uint64_t i = 0;
 		auto& back = obj.another_object.nested_object.v3s.emplace_back();
 		for (double x: v3) {
 			back[i++] = x;
@@ -1778,8 +1778,8 @@ bool on_demand::read_in_order(obj_t& obj, const padded_string& json) {
 
 	ondemand::array string_array = doc["string_array"];
 	obj.string_array.resize(string_array.count_elements());
-	size_t index = 0;
-	for (std::string_view x: string_array) {
+	uint64_t index = 0;
+	for (const std::string_view& x: string_array) {
 		obj.string_array[index++] = x;
 	}
 
@@ -1799,10 +1799,13 @@ auto simdjson_test() {
 	obj_t obj{};
 
 	auto error = parser.read_in_order(obj, buffer);
+	if (error) {
+		std::cerr << "simdjson error" << std::endl;
+	}
 
 	auto result = benchmark(
 		[&]() {
-			const auto error = parser.read_in_order(obj, buffer);
+			error = parser.read_in_order(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1819,10 +1822,13 @@ auto simdjson_test() {
 	buffer = glz::write_json(objDouble);
 
 	error = parser.readDouble(objDouble, buffer);
+	if (error) {
+		std::cerr << "simdjson error" << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readDouble(objDouble, buffer);
+			error = parser.readDouble(objDouble, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1840,7 +1846,7 @@ auto simdjson_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readString(objString, buffer);
+			error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1858,7 +1864,7 @@ auto simdjson_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readInt64(objInt64, buffer);
+			error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1876,7 +1882,7 @@ auto simdjson_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readUint64(objUint64, buffer);
+			error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1898,11 +1904,11 @@ auto simdjson_single_test() {
 
 	obj_t obj{};
 
-	const auto error = parser.read_in_order(obj, buffer);
+	auto error = parser.read_in_order(obj, buffer);
 
 	auto result = benchmark(
 		[&]() {
-			const auto error = parser.read_in_order(obj, buffer);
+			error = parser.read_in_order(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1918,11 +1924,11 @@ auto simdjson_single_test() {
 	buffer.clear();
 	buffer = glz::write_json(objDouble);
 
-	auto errorNew = parser.readDouble(objDouble, buffer);
+	error = parser.readDouble(objDouble, buffer);
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readDouble(objDouble, buffer);
+			error = parser.readDouble(objDouble, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1936,11 +1942,11 @@ auto simdjson_single_test() {
 	buffer.clear();
 	buffer = glz::write_json(objString);
 
-	errorNew = parser.readString(objString, buffer);
+	error = parser.readString(objString, buffer);
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readString(objString, buffer);
+			error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1954,11 +1960,11 @@ auto simdjson_single_test() {
 	buffer.clear();
 	buffer = glz::write_json(objInt64);
 
-	errorNew = parser.readInt64(objInt64, buffer);
+	error = parser.readInt64(objInt64, buffer);
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readInt64(objInt64, buffer);
+			error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -1972,11 +1978,11 @@ auto simdjson_single_test() {
 	buffer.clear();
 	buffer = glz::write_json(objUint64);
 
-	errorNew = parser.readUint64(objUint64, buffer);
+	error = parser.readUint64(objUint64, buffer);
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readUint64(objUint64, buffer);
+			error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -2139,9 +2145,11 @@ auto simdjson_abc_test() {
 
 	std::string buffer = glz::write_json(obj);
 
+	auto error = parser.readDouble(obj, buffer);
+
 	auto result = benchmark(
 		[&]() {
-			const auto error = parser.readDouble(obj, buffer);
+			error = parser.readDouble(obj, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -2159,7 +2167,7 @@ auto simdjson_abc_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readString(objString, buffer);
+			error = parser.readString(objString, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -2175,7 +2183,7 @@ auto simdjson_abc_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readInt64(objInt64, buffer);
+			error = parser.readInt64(objInt64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -2191,7 +2199,7 @@ auto simdjson_abc_test() {
 
 	result = benchmark(
 		[&]() {
-			const auto error = parser.readUint64(objUint64, buffer);
+			error = parser.readUint64(objUint64, buffer);
 			if (error) {
 				std::cerr << "simdjson error" << std::endl;
 			}
@@ -2219,7 +2227,7 @@ std::string regular_test() {
 	std::string table{};
 	const auto n = results.size();
 	table += table_header + '\n';
-	for (size_t i = 0; i < n; ++i) {
+	for (uint64_t i = 0; i < n; ++i) {
 		table += results[i].json_stats();
 		if (i != n - 1) {
 			table += "\n";
@@ -2237,7 +2245,7 @@ std::string abc_test() {
 	std::string table{};
 	const auto n = results.size();
 	table += table_header + '\n';
-	for (size_t i = 0; i < n; ++i) {
+	for (uint64_t i = 0; i < n; ++i) {
 		table += results[i].json_stats();
 		if (i != n - 1) {
 			table += "\n";
@@ -2255,7 +2263,7 @@ std::string single_test() {
 	std::string table{};
 	const auto n = results.size();
 	table += table_header + '\n';
-	for (size_t i = 0; i < n; ++i) {
+	for (uint64_t i = 0; i < n; ++i) {
 		table += results[i].json_stats();
 		if (i != n - 1) {
 			table += "\n";
@@ -2266,34 +2274,6 @@ std::string single_test() {
 
 int main() {
 	try {
-		bool result{};
-		std::vector<std::string> vector01{};
-		vector01.resize(1024 * 1024);
-		vector01[1024 * 1024 - 2] = "TESTING";
-		std::vector<std::string> vector02{};
-		vector02.resize(1024 * 1024);
-		std::cout << "BENCHMARK 01: std::vector<std::string> of size 1024*1024: "
-				  << benchmark(
-						 [&] {
-							 result = vector01 == vector02;
-						 },
-						 1024)
-				  << std::endl;
-		std::cout << "EQUALS: " << result << std::endl;
-
-		Jsonifier::Vector<std::string> vector03{};
-		vector03.resize(1024 * 1024);
-		vector03[1024 * 1024 - 2] = "TESTING";
-		Jsonifier::Vector<std::string> vector04{};
-		vector04.resize(1024 * 1024);
-		std::cout << "BENCHMARK 02: Jsonifier::Vector<std::string> of size 1024*1024: "
-				  << benchmark(
-						 [&] {
-							 result = vector03 == vector04;
-						 },
-						 1024)
-				  << std::endl;
-		std::cout << "EQUALS: " << result << std::endl;
 		auto singlTestResults = single_test();
 		auto multiTestResults = regular_test();
 		auto abcTestResults = abc_test();

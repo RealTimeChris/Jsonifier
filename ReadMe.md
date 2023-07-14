@@ -1,6 +1,6 @@
 # Jsonifier
-![Commit Activity](https://img.shields.io/github/commit-activity/m/RealTimeChris/Jsonifier?color=999EE0&label=Commits)
-[![Lines of Code](https://sloc.xyz/github/boyter/scc/)](https://github.com/RealTimeChris/Jsonifier/)
+![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=flat)
+[![Lines of Code](https://sloc.xyz/github/realtimechris/jsonifier)](https://github.com/RealTimeChris/Jsonifier/)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
 ### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
@@ -174,7 +174,7 @@ Rebuild and run your application.
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\DiscordCoreAPI\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
 ```
 In the provided error message:
 

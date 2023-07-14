@@ -51,7 +51,7 @@ namespace JsonifierInternal {
 
 		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+		template<bool printErrors, ArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 	};
@@ -75,7 +75,7 @@ namespace JsonifierInternal {
 
 		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
-		template<bool printErrors, VectorT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+		template<bool printErrors, ArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
 
 		template<bool printErrors, ObjectT ValueType, HasFind KeyType>
 		static void op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys);
@@ -104,7 +104,8 @@ namespace JsonifierInternal {
 			if (inStringNew.empty()) {
 				return;
 			}
-			if (refreshString || (inStringNew.size() != section.getStringView().size() && section.getStringView() != inStringNew)) {
+			bool refreshStringNew{ refreshString };
+			if (refreshStringNew || (inStringNew.size() != string.size() && string != inStringNew)) {
 				reset(inStringNew);
 			}
 			auto newIter = begin();
@@ -124,9 +125,12 @@ namespace JsonifierInternal {
 
 	  protected:
 		SimdStringReader section{};
+		Jsonifier::StringBase<uint8_t> string{};
 
-		template<typename ValueType> inline void reset(ValueType& stringNew) {
-			section.reset(stringNew);
+		template<typename ValueType> inline void reset(const ValueType& stringNew) {
+			string.resize(stringNew.size());
+			std::memcpy(string.data(), stringNew.data(), stringNew.size());
+			section.reset(static_cast<Jsonifier::StringViewBase<uint8_t>>(string));
 		}
 
 		inline StructuralIterator begin() noexcept {
