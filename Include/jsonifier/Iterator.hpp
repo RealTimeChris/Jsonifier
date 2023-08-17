@@ -3,20 +3,20 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
@@ -29,110 +29,95 @@ namespace JsonifierInternal {
 
 	template<typename ValueType> class Iterator {
 	  public:
-		using iterator_concept = std::bidirectional_iterator_tag;
-		using value_type = ValueType;
-		using difference_type = ptrdiff_t;
-		using pointer = const value_type*;
-		using reference = const value_type&;
-		using size_type = size_t;
+		using iterator_concept	= std::contiguous_iterator_tag;
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type		= ValueType;
+		using difference_type	= ptrdiff_t;
+		using reference			= value_type&;
+		using pointer			= value_type*;
 
-		inline constexpr Iterator() noexcept = default;
+		constexpr Iterator(pointer pointerNew) noexcept : value{ pointerNew } {};
 
-		inline constexpr Iterator(const pointer ptrNew, const size_type offsetNew) noexcept : dataVal(ptrNew), offset(offsetNew) {
+		constexpr reference operator*() const {
+			return *value;
 		}
 
-		inline constexpr reference operator*() const noexcept {
-			return dataVal[offset];
+		constexpr pointer operator->() const {
+			return value;
 		}
 
-		inline constexpr pointer operator->() const noexcept {
-			return dataVal + offset;
-		}
-
-		inline constexpr Iterator& operator++() noexcept {
-			++offset;
+		constexpr Iterator& operator++() {
+			++value;
 			return *this;
 		}
 
-		inline constexpr Iterator operator++(int32_t) noexcept {
-			Iterator temp{ *this };
+		constexpr Iterator operator++(int32_t) {
+			Iterator temp = *this;
 			++*this;
 			return temp;
 		}
 
-		inline constexpr Iterator& operator--() noexcept {
-			--offset;
+		constexpr Iterator& operator--() {
+			--value;
 			return *this;
 		}
 
-		inline constexpr Iterator operator--(int32_t) noexcept {
-			Iterator temp{ *this };
+		constexpr Iterator operator--(int32_t) {
+			Iterator temp = *this;
 			--*this;
 			return temp;
 		}
 
-		inline constexpr Iterator& operator+=(const difference_type offsetNew) noexcept {
-			offset += static_cast<size_type>(offsetNew);
+		constexpr Iterator& operator+=(const difference_type iter) {
+			value += iter;
 			return *this;
 		}
 
-		inline constexpr Iterator operator+(const difference_type offsetNew) const noexcept {
-			Iterator temp{ *this };
-			temp += offsetNew;
+		constexpr Iterator operator+(const difference_type iter) const {
+			Iterator temp = *this;
+			temp += iter;
 			return temp;
 		}
 
-		inline constexpr Iterator operator+(const difference_type offsetNew) noexcept {
-			*this += offsetNew;
-			return *this;
+		constexpr Iterator& operator-=(const difference_type iter) {
+			return *this += -iter;
 		}
 
-		inline constexpr Iterator& operator-=(const difference_type offsetNew) noexcept {
-			offset -= static_cast<size_type>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr Iterator operator-(const difference_type offsetNew) const noexcept {
-			Iterator temp{ *this };
-			temp -= offsetNew;
+		constexpr Iterator operator-(const difference_type iter) const {
+			Iterator temp = *this;
+			temp -= iter;
 			return temp;
 		}
 
-		inline constexpr difference_type operator-(const Iterator& rhs) const noexcept {
-			return static_cast<difference_type>(offset - rhs.offset);
+		constexpr reference operator[](const difference_type iter) const {
+			return *(*this + iter);
 		}
 
-		inline constexpr reference operator[](const difference_type offsetNew) const noexcept {
-			return *(*this + offsetNew);
+		constexpr difference_type operator-(const Iterator& iter) const {
+			return value - iter.value;
 		}
 
-		inline constexpr bool operator==(const Iterator& rhs) const noexcept {
-			return offset == rhs.offset;
+		constexpr bool operator==(const Iterator& iter) const {
+			return value == iter.value;
 		}
 
-		inline constexpr bool operator!=(const Iterator& rhs) const noexcept {
-			return !(*this == rhs);
+		constexpr bool operator>=(const Iterator& iter) const {
+			return value >= iter.value;
 		}
 
-		inline constexpr bool operator<(const Iterator& rhs) const noexcept {
-			return offset < rhs.offset;
+		constexpr bool operator<=(const Iterator& iter) const {
+			return value <= iter.value;
 		}
 
-		inline constexpr bool operator>(const Iterator& rhs) const noexcept {
-			return rhs < *this;
+		constexpr bool operator>(const Iterator& iter) const {
+			return value > iter.value;
 		}
 
-		inline constexpr bool operator<=(const Iterator& rhs) const noexcept {
-			return !(rhs < *this);
+		constexpr bool operator<(const Iterator& iter) const {
+			return value < iter.value;
 		}
 
-		inline constexpr bool operator>=(const Iterator& rhs) const noexcept {
-			return !(*this < rhs);
-		}
-
-	  protected:
-		pointer dataVal = nullptr;
-		size_type offset = 0;
+		pointer value;
 	};
 
-}
+}// namespace JsonifierInternal

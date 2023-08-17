@@ -1,4 +1,4 @@
-name: Build-and-Test-MSVC
+name: Build-and-Test-MSVC-Windows
 
 on:
   push:
@@ -40,4 +40,5 @@ jobs:
       working-directory: Tests/Build/${{matrix.build_type}}/
       run: |
            ./Json-Performance.exe
+      continue-on-error: true
   

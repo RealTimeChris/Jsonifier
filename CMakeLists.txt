@@ -68,11 +68,17 @@ target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>" 
+	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"	
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
+	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
 	"${AVX_FLAG}"
 )
 

@@ -3,83 +3,99 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 3, 2023
 #pragma once
 
+#include <cstring>
 #include <immintrin.h>
 #include <iostream>
-#include <stdlib.h>
-#include <cstdint>
-#include <cstring>
 #include <limits>
+#include <stdlib.h>
 
-#ifdef max
+#if defined max
 	#undef max
 #endif
 
-#ifdef min
+#if defined min
 	#undef min
 #endif
 
 namespace JsonifierInternal {
 
-#ifdef T_AVX512
+	template<typename ValueType>
+	concept FloatingT = std::floating_point<ValueType>;
 
-	template<typename ValueType> inline __m128i gatherValues128(const ValueType str[sizeof(__m128) / sizeof(ValueType)]) {
-		alignas(32) float newArray[sizeof(__m128i) / sizeof(float)]{};
+#if defined T_AVX512
+
+	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
+		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
-	template<typename ValueType> inline __m256i gatherValues256(const ValueType str[sizeof(__m256) / sizeof(ValueType)]) {
+	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
 		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
 
-	template<typename ValueType> inline __m512i gatherValues512(const ValueType str[sizeof(__m512) / sizeof(ValueType)]) {
-		return _mm512_load_epi8(str);
+	template<typename ValueType> inline __m512i gatherValues512(const ValueType* str) {
+		return _mm512_loadu_epi64(str);
 	}
 
-	template<typename ValueType> inline uint64_t findSingleCharacter(const ValueType* str, uint64_t length, ValueType target) {
-		__m512i targetVec = _mm512_set1_epi8(target);
-		__m512i strVec = _mm512_load_epi8(str);
-		const uint64_t vecSize = sizeof(__m512i);
-		uint64_t remainingBytes = length;
+	template<FloatingT ValueType> inline __m128 gatherValues128(const ValueType* str) {
+		return _mm_load_ps(str);
+	}
 
-		uint64_t index = 0;
+	template<FloatingT ValueType> inline __m256 gatherValues256(const ValueType* str) {
+		return _mm256_load_ps(str);
+	}
+
+	template<FloatingT ValueType> inline __m512 gatherValues512(const ValueType* str) {
+		return _mm512_load_ps(str);
+	}
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint64_t vecSize = sizeof(__m512);
+		const __m512i targetVec			  = _mm512_set1_epi8(target);
+		uint64_t remainingBytes			  = length;
+		__m512i currentVec{};
+		uint64_t index{};
+		uint64_t mask{};
+
 		while (remainingBytes >= vecSize) {
-			uint64_t mask = _mm512_cmpeq_epi64_mask(targetVec, strVec);
+			currentVec = gatherValues512<ValueType01>(str);
+			mask	   = _mm512_cmpeq_epi8_mask(targetVec, currentVec);
 
-			if (mask != 0) {
-				uint64_t matchingIndex = _tzcnt_u64(mask);
-				return index + matchingIndex;
+			if (mask != 0xFFFFFFFF) {
+				uint64_t firstNonMatchMask = ~mask;
+				return index + _tzcnt_u64(firstNonMatchMask);
 			}
+
+			str += vecSize;
 			index += vecSize;
-			strVec = _mm512_load_epi8(str + index);
 			remainingBytes -= vecSize;
 		}
 
-		const ValueType* remainingStr = str + index;
 		for (uint64_t i = 0; i < remainingBytes; i++) {
-			if (remainingStr[i] == target) {
+			if (str[i] != target) {
 				return index + i;
 			}
 		}
@@ -87,201 +103,291 @@ namespace JsonifierInternal {
 		return std::numeric_limits<uint64_t>::max();
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept;
+	template<typename ValueType01, typename ValueType02> inline uint64_t findSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint64_t vecSize = sizeof(__m512);
+		const __m512i targetVec			  = _mm512_set1_epi8(target);
+		uint64_t remainingBytes{ length };
+		__m512i currentVec{};
+		uint64_t index{};
+		uint64_t mask{};
+		while (remainingBytes >= vecSize) {
+			currentVec = gatherValues512<ValueType01>(str);
+			mask	   = _mm512_cmpeq_epi8_mask(targetVec, currentVec);
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 16 };
-		auto destVector = gatherValues128<ValueType>(string1);
-		auto sourceVector = gatherValues128<ValueType>(string2);
-		if (static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi64(destVector, sourceVector))) != (std::numeric_limits<uint16_t>::max())) {
+			if (mask != 0) {
+				return index + _tzcnt_u64(mask);
+			}
+
+			str += vecSize;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		for (uint64_t i = 0; i < remainingBytes; i++) {
+			if (str[i] == target) {
+				return index + i;
+			}
+		}
+
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findLastSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint64_t vecSize = sizeof(__m512);
+		const __m512i targetVec			  = _mm512_set1_epi8(target);
+		uint64_t remainingBytes{};
+		__m512i currentVec{};
+		uint64_t index{ length };
+		uint64_t mask{};
+		str += length - vecSize;
+		while (remainingBytes >= 0) {
+			currentVec = gatherValues512<ValueType01>(str);
+			mask	   = _mm512_cmpeq_epi8_mask(targetVec, currentVec);
+
+			if (mask != 0) {
+				return index - _lzcnt_u64(mask);
+			}
+
+			str -= vecSize;
+			index -= vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		for (uint64_t i = remainingBytes; i > 0; --i) {
+			if (str[i] == target) {
+				return index + i;
+			}
+		}
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length);
+
+	template<typename ValueType, typename IndexType> inline uint64_t getIntervalCount(uint64_t originalLength) {
+		return originalLength * sizeof(ValueType) / sizeof(IndexType);
+	}
+
+	template<FloatingT ValueType01, FloatingT ValueType02> inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint16_t maskValue{ 0b0000000000001111 };
+
+		auto destVector	  = gatherValues128<ValueType01>(string1);
+		auto sourceVector = gatherValues128<ValueType02>(string2);
+		if (_mm_movemask_ps(_mm_cmpeq_ps(destVector, sourceVector)) != maskValue) {
 			return false;
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + 16, string2 + 16, remainder);
+
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues128<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues128<ValueType02>(string2 + x * vectorSize);
+			if (_mm_movemask_ps(_mm_cmpeq_ps(destVector, sourceVector)) != maskValue) {
+				return false;
+			}
 		}
+
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+
 		return true;
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 32 };
-		auto destVector = gatherValues128<ValueType01>(string1);
-		auto sourceVector = gatherValues128<ValueType02>(string1);
-		if (static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi64(destVector, sourceVector))) != (std::numeric_limits<uint32_t>::max())) {
+	template<typename ValueType01, typename ValueType02> inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint16_t maskValue{ 0xffff };
+		auto destVector	  = gatherValues128<ValueType01>(string1);
+		auto sourceVector = gatherValues128<ValueType02>(string2);
+		if (_mm_movemask_epi8(_mm_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
 			return false;
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + 32, string2 + 32, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues64(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 64 };
-		auto destVector = gatherValues512<ValueType>(string1);
-		auto sourceVector = gatherValues512<ValueType>(string2);
-		if (_mm512_cmpeq_epi64_mask(destVector, sourceVector) != (std::numeric_limits<uint64_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 64, string2 + 64, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues128(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 128 };
-		auto destVector = gatherValues512<ValueType>(string1);
-		auto sourceVector = gatherValues512<ValueType>(string2);
-		uint64_t result{ std::numeric_limits<uint64_t>::max() };
-		uint64_t cmp{ _mm512_cmpeq_epi64_mask(destVector, sourceVector) };
-		result = result & cmp;
-		destVector = gatherValues512<ValueType>(string1 + 64);
-		sourceVector = gatherValues512<ValueType>(string2 + 64);
-		cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-		result = result & cmp;
-		if (result != (std::numeric_limits<uint64_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 128, string2 + 128, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues256(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 256 };
-		auto destVector = gatherValues512<ValueType>(string1);
-		auto sourceVector = gatherValues512<ValueType>(string2);
-		uint64_t result{ std::numeric_limits<uint64_t>::max() };
-		uint64_t cmp{ _mm512_cmpeq_epi64_mask(destVector, sourceVector) };
-		result = result & cmp;
-		destVector = gatherValues512<ValueType>(string1 + 64);
-		sourceVector = gatherValues512<ValueType>(string2 + 64);
-		cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-		result = result & cmp;
-		destVector = gatherValues512<ValueType>(string1 + 128);
-		sourceVector = gatherValues512<ValueType>(string2 + 128);
-		cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-		result = result & cmp;
-		destVector = gatherValues512<ValueType>(string1 + 192);
-		sourceVector = gatherValues512<ValueType>(string2 + 192);
-		cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-		result = result & cmp;
-		if (result != (std::numeric_limits<uint64_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 256, string2 + 256, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues512(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 512 };
-		uint64_t intervalCount{ length / 512 };
-		auto destVector = gatherValues512<ValueType>(string1);
-		auto sourceVector = gatherValues512<ValueType>(string2);
-		uint64_t result{ std::numeric_limits<uint64_t>::max() };
-		uint64_t cmp{};
-		for (uint64_t x = intervalCount; x > 0; --x) {
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (1ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (1ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (2ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (2ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (3ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (3ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (4ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (4ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (5ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (5ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (6ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (6ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (7ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (7ull * 64));
-			cmp = _mm512_cmpeq_epi64_mask(destVector, sourceVector);
-			result = result & cmp;
-			destVector = gatherValues512<ValueType>(string1 + x * (8ull * 64));
-			sourceVector = gatherValues512<ValueType>(string2 + x * (8ull * 64));
-			if (result != (std::numeric_limits<uint64_t>::max())) {
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues128<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues128<ValueType02>(string2 + x * vectorSize);
+			if (_mm_movemask_epi8(_mm_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
 				return false;
 			}
 		}
 		if (remainder > 0) {
-			return compareValues(string1 + intervalCount * 64, string2 + intervalCount * 64, remainder);
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
 		}
 		return true;
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		if (length >= 512) {
-			return compareValues512(string1, string2, length);
-		} else if (length >= 256) {
-			return compareValues256(string1, string2, length);
-		} else if (length >= 128) {
-			return compareValues128(string1, string2, length);
-		} else if (length >= 64) {
+	template<FloatingT ValueType01, FloatingT ValueType02> inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint32_t maskValue{ 0b00000000000000000000000011111111 };
+		auto destVector	  = gatherValues256<ValueType01>(string1);
+		auto sourceVector = gatherValues256<ValueType02>(string2);
+		if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues256<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues256<ValueType02>(string2 + x * vectorSize);
+			if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint32_t maskValue{ 0xffffffff };
+		auto destVector	  = gatherValues256<ValueType01>(string1);
+		auto sourceVector = gatherValues256<ValueType02>(string2);
+		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues256<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues256<ValueType02>(string2 + x * vectorSize);
+			if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<FloatingT ValueType01, FloatingT ValueType02> inline bool compareValues64(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m512i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m512i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint64_t maskValue{ 0b0000000000000000000000000000000000000000000000001111111111111111 };
+		auto destVector	  = gatherValues512<ValueType01>(string1);
+		auto sourceVector = gatherValues512<ValueType02>(string2);
+		if (_mm512_cmpeq_epi8_mask(destVector, sourceVector) != maskValue) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues512<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues512<ValueType02>(string2 + x * vectorSize);
+			if (_mm512_cmpeq_epi8_mask(destVector, sourceVector) != maskValue) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues64(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m512i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m512i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint64_t maskValue{ 0xffffffffffffffff };
+		auto destVector	  = gatherValues512<ValueType01>(string1);
+		auto sourceVector = gatherValues512<ValueType02>(string2);
+		if (_mm512_cmpeq_epi8_mask(destVector, sourceVector) != maskValue) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues512<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues512<ValueType02>(string2 + x * vectorSize);
+			if (_mm512_cmpeq_epi8_mask(destVector, sourceVector) != maskValue) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		if (length >= 64) {
 			return compareValues64(string1, string2, length);
 		} else if (length >= 32) {
 			return compareValues32(string1, string2, length);
 		} else if (length >= 16) {
 			return compareValues16(string1, string2, length);
 		} else {
-			return (std::memcmp(string1, string2, length) == 0);
+			return (std::memcmp(string1, string2, length * sizeof(ValueType01)) == 0);
 		}
 	}
 
 #elif defined T_AVX2
 
-	template<typename ValueType> inline __m128i gatherValues128(const ValueType str[sizeof(__m128) / sizeof(ValueType)]) {
-		alignas(32) float newArray[sizeof(__m128i) / sizeof(float)]{};
+	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
+		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
-	template<typename ValueType> inline __m256i gatherValues256(const ValueType str[sizeof(__m256) / sizeof(ValueType)]) {
+	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
 		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
 
-	template<typename ValueType> inline uint64_t findSingleCharacter(const ValueType* str, uint64_t length, ValueType target) {
-		__m256i targetVec = _mm256_set1_epi8(target);
-		__m256i currentVec = gatherValues256<ValueType>(str);
-		const uint32_t vecSize = sizeof(__m256);
-		uint64_t remainingBytes = length;
-		__m256i compareResult{};
-		uint64_t index = 0;
-		while (remainingBytes >= vecSize) {
-			currentVec = gatherValues256<ValueType>(str);
-			compareResult = _mm256_cmpeq_epi64(targetVec, currentVec);
-			uint32_t mask = _mm256_movemask_epi8(compareResult);
+	template<FloatingT ValueType> inline __m128 gatherValues128(const ValueType* str) {
+		return _mm_load_ps(str);
+	}
 
+	template<FloatingT ValueType> inline __m256 gatherValues256(const ValueType* str) {
+		return _mm256_load_ps(str);
+	}
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m256);
+		const __m256i targetVec			  = _mm256_set1_epi8(target);
+		uint64_t remainingBytes			  = length;
+		__m256i currentVec{};
+		uint64_t index{};
+		uint32_t mask{};
+
+		while (remainingBytes >= vecSize) {
+			currentVec = gatherValues256<ValueType01>(str);
+			mask	   = _mm256_movemask_epi8(_mm256_cmpeq_epi8(targetVec, currentVec));
+
+			if (mask != 0xFFFFFFFF) {
+				uint32_t firstNonMatchMask = ~mask;
+				return index + _tzcnt_u32(firstNonMatchMask);
+			}
+
+			str += vecSize;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		for (uint64_t i = 0; i < remainingBytes; i++) {
+			if (str[i] != target) {
+				return index + i;
+			}
+		}
+
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m256);
+		const __m256i targetVec			  = _mm256_set1_epi8(target);
+		uint64_t remainingBytes{ length };
+		__m256i currentVec{};
+		uint64_t index{};
+		uint32_t mask{};
+		while (remainingBytes >= vecSize) {
+			currentVec = gatherValues256<ValueType01>(str);
+			mask	   = _mm256_movemask_epi8(_mm256_cmpeq_epi8(targetVec, currentVec));
 
 			if (mask != 0) {
-				uint32_t matchingIndex = _tzcnt_u32(mask);
-				return index + matchingIndex;
+				return index + _tzcnt_u32(mask);
 			}
 
 			str += vecSize;
@@ -298,179 +404,200 @@ namespace JsonifierInternal {
 		return std::numeric_limits<uint64_t>::max();
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept;
+	template<typename ValueType01, typename ValueType02> inline uint64_t findLastSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m256);
+		const __m256i targetVec			  = _mm256_set1_epi8(target);
+		uint64_t remainingBytes{};
+		__m256i currentVec{};
+		uint64_t index{ length };
+		uint32_t mask{};
+		str += length - vecSize;
+		while (remainingBytes >= 0) {
+			currentVec = gatherValues256<ValueType01>(str);
+			mask	   = _mm256_movemask_epi8(_mm256_cmpeq_epi8(targetVec, currentVec));
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 16 };
-		auto destVector = gatherValues128<ValueType01>(string1);
+			if (mask != 0) {
+				return index - _lzcnt_u32(mask);
+			}
+
+			str -= vecSize;
+			index -= vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		for (uint64_t i = remainingBytes; i > 0; --i) {
+			if (str[i] == target) {
+				return index + i;
+			}
+		}
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length);
+
+	template<typename ValueType, typename IndexType> inline uint64_t getIntervalCount(uint64_t originalLength) {
+		return originalLength * sizeof(ValueType) / sizeof(IndexType);
+	}
+
+	template<FloatingT ValueType01, FloatingT ValueType02> inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint16_t maskValue{ 0b0000000000001111 };
+
+		auto destVector	  = gatherValues128<ValueType01>(string1);
 		auto sourceVector = gatherValues128<ValueType02>(string2);
-		if (static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi64(destVector, sourceVector))) != (std::numeric_limits<uint16_t>::max())) {
+		if (_mm_movemask_ps(_mm_cmpeq_ps(destVector, sourceVector)) != maskValue) {
 			return false;
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + 16, string2 + 16, remainder);
+
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues128<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues128<ValueType02>(string2 + x * vectorSize);
+			if (_mm_movemask_ps(_mm_cmpeq_ps(destVector, sourceVector)) != maskValue) {
+				return false;
+			}
 		}
+
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+
 		return true;
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 32 };
-		auto destVector = gatherValues256<ValueType01>(string1);
-		auto sourceVector = gatherValues256<ValueType02>(string2);
-		if (static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi64(destVector, sourceVector))) != (std::numeric_limits<uint32_t>::max())) {
+	template<typename ValueType01, typename ValueType02> inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint16_t maskValue{ 0xffff };
+		auto destVector	  = gatherValues128<ValueType01>(string1);
+		auto sourceVector = gatherValues128<ValueType02>(string2);
+		if (_mm_movemask_epi8(_mm_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
 			return false;
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + 32, string2 + 32, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues64(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 64 };
-		auto destVector = gatherValues256<ValueType01>(string1);
-		auto sourceVector = gatherValues256<ValueType02>(string2);
-		__m256i result{ _mm256_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m256i cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-		result = _mm256_and_si256(result, cmp);
-		destVector = gatherValues256<ValueType01>(string1 + 32);
-		sourceVector = gatherValues256<ValueType02>(string2 + 32);
-		cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-		result = _mm256_and_si256(result, cmp);
-		if (static_cast<uint32_t>(_mm256_movemask_epi8(result)) != (std::numeric_limits<uint32_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 64, string2 + 64, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues128(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 128 };
-		auto destVector = gatherValues256<ValueType01>(string1);
-		auto sourceVector = gatherValues256<ValueType02>(string2);
-		__m256i result{ _mm256_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m256i cmp{ _mm256_cmpeq_epi64(destVector, sourceVector) };
-		result = _mm256_and_si256(result, cmp);
-		destVector = gatherValues256<ValueType01>(string1 + 32);
-		sourceVector = gatherValues256<ValueType02>(string2 + 32);
-		cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-		result = _mm256_and_si256(result, cmp);
-		destVector = gatherValues256<ValueType01>(string1 + 64);
-		sourceVector = gatherValues256<ValueType02>(string2 + 64);
-		cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-		result = _mm256_and_si256(result, cmp);
-		destVector = gatherValues256<ValueType01>(string1 + 96);
-		sourceVector = gatherValues256<ValueType02>(string2 + 96);
-		cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-		result = _mm256_and_si256(result, cmp);
-		if (static_cast<uint32_t>(_mm256_movemask_epi8(result)) != (std::numeric_limits<uint32_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 128, string2 + 128, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues256(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t intervalCount{ length / 256 };
-		const uint64_t remainder{ length % 256 };
-		auto destVector = gatherValues256<ValueType01>(string1);
-		auto sourceVector = gatherValues256<ValueType02>(string2);
-		__m256i result{ _mm256_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m256i cmp{};
-		for (uint64_t x = intervalCount; x > 0; --x) {
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (1ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (1ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (2ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (2ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (3ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (3ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (4ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (4ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (5ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (5ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (6ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (6ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (7ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (7ull * 32));
-			cmp = _mm256_cmpeq_epi64(destVector, sourceVector);
-			result = _mm256_and_si256(result, cmp);
-			destVector = gatherValues256<ValueType01>(string1 + x * (8ull * 32));
-			sourceVector = gatherValues256<ValueType02>(string2 + x * (8ull * 32));
-			if (static_cast<uint32_t>(_mm256_movemask_epi8(result)) != (std::numeric_limits<uint32_t>::max())) {
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues128<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues128<ValueType02>(string2 + x * vectorSize);
+			if (_mm_movemask_epi8(_mm_cmpeq_epi8(destVector, sourceVector)) != maskValue) {
 				return false;
 			}
 		}
 		if (remainder > 0) {
-			return compareValues(string1 + intervalCount * 32, string2 + intervalCount * 32, remainder);
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
 		}
 		return true;
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		if (length >= 256) {
-			return compareValues256(string1, string2, length);
-		} else if (length >= 128) {
-			return compareValues128(string1, string2, length);
-		} else if (length >= 64) {
-			return compareValues64(string1, string2, length);
-		} else if (length >= 32) {
+	template<FloatingT ValueType01, FloatingT ValueType02> inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint32_t maskValue{ 0b00000000000000000000000011111111 };
+		auto destVector	  = gatherValues256<ValueType01>(string1);
+		auto sourceVector = gatherValues256<ValueType02>(string2);
+		if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues256<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues256<ValueType02>(string2 + x * vectorSize);
+			if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
+		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
+		const uint64_t remainder			 = length % vectorSize;
+		static constexpr uint32_t maskValue{ 0xffffffff };
+		auto destVector	  = gatherValues256<ValueType01>(string1);
+		auto sourceVector = gatherValues256<ValueType02>(string2);
+		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destVector, sourceVector)) != static_cast<int32_t>(maskValue)) {
+			return false;
+		}
+		for (uint64_t x = 1; x < intervalCount; ++x) {
+			destVector	 = gatherValues256<ValueType01>(string1 + x * vectorSize);
+			sourceVector = gatherValues256<ValueType02>(string2 + x * vectorSize);
+			if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destVector, sourceVector)) != static_cast<int32_t>(maskValue)) {
+				return false;
+			}
+		}
+		if (remainder > 0) {
+			return compareValues(string1 + (vectorSize * intervalCount), string2 + (vectorSize * intervalCount), remainder);
+		}
+		return true;
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		if (length >= 32) {
 			return compareValues32(string1, string2, length);
 		} else if (length >= 16) {
 			return compareValues16(string1, string2, length);
 		} else {
-			return (std::memcmp(string1, string2, length) == 0);
+			return (std::memcmp(string1, string2, length * sizeof(ValueType01)) == 0);
 		}
 	}
 
 #elif defined T_AVX
 
-	template<typename ValueType> inline __m128i gatherValues128(const ValueType str[sizeof(__m128) / sizeof(ValueType)]) {
-		alignas(32) float newArray[sizeof(__m128i) / sizeof(float)]{};
+	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
+		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
-	template<typename ValueType> inline uint64_t findSingleCharacter(const ValueType* str, uint64_t length, ValueType target) {
-		__m128i targetVec = _mm_set1_epi8(target);
-		__m128i currentVec = gatherValues128<ValueType>(str);
-		const uint32_t vecSize = sizeof(__m128);
-		uint64_t remainingBytes = length;
-		__m128i compareResult{};
-		uint64_t index = 0;
-		while (remainingBytes >= vecSize) {
-			currentVec = gatherValues128<ValueType>(str);
-			compareResult = _mm_cmpeq_epi8(targetVec, currentVec);
-			uint32_t mask = _mm_movemask_epi8(compareResult);
+	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m128);
+		const __m128i targetVec			  = _mm_set1_epi8(target);
+		uint64_t remainingBytes			  = length;
+		__m128i currentVec{};
+		uint64_t index{};
+		uint32_t mask{};
 
+		while (remainingBytes >= vecSize) {
+			currentVec = gatherValues128<ValueType01>(str);
+			mask	   = _mm_movemask_epi8(_mm_cmpeq_epi8(targetVec, currentVec));
+
+			if (mask != 0xFFFFFFFF) {
+				uint32_t firstNonMatchMask = ~mask;
+				return index + _tzcnt_u32(firstNonMatchMask);
+			}
+
+			str += vecSize;
+			index += vecSize;
+			remainingBytes -= vecSize;
+		}
+
+		for (uint64_t i = 0; i < remainingBytes; i++) {
+			if (str[i] != target) {
+				return index + i;
+			}
+		}
+
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m128);
+		const __m128i targetVec			  = _mm_set1_epi8(target);
+		uint64_t remainingBytes{ length };
+		__m128i currentVec{};
+		uint64_t index{};
+		uint32_t mask{};
+		while (remainingBytes >= vecSize) {
+			currentVec = gatherValues128<ValueType01>(str);
+			mask	   = _mm_movemask_epi8(_mm_cmpeq_epi8(targetVec, currentVec));
 
 			if (mask != 0) {
-				uint32_t matchingIndex = _tzcnt_u16(static_cast<uint16_t>(mask));
-				return index + matchingIndex;
+				return index + _tzcnt_u32(mask);
 			}
 
 			str += vecSize;
@@ -487,158 +614,65 @@ namespace JsonifierInternal {
 		return std::numeric_limits<uint64_t>::max();
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept;
+	template<typename ValueType01, typename ValueType02> inline uint64_t findLastSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		static constexpr uint32_t vecSize = sizeof(__m128);
+		const __m128i targetVec			  = _mm_set1_epi8(target);
+		uint64_t remainingBytes{};
+		__m128i currentVec{};
+		uint64_t index{ length };
+		uint32_t mask{};
+		str += length - vecSize;
+		while (remainingBytes >= 0) {
+			currentVec = gatherValues128<ValueType01>(str);
+			mask	   = _mm_movemask_epi8(_mm_cmpeq_epi8(targetVec, currentVec));
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues16(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 16 };
-		auto destVector = gatherValues128<ValueType>(string1);
-		auto sourceVector = gatherValues128<ValueType>(string2);
-		if (static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi64(destVector, sourceVector))) != (std::numeric_limits<uint16_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 16, string2 + 16, remainder);
-		}
-		return true;
-	}
+			if (mask != 0) {
+				return index - _lzcnt_u32(mask);
+			}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues32(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint32_t remainder{ length % 32 };
-		auto destVector = gatherValues128<ValueType>(string1);
-		auto sourceVector = gatherValues128<ValueType>(string2);
-		__m128i result{ _mm_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m128i cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		destVector = gatherValues128<ValueType>(string1 + 32);
-		sourceVector = gatherValues128<ValueType>(string2 + 32);
-		cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		if (static_cast<uint32_t>(_mm_movemask_epi8(result)) != (std::numeric_limits<uint16_t>::max())) {
-			return false;
+			str -= vecSize;
+			index -= vecSize;
+			remainingBytes -= vecSize;
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + 32, string2 + 32, remainder);
-		}
-		return true;
-	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues64(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t remainder{ length % 64 };
-		auto destVector = gatherValues128<ValueType>(string1);
-		auto sourceVector = gatherValues128<ValueType>(string2);
-		__m128i result{ _mm_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m128i cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		destVector = gatherValues128<ValueType>(string1 + 16);
-		sourceVector = gatherValues128<ValueType>(string2 + 16);
-		cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		destVector = gatherValues128<ValueType>(string1 + 32);
-		sourceVector = gatherValues128<ValueType>(string2 + 32);
-		cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		destVector = gatherValues128<ValueType>(string1 + 48);
-		sourceVector = gatherValues128<ValueType>(string2 + 48);
-		cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-		result = _mm_and_si128(result, cmp);
-		if (_mm_movemask_epi8(result) != (std::numeric_limits<uint16_t>::max())) {
-			return false;
-		}
-		if (remainder > 0) {
-			return compareValues(string1 + 64, string2 + 64, remainder);
-		}
-		return true;
-	}
-
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues128(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		const uint64_t intervalCount{ length / 128 };
-		const uint64_t remainder{ length % 128 };
-		auto destVector = gatherValues128<ValueType>(string1);
-		auto sourceVector = gatherValues128<ValueType>(string2);
-		__m128i result{ _mm_set1_epi64x(std::numeric_limits<uint64_t>::max()) };
-		__m128i cmp{};
-		for (uint64_t x = intervalCount; x > 0; --x) {
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (1ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (1ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (2ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (2ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (3ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (3ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (4ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (4ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (5ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (5ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (6ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (6ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (7ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (7ull * 32));
-			cmp = _mm_cmpeq_epi8(destVector, sourceVector);
-			result = _mm_and_si128(result, cmp);
-			destVector = gatherValues128<ValueType>(string1 + x * (8ull * 32));
-			sourceVector = gatherValues128<ValueType>(string2 + x * (8ull * 32));
-			if (static_cast<uint32_t>(_mm_movemask_epi8(result)) != (std::numeric_limits<uint32_t>::max())) {
-				return false;
+		for (uint64_t i = remainingBytes; i > 0; --i) {
+			if (str[i] == target) {
+				return index + i;
 			}
 		}
-		if (remainder > 0) {
-			return compareValues(string1 + intervalCount * 16, string2 + intervalCount * 16, remainder);
-		}
-		return true;
+		return std::numeric_limits<uint64_t>::max();
 	}
 
-	template<typename ValueType01, typename ValueType02>
-	inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) noexcept {
-		if (length >= 128) {
-			return compareValues128(string1, string2, length);
-		} else if (length >= 64) {
-			return compareValues64(string1, string2, length);
-		} else if (length >= 32) {
-			return compareValues32(string1, string2, length);
-		} else if (length >= 16) {
-			return compareValues16(string1, string2, length);
-		} else {
-			return (std::memcmp(string1, string2, length) == 0);
-		}
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const ValueType01* string1, const ValueType02* string2, uint64_t length) {
+		return (std::memcmp(string1, string2, length * sizeof(ValueType01)) == 0);
 	}
 
 #else
 
-	inline uint64_t findSingleCharacter(const ValueType* str, uint64_t length, ValueType target) {
-		return std::string_view{ static_cast<const ValueType*>(str), length }.find(target);
+	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
+		return std::basic_string_view<ValueType01>{ static_cast<const ValueType01*>(str), length }.find_first_not_of(static_cast<ValueType01>(target));
 	}
 
-	inline bool compareValues(const ValueType* destVector, const ValueType* sourceVector, uint64_t length) noexcept {
-		return std::string_view{ static_cast<const ValueType*>(destVector), length } ==
-			std::string_view{ static_cast<const ValueType*>(sourceVector), length };
+	template<typename ValueType01, typename ValueType02> inline uint64_t findSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		return std::basic_string_view<ValueType01>{ static_cast<const ValueType01*>(str), length }.find(static_cast<ValueType01>(target));
+	}
+
+	template<typename ValueType01, typename ValueType02> inline uint64_t findLastSingleCharacter(const ValueType01* str, uint64_t length, ValueType02 target) {
+		return std::basic_string_view<ValueType01>{ static_cast<const ValueType01*>(str), length }.find_last_of(static_cast<ValueType01>(target));
+	}
+
+	template<typename ValueType01, typename ValueType02> inline bool compareValues(const void* destVector, const void* sourceVector, uint64_t length) {
+		return std::basic_string_view<std::remove_pointer_t<ValueType01>>{ static_cast<const ValueType01*>(destVector), length } ==
+			std::basic_string_view<std::remove_pointer_t<ValueType01>>{ static_cast<const ValueType01*>(sourceVector), length };
 	}
 
 #endif
 
 	class JsonifierCoreInternal {
 	  public:
-		template<typename ValueType01, typename ValueType02>
-		inline static bool compare(const ValueType01* destVector, const ValueType02* sourceVector, uint64_t length) noexcept {
-			return compareValues(destVector, sourceVector, length * sizeof(ValueType01));
+		template<typename ValueType01, typename ValueType02> static inline bool compare(const ValueType01* destVector, const ValueType02* sourceVector, uint64_t length) {
+			return compareValues<ValueType01, ValueType02>(destVector, sourceVector, length);
 		}
 	};
 
-}
+}// namespace JsonifierInternal

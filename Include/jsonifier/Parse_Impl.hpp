@@ -3,28 +3,28 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/NumberParsing.hpp>
-#include <jsonifier/StringParsing.hpp>
+#include <jsonifier/NumberUtils.hpp>
+#include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Derailleur.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/Base.hpp>
@@ -32,7 +32,7 @@
 
 namespace JsonifierInternal {
 
-	inline static Jsonifier::StringBase<uint8_t>& getCurrentStringBuffer() noexcept {
+	static inline Jsonifier::StringBase<uint8_t>& getCurrentStringBuffer() noexcept {
 		static thread_local Jsonifier::StringBase<uint8_t> currentStringBuffer{};
 		return currentStringBuffer;
 	}
@@ -50,7 +50,7 @@ namespace JsonifierInternal {
 	}
 
 	template<bool printErrors, EnumT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue = static_cast<int64_t>(value);
+		auto newValue	 = static_cast<int64_t>(value);
 		auto newValueOld = static_cast<int64_t>(value);
 		parseNumber(newValue, *iter);
 		newValue |= newValueOld;
@@ -77,9 +77,9 @@ namespace JsonifierInternal {
 		auto newPtr = *iter;
 		++iter;
 		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		auto newerSize = sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
+		auto newerSize	= sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
 		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data());
+		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data(), newerSize);
 		if (newPtr) {
 			newerSize = newerPtr - getCurrentStringBuffer().data();
 			value.resize(newerSize);
@@ -89,7 +89,7 @@ namespace JsonifierInternal {
 
 	template<bool printErrors, CharT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
 		auto newPtr = *iter;
-		value = static_cast<ValueType>(*(newPtr + 1));
+		value		= static_cast<ValueType>(*(newPtr + 1));
 		++iter;
 	}
 
@@ -104,7 +104,7 @@ namespace JsonifierInternal {
 
 		auto valueIter = value.begin();
 
-		for (size_t i = 0; i < n; ++i) {
+		for (uint64_t i = 0; i < n; ++i) {
 			if (iter == iter) {
 				return;
 			}
@@ -129,7 +129,7 @@ namespace JsonifierInternal {
 		const auto m = value.size();
 
 		auto valueIter = value.begin();
-		size_t i{};
+		uint64_t i{};
 		for (; i < m; ++i) {
 			if (iter == iter) {
 				return;
@@ -178,12 +178,12 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					continue;
 				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					continue;
 				}
 				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt = frozenMap.find(key);
+				const auto& memberIt	 = frozenMap.find(key);
 				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
 					continue;
 				} else if (memberIt != frozenMap.end()) [[likely]] {
@@ -225,7 +225,7 @@ namespace JsonifierInternal {
 	}
 
 	template<bool printErrors, EnumT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue = static_cast<int64_t>(value);
+		auto newValue	 = static_cast<int64_t>(value);
 		auto newValueOld = static_cast<int64_t>(value);
 		parseNumber(newValue, *iter);
 		newValue |= newValueOld;
@@ -252,9 +252,9 @@ namespace JsonifierInternal {
 		auto newPtr = *iter;
 		++iter;
 		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		auto newerSize = sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
+		auto newerSize	= sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
 		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data());
+		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data(), newerSize);
 		if (newPtr) {
 			newerSize = newerPtr - getCurrentStringBuffer().data();
 			value.resize(newerSize);
@@ -264,7 +264,7 @@ namespace JsonifierInternal {
 
 	template<bool printErrors, CharT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
 		auto newPtr = *iter;
-		value = static_cast<ValueType>(*(newPtr + 1));
+		value		= static_cast<ValueType>(*(newPtr + 1));
 		++iter;
 	}
 
@@ -279,7 +279,7 @@ namespace JsonifierInternal {
 
 		auto valueIter = value.begin();
 
-		for (size_t i = 0; i < n; ++i) {
+		for (uint64_t i = 0; i < n; ++i) {
 			if (iter == iter) {
 				return;
 			}
@@ -304,7 +304,7 @@ namespace JsonifierInternal {
 		const auto m = value.size();
 
 		auto valueIter = value.begin();
-		size_t i{};
+		uint64_t i{};
 		for (; i < m; ++i) {
 			if (iter == iter) {
 				return;
@@ -353,12 +353,12 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					continue;
 				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					continue;
 				}
 				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt = frozenMap.find(key);
+				const auto& memberIt	 = frozenMap.find(key);
 				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
 					continue;
 				} else if (memberIt != frozenMap.end()) [[likely]] {
@@ -387,8 +387,7 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<bool printErrors, ObjectT ValueType, HasFind KeyType>
-	inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys) {
+	template<bool printErrors, ObjectT ValueType, HasFind KeyType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys) {
 		if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 			return;
 		}
@@ -409,7 +408,7 @@ namespace JsonifierInternal {
 				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
 					return;
 				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<size_t>(*iter - *start) - 2 };
+				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
 				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
 					return;
 				}
@@ -418,13 +417,13 @@ namespace JsonifierInternal {
 					continue;
 				}
 				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt = frozenMap.find(key);
+				const auto& memberIt	 = frozenMap.find(key);
 				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
 					continue;
 				} else if (memberIt != frozenMap.end()) [[likely]] {
 					std::visit(
 						[&](auto& memberPtr) {
-							auto newMember = getMember(value, memberPtr);
+							auto newMember		= getMember(value, memberPtr);
 							using newMemberType = decltype(newMember);
 							if constexpr (HasExcludedKeys<newMemberType>) {
 								ParseWithKeys::op<printErrors>(getMember(value, memberPtr), iter, newMember.excludedKeys);
