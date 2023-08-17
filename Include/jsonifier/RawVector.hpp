@@ -27,7 +27,7 @@
 
 namespace JsonifierInternal {
 
-	template<typename ValueType, size_t N> class RawVector {
+	template<typename ValueType, size_t Count> class RawVector {
 	  public:
 		using value_type = ValueType;
 		using reference = value_type&;
@@ -36,74 +36,74 @@ namespace JsonifierInternal {
 		using const_pointer = const value_type*;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
-		using size_type = size_t;
+		using size_type = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		inline constexpr RawVector() noexcept = default;
-		inline constexpr RawVector& operator=(RawVector&&) noexcept = default;
-		inline constexpr RawVector(RawVector&&) noexcept = default;
-		inline constexpr RawVector& operator=(const RawVector&) noexcept = default;
-		inline constexpr RawVector(const RawVector&) noexcept = default;
+		constexpr RawVector() noexcept = default;
+		constexpr RawVector& operator=(RawVector&&) noexcept = default;
+		constexpr RawVector(RawVector&&) noexcept = default;
+		constexpr RawVector& operator=(const RawVector&) noexcept = default;
+		constexpr RawVector(const RawVector&) noexcept = default;
 
-		inline constexpr RawVector(size_type count, const auto& value) : dsize(count) {
-			for (size_type x = 0; x < N; ++x)
+		constexpr RawVector(size_type count, const auto& value) : dsize(count) {
+			for (size_type x = 0; x < Count; ++x)
 				data[x] = value;
 		}
 
-		inline constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return data;
 		}
 
-		inline constexpr iterator end() noexcept {
+		constexpr iterator end() {
 			return data + dsize;
 		}
 
-		inline constexpr size_type size() const noexcept {
+		constexpr size_type size() const {
 			return dsize;
 		}
 
-		inline constexpr reference operator[](size_type index) {
+		constexpr reference operator[](size_type index) {
 			return data[index];
 		}
 
-		inline constexpr const_reference operator[](size_type index) const noexcept {
+		constexpr const_reference operator[](size_type index) const {
 			return data[index];
 		}
 
-		inline constexpr reference front() {
+		constexpr reference front() {
 			return data[0];
 		}
 
-		inline constexpr reference back() {
+		constexpr reference back() {
 			return data[dsize - 1];
 		}
 
-		inline constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return data[0];
 		}
 
-		inline constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return data[dsize - 1];
 		}
 
-		inline constexpr void push_back(const value_type& a) {
+		constexpr void push_back(const value_type& a) {
 			data[dsize++] = a;
 		}
 
-		inline constexpr void push_back(value_type&& a) {
+		constexpr void push_back(value_type&& a) {
 			data[dsize++] = std::forward<value_type>(a);
 		}
 
-		inline constexpr void pop_back() {
+		constexpr void pop_back() {
 			--dsize;
 		}
 
-		inline constexpr void clear() {
+		constexpr void clear() {
 			dsize = 0;
 		}
 
 	  protected:
-		value_type data[N] = {};
+		value_type data[Count] = {};
 		size_type dsize = 0;
 	};
 

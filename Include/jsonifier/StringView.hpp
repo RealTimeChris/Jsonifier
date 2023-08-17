@@ -35,146 +35,179 @@ namespace Jsonifier {
 
 	template<typename ValueType> class StringViewBase {
 	  public:
-		using value_type = ValueType;
-		using traits_type = std::char_traits<value_type>;
-		using pointer = value_type*;
-		using const_pointer = const value_type*;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using iterator = JsonifierInternal::Iterator<value_type>;
-		using const_iterator = const iterator;
-		using reverse_iterator = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = const reverse_iterator;
-		using size_type = size_t;
-		using difference_type = ptrdiff_t;
+		using value_type			 = ValueType;
+		using pointer				 = value_type*;
+		using const_pointer			 = const value_type*;
+		using reference				 = value_type&;
+		using const_reference		 = const value_type&;
+		using iterator               = JsonifierInternal::Iterator<StringViewBase>;
+		using const_iterator         = JsonifierInternal::ConstIterator<StringViewBase>;
+		using reverse_iterator       = std::reverse_iterator<iterator>;
+		using difference_type		 = std::ptrdiff_t;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+		using object_compare		 = std::equal_to<value_type>;
+		using size_type				 = uint64_t;
+		using allocator				 = JsonifierInternal::AllocWrapper<value_type>;
+		using traits_type			 = std::char_traits<value_type>;
 
 		const_pointer dataVal{};
 		size_type sizeVal{};
 
-		inline static constexpr auto npos{ static_cast<size_type>(-1) };
+		static constexpr auto npos{ static_cast<size_type>(-1) };
 
-		inline constexpr StringViewBase() noexcept : dataVal(), sizeVal(0) {
+		constexpr StringViewBase() noexcept : dataVal(), sizeVal(0) {
 		}
 
-		inline constexpr StringViewBase(const StringViewBase&) noexcept = default;
-		inline constexpr StringViewBase& operator=(const StringViewBase&) noexcept = default;
+		constexpr StringViewBase(const StringViewBase&) noexcept = default;
+		constexpr StringViewBase& operator=(const StringViewBase&) noexcept = default;
 
-		StringViewBase& operator=(const StringBase<value_type>& stringNew) {
+		constexpr StringViewBase& operator=(const StringBase<value_type>& stringNew) {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
 			return *this;
 		}
 
-		StringViewBase(const StringBase<value_type>& stringNew) {
+		constexpr StringViewBase(const StringBase<value_type>& stringNew) {
 			*this = stringNew;
 		}
 
-		inline std::enable_if<std::same_as<char, value_type>, StringViewBase<value_type>>& operator=(const std::string& other) noexcept {
+		constexpr std::enable_if<std::same_as<char, value_type>, StringViewBase<value_type>>& operator=(const std::string& other) {
 			dataVal = other.data();
 			sizeVal = other.size();
 			return *this;
 		}
 
-		inline StringViewBase(const std::string& other) noexcept {
+		constexpr StringViewBase(const std::string& other) {
 			*this = other;
 		};
 
-		inline constexpr StringViewBase& operator=(const std::string_view& other) noexcept {
+		constexpr StringViewBase& operator=(const std::string_view& other) {
 			dataVal = other.data();
 			sizeVal = other.size();
 			return *this;
 		}
 
-		inline constexpr StringViewBase(const std::string_view& other) noexcept {
+		constexpr StringViewBase(const std::string_view& other) {
 			*this = other;
 		};
 
-		template<size_t strLength> inline StringViewBase(const value_type (&other)[strLength]) noexcept {
+		template<size_t strLength> constexpr StringViewBase(const value_type (&other)[strLength]) {
 			dataVal = other;
 			sizeVal = strLength;
 		};
 
-		inline constexpr StringViewBase(const_pointer _Ntcts) noexcept : dataVal(_Ntcts), sizeVal(traits_type::length(_Ntcts)) {
+		constexpr StringViewBase(const_pointer _Ntcts) noexcept : dataVal(_Ntcts), sizeVal(traits_type::length(_Ntcts)) {
 		}
 
-		inline constexpr StringViewBase(const_pointer _Cts, const size_type countNew) noexcept : dataVal(_Cts), sizeVal(countNew){};
+		constexpr StringViewBase(const_pointer _Cts, const size_type countNew) noexcept : dataVal(_Cts), sizeVal(countNew){};
 
-		inline constexpr const_iterator begin() const noexcept {
-			return const_iterator(dataVal, 0);
+		constexpr const_iterator cbegin() const {
+			return const_iterator(dataVal);
 		}
 
-		inline constexpr const_iterator end() const noexcept {
-			return const_iterator(dataVal, sizeVal);
+		constexpr const_iterator cend() const {
+			return const_iterator(dataVal + sizeVal);
 		}
 
-		inline constexpr size_type size() const noexcept {
+		constexpr const_iterator begin() const {
+			return const_iterator(dataVal);
+		}
+
+		constexpr const_iterator end() const {
+			return const_iterator(dataVal + sizeVal);
+		}
+
+		constexpr const_reverse_iterator crbegin() const {
+			return reverse_iterator(end());
+		}
+
+		constexpr const_reverse_iterator crend() const {
+			return reverse_iterator(begin());
+		}
+
+		constexpr reverse_iterator rbegin() const {
+			return reverse_iterator(end());
+		}
+
+		constexpr reverse_iterator rend() const {
+			return reverse_iterator(begin());
+		}
+
+		constexpr size_type size() const {
 			return sizeVal;
 		}
 
-		inline constexpr size_type length() const noexcept {
+		constexpr size_type length() const {
 			return sizeVal;
 		}
 
-		inline constexpr bool empty() const noexcept {
+		constexpr bool empty() const {
 			return sizeVal == 0;
 		}
 
-		inline constexpr const_pointer data() const noexcept {
+		constexpr const_pointer data() const {
 			return dataVal;
 		}
 
-		inline constexpr size_type max_size() const noexcept {
+		constexpr size_type max_size() const {
 			return std::min(static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<size_t>(-1) / sizeof(value_type));
 		}
 
-		inline constexpr const_reference operator[](const size_type offsetNew) const noexcept {
+		constexpr const_reference operator[](const size_type offsetNew) const {
 			return dataVal[offsetNew];
 		}
 
-		inline constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
-		inline constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return dataVal[sizeVal - 1];
 		}
 
-		inline constexpr void swap(StringViewBase& other) noexcept {
+		constexpr void swap(StringViewBase& other) {
 			const StringViewBase temp{ other };
 			other = *this;
 			*this = temp;
 		}
 
-		inline constexpr StringViewBase substr(const size_type offsetNew = 0, size_type countNew = npos) const noexcept {
+		constexpr StringViewBase substr(const size_type offsetNew = 0, size_type countNew = npos) const {
 			return StringViewBase(dataVal + offsetNew, countNew);
 		}
 
-		inline explicit operator String() const noexcept {
+		inline explicit operator String() const {
 			String returnValue{};
 			returnValue.resize(sizeVal);
 			std::memcpy(returnValue.data(), data(), returnValue.size());
 			return returnValue;
 		}
 
-		inline explicit operator std::string() const noexcept {
+		inline explicit operator std::string() const {
 			std::string returnString{};
 			returnString.resize(size());
 			std::memcpy(returnString.data(), data(), size());
 			return returnString;
 		}
 
-		inline explicit operator std::string_view() const noexcept {
+		constexpr explicit operator std::string_view() const {
 			return { data(), size() };
 		}
 
-		template<typename ValueTypeNew> inline constexpr bool operator==(const ValueType& rhs) const {
+		template<JsonifierInternal::HasDataAndSize StringType> constexpr bool operator==(const StringType& rhs) const {
 			if (rhs.size() != size()) {
 				return false;
 			}
 			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), data(), rhs.size());
 		}
 
-		inline constexpr ~StringViewBase() noexcept = default;
+		template<size_type StrLength> constexpr bool operator==(const value_type (&rhs)[StrLength]) const {
+			if (StrLength != size()) {
+				return false;
+			}
+			return JsonifierInternal::JsonifierCoreInternal::compare(rhs, data(), StrLength);
+		}
+
+		constexpr ~StringViewBase() noexcept = default;
 	};
 
 	using StringView = StringViewBase<char>;
@@ -184,6 +217,18 @@ namespace Jsonifier {
 		const Jsonifier::StringViewBase<char>& string) {
 		return insertString<Jsonifier::StringViewBase<char>::value_type, Jsonifier::StringViewBase<char>::traits_type>(oStream, string.data(),
 			string.size());
+	}
+
+	inline String operator+(const char* lhs, const StringView& rhs) {
+		String newString(lhs);
+		newString += rhs;
+		return newString;
+	}
+
+	template<typename ValueType> inline std::string operator+=(const std::string& lhs, const StringViewBase<ValueType>& rhs) {
+		String newString(lhs);
+		newString += rhs;
+		return newString;
 	}
 
 }

@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <memory_resource>
 #include <cstdint>
 #include <utility>
 #include <memory>
@@ -35,35 +36,50 @@
 	#define ALIGNED_FREE(ptr) free(ptr)
 #endif
 
+#ifdef T_AVX512
+	#define ALIGNMENT 64
+#elif defined T_AVX2
+	#define ALIGNMENT 32
+#elif defined T_AVX
+	#define ALIGNMENT 16
+#else
+	#define ALIGNMENT 8
+#endif
+
 namespace JsonifierInternal {
 
-	template<typename ValueType, uint64_t Alignment = alignof(ValueType)> class AlignedAllocator {
+	template<typename ValueType> class AlignedAllocator {
 	  public:
 		using value_type = ValueType;
 		using pointer = value_type*;
 		using size_type = uint64_t;
+		using allocator = std::pmr::polymorphic_allocator<value_type>;
 
-		inline pointer allocate(size_type n) {
+		constexpr AlignedAllocator() {};
+
+		inline pointer allocate(size_type n) const {
 			if (n == 0) {
 				return nullptr;
 			}
 
-			return static_cast<pointer>(ALIGNED_ALLOC(n * sizeof(ValueType), Alignment < 32 ? 32 : Alignment));
+			return static_cast<pointer>(ALIGNED_ALLOC(n * sizeof(ValueType), ALIGNMENT));
 		}
 
-		inline void deallocate(pointer p, size_type) {
+		inline void deallocate(pointer p, size_type) const {
 			if (p) {
-				ALIGNED_FREE(p);
+				return ALIGNED_FREE(p);
 			}
 		}
 
-		template<typename... Args> inline void construct(pointer p, Args&&... args) {
+		template<typename... Args> inline void construct(pointer p, Args&&... args) const {
 			new (p) value_type(std::forward<Args>(args)...);
 		}
 
-		inline void destroy(pointer p) {
+		inline void destroy(pointer p) const {
 			p->~value_type();
 		}
+
+		constexpr ~AlignedAllocator() {};
 	};
 
 	template<typename ValueType> class AllocWrapper : public AlignedAllocator<ValueType> {
@@ -71,24 +87,28 @@ namespace JsonifierInternal {
 		using value_type = ValueType;
 		using pointer = value_type*;
 		using size_type = uint64_t;
-		using allocator = AlignedAllocator<value_type>;
-		using allocator_traits = std::allocator_traits<allocator>;
+		using allocator = const AlignedAllocator<value_type>;
+		using allocator_traits = const std::allocator_traits<allocator>;
 
-		inline pointer allocate(size_type count) noexcept {
+		constexpr AllocWrapper() {};
+
+		inline pointer allocate(size_type count) const {
 			return allocator_traits::allocate(*this, count);
 		}
 
-		inline void deallocate(pointer ptr, size_type count) noexcept {
+		inline void deallocate(pointer ptr, size_type count) const {
 			allocator_traits::deallocate(*this, ptr, count);
 		}
 
-		template<typename... Args> inline void construct(pointer ptr, Args&&... args) noexcept {
+		template<typename... Args> inline void construct(pointer ptr, Args&&... args) const {
 			allocator_traits::construct(*this, ptr, std::forward<Args>(args)...);
 		}
 
-		inline void destroy(pointer ptr) noexcept {
+		inline void destroy(pointer ptr) const {
 			allocator_traits::destroy(*this, ptr);
 		}
+
+		constexpr ~AllocWrapper() {};
 	};
 
 }

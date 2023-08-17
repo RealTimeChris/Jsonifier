@@ -27,7 +27,7 @@
 
 namespace JsonifierInternal {
 
-	template<typename ValueType, size_t N> struct RawArray {
+	template<typename ValueType, size_t Count> struct RawArray {
 	  public:
 		using value_type = ValueType;
 		using reference = value_type&;
@@ -36,104 +36,101 @@ namespace JsonifierInternal {
 		using const_pointer = const value_type*;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
-		using size_type = size_t;
+		using size_type = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		inline constexpr RawArray() noexcept = default;
-		inline constexpr RawArray& operator=(RawArray&&) noexcept = default;
-		inline constexpr RawArray(RawArray&&) noexcept = default;
-		inline constexpr RawArray& operator=(const RawArray&) noexcept = default;
-		inline constexpr RawArray(const RawArray&) noexcept = default;
+		constexpr RawArray() noexcept = default;
+		constexpr RawArray& operator=(RawArray&&) noexcept = default;
+		constexpr RawArray(RawArray&&) noexcept = default;
+		constexpr RawArray& operator=(const RawArray&) noexcept = default;
+		constexpr RawArray(const RawArray&) noexcept = default;
 
-		template<size_t M> inline constexpr RawArray(ValueType const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
-			static_assert(M >= N);
+		template<size_t M> constexpr RawArray(ValueType const (&init)[M]) : RawArray(init, std::make_index_sequence<Count>()) {
+			static_assert(M >= Count);
 		}
 
-		inline constexpr RawArray(const std::initializer_list<ValueType>& other) {
+		constexpr RawArray(const std::initializer_list<ValueType>& other) {
 			for (size_t x = 0; x < other.size(); ++x) {
 				operator[](x) = std::move(other.begin()[x]);
 			}
 		}
 
-		inline constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return dataVal;
 		}
 
-		inline constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const {
 			return dataVal;
 		}
 
-		inline constexpr iterator end() noexcept {
-			return dataVal + N;
+		constexpr iterator end() {
+			return dataVal + Count;
 		}
 
-		inline constexpr const_iterator end() const noexcept {
-			return dataVal + N;
+		constexpr const_iterator end() const {
+			return dataVal + Count;
 		}
 
-		inline constexpr size_type size() const noexcept {
-			return N;
+		constexpr size_type size() const {
+			return Count;
 		}
 
-		inline constexpr size_type maxSize() const noexcept {
-			return N;
-		}
-
-		inline constexpr reference operator[](size_t index) {
+		constexpr reference operator[](size_t index) {
 			return dataVal[index];
 		}
 
-		inline constexpr const_reference operator[](size_t index) const noexcept {
+		constexpr const_reference operator[](size_t index) const {
 			return dataVal[index];
 		}
 
-		inline constexpr reference at(size_t index) noexcept {
-			if (index > N) {
+		constexpr reference at(size_t index) {
+			if (index > Count) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		inline constexpr const_reference at(size_t index) const noexcept {
-			if (index > N) {
+		constexpr const_reference at(size_t index) const {
+			if (index > Count) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		inline constexpr reference front() {
+		constexpr reference front() {
 			return dataVal[0];
 		}
 
-		inline constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
-		inline constexpr reference back() {
-			return dataVal[N - 1];
+		constexpr reference back() {
+			return dataVal[Count - 1];
 		}
 
-		inline constexpr const_reference back() const noexcept {
-			return dataVal[N - 1];
+		constexpr const_reference back() const {
+			return dataVal[Count - 1];
 		}
 
-		inline constexpr value_type* data() noexcept {
+		constexpr value_type* data() {
 			return dataVal;
 		}
 
-		inline constexpr const value_type* data() const noexcept {
+		constexpr const value_type* data() const {
 			return dataVal;
 		}
 
-		inline constexpr void fill(const value_type& val) {
-			for (size_t x = 0; x < N; ++x) {
+		constexpr void fill(const value_type& val) {
+			for (size_t x = 0; x < Count; ++x) {
 				dataVal[x] = val;
 			}
 		}
 
-		ValueType dataVal[N] = {};
+		ValueType dataVal[Count] = {};
 
-		template<size_t M, size_t... I> inline constexpr RawArray(ValueType const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {};
+		template<size_t M, size_t... Index> constexpr RawArray(ValueType const (&init)[M], std::index_sequence<Index...>)
+			: dataVal{ init[Index]... } {};
 	};
 
 	template<typename ValueType> class RawArray<ValueType, 0> {
@@ -147,10 +144,10 @@ namespace JsonifierInternal {
 		using const_iterator = const_pointer;
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-		using size_type = size_t;
+		using size_type = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		inline constexpr RawArray() noexcept = default;
+		constexpr RawArray() noexcept = default;
 	};
 
 }

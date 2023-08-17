@@ -54,7 +54,7 @@ namespace JsonifierInternal {
 			}
 		};
 
-		inline static void skipValue(StructuralIterator& iter) noexcept {
+		inline static void skipValue(StructuralIterator& iter) {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -73,7 +73,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static size_t countArrayElements(StructuralIterator iter) noexcept {
+		inline static size_t countArrayElements(StructuralIterator iter) {
 			size_t currentDepth{ 1 };
 			size_t currentCount{ 1 };
 			if (iter == ']') {
@@ -109,7 +109,7 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		inline static void skipObject(StructuralIterator& iter) noexcept {
+		inline static void skipObject(StructuralIterator& iter) {
 			++iter;
 			size_t currentDepth{ 1 };
 			if (iter == '}') {
@@ -136,7 +136,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static void skipArray(StructuralIterator& iter) noexcept {
+		inline static void skipArray(StructuralIterator& iter) {
 			++iter;
 			size_t currentDepth{ 1 };
 			if (iter == ']') {

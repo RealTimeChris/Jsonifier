@@ -54,12 +54,20 @@ namespace JsonifierInternal {
 
 	class Serializer;
 
+	template<typename T> struct always_false : std::false_type {};
+
+	template<typename T> constexpr bool always_false_v = always_false<T>::value;
+
+	template<typename T> void printTypeInCompilationError(T&&) {
+		static_assert(always_false_v<T>, "Compilation failed because you wanted to know the type; see below:");
+	}
+
 	template<typename ValueType = void> struct Hash {
 		static_assert(std::is_integral<ValueType>::value || std::is_enum<ValueType>::value,
 			"Hash only supports integral types, specialize for other types.");
 
-		inline constexpr uint64_t operator()(ValueType const& value, uint64_t seed) const {
-			uint64_t key = seed ^ static_cast<uint64_t>(value);
+		constexpr std::size_t operator()(ValueType const& value, std::size_t seed) const {
+			std::size_t key = seed ^ static_cast<std::size_t>(value);
 			key = (~key) + (key << 21);
 			key = key ^ (key >> 24);
 			key = (key + (key << 3)) + (key << 8);
@@ -100,7 +108,7 @@ namespace JsonifierInternal {
 
 	template<typename ValueType>
 	concept VectorSubscriptable = requires(ValueType value) {
-		{ value[uint64_t{}] } -> std::same_as<typename ValueType::value_type&>;
+		{ value[std::size_t{}] } -> std::same_as<typename ValueType::value_type&>;
 	};
 
 	template<typename ValueType>
@@ -110,17 +118,7 @@ namespace JsonifierInternal {
 	};
 
 	template<typename ValueType>
-	concept HasSize = requires(ValueType value) {
-		{ value.size() } -> std::same_as<uint64_t>;
-	};
-
-	template<typename ValueType>
-	concept HasData = requires(ValueType value) {
-		{ value.data() };
-	};
-
-	template<typename ValueType>
-	concept HasSubstr = requires(ValueType value, const uint64_t pos, uint64_t len) {
+	concept HasSubstr = requires(ValueType value, const std::size_t pos, std::size_t len) {
 		{ value.substr(pos, len) } -> std::same_as<ValueType>;
 	};
 
@@ -130,6 +128,9 @@ namespace JsonifierInternal {
 
 	template<typename ValueType>
 	concept BoolT = std::same_as<RefUnwrap<ValueType>, bool>;
+
+	template<typename ValueType>
+	concept IntegerT = std::integral<ValueType>;
 
 	template<typename ValueType>
 	concept FloatT = std::floating_point<std::decay_t<ValueType>> && !BoolT<std::decay_t<ValueType>>;
@@ -144,8 +145,8 @@ namespace JsonifierInternal {
 	concept NumT = FloatT<ValueType> || UnsignedT<ValueType> || SignedT<ValueType>;
 
 	template<typename ValueType>
-	concept StringT = HasSubstr<std::remove_const_t<ValueType>> && HasData<std::remove_const_t<ValueType>> &&
-			HasSize<std::remove_const_t<ValueType>> && !std::same_as<char, std::remove_const_t<ValueType>> ||
+	concept StringT = ( HasSubstr<std::remove_const_t<ValueType>> && HasData<std::remove_const_t<ValueType>> &&
+						  HasSize<std::remove_const_t<ValueType>> && !std::same_as<char, std::remove_const_t<ValueType>> ) ||
 		std::derived_from<ValueType, std::string>;
 
 	template<typename ValueType>
@@ -185,61 +186,102 @@ namespace JsonifierInternal {
 
 	template<> struct FalseT<RandomCoreType> : std::true_type {};
 
-	template<typename... Args> inline constexpr bool FalseV = FalseT<Args...>::value;
+	template<typename... Args> constexpr bool FalseV = FalseT<Args...>::value;
 
-	template<uint64_t strLength> class StringLiteral {
+	template<std::size_t strLength> class StringLiteral {
 	  public:
-		static constexpr uint64_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
+		static constexpr std::size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
-		inline constexpr StringLiteral() noexcept = default;
+		constexpr StringLiteral() noexcept = default;
 
-		inline constexpr StringLiteral(const char (&str)[strLength]) {
+		constexpr StringLiteral(const char (&str)[strLength]) {
 			std::copy(str, str + strLength, string);
 		}
 
-		inline constexpr const char* data() const noexcept {
+		constexpr const char* data() const {
 			return string;
 		}
 
-		inline constexpr const char* begin() const noexcept {
+		constexpr const char* begin() const {
 			return string;
 		}
 
-		inline constexpr const char* end() const noexcept {
+		constexpr const char* end() const {
 			return string + sizeVal;
 		}
 
-		inline constexpr uint64_t size() const noexcept {
+		constexpr std::size_t size() const {
 			return sizeVal;
 		}
 
-		inline constexpr const Jsonifier::StringView stringView() const noexcept {
+		constexpr const Jsonifier::StringView stringView() const {
 			return { string, sizeVal };
 		}
 
 		char string[strLength];
 	};
 
+	template<std::size_t Count> constexpr auto stringLiteralFromView(const Jsonifier::StringViewBase<char>& str) {
+		StringLiteral<Count + 1> string{};
+		std::copy_n(str.data(), str.size(), string.string);
+		*(string.string + Count) = '\0';
+		return string;
+	}
+
 	template<StringLiteral str> struct CharsImpl {
 		static constexpr Jsonifier::StringView value{ str.string, std::char_traits<char>::length(str.string) };
 	};
 
-	template<StringLiteral str> inline constexpr Jsonifier::StringView Chars = CharsImpl<str>::value;
+	template<StringLiteral str> constexpr Jsonifier::StringView Chars = CharsImpl<str>::value;
 
 	template<typename ValueType>
 	concept StdTupleT = IsSpecializationV<ValueType, Tuplet::Tuple>::value || IsSpecializationV<ValueType, Pair>::value;
 
-	template<class = void, std::size_t... Is> inline constexpr auto indexer(std::index_sequence<Is...>) noexcept {
+	template<typename = void, std::size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
 		return [](auto&& f) noexcept -> decltype(auto) {
-			return decltype(f)(f)(std::integral_constant<std::size_t, Is>{}...);
+			return decltype(f)(f)(std::integral_constant<std::size_t, Indices>{}...);
 		};
 	}
 
-	template<uint64_t n> inline constexpr auto indexer() {
+	template<std::size_t... Is> struct seq {};
+	template<std::size_t Count, std::size_t... Is> struct gen_seq : gen_seq<Count - 1, Count - 1, Is...> {};
+	template<std::size_t... Is> struct gen_seq<0, Is...> : seq<Is...> {};
+
+	template<std::size_t N1, std::size_t... I1, std::size_t N2, std::size_t... I2>
+	constexpr std::array<const char, N1 + N2 - 1> concat(const char (&a1)[N1], const char (&a2)[N2], seq<I1...>, seq<I2...>) {
+		return { { a1[I1]..., a2[I2]... } };
+	}
+
+	template<typename ValueType01, std::size_t size01, const std::array<ValueType01, size01>& string01, typename ValueType02, std::size_t size02>
+	constexpr auto concatArrays(const ValueType02 (&string02)[size02]) {
+		std::array<char, string01.size() + size02> returnArray{};
+		std::copy(string01.data(), string01.data() + string01.size(), returnArray.data());
+		std::copy(string02, string02 + size02, returnArray.data() + string01.size());
+		return returnArray;
+	}
+
+	template<typename ValueType01, const Jsonifier::StringViewBase<ValueType01>& string01, typename ValueType02, std::size_t size>
+	constexpr auto concatArrays(const ValueType02 (&string02)[size]) {
+		std::array<char, string01.size() + size> returnArray{};
+		std::copy(string01.data(), string01.data() + string01.size(), returnArray.data());
+		std::copy(string02, string02 + size, returnArray.data() + string01.size());
+		return returnArray;
+	}
+
+	template<typename ValueType01, const Jsonifier::StringViewBase<ValueType01>& string01, typename ValueType02,
+		const Jsonifier::StringViewBase<ValueType02>& string02>
+	constexpr auto concatArrays() {
+		std::array<char, string01.size() + string02.size()> returnArray{};
+		std::copy(string01.data(), string01.data() + string01.size(), returnArray.data());
+		std::copy(string02.data(), string02.data() + string02.size(), returnArray.data() + string01.size());
+		return returnArray;
+	}
+
+	template<std::size_t n> constexpr auto indexer() {
 		return indexer(std::make_index_sequence<n>{});
 	}
 
-	template<uint64_t n, typename Func> inline constexpr auto forEach(Func&& f) {
+	template<std::size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
 			(std::forward<Func>(f)(i), ...);
 		});
@@ -249,9 +291,9 @@ namespace JsonifierInternal {
 		static constexpr auto value = newArr;
 	};
 
-	template<const Jsonifier::StringView&... Strings> inline constexpr Jsonifier::StringView join() {
+	template<const Jsonifier::StringView&... Strings> constexpr Jsonifier::StringView join() {
 		constexpr auto joinedArr = []() {
-			constexpr uint64_t len = (Strings.size() + ... + 0);
+			constexpr std::size_t len = (Strings.size() + ... + 0);
 			RawArray<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
@@ -302,11 +344,11 @@ namespace Jsonifier {
 
 	template<typename ValueType> Object(ValueType) -> Object<ValueType>;
 
-	inline constexpr auto array(auto&&... args) {
+	constexpr auto array(auto&&... args) {
 		return Array{ JsonifierInternal::Tuplet::copyTuple(args...) };
 	}
 
-	inline constexpr auto object(auto&&... args) {
+	constexpr auto object(auto&&... args) {
 		if constexpr (sizeof...(args) == 0) {
 			return Object{ JsonifierInternal::Tuplet::Tuple{} };
 		} else {
@@ -353,12 +395,14 @@ namespace JsonifierInternal {
 	template<typename ValueType>
 	concept ArrayT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
 						 HasEmplaceBack<ValueType> )&&!JsonifierArrayT<ValueType> &&
-		!TupleT<ValueType> && !HasSubstr<ValueType> && requires(ValueType data) { typename ValueType::value_type; };
+			!TupleT<ValueType> && !HasSubstr<ValueType> && requires(ValueType data) { typename ValueType::value_type; } ||
+		IsSpecializationV<ValueType, Jsonifier::Vector>::value;
 
 	template<typename ValueType>
-	concept RawArrayT = ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
-							!HasEmplaceBack<ValueType> )&&!JsonifierArrayT<ValueType> &&
-		!TupleT<ValueType> && !HasSubstr<ValueType> && !HasResize<ValueType>;
+	concept RawArrayT = ( ( !ComplexT<ValueType> && !MapT<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType> &&
+							  !HasEmplaceBack<ValueType> )&&!JsonifierArrayT<ValueType> &&
+							!TupleT<ValueType> && !HasSubstr<ValueType> && !HasResize<ValueType> ) ||
+		std::is_array_v<ValueType>;
 
 	template<typename ValueType>
 	concept VectorLike = HasResize<ValueType> && VectorSubscriptable<ValueType> && HasData<ValueType>;
@@ -372,7 +416,7 @@ namespace JsonifierInternal {
 
 		using HRClock = std::chrono::high_resolution_clock;
 
-		inline StopWatch& operator=(StopWatch&& data) noexcept {
+		inline StopWatch& operator=(StopWatch&& data) {
 			maxNumberOfTimeUnits.store(data.maxNumberOfTimeUnits.load());
 			startTime.store(data.startTime.load());
 			return *this;

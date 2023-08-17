@@ -71,7 +71,7 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"	
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
 	"${AVX_FLAG}"
 )

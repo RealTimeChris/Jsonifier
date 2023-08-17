@@ -30,7 +30,7 @@ namespace Jsonifier {
 	struct RawJsonData {
 		inline RawJsonData() noexcept = default;
 
-		inline RawJsonData& operator=(bool value) noexcept {
+		inline RawJsonData& operator=(bool value) {
 			if (value) {
 				jsonData = "true";
 			} else {
@@ -39,57 +39,57 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline RawJsonData(bool value) noexcept {
+		inline RawJsonData(bool value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(double value) noexcept {
+		inline RawJsonData& operator=(double value) {
 			jsonData = String{ std::to_string(value) };
 			return *this;
 		}
 
-		inline RawJsonData(double value) noexcept {
+		inline RawJsonData(double value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(int64_t value) noexcept {
+		inline RawJsonData& operator=(int64_t value) {
 			jsonData = String{ std::to_string(value) };
 			return *this;
 		}
 
-		inline RawJsonData(int64_t value) noexcept {
+		inline RawJsonData(int64_t value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(const Jsonifier::String& value) noexcept {
+		inline RawJsonData& operator=(const Jsonifier::String& value) {
 			jsonData = value;
 			return *this;
 		}
 
-		inline RawJsonData(const Jsonifier::String& value) noexcept {
+		inline RawJsonData(const Jsonifier::String& value) {
 			*this = value;
 		}
 
-		inline char* data() noexcept {
+		inline char* data() {
 			return jsonData.data();
 		}
 
-		inline void resize(size_t sizeNew) noexcept {
+		inline void resize(size_t sizeNew) {
 			jsonData.resize(sizeNew);
 		}
 
-		inline explicit operator StringView() noexcept {
+		inline explicit operator StringView() {
 			return { jsonData.data(), jsonData.size() };
 		}
 
-		inline operator String() noexcept {
+		inline operator String() {
 			String newString{};
 			newString.resize(jsonData.size());
 			std::memcpy(newString.data(), jsonData.data(), jsonData.size());
 			return newString;
 		}
 
-		inline operator std::string() noexcept {
+		inline operator std::string() {
 			return jsonData.operator std::string();
 		}
 
@@ -106,7 +106,7 @@ namespace Jsonifier {
 		String jsonData{};
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, RawJsonData& jsonValue) noexcept {
+	inline std::ostream& operator<<(std::ostream& os, RawJsonData& jsonValue) {
 		os << jsonValue.operator std::string();
 		return os;
 	}
