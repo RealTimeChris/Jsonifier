@@ -15,9 +15,8 @@ function(check_instruction_set INSTRUCTION_SET_NAME INSTRUCTION_SET_FLAG INSTRUC
     set(CMAKE_REQUIRED_FLAGS "${INSTRUCTION_SET_FLAG}")
     CHECK_CXX_SOURCE_RUNS("${INSTRUCTION_SET_CODE}" "${INSTRUCTION_SET_NAME}")
     if(${INSTRUCTION_SET_NAME})
-        set(AVX_TYPE "${INSTRUCTION_SET_NAME}" PARENT_SCOPE)
         set(AVX_FLAG "${INSTRUCTION_SET_FLAG}" PARENT_SCOPE)
-        set(AVX_NAME "${INSTRUCTION_SET_NAME}" PARENT_SCOPE)
+        set(AVX_TYPE "${INSTRUCTION_SET_NAME}" PARENT_SCOPE)
     else()
         message(STATUS "Instruction set ${INSTRUCTION_SET_NAME} not supported. Falling back to the previous instruction set.")
         return()
@@ -27,20 +26,26 @@ endfunction()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(INSTRUCTION_SETS
         "T_AVX?/arch:AVX?auto result = _mm_testz_ps(__m128{}, __m128{})"
-        "T_AVX2?/arch:AVX2?auto result = _mm256_extract_epi64(__m256i{}, 0)"
-        "T_AVX512?/arch:AVX512?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{}).char newArray[64]{}.auto result = _mm_loadu_epi64(newArray)"
+        "T_AVX2?/arch:AVX2?auto result = _mm256_add_epi32(__m256i{}, __m256i{})"
+        "T_AVX512?/arch:AVX512?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{})"
+    )
+elseif(APPLE)
+    set(INSTRUCTION_SETS
+        "T_AVX?-march=native?auto result = _mm_testz_ps(__m128{}, __m128{}).auto result2 = _blsr_u64(std::uint64_t{})"
+        "T_AVX2?-march=native?auto result = _mm256_add_epi32(__m256i{}, __m256i{})"
+        "T_AVX512?-march=native?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{})"
     )
 else()
     set(INSTRUCTION_SETS
         "T_AVX?-mavx.-mpclmul.-mbmi?auto result = _mm_testz_ps(__m128{}, __m128{})"
-        "T_AVX2?-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm256_extract_epi64(__m256i{}, 0)"
-        "T_AVX512?-mavx512bw.-avx512vl.-mavx512f.-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{}).char newArray[64]{}.auto result = _mm_loadu_epi64(newArray)"
+        "T_AVX2?-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm256_add_epi32(__m256i{}, __m256i{})"
+        "T_AVX512?-mavx512bw.-mavx512f.-mavx2.-mavx.-mpclmul.-mbmi?auto result = _mm512_add_ps(__m512i{}, __m512i{}).auto result2 = _mm512_cmplt_epu8_mask(__m512i{}, __m512i{})"
     )
 endif()
 
 set(CMAKE_REQUIRED_FLAGS_SAVE "${CMAKE_REQUIRED_FLAGS}")
 
-set(AVX_NAME "T_Fallback")
+set(AVX_TYPE "T_Fallback")
 
 foreach(INSTRUCTION_SET IN LISTS INSTRUCTION_SETS)
     string(REPLACE "?" ";" CURRENT_LIST "${INSTRUCTION_SET}")
@@ -52,5 +57,5 @@ foreach(INSTRUCTION_SET IN LISTS INSTRUCTION_SETS)
     check_instruction_set("${INSTRUCTION_SET_NAME}" "${INSTRUCTION_SET_FLAG}" "${INSTRUCTION_SET_INTRINSIC}")
 endforeach()
 
-message(STATUS "Detected CPU Architecture: ${AVX_NAME}")
+message(STATUS "Detected CPU Architecture: ${AVX_TYPE}")
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_SAVE}")

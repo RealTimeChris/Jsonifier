@@ -3,7 +3,7 @@
 #include "glaze/glaze.hpp"
 #include <jsonifier/Index.hpp>
 
-inline constexpr static std::string_view json0 = R"({"fixed_object": {
+constexpr static std::string_view json0 = R"({"fixed_object": {
       "int_array": [0, 1, 2, 3, 4, 5, 6],
       "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
       "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
@@ -101,59 +101,59 @@ struct obj_t {
 
 template<> struct glz::meta<fixed_object_t> {
 	using OTy = fixed_object_t;
-	inline constexpr static auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
+	constexpr static auto value = object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct glz::meta<fixed_name_object_t> {
 	using OTy = fixed_name_object_t;
-	inline constexpr static auto value =
+	constexpr static auto value =
 		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct glz::meta<nested_object_t> {
 	using OTy = nested_object_t;
-	inline constexpr static auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
+	constexpr static auto value = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct glz::meta<another_object_t> {
 	using OTy = another_object_t;
-	inline constexpr static auto value =
+	constexpr static auto value =
 		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct glz::meta<obj_t> {
 	using OTy = obj_t;
-	inline constexpr static auto value = glz::object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
+	constexpr static auto value = glz::object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
 		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
 		&OTy::boolean, "another_bool", &OTy::another_bool);
 };
 
 template<> struct Jsonifier::Core<fixed_object_t> {
 	using OTy = fixed_object_t;
-	inline constexpr static auto parseValue =
+	constexpr static auto parseValue =
 		object("int_array", &OTy::int_array, "float_array", &OTy::float_array, "double_array", &OTy::double_array);
 };
 
 template<> struct Jsonifier::Core<fixed_name_object_t> {
 	using OTy = fixed_name_object_t;
-	inline constexpr static auto parseValue =
+	constexpr static auto parseValue =
 		object("name0", &OTy::name0, "name1", &OTy::name1, "name2", &OTy::name2, "name3", &OTy::name3, "name4", &OTy::name4);
 };
 
 template<> struct Jsonifier::Core<nested_object_t> {
 	using OTy = nested_object_t;
-	inline constexpr static auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
+	constexpr static auto parseValue = object("v3s", &OTy::v3s, "id", &OTy::id);
 };
 
 template<> struct Jsonifier::Core<another_object_t> {
 	using OTy = another_object_t;
-	inline constexpr static auto parseValue =
+	constexpr static auto parseValue =
 		object("string", &OTy::string, "another_string", &OTy::another_string, "boolean", &OTy::boolean, "nested_object", &OTy::nested_object);
 };
 
 template<> struct Jsonifier::Core<obj_t> {
 	using OTy = obj_t;
-	inline constexpr static auto parseValue = object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
+	constexpr static auto parseValue = object("fixed_object", &OTy::fixed_object, "fixed_name_object", &OTy::fixed_name_object,
 		"another_object", &OTy::another_object, "string_array", &OTy::string_array, "string", &OTy::string, "number", &OTy::number, "boolean",
 		&OTy::boolean, "another_bool", &OTy::another_bool);
 };
@@ -211,28 +211,28 @@ GLZ_META(Test<double>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, 
 
 template<> struct Jsonifier::Core<Test<std::string>> {
 	using OTy = Test<std::string>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+	constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
 		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
 		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<uint64_t>> {
 	using OTy = Test<uint64_t>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+	constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
 		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
 		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<int64_t>> {
 	using OTy = Test<int64_t>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+	constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
 		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
 		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct Jsonifier::Core<Test<double>> {
 	using OTy = Test<double>;
-	inline constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
+	constexpr static auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g,
 		"h", &OTy::h, "i", &OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q,
 		"r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
@@ -290,28 +290,28 @@ GLZ_META(AbcTest<double>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, 
 
 template<> struct Jsonifier::Core<AbcTest<std::string>> {
 	using OTy = AbcTest<std::string>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+	constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
 		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
 		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<uint64_t>> {
 	using OTy = AbcTest<uint64_t>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+	constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
 		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
 		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<int64_t>> {
 	using OTy = AbcTest<int64_t>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+	constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
 		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
 		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 template<> struct Jsonifier::Core<AbcTest<double>> {
 	using OTy = AbcTest<double>;
-	inline constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
+	constexpr static auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t,
 		"s", &OTy::s, "r", &OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j,
 		"i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };

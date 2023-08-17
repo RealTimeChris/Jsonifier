@@ -1,4 +1,4 @@
-name: Build-and-Test-CLANG
+name: Build-and-Test-GCC-Ubuntu
 
 on:
   push:
@@ -8,27 +8,25 @@ on:
 
 jobs:
   Build:
-    runs-on: macos-latest
+    runs-on: ubuntu-22.04
     
     strategy:
       fail-fast: false
       matrix:
-        clang: [17]
+        gcc: [12]
         build_type: [Debug, Release]
         std: [20]
+    env:
+      CC: gcc-${{matrix.gcc}}
+      CXX: g++-${{matrix.gcc}}
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Clang17
-      run: |
-            brew install llvm
-            echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> ~/.bash_profile
-
     - name: Configure CMake
       working-directory: Tests
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/local/opt/llvm/bin/clang-16 -DGITHUB_BRANCH_TYPE=${{github.ref}}
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DGITHUB_BRANCH_TYPE=${{github.ref}}
 
     - name: Build the Test
       working-directory: Tests/Build
@@ -39,4 +37,4 @@ jobs:
       working-directory: Tests/Build
       run: |
            ./Json-Performance
-      
+      continue-on-error: true

@@ -36,24 +36,24 @@ namespace JsonifierInternal {
 		FirstType first{};
 		SecondType second{};
 
-		inline constexpr Pair() noexcept = default;
+		constexpr Pair() noexcept = default;
 
-		inline constexpr Pair(FirstType&& firstNew, SecondType&& secondNew) {
+		constexpr Pair(FirstType&& firstNew, SecondType&& secondNew) {
 			first = std::forward<FirstType>(firstNew);
 			second = std::forward<SecondType>(secondNew);
 		}
 
-		inline constexpr Pair(const FirstType& firstNew, const SecondType& secondNew) {
+		constexpr Pair(const FirstType& firstNew, const SecondType& secondNew) {
 			first = firstNew;
 			second = secondNew;
 		}
 
-		inline constexpr void swap(Pair<FirstType, SecondType>& other) noexcept {
+		constexpr void swap(Pair<FirstType, SecondType>& other) noexcept {
 			swapF(first, other.first);
 			swapF(second, other.second);
 		}
 
-		inline constexpr bool operator==(const Pair& other) const noexcept {
+		constexpr bool operator==(const Pair& other) const noexcept {
 			return first == other.first && second == other.second;
 		}
 	};

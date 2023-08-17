@@ -9,9 +9,15 @@
 
 ## Compiler Support
 ----
-![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
-![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
-![CLANG_17](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_17.yml?color=00ff90&label=CLANG_17)
+![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue)
+![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=GNU_12&labelColor=pewter&color=blue)
+![CLANG_16](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_16-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=CLANG_16&labelColor=pewter&color=blue)
+
+## Operating System Support
+----
+![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue)
+![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue)
+![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_16-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=Mac&labelColor=pewter&color=blue)
 
 ## Usage - Serialization/Parsing
 ----

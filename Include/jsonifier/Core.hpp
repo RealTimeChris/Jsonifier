@@ -40,7 +40,7 @@ namespace JsonifierInternal {
 		inline static constexpr Tuplet::Tuple<> parseValue{};
 	};
 
-	template<typename ValueType> inline constexpr auto CoreWrapperV = [] {
+	template<typename ValueType> constexpr auto CoreWrapperV = [] {
 		if constexpr (JsonifierT<ValueType>) {
 			return Jsonifier::Core<ValueType>::parseValue;
 		} else {
@@ -48,7 +48,7 @@ namespace JsonifierInternal {
 		}
 	}();
 
-	template<typename ValueType> inline constexpr auto CoreV = CoreWrapperV<std::decay_t<ValueType>>.parseValue;
+	template<typename ValueType> constexpr auto CoreV = CoreWrapperV<std::decay_t<ValueType>>.parseValue;
 
 	template<typename ValueType> using CoreT = std::decay_t<decltype(CoreV<ValueType>)>;
 
