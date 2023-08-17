@@ -3,20 +3,20 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
@@ -24,24 +24,23 @@
 /// Most of the code in this header was sampled fromSimdjson - https://github.com/simdjson
 #pragma once
 
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Tables.hpp>
-#include <jsonifier/Simd.hpp>
 #include <codecvt>
+#include <jsonifier/Allocator.hpp>
+#include <jsonifier/Base.hpp>
+#include <jsonifier/Simd.hpp>
+#include <jsonifier/Tables.hpp>
 
 namespace JsonifierInternal {
 
-	template<typename SimdBase> class BackslashAndQuote;
-
-	template<> class BackslashAndQuote<SimdBaseReal> {
+	template<typename SimdBase> class BackslashAndQuote {
 	  public:
-		static const uint32_t bytesProcessed = BytesPerStep;
+		static const StringParsingType bytesProcessed = BytesPerStep;
 
-		BackslashAndQuote<SimdBaseReal> inline static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBaseReal values(source);
+		inline BackslashAndQuote<SimdBase> static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
+			SimdBase values(source);
 			values.store(dest);
 			BackslashAndQuote returnData{};
-			returnData.bsBits = { values == uint8_t{ '\\' } };
+			returnData.bsBits	 = { values == uint8_t{ '\\' } };
 			returnData.quoteBits = { values == uint8_t{ '\"' } };
 			return returnData;
 		}
@@ -67,7 +66,7 @@ namespace JsonifierInternal {
 		StringParsingType bsBits{};
 	};
 
-	inline static uint32_t hexToU32NoCheck(StringViewPtr source) {
+	inline uint32_t hexToU32NoCheck(StringViewPtr source) {
 		uint32_t v1 = digitToVal32[630ull + source[0]];
 		uint32_t v2 = digitToVal32[420ull + source[1]];
 		uint32_t v3 = digitToVal32[210ull + source[2]];
@@ -75,7 +74,7 @@ namespace JsonifierInternal {
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline size_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
+	inline uint64_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
 		if (codePoint <= 0x7F) {
 			c[0] = uint8_t(codePoint);
 			return 1;
@@ -101,7 +100,7 @@ namespace JsonifierInternal {
 
 	inline bool handleUnicodeCodePoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
 		constexpr uint32_t subCodePoint = 0xfffd;
-		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
+		uint32_t codePoint				= hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
 			const uint8_t* srcData = *srcPtr;
@@ -109,7 +108,7 @@ namespace JsonifierInternal {
 				codePoint = subCodePoint;
 			} else {
 				uint32_t codePoint2 = hexToU32NoCheck(srcData + 2);
-				uint32_t lowBit = codePoint2 - 0xdc00;
+				uint32_t lowBit		= codePoint2 - 0xdc00;
 				if (lowBit >> 10) {
 					codePoint = subCodePoint;
 				} else {
@@ -120,22 +119,23 @@ namespace JsonifierInternal {
 		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
 			codePoint = subCodePoint;
 		}
-		size_t offset = codePointToUtf8(codePoint, *dstPtr);
+		uint64_t offset = codePointToUtf8(codePoint, *dstPtr);
 		*dstPtr += offset;
 		return offset > 0;
 	}
 
-	inline static StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest) {
-		while (true) {
+	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, uint64_t maxLength) {
+		while (maxLength > 0) {
 			auto bsQuote = BackslashAndQuote<SimdBaseReal>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
 			}
 			if (bsQuote.hasBackslash()) {
-				auto bsDist = bsQuote.backslashIndex();
+				auto bsDist			= bsQuote.backslashIndex();
 				uint8_t escape_char = source[bsDist + 1];
 				if (escape_char == 'u') {
 					source += bsDist;
+					maxLength -= bsDist;
 					dest += bsDist;
 					if (!handleUnicodeCodePoint(&source, &dest)) {
 						return nullptr;
@@ -146,10 +146,12 @@ namespace JsonifierInternal {
 						return nullptr;
 					}
 					dest[bsDist] = escapeResult;
+					maxLength -= bsDist + 2ull;
 					source += bsDist + 2ull;
 					dest += bsDist + 1ull;
 				}
 			} else {
+				maxLength -= BackslashAndQuote<SimdBaseReal>::bytesProcessed;
 				source += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
 				dest += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
 			}
@@ -157,8 +159,8 @@ namespace JsonifierInternal {
 		return nullptr;
 	}
 
-	inline static bool parseBool(StringViewPtr json) noexcept {
+	inline bool parseBool(StringViewPtr json) {
 		uint8_t valueNew[5]{ "true" };
-		return std::memcmp(valueNew, json, 5) == 0;
+		return std::memcmp(valueNew, json, 4) == 0;
 	}
-}
+}// namespace JsonifierInternal

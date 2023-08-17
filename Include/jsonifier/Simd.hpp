@@ -3,20 +3,20 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
@@ -32,9 +32,9 @@ namespace JsonifierInternal {
 	  public:
 		inline StringBlockReader(const uint8_t* stringViewNew, uint64_t lengthNew) noexcept : inString{ stringViewNew } {
 			lengthMinusStep = lengthNew < StepSize ? 0 : lengthNew - StepSize;
-			inString = stringViewNew;
-			length = lengthNew;
-			index = 0;
+			inString		= stringViewNew;
+			length			= lengthNew;
+			index			= 0;
 		}
 
 		inline uint64_t getRemainder(StringBufferPtr dest) const noexcept {
@@ -67,23 +67,23 @@ namespace JsonifierInternal {
 	  public:
 		using size_type = uint64_t;
 
-		inline SimdStringReader() noexcept = default;
-		inline SimdStringReader& operator=(SimdStringReader&& other) noexcept = default;
-		inline SimdStringReader(SimdStringReader&& other) noexcept = default;
+		inline SimdStringReader() noexcept										   = default;
+		inline SimdStringReader& operator=(SimdStringReader&& other) noexcept	   = default;
+		inline SimdStringReader(SimdStringReader&& other) noexcept				   = default;
 		inline SimdStringReader& operator=(const SimdStringReader& other) noexcept = delete;
-		inline SimdStringReader(const SimdStringReader& other) noexcept = delete;
+		inline SimdStringReader(const SimdStringReader& other) noexcept			   = delete;
 
 		inline void reset(Jsonifier::StringViewBase<uint8_t> stringViewNew) noexcept {
 			uint64_t sizeNew{ roundUpToMultipleOfEight(stringViewNew.size()) };
 			structuralIndices.resize(sizeNew);
-			stringView = stringViewNew;
+			stringView	= stringViewNew;
 			storedLSB01 = false;
 			prevEscaped = false;
 			structurals.reset();
 			whitespace.reset();
 			backslash.reset();
 			prevInString = 0;
-			stringIndex = 0;
+			stringIndex	 = 0;
 			quotes.reset();
 			tapeIndex = 0;
 			op.reset();
@@ -139,30 +139,22 @@ namespace JsonifierInternal {
 		}
 
 		inline int64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, int64_t newBits) noexcept {
-			structuralIndices[(currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] =
-				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			structuralIndices[(currentIndex * 8) + tapeIndex]	  = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			newBits												  = blsr(newBits);
 			return newBits;
 		}
 
@@ -181,13 +173,13 @@ namespace JsonifierInternal {
 		}
 
 		inline void addTapeValues() noexcept {
-			alignas(64) int64_t newBits[SixtyFourPer]{};
+			alignas(ALIGNMENT) int64_t newBits[SixtyFourPer]{};
 			structurals.store(newBits);
 			for (uint64_t x = 0; x < SixtyFourPer; ++x) {
 				if (!newBits[x]) {
 					continue;
 				}
-				auto cnt = _mm_popcnt_u64(newBits[x]);
+				auto cnt			 = popcnt(newBits[x]);
 				uint64_t rollsAmount = static_cast<uint64_t>(ceil(static_cast<float>(cnt) / 8.0f));
 				for (uint64_t y = 0; y < rollsAmount; ++y) {
 					newBits[x] = rollValuesIntoTape(y, x, newBits[x]);
@@ -198,12 +190,12 @@ namespace JsonifierInternal {
 
 		inline SimdBaseReal collectEscapedCharacters() {
 			if (backslash.operator bool()) {
-				auto newPrevEscaped = prevEscaped;
+				auto newPrevEscaped		   = prevEscaped;
 				SimdBaseReal followsEscape = backslash.shl<1>();
 				SimdBaseReal evenBits{ set(0b01010101) };
 				SimdBaseReal oddSequenceStarts = backslash.bitAndNot(evenBits.bitAndNot(followsEscape));
 				SimdBaseReal sequencesStartingOnEvenBits{};
-				prevEscaped = oddSequenceStarts.collectCarries(backslash, sequencesStartingOnEvenBits);
+				prevEscaped				= oddSequenceStarts.collectCarries(backslash, sequencesStartingOnEvenBits);
 				SimdBaseReal invertMask = sequencesStartingOnEvenBits.shl<1>();
 				return std::move(((evenBits ^ invertMask) & followsEscape).setLSB(newPrevEscaped));
 			} else {
@@ -215,16 +207,16 @@ namespace JsonifierInternal {
 		}
 
 		inline void collectStructurals() noexcept {
-			SimdBaseReal escaped = collectEscapedCharacters();
-			quotes = quotes.bitAndNot(escaped);
-			SimdBaseReal inString = quotes.carrylessMultiplication(prevInString);
-			SimdBaseReal scalar = ~(op | whitespace);
-			SimdBaseReal nonQuoteScalar = scalar.bitAndNot(quotes);
-			SimdBaseReal stringTail = inString ^ quotes;
-			SimdBaseReal followsNonQuoteScalar = nonQuoteScalar.follows(storedLSB01);
-			SimdBaseReal potentialScalarStart = scalar.bitAndNot(followsNonQuoteScalar);
+			SimdBaseReal escaped				  = collectEscapedCharacters();
+			quotes								  = quotes.bitAndNot(escaped);
+			SimdBaseReal inString				  = quotes.carrylessMultiplication(prevInString);
+			SimdBaseReal scalar					  = ~(op | whitespace);
+			SimdBaseReal nonQuoteScalar			  = scalar.bitAndNot(quotes);
+			SimdBaseReal stringTail				  = inString ^ quotes;
+			SimdBaseReal followsNonQuoteScalar	  = nonQuoteScalar.follows(storedLSB01);
+			SimdBaseReal potentialScalarStart	  = scalar.bitAndNot(followsNonQuoteScalar);
 			SimdBaseReal potentialStructuralStart = op | potentialScalarStart;
-			structurals = potentialStructuralStart.bitAndNot(stringTail);
+			structurals							  = potentialStructuralStart.bitAndNot(stringTail);
 		}
 	};
 

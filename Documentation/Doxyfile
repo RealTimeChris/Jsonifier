@@ -190,7 +190,7 @@ STRIP_FROM_PATH        =
 # header file to include in order to use a class. If left blank only the name of
 # the header file containing the class definition is used. Otherwise one should
 # specify the list of include paths that are normally passed to the compiler
-# using the -I flag.
+# using the -Index flag.
 
 STRIP_FROM_INC_PATH    =
 

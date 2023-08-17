@@ -1,22 +1,22 @@
 /*
-    MIT License
+	MIT License
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/Jsonifier
@@ -33,8 +33,7 @@ namespace JsonifierInternal {
 
 	template<bool printErrors> class Derailleur {
 	  public:
-		template<uint8_t c>
-		inline static bool checkForMatchClosed(StructuralIterator& iter, std::source_location location = std::source_location::current()) {
+		template<uint8_t c> static inline bool checkForMatchClosed(StructuralIterator& iter, std::source_location location = std::source_location::current()) {
 			if (iter == c) {
 				++iter;
 				return true;
@@ -45,7 +44,7 @@ namespace JsonifierInternal {
 			}
 		};
 
-		template<uint8_t c> inline static bool checkForMatchOpen(StructuralIterator& iter) {
+		template<uint8_t c> static inline bool checkForMatchOpen(StructuralIterator& iter) {
 			if (iter == c) {
 				++iter;
 				return true;
@@ -54,7 +53,7 @@ namespace JsonifierInternal {
 			}
 		};
 
-		inline static void skipValue(StructuralIterator& iter) noexcept {
+		static inline void skipValue(StructuralIterator& iter) noexcept {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -73,7 +72,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static size_t countArrayElements(StructuralIterator iter) noexcept {
+		static inline size_t countArrayElements(StructuralIterator iter) noexcept {
 			size_t currentDepth{ 1 };
 			size_t currentCount{ 1 };
 			if (iter == ']') {
@@ -109,9 +108,9 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		inline static void skipObject(StructuralIterator& iter) noexcept {
+		static inline void skipObject(StructuralIterator& iter) noexcept {
 			++iter;
-			size_t currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			if (iter == '}') {
 				++iter;
 				return;
@@ -136,9 +135,9 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static void skipArray(StructuralIterator& iter) noexcept {
+		static inline void skipArray(StructuralIterator& iter) noexcept {
 			++iter;
-			size_t currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			if (iter == ']') {
 				++iter;
 				return;
@@ -163,17 +162,17 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static bool isTypeType(uint8_t c) {
+		static inline bool isTypeType(uint8_t c) {
 			const uint8_t array01[]{ "0123456789-ftn\"{[" };
 			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 
-		inline static bool isDigitType(uint8_t c) {
+		static inline bool isDigitType(uint8_t c) {
 			const uint8_t array01[]{ "0123456789-" };
 			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
 		}
 
-		template<uint8_t c> inline static void skipToNextValue(StructuralIterator& iter) {
+		template<uint8_t c> static inline void skipToNextValue(StructuralIterator& iter) {
 			while (iter != iter) {
 				if (iter == ',') {
 					return;
@@ -183,7 +182,7 @@ namespace JsonifierInternal {
 			return;
 		};
 
-		inline static Jsonifier::StringView getValueType(uint8_t charToCheck) {
+		static inline Jsonifier::StringView getValueType(uint8_t charToCheck) {
 			static constexpr Jsonifier::StringView array{ "Array" };
 			static constexpr Jsonifier::StringView object{ "Object" };
 			static constexpr Jsonifier::StringView boolean{ "Bool" };
@@ -207,22 +206,21 @@ namespace JsonifierInternal {
 			}
 		}
 
-		template<uint8_t c> inline static void reportError(StructuralIterator& iter, std::source_location location) {
+		template<uint8_t c> static inline void reportError(StructuralIterator& iter, std::source_location location) {
 			if (printErrors) {
 				if (collectMisReadType<c>(iter) == TypeOfMisread::Wrong_Type) {
-					std::cout << "It seems you mismatched a value for a value of type: " << getValueType(c)
-							  << ", the found value was actually: " << getValueType(**iter) << ", at index: " << iter.getCurrentIndex()
-							  << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
+					std::cout << "It seems you mismatched a value for a value of type: " << getValueType(c) << ", the found value was actually: " << getValueType(**iter)
+							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
 							  << ", in function: " << location.function_name() << "()." << std::endl;
 				} else {
 					std::cout << "Failed to collect a '" << c << "', at index: " << iter.getCurrentIndex() << " instead found a '" << **iter << "'"
-							  << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
-							  << ", in function: " << location.function_name() << "()." << std::endl;
+							  << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column() << ", in function: " << location.function_name()
+							  << "()." << std::endl;
 				}
 			}
 		}
 
-		template<uint8_t c> inline static TypeOfMisread collectMisReadType(StructuralIterator& iter) {
+		template<uint8_t c> static inline TypeOfMisread collectMisReadType(StructuralIterator& iter) {
 			if (isTypeType(**iter) && isTypeType(c)) {
 				return TypeOfMisread::Wrong_Type;
 			} else {
