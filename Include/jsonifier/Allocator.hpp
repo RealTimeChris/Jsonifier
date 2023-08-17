@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <memory_resource>
 #include <cstdint>
 #include <utility>
 #include <memory>
@@ -35,33 +36,44 @@
 	#define ALIGNED_FREE(ptr) free(ptr)
 #endif
 
+#ifdef T_AVX512
+	#define ALIGNMENT 64
+#elif defined T_AVX2
+	#define ALIGNMENT 32
+#elif defined T_AVX
+	#define ALIGNMENT 16
+#else
+	#define ALIGNMENT 8
+#endif
+
 namespace JsonifierInternal {
 
-	template<typename ValueType, uint64_t Alignment = alignof(ValueType)> class AlignedAllocator {
+	template<typename ValueType> class AlignedAllocator {
 	  public:
 		using value_type = ValueType;
 		using pointer = value_type*;
-		using size_type = uint64_t;
+		using size_type = size_t;
+		using allocator = std::pmr::polymorphic_allocator<value_type>;
 
-		inline pointer allocate(size_type n) {
+		constexpr pointer allocate(size_type n) {
 			if (n == 0) {
 				return nullptr;
 			}
 
-			return static_cast<pointer>(ALIGNED_ALLOC(n * sizeof(ValueType), Alignment < 32 ? 32 : Alignment));
+			return static_cast<pointer>(ALIGNED_ALLOC(n * sizeof(ValueType), ALIGNMENT));
 		}
 
-		inline void deallocate(pointer p, size_type) {
+		constexpr void deallocate(pointer p, size_type) {
 			if (p) {
-				ALIGNED_FREE(p);
+				return ALIGNED_FREE(p);
 			}
 		}
 
-		template<typename... Args> inline void construct(pointer p, Args&&... args) {
+		template<typename... Args> constexpr void construct(pointer p, Args&&... args) {
 			new (p) value_type(std::forward<Args>(args)...);
 		}
 
-		inline void destroy(pointer p) {
+		constexpr void destroy(pointer p) {
 			p->~value_type();
 		}
 	};
@@ -70,7 +82,7 @@ namespace JsonifierInternal {
 	  public:
 		using value_type = ValueType;
 		using pointer = value_type*;
-		using size_type = uint64_t;
+		using size_type = size_t;
 		using allocator = AlignedAllocator<value_type>;
 		using allocator_traits = std::allocator_traits<allocator>;
 

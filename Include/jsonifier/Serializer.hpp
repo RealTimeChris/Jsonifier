@@ -85,7 +85,7 @@ namespace JsonifierInternal {
 
 	class Serializer {
 	  public:
-		inline constexpr Serializer() noexcept = default;
+		constexpr Serializer() noexcept = default;
 
 		template<bool excludeKeys = false> inline void serializeJson(CoreType auto& data, VectorLike auto& buffer) {
 			size_t index{};

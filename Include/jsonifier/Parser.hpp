@@ -89,6 +89,7 @@ namespace JsonifierInternal {
 
 		inline Parser& operator=(Parser&& other) noexcept {
 			swapF(section, other.section);
+			swapF(string, other.string);
 			return *this;
 		};
 
@@ -124,12 +125,12 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		SimdStringReader section{};
 		Jsonifier::StringBase<uint8_t> string{};
+		SimdStringReader section{};
 
 		template<typename ValueType> inline void reset(const ValueType& stringNew) {
 			string.resize(stringNew.size());
-			std::memcpy(string.data(), stringNew.data(), stringNew.size());
+			std::copy(stringNew.data(), stringNew.data() + stringNew.size(), string.data());
 			section.reset(static_cast<Jsonifier::StringViewBase<uint8_t>>(string));
 		}
 

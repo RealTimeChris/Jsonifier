@@ -29,110 +29,80 @@ namespace JsonifierInternal {
 
 	template<typename ValueType> class Iterator {
 	  public:
-		using iterator_concept = std::bidirectional_iterator_tag;
+		using iterator_concept = std::forward_iterator_tag;
 		using value_type = ValueType;
 		using difference_type = ptrdiff_t;
 		using pointer = const value_type*;
 		using reference = const value_type&;
 		using size_type = size_t;
 
-		inline constexpr Iterator() noexcept = default;
+		constexpr Iterator() noexcept : dataVal{}, offset{} {};
 
-		inline constexpr Iterator(const pointer ptrNew, const size_type offsetNew) noexcept : dataVal(ptrNew), offset(offsetNew) {
+		constexpr Iterator(const pointer ptrNew, const size_type offsetNew) noexcept : dataVal(ptrNew), offset(offsetNew) {
 		}
 
-		inline constexpr reference operator*() const noexcept {
+		constexpr reference operator*() const noexcept {
 			return dataVal[offset];
 		}
 
-		inline constexpr pointer operator->() const noexcept {
+		constexpr pointer operator->() const noexcept {
 			return dataVal + offset;
 		}
 
-		inline constexpr Iterator& operator++() noexcept {
+		constexpr Iterator& operator++() noexcept {
 			++offset;
 			return *this;
 		}
 
-		inline constexpr Iterator operator++(int32_t) noexcept {
+		constexpr Iterator operator++(int32_t) noexcept {
 			Iterator temp{ *this };
 			++*this;
 			return temp;
 		}
 
-		inline constexpr Iterator& operator--() noexcept {
-			--offset;
-			return *this;
-		}
-
-		inline constexpr Iterator operator--(int32_t) noexcept {
-			Iterator temp{ *this };
-			--*this;
-			return temp;
-		}
-
-		inline constexpr Iterator& operator+=(const difference_type offsetNew) noexcept {
+		constexpr Iterator& operator+=(const difference_type offsetNew) noexcept {
 			offset += static_cast<size_type>(offsetNew);
 			return *this;
 		}
 
-		inline constexpr Iterator operator+(const difference_type offsetNew) const noexcept {
+		constexpr Iterator operator+(const difference_type offsetNew) const noexcept {
 			Iterator temp{ *this };
 			temp += offsetNew;
 			return temp;
 		}
 
-		inline constexpr Iterator operator+(const difference_type offsetNew) noexcept {
+		constexpr Iterator operator+(const difference_type offsetNew) noexcept {
 			*this += offsetNew;
 			return *this;
 		}
 
-		inline constexpr Iterator& operator-=(const difference_type offsetNew) noexcept {
-			offset -= static_cast<size_type>(offsetNew);
-			return *this;
-		}
-
-		inline constexpr Iterator operator-(const difference_type offsetNew) const noexcept {
-			Iterator temp{ *this };
-			temp -= offsetNew;
-			return temp;
-		}
-
-		inline constexpr difference_type operator-(const Iterator& rhs) const noexcept {
-			return static_cast<difference_type>(offset - rhs.offset);
-		}
-
-		inline constexpr reference operator[](const difference_type offsetNew) const noexcept {
-			return *(*this + offsetNew);
-		}
-
-		inline constexpr bool operator==(const Iterator& rhs) const noexcept {
+		constexpr bool operator==(const Iterator& rhs) const noexcept {
 			return offset == rhs.offset;
 		}
 
-		inline constexpr bool operator!=(const Iterator& rhs) const noexcept {
+		constexpr bool operator!=(const Iterator& rhs) const noexcept {
 			return !(*this == rhs);
 		}
 
-		inline constexpr bool operator<(const Iterator& rhs) const noexcept {
+		constexpr bool operator<(const Iterator& rhs) const noexcept {
 			return offset < rhs.offset;
 		}
 
-		inline constexpr bool operator>(const Iterator& rhs) const noexcept {
+		constexpr bool operator>(const Iterator& rhs) const noexcept {
 			return rhs < *this;
 		}
 
-		inline constexpr bool operator<=(const Iterator& rhs) const noexcept {
+		constexpr bool operator<=(const Iterator& rhs) const noexcept {
 			return !(rhs < *this);
 		}
 
-		inline constexpr bool operator>=(const Iterator& rhs) const noexcept {
+		constexpr bool operator>=(const Iterator& rhs) const noexcept {
 			return !(*this < rhs);
 		}
 
 	  protected:
-		pointer dataVal = nullptr;
-		size_type offset = 0;
+		pointer dataVal;
+		size_type offset;
 	};
 
 }

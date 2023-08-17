@@ -73,7 +73,7 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline static size_t countArrayElements(StructuralIterator iter) noexcept {
+		inline static size_t countArrayElements(StructuralIterator iter) noexcept { 
 			size_t currentDepth{ 1 };
 			size_t currentCount{ 1 };
 			if (iter == ']') {

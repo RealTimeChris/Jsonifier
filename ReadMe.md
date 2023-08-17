@@ -9,9 +9,15 @@
 
 ## Compiler Support
 ----
-![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022.yml?color=00ff90&label=MSVC_2022)
-![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12.yml?color=00ff90&label=GCC_12)
-![CLANG_17](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_17.yml?color=00ff90&label=CLANG_17)
+![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue)
+![GCC_12](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=GNU_12&labelColor=pewter&color=blue)
+![CLANG_16](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_16-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=CLANG_16&labelColor=pewter&color=blue)
+
+## Operating System Support
+----
+![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue)
+![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_12-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue)
+![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_16-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=Mac&labelColor=pewter&color=blue)
 
 ## Usage - Serialization/Parsing
 ----
@@ -229,18 +235,18 @@ The configuration script in Jsonifier's CMakeLists.txt file detects the CPU arch
 ## Installation (Vcpkg)
 - Requirements:
 	- CMake 3.18 or later.
-	- A C++23 or later compiler.
+	- A C++20 or later compiler.
 - Steps:   
 	1. Install vcpkg, if need be.
 	2. Make sure to run vcpkg integrate install.
 	3. Enter within a terminal vcpkg install jsonifier:x64-windows_OR_linux.
-	4. Set up a project in your IDE and make sure to set the C++ standard to C++23 or later - and include `<jsonifier/Index.hpp>`.
+	4. Set up a project in your IDE and make sure to set the C++ standard to C++20 or later - and include `<jsonifier/Index.hpp>`.
 	5. Build and run!
 	
 ## Installation (CMake-FetchContent)
 - Requirements:
 	- CMake 3.18 or later.
-	- A C++23 or later compiler.
+	- A C++20 or later compiler.
 - Steps:   Add the following to your CMakeLists.txt build script.
 ```cpp
 include(FetchContent)
@@ -258,7 +264,7 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
 ## Installation (CMake)
 - Requirements:
 	- CMake 3.18 or later.
-	- A C++23 or later compiler.
+	- A C++20 or later compiler.
 - Steps:   
 	1. Clone this repo into a folder.
 	2. Set the installation directory if you wish, using the `CMAKE_INSTALL_PREFIX` variable in CMakeLists.txt.

@@ -30,14 +30,14 @@ namespace JsonifierInternal {
 
 	class StringBlockReader {
 	  public:
-		inline StringBlockReader(const uint8_t* stringViewNew, uint64_t lengthNew) noexcept : inString{ stringViewNew } {
+		inline StringBlockReader(const uint8_t* stringViewNew, size_t lengthNew) noexcept : inString{ stringViewNew } {
 			lengthMinusStep = lengthNew < StepSize ? 0 : lengthNew - StepSize;
 			inString = stringViewNew;
 			length = lengthNew;
 			index = 0;
 		}
 
-		inline uint64_t getRemainder(StringBufferPtr dest) const noexcept {
+		inline size_t getRemainder(StringBufferPtr dest) const noexcept {
 			if (length == index) {
 				return 0;
 			}
@@ -58,14 +58,14 @@ namespace JsonifierInternal {
 
 	  protected:
 		const uint8_t* inString{};
-		uint64_t lengthMinusStep{};
-		uint64_t length{};
-		uint64_t index{};
+		size_t lengthMinusStep{};
+		size_t length{};
+		size_t index{};
 	};
 
 	class SimdStringReader {
 	  public:
-		using size_type = uint64_t;
+		using size_type = size_t;
 
 		inline SimdStringReader() noexcept = default;
 		inline SimdStringReader& operator=(SimdStringReader&& other) noexcept = default;
@@ -74,7 +74,7 @@ namespace JsonifierInternal {
 		inline SimdStringReader(const SimdStringReader& other) noexcept = delete;
 
 		inline void reset(Jsonifier::StringViewBase<uint8_t> stringViewNew) noexcept {
-			uint64_t sizeNew{ roundUpToMultipleOfEight(stringViewNew.size()) };
+			size_t sizeNew{ roundUpToMultipleOfEight(stringViewNew.size()) };
 			structuralIndices.resize(sizeNew);
 			stringView = stringViewNew;
 			storedLSB01 = false;
@@ -96,7 +96,7 @@ namespace JsonifierInternal {
 				while (stringReader.hasFullBlock()) {
 					generateStructurals(stringReader.fullBlock());
 				}
-				uint8_t block[StepSize];
+				alignas(ALIGNMENT) uint8_t block[StepSize];
 				stringReader.getRemainder(block);
 				generateStructurals(block);
 			}
@@ -122,53 +122,53 @@ namespace JsonifierInternal {
 		SimdBaseReal structurals{};
 		SimdBaseReal whitespace{};
 		SimdBaseReal backslash{};
-		uint64_t prevInString{};
-		uint64_t stringIndex{};
+		size_t prevInString{};
+		size_t stringIndex{};
 		SimdBaseReal quotes{};
-		uint64_t tapeIndex{};
+		size_t tapeIndex{};
 		bool prevEscaped{};
 		bool storedLSB01{};
 		SimdBaseReal op{};
 
-		inline uint64_t roundUpToMultipleOfEight(uint64_t num) {
-			uint64_t remainder = num % 8;
+		inline size_t roundUpToMultipleOfEight(size_t num) {
+			size_t remainder = num % 8;
 			if (remainder == 0) {
 				return num;
 			}
 			return num + (8 - remainder);
 		}
 
-		inline int64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, int64_t newBits) noexcept {
+		inline int64_t rollValuesIntoTape(size_t currentIndex, size_t x, int64_t newBits) noexcept {
 			structuralIndices[(currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[1 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[2 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[3 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[4 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[5 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[6 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			structuralIndices[7 + (currentIndex * 8) + tapeIndex] =
 				stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
-			newBits = _blsr_u64(newBits);
+			newBits = blsr(newBits);
 			return newBits;
 		}
 
 		inline void generateStructurals(StringViewPtr valueNew) noexcept {
 			SimdBaseReal newPtr[8]{};
-			for (uint64_t x = 0; x < 8; ++x) {
+			for (size_t x = 0; x < 8; ++x) {
 				newPtr[x] = load(valueNew + (BytesPerStep * x));
 			}
 			whitespace.convertWhitespaceToSimdBase(newPtr);
@@ -181,15 +181,15 @@ namespace JsonifierInternal {
 		}
 
 		inline void addTapeValues() noexcept {
-			alignas(64) int64_t newBits[SixtyFourPer]{};
+			alignas(ALIGNMENT) int64_t newBits[SixtyFourPer]{};
 			structurals.store(newBits);
-			for (uint64_t x = 0; x < SixtyFourPer; ++x) {
+			for (size_t x = 0; x < SixtyFourPer; ++x) {
 				if (!newBits[x]) {
 					continue;
 				}
-				auto cnt = _mm_popcnt_u64(newBits[x]);
-				uint64_t rollsAmount = static_cast<uint64_t>(ceil(static_cast<float>(cnt) / 8.0f));
-				for (uint64_t y = 0; y < rollsAmount; ++y) {
+				auto cnt = popcnt(newBits[x]);
+				size_t rollsAmount = static_cast<size_t>(ceil(static_cast<float>(cnt) / 8.0f));
+				for (size_t y = 0; y < rollsAmount; ++y) {
 					newBits[x] = rollValuesIntoTape(y, x, newBits[x]);
 				}
 				tapeIndex += cnt;

@@ -60,7 +60,7 @@ namespace Jsonifier {
 		using size_type = size_t;
 		using allocator = JsonifierInternal::AllocWrapper<value_type>;
 
-		inline constexpr Vector() noexcept = default;
+		constexpr Vector() noexcept = default;
 
 		inline Vector& operator=(Vector&& other) noexcept {
 			JsonifierInternal::swapF(capacityVal, other.capacityVal);
@@ -73,7 +73,7 @@ namespace Jsonifier {
 			*this = std::move(other);
 		}
 
-		inline constexpr Vector& operator=(std::initializer_list<value_type> initList) {
+		constexpr Vector& operator=(std::initializer_list<value_type> initList) {
 			resize(initList.size());
 			for (size_type x = 0; x < sizeVal; ++x) {
 				values[x] = std::move(initList.begin()[x]);
@@ -81,7 +81,7 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline constexpr explicit Vector(std::initializer_list<value_type> initList) {
+		constexpr explicit Vector(std::initializer_list<value_type> initList) {
 			*this = initList;
 		}
 
@@ -104,7 +104,7 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline constexpr Vector& operator=(value_type other) noexcept {
+		constexpr Vector& operator=(value_type other) noexcept {
 			emplace_back(other);
 			return *this;
 		}
@@ -113,58 +113,58 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return const_iterator(values, 0);
 		}
 
-		inline constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return const_iterator(values, sizeVal);
 		}
 
-		inline constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return iterator(values, 0);
 		}
 
-		inline constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return iterator(values, sizeVal);
 		}
 
-		inline constexpr reference front() noexcept {
+		constexpr reference front() noexcept {
 			return values[0];
 		}
 
-		inline constexpr reference back() noexcept {
+		constexpr reference back() noexcept {
 			return values[sizeVal - 1];
 		}
 
-		inline constexpr reference operator[](size_type index) const noexcept {
+		constexpr reference operator[](size_type index) const noexcept {
 			return values[index];
 		}
 
-		inline constexpr size_type capacity() const noexcept {
+		constexpr size_type capacity() const noexcept {
 			return capacityVal;
 		}
 
-		inline constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return sizeVal;
 		}
 
-		inline constexpr pointer data() const noexcept {
+		constexpr pointer data() const noexcept {
 			return values;
 		}
 
-		inline constexpr size_type maxSize() const noexcept {
+		constexpr size_type maxSize() const noexcept {
 			return std::numeric_limits<size_type>::max() / sizeof(value_type);
 		}
 
-		inline constexpr void emplace_back(const_reference c) {
+		constexpr void emplace_back(const_reference c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
 			allocator::construct(&values[sizeVal++], c);
 		}
 
-		inline constexpr void emplace_back(value_type&& c) {
+		constexpr void emplace_back(value_type&& c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 8 + 1);
 			}
@@ -213,18 +213,18 @@ namespace Jsonifier {
 			}
 		}
 
-		inline constexpr void reset() {
+		constexpr void reset() {
 			std::fill(values, values + capacityVal, value_type{});
 		}
 
-		inline constexpr bool operator==(const Vector<value_type>& rhs) const noexcept {
+		constexpr bool operator==(const Vector<value_type>& rhs) const noexcept {
 			if (rhs.size() != size()) {
 				return false;
 			}
 			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), this->data(), this->size());
 		}
 
-		inline constexpr ~Vector() {
+		constexpr ~Vector() {
 			if (values && capacityVal) {
 				allocator::deallocate(values, capacityVal);
 			}

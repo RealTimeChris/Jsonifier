@@ -222,10 +222,10 @@ namespace JsonifierInternal {
 		*hi = __umulh(a, b);
 		*lo = a * b;
 #else
-		uint32_t a0 = ( uint32_t )(a), a1 = ( uint32_t )(a >> 32);
+		uint32_t a0 = ( uint32_t )(a), array01 = ( uint32_t )(a >> 32);
 		uint32_t b0 = ( uint32_t )(b), b1 = ( uint32_t )(b >> 32);
 		size_t p00 = ( size_t )a0 * b0, p01 = ( size_t )a0 * b1;
-		size_t p10 = ( size_t )a1 * b0, p11 = ( size_t )a1 * b1;
+		size_t p10 = ( size_t )array01 * b0, p11 = ( size_t )array01 * b1;
 		size_t m0 = p01 + (p00 >> 32);
 		uint32_t m00 = ( uint32_t )(m0), m01 = ( uint32_t )(m0 >> 32);
 		size_t m1 = p10 + m00;
@@ -581,9 +581,7 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType>
-		requires std::same_as<ValueType, uint32_t> || std::same_as<ValueType, uint16_t> || std::same_as<ValueType, uint8_t>
-	inline static auto* toChars(auto* buf, ValueType val) noexcept {
+	template<UnsignedT ValueType> inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 		uint32_t lz;
 
@@ -646,9 +644,7 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType>
-		requires std::same_as<ValueType, int32_t> || std::same_as<ValueType, int16_t> || std::same_as<ValueType, int8_t>
-	inline static auto* toChars(auto* buf, ValueType val) noexcept {
+	template<SignedT ValueType> inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		uint32_t neg = uint32_t(-val);
 		size_t sign = val < 0;
 		*buf = '-';
@@ -754,8 +750,8 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType>
-		requires std::same_as<ValueType, size_t>
+	template<UnsignedT ValueType>
+		requires(sizeof(ValueType) == 8)
 	inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		size_t tmp, hgh;
 		uint32_t mid, low;
@@ -781,8 +777,8 @@ namespace JsonifierInternal {
 		}
 	}
 
-	template<typename ValueType>
-		requires std::same_as<ValueType, int64_t>
+	template<SignedT ValueType>
+		requires(sizeof(ValueType) == 8)
 	inline static auto* toChars(auto* buf, ValueType val) noexcept {
 		size_t neg = size_t(-val);
 		size_t sign = val < 0;

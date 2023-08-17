@@ -26,10 +26,11 @@
 #include <jsonifier/Vector.hpp>
 
 #include <algorithm>
+#include <string>
 
 namespace JsonifierInternal {
 
-	template<typename OTy1, typename OTy2> inline constexpr bool stringConstCompare(const OTy1& S0, const OTy2& S1) noexcept {
+	template<typename OTy1, typename OTy2> constexpr bool stringConstCompare(const OTy1& S0, const OTy2& S1) noexcept {
 		if (S0.size() != S1.size()) [[unlikely]] {
 			return false;
 		}
@@ -41,16 +42,30 @@ namespace JsonifierInternal {
 		}
 		return true;
 	}
+
+	template<typename ValueType>
+	concept HasSize = requires(ValueType value) {
+		{ value.size() };
+	};
+
+	template<typename ValueType>
+	concept HasData = requires(ValueType value) {
+		{ value.data() };
+	};
+
+	template<typename ValueType>
+	concept HasDataAndSize = HasData<ValueType> && HasSize<ValueType>;
 }
 
 namespace Jsonifier {
+
 
 	template<typename ValueType> class StringViewBase;
 
 	template<typename ValueType> class StringBase : public JsonifierInternal::AllocWrapper<ValueType> {
 	  public:
 		using value_type = ValueType;
-		using traits_type = std::char_traits<value_type>;
+		using traits_type = std::char_traits<char>;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
 		using reference = value_type&;
@@ -63,11 +78,11 @@ namespace Jsonifier {
 		using difference_type = ptrdiff_t;
 		using allocator = JsonifierInternal::AllocWrapper<value_type>;
 
-		inline constexpr StringBase() noexcept = default;
+		constexpr StringBase() noexcept : capacityVal{ 0 }, sizeVal{ 0 }, values{ nullptr } {};
 
 		inline static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-		inline constexpr StringBase& operator=(StringBase&& other) noexcept {
+		constexpr StringBase& operator=(StringBase&& other) noexcept {
 			if (this != &other) {
 				JsonifierInternal::swapF(capacityVal, other.capacityVal);
 				JsonifierInternal::swapF(sizeVal, other.sizeVal);
@@ -80,121 +95,134 @@ namespace Jsonifier {
 			*this = std::move(other);
 		}
 
-		inline constexpr StringBase& operator=(const StringBase& other) noexcept {
+		constexpr StringBase& operator=(const StringBase& other) noexcept {
 			if (this != &other) {
 				auto sizeNew = other.size();
 				if (sizeNew) [[likely]] {
 					reserve(sizeNew);
-					std::memcpy(values, other.data(), sizeNew);
+					std::copy(other.data(), other.data() + sizeNew, values);
 					sizeVal = sizeNew;
 				}
 			}
 			return *this;
 		}
 
-		inline StringBase(const StringBase& other) noexcept {
+		constexpr StringBase(const StringBase& other) noexcept {
 			*this = other;
 		}
 
-		inline StringBase(value_type other) noexcept {
+		constexpr StringBase(value_type other) noexcept {
 			*this = other;
 		}
 
-		inline StringBase& operator=(const std::string& other) noexcept {
+		constexpr StringBase& operator=(const std::string& other) noexcept {
 			auto sizeNew = other.size();
 			if (sizeNew) [[likely]] {
 				reserve(sizeNew);
-				std::memcpy(values, other.data(), sizeNew);
+				std::copy(other.data(), other.data() + sizeNew, values);
 				sizeVal = sizeNew;
 			}
 			return *this;
 		}
 
-		inline StringBase(const std::string& other) noexcept {
+		constexpr StringBase(const std::string& other) noexcept {
 			*this = other;
 		}
 
-		inline constexpr StringBase& operator=(const std::string_view& other) noexcept {
+		constexpr StringBase& operator=(const std::string_view& other) noexcept {
 			auto sizeNew = other.size();
 			if (sizeNew) [[likely]] {
 				reserve(sizeNew);
-				std::memcpy(values, other.data(), sizeNew);
+				std::copy(other.data(), other.data() + sizeNew, values);
 				sizeVal = sizeNew;
 			}
 			return *this;
 		}
 
-		inline StringBase(const std::string_view& other) noexcept {
+		constexpr StringBase(const std::string_view& other) noexcept {
 			*this = other;
 		}
 
-		template<size_t strLength> inline constexpr StringBase(const value_type (&other)[strLength]) {
+		template<size_t strLength> constexpr StringBase(const value_type (&other)[strLength]) {
 			if (strLength) [[likely]] {
 				reserve(strLength);
-				std::memcpy(values, other, strLength);
+				std::copy(other, other + strLength, values);
 				sizeVal = strLength;
 			}
 		}
 
-		inline constexpr StringBase& operator=(const_pointer other) noexcept {
+		constexpr StringBase& operator=(const_pointer other) noexcept {
 			auto sizeNew = traits_type::length(other);
 			if (sizeNew) [[likely]] {
 				reserve(sizeNew);
-				std::memcpy(values, other, sizeNew);
+				std::copy(other, other + sizeNew, values);
 				sizeVal = sizeNew;
 			}
 			return *this;
 		}
 
-		inline StringBase(const_pointer other) noexcept {
+		constexpr StringViewBase<value_type> stringView(size_type offSet, size_type count) noexcept {
+			return { values + offSet, count };
+		}
+
+		constexpr StringBase(const_pointer other) noexcept {
 			*this = other;
 		}
 
-		inline StringBase(const_pointer other, size_t sizeNew) noexcept {
+		constexpr StringBase(const_pointer other, size_t sizeNew) noexcept {
 			if (sizeNew) [[likely]] {
 				reserve(sizeNew);
-				std::memcpy(values, other, sizeNew);
+				std::copy(other, other + sizeNew, values);
 				sizeVal = sizeNew;
 			}
 		}
 
-		inline StringBase substr(size_type pos, size_type count) {
+		constexpr StringBase substr(size_type pos, size_type count) {
 			if (pos + count >= sizeVal) {
 				return StringBase{};
 			}
 			StringBase result{};
 			result.reserve(count);
-			std::memcpy(result.values, values + pos, count * sizeof(value_type));
+			std::copy(values + pos, values + pos + count * sizeof(value_type), result.values);
 			result.sizeVal = count;
 			allocator::construct(&result.values[count], '\0');
 			return result;
 		}
 
-		inline constexpr auto& back() const noexcept {
+		inline void erase(size_type count) {
+			if (count > sizeVal || count == 0) {
+				return;
+			}
+			traits_type::move(values, values + count, sizeVal - count);
+			sizeVal -= count;
+			values[sizeVal] = '\0';
+		}
+
+		constexpr auto& back() const noexcept {
 			return *(values + sizeVal);
 		}
 
-		inline constexpr auto& front() const noexcept {
+		constexpr auto& front() const noexcept {
 			return *values;
 		}
 
-		inline constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return const_iterator(values, 0);
 		}
 
-		inline constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return const_iterator(values, sizeVal);
 		}
 
-		inline constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return iterator(values, 0);
 		}
 
-		inline constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return iterator(values, sizeVal);
 		}
 
-		inline void pushBack(value_type value) {
+		constexpr void pushBack(value_type value) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve((sizeVal + 2) * 4);
 			}
@@ -202,26 +230,26 @@ namespace Jsonifier {
 			allocator::construct(&values[sizeVal], '\0');
 		}
 
-		inline constexpr value_type& operator[](size_type index) noexcept {
+		constexpr value_type& operator[](size_type index) noexcept {
 			return values[index];
 		}
 
-		inline constexpr value_type& operator[](size_type index) const noexcept {
+		constexpr value_type& operator[](size_type index) const noexcept {
 			return values[index];
 		}
 
-		inline operator std::string() const {
+		constexpr operator std::string() const {
 			std::string newString{};
 			newString.resize(size());
 			std::memcpy(newString.data(), data(), size());
 			return newString;
 		}
 
-		inline constexpr void clear() noexcept {
+		constexpr void clear() noexcept {
 			sizeVal = 0;
 		}
 
-		inline constexpr size_type maxSize() const {
+		constexpr size_type maxSize() const {
 			return std::numeric_limits<size_type>::max();
 		}
 
@@ -240,12 +268,12 @@ namespace Jsonifier {
 					}
 					capacityVal = sizeNew;
 					values = newPtr;
-					std::uninitialized_default_construct(values + sizeVal, values + sizeVal + (sizeNew - sizeVal));
+					std::uninitialized_default_construct(values + sizeVal, values + capacityVal);
 				} else if (sizeNew > sizeVal) [[unlikely]] {
-					std::uninitialized_default_construct(values + sizeVal, values + sizeVal + (sizeNew - sizeVal));
+					std::uninitialized_default_construct(values + sizeVal, values + capacityVal);
 				}
 				sizeVal = sizeNew;
-				values[sizeVal] = '\0';
+				allocator::construct(&values[sizeVal], '\0');
 			} else {
 				sizeVal = 0;
 			}
@@ -268,37 +296,52 @@ namespace Jsonifier {
 			}
 		}
 
-		inline constexpr size_type capacity() const noexcept {
+		constexpr size_type capacity() const noexcept {
 			return capacityVal;
 		}
 
-		inline constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return sizeVal;
 		}
 
-		inline constexpr bool empty() const noexcept {
+		constexpr bool empty() const noexcept {
 			return sizeVal == 0;
 		}
 
-		inline constexpr pointer data() const noexcept {
+		constexpr operator StringViewBase<value_type>() {
+			return { values, sizeVal };
+		}
+
+		constexpr pointer data() const noexcept {
 			return values;
 		}
 
-		template<typename ValueTypeNew> inline constexpr bool operator==(const ValueTypeNew& rhs) const noexcept {
+		template<JsonifierInternal::HasDataAndSize StringType> constexpr bool operator==(const StringType& rhs) const noexcept {
 			if (rhs.size() != size()) {
 				return false;
 			}
 			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), data(), rhs.size());
 		}
 
-		inline StringBase& operator+=(const StringBase& rhs) noexcept {
+		template<JsonifierInternal::HasDataAndSize StringType> constexpr bool operator!=(const StringType& rhs) const noexcept {
+			return !(*this == rhs);
+		}
+
+		template<size_type StrLength> constexpr bool operator==(const value_type (&rhs)[StrLength]) const noexcept {
+			if (StrLength != size()) {
+				return false;
+			}
+			return JsonifierInternal::JsonifierCoreInternal::compare(rhs, data(), StrLength);
+		}
+
+		template<typename StringType> constexpr StringBase& operator+=(const StringType& rhs) noexcept {
 			auto oldSize = size();
 			resize(oldSize + rhs.size());
 			std::copy(rhs.data(), rhs.data() + rhs.size(), data() + oldSize);
 			return *this;
 		}
 
-		inline StringBase& operator+=(const_pointer rhs) noexcept {
+		constexpr StringBase& operator+=(const_pointer rhs) noexcept {
 			auto oldSize = size();
 			auto rhsSize = traits_type::length(rhs);
 			resize(oldSize + rhsSize);
@@ -306,19 +349,19 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline StringBase operator+(const StringBase& rhs) noexcept {
+		constexpr StringBase operator+(const StringBase& rhs) noexcept {
 			StringBase newString(*this);
 			newString += rhs;
 			return newString;
 		}
 
-		inline StringBase operator+(const_pointer rhs) noexcept {
+		constexpr StringBase operator+(const_pointer rhs) noexcept {
 			StringBase newString(*this);
 			newString += rhs;
 			return newString;
 		}
 
-		inline ~StringBase() {
+		constexpr ~StringBase() {
 			if (values && capacityVal > 0) {
 				allocator::deallocate(values, capacityVal + 1);
 				values = nullptr;
@@ -381,17 +424,18 @@ namespace Jsonifier {
 
 	using String = StringBase<char>;
 
-	inline std::basic_ostream<uint8_t, StringBase<uint8_t>::traits_type>& operator<<(
-		std::basic_ostream<uint8_t, StringBase<uint8_t>::traits_type>& oStream, const StringBase<uint8_t>& string) {
-		return insertString<uint8_t, StringBase<uint8_t>::traits_type>(oStream, string.data(), string.size());
-	}
-
-	inline std::basic_ostream<char, StringBase<char>::traits_type>& operator<<(std::basic_ostream<char, StringBase<char>::traits_type>& oStream,
-		const StringBase<char>& string) {
-		return insertString<char, StringBase<char>::traits_type>(oStream, string.data(), string.size());
+	template<typename ValueType> inline std::ostream& operator<<(std::ostream& os, const StringBase<ValueType>& string) {
+		os << string.operator typename std::string();
+		return os;
 	}
 
 	inline String operator+(const char* lhs, const String& rhs) noexcept {
+		String newString(lhs);
+		newString += rhs;
+		return newString;
+	}
+
+	template<typename ValueType> inline std::string operator+=(const std::string& lhs, const StringBase<ValueType>& rhs) noexcept {
 		String newString(lhs);
 		newString += rhs;
 		return newString;
