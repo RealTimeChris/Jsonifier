@@ -54,12 +54,12 @@ namespace JsonifierInternal {
 
 	class Serializer;
 
-	template<typename T> struct always_false : std::false_type {};
+	template<typename ValueType> struct always_false : std::false_type {};
 
-	template<typename T> constexpr bool always_false_v = always_false<T>::value;
+	template<typename ValueType> constexpr bool always_false_v = always_false<ValueType>::value;
 
-	template<typename T> void printTypeInCompilationError(T&&) noexcept {
-		static_assert(always_false_v<T>, "Compilation failed because you failed to specialize the Core<> template for the following class:");
+	template<typename ValueType> void printTypeInCompilationError(ValueType&&) noexcept {
+		static_assert(always_false_v<ValueType>, "Compilation failed because you failed to specialize the Core<> template for the following class:");
 	}
 
 	template<typename ValueType = void> struct Hash {
@@ -106,8 +106,10 @@ namespace JsonifierInternal {
 	};
 
 	template<typename ValueType>
-	concept VectorSubscriptable = requires(ValueType value) {
-		{ value[std::size_t{}] } -> std::same_as<typename ValueType::value_type&>;
+	concept VectorSubscriptable = requires(ValueType value, uint64_t index) {
+		{ value[index] } -> std::same_as<typename std::remove_reference_t<ValueType>::reference>;
+	} || requires(ValueType value, uint64_t index) {
+		{ value[index] } -> std::same_as<typename std::remove_reference_t<ValueType>::const_reference>;
 	};
 
 	template<typename ValueType>
@@ -228,12 +230,12 @@ namespace JsonifierInternal {
 		};
 	}
 
-	template<std::size_t... Is> struct seq {};
+	template<std::size_t... Is> struct Sequence {};
 	template<std::size_t Count, std::size_t... Is> struct GenSeq : GenSeq<Count - 1, Count - 1, Is...> {};
-	template<std::size_t... Is> struct GenSeq<0, Is...> : seq<Is...> {};
+	template<std::size_t... Is> struct GenSeq<0, Is...> : Sequence<Is...> {};
 
 	template<std::size_t N1, std::size_t... I1, std::size_t N2, std::size_t... I2>
-	constexpr std::array<const char, N1 + N2 - 1> concat(const char (&a1)[N1], const char (&a2)[N2], seq<I1...>, seq<I2...>) {
+	constexpr std::array<const char, N1 + N2 - 1> concat(const char (&a1)[N1], const char (&a2)[N2], Sequence<I1...>, Sequence<I2...>) {
 		return { { a1[I1]..., a2[I2]... } };
 	}
 
@@ -267,7 +269,7 @@ namespace JsonifierInternal {
 
 	template<std::size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<Func>(f)(i), ...);
+			(std::forward<RefUnwrap<Func>>(f)(i), ...);
 		});
 	}
 

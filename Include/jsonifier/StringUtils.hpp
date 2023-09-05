@@ -83,7 +83,7 @@ namespace JsonifierInternal {
 			c[0] = uint8_t((codePoint >> 6) + 192);
 			c[1] = uint8_t((codePoint & 63) + 128);
 			return 2;
-		} else if (codePoint <= 0xFFFF) {
+		} else if (codePoint <= 0xffff) {
 			c[0] = uint8_t((codePoint >> 12) + 224);
 			c[1] = uint8_t(((codePoint >> 6) & 63) + 128);
 			c[2] = uint8_t((codePoint & 63) + 128);
@@ -103,7 +103,7 @@ namespace JsonifierInternal {
 		uint32_t codePoint				= hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			const uint8_t* srcData = *srcPtr;
+			StringViewPtr srcData = *srcPtr;
 			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
 				codePoint = subCodePoint;
 			} else {

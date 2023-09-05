@@ -23,11 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <cstring>
 #include <immintrin.h>
-#include <iostream>
-#include <limits>
-#include <stdlib.h>
+#include <cstring>
 
 #if defined max
 	#undef max
@@ -45,13 +42,13 @@ namespace JsonifierInternal {
 #if defined T_AVX512
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
 	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
-		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
@@ -69,7 +66,7 @@ namespace JsonifierInternal {
 	}
 
 	template<FloatingT ValueType> inline __m512 gatherValues512(const ValueType* str) {
-		return _mm512_load_ps(str);
+		return _mm512_loadu_ps(str);
 	}
 
 	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
@@ -84,7 +81,7 @@ namespace JsonifierInternal {
 			currentVec = gatherValues512<ValueType01>(str);
 			mask	   = _mm512_cmpeq_epi8_mask(targetVec, currentVec);
 
-			if (mask != 0xFFFFFFFF) {
+			if (mask != 0xffffffff) {
 				uint64_t firstNonMatchMask = ~mask;
 				return index + _tzcnt_u64(firstNonMatchMask);
 			}
@@ -171,7 +168,7 @@ namespace JsonifierInternal {
 		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
 		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint16_t maskValue{ 0b0000000000001111 };
+		static constexpr uint16_t maskValue{ 0xffff };
 
 		auto destVector	  = gatherValues128<ValueType01>(string1);
 		auto sourceVector = gatherValues128<ValueType02>(string2);
@@ -221,7 +218,7 @@ namespace JsonifierInternal {
 		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
 		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0b00000000000000000000000011111111 };
+		static constexpr uint32_t maskValue{ 0xffffffff };
 		auto destVector	  = gatherValues256<ValueType01>(string1);
 		auto sourceVector = gatherValues256<ValueType02>(string2);
 		if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
@@ -267,7 +264,7 @@ namespace JsonifierInternal {
 		static constexpr uint64_t vectorSize = sizeof(__m512i) / sizeof(ValueType01);
 		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m512i>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint64_t maskValue{ 0b0000000000000000000000000000000000000000000000001111111111111111 };
+		static constexpr uint64_t maskValue{ 0xffffffffffffffff };
 		auto destVector	  = gatherValues512<ValueType01>(string1);
 		auto sourceVector = gatherValues512<ValueType02>(string2);
 		if (_mm512_cmpeq_epi8_mask(destVector, sourceVector) != maskValue) {
@@ -324,13 +321,13 @@ namespace JsonifierInternal {
 #elif defined T_AVX2
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
 	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
-		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
@@ -355,7 +352,7 @@ namespace JsonifierInternal {
 			currentVec = gatherValues256<ValueType01>(str);
 			mask	   = _mm256_movemask_epi8(_mm256_cmpeq_epi8(targetVec, currentVec));
 
-			if (mask != 0xFFFFFFFF) {
+			if (mask != 0xffffffff) {
 				uint32_t firstNonMatchMask = ~mask;
 				return index + _tzcnt_u32(firstNonMatchMask);
 			}
@@ -443,7 +440,7 @@ namespace JsonifierInternal {
 		static constexpr uint64_t vectorSize = sizeof(__m128i) / sizeof(ValueType01);
 		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m128i>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint16_t maskValue{ 0b0000000000001111 };
+		static constexpr uint16_t maskValue{ 0xffff };
 
 		auto destVector	  = gatherValues128<ValueType01>(string1);
 		auto sourceVector = gatherValues128<ValueType02>(string2);
@@ -493,7 +490,7 @@ namespace JsonifierInternal {
 		static constexpr uint64_t vectorSize = sizeof(__m256i) / sizeof(ValueType01);
 		const uint64_t intervalCount		 = getIntervalCount<ValueType01, __m256i>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0b00000000000000000000000011111111 };
+		static constexpr uint32_t maskValue{ 0xffffffff };
 		auto destVector	  = gatherValues256<ValueType01>(string1);
 		auto sourceVector = gatherValues256<ValueType02>(string2);
 		if (_mm256_movemask_ps(_mm256_cmp_ps(destVector, sourceVector, _CMP_EQ_OQ)) != maskValue) {
@@ -548,7 +545,7 @@ namespace JsonifierInternal {
 #elif defined T_AVX
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
@@ -565,9 +562,9 @@ namespace JsonifierInternal {
 			currentVec = gatherValues128<ValueType01>(str);
 			mask	   = _mm_movemask_epi8(_mm_cmpeq_epi8(targetVec, currentVec));
 
-			if (mask != 0xFFFFFFFF) {
+			if (mask != 0xffff) {
 				uint32_t firstNonMatchMask = ~mask;
-				return index + _tzcnt_u32(firstNonMatchMask);
+				return index + _tzcnt_u16(firstNonMatchMask);
 			}
 
 			str += vecSize;
@@ -597,7 +594,7 @@ namespace JsonifierInternal {
 			mask	   = _mm_movemask_epi8(_mm_cmpeq_epi8(targetVec, currentVec));
 
 			if (mask != 0) {
-				return index + _tzcnt_u32(mask);
+				return index + _tzcnt_u16(mask);
 			}
 
 			str += vecSize;
@@ -648,6 +645,37 @@ namespace JsonifierInternal {
 	}
 
 #else
+
+	struct __m128I {
+		inline __m128I() noexcept = default;
+		inline __m128I(__m128I&& valueNew) {
+			*this = std::move(valueNew);
+		}
+
+		inline __m128I& operator=(__m128I&& valueNew) {
+			values[0] = valueNew.values[0];
+			values[1] = valueNew.values[1];
+			return *this;
+		}
+
+		inline __m128I(const __m128I& valueNew) {
+			*this = std::move(valueNew);
+		}
+
+		inline __m128I& operator=(const __m128I& valueNew) {
+			values[0] = valueNew.values[0];
+			values[1] = valueNew.values[1];
+			return *this;
+		}
+
+		uint64_t values[2]{};
+	};
+
+	template<typename ValueType> inline __m128I gatherValues128(const ValueType* str) {
+		alignas(ALIGNMENT) __m128I newArray{};
+		std::memcpy(&newArray, str, sizeof(__m128I));
+		return newArray;
+	}
 
 	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
 		return std::basic_string_view<ValueType01>{ static_cast<const ValueType01*>(str), length }.find_first_not_of(static_cast<ValueType01>(target));

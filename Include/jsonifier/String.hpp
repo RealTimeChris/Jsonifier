@@ -25,23 +25,22 @@
 
 #include <jsonifier/Vector.hpp>
 
-#include <algorithm>
-#include <string>
-
 namespace JsonifierInternal {
 
-	template<typename OTy1, typename OTy2> constexpr bool stringConstCompare(const OTy1& S0, const OTy2& S1) {
-		if (S0.size() != S1.size()) [[unlikely]] {
+	template<typename ValueType01, typename ValueType02> constexpr bool stringConstCompare(const ValueType01& string01, const ValueType02& string02) {
+		if (string01.size() != string02.size()) [[unlikely]] {
 			return false;
 		}
-		using CharType = OTy1::value_type;
-		for (uint64_t x = 0; x < S0.size(); ++x) {
-			if (S0[x] != static_cast<CharType>(S1[x])) [[unlikely]] {
+		using CharType = ValueType01::value_type;
+		for (uint64_t x = 0; x < string01.size(); ++x) {
+			if (string01[x] != static_cast<CharType>(string02[x])) [[unlikely]] {
 				return false;
 			}
 		}
 		return true;
 	}
+
+	template<typename ValueType> using RefUnwrap = std::decay_t<ValueType>;
 
 	template<typename ValueType>
 	concept HasSize = requires(ValueType value) {
@@ -68,7 +67,7 @@ namespace JsonifierInternal {
 
 	template<typename ValueType>
 	concept HasSubstr = requires(ValueType value) {
-		{ value.substr(std::declval<typename ValueType::size_type>(), std::declval<typename ValueType::size_type>()) };
+		{ value.substr(std::declval<uint64_t>(), std::declval<uint64_t>()) };
 	};
 
 	template<typename ValueType>
@@ -137,8 +136,8 @@ namespace Jsonifier {
 		}
 
 		template<JsonifierInternal::SearchableStringValue StringType> inline size_type findLastOf(const StringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<std::remove_cvref_t<StringType>, value_type> || std::same_as<std::remove_cvref_t<StringType>, value_type> ||
-				std::same_as<std::remove_cvref_t<StringType>, char>) {
+			if constexpr (std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> || std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> ||
+				std::same_as<JsonifierInternal::RefUnwrap<StringType>, char>) {
 				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
 					return JsonifierInternal::findLastSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal - position, valueToFind);
 				} else {
@@ -174,8 +173,8 @@ namespace Jsonifier {
 		}
 
 		template<JsonifierInternal::SearchableStringValue StringType> inline size_type findFirstOf(const StringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<std::remove_cvref_t<StringType>, value_type> || std::same_as<std::remove_cvref_t<StringType>, value_type> ||
-				std::same_as<std::remove_cvref_t<StringType>, char>) {
+			if constexpr (std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> || std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> ||
+				std::same_as<JsonifierInternal::RefUnwrap<StringType>, char>) {
 				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
 					return JsonifierInternal::findSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
 				} else {
@@ -211,8 +210,8 @@ namespace Jsonifier {
 		}
 
 		template<JsonifierInternal::SearchableStringValue StringType> inline size_type findFirstNotOf(const StringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<std::remove_cvref_t<StringType>, value_type> || std::same_as<std::remove_cvref_t<StringType>, value_type> ||
-				std::same_as<std::remove_cvref_t<StringType>, char>) {
+			if constexpr (std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> || std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> ||
+				std::same_as<JsonifierInternal::RefUnwrap<StringType>, char>) {
 				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
 					return JsonifierInternal::findFirstCharacterNotEqual(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
 				} else {
@@ -260,8 +259,8 @@ namespace Jsonifier {
 		}
 
 		template<JsonifierInternal::SearchableStringValue StringType> inline size_type find(StringType valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<std::remove_cvref_t<StringType>, value_type> || std::same_as<std::remove_cvref_t<StringType>, value_type> ||
-				std::same_as<std::remove_cvref_t<StringType>, char>) {
+			if constexpr (std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> || std::same_as<JsonifierInternal::RefUnwrap<StringType>, value_type> ||
+				std::same_as<JsonifierInternal::RefUnwrap<StringType>, char>) {
 				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
 					return JsonifierInternal::findSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
 				} else {
@@ -331,8 +330,8 @@ namespace Jsonifier {
 						++currentIndex;
 					}
 				}
+				return ValueTypeNew::npos;
 			}
-			return ValueTypeNew::npos;
 		}
 	};
 
@@ -431,17 +430,17 @@ namespace Jsonifier {
 			}
 		}
 
-		StringBase substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
+		inline StringBase substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
 			if (position >= sizeVal) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
 			count = std::min(count, sizeVal - position);
 
-			StringBase result;
+			StringBase result{};
 			result.resize(count);
 			std::memcpy(result.dataVal, dataVal + position, count * sizeof(value_type));
-			getAlloc().construct(&result.dataVal[count], '\0');
+			result.getAlloc().construct(&result.dataVal[count], '\0');
 
 			return result;
 		}
@@ -632,9 +631,9 @@ namespace Jsonifier {
 					}
 					capacityVal = sizeNew;
 					dataVal		= newPtr;
-					std::uninitialized_default_construct(dataVal + sizeVal, dataVal + capacityVal);
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 				} else if (sizeNew > sizeVal) [[unlikely]] {
-					std::uninitialized_default_construct(dataVal + sizeVal, dataVal + capacityVal);
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 				}
 				sizeVal = sizeNew;
 				getAlloc().construct(&dataVal[sizeVal], '\0');
@@ -643,19 +642,20 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void reserve(size_type capacityNew) {
-			if (capacityNew > capacityVal) [[likely]] {
-				pointer newPtr = getAlloc().allocate(capacityNew + 1);
+		inline void reserve(size_t capacityValNew) {
+			if (capacityValNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityValNew + 1);
 				try {
-					if (dataVal) [[likely]] {
+					if (dataVal && sizeVal) [[likely]] {
 						std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						getAlloc().deallocate(dataVal, capacityVal + 1);
 					}
 				} catch (...) {
-					getAlloc().deallocate(newPtr, capacityNew + 1);
+					getAlloc().deallocate(newPtr, capacityValNew + 1);
 					throw;
 				}
-				capacityVal = capacityNew;
+
+				capacityVal = capacityValNew;
 				dataVal		= newPtr;
 			}
 		}
@@ -778,7 +778,7 @@ namespace Jsonifier {
 		size_type sizeVal{};
 		pointer dataVal{};
 
-		inline const allocator& getAlloc() const {
+		inline allocator& getAlloc() {
 			return *this;
 		}
 
