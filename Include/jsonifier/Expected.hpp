@@ -111,26 +111,26 @@ namespace JsonifierInternal {
 		template<typename G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
 			hasValue = false;
 			return *this;
-		};
+		}
 
 		template<typename G> inline constexpr Expected(Unexpected<G>&& other) {
 			*this = std::move(other);
-		};
+		}
 
 		template<typename G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
 			hasValue = false;
 			return *this;
-		};
+		}
 
 		template<typename G> inline constexpr Expected(const Unexpected<G>& other) {
 			*this = other;
-		};
+		}
 
 		inline constexpr Expected& operator=(ValueType&& other) {
 			val		 = std::move(other);
 			hasValue = true;
 			return *this;
-		};
+		}
 
 		inline constexpr Expected(ValueType&& v) {
 			*this = std::move(v);
@@ -242,19 +242,19 @@ namespace JsonifierInternal {
 
 		template<typename G> inline constexpr Expected& operator=(Unexpected<G>&& other) {
 			return *this;
-		};
+		}
 
 		template<typename G> inline constexpr Expected(Unexpected<G>&& other) {
 			*this = std::move(other);
-		};
+		}
 
 		template<typename G> inline constexpr Expected& operator=(const Unexpected<G>& other) {
 			return *this;
-		};
+		}
 
 		template<typename G> inline constexpr Expected(const Unexpected<G>& other) {
 			*this = other;
-		};
+		}
 
 		inline constexpr void swap(Expected& other) noexcept {
 			std::swap(unex, other.unex);

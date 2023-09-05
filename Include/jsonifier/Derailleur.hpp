@@ -42,7 +42,7 @@ namespace JsonifierInternal {
 				skipToNextValue<c>(iter);
 				return false;
 			}
-		};
+		}
 
 		template<uint8_t c> static inline bool checkForMatchOpen(StructuralIterator& iter) {
 			if (iter == c) {
@@ -51,7 +51,7 @@ namespace JsonifierInternal {
 			} else {
 				return false;
 			}
-		};
+		}
 
 		static inline void skipValue(StructuralIterator& iter) noexcept {
 			switch (**iter) {
@@ -180,7 +180,7 @@ namespace JsonifierInternal {
 				++iter;
 			}
 			return;
-		};
+		}
 
 		static inline Jsonifier::StringView getValueType(uint8_t charToCheck) {
 			static constexpr Jsonifier::StringView array{ "Array" };
@@ -213,9 +213,9 @@ namespace JsonifierInternal {
 							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
 							  << ", in function: " << location.function_name() << "()." << std::endl;
 				} else {
-					std::cout << "Failed to collect a '" << c << "', at index: " << iter.getCurrentIndex() << " instead found a '" << **iter << "'"
-							  << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column() << ", in function: " << location.function_name()
-							  << "()." << std::endl;
+					std::cout << "Failed to collect a '" << c << "', instead found a '" << **iter << "'"
+							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
+							  << ", in function: " << location.function_name() << "()." << std::endl;
 				}
 			}
 		}

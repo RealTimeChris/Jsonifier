@@ -32,54 +32,17 @@
 
 namespace JsonifierInternal {
 
-	struct ParseNoKeys {
-		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& iter);
+	template<bool printErrors, bool excludeKeys, typename ValueType> struct ParseImpl;
 
-		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+	template<bool printErrors, bool excludeKeys> struct Parse {
+		template<typename ValueType> inline static void op(ValueType&& value, StructuralIterator& iter) {
+			ParseImpl<printErrors, excludeKeys, std::remove_cvref_t<ValueType>>::op(std::forward<std::remove_cvref_t<ValueType>>(value), iter);
+		}
 
-		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, CharT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, ArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-	};
-
-	struct ParseWithKeys {
-		template<bool printErrors, typename ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, BoolT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, NumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, EnumT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, UniquePtrT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, RawJsonT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, StringT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, CharT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, RawArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, ArrayT ValueType> static void op(ValueType& value, StructuralIterator& iter);
-
-		template<bool printErrors, ObjectT ValueType, HasFind KeyType> static void op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys);
-
-		template<bool printErrors, ObjectT ValueType> static void op(ValueType& value, StructuralIterator& iter);
+		template<typename ValueType, HasFind KeyType> inline static void op(ValueType&& value, StructuralIterator& iter, const KeyType& keys) {
+			ParseImpl<printErrors, excludeKeys, std::remove_cvref_t<ValueType>>::op(std::forward<std::remove_cvref_t<ValueType>>(value), iter,
+				keys);
+		}
 	};
 
 	class Parser {
@@ -88,6 +51,7 @@ namespace JsonifierInternal {
 
 		inline Parser& operator=(Parser&& other) noexcept {
 			std::swap(section, other.section);
+			std::swap(string, other.string);
 			return *this;
 		};
 
@@ -98,26 +62,24 @@ namespace JsonifierInternal {
 		inline Parser& operator=(const Parser&) = delete;
 		inline Parser(const Parser&)			= delete;
 
-		template<bool printErrors = false, bool refreshString = false, bool excludeKeys = false> void parseJson(CoreType auto& data, StringT auto& inStringNew) {
+		template<bool printErrors = false, bool refreshString = false, bool excludeKeys = false, CoreType ValueType, StringT BufferType>
+		void parseJson(ValueType&& data, BufferType&& inStringNew) {
 			if (inStringNew.empty()) {
 				return;
 			}
-			bool refreshStringNew{ refreshString };
-			if (refreshStringNew || (inStringNew.size() != string.size() && string != inStringNew)) {
-				reset(inStringNew);
-			}
+			refreshString ? reset(std::forward<BufferType>(inStringNew)) : (string != inStringNew ? reset(std::forward<BufferType>(inStringNew)) : void());
 			auto newIter = begin();
 			if (!*newIter) {
 				return;
 			}
 			if constexpr (excludeKeys) {
 				if constexpr (HasExcludedKeys<decltype(data)>) {
-					ParseWithKeys::op<printErrors>(data, newIter, data.excludedKeys);
+					Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter, data.excludedKeys);
 				} else {
-					ParseWithKeys::op<printErrors>(data, newIter);
+					Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter);
 				}
 			} else {
-				ParseNoKeys::op<printErrors>(data, newIter);
+				Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter);
 			}
 		}
 

@@ -28,75 +28,32 @@
 
 namespace JsonifierInternal {
 
-	struct SerializeNoKeys {
-		template<NullT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
+	template<bool excludeKeys = false, typename ValueType = void> struct SerializeImpl;
 
-		template<BoolT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
+	template<bool excludeKeys> struct Serialize {
+		template<typename ValueType, VectorLike BufferType> inline static void op(ValueType&& value, BufferType&& buffer, uint64_t& index) {
+			SerializeImpl<excludeKeys, RefUnwrap<ValueType>>::op(std::forward<ValueType>(value), std::forward<BufferType>(buffer), index);
+		}
 
-		template<NumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<EnumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<CharT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<StringT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<RawJsonT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ObjectT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<typename ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-	};
-
-	struct SerializeWithKeys {
-		template<NullT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<BoolT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<NumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<EnumT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<CharT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<StringT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<RawJsonT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<RawArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ArrayT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ArrayTupleT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<ObjectT ValueType, VectorLike BufferType, HasFind KeyType> static void op(ValueType& value, BufferType& buffer, uint64_t& index, const KeyType& excludedKeys);
-
-		template<ObjectT ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
-
-		template<typename ValueType, VectorLike BufferType> static void op(ValueType& value, BufferType& buffer, uint64_t& index);
+		template<typename ValueType, VectorLike BufferType, HasFind KeyType> inline static void op(ValueType&& value, BufferType&& buffer, uint64_t& index, KeyType& keys) {
+			SerializeImpl<excludeKeys, RefUnwrap<ValueType>>::op(std::forward<ValueType>(value), std::forward<BufferType>(buffer), index, keys);
+		}
 	};
 
 	class Serializer {
 	  public:
 		inline constexpr Serializer() noexcept = default;
 
-		template<bool excludeKeys = false> inline void serializeJson(CoreType auto& data, VectorLike auto& buffer) {
+		template<bool excludeKeys = false, CoreType ValueType, VectorLike BufferType> inline void serializeJson(ValueType&& data, BufferType&& buffer) {
 			uint64_t index{};
-			using ValueType = decltype(data);
 			if constexpr (excludeKeys) {
 				if constexpr (HasExcludedKeys<ValueType>) {
-					SerializeWithKeys::op(data, stringBuffer, index, data.excludedKeys);
+					Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index, data.excludedKeys);
 				} else {
-					SerializeWithKeys::op(data, stringBuffer, index);
+					Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index);
 				}
 			} else {
-				SerializeNoKeys::op(data, stringBuffer, index);
+				Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index);
 			}
 			if (buffer.size() != index) [[unlikely]] {
 				buffer.resize(index);

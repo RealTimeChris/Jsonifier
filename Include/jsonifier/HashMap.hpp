@@ -460,7 +460,7 @@ namespace JsonifierInternal {
 			}
 
 			if constexpr (D.is_front_hash) {
-				const auto k = key[0] - D.front;
+				const auto k = static_cast<uint64_t>(key[0] - D.front);
 				if (k >= N_table) [[unlikely]] {
 					return Unexpected(ErrorCode::Unknown_Key);
 				}
@@ -471,7 +471,7 @@ namespace JsonifierInternal {
 				}
 				return item.second;
 			} else {
-				const auto k = key.back() - D.front;
+				const auto k = static_cast<uint64_t>(key.back() - D.front);
 				if (k >= N_table) [[unlikely]] {
 					return Unexpected(ErrorCode::Unknown_Key);
 				}
@@ -490,7 +490,7 @@ namespace JsonifierInternal {
 			}
 
 			if constexpr (D.is_front_hash) {
-				const auto k = key[0] - D.front;
+				const auto k = static_cast<uint64_t>(key[0] - D.front);
 				if (k >= N_table) [[unlikely]] {
 					return items.end();
 				}
@@ -500,7 +500,7 @@ namespace JsonifierInternal {
 					return items.end();
 				return items.begin() + index;
 			} else {
-				const auto k = key.back() - D.front;
+				const auto k = static_cast<uint64_t>(key.back() - D.front);
 				if (k >= N_table) [[unlikely]] {
 					return items.end();
 				}
@@ -547,11 +547,11 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename ValueType, const Jsonifier::StringView& S0, const Jsonifier::StringView& S1> struct DoubleItem {
+	template<typename ValueType, const Jsonifier::StringView& string01, const Jsonifier::StringView& string02> struct DoubleItem {
 		RawArray<Pair<Jsonifier::StringView, ValueType>, 2> items{};
 
-		static constexpr auto s0 = S0;
-		static constexpr auto s1 = S1;
+		static constexpr auto s0 = string01;
+		static constexpr auto s1 = string02;
 
 		inline constexpr decltype(auto) end() const noexcept {
 			return items.end();
@@ -566,9 +566,9 @@ namespace JsonifierInternal {
 					return items.end();
 				}
 			}
-			if (stringConstCompare(S0, key)) {
+			if (stringConstCompare(string01, key)) {
 				return items.begin();
-			} else if (stringConstCompare(S1, key)) {
+			} else if (stringConstCompare(string02, key)) {
 				return items.begin() + 1;
 			} else [[unlikely]] {
 				return items.end();
@@ -599,7 +599,7 @@ namespace JsonifierInternal {
 
 	template<typename Tuple, typename = std::make_index_sequence<std::tuple_size<Tuple>::value>> struct ValueTupleVariant;
 
-	template<typename Tuple, uint64_t... I> struct ValueTupleVariant<Tuple, std::index_sequence<I...>> {
+	template<typename Tuple, size_t... I> struct ValueTupleVariant<Tuple, std::index_sequence<I...>> {
 		using type = typename TupleVariant<decltype(Tuplet::tupleCat(std::declval<Tuplet::Tuple<std::tuple_element_t<1, std::tuple_element_t<I, Tuple>>>>()...))>::type;
 	};
 
@@ -784,9 +784,9 @@ namespace JsonifierInternal {
 
 	template<typename Key, typename Value, size_t n> class UnorderedMap {
 	  public:
-		static constexpr auto storage_size	   = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
-		using container_type				   = RawArray<Pair<Key, Value>, n>;
-		using tables_type					   = PmhTables<storage_size>;
+		static constexpr auto storage_size = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
+		using container_type			   = RawArray<Pair<Key, Value>, n>;
+		using tables_type				   = PmhTables<storage_size>;
 
 		using Self			  = UnorderedMap<Key, Value, n>;
 		using key_type		  = Key;

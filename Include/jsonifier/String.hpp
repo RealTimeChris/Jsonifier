@@ -30,13 +30,13 @@
 
 namespace JsonifierInternal {
 
-	template<typename OTy1, typename OTy2> constexpr bool stringConstCompare(const OTy1& S0, const OTy2& S1) {
-		if (S0.size() != S1.size()) [[unlikely]] {
+	template<typename ValueType01, typename ValueType02> constexpr bool stringConstCompare(const ValueType01& string01, const ValueType02& string02) {
+		if (string01.size() != string02.size()) [[unlikely]] {
 			return false;
 		}
-		using CharType = OTy1::value_type;
-		for (uint64_t x = 0; x < S0.size(); ++x) {
-			if (S0[x] != static_cast<CharType>(S1[x])) [[unlikely]] {
+		using CharType = ValueType01::value_type;
+		for (uint64_t x = 0; x < string01.size(); ++x) {
+			if (string01[x] != static_cast<CharType>(string02[x])) [[unlikely]] {
 				return false;
 			}
 		}
@@ -68,7 +68,7 @@ namespace JsonifierInternal {
 
 	template<typename ValueType>
 	concept HasSubstr = requires(ValueType value) {
-		{ value.substr(std::declval<typename ValueType::size_type>(), std::declval<typename ValueType::size_type>()) };
+		{ value.substr(std::declval<uint64_t>(), std::declval<uint64_t>()) };
 	};
 
 	template<typename ValueType>
@@ -331,8 +331,8 @@ namespace Jsonifier {
 						++currentIndex;
 					}
 				}
+				return ValueTypeNew::npos;
 			}
-			return ValueTypeNew::npos;
 		}
 	};
 
@@ -431,17 +431,17 @@ namespace Jsonifier {
 			}
 		}
 
-		StringBase substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
+		inline StringBase substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
 			if (position >= sizeVal) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
 			count = std::min(count, sizeVal - position);
 
-			StringBase result;
+			StringBase result{};
 			result.resize(count);
 			std::memcpy(result.dataVal, dataVal + position, count * sizeof(value_type));
-			getAlloc().construct(&result.dataVal[count], '\0');
+			result.getAlloc().construct(&result.dataVal[count], '\0');
 
 			return result;
 		}
@@ -778,7 +778,7 @@ namespace Jsonifier {
 		size_type sizeVal{};
 		pointer dataVal{};
 
-		inline const allocator& getAlloc() const {
+		inline allocator& getAlloc() {
 			return *this;
 		}
 

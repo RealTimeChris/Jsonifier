@@ -45,13 +45,13 @@ namespace JsonifierInternal {
 #if defined T_AVX512
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
 	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
-		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
@@ -324,13 +324,13 @@ namespace JsonifierInternal {
 #elif defined T_AVX2
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
 	template<typename ValueType> inline __m256i gatherValues256(const ValueType* str) {
-		alignas(32) float newArray[sizeof(__m256i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m256i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m256i));
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
@@ -548,7 +548,7 @@ namespace JsonifierInternal {
 #elif defined T_AVX
 
 	template<typename ValueType> inline __m128i gatherValues128(const ValueType* str) {
-		alignas(16) float newArray[sizeof(__m128i) / sizeof(float)]{};
+		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
 		std::memcpy(newArray, str, sizeof(__m128i));
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
@@ -648,6 +648,16 @@ namespace JsonifierInternal {
 	}
 
 #else
+
+	struct __m128I {
+		uint64_t values[2]{};
+	};
+
+	template<typename ValueType> inline __m128I gatherValues128(const ValueType* str) {
+		alignas(ALIGNMENT) __m128I newArray{};
+		std::memcpy(&newArray, str, sizeof(__m128I));
+		return newArray;
+	}
 
 	template<typename ValueType01, typename ValueType02> inline uint64_t findFirstCharacterNotEqual(const ValueType01* str, uint64_t length, ValueType02 target) {
 		return std::basic_string_view<ValueType01>{ static_cast<const ValueType01*>(str), length }.find_first_not_of(static_cast<ValueType01>(target));

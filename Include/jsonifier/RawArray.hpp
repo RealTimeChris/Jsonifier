@@ -131,9 +131,10 @@ namespace JsonifierInternal {
 			}
 		}
 
-		ValueType dataVal[N] = {};
+		ValueType dataVal[N]{};
 
-		template<size_t M, size_t... I> inline constexpr RawArray(ValueType const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {};
+		template<size_t M, size_t... I> inline constexpr RawArray(ValueType const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
+		}
 	};
 
 	template<typename ValueType> class RawArray<ValueType, 0> {

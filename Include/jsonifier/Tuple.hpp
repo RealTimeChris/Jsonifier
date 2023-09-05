@@ -31,7 +31,7 @@
 
 namespace JsonifierInternal {
 
-	template<typename ValueType> using RefUnwrap = std::decay_t<std::remove_const_t<ValueType>>;
+	template<typename ValueType> using RefUnwrap = std::decay_t<ValueType>;
 
 	namespace Tuplet {
 		template<typename ValueType> using IdentityT = ValueType;

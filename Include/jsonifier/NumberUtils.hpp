@@ -268,7 +268,7 @@ namespace JsonifierInternal {
 		StringViewPtr sigCut				  = nullptr;
 		[[maybe_unused]] StringViewPtr sigEnd = nullptr;
 		StringViewPtr dotPos				  = nullptr;
-		uint32_t fracZeros					  = 0;
+		uint32_t fracZeroes					  = 0;
 		uint64_t sig						  = 0;
 		int32_t exp							  = 0;
 		bool expSign;
@@ -330,8 +330,8 @@ namespace JsonifierInternal {
 	dotPos = cur + x; \
 	if ((cur[x] == '.')) [[likely]] { \
 		if (sig == 0) \
-			while (cur[fracZeros + x + 1] == zero) \
-				++fracZeros; \
+			while (cur[fracZeroes + x + 1] == zero) \
+				++fracZeroes; \
 		goto digi_frac_##x; \
 	} \
 	cur += x; \
@@ -340,18 +340,18 @@ namespace JsonifierInternal {
 		repeatIIn_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(x) \
-	digi_frac_##x : if (((numTmp = static_cast<uint64_t>(cur[x + 1 + fracZeros] - zero)) <= 9)) [[likely]] sig = numTmp + sig * 10; \
+	digi_frac_##x : if (((numTmp = static_cast<uint64_t>(cur[x + 1 + fracZeroes] - zero)) <= 9)) [[likely]] sig = numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##x; \
 	}
 			repeatIIn_1_18(expr_frac)
 #undef expr_frac
-				cur += 20ull + fracZeros;
+				cur += 20ull + fracZeroes;
 		if (uint8_t(*cur - zero) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
-	digi_stop_##x : cur += x##ull + 1ull + fracZeros; \
+	digi_stop_##x : cur += x##ull + 1ull + fracZeroes; \
 	goto digi_frac_end;
 		repeatIIn_1_18(expr_stop)
 #undef expr_stop
@@ -521,8 +521,8 @@ namespace JsonifierInternal {
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
 			using raw_t								= std::conditional_t<std::same_as<float, RefUnwrap<ValueType>>, uint32_t, uint64_t>;
-			const auto sigLeadingZeros				= std::countl_zero(sig);
-			const auto sigNorm						= sig << sigLeadingZeros;
+			const auto sigLeadingZeroes				= std::countl_zero(sig);
+			const auto sigNorm						= sig << sigLeadingZeroes;
 			const auto sig2Norm						= sig2FromExp10(exp);
 			const auto sigProduct					= mulhi64(sigNorm, sig2Norm) + 1;
 			const auto sigProductStartsWith1		= sigProduct >> 63;
@@ -530,7 +530,7 @@ namespace JsonifierInternal {
 			static constexpr uint64_t roundMask		= uint64_t(1) << 63 >> (std::numeric_limits<ValueType>::digits - 1);
 			static constexpr uint32_t exponentBits	= ceillog2(std::numeric_limits<ValueType>::max_exponent - std::numeric_limits<ValueType>::min_exponent + 1);
 			static constexpr uint32_t mantissaShift = exponentBits + 1 + 64 - 8 * sizeof(raw_t);
-			int32_t exp2							= exp2FromExp10(exp) + static_cast<uint32_t>(-sigLeadingZeros + sigProductStartsWith1);
+			int32_t exp2							= exp2FromExp10(exp) + static_cast<uint32_t>(-sigLeadingZeroes + sigProductStartsWith1);
 
 			if (exp2 < std::numeric_limits<ValueType>::min_exponent - 1) [[unlikely]] {
 				val = sign ? -ValueType(0) : ValueType(0);
@@ -594,7 +594,7 @@ namespace JsonifierInternal {
 			lz = aa < 10;
 			std::memcpy(&buf[0], &charTable[aa * 2ull + lz], 2);
 			buf -= lz;
-			std::memcpy(&buf[2], &charTable[2 * bb], 2);
+			std::memcpy(&buf[2], &charTable[2ull * bb], 2);
 
 			return buf + 4ull;
 		} else if (val < 1000000) {
@@ -603,10 +603,10 @@ namespace JsonifierInternal {
 			bb	 = (bbcc * 5243) >> 19;
 			cc	 = bbcc - bb * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
 			return buf + 6ull;
 		} else if (val < 100000000) {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
@@ -616,11 +616,11 @@ namespace JsonifierInternal {
 			bb	 = aabb - aa * 100;
 			dd	 = ccdd - cc * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
-			std::memcpy(buf + 6ull, charTable + dd * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable.data() + dd * 2ull, 2);
 			return buf + 8;
 		} else {
 			aabbcc = uint32_t((uint64_t(val) * 3518437209ul) >> 45);
@@ -632,12 +632,12 @@ namespace JsonifierInternal {
 			cc	   = bbcc - bb * 100;
 			ee	   = ddee - dd * 100;
 			lz	   = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
-			std::memcpy(buf + 6ull, charTable + dd * 2ull, 2);
-			std::memcpy(buf + 8, charTable + ee * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable.data() + dd * 2ull, 2);
+			std::memcpy(buf + 8, charTable.data() + ee * 2ull, 2);
 			return buf + 10;
 		}
 	}
@@ -657,10 +657,10 @@ namespace JsonifierInternal {
 		cc	 = (ccdd * 5243) >> 19;
 		bb	 = aabb - aa * 100;
 		dd	 = ccdd - cc * 100;
-		std::memcpy(buf, charTable + aa * 2ull, 2);
-		std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-		std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
-		std::memcpy(buf + 6ull, charTable + dd * 2ull, 2);
+		std::memcpy(buf, charTable.data() + aa * 2ull, 2);
+		std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+		std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
+		std::memcpy(buf + 6ull, charTable.data() + dd * 2ull, 2);
 		return buf + 8;
 	}
 
@@ -668,8 +668,8 @@ namespace JsonifierInternal {
 		uint32_t aa, bb;
 		aa = (val * 5243) >> 19;
 		bb = val - aa * 100;
-		std::memcpy(buf, charTable + aa * 2ull, 2);
-		std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
+		std::memcpy(buf, charTable.data() + aa * 2ull, 2);
+		std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
 		return buf + 4ull;
 	}
 
@@ -678,16 +678,16 @@ namespace JsonifierInternal {
 
 		if (val < 100) {
 			lz = val < 10;
-			std::memcpy(buf, charTable + val * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + val * 2ull + lz, 2);
 			buf -= lz;
 			return buf + 2ull;
 		} else if (val < 10000) {
 			aa = (val * 5243) >> 19;
 			bb = val - aa * 100;
 			lz = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
 			return buf + 4ull;
 		} else if (val < 1000000) {
 			aa	 = uint32_t((uint64_t(val) * 429497) >> 32);
@@ -695,10 +695,10 @@ namespace JsonifierInternal {
 			bb	 = (bbcc * 5243) >> 19;
 			cc	 = bbcc - bb * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
 			return buf + 6ull;
 		} else {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
@@ -708,11 +708,11 @@ namespace JsonifierInternal {
 			bb	 = aabb - aa * 100;
 			dd	 = ccdd - cc * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
-			std::memcpy(buf + 6ull, charTable + dd * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable.data() + dd * 2ull, 2);
 			return buf + 8;
 		}
 	}
@@ -726,10 +726,10 @@ namespace JsonifierInternal {
 			bb	 = (bbcc * 5243) >> 19;
 			cc	 = bbcc - bb * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
 			return buf + 6ull;
 		} else {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
@@ -739,11 +739,11 @@ namespace JsonifierInternal {
 			bb	 = aabb - aa * 100;
 			dd	 = ccdd - cc * 100;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ull + lz, 2);
+			std::memcpy(buf, charTable.data() + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ull, charTable + bb * 2ull, 2);
-			std::memcpy(buf + 4ull, charTable + cc * 2ull, 2);
-			std::memcpy(buf + 6ull, charTable + dd * 2ull, 2);
+			std::memcpy(buf + 2ull, charTable.data() + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable.data() + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable.data() + dd * 2ull, 2);
 			return buf + 8;
 		}
 	}
@@ -859,9 +859,9 @@ namespace JsonifierInternal {
 		buf[0] = uint8_t(a + '0');
 		buf += a > 0;
 		lz = bb < 10 && a == 0;
-		std::memcpy(buf, charTable + (bb * 2ull + lz), 2ull);
+		std::memcpy(buf, charTable.data() + (bb * 2ull + lz), 2ull);
 		buf -= lz;
-		std::memcpy(buf + 2ull, charTable + 2ull * cc, 2ull);
+		std::memcpy(buf + 2ull, charTable.data() + 2ull * cc, 2ull);
 
 		if (ffgghhii) {
 			uint32_t dd	  = (ddee * 5243) >> 19;
@@ -870,15 +870,15 @@ namespace JsonifierInternal {
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff	  = (ffgg * 5243) >> 19;
 			uint32_t gg	  = ffgg - ff * 100;
-			std::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
-			std::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
-			std::memcpy(buf + 8ull, charTable + 2ull * ff, 2ull);
-			std::memcpy(buf + 10ull, charTable + 2ull * gg, 2ull);
+			std::memcpy(buf + 4ull, charTable.data() + 2ull * dd, 2ull);
+			std::memcpy(buf + 6ull, charTable.data() + 2ull * ee, 2ull);
+			std::memcpy(buf + 8ull, charTable.data() + 2ull * ff, 2ull);
+			std::memcpy(buf + 10ull, charTable.data() + 2ull * gg, 2ull);
 			if (hhii) {
 				uint32_t hh = (hhii * 5243) >> 19;
 				uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12ull, charTable + 2ull * hh, 2ull);
-				std::memcpy(buf + 14ull, charTable + 2ull * ii, 2ull);
+				std::memcpy(buf + 12ull, charTable.data() + 2ull * hh, 2ull);
+				std::memcpy(buf + 14ull, charTable.data() + 2ull * ii, 2ull);
 				tz1 = decTrailingZeroTable[hh];
 				tz2 = decTrailingZeroTable[ii];
 				tz	= ii ? tz2 : (tz1 + 2ull);
@@ -895,8 +895,8 @@ namespace JsonifierInternal {
 			if (ddee) {
 				uint32_t dd = (ddee * 5243) >> 19;
 				uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4ull, charTable + 2ull * dd, 2ull);
-				std::memcpy(buf + 6ull, charTable + 2ull * ee, 2ull);
+				std::memcpy(buf + 4ull, charTable.data() + 2ull * dd, 2ull);
+				std::memcpy(buf + 6ull, charTable.data() + 2ull * ee, 2ull);
 				tz1 = decTrailingZeroTable[dd];
 				tz2 = decTrailingZeroTable[ee];
 				tz	= ee ? tz2 : (tz1 + 2ull);
@@ -1001,13 +1001,13 @@ namespace JsonifierInternal {
 				expDec = std::abs(expDec);
 				if (expDec < 100) {
 					uint32_t lz = expDec < 10;
-					std::memcpy(buffer, charTable + (expDec * 2ull + lz), 2ull);
+					std::memcpy(buffer, charTable.data() + (expDec * 2ull + lz), 2ull);
 					return buffer + 2ull - lz;
 				} else {
 					uint32_t hi = (uint32_t(expDec) * 656) >> 16;
 					uint32_t lo = uint32_t(expDec) - hi * 100;
 					buffer[0]	= uint8_t(hi) + '0';
-					std::memcpy(&buffer[1], charTable + (lo * 2ull), 2ull);
+					std::memcpy(&buffer[1], charTable.data() + (lo * 2ull), 2ull);
 					return buffer + 3ull;
 				}
 			}

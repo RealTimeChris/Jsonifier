@@ -55,7 +55,7 @@ namespace Jsonifier {
 		inline Vector() noexcept = default;
 
 		inline Vector& operator=(Vector&& other) noexcept {
-			if (this != &other) {
+			if (this != &other && dataVal != other.dataVal) {
 				reset();
 				swap(other);
 			}
@@ -69,10 +69,10 @@ namespace Jsonifier {
 		inline Vector& operator=(const Vector& other) {
 			if (this != &other) {
 				reset();
-				resize(other.size());
-				for (size_type x = 0; x < capacityVal; ++x) {
-					dataVal[x] = other[x];
-				}
+				auto sizeValNew = other.size();
+				reserve(sizeValNew);
+				std::uninitialized_copy(other.data(), other.data() + sizeValNew, dataVal);
+				sizeVal = sizeValNew;
 			}
 			return *this;
 		}
@@ -81,49 +81,51 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		inline Vector& operator=(std::vector<value_type>&& initList) {
+		inline Vector& operator=(std::vector<value_type>&& other) {
 			reset();
-			resize(initList.size());
-			for (size_type x = 0; x < sizeVal; ++x) {
-				dataVal[x] = std::move(initList[x]);
-			}
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_move(other.data(), other.data() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
 			return *this;
 		}
 
-		inline explicit Vector(std::vector<value_type>&& initList) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = std::move(initList);
+		inline explicit Vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
+			*this = std::move(other);
 		}
 
-		inline Vector& operator=(const std::vector<value_type>& initList) {
+		inline Vector& operator=(const std::vector<value_type>& other) {
 			reset();
-			resize(initList.size());
-			for (size_type x = 0; x < sizeVal; ++x) {
-				dataVal[x] = initList[x];
-			}
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_copy(other.data(), other.data() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
 			return *this;
 		}
 
-		inline explicit Vector(const std::vector<value_type>& initList) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = initList;
+		inline explicit Vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
+			*this = other;
 		}
 
-		inline Vector& operator=(std::initializer_list<value_type> initList) {
+		inline Vector& operator=(std::initializer_list<value_type> other) {
 			reset();
-			resize(initList.size());
-			for (size_type x = 0; x < sizeVal; ++x) {
-				dataVal[x] = std::move(initList.begin()[x]);
-			}
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_move(other.begin(), other.begin() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
 			return *this;
 		}
 
-		inline explicit Vector(std::initializer_list<value_type> initList) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = initList;
+		inline explicit Vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
+			*this = other;
 		}
 
 		inline explicit Vector(value_type&& other, size_type sizeNew) : capacityVal{}, sizeVal{}, dataVal{} {
 			reset();
-			resize(sizeNew);
-			std::fill(data(), data() + sizeVal, other);
+			auto sizeValNew = sizeNew;
+			reserve(sizeValNew);
+			std::uninitialized_fill(data(), data() + sizeValNew, other);
+			sizeVal = sizeValNew;
 		}
 
 		inline Vector& operator=(value_type other) {
@@ -135,7 +137,7 @@ namespace Jsonifier {
 			*this = other;
 		}
 
-		template<typename InputIterator> void insert(iterator where, InputIterator first, InputIterator last) {
+		template<typename InputIterator> inline void insert(iterator where, InputIterator first, InputIterator last) {
 			size_type insertCount = std::distance(first, last);
 
 			if (insertCount == 0) {
@@ -151,8 +153,6 @@ namespace Jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			std::memcpy(insertPos + insertCount, insertPos, (sizeVal - insertPosIndex));
-
 			for (InputIterator it = first; it != last; ++it) {
 				getAlloc().construct(insertPos++, *it);
 			}
@@ -160,7 +160,7 @@ namespace Jsonifier {
 			sizeVal = newSize;
 		}
 
-		template<typename ValueTypeNew> void insert(iterator where, ValueTypeNew&& value) {
+		template<typename ValueTypeNew> inline void insert(iterator where, ValueTypeNew&& value) {
 			size_type insertCount = 1;
 
 			if (insertCount == 0) {
@@ -175,8 +175,6 @@ namespace Jsonifier {
 			}
 
 			pointer insertPos = dataVal + insertPosIndex;
-
-			std::memcpy(insertPos + insertCount, insertPos, (sizeVal - insertPosIndex));
 
 			getAlloc().construct(insertPos++, value);
 
@@ -300,17 +298,15 @@ namespace Jsonifier {
 
 		inline void erase(size_type count) {
 			if (count >= sizeVal) {
+				clear();
 				return;
 			}
-			size_type newSize	 = sizeVal - count;
+			size_type newSize = sizeVal - count;
 
-			for (size_type x = 0; x < count; ++x) {
-				getAlloc().destroy(dataVal + x);
-			}
-			
+			std::destroy(dataVal, dataVal + count);
 
 			for (size_type i = 0; i < newSize; ++i) {
-				getAlloc().construct(dataVal + i, std::move(dataVal[i + count]));
+				dataVal[i] = std::move(dataVal[i + count]);
 			}
 
 			sizeVal = newSize;
@@ -318,6 +314,7 @@ namespace Jsonifier {
 
 		inline void erase(iterator iter) {
 			if (iter < begin() || iter >= end()) {
+				clear();
 				return;
 			}
 
@@ -327,37 +324,27 @@ namespace Jsonifier {
 			getAlloc().destroy(dataVal + eraseIndex);
 
 			for (size_type i = eraseIndex; i < newSize; ++i) {
-				getAlloc().construct(dataVal + i, std::move(dataVal[i + 1]));
+				dataVal[i] = std::move(dataVal[i + 1]);
 			}
 
 			sizeVal = newSize;
 		}
 
-
-		inline void erase(iterator iter01, iterator iter02) {
-			if (iter01 > iter02 || iter01 < begin() || iter02 > end()) {
+		inline void shrinkToFit() {
+			if (sizeVal == capacityVal) {
 				return;
 			}
 
-			size_type sizeCount			 = iter02 - iter01;
-			size_type pos1				 = iter01 - begin();
-			size_type elementsAfterErase = sizeVal - (pos1 + sizeCount);
-
-			if (sizeCount > sizeVal || sizeCount == 0) {
-				return;
-			}
-
-			if (elementsAfterErase < sizeCount) {
-				std::memcpy(dataVal + pos1, dataVal + pos1 + sizeCount, sizeVal * sizeof(value_type));
-			} else {
-				std::memcpy(dataVal + pos1, dataVal + pos1 + sizeCount, (pos1 + sizeCount + elementsAfterErase) * sizeof(value_type));
-			}
-
-			sizeVal -= sizeCount;
+			auto oldCapacity  = capacityVal;
+			capacityVal		  = sizeVal;
+			pointer newValues = getAlloc().allocate(capacityVal);
+			std::uninitialized_move(dataVal, dataVal + sizeVal, newValues);
+			getAlloc().deallocate(dataVal, oldCapacity);
+			dataVal = newValues;
 		}
 
 		inline void resize(size_type sizeNew) {
-			if (sizeNew > 0) {
+			if (sizeNew > 0) [[likely]] {
 				if (sizeNew > capacityVal) {
 					pointer newPtr = getAlloc().allocate(sizeNew);
 					try {
@@ -371,9 +358,11 @@ namespace Jsonifier {
 					}
 					capacityVal = sizeNew;
 					dataVal		= newPtr;
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + sizeVal + (sizeNew - sizeVal));
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 				} else if (sizeNew > sizeVal) {
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + sizeVal + (sizeNew - sizeVal));
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
+				} else if (sizeNew < sizeVal) {
+					std::destroy(dataVal + sizeNew, dataVal + sizeVal);
 				}
 				sizeVal = sizeNew;
 			} else {
@@ -381,32 +370,21 @@ namespace Jsonifier {
 			}
 		}
 
-		inline void shrinkToFit() {
-			if (sizeVal == capacityVal) {
-				return;
-			}
-
-			capacityVal		  = sizeVal;
-			pointer newValues = getAlloc().allocate(capacityVal);
-			std::uninitialized_move(dataVal, dataVal + sizeVal, newValues);
-			getAlloc().deallocate(dataVal, sizeVal);
-			dataVal = newValues;
-		}
-
 		inline void reserve(size_t capacityValNew) {
-			if (capacityValNew > capacityVal) {
-				pointer newData = getAlloc().allocate(capacityValNew);
-				for (size_t i = 0; i < sizeVal; ++i) {
-					getAlloc().construct(newData + i, std::move(dataVal[i]));
-					getAlloc().destroy(dataVal + i);
-				}
-
-				if (dataVal) {
-					getAlloc().deallocate(dataVal, capacityVal);
+			if (capacityValNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityValNew);
+				try {
+					if (dataVal && sizeVal) [[likely]] {
+						std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
+						getAlloc().deallocate(dataVal, capacityVal);
+					}
+				} catch (...) {
+					getAlloc().deallocate(newPtr, capacityValNew);
+					throw;
 				}
 
 				capacityVal = capacityValNew;
-				dataVal		= newData;
+				dataVal		= newPtr;
 			}
 		}
 
@@ -446,7 +424,7 @@ namespace Jsonifier {
 		size_type sizeVal{};
 		pointer dataVal{};
 
-		const object_compare& getObjectComparitor() const {
+		inline const object_compare& getObjectComparitor() const {
 			return *this;
 		}
 
@@ -457,6 +435,7 @@ namespace Jsonifier {
 		inline void reset() {
 			if (dataVal && capacityVal) {
 				if (sizeVal) {
+					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
 				getAlloc().deallocate(dataVal, capacityVal);

@@ -30,7 +30,7 @@ namespace JsonifierInternal {
 
 	class StringBlockReader {
 	  public:
-		inline StringBlockReader(const uint8_t* stringViewNew, uint64_t lengthNew) noexcept : inString{ stringViewNew } {
+		inline StringBlockReader(const uint8_t* stringViewNew, uint64_t lengthNew) noexcept {
 			lengthMinusStep = lengthNew < StepSize ? 0 : lengthNew - StepSize;
 			inString		= stringViewNew;
 			length			= lengthNew;
@@ -41,19 +41,22 @@ namespace JsonifierInternal {
 			if (length == index) {
 				return 0;
 			}
-			std::memset(dest, 0x20, StepSize);
+			std::memset(dest, 0x20, StepSize * 2);
 			std::memcpy(dest, inString + index, (length - index));
 			return length - index;
 		}
 
 		inline StringViewPtr fullBlock() noexcept {
 			const uint8_t* newPtr = inString + index;
-			index += StepSize;
 			return newPtr;
 		}
 
+		inline void advanceIndex() {
+			index += StepSize * 2;
+		}
+
 		inline bool hasFullBlock() const noexcept {
-			return index < lengthMinusStep;
+			return index + StepSize < lengthMinusStep;
 		}
 
 	  protected:
@@ -74,12 +77,10 @@ namespace JsonifierInternal {
 		inline SimdStringReader(const SimdStringReader& other) noexcept			   = delete;
 
 		inline void reset(Jsonifier::StringViewBase<uint8_t> stringViewNew) noexcept {
-			uint64_t sizeNew{ roundUpToMultipleOfEight(stringViewNew.size()) };
-			structuralIndices.resize(sizeNew);
-			stringView	= stringViewNew;
+			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size()));
+			stringView = stringViewNew;
+			nextIsEscaped.reset();
 			storedLSB01 = false;
-			prevEscaped = false;
-			structurals.reset();
 			whitespace.reset();
 			backslash.reset();
 			prevInString = 0;
@@ -95,10 +96,13 @@ namespace JsonifierInternal {
 				StringBlockReader stringReader{ stringView.data(), stringView.size() };
 				while (stringReader.hasFullBlock()) {
 					generateStructurals(stringReader.fullBlock());
+					generateStructurals(stringReader.fullBlock() + StepSize);
+					stringReader.advanceIndex();
 				}
-				uint8_t block[StepSize];
+				uint8_t block[StepSize * 2];
 				stringReader.getRemainder(block);
 				generateStructurals(block);
+				generateStructurals(block + StepSize);
 			}
 		}
 
@@ -117,16 +121,16 @@ namespace JsonifierInternal {
 		inline ~SimdStringReader() noexcept {};
 
 	  protected:
-		Jsonifier::Vector<StructuralIndex> structuralIndices{};
+		inline static const SimdBaseReal oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
+		Jsonifier::Vector<uint32_t> structuralIndices{};
 		Jsonifier::StringViewBase<uint8_t> stringView{};
-		SimdBaseReal structurals{};
+		SimdBaseReal nextIsEscaped{};
 		SimdBaseReal whitespace{};
 		SimdBaseReal backslash{};
 		uint64_t prevInString{};
 		uint64_t stringIndex{};
 		SimdBaseReal quotes{};
 		uint64_t tapeIndex{};
-		bool prevEscaped{};
 		bool storedLSB01{};
 		SimdBaseReal op{};
 
@@ -139,21 +143,21 @@ namespace JsonifierInternal {
 		}
 
 		inline int64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, int64_t newBits) noexcept {
-			structuralIndices[(currentIndex * 8) + tapeIndex]	  = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[(currentIndex * 8) + tapeIndex]	  = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(_tzcnt_u64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
 			newBits												  = blsr(newBits);
 			return newBits;
 		}
@@ -167,12 +171,11 @@ namespace JsonifierInternal {
 			backslash.convertBackslashesToSimdBase(newPtr);
 			op.convertStructuralsToSimdBase(newPtr);
 			quotes.convertQuotesToSimdBase(newPtr);
-			collectStructurals();
-			addTapeValues();
+			addTapeValues(collectStructurals());
 			stringIndex += StepSize;
 		}
 
-		inline void addTapeValues() noexcept {
+		inline void addTapeValues(SimdBaseReal structurals) noexcept {
 			alignas(ALIGNMENT) int64_t newBits[SixtyFourPer]{};
 			structurals.store(newBits);
 			for (uint64_t x = 0; x < SixtyFourPer; ++x) {
@@ -190,33 +193,31 @@ namespace JsonifierInternal {
 
 		inline SimdBaseReal collectEscapedCharacters() {
 			if (backslash.operator bool()) {
-				auto newPrevEscaped		   = prevEscaped;
-				SimdBaseReal followsEscape = backslash.shl<1>();
-				SimdBaseReal evenBits{ set(0b01010101) };
-				SimdBaseReal oddSequenceStarts = backslash.bitAndNot(evenBits.bitAndNot(followsEscape));
-				SimdBaseReal sequencesStartingOnEvenBits{};
-				prevEscaped				= oddSequenceStarts.collectCarries(backslash, sequencesStartingOnEvenBits);
-				SimdBaseReal invertMask = sequencesStartingOnEvenBits.shl<1>();
-				return std::move(((evenBits ^ invertMask) & followsEscape).setLSB(newPrevEscaped));
-			} else {
-				SimdBaseReal escaped{};
-				escaped.setLSB(prevEscaped);
-				prevEscaped = false;
+				SimdBaseReal currentValues = backslash.bitAndNot(nextIsEscaped).shl<1>();
+				currentValues			   = currentValues | oddBits;
+				currentValues			   = currentValues - backslash.bitAndNot(nextIsEscaped);
+				currentValues			   = currentValues ^ oddBits;
+				SimdBaseReal escaped	   = currentValues ^ (backslash | nextIsEscaped);
+				SimdBaseReal escape		   = currentValues & backslash;
+				nextIsEscaped.setLSB(escape.checkMSB());
 				return escaped;
+
+			} else {
+				return {};
 			}
 		}
 
-		inline void collectStructurals() noexcept {
-			SimdBaseReal escaped				  = collectEscapedCharacters();
-			quotes								  = quotes.bitAndNot(escaped);
-			SimdBaseReal inString				  = quotes.carrylessMultiplication(prevInString);
-			SimdBaseReal scalar					  = ~(op | whitespace);
-			SimdBaseReal nonQuoteScalar			  = scalar.bitAndNot(quotes);
-			SimdBaseReal stringTail				  = inString ^ quotes;
-			SimdBaseReal followsNonQuoteScalar	  = nonQuoteScalar.follows(storedLSB01);
-			SimdBaseReal potentialScalarStart	  = scalar.bitAndNot(followsNonQuoteScalar);
-			SimdBaseReal potentialStructuralStart = op | potentialScalarStart;
-			structurals							  = potentialStructuralStart.bitAndNot(stringTail);
+		inline SimdBaseReal collectStructurals() noexcept {
+			SimdBaseReal currentValues = collectEscapedCharacters();
+			quotes					   = quotes.bitAndNot(currentValues);
+			currentValues			   = quotes.carrylessMultiplication(prevInString);
+			SimdBaseReal stringTail	   = currentValues ^ quotes;
+			SimdBaseReal scalar		   = ~(op | whitespace);
+			currentValues			   = scalar.bitAndNot(quotes);
+			currentValues			   = currentValues.follows(storedLSB01);
+			currentValues			   = scalar.bitAndNot(currentValues);
+			currentValues			   = op | currentValues;
+			return currentValues.bitAndNot(stringTail);
 		}
 	};
 

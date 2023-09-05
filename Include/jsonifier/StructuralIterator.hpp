@@ -36,13 +36,13 @@ namespace JsonifierInternal {
 		inline StructuralIterator() noexcept = default;
 
 		inline StructuralIterator(SimdStringReader* stringReaderNew) noexcept {
+			stringView	 = stringReaderNew->getStringView().data();
 			stringLength = stringReaderNew->getStringLength();
 			currentIndex = stringReaderNew->getStructurals();
-			rootIndex	 = currentIndex;
 		}
 
 		inline value_type operator*() const noexcept {
-			return *currentIndex;
+			return &stringView[*currentIndex];
 		}
 
 		inline StructuralIterator& operator++() noexcept {
@@ -51,7 +51,7 @@ namespace JsonifierInternal {
 		}
 
 		inline int64_t getCurrentIndex() const noexcept {
-			return *currentIndex - *rootIndex;
+			return *currentIndex;
 		}
 
 		inline bool operator==(const StructuralIterator&) const noexcept {
@@ -64,7 +64,7 @@ namespace JsonifierInternal {
 
 	  protected:
 		StructuralIndex* currentIndex{};
-		StructuralIndex* rootIndex{};
+		const uint8_t* stringView{};
 		int64_t stringLength{};
 
 		inline bool checkForNullIndex() const noexcept {
