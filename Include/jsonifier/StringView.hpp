@@ -25,12 +25,6 @@
 
 #include <jsonifier/String.hpp>
 
-#include <immintrin.h>
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <type_traits>
-
 namespace Jsonifier {
 
 	template<typename ValueType> class StringViewBase : public StringOpBase<StringViewBase<ValueType>, ValueType> {

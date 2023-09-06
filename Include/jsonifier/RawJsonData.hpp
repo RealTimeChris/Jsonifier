@@ -82,14 +82,14 @@ namespace Jsonifier {
 			return { jsonData.data(), jsonData.size() };
 		}
 
-		inline operator String() noexcept {
+		inline operator String() const noexcept {
 			String newString{};
 			newString.resize(jsonData.size());
 			std::memcpy(newString.data(), jsonData.data(), jsonData.size());
 			return newString;
 		}
 
-		inline operator std::string() noexcept {
+		inline operator std::string() const noexcept {
 			return jsonData.operator std::string();
 		}
 

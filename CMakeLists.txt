@@ -79,12 +79,21 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
 	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-I/usr/local/opt/llvm/include/c++/v1/>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-I/usr/local/opt/llvm/include>"
 	"${AVX_FLAG}"
 )
 
 target_link_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-rpath,/usr/local/opt/llvm/lib>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-L/usr/local/opt/llvm/lib>"
+)
+
+target_link_libraries(
+	"${PROJECT_NAME}" INTERFACE
+    "$<$<CXX_COMPILER_ID:CLANG>:-lc++>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

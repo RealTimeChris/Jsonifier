@@ -33,27 +33,24 @@ namespace JsonifierInternal {
 		using first_type  = FirstType;
 		using second_type = SecondType;
 
-		FirstType first{};
-		SecondType second{};
+		first_type first;
+		second_type second;
 
-		inline constexpr Pair() noexcept = default;
+		constexpr Pair() noexcept = default;
 
-		inline constexpr Pair(FirstType&& firstNew, SecondType&& secondNew) {
-			first  = std::forward<FirstType>(firstNew);
-			second = std::forward<SecondType>(secondNew);
+		template<typename FirstTypeNew, typename SecondTypeNew> constexpr Pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
+			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {
 		}
 
-		inline constexpr Pair(const FirstType& firstNew, const SecondType& secondNew) {
-			first  = firstNew;
-			second = secondNew;
-		}
+		template<typename FirstTypeNew>
+			requires(std::same_as<first_type, FirstTypeNew>)
+		constexpr Pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {}
 
-		inline constexpr void swap(Pair<FirstType, SecondType>& other) noexcept {
-			std::swap(first, other.first);
-			std::swap(second, other.second);
-		}
+		template<typename SecondTypeNew>
+			requires(std::same_as<second_type, SecondTypeNew>)
+		constexpr Pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {}
 
-		inline constexpr bool operator==(const Pair& other) const noexcept {
+		constexpr bool operator==(const Pair& other) const {
 			return first == other.first && second == other.second;
 		}
 	};

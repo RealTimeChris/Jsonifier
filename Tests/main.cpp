@@ -467,7 +467,7 @@ class FileLoader {
 		auto theStream = std::ofstream{ filePath, std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
-		this->fileContents = inputStream.str();
+		fileContents = inputStream.str();
 		theStream.close();
 	}
 
@@ -479,7 +479,7 @@ class FileLoader {
 	}
 
 	operator std::string() {
-		return this->fileContents;
+		return fileContents;
 	}
 
 	~FileLoader() {
@@ -1540,7 +1540,7 @@ struct on_demand {
 	ondemand::parser parser{};
 };
 
-template<typename OTy, typename OTy2> void simdPull(const char* x, OTy2& obj, simdjson::ondemand::document& doc) {
+template<typename OTy, typename ValueType02> void simdPull(const char* x, ValueType02& obj, simdjson::ondemand::document& doc) {
 	ondemand::array xNew = doc[x];
 	for (const OTy& value: xNew) {
 		obj.x.emplace_back(value);

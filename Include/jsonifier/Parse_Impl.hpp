@@ -37,420 +37,334 @@ namespace JsonifierInternal {
 		return currentStringBuffer;
 	}
 
-	template<bool printErrors, BoolT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		value = parseBool(*iter);
-		++iter;
-		return;
+	static inline Jsonifier::StringBase<char>& getCurrentKeyBuffer() noexcept {
+		static thread_local Jsonifier::StringBase<char> currentStringBuffer{};
+		return currentStringBuffer;
 	}
 
-	template<bool printErrors, NumT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		parseNumber(value, *iter);
-		++iter;
-		return;
-	}
-
-	template<bool printErrors, EnumT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue	 = static_cast<int64_t>(value);
-		auto newValueOld = static_cast<int64_t>(value);
-		parseNumber(newValue, *iter);
-		newValue |= newValueOld;
-		value = static_cast<ValueType>(newValue);
-		++iter;
-		return;
-	}
-
-	template<bool printErrors, UniquePtrT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		value = std::make_unique<typename ValueType::element_type>();
-		ParseNoKeys::op<printErrors>(*value, iter);
-		return;
-	}
-
-	template<bool printErrors, RawJsonT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		Derailleur<printErrors>::skipValue(iter);
-		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		value.resize(sizeNew);
-		std::memcpy(value.data(), newPtr, sizeNew);
-	}
-
-	template<bool printErrors, StringT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		++iter;
-		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		auto newerSize	= sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
-		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data(), newerSize);
-		if (newPtr) {
-			newerSize = newerPtr - getCurrentStringBuffer().data();
-			value.resize(newerSize);
-			std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
-		}
-	}
-
-	template<bool printErrors, CharT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		value		= static_cast<ValueType>(*(newPtr + 1));
-		++iter;
-	}
-
-	template<bool printErrors, RawArrayT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
+	template<bool printErrors, bool excludeKeys, BoolT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			value = parseBool(*iter);
+			++iter;
 			return;
 		}
-		if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
+	};
+
+	template<bool printErrors, bool excludeKeys, NumT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			parseNumber(value, *iter);
+			++iter;
 			return;
 		}
-		const auto n = std::min(value.size(), Derailleur<printErrors>::countArrayElements(iter));
+	};
 
-		auto valueIter = value.begin();
+	template<bool printErrors, bool excludeKeys, EnumT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			auto newValue	 = static_cast<int64_t>(value);
+			auto newValueOld = static_cast<int64_t>(value);
+			parseNumber(newValue, *iter);
+			newValue |= newValueOld;
+			value = static_cast<ValueType>(newValue);
+			++iter;
+			return;
+		}
+	};
 
-		for (uint64_t i = 0; i < n; ++i) {
-			if (iter == iter) {
+	template<bool printErrors, bool excludeKeys, UniquePtrT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			value = std::make_unique<typename ValueType::element_type>();
+			Parse<printErrors, excludeKeys>::op(*value, iter);
+			return;
+		}
+	};
+
+	template<bool printErrors, bool excludeKeys, RawJsonT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			auto newPtr = *iter;
+			Derailleur<printErrors>::skipValue(iter);
+			int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
+			value.resize(sizeNew);
+			std::memcpy(value.data(), newPtr, sizeNew);
+		}
+	};
+
+	template<bool printErrors, bool excludeKeys, StringT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			auto newPtr = *iter;
+			++iter;
+			int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
+			auto newerSize	= sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
+			getCurrentStringBuffer().resize(newerSize * 2);
+			auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data(), newerSize);
+			if (newerPtr) {
+				newerSize = newerPtr - getCurrentStringBuffer().data();
+				value.resize(newerSize);
+				std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
+			}
+		}
+	};
+
+	template<bool printErrors, bool excludeKeys, CharT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			auto newPtr = *iter;
+			value		= static_cast<ValueType>(*(newPtr + 1));
+			++iter;
+		}
+	};
+
+	template<bool printErrors, bool excludeKeys, RawArrayT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 				return;
 			}
-			ParseNoKeys::op<printErrors>(*valueIter++, iter);
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+			if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
+				return;
+			}
+			const auto n = std::min(value.size(), Derailleur<printErrors>::countArrayElements(iter));
+
+			auto valueIter = value.begin();
+
+			for (uint64_t i = 0; i < n; ++i) {
+				if (iter == iter) {
 					return;
 				}
-				return;
-			}
-		}
-		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
-	}
-
-	template<bool printErrors, ArrayT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
-			return;
-		}
-		if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
-			return;
-		}
-		const auto m = value.size();
-
-		auto valueIter = value.begin();
-		uint64_t i{};
-		for (; i < m; ++i) {
-			if (iter == iter) {
-				return;
-			}
-			ParseNoKeys::op<printErrors>(*valueIter++, iter);
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+				Parse<printErrors, excludeKeys>::op(*valueIter++, iter);
+				if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+						return;
+					}
 					return;
 				}
-				return;
 			}
+			Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
 		}
-		while (iter != iter) {
-			ParseNoKeys::op<printErrors>(value.emplace_back(), iter);
-			if (iter == iter) {
+	};
+
+	template<bool printErrors, bool excludeKeys, ArrayT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 				return;
 			}
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+			if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
+				return;
+			}
+			const auto m = value.size();
+
+			auto valueIter = value.begin();
+			uint64_t i{};
+			for (; i < m; ++i) {
+				if (iter == iter) {
 					return;
 				}
-				return;
-			}
-		}
-		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
-	}
-
-	template<bool printErrors, ObjectT ValueType> inline void ParseNoKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
-			return;
-		}
-		bool first{ true };
-		while (iter != iter) {
-			if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
-				return;
-			} else if (first) [[unlikely]] {
-				first = false;
-			} else [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
-					continue;
+				Parse<printErrors, excludeKeys>::op(*valueIter++, iter);
+				if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+						return;
+					}
+					return;
 				}
 			}
+			while (iter != iter) {
+				Parse<printErrors, excludeKeys>::op(value.emplace_back(), iter);
+				if (iter == iter) {
+					return;
+				}
+				if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+						return;
+					}
+					return;
+				}
+			}
+			Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
+		}
+	};
 
-			if constexpr (JsonifierObjectT<ValueType>) {
-				StructuralIterator start = iter;
-				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
-					continue;
-				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					continue;
-				}
-				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt	 = frozenMap.find(key);
-				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
-					continue;
-				} else if (memberIt != frozenMap.end()) [[likely]] {
-					std::visit(
-						[&](auto& memberPtr) {
-							ParseNoKeys::op<printErrors>(getMember(value, memberPtr), iter);
-						},
-						memberIt->second);
-				} else [[unlikely]] {
-					Derailleur<printErrors>::skipValue(iter);
-				}
-			} else {
-				ParseNoKeys::op<printErrors>(getCurrentStringBuffer(), iter);
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					continue;
+	template<bool printErrors, bool excludeKeys, ObjectT ValueType> struct ParseImpl<printErrors, excludeKeys, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
+				return;
+			}
+			bool first{ true };
+			while (iter != iter) {
+				if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
+					return;
+				} else if (first) [[unlikely]] {
+					first = false;
+				} else [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
+						return;
+					}
 				}
 
-				if constexpr (StringT<typename ValueType::key_type>) {
-					ParseNoKeys::op<printErrors>(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+				if constexpr (JsonifierObjectT<ValueType>) {
+					StructuralIterator start = iter;
+					if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
+						return;
+					}
+					const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+					constexpr auto frozenMap = makeMap<ValueType>();
+					const auto& memberIt	 = frozenMap.find(key);
+					if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
+						continue;
+					} else if (memberIt != frozenMap.end()) [[likely]] {
+						std::visit(
+							[&](auto& memberPtr) {
+								auto& newMember = getMember(value, memberPtr);
+								Parse<printErrors, true>::op(newMember, iter);
+							},
+							memberIt->second);
+					} else [[unlikely]] {
+						Derailleur<printErrors>::skipValue(iter);
+					}
 				} else {
-					static thread_local typename ValueType::key_type key_value{};
-					ParseNoKeys::op<printErrors>(key_value, iter);
-					ParseNoKeys::op<printErrors>(value[key_value], iter);
+					Parse<printErrors, true>::op(getCurrentStringBuffer(), iter);
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+
+					if constexpr (StringT<typename ValueType::key_type>) {
+						Parse<printErrors, true>::op(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+					} else {
+						static thread_local typename ValueType::key_type key_value{};
+						Parse<printErrors, true>::op(key_value, iter);
+						Parse<printErrors, true>::op(value[key_value], iter);
+					}
 				}
 			}
 		}
 	};
 
-	template<bool printErrors, BoolT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		value = parseBool(*iter);
-		++iter;
-		return;
-	}
-
-	template<bool printErrors, NumT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		parseNumber(value, *iter);
-		++iter;
-		return;
-	}
-
-	template<bool printErrors, EnumT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newValue	 = static_cast<int64_t>(value);
-		auto newValueOld = static_cast<int64_t>(value);
-		parseNumber(newValue, *iter);
-		newValue |= newValueOld;
-		value = static_cast<ValueType>(newValue);
-		++iter;
-		return;
-	}
-
-	template<bool printErrors, UniquePtrT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		value = std::make_unique<typename ValueType::element_type>();
-		ParseNoKeys::op<printErrors>(*value, iter);
-		return;
-	}
-
-	template<bool printErrors, RawJsonT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		Derailleur<printErrors>::skipValue(iter);
-		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		value.resize(sizeNew);
-		std::memcpy(value.data(), newPtr, sizeNew);
-	}
-
-	template<bool printErrors, StringT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		++iter;
-		int64_t sizeNew = static_cast<int64_t>(*iter - newPtr);
-		auto newerSize	= sizeNew + (BytesPerStep - (sizeNew % BytesPerStep));
-		getCurrentStringBuffer().resize(newerSize * 2);
-		auto newerPtr = parseString((newPtr) + 1, getCurrentStringBuffer().data(), newerSize);
-		if (newPtr) {
-			newerSize = newerPtr - getCurrentStringBuffer().data();
-			value.resize(newerSize);
-			std::memcpy(value.data(), getCurrentStringBuffer().data(), newerSize);
-		}
-	}
-
-	template<bool printErrors, CharT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		auto newPtr = *iter;
-		value		= static_cast<ValueType>(*(newPtr + 1));
-		++iter;
-	}
-
-	template<bool printErrors, RawArrayT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
-			return;
-		}
-		if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
-			return;
-		}
-		const auto n = std::min(value.size(), Derailleur<printErrors>::countArrayElements(iter));
-
-		auto valueIter = value.begin();
-
-		for (uint64_t i = 0; i < n; ++i) {
-			if (iter == iter) {
+	template<bool printErrors, ObjectT ValueType> struct ParseImpl<printErrors, true, ValueType> {
+		inline static void op(ValueType&& value, StructuralIterator& iter) {
+			if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 				return;
 			}
-			ParseWithKeys::op<printErrors>(*valueIter++, iter);
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
+			bool first{ true };
+			while (iter != iter) {
+				if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
 					return;
-				}
-				return;
-			}
-		}
-		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
-	}
-
-	template<bool printErrors, ArrayT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
-			return;
-		}
-		if (Derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
-			return;
-		}
-		const auto m = value.size();
-
-		auto valueIter = value.begin();
-		uint64_t i{};
-		for (; i < m; ++i) {
-			if (iter == iter) {
-				return;
-			}
-			ParseWithKeys::op<printErrors>(*valueIter++, iter);
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
-					return;
-				}
-				return;
-			}
-		}
-		while (iter != iter) {
-			ParseWithKeys::op<printErrors>(value.emplace_back(), iter);
-			if (iter == iter) {
-				return;
-			}
-			if (!Derailleur<printErrors>::template checkForMatchOpen<','>(iter)) [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<']'>(iter)) {
-					return;
-				}
-				return;
-			}
-		}
-		Derailleur<printErrors>::template checkForMatchClosed<']'>(iter);
-	}
-
-	template<bool printErrors, ObjectT ValueType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
-			return;
-		}
-		bool first{ true };
-		while (iter != iter) {
-			if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
-				return;
-			} else if (first) [[unlikely]] {
-				first = false;
-			} else [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
-					continue;
-				}
-			}
-
-			if constexpr (JsonifierObjectT<ValueType>) {
-				StructuralIterator start = iter;
-				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
-					continue;
-				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					continue;
-				}
-				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt	 = frozenMap.find(key);
-				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
-					continue;
-				} else if (memberIt != frozenMap.end()) [[likely]] {
-					std::visit(
-						[&](auto& memberPtr) {
-							ParseWithKeys::op<printErrors>(getMember(value, memberPtr), iter);
-						},
-						memberIt->second);
-				} else [[unlikely]] {
-					Derailleur<printErrors>::skipValue(iter);
-				}
-			} else {
-				ParseWithKeys::op<printErrors>(getCurrentStringBuffer(), iter);
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					continue;
+				} else if (first) [[unlikely]] {
+					first = false;
+				} else [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
+						return;
+					}
 				}
 
-				if constexpr (StringT<typename ValueType::key_type>) {
-					ParseWithKeys::op<printErrors>(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+				if constexpr (JsonifierObjectT<ValueType>) {
+					StructuralIterator start = iter;
+					if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
+						return;
+					}
+					const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+					constexpr auto frozenMap = makeMap<ValueType>();
+					const auto& memberIt	 = frozenMap.find(key);
+					if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
+						continue;
+					} else if (memberIt != frozenMap.end()) [[likely]] {
+						std::visit(
+							[&](auto& memberPtr) {
+								auto& newMember		= getMember(value, memberPtr);
+								using newMemberType = decltype(newMember);
+								if constexpr (HasExcludedKeys<newMemberType>) {
+									Parse<printErrors, true>::op(newMember, iter, newMember.excludedKeys);
+								} else {
+									Parse<printErrors, true>::op(newMember, iter);
+								}
+							},
+							memberIt->second);
+					} else [[unlikely]] {
+						Derailleur<printErrors>::skipValue(iter);
+					}
 				} else {
-					static thread_local typename ValueType::key_type key_value{};
-					ParseWithKeys::op<printErrors>(key_value, iter);
-					ParseWithKeys::op<printErrors>(value[key_value], iter);
+					Parse<printErrors, true>::op(getCurrentStringBuffer(), iter);
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+
+					if constexpr (StringT<typename ValueType::key_type>) {
+						Parse<printErrors, true>::op(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+					} else {
+						static thread_local typename ValueType::key_type key_value{};
+						Parse<printErrors, true>::op(key_value, iter);
+						Parse<printErrors, true>::op(value[key_value], iter);
+					}
 				}
 			}
-		}
-	};
+		};
 
-	template<bool printErrors, ObjectT ValueType, HasFind KeyType> inline void ParseWithKeys::op(ValueType& value, StructuralIterator& iter, const KeyType& excludedKeys) {
-		if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
-			return;
-		}
-		bool first{ true };
-		while (iter != iter) {
-			if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
+		template<HasFind KeyType> inline static void op(ValueType&& value, StructuralIterator& iter, const KeyType& excludedKeys) {
+			if (!Derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 				return;
-			} else if (first) [[unlikely]] {
-				first = false;
-			} else [[likely]] {
-				if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
-					return;
-				}
 			}
-
-			if constexpr (JsonifierObjectT<ValueType>) {
-				StructuralIterator start = iter;
-				if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
+			bool first{ true };
+			while (iter != iter) {
+				if (Derailleur<printErrors>::template checkForMatchOpen<'}'>(iter)) [[unlikely]] {
 					return;
-				}
-				const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					return;
-				}
-				if (excludedKeys.find(static_cast<typename KeyType::key_type>(key)) != excludedKeys.end()) {
-					Derailleur<printErrors>::skipValue(iter);
-					continue;
-				}
-				constexpr auto frozenMap = makeMap<ValueType>();
-				const auto& memberIt	 = frozenMap.find(key);
-				if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
-					continue;
-				} else if (memberIt != frozenMap.end()) [[likely]] {
-					std::visit(
-						[&](auto& memberPtr) {
-							auto newMember		= getMember(value, memberPtr);
-							using newMemberType = decltype(newMember);
-							if constexpr (HasExcludedKeys<newMemberType>) {
-								ParseWithKeys::op<printErrors>(getMember(value, memberPtr), iter, newMember.excludedKeys);
-							} else {
-								ParseWithKeys::op<printErrors>(getMember(value, memberPtr), iter);
-							}
-						},
-						memberIt->second);
-				} else [[unlikely]] {
-					Derailleur<printErrors>::skipValue(iter);
-				}
-			} else {
-				ParseWithKeys::op<printErrors>(getCurrentStringBuffer(), iter);
-				if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
-					return;
+				} else if (first) [[unlikely]] {
+					first = false;
+				} else [[likely]] {
+					if (!Derailleur<printErrors>::template checkForMatchClosed<','>(iter)) {
+						return;
+					}
 				}
 
-				if constexpr (StringT<typename ValueType::key_type>) {
-					ParseWithKeys::op<printErrors>(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+				if constexpr (JsonifierObjectT<ValueType>) {
+					StructuralIterator start = iter;
+					if (!Derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) {
+						return;
+					}
+					const Jsonifier::StringViewBase<uint8_t> key{ *start + 1, static_cast<uint64_t>(*iter - *start) - 2 };
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+					getCurrentKeyBuffer().resize(static_cast<uint64_t>(*iter - *start) - 2);
+					std::memcpy(getCurrentKeyBuffer().data(), *start + 1, static_cast<uint64_t>(*iter - *start) - 2);
+					if (excludedKeys.find(static_cast<const typename KeyType::key_type>(getCurrentKeyBuffer())) != excludedKeys.end()) {
+						Derailleur<printErrors>::skipValue(iter);
+						continue;
+					}
+					constexpr auto frozenMap = makeMap<ValueType>();
+					const auto& memberIt	 = frozenMap.find(key);
+					if (Derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
+						continue;
+					} else if (memberIt != frozenMap.end()) [[likely]] {
+						std::visit(
+							[&](auto& memberPtr) {
+								auto& newMember		= getMember(value, memberPtr);
+								using newMemberType = decltype(newMember);
+								if constexpr (HasExcludedKeys<newMemberType>) {
+									Parse<printErrors, true>::op(newMember, iter, newMember.excludedKeys);
+								} else {
+									Parse<printErrors, true>::op(newMember, iter);
+								}
+							},
+							memberIt->second);
+					} else [[unlikely]] {
+						Derailleur<printErrors>::skipValue(iter);
+					}
 				} else {
-					static thread_local typename ValueType::key_type key_value{};
-					ParseWithKeys::op<printErrors>(key_value, iter);
-					ParseWithKeys::op<printErrors>(value[key_value], iter);
+					Parse<printErrors, true>::op(getCurrentStringBuffer(), iter);
+					if (!Derailleur<printErrors>::template checkForMatchClosed<':'>(iter)) {
+						return;
+					}
+
+					if constexpr (StringT<typename ValueType::key_type>) {
+						Parse<printErrors, true>::op(value[static_cast<typename ValueType::key_type>(getCurrentStringBuffer())], iter);
+					} else {
+						static thread_local typename ValueType::key_type key_value{};
+						Parse<printErrors, true>::op(key_value, iter);
+						Parse<printErrors, true>::op(value[key_value], iter);
+					}
 				}
 			}
-		}
+		};
 	};
-
-
 }
