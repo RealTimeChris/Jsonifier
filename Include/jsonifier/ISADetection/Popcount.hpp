@@ -20,14 +20,30 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 20, 2023
+/// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/Parser.hpp>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
-namespace jsonifier {
+namespace jsonifier_internal {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+#if CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
+
+	#define popcnt(value) _mm_popcnt_u64(value)
+
+#else
+
+	inline uint64_t popcnt(uint64_t value) {
+		uint64_t count{};
+
+		while (value > 0) {
+			count += value & 1;
+			value >>= 1;
+		}
+
+		return count;
+	}
+
+#endif
 
 }

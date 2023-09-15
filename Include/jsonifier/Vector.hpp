@@ -19,7 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
@@ -29,32 +29,32 @@
 #include <source_location>
 #include <cstring>
 
-#if defined __linux__
-	#if !defined _tzcnt_u16
+#if defined(__linux__)
+	#if !defined(_tzcnt_u16)
 		#define _tzcnt_u16 __tzcnt_u16
 	#endif
 #endif
 
-namespace Jsonifier {
+namespace jsonifier {
 
-	template<typename ValueType> class Vector : protected std::equal_to<ValueType>, protected JsonifierInternal::AllocWrapper<ValueType> {
+	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
-		using value_type			 = ValueType;
+		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = JsonifierInternal::Iterator<Vector::value_type>;
-		using const_iterator		 = JsonifierInternal::Iterator<const Vector::value_type>;
+		using iterator				 = jsonifier_internal::iterator<vector::value_type>;
+		using const_iterator		 = jsonifier_internal::iterator<const vector::value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
 		using size_type				 = uint64_t;
-		using allocator				 = JsonifierInternal::AllocWrapper<value_type>;
+		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
-		inline Vector() noexcept = default;
+		inline vector() noexcept = default;
 
-		inline Vector& operator=(Vector&& other) noexcept {
+		inline vector& operator=(vector&& other) noexcept {
 			if (this != &other && dataVal != other.dataVal) {
 				reset();
 				swap(other);
@@ -62,11 +62,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline Vector(Vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
+		inline vector(vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = std::move(other);
 		}
 
-		inline Vector& operator=(const Vector& other) {
+		inline vector& operator=(const vector& other) {
 			if (this != &other) {
 				reset();
 				auto sizeValNew = other.size();
@@ -77,11 +77,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline Vector(const Vector& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline vector(const vector& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
-		inline Vector& operator=(std::vector<value_type>&& other) {
+		inline vector& operator=(std::vector<value_type>&& other) {
 			reset();
 			auto sizeValNew = other.size();
 			reserve(sizeValNew);
@@ -90,11 +90,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline explicit Vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline explicit vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = std::move(other);
 		}
 
-		inline Vector& operator=(const std::vector<value_type>& other) {
+		inline vector& operator=(const std::vector<value_type>& other) {
 			reset();
 			auto sizeValNew = other.size();
 			reserve(sizeValNew);
@@ -103,11 +103,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline explicit Vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline explicit vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
-		inline Vector& operator=(std::initializer_list<value_type> other) {
+		inline vector& operator=(std::initializer_list<value_type> other) {
 			reset();
 			auto sizeValNew = other.size();
 			reserve(sizeValNew);
@@ -116,11 +116,11 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline explicit Vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline explicit vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
-		inline explicit Vector(value_type&& other, size_type sizeNew) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline explicit vector(value_type&& other, size_type sizeNew) : capacityVal{}, sizeVal{}, dataVal{} {
 			reset();
 			auto sizeValNew = sizeNew;
 			reserve(sizeValNew);
@@ -128,12 +128,12 @@ namespace Jsonifier {
 			sizeVal = sizeValNew;
 		}
 
-		inline Vector& operator=(value_type other) {
+		inline vector& operator=(value_type other) {
 			emplace_back(other);
 			return *this;
 		}
 
-		inline Vector(value_type other) : capacityVal{}, sizeVal{}, dataVal{} {
+		inline vector(value_type other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
@@ -160,7 +160,7 @@ namespace Jsonifier {
 			sizeVal = newSize;
 		}
 
-		template<typename ValueTypeNew> inline void insert(iterator where, ValueTypeNew&& value) {
+		template<typename value_type_newer> inline void insert(iterator where, value_type_newer&& value) {
 			size_type insertCount = 1;
 
 			if (insertCount == 0) {
@@ -239,14 +239,14 @@ namespace Jsonifier {
 
 		inline reference at(size_type index) {
 			if (index >= sizeVal) {
-				throw std::out_of_range{ "Sorry, but that index is beyond the end of this Vector's bounds." };
+				throw std::out_of_range{ "Sorry, but that index is beyond the end of this vector's bounds." };
 			}
 			return dataVal[index];
 		}
 
 		inline const_reference at(size_type index) const {
 			if (index >= sizeVal) {
-				throw std::out_of_range{ "Sorry, but that index is beyond the end of this Vector's bounds." };
+				throw std::out_of_range{ "Sorry, but that index is beyond the end of this vector's bounds." };
 			}
 			return dataVal[index];
 		}
@@ -287,18 +287,17 @@ namespace Jsonifier {
 			return std::numeric_limits<size_type>::max() / sizeof(value_type);
 		}
 
-		template<typename... ValueTypes> inline reference emplace_back(ValueTypes&&... c) {
+		template<typename... value_types> inline reference emplace_back(value_types&&... c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
-			getAlloc().construct(&dataVal[sizeVal++], std::forward<ValueTypes>(c)...);
+			getAlloc().construct(&dataVal[sizeVal++], std::forward<value_types>(c)...);
 
 			return dataVal[sizeVal - 1];
 		}
 
 		inline void erase(size_type count) {
 			if (count >= sizeVal) {
-				clear();
 				return;
 			}
 			size_type newSize = sizeVal - count;
@@ -314,11 +313,10 @@ namespace Jsonifier {
 
 		inline void erase(iterator iter) {
 			if (iter < begin() || iter >= end()) {
-				clear();
 				return;
 			}
 
-			size_type eraseIndex = iter - begin();
+			size_type eraseIndex = static_cast<size_type>(iter - begin());
 			size_type newSize	 = sizeVal - 1;
 
 			getAlloc().destroy(dataVal + eraseIndex);
@@ -393,29 +391,29 @@ namespace Jsonifier {
 			sizeVal = 0;
 		}
 
-		inline void swap(Vector& other) {
+		inline void swap(vector& other) {
 			std::swap(capacityVal, other.capacityVal);
 			std::swap(sizeVal, other.sizeVal);
 			std::swap(dataVal, other.dataVal);
 		}
 
-		inline bool operator==(const Vector<value_type>& rhs) const {
+		inline bool operator==(const vector<value_type>& rhs) const {
 			if (rhs.size() != size()) {
 				return false;
 			}
-			if constexpr (std::is_fundamental_v<value_type>) {
-				return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), data(), size());
-			} else {
+			if constexpr (!std::is_fundamental_v<value_type>) {
 				for (size_type x = 0; x < sizeVal; ++x) {
 					if (!getObjectComparitor()(rhs.dataVal[x], dataVal[x])) {
 						return false;
 					}
 				}
+				return true;
+			} else {
+				return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), data(), size());
 			}
-			return true;
 		}
 
-		inline ~Vector() {
+		inline ~vector() {
 			reset();
 		};
 
@@ -445,4 +443,4 @@ namespace Jsonifier {
 		}
 	};
 
-}// namespace Jsonifier
+}// namespace jsonifier

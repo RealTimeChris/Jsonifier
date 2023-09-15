@@ -19,63 +19,66 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
 #include <jsonifier/Simd.hpp>
 #include <iterator>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	class StructuralIterator {
+	class structural_iterator {
 	  public:
 		using iterator_category = std::forward_iterator_tag;
-		using value_type		= StringViewPtr;
+		using value_type		= string_view_ptr;
+		using pointer			= value_type*;
+		using size_type			= int64_t;
 
-		inline StructuralIterator() noexcept = default;
-
-		inline StructuralIterator(SimdStringReader* stringReaderNew) noexcept {
-			stringView	 = stringReaderNew->getStringView().data();
-			stringLength = stringReaderNew->getStringLength();
-			currentIndex = stringReaderNew->getStructurals();
-			rootIndex	 = currentIndex;
+		inline structural_iterator(pointer rootIndexNew, jsonifier::string_view_base<uint8_t> stringViewNew) noexcept {
+			stringLength = stringViewNew.size();
+			stringView	 = stringViewNew.data();
+			currentIndex = rootIndexNew;
+			rootIndex	 = rootIndexNew;
 		}
 
 		inline value_type operator*() const noexcept {
 			return *currentIndex;
 		}
 
-		inline StructuralIterator& operator++() noexcept {
+		inline structural_iterator& operator++() noexcept {
 			++currentIndex;
 			return *this;
 		}
 
-		inline int64_t getCurrentIndex() const noexcept {
+		inline size_type getCurrentIndex() const noexcept {
 			return *currentIndex - *rootIndex;
 		}
 
-		inline bool operator==(const StructuralIterator&) const noexcept {
-			return checkForNullIndex() || checkForStringOverRun();
+		inline bool operator==(const structural_iterator&) const noexcept {
+			return checkForNullIndex() || checkForstringOverRun();
 		}
 
 		inline bool operator==(uint8_t other) const noexcept {
+			if (checkForNullIndex() || checkForstringOverRun()) {
+				return false;
+			}
 			return ***this == other;
 		}
 
 	  protected:
-		StructuralIndex* currentIndex{};
-		StructuralIndex* rootIndex{};
-		StringViewPtr stringView{};
-		int64_t stringLength{};
+		size_type stringLength{};
+		value_type stringView{};
+		pointer currentIndex{};
+		pointer rootIndex{};
 
 		inline bool checkForNullIndex() const noexcept {
 			return !currentIndex;
 		}
 
-		inline bool checkForStringOverRun() const noexcept {
+		inline bool checkForstringOverRun() const noexcept {
 			auto currentIndexTemp = getCurrentIndex();
-			return currentIndexTemp <= 0 || currentIndexTemp >= stringLength;
+			return currentIndexTemp < 0 || currentIndexTemp >= stringLength;
 		}
 	};
 }
