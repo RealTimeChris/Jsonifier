@@ -19,16 +19,16 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <type_traits>
 #include <iterator>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename FirstType, typename SecondType> class Pair {
+	template<typename FirstType, typename SecondType> class pair {
 	  public:
 		using first_type  = FirstType;
 		using second_type = SecondType;
@@ -36,26 +36,28 @@ namespace JsonifierInternal {
 		first_type first;
 		second_type second;
 
-		constexpr Pair() noexcept = default;
+		constexpr pair() = default;
 
-		template<typename FirstTypeNew, typename SecondTypeNew> constexpr Pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
+		template<typename FirstTypeNew, typename SecondTypeNew> constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
 			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {
 		}
 
 		template<typename FirstTypeNew>
 			requires(std::same_as<first_type, FirstTypeNew>)
-		constexpr Pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {}
+		constexpr pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {
+		}
 
 		template<typename SecondTypeNew>
 			requires(std::same_as<second_type, SecondTypeNew>)
-		constexpr Pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {}
+		constexpr pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {
+		}
 
-		constexpr bool operator==(const Pair& other) const {
+		constexpr bool operator==(const pair& other) const {
 			return first == other.first && second == other.second;
 		}
 	};
 
-	template<typename ValueType> using UnwrapRefDecayT = typename std::unwrap_ref_decay<ValueType>::type;
+	template<typename value_type> using unwrap_ref_decay_t = typename std::unwrap_ref_decay<value_type>::type;
 
-	template<typename A, typename B> Pair(A, B) -> Pair<UnwrapRefDecayT<A>, UnwrapRefDecayT<B>>;
+	template<typename a, typename b> pair(a, b) -> pair<unwrap_ref_decay_t<a>, unwrap_ref_decay_t<b>>;
 }

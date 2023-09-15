@@ -19,24 +19,24 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
 #include <iterator>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename ValueType> class Iterator {
+	template<typename value_type_new> class iterator {
 	  public:
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;
-		using value_type		= ValueType;
-		using difference_type	= ptrdiff_t;
+		using value_type		= value_type_new;
 		using reference			= value_type&;
 		using pointer			= value_type*;
+		using difference_type	= ptrdiff_t;
 
-		constexpr Iterator(pointer pointerNew) noexcept : value{ pointerNew } {};
+		constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
 
 		constexpr reference operator*() const {
 			return *value;
@@ -46,45 +46,45 @@ namespace JsonifierInternal {
 			return value;
 		}
 
-		constexpr Iterator& operator++() {
+		constexpr iterator& operator++() {
 			++value;
 			return *this;
 		}
 
-		constexpr Iterator operator++(int32_t) {
-			Iterator temp = *this;
+		constexpr iterator operator++(int32_t) {
+			iterator temp{ *this };
 			++*this;
 			return temp;
 		}
 
-		constexpr Iterator& operator--() {
+		constexpr iterator& operator--() {
 			--value;
 			return *this;
 		}
 
-		constexpr Iterator operator--(int32_t) {
-			Iterator temp = *this;
+		constexpr iterator operator--(int32_t) {
+			iterator temp{ *this };
 			--*this;
 			return temp;
 		}
 
-		constexpr Iterator& operator+=(const difference_type iter) {
+		constexpr iterator& operator+=(const difference_type iter) {
 			value += iter;
 			return *this;
 		}
 
-		constexpr Iterator operator+(const difference_type iter) const {
-			Iterator temp = *this;
+		constexpr iterator operator+(const difference_type iter) const {
+			iterator temp{ *this };
 			temp += iter;
 			return temp;
 		}
 
-		constexpr Iterator& operator-=(const difference_type iter) {
+		constexpr iterator& operator-=(const difference_type iter) {
 			return *this += -iter;
 		}
 
-		constexpr Iterator operator-(const difference_type iter) const {
-			Iterator temp = *this;
+		constexpr iterator operator-(const difference_type iter) const {
+			iterator temp{ *this };
 			temp -= iter;
 			return temp;
 		}
@@ -93,31 +93,31 @@ namespace JsonifierInternal {
 			return *(*this + iter);
 		}
 
-		constexpr difference_type operator-(const Iterator& iter) const {
+		constexpr difference_type operator-(const iterator& iter) const {
 			return value - iter.value;
 		}
 
-		constexpr bool operator==(const Iterator& iter) const {
+		constexpr bool operator==(const iterator& iter) const {
 			return value == iter.value;
 		}
 
-		constexpr bool operator>=(const Iterator& iter) const {
+		constexpr bool operator>=(const iterator& iter) const {
 			return value >= iter.value;
 		}
 
-		constexpr bool operator<=(const Iterator& iter) const {
+		constexpr bool operator<=(const iterator& iter) const {
 			return value <= iter.value;
 		}
 
-		constexpr bool operator>(const Iterator& iter) const {
+		constexpr bool operator>(const iterator& iter) const {
 			return value > iter.value;
 		}
 
-		constexpr bool operator<(const Iterator& iter) const {
+		constexpr bool operator<(const iterator& iter) const {
 			return value < iter.value;
 		}
 
 		pointer value;
 	};
 
-}// namespace JsonifierInternal
+}// namespace jsonifier_internal
