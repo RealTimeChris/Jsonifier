@@ -13,13 +13,13 @@
 	substantial portions of the Software.
 
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR a PARTICULAR
 	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
 	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
@@ -27,64 +27,60 @@
 #include <jsonifier/ISADetection.hpp>
 #include <cmath>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	class StringBlockReader {
+	template<uint64_t stepSize> class string_block_reader {
 	  public:
-		inline StringBlockReader(StringViewPtr stringViewNew, uint64_t lengthNew) noexcept {
-			lengthMinusStep = lengthNew < StepSize ? 0 : lengthNew - StepSize;
-			inString		= stringViewNew;
+		inline void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
+			lengthMinusStep = lengthNew < stepSize ? 0 : lengthNew - stepSize;
+			instring		= stringViewNew;
 			length			= lengthNew;
 			index			= 0;
 		}
 
-		inline uint64_t getRemainder(StringBufferPtr dest) const noexcept {
+		inline uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
 			if (length == index) {
 				return 0;
 			}
-			std::memset(dest, 0x20, StepSize * 2);
-			std::memcpy(dest, inString + index, (length - index));
+			std::memset(dest, 0x20, stepSize);
+			std::memcpy(dest, instring + index, (length - index));
 			return length - index;
 		}
 
-		inline StringViewPtr fullBlock() noexcept {
-			return inString + index;
+		inline string_view_ptr fullBlock() noexcept {
+			return instring + index;
 		}
 
 		inline void advanceIndex() {
-			index += StepSize * 2;
+			index += stepSize;
 		}
 
 		inline bool hasFullBlock() const noexcept {
-			return index + StepSize < lengthMinusStep;
+			return index < lengthMinusStep;
 		}
 
 	  protected:
 		uint64_t lengthMinusStep{};
-		StringViewPtr inString{};
+		string_view_ptr instring{};
 		uint64_t length{};
 		uint64_t index{};
 	};
 
-	class SimdStringReader {
+	class simd_string_reader {
 	  public:
 		using size_type = uint64_t;
 
-		inline SimdStringReader() noexcept										   = default;
-		inline SimdStringReader& operator=(SimdStringReader&& other) noexcept	   = default;
-		inline SimdStringReader(SimdStringReader&& other) noexcept				   = default;
-		inline SimdStringReader& operator=(const SimdStringReader& other) noexcept = delete;
-		inline SimdStringReader(const SimdStringReader& other) noexcept			   = delete;
-
-		inline void reset(Jsonifier::StringViewBase<uint8_t> stringViewNew) noexcept {
-			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size() / 2));
+		inline void reset(jsonifier::string_view_base<uint8_t> stringViewNew) noexcept {
+			structuralIndices.clear();
+			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size()));
+			stringBlockReader.reset(stringViewNew.data(), stringViewNew.size());
 			stringView = stringViewNew;
 			currentValues.reset();
 			nextIsEscaped.reset();
 			storedLSB01 = false;
 			whitespace.reset();
 			backslash.reset();
-			prevInString = 0;
+			prevInstring = 0;
 			stringIndex	 = 0;
 			tapeIndex	 = 0;
 			quotes.reset();
@@ -93,50 +89,46 @@ namespace JsonifierInternal {
 		}
 
 		inline void generateJsonIndices() noexcept {
-			if (!stringView.empty()) [[likely]] {
-				StringBlockReader stringReader{ stringView.data(), stringView.size() };
-				while (stringReader.hasFullBlock()) {
-					generateStructurals(stringReader.fullBlock());
-					generateStructurals(stringReader.fullBlock() + StepSize);
-					stringReader.advanceIndex();
-				}
-				uint8_t block[StepSize * 2];
-				if (stringReader.getRemainder(block) > 0) {
-					generateStructurals(block);
-					generateStructurals(block + StepSize);
-				}
+			while (stringBlockReader.hasFullBlock()) {
+				generateStructurals(stringBlockReader.fullBlock());
+				generateStructurals(stringBlockReader.fullBlock() + StepSize);
+				stringBlockReader.advanceIndex();
+			}
+			uint8_t block[StepSize * 2];
+			if (stringBlockReader.getRemainder(block) > 0) {
+				generateStructurals(block);
+				generateStructurals(block + StepSize);
 			}
 		}
 
-		inline size_type getStringLength() noexcept {
+		inline size_type getstringLength() noexcept {
 			return stringView.size();
 		}
 
-		inline Jsonifier::StringViewBase<uint8_t> getStringView() noexcept {
+		inline jsonifier::string_view_base<uint8_t> getStringView() noexcept {
 			return stringView;
 		}
 
-		inline StructuralIndex* getStructurals() noexcept {
+		inline structural_index* getStructurals() noexcept {
 			return structuralIndices.data();
 		}
 
-		inline ~SimdStringReader() noexcept {};
-
 	  protected:
-		inline static const SimdBaseReal oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
-		Jsonifier::Vector<StructuralIndex> structuralIndices{};
-		Jsonifier::StringViewBase<uint8_t> stringView{};
-		SimdBaseReal nextIsEscaped{};
-		SimdBaseReal currentValues{};
-		SimdBaseReal whitespace{};
-		SimdBaseReal backslash{};
-		SimdBaseReal newPtr[8]{};
-		uint64_t prevInString{};
+		inline static const simd_base_real oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
+		jsonifier::vector<structural_index> structuralIndices{};
+		string_block_reader<StepSize * 2> stringBlockReader{};
+		jsonifier::string_view_base<uint8_t> stringView{};
+		simd_base_real nextIsEscaped{};
+		simd_base_real currentValues{};
+		simd_base_real whitespace{};
+		simd_base_real backslash{};
+		simd_base_real newPtr[8]{};
+		uint64_t prevInstring{};
 		uint64_t stringIndex{};
-		SimdBaseReal quotes{};
+		simd_base_real quotes{};
 		uint64_t tapeIndex{};
+		simd_base_real op{};
 		bool storedLSB01{};
-		SimdBaseReal op{};
 
 		inline uint64_t roundUpToMultipleOfEight(uint64_t num) {
 			uint64_t remainder = num % 8;
@@ -146,27 +138,27 @@ namespace JsonifierInternal {
 			return num + (8 - remainder);
 		}
 
-		inline int64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, int64_t newBits) noexcept {
-			structuralIndices[(currentIndex * 8) + tapeIndex]	  = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+		inline uint64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, uint64_t newBits) noexcept {
+			structuralIndices[(currentIndex * 8) + tapeIndex]	  = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount64(newBits) + (x * 64ull) + stringIndex);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
 			return newBits;
 		}
 
-		inline void generateStructurals(StringViewPtr valueNew) noexcept {
+		inline void generateStructurals(string_view_ptr valueNew) noexcept {
 			for (uint64_t x = 0; x < 8; ++x) {
 				newPtr[x] = load(valueNew + (BytesPerStep * x));
 			}
@@ -178,10 +170,10 @@ namespace JsonifierInternal {
 			stringIndex += StepSize;
 		}
 
-		inline void addTapeValues(SimdBaseReal structurals) noexcept {
-			alignas(ALIGNMENT) int64_t newBits[SixtyFourPer]{};
-			structurals.store(newBits);
-			for (uint64_t x = 0; x < SixtyFourPer; ++x) {
+		inline void addTapeValues(simd_base_real structurals) noexcept {
+			alignas(ALIGNMENT) uint64_t newBits[StridesPerStep]{};
+			structurals.store<uint64_t>(newBits);
+			for (uint64_t x = 0; x < StridesPerStep; ++x) {
 				if (!newBits[x]) {
 					continue;
 				}
@@ -194,13 +186,13 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline SimdBaseReal collectEscapedCharacters() {
+		inline simd_base_real collectEscapedCharacters() {
 			if (backslash.operator bool()) {
-				currentValues		 = backslash.bitAndNot(nextIsEscaped).shl<1>();
-				currentValues		 = currentValues | oddBits;
-				currentValues		 = currentValues - backslash.bitAndNot(nextIsEscaped);
-				currentValues		 = currentValues ^ oddBits;
-				SimdBaseReal escaped = currentValues ^ (backslash | nextIsEscaped);
+				currentValues		   = backslash.bitAndNot(nextIsEscaped).shl<1>();
+				currentValues		   = currentValues | oddBits;
+				currentValues		   = currentValues - backslash.bitAndNot(nextIsEscaped);
+				currentValues		   = currentValues ^ oddBits;
+				simd_base_real escaped = currentValues ^ (backslash | nextIsEscaped);
 				nextIsEscaped.setLSB((currentValues & backslash).checkMSB());
 				return escaped;
 
@@ -209,30 +201,22 @@ namespace JsonifierInternal {
 			}
 		}
 
-		inline SimdBaseReal collectStructurals() noexcept {
-			currentValues			= collectEscapedCharacters();
-			quotes					= quotes.bitAndNot(currentValues);
-			currentValues			= quotes.carrylessMultiplication(prevInString);
-			SimdBaseReal stringTail = currentValues ^ quotes;
-			SimdBaseReal scalar		= ~(op | whitespace);
-			currentValues			= scalar.bitAndNot(quotes);
-			currentValues			= currentValues.follows(storedLSB01);
-			currentValues			= scalar.bitAndNot(currentValues);
-			currentValues			= op | currentValues;
+		inline simd_base_real collectStructurals() noexcept {
+			currentValues			  = collectEscapedCharacters();
+			quotes					  = quotes.bitAndNot(currentValues);
+			currentValues			  = quotes.carrylessMultiplication(prevInstring);
+			simd_base_real stringTail = currentValues ^ quotes;
+			simd_base_real scalar	  = ~(op | whitespace);
+			currentValues			  = scalar.bitAndNot(quotes);
+			currentValues			  = currentValues.follows(storedLSB01);
+			currentValues			  = scalar.bitAndNot(currentValues);
+			currentValues			  = op | currentValues;
 			return currentValues.bitAndNot(stringTail);
 		}
 	};
 
 }
 
-#ifdef store
-	#undef store
-#endif
-
-#ifdef load
+#if defined(load)
 	#undef load
-#endif
-
-#ifdef set
-	#undef set
 #endif

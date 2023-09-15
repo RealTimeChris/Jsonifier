@@ -19,38 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
-
-#include <jsonifier/Tuple.hpp>
-#include <variant>
-
-namespace Jsonifier {
-	/// A class to aid in registering a class/struct to be parsed/serialized.
-	template<typename ValueType> struct Core {};
-}
-
-namespace JsonifierInternal {
-
-	template<typename ValueType>
-	concept JsonifierT = requires { Jsonifier::Core<std::decay_t<ValueType>>::parseValue; };
-
-	struct EmptyVal {
-		static constexpr Tuplet::Tuple<> parseValue{};
-	};
-
-	template<typename ValueType> constexpr auto CoreWrapperV = [] {
-		if constexpr (JsonifierT<ValueType>) {
-			return Jsonifier::Core<ValueType>::parseValue;
-		} else {
-			return EmptyVal{};
-		}
-	}();
-
-	template<typename ValueType> constexpr auto CoreV = CoreWrapperV<std::decay_t<ValueType>>.parseValue;
-
-	template<typename ValueType> using CoreT = std::decay_t<decltype(CoreV<ValueType>)>;
-
-	template<typename ValueType> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<ValueType>>)>;
-}
