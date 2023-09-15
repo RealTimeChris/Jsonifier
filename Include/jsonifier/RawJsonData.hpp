@@ -19,18 +19,19 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <jsonifier/String.hpp>
 
-namespace Jsonifier {
+namespace jsonifier {
 
-	struct RawJsonData {
-		inline RawJsonData() noexcept = default;
+	class raw_json_data {
+	  public:
+		inline raw_json_data() = default;
 
-		inline RawJsonData& operator=(bool value) noexcept {
+		inline raw_json_data& operator=(bool value) {
 			if (value) {
 				jsonData = "true";
 			} else {
@@ -39,74 +40,74 @@ namespace Jsonifier {
 			return *this;
 		}
 
-		inline RawJsonData(bool value) noexcept {
+		inline raw_json_data(bool value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(double value) noexcept {
-			jsonData = String{ std::to_string(value) };
+		inline raw_json_data& operator=(double value) {
+			jsonData = string{ std::to_string(value) };
 			return *this;
 		}
 
-		inline RawJsonData(double value) noexcept {
+		inline raw_json_data(double value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(int64_t value) noexcept {
-			jsonData = String{ std::to_string(value) };
+		inline raw_json_data& operator=(int64_t value) {
+			jsonData = string{ std::to_string(value) };
 			return *this;
 		}
 
-		inline RawJsonData(int64_t value) noexcept {
+		inline raw_json_data(int64_t value) {
 			*this = value;
 		}
 
-		inline RawJsonData& operator=(const Jsonifier::String& value) noexcept {
+		inline raw_json_data& operator=(const jsonifier::string& value) {
 			jsonData = value;
 			return *this;
 		}
 
-		inline RawJsonData(const Jsonifier::String& value) noexcept {
+		inline raw_json_data(const jsonifier::string& value) {
 			*this = value;
 		}
 
-		inline char* data() noexcept {
+		inline char* data() {
 			return jsonData.data();
 		}
 
-		inline void resize(uint64_t sizeNew) noexcept {
+		inline void resize(uint64_t sizeNew) {
 			jsonData.resize(sizeNew);
 		}
 
-		inline explicit operator StringView() noexcept {
+		inline explicit operator string_view() {
 			return { jsonData.data(), jsonData.size() };
 		}
 
-		inline operator String() const noexcept {
-			String newString{};
-			newString.resize(jsonData.size());
-			std::memcpy(newString.data(), jsonData.data(), jsonData.size());
-			return newString;
+		inline operator string() const {
+			string newstring{};
+			newstring.resize(jsonData.size());
+			std::memcpy(newstring.data(), jsonData.data(), jsonData.size());
+			return newstring;
 		}
 
-		inline operator std::string() const noexcept {
+		inline operator std::string() const {
 			return jsonData.operator std::string();
 		}
 
-		inline bool operator==(const RawJsonData& other) const {
+		inline bool operator==(const raw_json_data& other) const {
 			return jsonData == other.jsonData;
 		}
 
-		inline RawJsonData operator+(const String& other) {
+		inline raw_json_data operator+(const string& other) {
 			jsonData += other;
 			return *this;
 		}
 
 	  protected:
-		String jsonData{};
+		string jsonData{};
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, RawJsonData& jsonValue) noexcept {
+	inline std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) {
 		os << jsonValue.operator std::string();
 		return os;
 	}

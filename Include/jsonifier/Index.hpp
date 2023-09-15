@@ -19,9 +19,17 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
+
+#if defined(min)
+	#undef min
+#endif
+
+#if defined(max)
+	#undef max
+#endif
 
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/Serialize_Impl.hpp>
@@ -34,4 +42,3 @@
 #include <jsonifier/Tuple.hpp>
 #include <jsonifier/Base.hpp>
 #include <jsonifier/Simd.hpp>
-#include <jsonifier/Core.hpp>

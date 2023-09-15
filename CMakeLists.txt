@@ -24,8 +24,13 @@
 
 cmake_minimum_required(VERSION 3.18)
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
+
+include("CollectVersion")
+collect_version("jsonifier")
+
 set(PROJECT_NAME  "Jsonifier")
-set(PRODUCT_VERSION 0.9.4)
+set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(
     "${PROJECT_NAME}"
@@ -41,13 +46,19 @@ add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
-if(NOT DEFINED AVX_TYPE)
-	include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/DetectArchitecture.cmake")
+set(JSONIFIER-POPCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-LZCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-BMI_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+
+if(NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
+	include("JsonifierDetectArchitecture")
 endif()
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES
-	PUBLIC_HEADER "${HEADERS}"
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
@@ -55,45 +66,38 @@ set_target_properties(
 
 target_include_directories(
 	"${PROJECT_NAME}" INTERFACE
-	"$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
 )
 
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
-	"${AVX_TYPE}"
+	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
 )
+
+set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE INTERNAL "For the CPU architecture selection.")
+set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>" 
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
+	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
+	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"	
-	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-I/usr/local/opt/llvm/include/c++/v1/>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-I/usr/local/opt/llvm/include>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
 	"${AVX_FLAG}"
 )
 
 target_link_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-rpath,/usr/local/opt/llvm/lib>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-L/usr/local/opt/llvm/lib>"
-)
-
-target_link_libraries(
-	"${PROJECT_NAME}" INTERFACE
-    "$<$<CXX_COMPILER_ID:CLANG>:-lc++>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
@@ -126,11 +130,14 @@ install(
 )
 
 install(
+	DIRECTORY
+	"${CMAKE_CURRENT_SOURCE_DIR}/Include/"
+	DESTINATION "include"
+)
+
+install(
 	TARGETS "${PROJECT_NAME}"
 	EXPORT "${EXPORTED_TARGETS_NAME}"
-	RUNTIME DESTINATION "$<$<NOT:$<PLATFORM_ID:Linux>>:$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}bin,bin>>"
-	ARCHIVE DESTINATION "$<IF:$<CONFIG:Debug>,${DEBUG_PREFIX}lib,lib>"
-	PUBLIC_HEADER DESTINATION "include/jsonifier"
 )
 
 install(
@@ -139,3 +146,7 @@ install(
 	NAMESPACE "${PROJECT_NAME}::"
 	DESTINATION "share/jsonifier"
 )
+
+if (JSONIFIER_TEST)
+	add_subdirectory("./Tests")
+endif()

@@ -19,17 +19,17 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <iterator>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename ValueType, uint64_t N> class RawVector {
+	template<typename value_type_new, uint64_t N> class raw_vector {
 	  public:
-		using value_type	  = ValueType;
+		using value_type	  = value_type_new;
 		using reference		  = value_type&;
 		using const_reference = const value_type&;
 		using pointer		  = value_type*;
@@ -39,26 +39,22 @@ namespace JsonifierInternal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr RawVector() noexcept							 = default;
-		constexpr RawVector& operator=(RawVector&&) noexcept		 = default;
-		constexpr RawVector(RawVector&&) noexcept				 = default;
-		constexpr RawVector& operator=(const RawVector&) noexcept = default;
-		constexpr RawVector(const RawVector&) noexcept			 = default;
+		constexpr raw_vector() = default;
 
-		constexpr RawVector(size_type count, const auto& value) : dsize(count) {
+		constexpr raw_vector(size_type count, const auto& value) : dsize(count) {
 			for (size_type x = 0; x < N; ++x)
 				data[x] = value;
 		}
 
-		constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return data;
 		}
 
-		constexpr iterator end() noexcept {
+		constexpr iterator end() {
 			return data + dsize;
 		}
 
-		constexpr size_type size() const noexcept {
+		constexpr size_type size() const {
 			return dsize;
 		}
 
@@ -66,7 +62,7 @@ namespace JsonifierInternal {
 			return data[index];
 		}
 
-		constexpr const_reference operator[](size_type index) const noexcept {
+		constexpr const_reference operator[](size_type index) const {
 			return data[index];
 		}
 
@@ -78,11 +74,11 @@ namespace JsonifierInternal {
 			return data[dsize - 1];
 		}
 
-		constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return data[0];
 		}
 
-		constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return data[dsize - 1];
 		}
 
@@ -103,8 +99,8 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		value_type data[N] = {};
-		size_type dsize	   = 0;
+		alignas(JSONIFIER_ALIGNMENT) value_type data[N] = {};
+		size_type dsize									= 0;
 	};
 
 }

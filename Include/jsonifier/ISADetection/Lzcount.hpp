@@ -20,14 +20,45 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 20, 2023
+/// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/Parser.hpp>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
-namespace jsonifier {
+namespace jsonifier_internal {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
+
+	template<typename value_type> constexpr value_type lzCount(value_type value) {
+		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+		if constexpr (sizeof(value_type) == 4) {
+			return static_cast<value_type>(_lzcnt_u32(static_cast<std::uint32_t>(value)));
+		} else if constexpr (sizeof(value_type) == 8) {
+			return static_cast<value_type>(_lzcnt_u64(static_cast<std::uint64_t>(value)));
+		} else {
+			static_assert(sizeof(value_type) == 4 || sizeof(value_type) == 8, "Unsupported integer size");
+			return static_cast<value_type>(_lzcnt_u64(static_cast<std::uint64_t>(value)));
+		}
+	}
+
+#else
+
+	template<typename value_type> inline value_type lzCount(value_type value) {
+		if (value == 0) {
+			return sizeof(value_type) * 8;
+		}
+
+		value_type count{};
+		value_type mask{ static_cast<value_type>(1) << (std::numeric_limits<value_type>::digits - 1) };
+
+		while ((value & mask) == 0) {
+			count++;
+			mask >>= 1;
+		}
+
+		return count;
+	}
+
+#endif
 
 }

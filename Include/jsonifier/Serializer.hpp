@@ -19,41 +19,40 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<bool excludeKeys, typename ValueType = void> struct SerializeImpl;
+	template<bool excludeKeys, typename value_type = void> struct serialize_impl;
 
-	template<bool excludeKeys> struct Serialize {
-		template<typename ValueType, VectorLike BufferType> inline static void op(ValueType&& value, BufferType&& buffer, uint64_t& index) {
-			SerializeImpl<excludeKeys, RefUnwrap<ValueType>>::op(std::forward<ValueType>(value), std::forward<BufferType>(buffer), index);
+	template<bool excludeKeys> struct serialize {
+		template<typename value_type, vector_like buffer_type> inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index) {
+			serialize_impl<excludeKeys, ref_unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index);
 		}
 
-		template<typename ValueType, VectorLike BufferType, HasFind KeyType> inline static void op(ValueType&& value, BufferType&& buffer, uint64_t& index, const KeyType& keys) {
-			SerializeImpl<excludeKeys, RefUnwrap<ValueType>>::op(std::forward<ValueType>(value), std::forward<BufferType>(buffer), index, keys);
+		template<typename value_type, vector_like buffer_type, has_find KeyType>
+		inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index, const KeyType& keys) {
+			serialize_impl<excludeKeys, ref_unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index, keys);
 		}
 	};
 
-	class Serializer {
+	class serializer {
 	  public:
-		constexpr Serializer() noexcept = default;
-
-		template<bool excludeKeys = false, CoreType ValueType, VectorLike BufferType> inline void serializeJson(ValueType&& data, BufferType&& buffer) {
+		template<bool excludeKeys = false, core_type value_type, vector_like buffer_type> inline void serializeJson(value_type&& data, buffer_type&& buffer) {
 			uint64_t index{};
 			if constexpr (excludeKeys) {
-				if constexpr (HasExcludedKeys<ValueType>) {
-					Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index, data.excludedKeys);
+				if constexpr (has_excluded_keys<value_type>) {
+					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index, data.excludedKeys);
 				} else {
-					Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index);
+					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
 				}
 			} else {
-				Serialize<excludeKeys>::op(std::forward<ValueType>(data), stringBuffer, index);
+				serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
 			}
 			if (buffer.size() != index) [[unlikely]] {
 				buffer.resize(index);
@@ -62,7 +61,7 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		Jsonifier::String stringBuffer{};
+		jsonifier::string stringBuffer{};
 	};
 
 }

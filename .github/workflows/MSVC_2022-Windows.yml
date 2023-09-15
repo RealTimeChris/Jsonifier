@@ -27,17 +27,17 @@ jobs:
          value: $env:PATH;C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build
 
     - name: Configure CMake
-      working-directory: Tests
+      working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DGITHUB_BRANCH_TYPE=${{github.ref}}
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DDEV=true -DJSONIFIER_TEST=true
 
     - name: Build the Test
-      working-directory: Tests/Build
+      working-directory: ./Build
       run: |
            cmake --build . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: Tests/Build/${{matrix.build_type}}/
+      working-directory: ./Build/Tests/${{matrix.build_type}}
       run: |
            ./Json-Performance.exe
       continue-on-error: true
