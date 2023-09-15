@@ -19,7 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
@@ -27,24 +27,26 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Base.hpp>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	enum class TypeOfMisread { Wrong_Type = 0, Damaged_Input = 1 };
+	enum class type_of_misread { Wrong_Type = 0, Damaged_Input = 1 };
 
-	template<bool printErrors> class Derailleur {
+	template<bool printErrors> class derailleur {
 	  public:
-		template<uint8_t c> static inline bool checkForMatchClosed(StructuralIterator& iter, std::source_location location = std::source_location::current()) {
+		using size_type = uint64_t;
+
+		template<uint8_t c> inline static bool checkForMatchClosed(structural_iterator& iter, std::source_location location = std::source_location::current()) {
 			if (iter == c) {
 				++iter;
 				return true;
 			} else {
 				reportError<c>(iter, location);
-				skipToNextValue<c>(iter);
+				skipToNextValue(iter);
 				return false;
 			}
 		}
 
-		template<uint8_t c> static inline bool checkForMatchOpen(StructuralIterator& iter) {
+		template<uint8_t c> inline static bool checkForMatchOpen(structural_iterator& iter) {
 			if (iter == c) {
 				++iter;
 				return true;
@@ -53,7 +55,28 @@ namespace JsonifierInternal {
 			}
 		}
 
-		static inline void skipValue(StructuralIterator& iter) noexcept {
+		inline static void skipToNextValue(structural_iterator& iter) {
+			while (iter != ',' && iter != iter) {
+				switch (**iter) {
+					case '{': {
+						skipObject(iter);
+						break;
+					}
+					case '[': {
+						skipArray(iter);
+						break;
+					}
+					case '\0': {
+						break;
+					}
+					default: {
+						++iter;
+					}
+				}
+			}
+		}
+
+		inline static void skipValue(structural_iterator& iter) {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -72,9 +95,9 @@ namespace JsonifierInternal {
 			}
 		}
 
-		static inline size_t countArrayElements(StructuralIterator iter) noexcept {
-			size_t currentDepth{ 1 };
-			size_t currentCount{ 1 };
+		inline static size_type countArrayElements(structural_iterator iter) {
+			size_type currentDepth{ 1 };
+			size_type currentCount{ 1 };
 			if (iter == ']') {
 				++iter;
 				return {};
@@ -108,9 +131,9 @@ namespace JsonifierInternal {
 		}
 
 	  protected:
-		static inline void skipObject(StructuralIterator& iter) noexcept {
+		inline static void skipObject(structural_iterator& iter) {
 			++iter;
-			uint64_t currentDepth{ 1 };
+			size_type currentDepth{ 1 };
 			if (iter == '}') {
 				++iter;
 				return;
@@ -135,9 +158,9 @@ namespace JsonifierInternal {
 			}
 		}
 
-		static inline void skipArray(StructuralIterator& iter) noexcept {
+		inline static void skipArray(structural_iterator& iter) {
 			++iter;
-			uint64_t currentDepth{ 1 };
+			size_type currentDepth{ 1 };
 			if (iter == ']') {
 				++iter;
 				return;
@@ -162,33 +185,23 @@ namespace JsonifierInternal {
 			}
 		}
 
-		static inline bool isTypeType(uint8_t c) {
-			const uint8_t array01[]{ "0123456789-ftn\"{[" };
-			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
+		inline static bool isTypeType(uint8_t c) {
+			static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
+			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
 		}
 
-		static inline bool isDigitType(uint8_t c) {
-			const uint8_t array01[]{ "0123456789-" };
-			return findSingleCharacter(array01, std::size(array01), c) != Jsonifier::String::npos;
+		inline static bool isDigitType(uint8_t c) {
+			static constexpr uint8_t array01[]{ "0123456789-" };
+			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
 		}
 
-		template<uint8_t c> static inline void skipToNextValue(StructuralIterator& iter) {
-			while (iter != iter) {
-				if (iter == ',') {
-					return;
-				}
-				++iter;
-			}
-			return;
-		}
-
-		static inline Jsonifier::StringView getValueType(uint8_t charToCheck) {
-			static constexpr Jsonifier::StringView array{ "Array" };
-			static constexpr Jsonifier::StringView object{ "Object" };
-			static constexpr Jsonifier::StringView boolean{ "Bool" };
-			static constexpr Jsonifier::StringView number{ "Number" };
-			static constexpr Jsonifier::StringView str{ "String" };
-			static constexpr Jsonifier::StringView null{ "Null" };
+		inline static jsonifier::string_view getValueType(uint8_t charToCheck) {
+			static constexpr jsonifier::string_view array{ "array" };
+			static constexpr jsonifier::string_view object{ "object" };
+			static constexpr jsonifier::string_view boolean{ "Bool" };
+			static constexpr jsonifier::string_view number{ "Number" };
+			static constexpr jsonifier::string_view str{ "string" };
+			static constexpr jsonifier::string_view null{ "Null" };
 			if (isDigitType(charToCheck)) {
 				return number;
 			} else if (charToCheck == 't' || charToCheck == 'f') {
@@ -206,9 +219,9 @@ namespace JsonifierInternal {
 			}
 		}
 
-		template<uint8_t c> static inline void reportError(StructuralIterator& iter, std::source_location location) {
+		template<uint8_t c> inline static void reportError(structural_iterator& iter, std::source_location location) {
 			if (printErrors) {
-				if (collectMisReadType<c>(iter) == TypeOfMisread::Wrong_Type) {
+				if (collectMisReadType<c>(iter) == type_of_misread::Wrong_Type) {
 					std::cout << "It seems you mismatched a value for a value of type: " << getValueType(c) << ", the found value was actually: " << getValueType(**iter)
 							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
 							  << ", in function: " << location.function_name() << "()." << std::endl;
@@ -220,11 +233,11 @@ namespace JsonifierInternal {
 			}
 		}
 
-		template<uint8_t c> static inline TypeOfMisread collectMisReadType(StructuralIterator& iter) {
+		template<uint8_t c> inline static type_of_misread collectMisReadType(structural_iterator& iter) {
 			if (isTypeType(**iter) && isTypeType(c)) {
-				return TypeOfMisread::Wrong_Type;
+				return type_of_misread::Wrong_Type;
 			} else {
-				return TypeOfMisread::Damaged_Input;
+				return type_of_misread::Damaged_Input;
 			}
 		}
 	};

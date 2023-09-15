@@ -28,17 +28,17 @@ jobs:
             sudo ./llvm.sh 18
 
     - name: Configure CMake
-      working-directory: Tests
+      working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DGITHUB_BRANCH_TYPE=${{github.ref}}
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DDEV=true -DJSONIFIER_TEST=true
 
     - name: Build the Test
-      working-directory: Tests/Build
+      working-directory: ./Build
       run: |
            cmake --build . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: Tests/Build
+      working-directory: ./Build/Tests
       run: |
            ./Json-Performance
       continue-on-error: true

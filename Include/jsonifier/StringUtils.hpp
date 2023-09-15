@@ -19,7 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 /// Most of the code in this header was sampled fromSimdjson - https://github.com/simdjson
 #pragma once
@@ -30,16 +30,16 @@
 #include <jsonifier/Simd.hpp>
 #include <jsonifier/Tables.hpp>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename SimdBase> class BackslashAndQuote {
+	template<typename simd_base_internal> class backslash_and_quote {
 	  public:
-		static const StringParsingType bytesProcessed = BytesPerStep;
+		static constexpr string_parsing_type bytesProcessed = BytesPerStep;
 
-		inline BackslashAndQuote<SimdBase> static copyAndFind(StringViewPtr source, StringBufferPtr dest) {
-			SimdBase values(source);
+		inline backslash_and_quote<simd_base_internal> static copyAndFind(string_view_ptr source, string_buffer_ptr dest) {
+			simd_base_internal values(source);
 			values.store(dest);
-			BackslashAndQuote returnData{};
+			backslash_and_quote returnData{};
 			returnData.bsBits	 = { values == uint8_t{ '\\' } };
 			returnData.quoteBits = { values == uint8_t{ '\"' } };
 			return returnData;
@@ -53,28 +53,28 @@ namespace JsonifierInternal {
 			return ((quoteBits - 1) & bsBits) != 0;
 		}
 
-		inline StringParsingType quoteIndex() {
+		inline string_parsing_type quoteIndex() {
 			return tzCount(quoteBits);
 		}
 
-		inline StringParsingType backslashIndex() {
+		inline string_parsing_type backslashIndex() {
 			return tzCount(bsBits);
 		}
 
 	  protected:
-		StringParsingType quoteBits{};
-		StringParsingType bsBits{};
+		string_parsing_type quoteBits{};
+		string_parsing_type bsBits{};
 	};
 
-	inline uint32_t hexToU32NoCheck(StringViewPtr source) {
-		uint32_t v1 = digitToVal32[630ull + source[0]];
-		uint32_t v2 = digitToVal32[420ull + source[1]];
-		uint32_t v3 = digitToVal32[210ull + source[2]];
-		uint32_t v4 = digitToVal32[0ull + source[3]];
+	inline uint32_t hexToU32NoCheck(string_view_ptr source) {
+		uint32_t v1 = digitToVal32[630ULL + source[0]];
+		uint32_t v2 = digitToVal32[420ULL + source[1]];
+		uint32_t v3 = digitToVal32[210ULL + source[2]];
+		uint32_t v4 = digitToVal32[0ULL + source[3]];
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline uint64_t codePointToUtf8(uint32_t codePoint, StringBufferPtr c) {
+	inline uint64_t codePointToUtf8(uint32_t codePoint, string_buffer_ptr c) {
 		if (codePoint <= 0x7F) {
 			c[0] = uint8_t(codePoint);
 			return 1;
@@ -98,12 +98,12 @@ namespace JsonifierInternal {
 		return 0;
 	}
 
-	inline bool handleUnicodeCodePoint(StringViewPtr* srcPtr, StringBufferPtr* dstPtr) {
+	inline bool handleUnicodeCodePoint(string_view_ptr* srcPtr, string_buffer_ptr* dstPtr) {
 		constexpr uint32_t subCodePoint = 0xfffd;
 		uint32_t codePoint				= hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			StringViewPtr srcData = *srcPtr;
+			string_view_ptr srcData = *srcPtr;
 			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
 				codePoint = subCodePoint;
 			} else {
@@ -124,9 +124,9 @@ namespace JsonifierInternal {
 		return offset > 0;
 	}
 
-	inline StringBufferPtr parseString(StringViewPtr source, StringBufferPtr dest, uint64_t maxLength) {
+	inline string_buffer_ptr parsestring(string_view_ptr source, string_buffer_ptr dest, int64_t maxLength) {
 		while (maxLength > 0) {
-			auto bsQuote = BackslashAndQuote<SimdBaseReal>::copyAndFind(source, dest);
+			auto bsQuote = backslash_and_quote<simd_base<StepSize>>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
 			}
@@ -134,8 +134,8 @@ namespace JsonifierInternal {
 				auto bsDist			= bsQuote.backslashIndex();
 				uint8_t escape_char = source[bsDist + 1];
 				if (escape_char == 'u') {
-					source += bsDist;
 					maxLength -= bsDist;
+					source += bsDist;
 					dest += bsDist;
 					if (!handleUnicodeCodePoint(&source, &dest)) {
 						return nullptr;
@@ -146,21 +146,21 @@ namespace JsonifierInternal {
 						return nullptr;
 					}
 					dest[bsDist] = escapeResult;
-					maxLength -= bsDist + 2ull;
-					source += bsDist + 2ull;
-					dest += bsDist + 1ull;
+					maxLength -= bsDist + 1ULL;
+					source += bsDist + 2ULL;
+					dest += bsDist + 1ULL;
 				}
 			} else {
-				maxLength -= BackslashAndQuote<SimdBaseReal>::bytesProcessed;
-				source += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
-				dest += BackslashAndQuote<SimdBaseReal>::bytesProcessed;
+				maxLength -= backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				source += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				dest += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
 			}
 		}
 		return nullptr;
 	}
 
-	inline bool parseBool(StringViewPtr json) {
+	inline bool parseBool(string_view_ptr json) {
 		uint8_t valueNew[5]{ "true" };
 		return std::memcmp(valueNew, json, 4) == 0;
 	}
-}// namespace JsonifierInternal
+}// namespace jsonifier_internal

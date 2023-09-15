@@ -19,15 +19,15 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/Parser.hpp>
 
-namespace Jsonifier {
+namespace jsonifier {
 
-	class JsonifierCore : public JsonifierInternal::Parser, public JsonifierInternal::Serializer {};
+	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
 
 }
