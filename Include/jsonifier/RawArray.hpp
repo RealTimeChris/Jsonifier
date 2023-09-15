@@ -19,17 +19,17 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <iterator>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename ValueType, size_t N> struct RawArray {
+	template<typename value_type_new, size_t N> struct raw_array {
 	  public:
-		using value_type	  = ValueType;
+		using value_type	  = value_type_new;
 		using reference		  = value_type&;
 		using const_reference = const value_type&;
 		using pointer		  = value_type*;
@@ -39,43 +39,39 @@ namespace JsonifierInternal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr RawArray() noexcept						   = default;
-		constexpr RawArray& operator=(RawArray&&) noexcept	   = default;
-		constexpr RawArray(RawArray&&) noexcept				   = default;
-		constexpr RawArray& operator=(const RawArray&) noexcept = default;
-		constexpr RawArray(const RawArray&) noexcept			   = default;
+		constexpr raw_array() = default;
 
-		template<size_t M> constexpr RawArray(ValueType const (&init)[M]) : RawArray(init, std::make_index_sequence<N>()) {
+		template<size_t M> constexpr raw_array(value_type const (&init)[M]) : raw_array(init, std::make_index_sequence<N>()) {
 			static_assert(M >= N);
 		}
 
-		constexpr RawArray(const std::initializer_list<ValueType>& other) {
+		constexpr raw_array(const std::initializer_list<value_type>& other) {
 			for (uint64_t x = 0; x < other.size(); ++x) {
 				operator[](x) = std::move(other.begin()[x]);
 			}
 		}
 
-		constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return dataVal;
 		}
 
-		constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const {
 			return dataVal;
 		}
 
-		constexpr iterator end() noexcept {
+		constexpr iterator end() {
 			return dataVal + N;
 		}
 
-		constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const {
 			return dataVal + N;
 		}
 
-		constexpr size_type size() const noexcept {
+		constexpr size_type size() const {
 			return N;
 		}
 
-		constexpr size_type maxSize() const noexcept {
+		constexpr size_type maxSize() const {
 			return N;
 		}
 
@@ -83,18 +79,18 @@ namespace JsonifierInternal {
 			return dataVal[index];
 		}
 
-		constexpr const_reference operator[](uint64_t index) const noexcept {
+		constexpr const_reference operator[](uint64_t index) const {
 			return dataVal[index];
 		}
 
-		constexpr reference at(uint64_t index) noexcept {
+		constexpr reference at(uint64_t index) {
 			if (index > N) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		constexpr const_reference at(uint64_t index) const noexcept {
+		constexpr const_reference at(uint64_t index) const {
 			if (index > N) {
 				std::abort();
 			}
@@ -105,7 +101,7 @@ namespace JsonifierInternal {
 			return dataVal[0];
 		}
 
-		constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
@@ -113,15 +109,15 @@ namespace JsonifierInternal {
 			return dataVal[N - 1];
 		}
 
-		constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return dataVal[N - 1];
 		}
 
-		constexpr value_type* data() noexcept {
+		constexpr value_type* data() {
 			return dataVal;
 		}
 
-		constexpr const value_type* data() const noexcept {
+		constexpr const value_type* data() const {
 			return dataVal;
 		}
 
@@ -131,15 +127,15 @@ namespace JsonifierInternal {
 			}
 		}
 
-		ValueType dataVal[N]{};
+		alignas(JSONIFIER_ALIGNMENT) value_type dataVal[N]{};
 
-		template<size_t M, size_t... I> constexpr RawArray(ValueType const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
+		template<size_t M, size_t... I> constexpr raw_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}
 	};
 
-	template<typename ValueType> class RawArray<ValueType, 0> {
+	template<typename value_type_new> class raw_array<value_type_new, 0> {
 	  public:
-		using value_type			 = ValueType;
+		using value_type			 = value_type_new;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using pointer				 = value_type*;
@@ -150,8 +146,6 @@ namespace JsonifierInternal {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
 		using difference_type		 = std::ptrdiff_t;
-
-		constexpr RawArray() noexcept = default;
 	};
 
 }

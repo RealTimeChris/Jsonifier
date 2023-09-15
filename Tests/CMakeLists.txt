@@ -1,29 +1,8 @@
-cmake_minimum_required(VERSION 3.18)
-
-project(
-  "Json-Performance"
-  VERSION 0.1
-  LANGUAGES CXX
-)
-
 set(CMAKE_CXX_STANDARD 20)
 
-if (DEFINED GITHUB_BRANCH_TYPE)
-    string (REPLACE "/" ";" GITHUB_BRANCH_TYPE "${GITHUB_BRANCH_TYPE}")
-    list(GET GITHUB_BRANCH_TYPE 2 BRANCH)
-else()
-    set(BRANCH "dev")
-endif()
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Install/")
 
 include(FetchContent)
-
-FetchContent_Declare(
-    Jsonifier
-    GIT_REPOSITORY https://github.com/RealTimeChris/Jsonifier.git
-    GIT_TAG "${BRANCH}"
-    GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(Jsonifier)
 
 FetchContent_Declare(
     glaze
@@ -50,11 +29,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fmt)
 
 add_executable(
-    "${PROJECT_NAME}" 
+    "Json-Performance" 
     "main.cpp"
 )
 
 target_link_libraries(
-	"${PROJECT_NAME}" PRIVATE
-    Jsonifier glaze::glaze simdjson fmt::fmt
+	"Json-Performance" PUBLIC 
+    Jsonifier::Jsonifier glaze::glaze simdjson fmt::fmt
 )

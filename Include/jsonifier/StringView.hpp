@@ -19,105 +19,79 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
 
 #include <jsonifier/String.hpp>
 
-namespace Jsonifier {
+namespace jsonifier {
 
-	template<typename ValueType> class StringViewBase : public StringOpBase<StringViewBase<ValueType>, ValueType> {
+	template<typename value_type_new> class string_view_base {
 	  public:
-		using value_type			 = ValueType;
+		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = JsonifierInternal::Iterator<StringViewBase::value_type>;
-		using const_iterator		 = JsonifierInternal::Iterator<const StringViewBase::value_type>;
+		using iterator				 = jsonifier_internal::iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
-		using allocator				 = JsonifierInternal::AllocWrapper<value_type>;
-		using traits_type			 = JsonifierInternal::CharTraits<value_type>;
+		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
+		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
 		const_pointer dataVal{};
 		size_type sizeVal{};
 
-		friend StringOpBase<StringViewBase, value_type>;
+		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-		static constexpr auto npos{ std::numeric_limits<size_type>::max() };
-
-		constexpr StringViewBase() noexcept : dataVal(), sizeVal(0) {
+		constexpr string_view_base() : dataVal(), sizeVal(0) {
 		}
 
-		template<JsonifierInternal::HasDataAndSize ValueTypeNew> constexpr StringViewBase& operator=(const ValueTypeNew& stringNew) {
+		template<jsonifier_internal::string_t value_type_newer> constexpr string_view_base& operator=(const value_type_newer& stringNew) {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
 			return *this;
 		}
 
-		template<JsonifierInternal::HasDataAndSize ValueTypeNew> constexpr StringViewBase(const ValueTypeNew& stringNew) {
+		template<jsonifier_internal::string_t value_type_newer> constexpr string_view_base(const value_type_newer& stringNew) {
 			*this = stringNew;
 		}
 
-		template<uint64_t strLength> constexpr StringViewBase(const value_type (&other)[strLength]) {
+		template<uint64_t strLength> constexpr string_view_base(const value_type (&other)[strLength]) {
 			dataVal = other;
 			sizeVal = strLength;
 		}
 
-		constexpr StringViewBase(const_pointer pointerNew) noexcept : dataVal(pointerNew), sizeVal(traits_type::length(pointerNew)) {
+		constexpr string_view_base(const_pointer pointerNew) : dataVal(pointerNew), sizeVal(traits_type::length(pointerNew)) {
 		}
 
-		constexpr StringViewBase(const_pointer pointerNew, const size_type countNew) noexcept : dataVal(pointerNew), sizeVal(countNew){};
+		constexpr string_view_base(const_pointer pointerNew, const size_type countNew) : dataVal(pointerNew), sizeVal(countNew){};
 
-		constexpr const_iterator begin() noexcept {
+		constexpr const_iterator begin() const {
 			return const_iterator(dataVal);
 		}
 
-		constexpr const_iterator begin() const noexcept {
-			return const_iterator(dataVal);
-		}
-
-		constexpr const_iterator end() noexcept {
+		constexpr const_iterator end() const {
 			return const_iterator(dataVal + sizeVal);
 		}
 
-		constexpr const_iterator end() const noexcept {
-			return const_iterator(dataVal + sizeVal);
+		constexpr const_iterator cbegin() const {
+			return const_iterator(begin());
 		}
 
-		constexpr reverse_iterator rbegin() noexcept {
-			return reverse_iterator(end());
+		constexpr const_iterator cend() const {
+			return const_iterator(end());
 		}
 
-		constexpr const_reverse_iterator rbegin() const noexcept {
-			return const_reverse_iterator(end());
+		constexpr const_reverse_iterator crbegin() const {
+			return const_reverse_iterator(cend());
 		}
 
-		constexpr reverse_iterator rend() noexcept {
-			return reverse_iterator(begin());
-		}
-
-		constexpr const_reverse_iterator rend() const noexcept {
-			return const_reverse_iterator(begin());
-		}
-
-		constexpr const_iterator cbegin() const noexcept {
-			return begin();
-		}
-
-		constexpr const_iterator cend() const noexcept {
-			return end();
-		}
-
-		constexpr const_reverse_iterator crbegin() const noexcept {
-			return rbegin();
-		}
-
-		constexpr const_reverse_iterator crend() const noexcept {
-			return rend();
+		constexpr const_reverse_iterator crend() const {
+			return const_reverse_iterator(cbegin());
 		}
 
 		constexpr size_type size() const {
@@ -142,7 +116,7 @@ namespace Jsonifier {
 
 		constexpr const_reference at(const size_type offsetNew) const {
 			if (offsetNew >= sizeVal) {
-				throw std::out_of_range{ "Sorry, but that index is beyond the end of this StringView instance." };
+				throw std::out_of_range{ "Sorry, but that index is beyond the end of this string_view instance." };
 			}
 			return dataVal[offsetNew];
 		}
@@ -159,116 +133,149 @@ namespace Jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
-		constexpr void swap(StringViewBase& other) {
-			const StringViewBase temp{ other };
+		template<typename... ArgTypes> constexpr size_type find(ArgTypes&&... args) const {
+			return this->operator std::basic_string_view<value_type>().find(std::forward<ArgTypes>(args)...);
+		}
+
+		template<typename... ArgTypes> constexpr size_type findFirstOf(ArgTypes&&... args) const {
+			return this->operator std::basic_string_view<value_type>().find_first_of(std::forward<ArgTypes>(args)...);
+		}
+
+		template<typename... ArgTypes> constexpr size_type findLastOf(ArgTypes&&... args) const {
+			return this->operator std::basic_string_view<value_type>().find_last_of(std::forward<ArgTypes>(args)...);
+		}
+
+		template<typename... ArgTypes> constexpr size_type findFirstNotOf(ArgTypes&&... args) const {
+			return this->operator std::basic_string_view<value_type>().find_first_not_of(std::forward<ArgTypes>(args)...);
+		}
+
+		template<typename... ArgTypes> constexpr size_type findLastNotOf(ArgTypes&&... args) const {
+			return this->operator std::basic_string_view<value_type>().find_last_not_of(std::forward<ArgTypes>(args)...);
+		}
+
+		constexpr void swap(string_view_base& other) {
+			const string_view_base temp{ other };
 			other = *this;
 			*this = temp;
 		}
 
-		constexpr StringViewBase substr(const size_type offsetNew = 0, size_type countNew = npos) const {
-			return StringViewBase(dataVal + offsetNew, countNew);
+		constexpr string_view_base substr(const size_type offsetNew = 0, size_type countNew = npos) const {
+			if (offsetNew >= sizeVal) {
+				throw std::out_of_range("Substring position is out of range.");
+			}
+
+			countNew = std::min(countNew, sizeVal - offsetNew);
+			return string_view_base(dataVal + offsetNew, countNew);
 		}
 
-		template<typename ValueTypeNew = value_type> inline explicit operator std::basic_string<ValueTypeNew>() const {
-			std::basic_string<ValueTypeNew> returnValue{};
+		template<typename value_type_newer = value_type> inline explicit operator std::basic_string<value_type_newer>() const {
+			std::basic_string<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
 			std::memcpy(returnValue.data(), data(), returnValue.size());
 			return returnValue;
 		}
 
-		template<typename ValueTypeNew = value_type> inline explicit operator StringBase<ValueTypeNew>() const {
-			StringBase<ValueTypeNew> returnValue{};
+		template<typename value_type_newer = value_type> inline explicit operator string_base<value_type_newer>() const {
+			string_base<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
 			std::memcpy(returnValue.data(), data(), returnValue.size());
 			return returnValue;
 		}
 
-		constexpr explicit operator std::string_view() const {
+		constexpr explicit operator std::basic_string_view<value_type>() const {
 			return { data(), size() };
 		}
 
-		template<JsonifierInternal::HasDataAndSize StringType> constexpr bool operator==(const StringType& rhs) const {
-			if (rhs.size() != size()) {
+		template<jsonifier_internal::pointer_t value_type_newer>
+		inline friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) {
+			auto rhsLength = traits_type::length(rhs);
+			if (lhs.size() != rhsLength) {
 				return false;
 			}
-			return JsonifierInternal::JsonifierCoreInternal::compare(rhs.data(), data(), size());
+			return jsonifier_internal::jsonifier_core_internal::compare(rhs, lhs.data(), rhsLength);
 		}
 
-		template<size_type StrLength> constexpr bool operator==(const value_type (&rhs)[StrLength]) const {
-			if (StrLength - 1 != size()) {
+		template<jsonifier_internal::char_array_t value_type_newer> inline bool operator==(const value_type_newer& rhs) {
+			auto rhsLength = std::size(rhs) - 1;
+			if (size() != rhsLength) {
 				return false;
 			}
-			return JsonifierInternal::JsonifierCoreInternal::compare(rhs, data(), size());
+			return jsonifier_internal::jsonifier_core_internal::compare(rhs, data(), rhsLength);
 		}
 
-		template<JsonifierInternal::StringT StringTypeNew> inline friend StringBase<value_type> operator+(const StringTypeNew& lhs, const StringViewBase<value_type>& rhs) {
-			StringBase<value_type> newLhs{ lhs };
+		template<jsonifier_internal::string_t value_type_newer> inline friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) {
+			if (rhs.size() != lhs.size()) {
+				return false;
+			}
+			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
+		}
+
+		template<typename value_type_newer, size_type N> inline friend string_base<value_type_new> operator+(const value_type_newer (&lhs)[N], const string_view_base& rhs) {
+			string_base<value_type_new> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<JsonifierInternal::StringT StringTypeNew> inline friend StringBase<value_type> operator+=(const StringTypeNew& lhs, const StringViewBase<value_type>& rhs) {
-			StringBase<value_type> newLhs{ lhs };
+		template<typename value_type_newer, size_type N> inline friend string_base<value_type_new> operator+=(const value_type_newer (&lhs)[N], const string_view_base& rhs) {
+			string_base<value_type_new> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<size_type size> inline friend StringBase<value_type> operator+(const value_type (&lhs)[size], const StringViewBase<value_type>& rhs) {
-			StringBase<value_type> newLhs{ lhs };
+		template<jsonifier_internal::pointer_t string_type_new> inline friend string_base<value_type_new> operator+(string_type_new&& lhs, const string_view_base& rhs) {
+			string_base<value_type_new> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<size_type size> inline friend StringBase<value_type> operator+=(const value_type (&lhs)[size], const StringViewBase<value_type>& rhs) {
-			StringBase<value_type> newLhs{ lhs };
+		template<jsonifier_internal::pointer_t string_type_new> inline friend string_base<value_type_new> operator+=(string_type_new&& lhs, const string_view_base& rhs) {
+			string_base<value_type_new> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<uint64_t strLength> inline StringBase<value_type> operator+(const value_type (&rhs)[strLength]) {
-			StringBase<value_type> newLhs{ *this };
-			newLhs += rhs;
-			return newLhs;
-		}
-
-		template<uint64_t strLength> inline StringBase<value_type> operator+=(const value_type (&rhs)[strLength]) {
-			StringBase<value_type> newLhs{ *this };
-			newLhs += rhs;
-			return newLhs;
-		}
-
-		inline StringBase<value_type> operator+(const value_type& rhs) {
-			StringBase<value_type> newLhs{ *this };
+		inline string_base<value_type_new> operator+(const value_type& rhs) {
+			string_base<value_type_new> newLhs{ *this };
 			newLhs.pushBack(rhs);
 			return newLhs;
 		}
 
-		inline StringBase<value_type> operator+=(const value_type& rhs) {
-			StringBase<value_type> newLhs{ *this };
+		inline string_base<value_type_new> operator+=(const value_type& rhs) {
+			string_base<value_type_new> newLhs{ *this };
 			newLhs.pushBack(rhs);
 			return newLhs;
 		}
 
-		template<JsonifierInternal::StringT StringTypeNew> inline StringBase<value_type> operator+(const StringTypeNew& rhs) noexcept {
-			StringBase<value_type> newLhs{ *this };
+		template<jsonifier_internal::string_t string_type_new> inline string_base<value_type_new> operator+(const string_type_new& rhs) const {
+			string_base<value_type_new> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<JsonifierInternal::StringT StringTypeNew> inline StringBase<value_type> operator+=(const StringTypeNew& rhs) noexcept {
-			StringBase<value_type> newLhs{ *this };
+		template<jsonifier_internal::string_t string_type_new> inline string_base<value_type_new> operator+=(const string_type_new& rhs) {
+			string_base<value_type_new> newLhs{ *this };
 			newLhs.append(rhs.data(), rhs.size());
 			return newLhs;
 		}
 
-		constexpr ~StringViewBase() noexcept = default;
+		template<typename value_type_newer, size_type N> inline string_base<value_type_new> operator+(const value_type_newer (&rhs)[N]) const {
+			string_base<value_type_new> newLhs{ *this };
+			newLhs += rhs;
+			return newLhs;
+		}
+
+		template<typename value_type_newer, size_type N> inline string_base<value_type_new> operator+=(const value_type_newer (&rhs)[N]) {
+			string_base newLhs{ *this };
+			newLhs += rhs;
+			return newLhs;
+		}
 	};
 
-	using StringView = StringViewBase<char>;
+	using string_view = string_view_base<char>;
 
-	inline std::ostream& operator<<(std::ostream& oStream, const Jsonifier::StringViewBase<char>& string) {
-		oStream << string.operator Jsonifier::String();
+	inline std::ostream& operator<<(std::ostream& oStream, const jsonifier::string_view_base<char>& string) {
+		oStream << string.operator jsonifier::string();
 		return oStream;
 	}
 
-}// namespace Jsonifier
+}// namespace jsonifier
