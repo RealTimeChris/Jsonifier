@@ -19,38 +19,30 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
-#pragma once
 
-#include <jsonifier/Tuple.hpp>
-#include <variant>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
-namespace Jsonifier {
-	/// A class to aid in registering a class/struct to be parsed/serialized.
-	template<typename ValueType> struct Core {};
-}
+namespace jsonifier_internal {
 
-namespace JsonifierInternal {
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
 
-	template<typename ValueType>
-	concept JsonifierT = requires { Jsonifier::Core<std::decay_t<ValueType>>::parseValue; };
+	#define popcnt(value) _mm_popcnt_u64(value)
 
-	struct EmptyVal {
-		static constexpr Tuplet::Tuple<> parseValue{};
-	};
+#else
 
-	template<typename ValueType> constexpr auto CoreWrapperV = [] {
-		if constexpr (JsonifierT<ValueType>) {
-			return Jsonifier::Core<ValueType>::parseValue;
-		} else {
-			return EmptyVal{};
+	inline uint64_t popcnt(uint64_t value) {
+		uint64_t count{};
+
+		while (value > 0) {
+			count += value & 1;
+			value >>= 1;
 		}
-	}();
 
-	template<typename ValueType> constexpr auto CoreV = CoreWrapperV<std::decay_t<ValueType>>.parseValue;
+		return count;
+	}
 
-	template<typename ValueType> using CoreT = std::decay_t<decltype(CoreV<ValueType>)>;
+#endif
 
-	template<typename ValueType> using CoreWrapperT = std::decay_t<decltype(CoreWrapperV<std::decay_t<ValueType>>)>;
 }
