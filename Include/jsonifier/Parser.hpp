@@ -19,7 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
@@ -30,70 +30,59 @@
 #include <type_traits>
 #include <utility>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<bool printErrors, bool excludeKeys, typename ValueType = void> struct ParseImpl;
+	template<bool printErrors, bool excludeKeys, typename value_type = void> struct parse_impl;
 
-	template<bool printErrors, bool excludeKeys> struct Parse {
-		template<typename ValueType> inline static void op(ValueType&& value, StructuralIterator& iter) {
-			ParseImpl<printErrors, excludeKeys, RefUnwrap<ValueType>>::op(std::forward<RefUnwrap<ValueType>>(value), iter);
+	template<bool printErrors, bool excludeKeys> struct parse {
+		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter) {
+			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter);
 		}
 
-		template<typename ValueType, HasFind KeyType> inline static void op(ValueType&& value, StructuralIterator& iter, const KeyType& keys) {
-			ParseImpl<printErrors, excludeKeys, RefUnwrap<ValueType>>::op(std::forward<RefUnwrap<ValueType>>(value), iter, keys);
+		template<typename value_type, has_find KeyType> inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys) {
+			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter, keys);
 		}
 	};
 
-	class Parser {
+	class parser {
 	  public:
-		inline Parser() noexcept = default;
-
-		inline Parser& operator=(Parser&& other) noexcept {
-			std::swap(section, other.section);
-			std::swap(string, other.string);
-			return *this;
-		};
-
-		inline Parser(Parser&& other) noexcept {
-			*this = std::move(other);
-		};
-
-		inline Parser& operator=(const Parser&) = delete;
-		inline Parser(const Parser&)			= delete;
-
-		template<bool printErrors = false, bool refreshString = false, bool excludeKeys = false, CoreType ValueType, StringT BufferType>
-		void parseJson(ValueType&& data, BufferType&& inStringNew) {
+		template<bool printErrors = false, bool refreshstring = false, bool excludeKeys = false, core_type value_type, string_t buffer_type>
+		inline void parseJson(value_type&& data, buffer_type&& inStringNew) {
 			if (inStringNew.empty()) {
 				return;
 			}
-			refreshString ? reset(std::forward<BufferType>(inStringNew)) : (string != inStringNew ? reset(std::forward<BufferType>(inStringNew)) : void());
+			if constexpr (refreshstring) {
+				reset(std::forward<buffer_type>(inStringNew));
+			} else if (inStringNew != string) {
+				reset(std::forward<buffer_type>(inStringNew));
+			}
 			auto newIter = begin();
 			if (!*newIter) {
 				return;
 			}
 			if constexpr (excludeKeys) {
-				if constexpr (HasExcludedKeys<decltype(data)>) {
-					Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter, data.excludedKeys);
+				if constexpr (has_excluded_keys<decltype(data)>) {
+					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys);
 				} else {
-					Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter);
+					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter);
 				}
 			} else {
-				Parse<printErrors, excludeKeys>::op(std::forward<ValueType>(data), newIter);
+				parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter);
 			}
 		}
 
 	  protected:
-		SimdStringReader section{};
-		Jsonifier::StringBase<uint8_t> string{};
+		jsonifier::string_base<uint8_t> string{};
+		simd_string_reader section{};
 
-		template<typename ValueType> inline void reset(const ValueType& stringNew) {
+		template<typename value_type> inline void reset(value_type&& stringNew) {
 			string.resize(stringNew.size());
 			std::memcpy(string.data(), stringNew.data(), stringNew.size());
-			section.reset(static_cast<Jsonifier::StringViewBase<uint8_t>>(string));
+			section.reset(string);
 		}
 
-		inline StructuralIterator begin() noexcept {
-			return { &section };
+		inline structural_iterator begin() noexcept {
+			return structural_iterator{ section.getStructurals(), section.getStringView() };
 		}
 	};
 };

@@ -20,78 +20,49 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// NOTE: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/Concepts.hpp>
 #include <jsonifier/RawArray.hpp>
 #include <jsonifier/Pair.hpp>
 #include <type_traits>
 #include <concepts>
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	namespace Tuplet {
-		template<typename ValueType> using IdentityT = ValueType;
+	namespace tuplet {
 
-		template<typename ValueType> using TypeT = typename ValueType::type;
+		template<typename value_type> using identity_t = value_type;
 
-		template<size_t I> using Tag = std::integral_constant<size_t, I>;
+		template<typename value_type> using type_t = typename value_type::type;
 
-		template<size_t I> constexpr Tag<I> TagV{};
+		template<size_t N> using tag_range = std::make_index_sequence<N>;
 
-		template<size_t N> using TagRange = std::make_index_sequence<N>;
+		template<typename tup> using BaseListT = typename ref_unwrap<tup>::base_list;
 
-		template<typename ValueType, typename U>
-		concept SameAs = std::same_as<ValueType, U> && std::same_as<U, ValueType>;
+		template<typename... value_type> struct tuple;
 
-		template<typename ValueType, typename U>
-		concept OtherThan = !std::same_as<RefUnwrap<ValueType>, U>;
+		template<typename... value_type> struct type_list {};
 
-		template<typename Tup> using BaseListT = typename RefUnwrap<Tup>::base_list;
-
-		template<typename Tuple>
-		concept BaseListTuple = requires() { typename RefUnwrap<Tuple>::base_list; };
-
-		template<typename ValueType>
-		concept Stateless = std::is_empty_v<RefUnwrap<ValueType>>;
-
-		template<typename ValueType>
-		concept Indexable = Stateless<ValueType> || requires(ValueType value) { value[Tag<0>()]; };
-
-		template<typename U, typename ValueType>
-		concept AssignableTo = requires(U u, ValueType object) { object = u; };
-
-		template<typename ValueType>
-		concept Ordered = requires(ValueType const& object) {
-			{ object <=> object };
-		};
-		template<typename ValueType>
-		concept EqualityComparable = requires(ValueType const& object) {
-			{ object == object } -> SameAs<bool>;
-		};
-
-		template<typename... ValueType> struct Tuple;
-
-		template<typename... ValueType> struct TypeList {};
-
-		template<typename... Ls, typename... Rs> constexpr auto operator+(TypeList<Ls...>, TypeList<Rs...>) {
-			return TypeList<Ls..., Rs...>{};
+		template<typename... l, typename... r> constexpr auto operator+(type_list<l...>, type_list<r...>) {
+			return type_list<l..., r...>{};
 		}
 
-		template<typename... Bases> struct TypeMap : Bases... {
-			using base_list = TypeList<Bases...>;
-			using Bases::operator[]...;
-			using Bases::declElem...;
-			auto operator<=>(TypeMap const&) const = default;
-			bool operator==(TypeMap const&) const  = default;
+		template<typename... bases> struct type_map : bases... {
+			using base_list = type_list<bases...>;
+			using bases::operator[]...;
+			using bases::declElem...;
+			auto operator<=>(type_map const&) const = default;
+			bool operator==(type_map const&) const	= default;
 		};
 
-		template<size_t I, typename ValueType> struct TupleElem {
-			static inline ValueType declElem(Tag<I>);
-			using type = ValueType;
+		template<size_t I, typename value_type> struct tuple_elem {
+			inline static value_type declElem(Tag<I>);
+			using type = value_type;
 
-			ValueType value;
+			value_type value;
 
 			constexpr decltype(auto) operator[](Tag<I>) & {
 				return (value);
@@ -104,30 +75,30 @@ namespace JsonifierInternal {
 			constexpr decltype(auto) operator[](Tag<I>) && {
 				return (std::move(*this).value);
 			}
-			auto operator<=>(TupleElem const&) const = default;
-			bool operator==(TupleElem const&) const	 = default;
+			auto operator<=>(tuple_elem const&) const = default;
+			bool operator==(tuple_elem const&) const  = default;
 
-			constexpr auto operator<=>(TupleElem const& other) const noexcept(noexcept(value <=> other.value))
-				requires(std::is_reference_v<ValueType> && Ordered<ValueType>)
+			constexpr auto operator<=>(tuple_elem const& other) const noexcept(noexcept(value <=> other.value))
+				requires(std::is_reference_v<value_type> && ordered<value_type>)
 			{
 				return value <=> other.value;
 			}
 
-			constexpr bool operator==(TupleElem const& other) const noexcept(noexcept(value == other.value))
-				requires(std::is_reference_v<ValueType> && EqualityComparable<ValueType>)
+			constexpr bool operator==(tuple_elem const& other) const noexcept(noexcept(value == other.value))
+				requires(std::is_reference_v<value_type> && equality_comparable<value_type>)
 			{
 				return value == other.value;
 			}
 		};
 
-		template<typename A, typename... ValueType> struct GetTupleBase;
+		template<typename a, typename... value_type> struct get_tuple_base;
 
-		template<size_t... I, typename... ValueType> struct GetTupleBase<std::index_sequence<I...>, ValueType...> {
-			using type = TypeMap<TupleElem<I, ValueType>...>;
+		template<size_t... I, typename... value_type> struct get_tuple_base<std::index_sequence<I...>, value_type...> {
+			using type = type_map<tuple_elem<I, value_type>...>;
 		};
 
-		template<typename F, typename ValueType, typename... Bases> constexpr decltype(auto) applyImpl(F&& f, ValueType&& object, TypeList<Bases...>) {
-			return static_cast<F&&>(f)(static_cast<ValueType&&>(object).IdentityT<Bases>::value...);
+		template<typename f, typename value_type, typename... bases> constexpr decltype(auto) applyImpl(f&& fNew, value_type&& object, type_list<bases...>) {
+			return static_cast<f&&>(fNew)(static_cast<value_type&&>(object).identity_t<bases>::value...);
 		}
 		template<char... D> constexpr size_t sizetFromDigits() {
 			static_assert((('0' <= D && D <= '9') && ...), "Must be integral literal");
@@ -136,142 +107,138 @@ namespace JsonifierInternal {
 		}
 		template<typename First, typename> using first_t = First;
 
-		template<typename ValueType, typename... Q> constexpr auto repeatType(TypeList<Q...>) {
-			return TypeList<first_t<ValueType, Q>...>{};
+		template<typename value_type, typename... Q> constexpr auto repeatType(type_list<Q...>) {
+			return type_list<first_t<value_type, Q>...>{};
 		}
-		template<typename... Outer> constexpr auto getOuterBases(TypeList<Outer...>) {
-			return (repeatType<Outer>(BaseListT<TypeT<Outer>>{}) + ...);
+		template<typename... outer> constexpr auto getOuterBases(type_list<outer...>) {
+			return (repeatType<outer>(BaseListT<type_t<outer>>{}) + ...);
 		}
-		template<typename... Outer> constexpr auto getInnerBases(TypeList<Outer...>) {
-			return (BaseListT<TypeT<Outer>>{} + ...);
-		}
-
-		template<typename ValueType, typename... Outer, typename... Inner> constexpr auto catImpl(ValueType tup, TypeList<Outer...>, TypeList<Inner...>)
-			-> Tuple<TypeT<Inner>...> {
-			return { static_cast<TypeT<Outer>&&>(tup.IdentityT<Outer>::value).IdentityT<Inner>::value... };
+		template<typename... outer> constexpr auto getInnerBases(type_list<outer...>) {
+			return (BaseListT<type_t<outer>>{} + ...);
 		}
 
-		template<typename... ValueType> using TupleBaseT = typename GetTupleBase<TagRange<sizeof...(ValueType)>, ValueType...>::type;
+		template<typename value_type, typename... outer, typename... inner> constexpr auto catImpl(value_type tup, type_list<outer...>, type_list<inner...>)
+			-> tuple<type_t<inner>...> {
+			return { static_cast<type_t<outer>&&>(tup.identity_t<outer>::value).identity_t<inner>::value... };
+		}
 
-		template<typename... ValueType> struct Tuple : TupleBaseT<ValueType...> {
-			static constexpr size_t N = sizeof...(ValueType);
-			using super						 = TupleBaseT<ValueType...>;
+		template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
+
+		template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
+			static constexpr size_t N = sizeof...(value_type);
+			using super				  = tuple_base_t<value_type...>;
 			using super::operator[];
 			using base_list	   = typename super::base_list;
-			using element_list = TypeList<ValueType...>;
+			using element_list = type_list<value_type...>;
 			using super::declElem;
 
-			template<OtherThan<Tuple> U> constexpr auto& operator=(U&& tup) {
-				using tuple2 = RefUnwrap<U>;
-				if (BaseListTuple<tuple2>) {
-					eqImpl(static_cast<U&&>(tup), base_list(), typename tuple2::base_list());
+			template<other_than<tuple> u> constexpr auto& operator=(u&& tup) {
+				using tuple2 = ref_unwrap<u>;
+				if (base_list_tuple<tuple2>) {
+					eqImpl(static_cast<u&&>(tup), base_list(), typename tuple2::base_list());
 				} else {
-					eqImpl(static_cast<U&&>(tup), TagRange<N>());
+					eqImpl(static_cast<u&&>(tup), tag_range<N>());
 				}
 				return *this;
 			}
 
-			auto operator<=>(Tuple const&) const = default;
-			bool operator==(Tuple const&) const	 = default;
+			auto operator<=>(tuple const&) const = default;
+			bool operator==(tuple const&) const	 = default;
 
-			template<typename F> constexpr auto map(F&& func) & {
-				return mapImpl(base_list(), static_cast<F&&>(func));
+			template<typename f> constexpr auto map(f&& func) & {
+				return mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
-			template<typename F> constexpr auto map(F&& func) const& {
-				return mapImpl(base_list(), static_cast<F&&>(func));
+			template<typename f> constexpr auto map(f&& func) const& {
+				return mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
-			template<typename F> constexpr auto map(F&& func) && {
-				return static_cast<Tuple&&>(*this).mapImpl(base_list(), static_cast<F&&>(func));
+			template<typename f> constexpr auto map(f&& func) && {
+				return static_cast<tuple&&>(*this).mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
 		  protected:
-			template<typename U, typename... B1, typename... B2> constexpr void eqImpl(U&& u, TypeList<B1...>, TypeList<B2...>) {
+			template<typename u, typename... b1, typename... b2> constexpr void eqImpl(u&& uNew, type_list<b1...>, type_list<b2...>) {
 				// See:
 				// https://developercommunity.visualstudio.com/object/fold-expressions-unreliable-in-171-with-c20/1676476
-				(void(B1::value = static_cast<U&&>(u).B2::value), ...);
+				(void(b1::value = static_cast<u&&>(uNew).b2::value), ...);
 			}
 
-			template<typename U, size_t... I> constexpr void eqImpl(U&& u, std::index_sequence<I...>) {
-				(void(TupleElem<I, ValueType>::value = get<I>(static_cast<U&&>(u))), ...);
+			template<typename u, size_t... I> constexpr void eqImpl(u&& uNew, std::index_sequence<I...>) {
+				(void(tuple_elem<I, value_type>::value = get<I>(static_cast<u&&>(uNew))), ...);
 			}
 
-			template<typename F, typename... B> constexpr auto mapImpl(TypeList<B...>, F&& func) & -> Tuple<UnwrapRefDecayT<decltype(func(B::value))>...> {
-				return { func(B::value)... };
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<unwrap_ref_decay_t<decltype(func(b::value))>...> {
+				return { func(b::value)... };
 			}
 
-			template<typename F, typename... B> constexpr auto mapImpl(TypeList<B...>, F&& func) const& -> Tuple<UnwrapRefDecayT<decltype(func(B::value))>...> {
-				return { func(B::value)... };
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<unwrap_ref_decay_t<decltype(func(b::value))>...> {
+				return { func(b::value)... };
 			}
 
-			template<typename F, typename... B>
-			constexpr auto mapImpl(TypeList<B...>, F&& func) && -> Tuple<UnwrapRefDecayT<decltype(func(static_cast<ValueType&&>(B::value)))>...> {
-				return { func(static_cast<ValueType&&>(B::value))... };
+			template<typename f, typename... b>
+			constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<unwrap_ref_decay_t<decltype(func(static_cast<value_type&&>(b::value)))>...> {
+				return { func(static_cast<value_type&&>(b::value))... };
 			}
 		};
 
-		template<> struct Tuple<> : TupleBaseT<> {
+		template<> struct tuple<> : tuple_base_t<> {
 			static constexpr size_t N = 0;
-			using super						 = TupleBaseT<>;
-			using base_list					 = TypeList<>;
-			using element_list				 = TypeList<>;
+			using super				  = tuple_base_t<>;
+			using base_list			  = type_list<>;
+			using element_list		  = type_list<>;
 
-			template<OtherThan<Tuple> U>
-				requires Stateless<U>
-			constexpr auto& operator=(U&&) noexcept {
+			template<other_than<tuple> u>
+				requires stateless<u>
+			constexpr auto& operator=(u&&) noexcept {
 				return *this;
 			}
 
-			constexpr auto& assign() noexcept {
-				return *this;
+			auto operator<=>(tuple const&) const = default;
+			bool operator==(tuple const&) const	 = default;
+
+			template<typename f> constexpr void forEach(f&&) const noexcept {
 			}
 
-			auto operator<=>(Tuple const&) const = default;
-			bool operator==(Tuple const&) const	 = default;
-
-			template<typename F> constexpr void forEach(F&&) const noexcept {
-			}
-
-			template<typename F> constexpr bool any(F&&) const noexcept {
+			template<typename f> constexpr bool any(f&&) const noexcept {
 				return false;
 			}
 
-			template<typename F> constexpr bool all(F&&) const noexcept {
+			template<typename f> constexpr bool all(f&&) const noexcept {
 				return true;
 			}
 
-			template<typename F> constexpr auto map(F&&) const noexcept {
-				return Tuple{};
+			template<typename f> constexpr auto map(f&&) const noexcept {
+				return tuple{};
 			}
 		};
 
-		template<typename... ValueTypes> Tuple(ValueTypes...) -> Tuple<UnwrapRefDecayT<ValueTypes>...>;
+		template<typename... value_types> tuple(value_types...) -> tuple<unwrap_ref_decay_t<value_types>...>;
 
-		template<size_t I, Indexable Tup> constexpr decltype(auto) get(Tup&& tup) {
-			return static_cast<Tup&&>(tup)[Tag<I>()];
+		template<size_t I, indexable tup> constexpr decltype(auto) get(tup&& tupNew) {
+			return static_cast<tup&&>(tupNew)[Tag<I>()];
 		}
 
-		template<typename... ValueType> constexpr Tuple<ValueType&...> tie(ValueType&... object) {
+		template<typename... value_type> constexpr tuple<value_type&...> tie(value_type&... object) {
 			return { object... };
 		}
 
-		template<typename F, BaseListTuple Tup> constexpr decltype(auto) apply(F&& func, Tup&& tup) {
-			return applyImpl(static_cast<F&&>(func), static_cast<Tup&&>(tup), typename RefUnwrap<Tup>::base_list());
+		template<typename f, base_list_tuple tup> constexpr decltype(auto) apply(f&& func, tup&& tupNew) {
+			return applyImpl(static_cast<f&&>(func), static_cast<tup&&>(tupNew), typename ref_unwrap<tup>::base_list());
 		}
-		template<typename F, typename A, typename B> constexpr decltype(auto) apply(F&& func, Pair<A, B>& Pair) {
-			return static_cast<F&&>(func)(Pair.first, Pair.second);
+		template<typename f, typename a, typename b> constexpr decltype(auto) apply(f&& func, pair<a, b>& pair) {
+			return static_cast<f&&>(func)(pair.first, pair.second);
 		}
-		template<typename F, typename A, typename B> constexpr decltype(auto) apply(F&& func, Pair<A, B> const& Pair) {
-			return static_cast<F&&>(func)(Pair.first, Pair.second);
+		template<typename f, typename a, typename b> constexpr decltype(auto) apply(f&& func, pair<a, b> const& pair) {
+			return static_cast<f&&>(func)(pair.first, pair.second);
 		}
-		template<typename F, typename A, typename B> constexpr decltype(auto) apply(F&& func, Pair<A, B>&& Pair) {
-			return static_cast<F&&>(func)(std::move(Pair).first, std::move(Pair).second);
+		template<typename f, typename a, typename b> constexpr decltype(auto) apply(f&& func, pair<a, b>&& pair) {
+			return static_cast<f&&>(func)(std::move(pair).first, std::move(pair).second);
 		}
 
-		template<BaseListTuple... ValueType> constexpr auto tupleCat(ValueType&&... ts) {
-			if constexpr (sizeof...(ValueType) == 0) {
-				return Tuple<>();
+		template<base_list_tuple... value_type> constexpr auto tupleCat(value_type&&... ts) {
+			if constexpr (sizeof...(value_type) == 0) {
+				return tuple<>();
 			} else {
 #if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
 	#if defined(__clang__)
@@ -281,31 +248,31 @@ namespace JsonifierInternal {
 	#endif
 #endif
 #if TUPLET_CAT_BY_FORWARDING_TUPLE
-				using big_tuple = Tuple<ValueType&&...>;
+				using big_tuple = tuple<value_type&&...>;
 #else
-				using big_tuple = Tuple<RefUnwrap<ValueType>...>;
+				using big_tuple = tuple<ref_unwrap<value_type>...>;
 #endif
 				using outer_bases	 = BaseListT<big_tuple>;
 				constexpr auto outer = getOuterBases(outer_bases{});
 				constexpr auto inner = getInnerBases(outer_bases{});
-				return catImpl(big_tuple{ static_cast<ValueType&&>(ts)... }, outer, inner);
+				return catImpl(big_tuple{ static_cast<value_type&&>(ts)... }, outer, inner);
 			}
 		}
 
-		template<typename... ValueTypes> constexpr auto makeTuple(ValueTypes&&... args) {
-			return Tuple<UnwrapRefDecayT<ValueTypes>...>{ static_cast<ValueTypes&&>(args)... };
+		template<typename... value_types> constexpr auto makeTuple(value_types&&... args) {
+			return tuple<unwrap_ref_decay_t<value_types>...>{ static_cast<value_types&&>(args)... };
 		}
 
-		template<typename... ValueTypes> constexpr auto copyTuple(ValueTypes... args) {
-			return Tuple<ValueTypes...>{ args... };
+		template<typename... value_types> constexpr auto copyTuple(value_types... args) {
+			return tuple<value_types...>{ args... };
 		}
 
-		template<typename... ValueType> constexpr auto forwardAsTuple(ValueType&&... a) noexcept {
-			return Tuple<ValueType&&...>{ static_cast<ValueType&&>(a)... };
+		template<typename... value_type> constexpr auto forwardAstuple(value_type&&... a) noexcept {
+			return tuple<value_type&&...>{ static_cast<value_type&&>(a)... };
 		}
 	}
 
-	namespace Tuplet::literals {
+	namespace tuplet::literals {
 		template<char... D> constexpr auto operator""_tag() noexcept -> Tag<sizetFromDigits<D...>()> {
 			return {};
 		}
@@ -313,57 +280,58 @@ namespace JsonifierInternal {
 }
 
 namespace std {
-	template<typename... ValueType> struct tuple_size<JsonifierInternal::Tuplet::Tuple<ValueType...>> : std::integral_constant<size_t, sizeof...(ValueType)> {};
 
-	template<size_t I, typename... ValueType> struct tuple_element<I, JsonifierInternal::Tuplet::Tuple<ValueType...>> {
-		using type = decltype(JsonifierInternal::Tuplet::Tuple<ValueType...>::declElem(JsonifierInternal::Tuplet::Tag<I>()));
+	template<typename... value_type> struct tuple_size<jsonifier_internal::tuplet::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+
+	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuplet::tuple<value_type...>> {
+		using type = decltype(jsonifier_internal::tuplet::tuple<value_type...>::declElem(jsonifier_internal::Tag<I>()));
 	};
 
-	template<typename A, typename B> struct tuple_size<JsonifierInternal::Pair<A, B>> : std::integral_constant<size_t, 2> {};
+	template<typename a, typename b> struct tuple_size<jsonifier_internal::pair<a, b>> : std::integral_constant<size_t, 2> {};
 
-	template<size_t I, typename A, typename B> struct tuple_element<I, JsonifierInternal::Pair<A, B>> {
+	template<size_t I, typename a, typename b> struct tuple_element<I, jsonifier_internal::pair<a, b>> {
 		static_assert(I < 2, "tuplet::pair only has 2 elements");
-		using type = std::conditional_t<I == 0, A, B>;
+		using type = std::conditional_t<I == 0, a, b>;
 	};
 
 };
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename Tuple, size_t... Is> auto tupleSplit(Tuple&& tuple) {
-		static constexpr auto N	 = std::tuple_size_v<Tuple>;
+	template<typename tuple, size_t... Is> auto tupleSplit(tuple&& tupleNew) {
+		static constexpr auto N	 = std::tuple_size_v<tuple>;
 		static constexpr auto is = std::make_index_sequence<N / 2>{};
-		return std::make_pair(tupleSplitImpl<0>(tuple, is), tupleSplitImpl<1>(tuple, is));
+		return std::make_pair(tupleSplitImpl<0>(tupleNew, is), tupleSplitImpl<1>(tupleNew, is));
 	}
 
 	template<size_t N> constexpr auto shrinkIndexArray(auto& arrayNew) {
-		RawArray<size_t, N> res{};
+		raw_array<size_t, N> res{};
 		for (size_t x = 0; x < N; ++x) {
 			res[x] = arrayNew[x];
 		}
 		return res;
 	}
 
-	template<typename Tuple> constexpr auto filter() {
-		constexpr auto n = std::tuple_size_v<Tuple>;
-		RawArray<size_t, n> indices{};
+	template<typename tuple> constexpr auto filter() {
+		constexpr auto n = std::tuple_size_v<tuple>;
+		raw_array<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
-			using ValueType = RefUnwrap<std::tuple_element_t<I, Tuple>>;
-			if constexpr (!std::convertible_to<ValueType, Jsonifier::StringView>) {
+			using value_type = ref_unwrap<std::tuple_element_t<I, tuple>>;
+			if constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
 				indices[x++] = I - 1;
 			}
 		});
 		return std::make_pair(indices, x);
 	}
 
-	template<typename Func, typename Tuple> constexpr auto mapTuple(Func&& f, Tuple&& tuple) {
-		constexpr auto N = std::tuple_size_v<RefUnwrap<Tuple>>;
-		return mapTuple(f, tuple, std::make_index_sequence<N>{});
+	template<typename Func, typename tuple> constexpr auto mapTuple(Func&& f, tuple&& tupleNew) {
+		constexpr auto N = std::tuple_size_v<ref_unwrap<tuple>>;
+		return mapTuple(f, tupleNew, std::make_index_sequence<N>{});
 	}
 
-	template<size_t n_groups> constexpr auto groupSizes(const RawArray<size_t, n_groups>& indices, size_t n_total) {
-		RawArray<size_t, n_groups> diffs;
+	template<size_t n_groups> constexpr auto groupSizes(const raw_array<size_t, n_groups>& indices, size_t n_total) {
+		raw_array<size_t, n_groups> diffs;
 
 		for (size_t x = 0; x < n_groups - 1; ++x) {
 			diffs[x] = indices[x + 1] - indices[x];
@@ -372,44 +340,42 @@ namespace JsonifierInternal {
 		return diffs;
 	}
 
-	template<size_t Start, typename Tuple, size_t... Is> constexpr auto makeGroup(Tuple&& object, std::index_sequence<Is...>) {
+	template<size_t Start, typename tuple, size_t... Is> constexpr auto makeGroup(tuple&& object, std::index_sequence<Is...>) {
 		auto get_elem = [&](auto x) {
 			constexpr auto I = decltype(x)::value;
 			if constexpr (I == 1) {
-				return Tuplet::get<Start + I>(object);
+				return tuplet::get<Start + I>(object);
 			} else {
-				return Jsonifier::StringView(Tuplet::get<Start + I>(object));
+				return jsonifier::string_view(tuplet::get<Start + I>(object));
 			}
 		};
-		auto r = Tuplet::copyTuple(get_elem(std::integral_constant<size_t, Is>{})...);
+		auto r = tuplet::copyTuple(get_elem(std::integral_constant<size_t, Is>{})...);
 		return r;
 	}
 
-	template<auto& GroupStartArr, auto& GroupSizeArr, typename Tuple, size_t... GroupNumber>
-	constexpr auto makeGroupsImpl(Tuple&& object, std::index_sequence<GroupNumber...>) {
-		return Tuplet::copyTuple(makeGroup<Tuplet::get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<Tuplet::get<GroupNumber>(GroupSizeArr)>{})...);
+	template<auto& GroupStartArr, auto& GroupSizeArr, typename tuple, size_t... GroupNumber> constexpr auto makeGroupsImpl(tuple&& object, std::index_sequence<GroupNumber...>) {
+		return tuplet::copyTuple(makeGroup<tuplet::get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<tuplet::get<GroupNumber>(GroupSizeArr)>{})...);
 	}
 
-	template<typename Tuple> constexpr auto makeGroupsHelper() {
-		constexpr auto N = std::tuple_size_v<Tuple>;
+	template<typename tuple> constexpr auto makeGroupsHelper() {
+		constexpr auto N = std::tuple_size_v<tuple>;
 
-		constexpr auto filtered = filter<Tuple>();
+		constexpr auto filtered = filter<tuple>();
 		constexpr auto starts	= shrinkIndexArray<filtered.second>(filtered.first);
 		constexpr auto sizes	= groupSizes(starts, N);
 
-		return Tuplet::makeTuple(starts, sizes);
+		return tuplet::makeTuple(starts, sizes);
 	}
 
-	template<typename Tuple> struct GroupBuilder {
-		static constexpr auto h		 = makeGroupsHelper<Tuple>();
-		static constexpr auto starts = Tuplet::get<0>(h);
-		static constexpr auto sizes	 = Tuplet::get<1>(h);
+	template<typename tuple> struct GroupBuilder {
+		static constexpr auto h		 = makeGroupsHelper<tuple>();
+		static constexpr auto starts = tuplet::get<0>(h);
+		static constexpr auto sizes	 = tuplet::get<1>(h);
 
-		static constexpr auto op(Tuple&& object) {
+		static constexpr auto op(tuple&& object) {
 			constexpr auto n_groups = starts.size();
-			return makeGroupsImpl<starts, sizes>(std::forward<Tuple>(object), std::make_index_sequence<n_groups>{});
+			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};
-
-
+	
 }

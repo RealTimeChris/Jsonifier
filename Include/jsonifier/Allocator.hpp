@@ -19,24 +19,12 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/Jsonifier
+/// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
-#include <cstdint>
-#include <memory>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 #include <memory_resource>
-#include <utility>
-
-#if defined T_AVX512
-	#define ALIGNMENT 64
-#elif defined T_AVX2
-	#define ALIGNMENT 32
-#elif defined T_AVX
-	#define ALIGNMENT 16
-#else
-	#define ALIGNMENT 16
-#endif
 
 inline uint64_t findNextClosestMultiple(uint64_t number) {
 	if constexpr (ALIGNMENT == 0) {
@@ -52,20 +40,20 @@ inline uint64_t findNextClosestMultiple(uint64_t number) {
 	return nextMultiple;
 }
 
-namespace JsonifierInternal {
+namespace jsonifier_internal {
 
-	template<typename ValueType> class AlignedAllocator : public std::pmr::polymorphic_allocator<ValueType> {
+	template<typename value_type_new> class aligned_allocator : public std::pmr::polymorphic_allocator<value_type_new> {
 	  public:
-		using value_type = ValueType;
+		using value_type = value_type_new;
 		using pointer	 = value_type*;
 		using size_type	 = uint64_t;
-		using allocator	 = std::pmr::polymorphic_allocator<ValueType>;
+		using allocator	 = std::pmr::polymorphic_allocator<value_type>;
 
 		inline pointer allocate(size_type n) {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<ValueType*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), ALIGNMENT));
+			return static_cast<value_type*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), ALIGNMENT));
 		}
 
 		inline void deallocate(pointer ptr, size_type n) {
@@ -83,15 +71,13 @@ namespace JsonifierInternal {
 		}
 	};
 
-	template<typename ValueType> class AllocWrapper : public AlignedAllocator<ValueType> {
+	template<typename value_type_new> class alloc_wrapper : public aligned_allocator<value_type_new> {
 	  public:
-		using value_type	   = ValueType;
+		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
 		using size_type		   = uint64_t;
-		using allocator		   = AlignedAllocator<value_type>;
+		using allocator		   = aligned_allocator<value_type>;
 		using allocator_traits = std::allocator_traits<allocator>;
-
-		inline AllocWrapper(){};
 
 		inline pointer allocate(size_type count) {
 			return allocator_traits::allocate(*this, count);
@@ -108,8 +94,6 @@ namespace JsonifierInternal {
 		inline void destroy(pointer ptr) {
 			allocator_traits::destroy(*this, ptr);
 		}
-
-		inline ~AllocWrapper(){};
 	};
 
-}// namespace JsonifierInternal
+}// namespace jsonifier_internal

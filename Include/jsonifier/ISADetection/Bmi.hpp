@@ -20,14 +20,53 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 20, 2023
+/// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/Parser.hpp>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
-namespace jsonifier {
+namespace jsonifier_internal {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+#if CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
+
+	#define blsr(value) _blsr_u64(value)
+
+	template<typename value_type> inline value_type tzCount(value_type value) {
+		if constexpr (sizeof(value_type) == 2) {
+			return _tzcnt_u16(value);
+		} else if constexpr (sizeof(value_type) == 4) {
+			return _tzcnt_u32(value);
+		} else if constexpr (sizeof(value_type) == 8) {
+			return _tzcnt_u64(value);
+		} else {
+			return _tzcnt_u64(value);
+		}
+	}
+
+#else
+
+	inline uint64_t blsr(uint64_t value) {
+		if (value == 0) {
+			return 0;
+		}
+
+		return value & (value - 1);
+	}
+
+	template<integer_t value_type> inline value_type tzCount(value_type value) {
+		if (value == 0) {
+			return sizeof(value_type) * 8;
+		}
+
+		value_type count{};
+		while ((value & 1) == 0) {
+			value >>= 1;
+			++count;
+		}
+
+		return count;
+	}
+
+#endif
 
 }

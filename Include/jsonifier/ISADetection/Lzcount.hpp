@@ -20,14 +20,43 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 20, 2023
+/// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/Parser.hpp>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
-namespace jsonifier {
+namespace jsonifier_internal {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+#if CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
+
+	template<typename value_type> inline value_type lzCount(value_type value) {
+		if constexpr (sizeof(value_type) == 4) {
+			return _lzcnt_u32(value);
+		} else if constexpr (sizeof(value_type) == 8) {
+			return _lzcnt_u64(value);
+		} else {
+			return _lzcnt_u64(value);
+		}
+	}
+
+#else
+
+	template<typename value_type> inline value_type lzCount(value_type value) {
+		if (value == 0) {
+			return sizeof(value_type) * 8;
+		}
+
+		value_type count{};
+		value_type mask{ static_cast<value_type>(1) << (std::numeric_limits<value_type>::digits - 1) };
+
+		while ((value & mask) == 0) {
+			count++;
+			mask >>= 1;
+		}
+
+		return count;
+	}
+
+#endif
 
 }
