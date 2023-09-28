@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/Concepts.hpp>
-#include <jsonifier/Core.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
 #include <jsonifier/RawJsonData.hpp>
@@ -52,7 +51,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> constexpr bool always_false_v = always_false<value_type>::value;
 
-	template<typename value_type> void printTypeInCompilationError(value_type&&) noexcept {
+	template<typename value_type> void printTypeInCompilationError(value_type&&) {
 		static_assert(always_false_v<value_type>, "Compilation failed because you failed to specialize the core<> template for the following class:");
 	}
 
@@ -84,7 +83,7 @@ namespace jsonifier_internal {
 	  public:
 		static constexpr std::size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
-		constexpr string_literal() noexcept = default;
+		constexpr string_literal() = default;
 
 		constexpr string_literal(const value_type (&str)[strLength]) {
 			std::copy(str, str + strLength, string);
@@ -127,7 +126,7 @@ namespace jsonifier_internal {
 	template<string_literal str> constexpr jsonifier::string_view Chars = chars_impl<str>::value;
 
 	template<typename = void, std::size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
-		return [](auto&& f) noexcept -> decltype(auto) {
+		return [](auto&& f) -> decltype(auto) {
 			return decltype(f)(f)(std::integral_constant<std::size_t, Indices>{}...);
 		};
 	}
@@ -241,27 +240,27 @@ namespace jsonifier_internal {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		inline stop_watch& operator=(stop_watch&& other) noexcept {
+		inline stop_watch& operator=(stop_watch&& other) {
 			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(stop_watch&& other) noexcept {
+		inline stop_watch(stop_watch&& other) {
 			*this = std::move(other);
 		}
 
-		inline stop_watch& operator=(const stop_watch& other) noexcept {
+		inline stop_watch& operator=(const stop_watch& other) {
 			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(const stop_watch& other) noexcept {
+		inline stop_watch(const stop_watch& other) {
 			*this = other;
 		}
 
-		inline bool hasTimeElapsed() noexcept {
+		inline bool hasTimeElapsed() {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
@@ -283,7 +282,7 @@ namespace jsonifier_internal {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		inline value_type totalTimeElapsed() noexcept {
+		inline value_type totalTimeElapsed() {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 

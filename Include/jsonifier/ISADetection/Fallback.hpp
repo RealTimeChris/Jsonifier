@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if (!CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)) && (!CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)) && (!CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512))
+#if (!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)) && (!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)) && (!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512))
 
 	class __m128x2 {
 	  public:
@@ -67,16 +67,16 @@ namespace jsonifier_internal {
 		output.values[1] = packUint8(input);
 	}
 
-	inline uint16_t movemaskEpi8(const avx_type& a) {
-		uint16_t result{};
-		for (int16_t j = 0; j < 8; ++j) {
-			uint8_t value = (a.values[0] >> (j * 8)) & 0xff;
-			uint16_t mask = (value >> 7) & 1;
+	inline string_parsing_type movemaskEpi8(const avx_type& a) {
+		string_parsing_type result{};
+		for (string_parsing_type j = 0; j < 8; ++j) {
+			uint8_t value			 = (a.values[0] >> (j * 8)) & 0xff;
+			string_parsing_type mask = (value >> 7) & 1;
 			result |= mask << (0 * 8 + j);
 		}
-		for (int16_t j = 0; j < 8; ++j) {
-			uint8_t value = (a.values[1] >> (j * 8)) & 0xff;
-			uint16_t mask = (value >> 7) & 1;
+		for (string_parsing_type j = 0; j < 8; ++j) {
+			uint8_t value			 = (a.values[1] >> (j * 8)) & 0xff;
+			string_parsing_type mask = (value >> 7) & 1;
 			result |= mask << (1 * 8 + j);
 		}
 		return result;
@@ -157,7 +157,7 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	inline avx_type& insertUint16(avx_type& value, uint64_t index, uint16_t newValue) {
+	inline avx_type& insertInt16(avx_type& value, uint64_t index, int16_t newValue) {
 		if (index >= 8) {
 			return value;
 		}
@@ -168,7 +168,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	inline avx_type& insertUint64(avx_type& value, uint64_t index, uint64_t newValue) {
+	inline avx_type& insertInt64(avx_type& value, uint64_t index, int64_t newValue) {
 		if (index < 2) {
 			value.values[index] = newValue;
 			return value;
@@ -176,9 +176,9 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	inline uint64_t extractUint64(const avx_type& value, uint64_t index) {
+	inline int64_t extractInt64(const avx_type& value, uint64_t index) {
 		if (index < 2) {
-			return value.values[index];
+			return static_cast<int64_t>(value.values[index]);
 		}
 		return 0;
 	}
@@ -216,7 +216,7 @@ namespace jsonifier_internal {
 
 	template<> struct alignas(16) simd_base<128> {
 	  public:
-		inline simd_base() noexcept = default;
+		inline simd_base() = default;
 
 		inline simd_base& operator=(avx_type&& data) {
 			value = std::forward<avx_type>(data);
@@ -236,7 +236,7 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		inline simd_base(const uint8_t* values) {
+		inline simd_base(string_view_ptr values) {
 			value = gatherValues128<const uint8_t>(values);
 		}
 
@@ -248,11 +248,11 @@ namespace jsonifier_internal {
 			return value;
 		}
 
-		inline simd_base operator|(simd_base&& other) noexcept {
+		inline simd_base operator|(simd_base&& other) {
 			return orSi128(value, std::forward<avx_type>(other.value));
 		}
 
-		inline simd_base operator-(simd_base&& other) noexcept {
+		inline simd_base operator-(simd_base&& other) {
 			return subEpi8(value, std::forward<avx_type>(other.value));
 		}
 
@@ -321,16 +321,16 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline uint64_t getUint64(uint64_t index) const {
-			return extractUint64(value, index);
+		inline uint64_t getInt64(uint64_t index) const {
+			return extractInt64(value, index);
 		}
 
-		inline void insertUint64(uint64_t valueNewer, uint64_t index) {
-			value = jsonifier_internal::insertUint64(value, index, valueNewer);
+		inline void insertInt64(int64_t valueNewer, uint64_t index) {
+			value = jsonifier_internal::insertInt64(value, index, valueNewer);
 		}
 
-		inline void insertUint16(uint16_t valueNewer, uint64_t index) {
-			value = jsonifier_internal::insertUint16(value, index, valueNewer);
+		inline void insertInt16(string_parsing_type valueNewer, uint64_t index) {
+			value = jsonifier_internal::insertInt16(value, index, static_cast<int16_t>(valueNewer));
 		}
 
 		inline simd_base bitAndNot(const simd_base& other) {
@@ -341,19 +341,19 @@ namespace jsonifier_internal {
 			return shuffleEpi8(other.value, value);
 		}
 
-		inline void addValues(uint16_t values, uint64_t index) {
-			insertUint16(values, index);
+		inline void addValues(string_parsing_type values, uint64_t index) {
+			insertInt16(values, index);
 		}
 
 		template<uint64_t amount> inline simd_base shl() const {
 			simd_base currentValues{};
-			currentValues.insertUint64((getUint64(0) << amount), 0);
+			currentValues.insertInt64((getInt64(0) << amount), 0);
 			uint64_t shiftBetween = amount % 64;
-			currentValues.insertUint64(((getUint64(1) << amount) | (getUint64(0) >> (64 - shiftBetween))), 1);
+			currentValues.insertInt64(((getInt64(1) << amount) | (getInt64(0) >> (64 - shiftBetween))), 1);
 			return currentValues;
 		}
 
-		inline uint16_t toBitMask() {
+		inline string_parsing_type toBitMask() {
 			return movemaskEpi8(this->value);
 		}
 
@@ -393,10 +393,10 @@ namespace jsonifier_internal {
 		inline simd_base carrylessMultiplication(uint64_t& prevInstring) const {
 			simd_base valuesNew{};
 			avx_type valueLow{ value };
-			valuesNew.insertUint64(prefixXor(valueLow.values[0]) ^ prevInstring, 0);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(0)) >> 63);
-			valuesNew.insertUint64(prefixXor(valueLow.values[1]) ^ prevInstring, 1);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(1)) >> 63);
+			valuesNew.insertInt64(prefixXor(valueLow.values[0]) ^ prevInstring, 0);
+			prevInstring = uint64_t(valuesNew.getInt64(0) >> 63);
+			valuesNew.insertInt64(prefixXor(valueLow.values[1]) ^ prevInstring, 1);
+			prevInstring = uint64_t(valuesNew.getInt64(1) >> 63);
 			return valuesNew;
 		}
 
@@ -404,12 +404,12 @@ namespace jsonifier_internal {
 			bool returnValue{};
 			long long unsigned returnValue64{};
 			for (uint64_t x = 0; x < 2; ++x) {
-				if (_addcarry_u64(0, getUint64(x), other1.getUint64(x), &returnValue64)) {
+				if (_addcarry_u64(0, getInt64(x), other1.getInt64(x), &returnValue64)) {
 					returnValue = true;
 				} else {
 					returnValue = false;
 				}
-				result.insertUint64(returnValue64, x);
+				result.insertInt64(returnValue64, x);
 			}
 			return returnValue;
 		}

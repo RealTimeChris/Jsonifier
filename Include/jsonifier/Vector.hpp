@@ -29,12 +29,6 @@
 #include <source_location>
 #include <cstring>
 
-#if defined(__linux__)
-	#if !defined(_tzcnt_u16)
-		#define _tzcnt_u16 __tzcnt_u16
-	#endif
-#endif
-
 namespace jsonifier {
 
 	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
@@ -44,17 +38,17 @@ namespace jsonifier {
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier_internal::iterator<vector::value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const vector::value_type>;
+		using iterator				 = jsonifier_internal::iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
 		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
-		inline vector() noexcept = default;
+		inline vector() = default;
 
-		inline vector& operator=(vector&& other) noexcept {
+		inline vector& operator=(vector&& other) {
 			if (this != &other && dataVal != other.dataVal) {
 				reset();
 				swap(other);
@@ -62,7 +56,7 @@ namespace jsonifier {
 			return *this;
 		}
 
-		inline vector(vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
+		inline vector(vector&& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = std::move(other);
 		}
 
@@ -181,51 +175,51 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		inline iterator begin() noexcept {
+		inline iterator begin() {
 			return iterator(dataVal);
 		}
 
-		inline const_iterator begin() const noexcept {
+		inline const_iterator begin() const {
 			return const_iterator(dataVal);
 		}
 
-		inline iterator end() noexcept {
+		inline iterator end() {
 			return iterator(dataVal + sizeVal);
 		}
 
-		inline const_iterator end() const noexcept {
+		inline const_iterator end() const {
 			return const_iterator(dataVal + sizeVal);
 		}
 
-		inline reverse_iterator rbegin() noexcept {
+		inline reverse_iterator rbegin() {
 			return reverse_iterator(end());
 		}
 
-		inline const_reverse_iterator rbegin() const noexcept {
+		inline const_reverse_iterator rbegin() const {
 			return const_reverse_iterator(end());
 		}
 
-		inline reverse_iterator rend() noexcept {
+		inline reverse_iterator rend() {
 			return reverse_iterator(begin());
 		}
 
-		inline const_reverse_iterator rend() const noexcept {
+		inline const_reverse_iterator rend() const {
 			return const_reverse_iterator(begin());
 		}
 
-		inline const_iterator cbegin() const noexcept {
+		inline const_iterator cbegin() const {
 			return begin();
 		}
 
-		inline const_iterator cend() const noexcept {
+		inline const_iterator cend() const {
 			return end();
 		}
 
-		inline const_reverse_iterator crbegin() const noexcept {
+		inline const_reverse_iterator crbegin() const {
 			return rbegin();
 		}
 
-		inline const_reverse_iterator crend() const noexcept {
+		inline const_reverse_iterator crend() const {
 			return rend();
 		}
 

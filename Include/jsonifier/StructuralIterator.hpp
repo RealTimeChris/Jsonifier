@@ -35,31 +35,31 @@ namespace jsonifier_internal {
 		using pointer			= value_type*;
 		using size_type			= int64_t;
 
-		inline structural_iterator(pointer rootIndexNew, jsonifier::string_view_base<uint8_t> stringViewNew) noexcept {
+		inline structural_iterator(pointer rootIndexNew, jsonifier::string_view_base<uint8_t> stringViewNew) {
 			stringLength = stringViewNew.size();
 			stringView	 = stringViewNew.data();
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
-		inline value_type operator*() const noexcept {
+		inline value_type operator*() const {
 			return *currentIndex;
 		}
 
-		inline structural_iterator& operator++() noexcept {
+		inline structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
 		}
 
-		inline size_type getCurrentIndex() const noexcept {
+		inline size_type getCurrentIndex() const {
 			return *currentIndex - *rootIndex;
 		}
 
-		inline bool operator==(const structural_iterator&) const noexcept {
+		inline bool operator==(const structural_iterator&) const {
 			return checkForNullIndex() || checkForstringOverRun();
 		}
 
-		inline bool operator==(uint8_t other) const noexcept {
+		inline bool operator==(uint8_t other) const {
 			if (checkForNullIndex() || checkForstringOverRun()) {
 				return false;
 			}
@@ -72,11 +72,11 @@ namespace jsonifier_internal {
 		pointer currentIndex{};
 		pointer rootIndex{};
 
-		inline bool checkForNullIndex() const noexcept {
+		inline bool checkForNullIndex() const {
 			return !currentIndex;
 		}
 
-		inline bool checkForstringOverRun() const noexcept {
+		inline bool checkForstringOverRun() const {
 			auto currentIndexTemp = getCurrentIndex();
 			return currentIndexTemp < 0 || currentIndexTemp >= stringLength;
 		}

@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 			section.reset(string);
 		}
 
-		inline structural_iterator begin() noexcept {
+		inline structural_iterator begin() {
 			return structural_iterator{ section.getStructurals(), section.getStringView() };
 		}
 	};

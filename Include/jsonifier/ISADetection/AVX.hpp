@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	constexpr uint64_t StepSize{ 128 };
 	constexpr uint64_t BytesPerStep{ StepSize / 8 };
@@ -35,7 +35,7 @@ namespace jsonifier_internal {
 	using simd_base_real	  = simd_base<128>;
 	using string_parsing_type = uint16_t;
 	using avx_type			  = __m128i;
-	using avx_type_float	  = __m128;
+	using avx_float_type	  = __m128;
 
 	template<typename value_type> inline __m128i gatherValues128(const value_type* str) {
 		alignas(ALIGNMENT) float newArray[sizeof(__m128i) / sizeof(float)]{};
@@ -43,13 +43,13 @@ namespace jsonifier_internal {
 		return _mm_castps_si128(_mm_load_ps(newArray));
 	}
 
-	template<float_t value_type> inline avx_type_float gatherValues128(const value_type* str) {
+	template<float_t value_type> inline avx_float_type gatherValues128(const value_type* str) {
 		return _mm_load_ps(str);
 	}
 
 	template<> struct alignas(16) simd_base<128> {
 	  public:
-		inline simd_base() noexcept = default;
+		inline simd_base() = default;
 
 		inline simd_base& operator=(avx_type&& data) {
 			value = std::move(data);
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		inline simd_base(const uint8_t* values) {
+		inline simd_base(string_view_ptr values) {
 			value = gatherValues128<const uint8_t>(values);
 		}
 
@@ -85,36 +85,28 @@ namespace jsonifier_internal {
 			return !_mm_testz_si128(value, value);
 		}
 
-		inline operator uint16_t() const {
+		inline operator string_parsing_type() const {
 			return toBitMask();
 		}
 
-		inline simd_base operator|(simd_base&& other) noexcept {
-			return _mm_or_si128(value, std::forward<avx_type>(other));
+		template<typename simd_base_type> inline simd_base operator|(simd_base_type&& other) const {
+			return _mm_or_si128(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator-(simd_base&& other) noexcept {
-			return _mm_sub_epi8(value, std::forward<avx_type>(other));
+		template<typename simd_base_type> inline simd_base operator-(simd_base_type&& other) const {
+			return _mm_sub_epi8(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator|(const simd_base& other) const {
-			return _mm_or_si128(value, other);
+		template<typename simd_base_type> inline simd_base operator&(simd_base_type&& other) const {
+			return _mm_and_si128(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator&(const simd_base& other) const {
-			return _mm_and_si128(value, other);
-		}
-
-		inline simd_base operator-(const simd_base& other) const {
-			return _mm_sub_epi8(value, other);
-		}
-
-		inline simd_base operator^(const simd_base& other) const {
-			return _mm_xor_si128(value, other);
+		template<typename simd_base_type> inline simd_base operator^(simd_base_type&& other) const {
+			return _mm_xor_si128(value, std::forward<simd_base_type>(other));
 		}
 
 		inline string_parsing_type operator==(const simd_base& other) const {
-			simd_base newValue = _mm_cmpeq_epi8(value, other);
+			simd_base newValue{ _mm_cmpeq_epi8(value, other) };
 			return newValue.toBitMask();
 		}
 
@@ -128,7 +120,7 @@ namespace jsonifier_internal {
 		}
 
 		inline void convertWhitespaceToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[16]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
+			alignas(ALIGNMENT) static constexpr uint8_t arrayNew[16]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
 			simd_base whitespaceTable{ arrayNew };
 			for (uint64_t x = 0; x < 8; ++x) {
 				addValues(valuesNew[x].shuffle(whitespaceTable) == valuesNew[x], x);
@@ -143,7 +135,7 @@ namespace jsonifier_internal {
 		};
 
 		inline void convertStructuralsToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[16]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			alignas(ALIGNMENT) static constexpr uint8_t arrayNew[16]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
 			simd_base opTable{ arrayNew };
 			simd_base chars{ uint8_t{ 0x20 } };
 			for (uint64_t x = 0; x < 8; ++x) {
@@ -155,20 +147,6 @@ namespace jsonifier_internal {
 			simd_base quotes = _mm_set1_epi8('"');
 			for (uint64_t x = 0; x < 8; ++x) {
 				addValues(valuesNew[x] == quotes, x);
-			}
-		}
-
-		inline uint64_t getUint64(uint64_t index) const {
-			switch (index) {
-				case 0: {
-					return static_cast<uint64_t>(_mm_extract_epi64(value, 0));
-				}
-				case 1: {
-					return static_cast<uint64_t>(_mm_extract_epi64(value, 1));
-				}
-				default: {
-					return static_cast<uint64_t>(_mm_extract_epi64(value, 0));
-				}
 			}
 		}
 
@@ -203,67 +181,42 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline void insertInt32(uint32_t valueNew, uint64_t index) {
+		inline void insertInt16(string_parsing_type valueNew, uint64_t index) {
 			switch (index) {
 				case 0: {
-					value = _mm_insert_epi32(value, valueNew, 0);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 0);
 					break;
 				}
 				case 1: {
-					value = _mm_insert_epi32(value, valueNew, 1);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 1);
 					break;
 				}
 				case 2: {
-					value = _mm_insert_epi32(value, valueNew, 2);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 2);
 					break;
 				}
 				case 3: {
-					value = _mm_insert_epi32(value, valueNew, 3);
-					break;
-				}
-				default: {
-					value = _mm_insert_epi32(value, valueNew, 0);
-					break;
-				}
-			}
-		}
-
-		inline void insertInt16(int16_t valueNew, uint64_t index) {
-			switch (index) {
-				case 0: {
-					value = _mm_insert_epi16(value, valueNew, 0);
-					break;
-				}
-				case 1: {
-					value = _mm_insert_epi16(value, valueNew, 1);
-					break;
-				}
-				case 2: {
-					value = _mm_insert_epi16(value, valueNew, 2);
-					break;
-				}
-				case 3: {
-					value = _mm_insert_epi16(value, valueNew, 3);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 3);
 					break;
 				}
 				case 4: {
-					value = _mm_insert_epi16(value, valueNew, 4);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 4);
 					break;
 				}
 				case 5: {
-					value = _mm_insert_epi16(value, valueNew, 5);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 5);
 					break;
 				}
 				case 6: {
-					value = _mm_insert_epi16(value, valueNew, 6);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 6);
 					break;
 				}
 				case 7: {
-					value = _mm_insert_epi16(value, valueNew, 7);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 7);
 					break;
 				}
 				default: {
-					value = _mm_insert_epi16(value, valueNew, 0);
+					value = _mm_insert_epi16(value, static_cast<int16_t>(valueNew), 0);
 					break;
 				}
 			}
@@ -277,20 +230,20 @@ namespace jsonifier_internal {
 			return _mm_shuffle_epi8(other, value);
 		}
 
-		inline void addValues(uint16_t values, uint64_t index) {
+		inline void addValues(string_parsing_type values, uint64_t index) {
 			insertInt16(values, index);
 		}
 
 		template<uint64_t amount> inline simd_base shl() const {
 			simd_base currentValues{};
-			currentValues.insertInt64(getUint64(0) << amount, 0);
+			currentValues.insertInt64(static_cast<uint64_t>(getInt64(0)) << amount, 0);
 			size_t shiftBetween = amount % 64;
-			currentValues.insertInt64((getUint64(1) << amount) | (getUint64(0) >> (64 - shiftBetween)), 1);
+			currentValues.insertInt64(static_cast<uint64_t>((getInt64(1)) << amount) | (static_cast<uint64_t>(getInt64(0)) >> (64 - shiftBetween)), 1);
 			return currentValues;
 		}
 
-		inline int16_t toBitMask() const {
-			return static_cast<int16_t>(_mm_movemask_epi8(*this));
+		inline string_parsing_type toBitMask() const {
+			return static_cast<string_parsing_type>(_mm_movemask_epi8(*this));
 		}
 
 		inline void reset() {
@@ -322,9 +275,9 @@ namespace jsonifier_internal {
 			simd_base valuesNew{};
 			__m128i valueLow{ value };
 			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 0)) ^ prevInString, 0);
-			prevInString = uint64_t(static_cast<int64_t>(valuesNew.getUint64(0)) >> 63);
+			prevInString = uint64_t(static_cast<int64_t>(valuesNew.getInt64(0)) >> 63);
 			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 1)) ^ prevInString, 1);
-			prevInString = uint64_t(static_cast<int64_t>(valuesNew.getUint64(1)) >> 63);
+			prevInString = uint64_t(static_cast<int64_t>(valuesNew.getInt64(1)) >> 63);
 			return valuesNew;
 		}
 

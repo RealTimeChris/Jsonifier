@@ -36,7 +36,7 @@ namespace jsonifier_internal {
 		using reference			= value_type&;
 		using pointer			= value_type*;
 
-		constexpr iterator(pointer pointerNew) noexcept : value{ pointerNew } {};
+		constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
 
 		constexpr reference operator*() const {
 			return *value;

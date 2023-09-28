@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipValue(structural_iterator& iter) noexcept {
+		inline static void skipValue(structural_iterator& iter) {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static size_t countArrayElements(structural_iterator iter) noexcept {
+		inline static size_t countArrayElements(structural_iterator iter) {
 			size_t currentDepth{ 1 };
 			size_t currentCount{ 1 };
 			if (iter == ']') {
@@ -129,7 +129,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		inline static void skipObject(structural_iterator& iter) noexcept {
+		inline static void skipObject(structural_iterator& iter) {
 			++iter;
 			uint64_t currentDepth{ 1 };
 			if (iter == '}') {
@@ -156,7 +156,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipArray(structural_iterator& iter) noexcept {
+		inline static void skipArray(structural_iterator& iter) {
 			++iter;
 			uint64_t currentDepth{ 1 };
 			if (iter == ']') {
@@ -185,12 +185,12 @@ namespace jsonifier_internal {
 
 		inline static bool isTypeType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return findFirstOf(array01, std::size(array01), c) != jsonifier::string::npos;
 		}
 
 		inline static bool isDigitType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return findFirstOf(array01, std::size(array01), c) != jsonifier::string::npos;
 		}
 
 		inline static jsonifier::string_view getValueType(uint8_t charToCheck) {

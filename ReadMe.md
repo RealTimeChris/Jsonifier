@@ -21,7 +21,7 @@
 
 ## Usage - Serialization/Parsing
 ----
-- Create a specialization of the `Jsonifier::Core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
+- Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
 ----
 ```cpp
 namespace TestNS {
@@ -66,61 +66,61 @@ namespace TestNS {
 
 namespace Jsonifier {
 
-	template<> struct Core<TestNS::fixed_object_t> {
+	template<> struct core<TestNS::fixed_object_t> {
 		using ValueType = TestNS::fixed_object_t;
-		static constexpr auto parseValue = object("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+		static constexpr auto parseValue = createObject("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
 	};
 
-	template<> struct Core<TestNS::fixed_name_object_t> {
+	template<> struct core<TestNS::fixed_name_object_t> {
 		using ValueType = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = object("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
+		static constexpr auto parseValue = createObject("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
 	};
 
-	template<> struct Core<TestNS::nested_object_t> {
+	template<> struct core<TestNS::nested_object_t> {
 		using ValueType = TestNS::nested_object_t;
-		static constexpr auto parseValue = object("v3s", &ValueType::v3s, "id", &ValueType::id);
+		static constexpr auto parseValue = createObject("v3s", &ValueType::v3s, "id", &ValueType::id);
 	};
 
-	template<> struct Core<TestNS::another_object_t> {
+	template<> struct core<TestNS::another_object_t> {
 		using ValueType = TestNS::another_object_t;
 		static constexpr auto parseValue =
-			object("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
+			createObject("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
 	};
 
-	template<> struct Core<TestNS::obj_t> {
+	template<> struct core<TestNS::obj_t> {
 		using ValueType = TestNS::obj_t;
 		static constexpr auto parseValue =
-			object("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object, "another_object", &ValueType::another_object, "string_array",
+			createObject("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object, "another_object", &ValueType::another_object, "string_array",
 				&ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean", &ValueType::boolean, "another_bool", &ValueType::another_bool);
 	};
 }
 
 ```
 ### Usage - Parsing
-- Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
+- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
 - Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
 ```cpp
 std::string buffer{ json0 };
 
 obj_t obj{};
 
-Jsonifier::JsonifierCore parser{};
+jsonifier::jsonifier_core parser{};
 parser.parseJson(obj, buffer);
 ```
 ### Usage - Serialization
-- Create an instance of the `Jsonifier::JsonifierCore` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
+- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
 - Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
 ```cpp
 std::string buffer{};
 
 obj_t obj{};
 
-Jsonifier::JsonifierCore serializer{};
+jsonifier::jsonifier_core serializer{};
 serializer.serializeJson(obj, buffer);
 ```
 ## Excluding Keys from Serialization at Runtime
 ----
-To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called excludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `Jsonifier::JsonifierCore` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `excludedKeys` set.
+To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called excludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `jsonifier::jsonifier_core` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `excludedKeys` set.
 
 Here's an example of how you can do this:
 ```c++
@@ -140,7 +140,7 @@ public:
 
 int32_t main() {
   MyObject obj("John", 30);
-  Jsonifier::JsonifierCore jsonifier{};
+  jsonifier::jsonifier_core jsonifier{};
   std::string jsonBuffer{};
   jsonifier.serializeJson<true>(obj, jsonBuffer); // {"name":"John"}
   return 0;
@@ -149,11 +149,11 @@ int32_t main() {
 
 In this example, we have a class called `MyObject` with three member variables: `name`, `age`, and `excludedKeys`. The `excludedKeys` variable is a set of strings that will contain the keys we want to exclude from the serialized output.
 
-In the constructor of `MyObject`, we add the key "age" to the `excludedKeys` set using the `insert` function. This means that when we serialize this object using the `serializeJson` member function of the `Jsonifier::JsonifierCore` class, the "age" key will be excluded from the resulting JSON string.
+In the constructor of `MyObject`, we add the key "age" to the `excludedKeys` set using the `insert` function. This means that when we serialize this object using the `serializeJson` member function of the `jsonifier::jsonifier_core` class, the "age" key will be excluded from the resulting JSON string.
 
-In the `main` function, we create an instance of `MyObject` with the name "John" and age 30. We then create an instance of `Jsonifier::JsonifierCore` and call its `serializeJson` member function to serialize the object to a JSON string. Since we added the "age" key to the `excludedKeys` set in the constructor, the resulting JSON string only contains the "name" key.
+In the `main` function, we create an instance of `MyObject` with the name "John" and age 30. We then create an instance of `jsonifier::jsonifier_core` and call its `serializeJson` member function to serialize the object to a JSON string. Since we added the "age" key to the `excludedKeys` set in the constructor, the resulting JSON string only contains the "name" key.
 
-By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `Jsonifier::JsonifierCore` class, you can easily serialize objects with excluded keys to JSON strings.
+By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `jsonifier::jsonifier_core` class, you can easily serialize objects with excluded keys to JSON strings.
 
 ## Enabling Error Message Output in Jsonifier
 ----
@@ -209,28 +209,34 @@ Happy parsing with Jsonifier!
 Jsonifier is a JSON parsing library that supports various CPU architectures to optimize code generation and enhance performance. This page explains the relevant portion of the CMakeLists.txt file in Jsonifier, which detects the CPU architecture and sets the appropriate compiler flags for the supported architectures: x64, AVX, AVX2, and AVX-512.
 
 ### CPU Architecture Detection Configuration
-
 The CPU architecture detection and configuration in Jsonifier's CMakeLists.txt file are designed to support the following architectures: x64, AVX, AVX2, and AVX-512. Let's explore each architecture in detail:
 
 #### x64 Architecture
-
 The x64 architecture, also known as x86-64 or AMD64, is a 64-bit extension of the x86 instruction set architecture. It provides increased memory addressability and larger general-purpose registers, enabling more efficient processing of 64-bit data. The x64 architecture is widely used in modern CPUs, offering improved performance and expanded capabilities compared to its 32-bit predecessor.
 
 #### AVX (Advanced Vector Extensions)
-
 AVX, short for Advanced Vector Extensions, is an extension to the x86 instruction set architecture. AVX provides SIMD (Single Instruction, Multiple Data) instructions for performing parallel processing on vectors of data. It introduces 128-bit vector registers (XMM registers) and new instructions to accelerate floating-point and integer calculations. AVX is supported by many modern CPUs and offers significant performance benefits for applications that can utilize parallel processing.
 
 #### AVX2 (Advanced Vector Extensions 2)
-
 AVX2 is an extension of the AVX instruction set architecture. It builds upon the foundation of AVX and introduces additional instructions and capabilities for SIMD processing. AVX2 expands the vector register size to 256 bits (YMM registers) and introduces new integer and floating-point operations, enabling further optimization of vectorized code. CPUs that support AVX2 offer enhanced performance for applications that leverage these advanced instructions.
 
-#### AVX-512
-
+#### AVX-512 (Advanced Vector Extensions 512-bit)
 AVX-512 is an extension of the AVX instruction set architecture, designed to provide even higher levels of vector parallelism. AVX-512 introduces 512-bit vector registers (ZMM registers) and a broad range of new instructions for both floating-point and integer operations. With AVX-512, CPUs can process larger amounts of data in parallel, offering significant performance improvements for applications that can effectively utilize these capabilities.
 
-### Configuration Explanation
+### Manual Configuration
+In addition to automatic CPU architecture detection, Jsonifier's CMake configuration also allows for manual control over specific CPU instructions. You can manually set the JSONIFIER_CPU_INSTRUCTIONS variable in the CMake configuration to fine-tune the instruction sets used. Here are the values you can use for different instruction sets:
 
-The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures. It ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU.
+- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 5
+- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 4
+- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 3
+- JSONIFIER_CPU_INSTRUCTIONS for BMI: Set to 1 << 2
+- JSONIFIER_CPU_INSTRUCTIONS for LZCOUNT: Set to 1 << 1
+- JSONIFIER_CPU_INSTRUCTIONS for POPCNT: Set to 1 << 0
+
+You can combine LZCNT, BMI, and POPCNT with each other or any of the three AVX types (AVX, AVX2, AVX-512) to optimize Jsonifier for your specific use case. However, please note that you cannot combine multiple AVX types together, as they are distinct and cannot be used simultaneously. This flexibility in instruction set configuration allows you to tailor Jsonifier's performance to your target CPU architecture and application requirements effectively.
+
+### Configuration Explanation
+The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures. It ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU. Additionally, the manual configuration option allows you to customize the instruction sets for further optimization according to your specific needs.
 
 ## Installation (Vcpkg)
 - Requirements:

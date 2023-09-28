@@ -29,9 +29,9 @@ namespace jsonifier {
 
 	class raw_json_data {
 	  public:
-		inline raw_json_data() noexcept = default;
+		inline raw_json_data() = default;
 
-		inline raw_json_data& operator=(bool value) noexcept {
+		inline raw_json_data& operator=(bool value) {
 			if (value) {
 				jsonData = "true";
 			} else {
@@ -40,57 +40,57 @@ namespace jsonifier {
 			return *this;
 		}
 
-		inline raw_json_data(bool value) noexcept {
+		inline raw_json_data(bool value) {
 			*this = value;
 		}
 
-		inline raw_json_data& operator=(double value) noexcept {
+		inline raw_json_data& operator=(double value) {
 			jsonData = string{ std::to_string(value) };
 			return *this;
 		}
 
-		inline raw_json_data(double value) noexcept {
+		inline raw_json_data(double value) {
 			*this = value;
 		}
 
-		inline raw_json_data& operator=(int64_t value) noexcept {
+		inline raw_json_data& operator=(int64_t value) {
 			jsonData = string{ std::to_string(value) };
 			return *this;
 		}
 
-		inline raw_json_data(int64_t value) noexcept {
+		inline raw_json_data(int64_t value) {
 			*this = value;
 		}
 
-		inline raw_json_data& operator=(const jsonifier::string& value) noexcept {
+		inline raw_json_data& operator=(const jsonifier::string& value) {
 			jsonData = value;
 			return *this;
 		}
 
-		inline raw_json_data(const jsonifier::string& value) noexcept {
+		inline raw_json_data(const jsonifier::string& value) {
 			*this = value;
 		}
 
-		inline char* data() noexcept {
+		inline char* data() {
 			return jsonData.data();
 		}
 
-		inline void resize(uint64_t sizeNew) noexcept {
+		inline void resize(uint64_t sizeNew) {
 			jsonData.resize(sizeNew);
 		}
 
-		inline explicit operator string_view() noexcept {
+		inline explicit operator string_view() {
 			return { jsonData.data(), jsonData.size() };
 		}
 
-		inline operator string() const noexcept {
+		inline operator string() const {
 			string newstring{};
 			newstring.resize(jsonData.size());
 			std::memcpy(newstring.data(), jsonData.data(), jsonData.size());
 			return newstring;
 		}
 
-		inline operator std::string() const noexcept {
+		inline operator std::string() const {
 			return jsonData.operator std::string();
 		}
 
@@ -107,7 +107,7 @@ namespace jsonifier {
 		string jsonData{};
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) noexcept {
+	inline std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) {
 		os << jsonValue.operator std::string();
 		return os;
 	}

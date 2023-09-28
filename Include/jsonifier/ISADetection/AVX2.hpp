@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	constexpr uint64_t StepSize{ 256 };
 	constexpr uint64_t BytesPerStep{ StepSize / 8 };
@@ -36,8 +36,8 @@ namespace jsonifier_internal {
 	using string_parsing_type  = uint32_t;
 	using avx_type			   = __m256i;
 	using avx_type_small	   = __m128i;
-	using avx_type_float	   = __m256;
-	using avx_type_float_small = __m128;
+	using avx_float_type	   = __m256;
+	using avx_float_type_small = __m128;
 
 	template<typename value_type> inline avx_type_small gatherValues128(const value_type* str) {
 		alignas(ALIGNMENT) float newArray[sizeof(avx_type_small) / sizeof(float)]{};
@@ -51,17 +51,17 @@ namespace jsonifier_internal {
 		return _mm256_castps_si256(_mm256_load_ps(newArray));
 	}
 
-	template<float_t value_type> inline avx_type_float_small gatherValues128(const value_type* str) {
+	template<float_t value_type> inline avx_float_type_small gatherValues128(const value_type* str) {
 		return _mm_load_ps(str);
 	}
 
-	template<float_t value_type> inline avx_type_float gatherValues256(const value_type* str) {
+	template<float_t value_type> inline avx_float_type gatherValues256(const value_type* str) {
 		return _mm256_load_ps(str);
 	}
 
 	template<> struct alignas(32) simd_base<256> {
 	  public:
-		inline simd_base() noexcept = default;
+		inline simd_base() = default;
 
 		inline simd_base& operator=(avx_type&& data) {
 			value = std::forward<avx_type>(data);
@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		inline simd_base(const uint8_t* values) {
+		inline simd_base(string_view_ptr values) {
 			value = gatherValues256(values);
 		}
 
@@ -97,28 +97,24 @@ namespace jsonifier_internal {
 			return !_mm256_testz_si256(value, value);
 		}
 
-		inline simd_base operator|(simd_base&& other) noexcept {
-			return _mm256_or_si256(value, std::forward<avx_type>(other));
+		template<typename simd_base_type> inline simd_base operator|(simd_base_type&& other) const {
+			return _mm256_or_si256(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator|(const simd_base& other) const {
-			return _mm256_or_si256(value, other);
+		template<typename simd_base_type> inline simd_base operator-(simd_base_type&& other) const {
+			return _mm256_sub_epi8(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator-(const simd_base& other) const {
-			return _mm256_sub_epi8(value, other);
+		template<typename simd_base_type> inline simd_base operator&(simd_base_type&& other) const {
+			return _mm256_and_si256(value, std::forward<simd_base_type>(other));
 		}
 
-		inline simd_base operator&(const simd_base& other) const {
-			return _mm256_and_si256(value, other);
-		}
-
-		inline simd_base operator^(const simd_base& other) const {
-			return _mm256_xor_si256(value, other);
+		template<typename simd_base_type> inline simd_base operator^(simd_base_type&& other) const {
+			return _mm256_xor_si256(value, std::forward<simd_base_type>(other));
 		}
 
 		inline string_parsing_type operator==(const simd_base& other) const {
-			simd_base newValue = _mm256_cmpeq_epi8(value, other);
+			simd_base newValue{ _mm256_cmpeq_epi8(value, other) };
 			return newValue.toBitMask();
 		}
 
@@ -132,8 +128,8 @@ namespace jsonifier_internal {
 		}
 
 		inline void convertWhitespaceToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
-				'\n', 112, 100, '\r', 100, 100 };
+			alignas(ALIGNMENT) static constexpr uint8_t arrayNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100,
+				113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
 			simd_base whitespaceTable{ arrayNew };
 			for (uint64_t x = 0; x < 8; ++x) {
 				addValues(valuesNew[x].shuffle(whitespaceTable) == valuesNew[x], x);
@@ -148,7 +144,8 @@ namespace jsonifier_internal {
 		};
 
 		inline void convertStructuralsToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			alignas(
+				ALIGNMENT) static constexpr uint8_t arrayNew[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
 			simd_base opTable{ arrayNew };
 			simd_base chars{ uint8_t{ 0x20 } };
 			for (uint64_t x = 0; x < 8; ++x) {
@@ -163,22 +160,22 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline uint64_t getUint64(uint64_t index) {
+		inline int64_t getInt64(uint64_t index) {
 			switch (index) {
 				case 0: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(value, 0));
+					return _mm256_extract_epi64(value, 0);
 				}
 				case 1: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(value, 1));
+					return _mm256_extract_epi64(value, 1);
 				}
 				case 2: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(value, 2));
+					return _mm256_extract_epi64(value, 2);
 				}
 				case 3: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(value, 3));
+					return _mm256_extract_epi64(value, 3);
 				}
 				default: {
-					return static_cast<uint64_t>(_mm256_extract_epi64(value, 0));
+					return _mm256_extract_epi64(value, 0);
 				}
 			}
 		}
@@ -208,42 +205,42 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline void insertInt32(int32_t valueNew, uint64_t index) {
+		inline void insertInt32(string_parsing_type valueNew, uint64_t index) {
 			switch (index) {
 				case 0: {
-					value = _mm256_insert_epi32(value, valueNew, 0);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 0);
 					break;
 				}
 				case 1: {
-					value = _mm256_insert_epi32(value, valueNew, 1);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 1);
 					break;
 				}
 				case 2: {
-					value = _mm256_insert_epi32(value, valueNew, 2);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 2);
 					break;
 				}
 				case 3: {
-					value = _mm256_insert_epi32(value, valueNew, 3);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 3);
 					break;
 				}
 				case 4: {
-					value = _mm256_insert_epi32(value, valueNew, 4);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 4);
 					break;
 				}
 				case 5: {
-					value = _mm256_insert_epi32(value, valueNew, 5);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 5);
 					break;
 				}
 				case 6: {
-					value = _mm256_insert_epi32(value, valueNew, 6);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 6);
 					break;
 				}
 				case 7: {
-					value = _mm256_insert_epi32(value, valueNew, 7);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 7);
 					break;
 				}
 				default: {
-					value = _mm256_insert_epi32(value, valueNew, 0);
+					value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), 0);
 					break;
 				}
 			}
@@ -257,16 +254,16 @@ namespace jsonifier_internal {
 			return _mm256_shuffle_epi8(other, value);
 		}
 
-		inline void addValues(uint32_t values, uint64_t index) {
-			insertInt32(static_cast<int32_t>(values), index);
+		inline void addValues(string_parsing_type values, uint64_t index) {
+			insertInt32(values, index);
 		}
 
 		template<uint64_t amount> inline simd_base shl() const {
 			return simd_base{ _mm256_slli_epi64(*this, (amount % 64)) } | _mm256_srli_epi64(_mm256_permute4x64_epi64(*this, 0b10010011), 64 - (amount % 64));
 		}
 
-		inline uint32_t toBitMask() const {
-			return static_cast<uint32_t>(_mm256_movemask_epi8(*this));
+		inline string_parsing_type toBitMask() const {
+			return static_cast<string_parsing_type>(_mm256_movemask_epi8(*this));
 		}
 
 		inline void reset() {
@@ -298,14 +295,14 @@ namespace jsonifier_internal {
 			simd_base valuesNew{};
 			avx_type_small valueLow{ _mm256_extracti128_si256(value, 0) };
 			avx_type_small valueHigh{ _mm256_extracti128_si256(value, 1) };
-			valuesNew.insertInt64(static_cast<int64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 0)) ^ prevInstring), 0);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(0)) >> 63);
-			valuesNew.insertInt64(static_cast<int64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 1)) ^ prevInstring), 1);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(1)) >> 63);
-			valuesNew.insertInt64(static_cast<int64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueHigh, allOnes, 0)) ^ prevInstring), 2);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(2)) >> 63);
-			valuesNew.insertInt64(static_cast<int64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueHigh, allOnes, 1)) ^ prevInstring), 3);
-			prevInstring = uint64_t(static_cast<int64_t>(valuesNew.getUint64(3)) >> 63);
+			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 0)) ^ prevInstring, 0);
+			prevInstring = uint64_t(valuesNew.getInt64(0) >> 63);
+			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueLow, allOnes, 1)) ^ prevInstring, 1);
+			prevInstring = uint64_t(valuesNew.getInt64(1) >> 63);
+			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueHigh, allOnes, 0)) ^ prevInstring, 2);
+			prevInstring = uint64_t(valuesNew.getInt64(2) >> 63);
+			valuesNew.insertInt64(_mm_cvtsi128_si64(_mm_clmulepi64_si128(valueHigh, allOnes, 1)) ^ prevInstring, 3);
+			prevInstring = uint64_t(valuesNew.getInt64(3) >> 63);
 			return valuesNew;
 		}
 
@@ -342,8 +339,8 @@ namespace jsonifier_internal {
 		avx_type value{};
 	};
 
-	inline simd_base_real makeSimdBase(uint64_t value) {
-		return _mm256_set1_epi64x(static_cast<int64_t>(value));
+	inline simd_base_real makeSimdBase(int64_t value) {
+		return _mm256_set1_epi64x(value);
 	}
 
 	#define load(value) gatherValues256<std::remove_pointer_t<decltype(value)>>(value)

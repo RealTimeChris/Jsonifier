@@ -31,14 +31,14 @@ namespace jsonifier_internal {
 
 	template<uint64_t stepSize> class string_block_reader {
 	  public:
-		inline void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
+		inline void reset(string_view_ptr stringViewNew, uint64_t lengthNew) {
 			lengthMinusStep = lengthNew < stepSize ? 0 : lengthNew - stepSize;
 			instring		= stringViewNew;
 			length			= lengthNew;
 			index			= 0;
 		}
 
-		inline uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
+		inline uint64_t getRemainder(string_buffer_ptr dest) const {
 			if (length == index) {
 				return 0;
 			}
@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 			return length - index;
 		}
 
-		inline string_view_ptr fullBlock() noexcept {
+		inline string_view_ptr fullBlock() {
 			return instring + index;
 		}
 
@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 			index += stepSize;
 		}
 
-		inline bool hasFullBlock() const noexcept {
+		inline bool hasFullBlock() const {
 			return index < lengthMinusStep;
 		}
 
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 	  public:
 		using size_type = uint64_t;
 
-		inline void reset(jsonifier::string_view_base<uint8_t> stringViewNew) noexcept {
+		inline void reset(jsonifier::string_view_base<uint8_t> stringViewNew) {
 			structuralIndices.clear();
 			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size()));
 			stringBlockReader.reset(stringViewNew.data(), stringViewNew.size());
@@ -88,7 +88,7 @@ namespace jsonifier_internal {
 			generateJsonIndices();
 		}
 
-		inline void generateJsonIndices() noexcept {
+		inline void generateJsonIndices()  {
 			while (stringBlockReader.hasFullBlock()) {
 				generateStructurals(stringBlockReader.fullBlock());
 				generateStructurals(stringBlockReader.fullBlock() + StepSize);
@@ -101,15 +101,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline size_type getstringLength() noexcept {
+		inline size_type getstringLength() {
 			return stringView.size();
 		}
 
-		inline jsonifier::string_view_base<uint8_t> getStringView() noexcept {
+		inline jsonifier::string_view_base<uint8_t> getStringView() {
 			return stringView;
 		}
 
-		inline structural_index* getStructurals() noexcept {
+		inline structural_index* getStructurals() {
 			return structuralIndices.data();
 		}
 
@@ -138,7 +138,7 @@ namespace jsonifier_internal {
 			return num + (8 - remainder);
 		}
 
-		inline uint64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, uint64_t newBits) noexcept {
+		inline uint64_t rollValuesIntoTape(uint64_t currentIndex, uint64_t x, uint64_t newBits) {
 			structuralIndices[(currentIndex * 8) + tapeIndex]	  = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
 			newBits												  = blsr(newBits);
 			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (x * 64ULL) + stringIndex);
@@ -158,7 +158,7 @@ namespace jsonifier_internal {
 			return newBits;
 		}
 
-		inline void generateStructurals(string_view_ptr valueNew) noexcept {
+		inline void generateStructurals(string_view_ptr valueNew) {
 			for (uint64_t x = 0; x < 8; ++x) {
 				newPtr[x] = load(valueNew + (BytesPerStep * x));
 			}
@@ -170,7 +170,7 @@ namespace jsonifier_internal {
 			stringIndex += StepSize;
 		}
 
-		inline void addTapeValues(simd_base_real structurals) noexcept {
+		inline void addTapeValues(simd_base_real structurals) {
 			alignas(ALIGNMENT) uint64_t newBits[StridesPerStep]{};
 			structurals.store<uint64_t>(newBits);
 			for (uint64_t x = 0; x < StridesPerStep; ++x) {
@@ -201,7 +201,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline simd_base_real collectStructurals() noexcept {
+		inline simd_base_real collectStructurals() {
 			currentValues			  = collectEscapedCharacters();
 			quotes					  = quotes.bitAndNot(currentValues);
 			currentValues			  = quotes.carrylessMultiplication(prevInstring);

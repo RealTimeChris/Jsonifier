@@ -55,23 +55,23 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		constexpr const ETy&& error() const&& noexcept {
+		constexpr const ETy&& error() const&& {
 			return std::move(unex);
 		}
 
-		constexpr ETy&& error() && noexcept {
+		constexpr ETy&& error() && {
 			return std::move(unex);
 		}
 
-		constexpr const ETy& error() const& noexcept {
+		constexpr const ETy& error() const& {
 			return unex;
 		}
 
-		constexpr ETy& error() & noexcept {
+		constexpr ETy& error() & {
 			return unex;
 		}
 
-		constexpr void swap(unexpected& other) noexcept {
+		constexpr void swap(unexpected& other) {
 			std::swap(unex, other.unex);
 		}
 
@@ -92,7 +92,7 @@ namespace jsonifier_internal {
 		using unexpected_type			  = unexpected<ETy>;
 		template<typename U> using rebind = expected<U, error_type>;
 
-		constexpr expected() noexcept = default;
+		constexpr expected() = default;
 
 		template<typename G> constexpr expected& operator=(unexpected<G>&& other) {
 			hasValue = false;
@@ -122,7 +122,7 @@ namespace jsonifier_internal {
 			*this = std::move(v);
 		}
 
-		constexpr void swap(expected& other) noexcept {
+		constexpr void swap(expected& other) {
 			if (hasValue) {
 				std::swap(val, other.val);
 			} else {
@@ -131,35 +131,35 @@ namespace jsonifier_internal {
 			std::swap(hasValue, other.hasValue);
 		}
 
-		constexpr const value_type* operator->() const noexcept {
+		constexpr const value_type* operator->() const {
 			return &val;
 		}
 
-		constexpr value_type* operator->() noexcept {
+		constexpr value_type* operator->() {
 			return &val;
 		}
 
-		constexpr const value_type&& operator*() const&& noexcept {
+		constexpr const value_type&& operator*() const&& {
 			return std::move(val);
 		}
 
-		constexpr value_type&& operator*() && noexcept {
+		constexpr value_type&& operator*() && {
 			return std::move(val);
 		}
 
-		constexpr const value_type& operator*() const& noexcept {
+		constexpr const value_type& operator*() const& {
 			return val;
 		}
 
-		constexpr value_type& operator*() & noexcept {
+		constexpr value_type& operator*() & {
 			return val;
 		}
 
-		constexpr explicit operator bool() const noexcept {
+		constexpr explicit operator bool() const {
 			return hasValue;
 		}
 
-		constexpr bool has_value() const noexcept {
+		constexpr bool has_value() const {
 			return hasValue;
 		}
 
@@ -199,7 +199,7 @@ namespace jsonifier_internal {
 			return x.hasValue == y.hasValue && x.unex == y.unex && x.val == y.val;
 		}
 
-		constexpr ~expected() noexcept {};
+		constexpr ~expected() {};
 
 	  protected:
 		bool hasValue{};
@@ -219,7 +219,7 @@ namespace jsonifier_internal {
 
 		template<typename U> using rebind = expected<U, error_type>;
 
-		constexpr expected() noexcept = default;
+		constexpr expected() = default;
 
 		template<typename G> constexpr expected& operator=(unexpected<G>&& other) {
 			return *this;
@@ -237,15 +237,15 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		constexpr void swap(expected& other) noexcept {
+		constexpr void swap(expected& other) {
 			std::swap(unex, other.unex);
 		}
 
-		constexpr explicit operator bool() const noexcept {
+		constexpr explicit operator bool() const {
 			return false;
 		}
 
-		constexpr bool has_value() const noexcept {
+		constexpr bool has_value() const {
 			return false;
 		}
 
@@ -269,7 +269,7 @@ namespace jsonifier_internal {
 			return x.unex == y.unex;
 		}
 
-		constexpr ~expected() noexcept {};
+		constexpr ~expected() {};
 
 	  protected:
 		union {
