@@ -185,12 +185,12 @@ namespace jsonifier_internal {
 
 		inline static bool isTypeType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return findFirstOf(array01, std::size(array01), c) != jsonifier::string::npos;
 		}
 
 		inline static bool isDigitType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return findFirstOf(array01, std::size(array01), c) != jsonifier::string::npos;
 		}
 
 		inline static jsonifier::string_view getValueType(uint8_t charToCheck) {

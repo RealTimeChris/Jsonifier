@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
 
 	#define popcnt(value) _mm_popcnt_u64(value)
 

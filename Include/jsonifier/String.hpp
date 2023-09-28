@@ -40,8 +40,6 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<typename value_type> using ref_unwrap = std::decay_t<value_type>;
-
 	template<typename value_type> class char_traits : public std::char_traits<value_type> {};
 
 	template<> class char_traits<uint8_t> {
@@ -91,247 +89,26 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<typename value_type> class string_base;
-
-	template<typename value_type_new, typename value_type_internal> class string_op_base {
-	  public:
-		using value_type = value_type_internal;
-		using size_type	 = uint64_t;
-
-		inline const value_type_new& getDerivedType() const {
-			return *static_cast<const value_type_new*>(this);
-		}
-
-		template<jsonifier_internal::searchable_string_value stringType> inline size_type findLastOf(const stringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> || std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> ||
-				std::same_as<jsonifier_internal::ref_unwrap<stringType>, char>) {
-				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
-					return jsonifier_internal::findLastSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal - position, valueToFind);
-				} else {
-					return value_type_new::npos;
-				}
-			} else if constexpr (std::is_pointer_v<stringType> || std::is_array_v<stringType>) {
-				auto sizeValNew = jsonifier_internal::char_traits<std::remove_pointer_t<std::remove_all_extents_t<stringType>>>::length(valueToFind);
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ 0 };
-				for (size_type x = 0; x < sizeValNew; ++x) {
-					auto newIndex = jsonifier_internal::findLastSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal - position, valueToFind[x]);
-					if (newIndex > currentHighestIndex && newIndex != value_type_new::npos) {
-						currentHighestIndex = newIndex;
-					}
-				}
-				return currentHighestIndex == 0 ? value_type_new::npos : currentHighestIndex - 1;
-			} else {
-				auto sizeValNew = valueToFind.size();
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ 0 };
-				for (size_type x = 0; x < sizeValNew; ++x) {
-					auto newIndex = jsonifier_internal::findLastSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal - position, valueToFind[x]);
-					if (newIndex > currentHighestIndex && newIndex != value_type_new::npos) {
-						currentHighestIndex = newIndex;
-					}
-				}
-				return currentHighestIndex == 0 ? value_type_new::npos : currentHighestIndex - 1;
-			}
-		}
-
-		template<jsonifier_internal::searchable_string_value stringType> inline size_type findFirstOf(const stringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> || std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> ||
-				std::same_as<jsonifier_internal::ref_unwrap<stringType>, char>) {
-				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
-					return jsonifier_internal::findSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
-				} else {
-					return value_type_new::npos;
-				}
-			} else if constexpr (std::is_pointer_v<stringType> || std::is_array_v<stringType>) {
-				auto sizeValNew = jsonifier_internal::char_traits<std::remove_pointer_t<std::remove_all_extents_t<stringType>>>::length(valueToFind);
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ value_type_new::npos };
-				for (size_type x = 0; x < sizeValNew; ++x) {
-					auto newIndex = jsonifier_internal::findSingleCharacter(getDerivedType().dataVal + position, getDerivedType().sizeVal, valueToFind[x]);
-					if (newIndex < currentHighestIndex && newIndex != value_type_new::npos) {
-						currentHighestIndex = newIndex;
-					}
-				}
-				return currentHighestIndex;
-			} else {
-				auto sizeValNew = valueToFind.size();
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ value_type_new::npos };
-				for (size_type x = 0; x < sizeValNew; ++x) {
-					auto newIndex = jsonifier_internal::findSingleCharacter(getDerivedType().dataVal + position, getDerivedType().sizeVal, valueToFind[x]);
-					if (newIndex < currentHighestIndex && newIndex != value_type_new::npos) {
-						currentHighestIndex = newIndex;
-					}
-				}
-				return currentHighestIndex;
-			}
-		}
-
-		template<jsonifier_internal::searchable_string_value stringType> inline size_type findFirstNotOf(const stringType& valueToFind, size_type position = 0) const {
-			if constexpr (std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> || std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> ||
-				std::same_as<jsonifier_internal::ref_unwrap<stringType>, char>) {
-				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
-					return jsonifier_internal::findFirstCharacterNotEqual(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
-				} else {
-					return value_type_new::npos;
-				}
-			} else if constexpr (std::is_pointer_v<stringType> || std::is_array_v<stringType>) {
-				auto sizeValNew = jsonifier_internal::char_traits<std::remove_pointer_t<std::remove_all_extents_t<stringType>>>::length(valueToFind);
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ value_type_new::npos };
-				for (size_type x = position; x < getDerivedType().sizeVal; ++x) {
-					bool didWeFindOne{ false };
-					for (size_type y = 0; y < sizeValNew; ++y) {
-						if (valueToFind[y] == getDerivedType().dataVal[x]) {
-							didWeFindOne = true;
-							break;
-						}
-					}
-					if (!didWeFindOne) {
-						return x;
-					}
-				}
-				return currentHighestIndex;
-			} else {
-				auto sizeValNew = valueToFind.size();
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					return value_type_new::npos;
-				}
-				size_type currentHighestIndex{ value_type_new::npos };
-				for (size_type x = position; x < getDerivedType().sizeVal; ++x) {
-					bool didWeFindOne{ false };
-					for (size_type y = 0; y < sizeValNew; ++y) {
-						if (valueToFind[y] == getDerivedType().dataVal[x]) {
-							didWeFindOne = true;
-							break;
-						}
-					}
-					if (!didWeFindOne) {
-						return x;
-					}
-				}
-				return currentHighestIndex;
-			}
-		}
-
-		template<jsonifier_internal::searchable_string_value stringType> inline size_type find(stringType valueToFind, size_type position = 0) const {
-			typename value_type_new::size_type returnValue{};
-			if constexpr (std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> || std::same_as<jsonifier_internal::ref_unwrap<stringType>, value_type> ||
-				std::same_as<jsonifier_internal::ref_unwrap<stringType>, char>) {
-				if (getDerivedType().sizeVal && position < getDerivedType().sizeVal) {
-					returnValue = jsonifier_internal::findSingleCharacter(getDerivedType().dataVal, getDerivedType().sizeVal, valueToFind);
-				} else {
-					returnValue = value_type_new::npos;
-				}
-			} else if constexpr (std::is_pointer_v<stringType> || std::is_array_v<stringType>) {
-				auto sizeValNew = jsonifier_internal::char_traits<std::remove_pointer_t<std::remove_all_extents_t<stringType>>>::length(valueToFind);
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					returnValue = value_type_new::npos;
-				}
-				auto firstVal = valueToFind[0];
-				int64_t currentIndex{ static_cast<int64_t>(position) };
-				while (currentIndex < static_cast<int64_t>(getDerivedType().sizeVal) && returnValue != value_type_new::npos) {
-					if (auto newIndex = jsonifier_internal::findSingleCharacter(getDerivedType().dataVal + currentIndex, getDerivedType().sizeVal - currentIndex, firstVal);
-						newIndex != value_type_new::npos) {
-						bool doWeBreak{ false };
-						if (currentIndex + sizeValNew <= getDerivedType().sizeVal) {
-							if (memcmp(valueToFind, getDerivedType().dataVal + currentIndex, sizeValNew) == 0) {
-								doWeBreak = true;
-							}
-						} else {
-							returnValue = value_type_new::npos;
-							break;
-						}
-						if (doWeBreak) {
-							returnValue = currentIndex;
-							break;
-						}
-						if (newIndex == value_type_new::npos) {
-							returnValue = value_type_new::npos;
-							break;
-						} else if (!newIndex) {
-							++currentIndex;
-						} else {
-							currentIndex += newIndex;
-						}
-					} else {
-						++currentIndex;
-					}
-				}
-			} else {
-				auto sizeValNew = valueToFind.size();
-				if (getDerivedType().sizeVal == 0 || sizeValNew == 0 || position >= getDerivedType().sizeVal) {
-					returnValue = value_type_new::npos;
-				}
-				auto firstVal = valueToFind[0];
-				int64_t currentIndex{ static_cast<int64_t>(position) };
-				while (currentIndex < static_cast<int64_t>(getDerivedType().sizeVal) && returnValue != value_type_new::npos) {
-					if (auto newIndex = jsonifier_internal::findSingleCharacter(getDerivedType().dataVal + currentIndex, getDerivedType().sizeVal - currentIndex, firstVal);
-						newIndex != value_type_new::npos) {
-						bool doWeBreak{ false };
-						if (currentIndex + sizeValNew <= getDerivedType().sizeVal) {
-							if (memcmp(valueToFind.data(), getDerivedType().dataVal + currentIndex, sizeValNew) == 0) {
-								doWeBreak = true;
-							}
-						} else {
-							returnValue = value_type_new::npos;
-							break;
-						}
-						if (doWeBreak) {
-							returnValue = currentIndex;
-							break;
-						}
-						if (newIndex == value_type_new::npos) {
-							returnValue = value_type_new::npos;
-							break;
-						} else if (!newIndex) {
-							++currentIndex;
-						} else {
-							currentIndex += newIndex;
-						}
-					} else {
-						++currentIndex;
-					}
-				}
-			}
-			return returnValue;
-		}
-	};
-
 	template<typename value_type> class string_view_base;
 
-	template<typename value_type_new> class string_base : public string_op_base<string_base<value_type_new>, value_type_new>,
-														  protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new> class string_base : protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier_internal::iterator<string_base::value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const string_base::value_type>;
+		using iterator				 = jsonifier_internal::iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
-		friend string_op_base<string_base, value_type>;
-
 		inline string_base() noexcept : capacityVal{}, sizeVal{}, dataVal{} {};
 
-		inline static size_type npos{ std::numeric_limits<size_type>::max() };
+		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		inline string_base& operator=(string_base&& other) noexcept {
 			if (this != &other) {
@@ -413,10 +190,11 @@ namespace jsonifier {
 			count = std::min(count, sizeVal - position);
 
 			string_base result{};
-			result.resize(count);
-			std::memcpy(result.dataVal, dataVal + position, count * sizeof(value_type));
-			result.getAlloc().construct(&result.dataVal[count], static_cast<value_type>('\0'));
-
+			if (count > 0) {
+				result.resize(count);
+				std::memcpy(result.dataVal, dataVal + position, count * sizeof(value_type));
+				result.getAlloc().construct(&result.dataVal[count], static_cast<value_type>('\0'));
+			}
 			return result;
 		}
 
@@ -466,6 +244,26 @@ namespace jsonifier {
 
 		inline const_reverse_iterator crend() const noexcept {
 			return rend();
+		}
+
+		template<typename... ArgTypes> size_type find(ArgTypes... args) const {
+			return this->operator std::basic_string_view<value_type>().find(args...);
+		}
+
+		template<typename... ArgTypes> size_type findLastOf(ArgTypes... args) const {
+			return this->operator std::basic_string_view<value_type>().find_last_of(args...);
+		}
+
+		template<typename... ArgTypes> size_type findFirstOf(ArgTypes... args) const {
+			return this->operator std::basic_string_view<value_type>().find_first_of(args...);
+		}
+
+		template<typename... ArgTypes> size_type findFirstNotOf(ArgTypes... args) const {
+			return this->operator std::basic_string_view<value_type>().find_first_not_of(args...);
+		}
+
+		template<typename... ArgTypes> size_type findLastNotOf(ArgTypes... args) const {
+			return this->operator std::basic_string_view<value_type>().find_last_not_of(args...);
 		}
 
 		inline void append(const string_base& sizeNew) {
@@ -572,7 +370,7 @@ namespace jsonifier {
 			return std::string_view{ data() + offSet, count };
 		}
 
-		template<typename value_type_newer = value_type> inline explicit operator std::enable_if_t<std::same_as<value_type_newer, char>, std::string_view>() const {
+		inline operator std::basic_string_view<value_type>() const {
 			return { dataVal, sizeVal };
 		}
 
@@ -658,26 +456,11 @@ namespace jsonifier {
 			return jsonifier_internal::jsonifier_core_internal::compare(rhs, data(), size());
 		}
 
-		template<uint64_t strLength> inline bool operator==(const value_type (&other)[strLength]) const {
-			if ((strLength - 1) != size()) {
-				return false;
-			}
-			return jsonifier_internal::jsonifier_core_internal::compare(other, data(), size());
-		}
-
 		template<jsonifier_internal::string_t value_type_newer> inline friend bool operator==(const string_base& lhs, const value_type_newer& rhs) {
 			if (rhs.size() != lhs.size()) {
 				return false;
 			}
 			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
-		}
-
-		template<typename value_type_newer> inline friend bool operator==(const value_type_newer* lhs, const string_base& rhs) {
-			auto lhsSize = traits_type::length(lhs);
-			if (rhs.size() != lhsSize) {
-				return false;
-			}
-			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs, lhsSize);
 		}
 
 		inline void swap(string_base& other) {
@@ -686,13 +469,13 @@ namespace jsonifier {
 			std::swap(dataVal, other.dataVal);
 		}
 
-		template<jsonifier_internal::string_t stringTypeNew> inline friend string_base operator+(const stringTypeNew& lhs, const string_base& rhs) {
+		template<jsonifier_internal::string_t string_typeNew> inline friend string_base operator+(const string_typeNew& lhs, const string_base& rhs) {
 			string_base newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<jsonifier_internal::string_t stringTypeNew> inline friend string_base operator+=(const stringTypeNew& lhs, const string_base& rhs) {
+		template<jsonifier_internal::string_t string_typeNew> inline friend string_base operator+=(const string_typeNew& lhs, const string_base& rhs) {
 			string_base newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
@@ -733,13 +516,13 @@ namespace jsonifier {
 			return *this;
 		}
 
-		template<jsonifier_internal::string_t stringTypeNew> inline string_base operator+(const stringTypeNew& rhs) noexcept {
+		template<jsonifier_internal::string_t string_typeNew> inline string_base operator+(const string_typeNew& rhs) noexcept {
 			string_base newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<jsonifier_internal::string_t stringTypeNew> inline string_base& operator+=(const stringTypeNew& rhs) noexcept {
+		template<jsonifier_internal::string_t string_typeNew> inline string_base& operator+=(const string_typeNew& rhs) noexcept {
 			append(rhs.data(), rhs.size());
 			return *this;
 		}

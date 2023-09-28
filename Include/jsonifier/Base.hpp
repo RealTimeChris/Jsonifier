@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/Concepts.hpp>
-#include <jsonifier/Core.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
 #include <jsonifier/RawJsonData.hpp>

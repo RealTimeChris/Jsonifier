@@ -90,6 +90,14 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> struct hash<jsonifier::string_view_base<value_type>> {
+		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value) const noexcept {
+			return fnv1aHash(value);
+		}
+
+		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value, uint64_t seed) const noexcept {
+			return fnv1aHash(value, seed);
+		}
+
 		constexpr uint64_t operator()(jsonifier::string_view_base<char> value) const noexcept {
 			return fnv1aHash(value);
 		}
@@ -97,12 +105,22 @@ namespace jsonifier_internal {
 		constexpr uint64_t operator()(jsonifier::string_view_base<char> value, uint64_t seed) const noexcept {
 			return fnv1aHash(value, seed);
 		}
+	};
 
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value) const noexcept {
+	template<typename value_type> struct hash<std::basic_string<value_type>> {
+		constexpr uint64_t operator()(std::basic_string<uint8_t> value) const noexcept {
 			return fnv1aHash(value);
 		}
 
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value, uint64_t seed) const noexcept {
+		constexpr uint64_t operator()(std::basic_string<uint8_t> value, uint64_t seed) const noexcept {
+			return fnv1aHash(value, seed);
+		}
+
+		constexpr uint64_t operator()(std::basic_string<char> value) const noexcept {
+			return fnv1aHash(value);
+		}
+
+		constexpr uint64_t operator()(std::basic_string<char> value, uint64_t seed) const noexcept {
 			return fnv1aHash(value, seed);
 		}
 	};
@@ -266,9 +284,9 @@ namespace jsonifier_internal {
 				h *= fnv64Prime;
 				return h;
 			}
-			using stringType							= ref_unwrap<value_type>;
-			const typename stringType::value_type* d0	= value.data();
-			const typename stringType::value_type* end7 = value.data() + n - 7;
+			using string_type							 = ref_unwrap<value_type>;
+			const typename string_type::value_type* d0	 = value.data();
+			const typename string_type::value_type* end7 = value.data() + n - 7;
 			for (; d0 < end7; d0 += 8) {
 				h ^= toUint64N<8>(d0);
 				h ^= h >> 33;
@@ -708,7 +726,7 @@ namespace jsonifier_internal {
 		constexpr seed_or_index() noexcept = default;
 	};
 
-	template<uint64_t m> struct pmh_tables : protected hash<jsonifier::string_view_base<uint8_t>> {
+	template<uint64_t m> struct pmh_tables {
 		constexpr pmh_tables() noexcept = default;
 		constexpr pmh_tables(uint64_t firstSeedNew, raw_array<seed_or_index, m> firstTableNew, raw_array<uint64_t, m> secondTableNew) {
 			firstSeed	= firstSeedNew;
@@ -718,18 +736,19 @@ namespace jsonifier_internal {
 		uint64_t firstSeed;
 		raw_array<seed_or_index, m> firstTable;
 		raw_array<uint64_t, m> secondTable;
-		using hasher = hash<jsonifier::string_view_base<uint8_t>>;
 
-		constexpr const hasher& getHasher() const {
-			return *this;
+		template<typename KeyType> using hasher = hash<KeyType>;
+
+		template<typename ValueType> constexpr const hasher<ValueType> getHasher() const {
+			return hasher<ValueType>{};
 		}
 
 		template<typename KeyType> constexpr uint64_t lookup(const KeyType& key) const noexcept {
-			auto const d = firstTable[getHasher()(key, static_cast<uint64_t>(firstSeed)) % m];
+			auto const d = firstTable[getHasher<KeyType>()(key, static_cast<uint64_t>(firstSeed)) % m];
 			if (!d.isSeed()) [[unlikely]] {
 				return static_cast<uint64_t>(d.value());
 			} else [[likely]] {
-				return secondTable[getHasher()(key, static_cast<uint64_t>(d.value())) % m];
+				return secondTable[getHasher<KeyType>()(key, static_cast<uint64_t>(d.value())) % m];
 			}
 		}
 	};

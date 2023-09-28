@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
 
 	#define blsr(value) _blsr_u64(value)
 

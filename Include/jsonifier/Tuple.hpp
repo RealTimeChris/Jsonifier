@@ -377,5 +377,5 @@ namespace jsonifier_internal {
 			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};
-	
+
 }

@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	constexpr uint64_t StepSize{ 256 };
 	constexpr uint64_t BytesPerStep{ StepSize / 8 };
@@ -132,8 +132,8 @@ namespace jsonifier_internal {
 		}
 
 		inline void convertWhitespaceToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
-				'\n', 112, 100, '\r', 100, 100 };
+			alignas(ALIGNMENT) static constexpr uint8_t arrayNew[32]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100,
+				113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
 			simd_base whitespaceTable{ arrayNew };
 			for (uint64_t x = 0; x < 8; ++x) {
 				addValues(valuesNew[x].shuffle(whitespaceTable) == valuesNew[x], x);
@@ -148,7 +148,8 @@ namespace jsonifier_internal {
 		};
 
 		inline void convertStructuralsToSimdBase(const simd_base* valuesNew) {
-			alignas(ALIGNMENT) uint8_t arrayNew[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			alignas(
+				ALIGNMENT) static constexpr uint8_t arrayNew[32]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
 			simd_base opTable{ arrayNew };
 			simd_base chars{ uint8_t{ 0x20 } };
 			for (uint64_t x = 0; x < 8; ++x) {

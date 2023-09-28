@@ -29,12 +29,6 @@
 #include <source_location>
 #include <cstring>
 
-#if defined(__linux__)
-	#if !defined(_tzcnt_u16)
-		#define _tzcnt_u16 __tzcnt_u16
-	#endif
-#endif
-
 namespace jsonifier {
 
 	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
@@ -44,8 +38,8 @@ namespace jsonifier {
 		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier_internal::iterator<vector::value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const vector::value_type>;
+		using iterator				 = jsonifier_internal::iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;

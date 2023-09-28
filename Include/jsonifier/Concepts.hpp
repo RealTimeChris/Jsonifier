@@ -32,13 +32,13 @@ namespace jsonifier {
 
 	class raw_json_data;
 
+	template<typename value_type> class vector;
+
 	template<typename value_type> struct core {};
 
 	template<typename value_type> struct array {
 		value_type parseValue;
 	};
-
-	template<typename value_type> class vector;
 
 	template<typename value_type> array(value_type) -> array<value_type>;
 
@@ -71,24 +71,26 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type>
-	concept stateless = std::is_empty_v<ref_unwrap<value_type>>;
+	concept stateless = std::is_empty_v<std::decay_t<value_type>>;
 
 	template<typename value_type>
-	concept map_subscriptable = requires(value_type value, typename value_type::key_type keyNew) {
-		{ value[keyNew] } -> std::same_as<typename value_type::mapped_type&>;
+	concept map_subscriptable = requires(value_type value) {
+		{ value[std::declval<typename value_type::key_type>()] } -> std::same_as<typename value_type::reference>;
+	} || requires(value_type value) {
+		{ value[std::declval<typename value_type::key_type>()] } -> std::same_as<typename value_type::const_reference>;
 	};
 
 	template<typename value_type>
-	concept vector_subscriptable = requires(value_type value, uint64_t index) {
-		{ value[index] } -> std::same_as<typename std::remove_reference_t<value_type>::reference>;
-	} || requires(value_type value, uint64_t index) {
-		{ value[index] } -> std::same_as<typename std::remove_reference_t<value_type>::const_reference>;
+	concept vector_subscriptable = requires(value_type value) {
+		{ value[std::declval<uint64_t>()] } -> std::same_as<typename std::remove_reference_t<std::decay_t<value_type>>::reference>;
+	} || requires(value_type value) {
+		{ value[std::declval<uint64_t>()] } -> std::same_as<typename std::remove_reference_t<std::decay_t<value_type>>::const_reference>;
 	};
 
 	template<typename value_type>
 	concept pair_t = requires(value_type value) {
-		{ value.first } -> std::same_as<typename value_type::first_type&>;
-		{ value.second } -> std::same_as<typename value_type::second_type&>;
+		{ value.first } -> std::same_as<typename value_type::first_type>;
+		{ value.second } -> std::same_as<typename value_type::second_type>;
 	};
 
 	template<typename value_type>
@@ -153,9 +155,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type>
-	concept string_t =
-		( has_substr<std::remove_const_t<value_type>> && has_data_and_size<std::remove_const_t<value_type>> && !std::same_as<char, std::remove_const_t<value_type>> ) ||
-		std::derived_from<value_type, std::string> || std::same_as<std::string, value_type>;
+	concept string_t = has_substr<std::remove_const_t<value_type>> && has_data_and_size<std::remove_const_t<value_type>> && !std::same_as<char, std::remove_const_t<value_type>> &&
+		vector_subscriptable<std::decay_t<value_type>>;
 
 	template<typename value_type>
 	concept map_t = requires(value_type data) {
@@ -164,8 +165,8 @@ namespace jsonifier_internal {
 	} && range<value_type> && map_subscriptable<value_type> && !string_t<value_type>;
 
 	template<typename value_type>
-	concept has_emplace_back = requires(value_type data, typename value_type::value_type&& valueNew) {
-		{ data.emplace_back(valueNew) } -> std::same_as<typename value_type::value_type&>;
+	concept has_emplace_back = requires(value_type data) {
+		{ data.emplace_back(std::declval<typename value_type::value_type&&>()) } -> std::same_as<typename value_type::value_type&>;
 	};
 
 	template<typename value_type>
@@ -176,8 +177,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename Container>
-	concept has_find = requires(Container c, const typename Container::key_type& val) {
-		{ c.find(val) };
+	concept has_find = requires(Container c) {
+		{ c.find(std::declval<const typename Container::key_type&>()) };
 	};
 
 	template<typename value_type>
@@ -204,9 +205,6 @@ namespace jsonifier_internal {
 
 	template<typename value_type>
 	concept jsonifier_t = requires { jsonifier::core<std::decay_t<value_type>>::parseValue; };
-
-	template<typename value_type>
-	concept complex_t = jsonifier_t<ref_unwrap<value_type>>;
 
 	struct empty_val {
 		static constexpr std::tuple<> parseValue{};
@@ -239,20 +237,18 @@ namespace jsonifier_internal {
 	concept enum_t = std::is_enum<value_type>::value;
 
 	template<typename value_type>
-	concept tuple_t = requires(value_type value) { std::tuple_size<value_type>::value; } && !complex_t<value_type> && !range<value_type>;
+	concept tuple_t = requires(value_type value) { std::tuple_size<value_type>::value; } && !range<value_type>;
 
 	template<typename value_type>
 	concept array_tuple_t = jsonifier_array_t<value_type> || tuple_t<ref_unwrap<value_type>>;
 
 	template<typename value_type>
-	concept array_t = ( !complex_t<value_type> && !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> &&
-						  has_emplace_back<value_type> )&&!jsonifier_array_t<value_type> &&
+	concept array_t = ( !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> && has_emplace_back<value_type> )&&!jsonifier_array_t<value_type> &&
 			!tuple_t<value_type> && !has_substr<value_type> && requires(value_type data) { typename value_type::value_type; } ||
 		is_specialization_v<value_type, jsonifier::vector>::value;
 
 	template<typename value_type>
-	concept raw_array_t = ( ( !complex_t<value_type> && !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> &&
-								!has_emplace_back<value_type> )&&!jsonifier_array_t<value_type> &&
+	concept raw_array_t = ( ( !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> && !has_emplace_back<value_type> )&&!jsonifier_array_t<value_type> &&
 							  !tuple_t<value_type> && !has_substr<value_type> && !has_resize<value_type> ) ||
 		std::is_array_v<value_type>;
 

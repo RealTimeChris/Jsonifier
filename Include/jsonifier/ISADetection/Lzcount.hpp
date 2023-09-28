@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
 	template<typename value_type> inline value_type lzCount(value_type value) {
 		if constexpr (sizeof(value_type) == 4) {
