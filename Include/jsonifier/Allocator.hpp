@@ -27,16 +27,16 @@
 #include <memory_resource>
 
 inline uint64_t findNextClosestMultiple(uint64_t number) {
-	if constexpr (ALIGNMENT == 0) {
+	if constexpr (JSONIFIER_ALIGNMENT == 0) {
 		return 0;
 	}
 
-	uint64_t remainder = number % ALIGNMENT;
+	uint64_t remainder = number % JSONIFIER_ALIGNMENT;
 	if (remainder == 0) {
 		return number;
 	}
 
-	uint64_t nextMultiple = number + (ALIGNMENT - remainder);
+	uint64_t nextMultiple = number + (JSONIFIER_ALIGNMENT - remainder);
 	return nextMultiple;
 }
 
@@ -53,12 +53,12 @@ namespace jsonifier_internal {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<value_type*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), ALIGNMENT));
+			return static_cast<value_type*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), JSONIFIER_ALIGNMENT));
 		}
 
 		inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, findNextClosestMultiple(n * sizeof(value_type)), ALIGNMENT);
+				allocator::deallocate_bytes(ptr, findNextClosestMultiple(n * sizeof(value_type)), JSONIFIER_ALIGNMENT);
 			}
 		}
 

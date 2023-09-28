@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/Concepts.hpp>
-#include <jsonifier/Core.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
 #include <jsonifier/RawJsonData.hpp>
@@ -48,26 +47,18 @@ namespace jsonifier_internal {
 
 	class serializer;
 
-	template<typename value_type> struct always_false : std::false_type {};
-
-	template<typename value_type> constexpr bool always_false_v = always_false<value_type>::value;
-
-	template<typename value_type> void printTypeInCompilationError(value_type&&) noexcept {
-		static_assert(always_false_v<value_type>, "Compilation failed because you failed to specialize the core<> template for the following class:");
-	}
-
 	template<typename value_type = void> struct hash {
 		static_assert(std::is_integral<value_type>::value || std::is_enum<value_type>::value, "hash only supports integral types, specialize for other types.");
 
-		constexpr std::size_t operator()(value_type const& value, std::size_t seed) const {
-			std::size_t key = seed ^ static_cast<std::size_t>(value);
-			key				= (~key) + (key << 21);
-			key				= key ^ (key >> 24);
-			key				= (key + (key << 3)) + (key << 8);
-			key				= key ^ (key >> 14);
-			key				= (key + (key << 2)) + (key << 4);
-			key				= key ^ (key >> 28);
-			key				= key + (key << 31);
+		constexpr size_t operator()(value_type const& value, size_t seed) const {
+			size_t key = seed ^ static_cast<size_t>(value);
+			key		   = (~key) + (key << 21);
+			key		   = key ^ (key >> 24);
+			key		   = (key + (key << 3)) + (key << 8);
+			key		   = key ^ (key >> 14);
+			key		   = (key + (key << 2)) + (key << 4);
+			key		   = key ^ (key >> 28);
+			key		   = key + (key << 31);
 			return key;
 		}
 	};
@@ -80,11 +71,11 @@ namespace jsonifier_internal {
 
 	template<typename... Args> constexpr bool falseV = false_t<Args...>::value;
 
-	template<std::size_t strLength, typename value_type> class string_literal {
+	template<size_t strLength, typename value_type> class string_literal {
 	  public:
-		static constexpr std::size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
+		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
-		constexpr string_literal() noexcept = default;
+		constexpr string_literal() = default;
 
 		constexpr string_literal(const value_type (&str)[strLength]) {
 			std::copy(str, str + strLength, string);
@@ -102,7 +93,7 @@ namespace jsonifier_internal {
 			return string + sizeVal;
 		}
 
-		constexpr std::size_t size() const {
+		constexpr size_t size() const {
 			return sizeVal;
 		}
 
@@ -113,7 +104,7 @@ namespace jsonifier_internal {
 		value_type string[strLength];
 	};
 
-	template<std::size_t Count> constexpr auto stringLiteralFromView(const jsonifier::string_view_base<char>& str) {
+	template<size_t Count> constexpr auto stringLiteralFromView(const jsonifier::string_view_base<char>& str) {
 		constexpr string_literal<Count + 1, char> string{};
 		std::copy_n(str.data(), str.size(), string.string);
 		*(string.string + Count) = '\0';
@@ -126,17 +117,17 @@ namespace jsonifier_internal {
 
 	template<string_literal str> constexpr jsonifier::string_view Chars = chars_impl<str>::value;
 
-	template<typename = void, std::size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
-		return [](auto&& f) noexcept -> decltype(auto) {
-			return decltype(f)(f)(std::integral_constant<std::size_t, Indices>{}...);
+	template<typename = void, size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
+		return [](auto&& f) -> decltype(auto) {
+			return decltype(f)(f)(std::integral_constant<size_t, Indices>{}...);
 		};
 	}
 
-	template<std::size_t... Is> struct sequence {};
-	template<std::size_t Count, std::size_t... Is> struct gen_sequence : gen_sequence<Count - 1, Count - 1, Is...> {};
-	template<std::size_t... Is> struct gen_sequence<0, Is...> : sequence<Is...> {};
+	template<size_t... Is> struct sequence {};
+	template<size_t Count, size_t... Is> struct gen_sequence : gen_sequence<Count - 1, Count - 1, Is...> {};
+	template<size_t... Is> struct gen_sequence<0, Is...> : sequence<Is...> {};
 
-	template<typename value_type01, std::size_t size01, const jsonifier_internal::raw_array<value_type01, size01>& string01, typename value_type02, std::size_t size02>
+	template<typename value_type01, size_t size01, const jsonifier_internal::raw_array<value_type01, size01>& string01, typename value_type02, size_t size02>
 	constexpr auto concatArrays(const value_type02 (&string02)[size02]) {
 		jsonifier_internal::raw_array<char, string01.size() + size02> returnArray{};
 		std::copy(string01.data(), string01.data() + string01.size(), returnArray.data());
@@ -144,7 +135,7 @@ namespace jsonifier_internal {
 		return returnArray;
 	}
 
-	template<typename value_type01, const jsonifier::string_view_base<value_type01>& string01, typename value_type02, std::size_t size>
+	template<typename value_type01, const jsonifier::string_view_base<value_type01>& string01, typename value_type02, size_t size>
 	constexpr auto concatArrays(const value_type02 (&string02)[size]) {
 		jsonifier_internal::raw_array<char, string01.size() + size> returnArray{};
 		std::copy(string01.data(), string01.data() + string01.size(), returnArray.data());
@@ -160,11 +151,11 @@ namespace jsonifier_internal {
 		return returnArray;
 	}
 
-	template<std::size_t n> constexpr auto indexer() {
+	template<size_t n> constexpr auto indexer() {
 		return indexer(std::make_index_sequence<n>{});
 	}
 
-	template<std::size_t n, typename Func> constexpr auto forEach(Func&& f) {
+	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
 			(std::forward<ref_unwrap<Func>>(f)(i), ...);
 		});
@@ -176,7 +167,7 @@ namespace jsonifier_internal {
 
 	template<const jsonifier::string_view&... strings> constexpr jsonifier::string_view join() {
 		constexpr auto joinedArr = []() {
-			constexpr std::size_t len = (strings.size() + ... + 0);
+			constexpr size_t len = (strings.size() + ... + 0);
 			raw_array<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
@@ -241,27 +232,27 @@ namespace jsonifier_internal {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		inline stop_watch& operator=(stop_watch&& other) noexcept {
+		inline stop_watch& operator=(stop_watch&& other) {
 			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(stop_watch&& other) noexcept {
+		inline stop_watch(stop_watch&& other) {
 			*this = std::move(other);
 		}
 
-		inline stop_watch& operator=(const stop_watch& other) noexcept {
+		inline stop_watch& operator=(const stop_watch& other) {
 			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(const stop_watch& other) noexcept {
+		inline stop_watch(const stop_watch& other) {
 			*this = other;
 		}
 
-		inline bool hasTimeElapsed() noexcept {
+		inline bool hasTimeElapsed() {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
@@ -283,7 +274,7 @@ namespace jsonifier_internal {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		inline value_type totalTimeElapsed() noexcept {
+		inline value_type totalTimeElapsed() {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 

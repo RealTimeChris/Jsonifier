@@ -36,7 +36,7 @@ namespace jsonifier_internal {
 		first_type first;
 		second_type second;
 
-		constexpr pair() noexcept = default;
+		constexpr pair() = default;
 
 		template<typename FirstTypeNew, typename SecondTypeNew> constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
 			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {

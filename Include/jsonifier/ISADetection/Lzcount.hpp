@@ -25,17 +25,30 @@
 
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
+template<typename T> [[deprecated]] inline constexpr void print_type(T&& t, const char* msg = nullptr){};
+
+template<bool b, typename T> inline constexpr bool print_type_if_false(T&& t, const char* msg = nullptr) {
+	if constexpr (!b)
+		print_type(std::forward<T>(t));
+	return b;
+}
+
+#define STATIC_ASSERT(x, condition, msg) static_assert(print_type_if_false<condition>(x, msg), msg);
+
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
-	template<typename value_type> inline value_type lzCount(value_type value) {
+	template<typename value_type> constexpr value_type lzCount(value_type value) {
+		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+		STATIC_ASSERT(value, !std::is_integral_v<value_type>, "Input must be an integer type");
 		if constexpr (sizeof(value_type) == 4) {
-			return _lzcnt_u32(value);
+			return static_cast<value_type>(_lzcnt_u32(static_cast<std::uint32_t>(value)));
 		} else if constexpr (sizeof(value_type) == 8) {
-			return _lzcnt_u64(value);
+			return static_cast<value_type>(_lzcnt_u64(static_cast<std::uint64_t>(value)));
 		} else {
-			return _lzcnt_u64(value);
+			static_assert(sizeof(value_type) == 4 || sizeof(value_type) == 8, "Unsupported integer size");
+			return static_cast<value_type>(_lzcnt_u64(static_cast<std::uint64_t>(value)));
 		}
 	}
 
