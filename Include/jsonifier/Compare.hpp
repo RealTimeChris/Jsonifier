@@ -161,7 +161,6 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-
 		return std::numeric_limits<uint64_t>::max();
 	}
 
@@ -824,7 +823,6 @@ namespace jsonifier_internal {
 		if (target[0] == '\0') {
 			return std::numeric_limits<uint64_t>::max();
 		}
-
 		while (remainingBytes >= vecSize) {
 			__m128i currentVec = gatherValues128(str);
 			mask			   = _mm_movemask_epi8(_mm_cmpeq_epi8(currentVec, _mm_set1_epi8(target[0])));

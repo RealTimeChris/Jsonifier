@@ -97,6 +97,7 @@ namespace jsonifier_internal {
 		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value, uint64_t seed) const {
 			return fnv1aHash(value, seed);
 		}
+	};
 
 		constexpr uint64_t operator()(jsonifier::string_view_base<char> value) const {
 			return fnv1aHash(value);

@@ -267,7 +267,6 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<jsonifier_internal::string_t string_typeNew> inline string_base<value_type> operator+(const string_typeNew& rhs) {
 			string_base<value_type> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
