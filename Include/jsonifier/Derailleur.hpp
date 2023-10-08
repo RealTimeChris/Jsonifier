@@ -33,6 +33,8 @@ namespace jsonifier_internal {
 
 	template<bool printErrors> class derailleur {
 	  public:
+		using size_type = uint64_t;
+
 		template<uint8_t c> inline static bool checkForMatchClosed(structural_iterator& iter, std::source_location location = std::source_location::current()) {
 			if (iter == c) {
 				++iter;
@@ -74,7 +76,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipValue(structural_iterator& iter) noexcept {
+		inline static void skipValue(structural_iterator& iter) {
 			switch (**iter) {
 				case '{': {
 					skipObject(iter);
@@ -93,9 +95,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static size_t countArrayElements(structural_iterator iter) noexcept {
-			size_t currentDepth{ 1 };
-			size_t currentCount{ 1 };
+		inline static size_type countArrayElements(structural_iterator iter) {
+			size_type currentDepth{ 1 };
+			size_type currentCount{ 1 };
 			if (iter == ']') {
 				++iter;
 				return {};
@@ -129,9 +131,9 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		inline static void skipObject(structural_iterator& iter) noexcept {
+		inline static void skipObject(structural_iterator& iter) {
 			++iter;
-			uint64_t currentDepth{ 1 };
+			size_type currentDepth{ 1 };
 			if (iter == '}') {
 				++iter;
 				return;
@@ -156,9 +158,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipArray(structural_iterator& iter) noexcept {
+		inline static void skipArray(structural_iterator& iter) {
 			++iter;
-			uint64_t currentDepth{ 1 };
+			size_type currentDepth{ 1 };
 			if (iter == ']') {
 				++iter;
 				return;
@@ -185,12 +187,12 @@ namespace jsonifier_internal {
 
 		inline static bool isTypeType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
 		}
 
 		inline static bool isDigitType(uint8_t c) {
 			static constexpr uint8_t array01[]{ "0123456789-" };
-			return findSingleCharacter(array01, std::size(array01), c) != jsonifier::string::npos;
+			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
 		}
 
 		inline static jsonifier::string_view getValueType(uint8_t charToCheck) {

@@ -32,12 +32,12 @@
 
 namespace jsonifier_internal {
 
-	template<typename simd_base> class backslash_and_quote {
+	template<typename simd_base_internal> class backslash_and_quote {
 	  public:
 		static constexpr string_parsing_type bytesProcessed = BytesPerStep;
 
-		inline backslash_and_quote<simd_base> static copyAndFind(string_view_ptr source, string_buffer_ptr dest) {
-			simd_base values(source);
+		inline backslash_and_quote<simd_base_internal> static copyAndFind(string_view_ptr source, string_buffer_ptr dest) {
+			simd_base_internal values(source);
 			values.store(dest);
 			backslash_and_quote returnData{};
 			returnData.bsBits	 = { values == uint8_t{ '\\' } };
@@ -124,9 +124,9 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	inline string_buffer_ptr parsestring(string_view_ptr source, string_buffer_ptr dest, uint64_t maxLength) {
+	inline string_buffer_ptr parsestring(string_view_ptr source, string_buffer_ptr dest, int64_t maxLength) {
 		while (maxLength > 0) {
-			auto bsQuote = backslash_and_quote<simd_base_real>::copyAndFind(source, dest);
+			auto bsQuote = backslash_and_quote<simd_base<StepSize>>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
 			}
@@ -134,8 +134,8 @@ namespace jsonifier_internal {
 				auto bsDist			= bsQuote.backslashIndex();
 				uint8_t escape_char = source[bsDist + 1];
 				if (escape_char == 'u') {
-					source += bsDist;
 					maxLength -= bsDist;
+					source += bsDist;
 					dest += bsDist;
 					if (!handleUnicodeCodePoint(&source, &dest)) {
 						return nullptr;
@@ -146,14 +146,14 @@ namespace jsonifier_internal {
 						return nullptr;
 					}
 					dest[bsDist] = escapeResult;
-					maxLength -= bsDist + 2ULL;
+					maxLength -= bsDist + 1ULL;
 					source += bsDist + 2ULL;
 					dest += bsDist + 1ULL;
 				}
 			} else {
-				maxLength -= backslash_and_quote<simd_base_real>::bytesProcessed;
-				source += backslash_and_quote<simd_base_real>::bytesProcessed;
-				dest += backslash_and_quote<simd_base_real>::bytesProcessed;
+				maxLength -= backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				source += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				dest += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
 			}
 		}
 		return nullptr;

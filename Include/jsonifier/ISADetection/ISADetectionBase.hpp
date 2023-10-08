@@ -35,42 +35,79 @@
 	#pragma warning(disable : 5246)
 #endif
 
-#define CHECK_FOR_INSTRUCTION(x) (CPU_INSTRUCTIONS & x)
-
-#define JSONIFIER_POPCNT (1 << 0)
-#define JSONIFIER_LZCNT (1 << 1)
-#define JSONIFIER_BMI (1 << 2)
-#define JSONIFIER_AVX (1 << 3)
-#define JSONIFIER_AVX2 (1 << 4)
-#define JSONIFIER_AVX512 (1 << 5)
-
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	#define ALIGNMENT 64
-#elif CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-	#define ALIGNMENT 32
-#elif CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-	#define ALIGNMENT 16
-#else
-	#define ALIGNMENT 16
+#ifndef JSONIFIER_CPU_INSTRUCTIONS
+	#define JSONIFIER_CPU_INSTRUCTIONS 0
 #endif
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#ifndef JSONIFIER_CHECK_FOR_INSTRUCTION
+	#define JSONIFIER_CHECK_FOR_INSTRUCTION(x) (JSONIFIER_CPU_INSTRUCTIONS & x)
+#endif
+
+#ifndef JSONIFIER_POPCNT
+	#define JSONIFIER_POPCNT (1 << 0)
+#endif
+#ifndef JSONIFIER_LZCNT
+	#define JSONIFIER_LZCNT (1 << 1)
+#endif
+#ifndef JSONIFIER_BMI
+	#define JSONIFIER_BMI (1 << 2)
+#endif
+#ifndef JSONIFIER_AVX
+	#define JSONIFIER_AVX (1 << 3)
+#endif
+#ifndef JSONIFIER_AVX2
+	#define JSONIFIER_AVX2 (1 << 4)
+#endif
+#ifndef JSONIFIER_AVX512
+	#define JSONIFIER_AVX512 (1 << 5)
+#endif
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	#include <immintrin.h>
+
+using avx_int_512	= __m512i;
+using avx_int_256	= __m256i;
+using avx_int_128	= __m128i;
+using avx_float_512 = __m512;
+using avx_float_256 = __m256;
+using avx_float_128 = __m128;
+
+#else
+
+struct __m128x {
+	uint64_t values[2]{};
+};
+
+using avx_int_128 = __m128x;
+
 #endif
 
 #include <jsonifier/Concepts.hpp>
 #include <source_location>
 #include <iostream>
 #include <cstring>
+#include <cstdint>
 #include <bitset>
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+constexpr uint64_t JSONIFIER_ALIGNMENT{ 64 };
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+constexpr uint64_t JSONIFIER_ALIGNMENT{ 32 };
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
+#else
+constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
+#endif
 
 namespace jsonifier_internal {
 
-	using string_view_ptr	= const uint8_t*;
-	using structural_index	= string_view_ptr;
-	using string_buffer_ptr = uint8_t*;
+	template<uint64_t StepSize> struct simd_base_internal {};
 
-	template<uint64_t StepSize> struct simd_base {};
+	template<uint64_t size> using simd_base		  = simd_base_internal<size>;
+	template<uint64_t size> using simd_base_small = simd_base_internal<size / 2>;
+	using string_view_ptr						  = const uint8_t*;
+	using structural_index						  = string_view_ptr;
+	using string_buffer_ptr						  = uint8_t*;
 
 };

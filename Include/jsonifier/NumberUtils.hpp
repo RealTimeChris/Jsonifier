@@ -1020,11 +1020,11 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<jsonifier_internal::num_t value_type01> jsonifier::string_base<char> tostring(const value_type01& value) {
-		string_base<char> returnstring{};
+	template<typename value_type = char, jsonifier_internal::num_t value_type01> inline jsonifier::string_base<value_type> toString(const value_type01& value) {
+		string_base<value_type> returnstring{};
 		returnstring.resize(64);
 		auto newPtr = jsonifier_internal::toChars<value_type01>(returnstring.data(), value);
-		returnstring.resize(newPtr - returnstring.data());
+		returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		return returnstring;
 	}
 

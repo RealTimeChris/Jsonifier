@@ -168,16 +168,15 @@ namespace jsonifier_internal {
 				(void(tuple_elem<I, value_type>::value = get<I>(static_cast<u&&>(uNew))), ...);
 			}
 
-			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<unwrap_ref_decay_t<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<ref_unwrap<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
-			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<unwrap_ref_decay_t<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<ref_unwrap<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
-			template<typename f, typename... b>
-			constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<unwrap_ref_decay_t<decltype(func(static_cast<value_type&&>(b::value)))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<ref_unwrap<decltype(func(static_cast<value_type&&>(b::value)))>...> {
 				return { func(static_cast<value_type&&>(b::value))... };
 			}
 		};
@@ -190,30 +189,30 @@ namespace jsonifier_internal {
 
 			template<other_than<tuple> u>
 				requires stateless<u>
-			constexpr auto& operator=(u&&) noexcept {
+			constexpr auto& operator=(u&&) {
 				return *this;
 			}
 
 			auto operator<=>(tuple const&) const = default;
 			bool operator==(tuple const&) const	 = default;
 
-			template<typename f> constexpr void forEach(f&&) const noexcept {
+			template<typename f> constexpr void forEach(f&&) const {
 			}
 
-			template<typename f> constexpr bool any(f&&) const noexcept {
+			template<typename f> constexpr bool any(f&&) const {
 				return false;
 			}
 
-			template<typename f> constexpr bool all(f&&) const noexcept {
+			template<typename f> constexpr bool all(f&&) const {
 				return true;
 			}
 
-			template<typename f> constexpr auto map(f&&) const noexcept {
+			template<typename f> constexpr auto map(f&&) const {
 				return tuple{};
 			}
 		};
 
-		template<typename... value_types> tuple(value_types...) -> tuple<unwrap_ref_decay_t<value_types>...>;
+		template<typename... value_types> tuple(value_types...) -> tuple<ref_unwrap<value_types>...>;
 
 		template<size_t I, indexable tup> constexpr decltype(auto) get(tup&& tupNew) {
 			return static_cast<tup&&>(tupNew)[Tag<I>()];
@@ -260,20 +259,20 @@ namespace jsonifier_internal {
 		}
 
 		template<typename... value_types> constexpr auto makeTuple(value_types&&... args) {
-			return tuple<unwrap_ref_decay_t<value_types>...>{ static_cast<value_types&&>(args)... };
+			return tuple<ref_unwrap<value_types>...>{ static_cast<value_types&&>(args)... };
 		}
 
 		template<typename... value_types> constexpr auto copyTuple(value_types... args) {
 			return tuple<value_types...>{ args... };
 		}
 
-		template<typename... value_type> constexpr auto forwardAstuple(value_type&&... a) noexcept {
+		template<typename... value_type> constexpr auto forwardAstuple(value_type&&... a) {
 			return tuple<value_type&&...>{ static_cast<value_type&&>(a)... };
 		}
 	}
 
 	namespace tuplet::literals {
-		template<char... D> constexpr auto operator""_tag() noexcept -> Tag<sizetFromDigits<D...>()> {
+		template<char... D> constexpr auto operator""_tag() -> Tag<sizetFromDigits<D...>()> {
 			return {};
 		}
 	}
@@ -304,11 +303,16 @@ namespace jsonifier_internal {
 		return std::make_pair(tupleSplitImpl<0>(tupleNew, is), tupleSplitImpl<1>(tupleNew, is));
 	}
 
+	template<uint64_t index, uint64_t indexLimit> constexpr void shrinkIndexArrayHelper(auto& arrayNew01, auto& arrayNew02) {
+		if constexpr (index < indexLimit) {
+			arrayNew01[index] = arrayNew02[index];
+			shrinkIndexArrayHelper<index + 1, indexLimit>(arrayNew01, arrayNew02);
+		}
+	}
+
 	template<size_t N> constexpr auto shrinkIndexArray(auto& arrayNew) {
 		raw_array<size_t, N> res{};
-		for (size_t x = 0; x < N; ++x) {
-			res[x] = arrayNew[x];
-		}
+		shrinkIndexArrayHelper<0, N>(res, arrayNew);
 		return res;
 	}
 
@@ -330,12 +334,16 @@ namespace jsonifier_internal {
 		return mapTuple(f, tupleNew, std::make_index_sequence<N>{});
 	}
 
+	template<uint64_t index, uint64_t indexLimit> constexpr void groupSizesHelper(auto& diffs, auto& indices) {
+		if constexpr (index < indexLimit) {
+			diffs[index] = indices[index + 1] - indices[index];
+			groupSizesHelper<index + 1, indexLimit>(diffs, indices);
+		}
+	}
+
 	template<size_t n_groups> constexpr auto groupSizes(const raw_array<size_t, n_groups>& indices, size_t n_total) {
 		raw_array<size_t, n_groups> diffs;
-
-		for (size_t x = 0; x < n_groups - 1; ++x) {
-			diffs[x] = indices[x + 1] - indices[x];
-		}
+		groupSizesHelper<0, n_groups - 1>(diffs, indices);
 		diffs[n_groups - 1] = n_total - indices[n_groups - 1];
 		return diffs;
 	}
@@ -377,5 +385,5 @@ namespace jsonifier_internal {
 			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};
-	
+
 }

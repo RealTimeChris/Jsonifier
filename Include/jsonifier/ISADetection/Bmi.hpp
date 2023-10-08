@@ -27,11 +27,22 @@
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
 
-	#define blsr(value) _blsr_u64(value)
+	template<typename value_type> constexpr value_type blsr(value_type value) {
+		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+		if constexpr (sizeof(value_type) == 4) {
+			return _blsr_u32(value);
+		} else if constexpr (sizeof(value_type) == 8) {
+			return _blsr_u64(value);
+		} else {
+			static_assert(sizeof(value_type) == 4 || sizeof(value_type) == 8, "Unsupported size for blsr()");
+			return value;
+		}
+	}
 
-	template<typename value_type> inline value_type tzCount(value_type value) {
+	template<typename value_type> constexpr value_type tzCount(value_type value) {
+		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
 		if constexpr (sizeof(value_type) == 2) {
 			return _tzcnt_u16(value);
 		} else if constexpr (sizeof(value_type) == 4) {
@@ -39,9 +50,11 @@ namespace jsonifier_internal {
 		} else if constexpr (sizeof(value_type) == 8) {
 			return _tzcnt_u64(value);
 		} else {
-			return _tzcnt_u64(value);
+			static_assert(sizeof(value_type) == 2 || sizeof(value_type) == 4 || sizeof(value_type) == 8, "Unsupported size for tzCount()");
+			return value;
 		}
 	}
+
 
 #else
 

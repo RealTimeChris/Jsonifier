@@ -39,22 +39,22 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr raw_vector() noexcept = default;
+		constexpr raw_vector() = default;
 
 		constexpr raw_vector(size_type count, const auto& value) : dsize(count) {
 			for (size_type x = 0; x < N; ++x)
 				data[x] = value;
 		}
 
-		constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return data;
 		}
 
-		constexpr iterator end() noexcept {
+		constexpr iterator end() {
 			return data + dsize;
 		}
 
-		constexpr size_type size() const noexcept {
+		constexpr size_type size() const {
 			return dsize;
 		}
 
@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 			return data[index];
 		}
 
-		constexpr const_reference operator[](size_type index) const noexcept {
+		constexpr const_reference operator[](size_type index) const {
 			return data[index];
 		}
 
@@ -74,11 +74,11 @@ namespace jsonifier_internal {
 			return data[dsize - 1];
 		}
 
-		constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return data[0];
 		}
 
-		constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return data[dsize - 1];
 		}
 
@@ -99,8 +99,8 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		alignas(ALIGNMENT) value_type data[N] = {};
-		size_type dsize						  = 0;
+		alignas(JSONIFIER_ALIGNMENT) value_type data[N] = {};
+		size_type dsize									= 0;
 	};
 
 }

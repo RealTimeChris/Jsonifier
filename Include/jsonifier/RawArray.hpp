@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr raw_array() noexcept = default;
+		constexpr raw_array() = default;
 
 		template<size_t M> constexpr raw_array(value_type const (&init)[M]) : raw_array(init, std::make_index_sequence<N>()) {
 			static_assert(M >= N);
@@ -51,27 +51,27 @@ namespace jsonifier_internal {
 			}
 		}
 
-		constexpr iterator begin() noexcept {
+		constexpr iterator begin() {
 			return dataVal;
 		}
 
-		constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const {
 			return dataVal;
 		}
 
-		constexpr iterator end() noexcept {
+		constexpr iterator end() {
 			return dataVal + N;
 		}
 
-		constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const {
 			return dataVal + N;
 		}
 
-		constexpr size_type size() const noexcept {
+		constexpr size_type size() const {
 			return N;
 		}
 
-		constexpr size_type maxSize() const noexcept {
+		constexpr size_type maxSize() const {
 			return N;
 		}
 
@@ -79,18 +79,18 @@ namespace jsonifier_internal {
 			return dataVal[index];
 		}
 
-		constexpr const_reference operator[](uint64_t index) const noexcept {
+		constexpr const_reference operator[](uint64_t index) const {
 			return dataVal[index];
 		}
 
-		constexpr reference at(uint64_t index) noexcept {
+		constexpr reference at(uint64_t index) {
 			if (index > N) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		constexpr const_reference at(uint64_t index) const noexcept {
+		constexpr const_reference at(uint64_t index) const {
 			if (index > N) {
 				std::abort();
 			}
@@ -101,7 +101,7 @@ namespace jsonifier_internal {
 			return dataVal[0];
 		}
 
-		constexpr const_reference front() const noexcept {
+		constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
@@ -109,15 +109,15 @@ namespace jsonifier_internal {
 			return dataVal[N - 1];
 		}
 
-		constexpr const_reference back() const noexcept {
+		constexpr const_reference back() const {
 			return dataVal[N - 1];
 		}
 
-		constexpr value_type* data() noexcept {
+		constexpr value_type* data() {
 			return dataVal;
 		}
 
-		constexpr const value_type* data() const noexcept {
+		constexpr const value_type* data() const {
 			return dataVal;
 		}
 
@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		alignas(ALIGNMENT) value_type dataVal[N]{};
+		alignas(JSONIFIER_ALIGNMENT) value_type dataVal[N]{};
 
 		template<size_t M, size_t... I> constexpr raw_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}

@@ -37,7 +37,7 @@ namespace jsonifier_internal {
 	static thread_local jsonifier::string_base<char> currentKeyBuffer{};
 
 	template<bool printErrors, bool excludeKeys, bool_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			value = parseBool(*iter);
 			++iter;
 			return;
@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, num_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			parseNumber(value, *iter);
 			++iter;
 			return;
@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, enum_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			auto newValue	 = static_cast<int64_t>(value);
 			auto newValueOld = static_cast<int64_t>(value);
 			parseNumber(newValue, *iter);
@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, unique_ptr_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			value = std::make_unique<typename value_type::element_type>();
 			parse<printErrors, excludeKeys>::op(*value, iter);
 			return;
@@ -73,13 +73,13 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, raw_json_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			switch (**iter) {
 				case '"': {
 					auto newPtr = *iter + 1;
 					derailleur<printErrors>::skipValue(iter);
-					uint64_t sizeNew = static_cast<uint64_t>(*iter - newPtr) - 1;
-					if (static_cast<int64_t>(sizeNew) > 0) {
+					int64_t sizeNew = *iter - newPtr - 1;
+					if (sizeNew > 0) {
 						value.resize(sizeNew);
 						std::memcpy(value.data(), newPtr, sizeNew);
 					}
@@ -100,27 +100,28 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, string_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (derailleur<printErrors>::template checkForMatchOpen<'n'>(iter)) [[unlikely]] {
 				++iter;
 				return;
 			}
-			auto newPtr = *iter;
-			++iter;
-			int64_t sizeNew = *iter - newPtr;
-			auto newerSize	= static_cast<uint64_t>(sizeNew + (BytesPerStep - (sizeNew % BytesPerStep)));
-			currentStringBuffer.resize(newerSize * 2ULL);
-			auto newerPtr = parsestring((newPtr) + 1, currentStringBuffer.data(), newerSize);
+			auto newPtr = iter;
+			if (!derailleur<printErrors>::template checkForMatchClosed<'"'>(iter)) [[unlikely]] {
+				return;
+			}
+			int64_t sizeNew = *iter - *newPtr;
+			currentStringBuffer.resize(sizeNew);
+			auto newerPtr = parsestring((*newPtr) + 1, currentStringBuffer.data(), newPtr.getRemainingLength());
 			if (newerPtr) {
-				newerSize = static_cast<uint64_t>(newerPtr - currentStringBuffer.data());
-				value.resize(newerSize);
-				std::memcpy(value.data(), currentStringBuffer.data(), newerSize);
+				sizeNew = static_cast<uint64_t>(newerPtr - currentStringBuffer.data());
+				value.resize(sizeNew);
+				std::memcpy(value.data(), currentStringBuffer.data(), sizeNew);
 			}
 		}
 	};
 
 	template<bool printErrors, bool excludeKeys, char_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			auto newPtr = *iter;
 			value		= static_cast<value_type>(*(newPtr + 1));
 			++iter;
@@ -128,14 +129,14 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, raw_array_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 				return;
 			}
 			if (derailleur<printErrors>::template checkForMatchOpen<']'>(iter)) [[unlikely]] {
 				return;
 			}
-			const auto n = std::min(value.size(), derailleur<printErrors>::countArrayElements(iter));
+			const auto n = std::min(static_cast<uint64_t>(value.size()), derailleur<printErrors>::countArrayElements(iter));
 
 			auto valueIter = value.begin();
 
@@ -155,8 +156,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<bool printErrors, bool excludeKeys, array_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+	template<bool printErrors, bool excludeKeys, vector_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 				return;
 			}
@@ -196,7 +197,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, array_tuple_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'['>(iter)) {
 				return;
 			}
@@ -231,7 +232,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, bool excludeKeys, object_t value_type> struct parse_impl<printErrors, excludeKeys, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 				return;
 			}
@@ -289,7 +290,7 @@ namespace jsonifier_internal {
 	};
 
 	template<bool printErrors, object_t value_type> struct parse_impl<printErrors, true, value_type> {
-		static void op(value_type&& value, structural_iterator& iter) {
+		inline static void op(value_type&& value, structural_iterator& iter) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 				return;
 			}
@@ -350,7 +351,7 @@ namespace jsonifier_internal {
 			}
 		};
 
-		template<has_find KeyType> static void op(value_type&& value, structural_iterator& iter, const KeyType& excludedKeys) {
+		template<has_find KeyType> inline static void op(value_type&& value, structural_iterator& iter, const KeyType& excludedKeys) {
 			if (!derailleur<printErrors>::template checkForMatchClosed<'{'>(iter)) {
 				return;
 			}

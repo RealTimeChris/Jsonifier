@@ -22,12 +22,14 @@
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
+<<<<<<<< HEAD:Include/jsonifier/Core.hpp
+========
 
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
 namespace jsonifier_internal {
 
-#if CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
 
 	#define popcnt(value) _mm_popcnt_u64(value)
 
@@ -47,3 +49,4 @@ namespace jsonifier_internal {
 #endif
 
 }
+>>>>>>>> dev:Include/jsonifier/ISADetection/Popcount.hpp

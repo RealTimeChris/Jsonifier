@@ -74,15 +74,17 @@ namespace jsonifier_internal {
 	  protected:
 		jsonifier::string_base<uint8_t> string{};
 		simd_string_reader section{};
+		int64_t originalLength{};
 
 		template<typename value_type> inline void reset(value_type&& stringNew) {
 			string.resize(stringNew.size());
+			originalLength = stringNew.size();
 			std::memcpy(string.data(), stringNew.data(), stringNew.size());
 			section.reset(string);
 		}
 
-		inline structural_iterator begin() noexcept {
-			return structural_iterator{ section.getStructurals(), section.getStringView() };
+		inline structural_iterator begin() {
+			return structural_iterator{ section.getStructurals(), originalLength };
 		}
 	};
 };

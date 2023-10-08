@@ -32,11 +32,11 @@ namespace jsonifier_internal {
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type		= value_type_new;
-		using difference_type	= ptrdiff_t;
 		using reference			= value_type&;
 		using pointer			= value_type*;
+		using difference_type	= ptrdiff_t;
 
-		constexpr iterator(pointer pointerNew) noexcept : value{ pointerNew } {};
+		constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
 
 		constexpr reference operator*() const {
 			return *value;
@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator operator++(int32_t) {
-			iterator temp = *this;
+			iterator temp{ *this };
 			++*this;
 			return temp;
 		}
@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator operator--(int32_t) {
-			iterator temp = *this;
+			iterator temp{ *this };
 			--*this;
 			return temp;
 		}
@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator operator+(const difference_type iter) const {
-			iterator temp = *this;
+			iterator temp{ *this };
 			temp += iter;
 			return temp;
 		}
@@ -84,7 +84,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator operator-(const difference_type iter) const {
-			iterator temp = *this;
+			iterator temp{ *this };
 			temp -= iter;
 			return temp;
 		}
