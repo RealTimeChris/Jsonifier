@@ -34,6 +34,7 @@
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/JsonifierCore.hpp>
+#include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/HashMap.hpp>

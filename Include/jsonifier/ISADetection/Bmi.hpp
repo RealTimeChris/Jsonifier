@@ -29,8 +29,7 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
 
-	template<typename value_type> constexpr value_type blsr(value_type value) {
-		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+	template<jsonifier::concepts::integer_t value_type> constexpr value_type blsr(value_type value) {
 		if constexpr (sizeof(value_type) == 4) {
 			return _blsr_u32(value);
 		} else if constexpr (sizeof(value_type) == 8) {
@@ -41,8 +40,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> constexpr value_type tzCount(value_type value) {
-		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+	template<jsonifier::concepts::integer_t value_type> constexpr value_type tzCount(value_type value) {
 		if constexpr (sizeof(value_type) == 2) {
 			return _tzcnt_u16(value);
 		} else if constexpr (sizeof(value_type) == 4) {
@@ -55,10 +53,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-
 #else
 
-	inline uint64_t blsr(uint64_t value) {
+	template<jsonifier::concepts::integer_t value_type> inline value_type blsr(value_type value) {
 		if (value == 0) {
 			return 0;
 		}
@@ -66,7 +63,7 @@ namespace jsonifier_internal {
 		return value & (value - 1);
 	}
 
-	template<integer_t value_type> inline value_type tzCount(value_type value) {
+	template<jsonifier::concepts::integer_t value_type> inline value_type tzCount(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

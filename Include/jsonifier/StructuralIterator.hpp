@@ -31,23 +31,37 @@ namespace jsonifier_internal {
 	class structural_iterator {
 	  public:
 		using iterator_category = std::forward_iterator_tag;
-		using value_type		= string_view_ptr;
-		using pointer			= value_type*;
+		using value_type		= uint8_t;
+		using difference_type	= std::ptrdiff_t;
+		using pointer			= string_view_ptr*;
+		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		inline structural_iterator(pointer rootIndexNew, size_type originalLength) {
+		inline structural_iterator() noexcept = default;
+
+		inline structural_iterator(structural_index* rootIndexNew, size_type originalLength) {
 			stringLength = originalLength;
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
 		inline value_type operator*() const {
+			return **currentIndex;
+		}
+
+		inline string_view_ptr operator->() {
 			return *currentIndex;
 		}
 
 		inline structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
+		}
+
+		inline structural_iterator operator++(int32_t) {
+			structural_iterator oldIter{ *this };
+			++(*this);
+			return oldIter;
 		}
 
 		inline size_type getCurrentIndex() const {
@@ -66,7 +80,7 @@ namespace jsonifier_internal {
 			if (checkForstringOverRun()) {
 				return false;
 			}
-			return ***this == other;
+			return **currentIndex == other;
 		}
 
 	  protected:

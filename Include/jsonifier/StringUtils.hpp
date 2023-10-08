@@ -21,7 +21,7 @@
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
-/// Most of the code in this header was sampled fromSimdjson - https://github.com/simdjson
+/// Most of the code in this header was sampled from simdjson - https://github.com/simdjson
 #pragma once
 
 #include <codecvt>
@@ -124,9 +124,9 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	inline string_buffer_ptr parsestring(string_view_ptr source, string_buffer_ptr dest, int64_t maxLength) {
+	inline string_buffer_ptr parseString(string_view_ptr source, string_buffer_ptr dest, uint64_t maxLength) {
 		while (maxLength > 0) {
-			auto bsQuote = backslash_and_quote<simd_base<StepSize>>::copyAndFind(source, dest);
+			auto bsQuote = backslash_and_quote<simd_base>::copyAndFind(source, dest);
 			if (bsQuote.hasQuoteFirst()) {
 				return dest + bsQuote.quoteIndex();
 			}
@@ -146,14 +146,14 @@ namespace jsonifier_internal {
 						return nullptr;
 					}
 					dest[bsDist] = escapeResult;
-					maxLength -= bsDist + 1ULL;
+					maxLength -= bsDist + 2ULL;
 					source += bsDist + 2ULL;
 					dest += bsDist + 1ULL;
 				}
 			} else {
-				maxLength -= backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
-				source += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
-				dest += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				maxLength -= backslash_and_quote<simd_base>::bytesProcessed;
+				source += backslash_and_quote<simd_base>::bytesProcessed;
+				dest += backslash_and_quote<simd_base>::bytesProcessed;
 			}
 		}
 		return nullptr;

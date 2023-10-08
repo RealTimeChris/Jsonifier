@@ -26,21 +26,21 @@
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
 #include <memory_resource>
 
-inline uint64_t findNextClosestMultiple(uint64_t number) {
-	if constexpr (JSONIFIER_ALIGNMENT == 0) {
-		return 0;
-	}
-
-	uint64_t remainder = number % JSONIFIER_ALIGNMENT;
-	if (remainder == 0) {
-		return number;
-	}
-
-	uint64_t nextMultiple = number + (JSONIFIER_ALIGNMENT - remainder);
-	return nextMultiple;
-}
-
 namespace jsonifier_internal {
+
+	inline uint64_t findNextClosestMultiple(uint64_t number) {
+		if constexpr (JsonifierAlignment == 0) {
+			return 0;
+		}
+
+		uint64_t remainder = number % JsonifierAlignment;
+		if (remainder == 0) {
+			return number;
+		}
+
+		uint64_t nextMultiple = number + (JsonifierAlignment - remainder);
+		return nextMultiple;
+	}
 
 	template<typename value_type_new> class aligned_allocator : public std::pmr::polymorphic_allocator<value_type_new> {
 	  public:
@@ -53,12 +53,12 @@ namespace jsonifier_internal {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<value_type*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), JSONIFIER_ALIGNMENT));
+			return static_cast<value_type*>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), JsonifierAlignment));
 		}
 
 		inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, findNextClosestMultiple(n * sizeof(value_type)), JSONIFIER_ALIGNMENT);
+				allocator::deallocate_bytes(ptr, findNextClosestMultiple(n * sizeof(value_type)), JsonifierAlignment);
 			}
 		}
 
@@ -89,6 +89,10 @@ namespace jsonifier_internal {
 
 		template<typename... Args> inline void construct(pointer ptr, Args&&... args) {
 			allocator_traits::construct(*this, ptr, std::forward<Args>(args)...);
+		}
+
+		inline size_type maxSize() {
+			return allocator_traits::max_size(*this);
 		}
 
 		inline void destroy(pointer ptr) {

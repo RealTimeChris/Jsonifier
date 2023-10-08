@@ -327,12 +327,11 @@ namespace jsonifier {
 				return;
 			}
 
-			auto oldCapacity  = capacityVal;
-			capacityVal		  = sizeVal;
-			pointer newValues = getAlloc().allocate(capacityVal);
-			std::uninitialized_move(dataVal, dataVal + sizeVal, newValues);
-			getAlloc().deallocate(dataVal, oldCapacity);
-			dataVal = newValues;
+			vector<value_type> newVector{};
+			newVector.reserve(sizeVal);
+			std::uninitialized_move(dataVal, dataVal + sizeVal, newVector.data());
+			newVector.sizeVal = sizeVal;
+			swap(newVector);
 		}
 
 		inline void resize(size_type sizeNew) {
@@ -350,9 +349,9 @@ namespace jsonifier {
 					}
 					capacityVal = sizeNew;
 					dataVal		= newPtr;
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
+					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				} else if (sizeNew > sizeVal) {
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
+					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				} else if (sizeNew < sizeVal) {
 					std::destroy(dataVal + sizeNew, dataVal + sizeVal);
 				}

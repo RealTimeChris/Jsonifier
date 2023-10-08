@@ -90,24 +90,52 @@ using avx_int_128 = __m128x;
 #include <cstdint>
 #include <bitset>
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 64 };
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 32 };
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
-#else
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
-#endif
-
 namespace jsonifier_internal {
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+
+	constexpr uint64_t JsonifierAlignment{ 64 };
+	constexpr uint64_t StepSize{ 512 };
+	constexpr uint64_t BytesPerStep{ StepSize / 8 };
+	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
+	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
+	using string_parsing_type = uint64_t;
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+
+	constexpr uint64_t JsonifierAlignment{ 32 };
+	constexpr uint64_t StepSize{ 256 };
+	constexpr uint64_t BytesPerStep{ StepSize / 8 };
+	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
+	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
+	using string_parsing_type = uint32_t;
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+
+	constexpr uint64_t JsonifierAlignment{ 16 };
+	constexpr uint64_t StepSize{ 128 };
+	constexpr uint64_t BytesPerStep{ StepSize / 8 };
+	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
+	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
+	using string_parsing_type = uint16_t;
+
+#else
+
+	constexpr uint64_t JsonifierAlignment{ 16 };
+	constexpr uint64_t StepSize{ 128 };
+	constexpr uint64_t BytesPerStep{ StepSize / 8 };
+	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
+	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
+	using string_parsing_type = uint16_t;
+
+#endif
 
 	template<uint64_t StepSize> struct simd_base_internal {};
 
-	template<uint64_t size> using simd_base		  = simd_base_internal<size>;
-	template<uint64_t size> using simd_base_small = simd_base_internal<size / 2>;
-	using string_view_ptr						  = const uint8_t*;
-	using structural_index						  = string_view_ptr;
-	using string_buffer_ptr						  = uint8_t*;
+	using simd_base			= simd_base_internal<StepSize>;
+	using simd_base_small	= simd_base_internal<StepSize / 2>;
+	using string_view_ptr	= const uint8_t*;
+	using structural_index	= string_view_ptr;
+	using string_buffer_ptr = uint8_t*;
 
 };

@@ -29,8 +29,7 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
-	template<typename value_type> constexpr value_type lzCount(value_type value) {
-		static_assert(std::is_integral_v<value_type>, "Input must be an integer type");
+	template<jsonifier::concepts::integer_t value_type> constexpr value_type lzCount(value_type value) {
 		if constexpr (sizeof(value_type) == 4) {
 			return static_cast<value_type>(_lzcnt_u32(static_cast<std::uint32_t>(value)));
 		} else if constexpr (sizeof(value_type) == 8) {
@@ -43,7 +42,7 @@ namespace jsonifier_internal {
 
 #else
 
-	template<typename value_type> inline value_type lzCount(value_type value) {
+	template<jsonifier::concepts::integer_t value_type> inline value_type lzCount(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

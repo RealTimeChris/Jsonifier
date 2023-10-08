@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 
 		template<size_t N> using tag_range = std::make_index_sequence<N>;
 
-		template<typename tup> using BaseListT = typename ref_unwrap<tup>::base_list;
+		template<typename tup> using BaseListT = typename std::decay_t<tup>::base_list;
 
 		template<typename... value_type> struct tuple;
 
@@ -59,33 +59,33 @@ namespace jsonifier_internal {
 		};
 
 		template<size_t I, typename value_type> struct tuple_elem {
-			inline static value_type declElem(Tag<I>);
+			inline static value_type declElem(jsonifier::concepts::Tag<I>);
 			using type = value_type;
 
 			value_type value;
 
-			constexpr decltype(auto) operator[](Tag<I>) & {
+			constexpr decltype(auto) operator[](jsonifier::concepts::Tag<I>) & {
 				return (value);
 			}
 
-			constexpr decltype(auto) operator[](Tag<I>) const& {
+			constexpr decltype(auto) operator[](jsonifier::concepts::Tag<I>) const& {
 				return (value);
 			}
 
-			constexpr decltype(auto) operator[](Tag<I>) && {
+			constexpr decltype(auto) operator[](jsonifier::concepts::Tag<I>) && {
 				return (std::move(*this).value);
 			}
 			auto operator<=>(tuple_elem const&) const = default;
 			bool operator==(tuple_elem const&) const  = default;
 
 			constexpr auto operator<=>(tuple_elem const& other) const noexcept(noexcept(value <=> other.value))
-				requires(std::is_reference_v<value_type> && ordered<value_type>)
+				requires(std::is_reference_v<value_type> && jsonifier::concepts::ordered<value_type>)
 			{
 				return value <=> other.value;
 			}
 
 			constexpr bool operator==(tuple_elem const& other) const noexcept(noexcept(value == other.value))
-				requires(std::is_reference_v<value_type> && equality_comparable<value_type>)
+				requires(std::is_reference_v<value_type> && jsonifier::concepts::equality_comparable<value_type>)
 			{
 				return value == other.value;
 			}
@@ -132,9 +132,9 @@ namespace jsonifier_internal {
 			using element_list = type_list<value_type...>;
 			using super::declElem;
 
-			template<other_than<tuple> u> constexpr auto& operator=(u&& tup) {
-				using tuple2 = ref_unwrap<u>;
-				if (base_list_tuple<tuple2>) {
+			template<jsonifier::concepts::other_than<tuple> u> constexpr auto& operator=(u&& tup) {
+				using tuple2 = std::decay_t<u>;
+				if (jsonifier::concepts::base_list_tuple<tuple2>) {
 					eqImpl(static_cast<u&&>(tup), base_list(), typename tuple2::base_list());
 				} else {
 					eqImpl(static_cast<u&&>(tup), tag_range<N>());
@@ -168,15 +168,16 @@ namespace jsonifier_internal {
 				(void(tuple_elem<I, value_type>::value = get<I>(static_cast<u&&>(uNew))), ...);
 			}
 
-			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<ref_unwrap<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<std::decay_t<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
-			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<ref_unwrap<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<std::decay_t<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
-			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<ref_unwrap<decltype(func(static_cast<value_type&&>(b::value)))>...> {
+			template<typename f, typename... b>
+			constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<std::decay_t<decltype(func(static_cast<value_type&&>(b::value)))>...> {
 				return { func(static_cast<value_type&&>(b::value))... };
 			}
 		};
@@ -187,8 +188,8 @@ namespace jsonifier_internal {
 			using base_list			  = type_list<>;
 			using element_list		  = type_list<>;
 
-			template<other_than<tuple> u>
-				requires stateless<u>
+			template<jsonifier::concepts::other_than<tuple> u>
+				requires jsonifier::concepts::stateless<u>
 			constexpr auto& operator=(u&&) {
 				return *this;
 			}
@@ -212,18 +213,18 @@ namespace jsonifier_internal {
 			}
 		};
 
-		template<typename... value_types> tuple(value_types...) -> tuple<ref_unwrap<value_types>...>;
+		template<typename... value_types> tuple(value_types...) -> tuple<std::decay_t<value_types>...>;
 
-		template<size_t I, indexable tup> constexpr decltype(auto) get(tup&& tupNew) {
-			return static_cast<tup&&>(tupNew)[Tag<I>()];
+		template<size_t I, jsonifier::concepts::indexable tup> constexpr decltype(auto) get(tup&& tupNew) {
+			return static_cast<tup&&>(tupNew)[jsonifier::concepts::Tag<I>()];
 		}
 
 		template<typename... value_type> constexpr tuple<value_type&...> tie(value_type&... object) {
 			return { object... };
 		}
 
-		template<typename f, base_list_tuple tup> constexpr decltype(auto) apply(f&& func, tup&& tupNew) {
-			return applyImpl(static_cast<f&&>(func), static_cast<tup&&>(tupNew), typename ref_unwrap<tup>::base_list());
+		template<typename f, jsonifier::concepts::base_list_tuple tup> constexpr decltype(auto) apply(f&& func, tup&& tupNew) {
+			return applyImpl(static_cast<f&&>(func), static_cast<tup&&>(tupNew), typename std::decay_t<tup>::base_list());
 		}
 		template<typename f, typename a, typename b> constexpr decltype(auto) apply(f&& func, pair<a, b>& pair) {
 			return static_cast<f&&>(func)(pair.first, pair.second);
@@ -235,7 +236,7 @@ namespace jsonifier_internal {
 			return static_cast<f&&>(func)(std::move(pair).first, std::move(pair).second);
 		}
 
-		template<base_list_tuple... value_type> constexpr auto tupleCat(value_type&&... ts) {
+		template<jsonifier::concepts::base_list_tuple... value_type> constexpr auto tupleCat(value_type&&... ts) {
 			if constexpr (sizeof...(value_type) == 0) {
 				return tuple<>();
 			} else {
@@ -249,7 +250,7 @@ namespace jsonifier_internal {
 #if TUPLET_CAT_BY_FORWARDING_TUPLE
 				using big_tuple = tuple<value_type&&...>;
 #else
-				using big_tuple = tuple<ref_unwrap<value_type>...>;
+				using big_tuple = tuple<std::decay_t<value_type>...>;
 #endif
 				using outer_bases	 = BaseListT<big_tuple>;
 				constexpr auto outer = getOuterBases(outer_bases{});
@@ -259,7 +260,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename... value_types> constexpr auto makeTuple(value_types&&... args) {
-			return tuple<ref_unwrap<value_types>...>{ static_cast<value_types&&>(args)... };
+			return tuple<std::decay_t<value_types>...>{ static_cast<value_types&&>(args)... };
 		}
 
 		template<typename... value_types> constexpr auto copyTuple(value_types... args) {
@@ -272,7 +273,7 @@ namespace jsonifier_internal {
 	}
 
 	namespace tuplet::literals {
-		template<char... D> constexpr auto operator""_tag() -> Tag<sizetFromDigits<D...>()> {
+		template<char... D> constexpr auto operator""_tag() -> jsonifier::concepts::Tag<sizetFromDigits<D...>()> {
 			return {};
 		}
 	}
@@ -283,7 +284,7 @@ namespace std {
 	template<typename... value_type> struct tuple_size<jsonifier_internal::tuplet::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuplet::tuple<value_type...>> {
-		using type = decltype(jsonifier_internal::tuplet::tuple<value_type...>::declElem(jsonifier_internal::Tag<I>()));
+		using type = decltype(jsonifier_internal::tuplet::tuple<value_type...>::declElem(jsonifier::concepts::Tag<I>()));
 	};
 
 	template<typename a, typename b> struct tuple_size<jsonifier_internal::pair<a, b>> : std::integral_constant<size_t, 2> {};
@@ -321,7 +322,7 @@ namespace jsonifier_internal {
 		raw_array<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
-			using value_type = ref_unwrap<std::tuple_element_t<I, tuple>>;
+			using value_type = std::decay_t<std::tuple_element_t<I, tuple>>;
 			if constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
 				indices[x++] = I - 1;
 			}
@@ -330,7 +331,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename Func, typename tuple> constexpr auto mapTuple(Func&& f, tuple&& tupleNew) {
-		constexpr auto N = std::tuple_size_v<ref_unwrap<tuple>>;
+		constexpr auto N = std::tuple_size_v<std::decay_t<tuple>>;
 		return mapTuple(f, tupleNew, std::make_index_sequence<N>{});
 	}
 

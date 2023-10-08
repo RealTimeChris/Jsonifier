@@ -29,14 +29,8 @@ namespace jsonifier_internal {
 
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-	constexpr uint64_t StepSize{ 128 };
-	constexpr uint64_t BytesPerStep{ StepSize / 8 };
-	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
-	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
-	using string_parsing_type = uint16_t;
-
 	template<typename value_type>
-	concept avx_t = std::same_as<ref_unwrap<value_type>, avx_int_128>;
+	concept avx_t = std::same_as<std::decay_t<value_type>, avx_int_128>;
 
 	inline uint64_t packUint64(uint8_t* arr) {
 		return (static_cast<uint64_t>(arr[7]) << 56) | (static_cast<uint64_t>(arr[6]) << 48) | (static_cast<uint64_t>(arr[5]) << 40) | (static_cast<uint64_t>(arr[4]) << 32) |
@@ -49,7 +43,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> inline avx_int_128 gatherValues128(const value_type* str) {
-		alignas(JSONIFIER_ALIGNMENT) avx_int_128 newArray{};
+		alignas(JsonifierAlignment) avx_int_128 newArray{};
 		packUint64Array(str, newArray);
 		return newArray;
 	}
@@ -285,16 +279,16 @@ namespace jsonifier_internal {
 			return notSi128(this->value);
 		}
 
-		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
+				alignas(JsonifierAlignment) static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
 				static const simd_base_internal whitespaceTable{ arrayNew };
 				addValues<index>(valuesNew[index].shuffle(whitespaceTable) == valuesNew[index]);
 				convertWhitespaceToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
 				static const simd_base_internal backslashes{ set1Epi8('\\') };
 				addValues<index>(valuesNew[index] == backslashes);
@@ -302,9 +296,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+				alignas(JsonifierAlignment) static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
 				static const simd_base_internal opTable{ arrayNew };
 				static const simd_base_internal chars{ uint8_t{ 0x20 } };
 				addValues<index>(valuesNew[index].shuffle(opTable) == (valuesNew[index] | chars));
@@ -312,7 +306,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertQuotesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertQuotesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
 				static const simd_base_internal quotes{ set1Epi8('"') };
 				addValues<index>(valuesNew[index] == quotes);
@@ -429,7 +423,7 @@ namespace jsonifier_internal {
 		avx_int_128 value{};
 	};
 
-	inline simd_base<StepSize> makeSimdBase(uint64_t value) {
+	inline simd_base makeSimdBase(uint64_t value) {
 		return set1Epi64x(value);
 	}
 

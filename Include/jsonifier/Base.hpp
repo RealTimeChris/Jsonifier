@@ -26,7 +26,6 @@
 #include <jsonifier/Concepts.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
-#include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
 
@@ -104,13 +103,6 @@ namespace jsonifier_internal {
 		value_type string[strLength];
 	};
 
-	template<size_t Count> constexpr auto stringLiteralFromView(const jsonifier::string_view_base<char>& str) {
-		constexpr string_literal<Count + 1, char> string{};
-		std::copy_n(str.data(), str.size(), string.string);
-		*(string.string + Count) = '\0';
-		return string;
-	}
-
 	template<string_literal str> struct chars_impl {
 		static constexpr jsonifier::string_view value{ str.string, jsonifier_internal::char_traits<char>::length(str.string) };
 	};
@@ -157,7 +149,7 @@ namespace jsonifier_internal {
 
 	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<ref_unwrap<Func>>(f)(i), ...);
+			(std::forward<std::decay_t<Func>>(f)(i), ...);
 		});
 	}
 
@@ -198,29 +190,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<ref_unwrap<mptr_t>&>()));
-}// namespace jsonifier_internal
+	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<std::decay_t<mptr_t>&>()));
 
-namespace jsonifier {
-
-	constexpr auto createArray(auto&&... args) {
-		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
-	}
-
-	constexpr auto createObject(auto&&... args) {
-		if constexpr (sizeof...(args) == 0) {
-			return object{ jsonifier_internal::tuplet::tuple{} };
-		} else {
-			return object{ jsonifier_internal::GroupBuilder<jsonifier_internal::ref_unwrap<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
-				jsonifier_internal::tuplet::copyTuple(args...)) };
-		}
-	}
-
-}// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	template<time_type value_type> class stop_watch {
+	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
@@ -283,5 +255,22 @@ namespace jsonifier_internal {
 		std::atomic<value_type> startTimeInTimeUnits{};
 	};
 
-	template<time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
+	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }// namespace jsonifier_internal
+
+namespace jsonifier {
+
+	constexpr auto createArray(auto&&... args) {
+		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
+	}
+
+	constexpr auto createObject(auto&&... args) {
+		if constexpr (sizeof...(args) == 0) {
+			return object{ jsonifier_internal::tuplet::tuple{} };
+		} else {
+			return object{ jsonifier_internal::GroupBuilder<std::decay_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
+				jsonifier_internal::tuplet::copyTuple(args...)) };
+		}
+	}
+
+}// namespace jsonifier

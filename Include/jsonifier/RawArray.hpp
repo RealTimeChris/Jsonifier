@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		alignas(JSONIFIER_ALIGNMENT) value_type dataVal[N]{};
+		alignas(JsonifierAlignment) value_type dataVal[N]{};
 
 		template<size_t M, size_t... I> constexpr raw_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}

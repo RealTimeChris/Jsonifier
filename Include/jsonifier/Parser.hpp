@@ -36,17 +36,18 @@ namespace jsonifier_internal {
 
 	template<bool printErrors, bool excludeKeys> struct parse {
 		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter) {
-			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter);
+			parse_impl<printErrors, excludeKeys, std::decay_t<value_type>>::op(std::forward<std::decay_t<value_type>>(value), iter);
 		}
 
-		template<typename value_type, has_find KeyType> inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys) {
-			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter, keys);
+		template<typename value_type, jsonifier::concepts::has_find KeyType> inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys) {
+			parse_impl<printErrors, excludeKeys, std::decay_t<value_type>>::op(std::forward<std::decay_t<value_type>>(value), iter, keys);
 		}
 	};
 
 	class parser {
 	  public:
-		template<bool printErrors = false, bool refreshstring = false, bool excludeKeys = false, core_type value_type, string_t buffer_type>
+		template<bool printErrors = false, bool refreshstring = false, bool excludeKeys = false, jsonifier::concepts::core_type value_type,
+			jsonifier::concepts::string_t buffer_type>
 		inline void parseJson(value_type&& data, buffer_type&& inStringNew) {
 			if (inStringNew.empty()) {
 				return;
@@ -61,7 +62,7 @@ namespace jsonifier_internal {
 				return;
 			}
 			if constexpr (excludeKeys) {
-				if constexpr (has_excluded_keys<decltype(data)>) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<decltype(data)>) {
 					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys);
 				} else {
 					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter);
