@@ -29,7 +29,7 @@
 #include <string>
 
 namespace jsonifier_internal {
-	
+
 	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value) {
 		uint64_t d = 5381;
 		for (const auto& c: value)
@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 		for (const auto& c: value)
 			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);
 		return d >> 8;
-	} 
-	
+	}
+
 	template<typename value_type> struct hash;
 }

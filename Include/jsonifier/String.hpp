@@ -32,7 +32,7 @@ namespace jsonifier_internal {
 		if (string01.size() != string02.size()) [[unlikely]] {
 			return false;
 		}
-		using char_t = value_type01::value_type;
+		using char_t = typename value_type01::value_type;
 		for (uint64_t x = 0; x < string01.size(); ++x) {
 			if (string01[x] != static_cast<char_t>(string02[x])) [[unlikely]] {
 				return false;
@@ -348,7 +348,7 @@ namespace jsonifier {
 			++sizeVal;
 		}
 
-		inline void erase(size_type count) {
+		jsonifier_inline void erase(size_type count) {
 			if (count == 0) {
 				return;
 			} else if (count > sizeVal) {
@@ -359,7 +359,7 @@ namespace jsonifier {
 			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
 		}
 
-		inline void erase(iterator count) {
+		jsonifier_inline void erase(iterator count) {
 			auto sizeNew = count - dataVal;
 			if (sizeNew == 0) {
 				return;

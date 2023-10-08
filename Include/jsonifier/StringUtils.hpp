@@ -33,53 +33,52 @@ namespace jsonifier_internal {
 
 	class backslash_and_quote {
 	  public:
-
-		template<typename source_type, typename dest_type> inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
-			auto values = gatherValuesU<simd_int_t>(source);
-			simd_base::store(values, destString);
+		template<typename source_type, typename dest_type> jsonifier_inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
+			auto values = gatherValuesU<simd_int_128>(source);
+			storeu(values, destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashes) };
-			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotes) };
+			returnData.bsOrQuoteBits = simd_base::cmpeq(values, backslashes128);
+			returnData.bsOrQuoteBits |= simd_base::cmpeq(values, quotes128);
 			return returnData;
 		}
 
-		inline bool hasQuoteFirst() {
-			return ((bsBits - 1) & quoteBits) != 0;
+		jsonifier_inline bool hasBackslashOrQuote() {
+			return bsOrQuoteBits != 0;
 		}
 
-		inline bool hasBackslash() {
-			return ((quoteBits - 1) & bsBits) != 0;
-		}
-
-		inline string_parsing_type quoteIndex() { 
-			return tzcnt(quoteBits);
-		}
-
-		inline string_parsing_type backslashIndex() {
-			return tzcnt(bsBits);
+		jsonifier_inline uint16_t backslashOrQuoteIndex() {
+			return tzcnt(bsOrQuoteBits);
 		}
 
 	  protected:
-		string_parsing_type quoteBits{};
-		string_parsing_type bsBits{};
+		static jsonifier_constexpr simd_int_128 backslashes128{ simdFromValue<simd_int_128>(0x5Cu) };
+		static jsonifier_constexpr simd_int_128 quotes128{ simdFromValue<simd_int_128>(0x22u) };
+		uint16_t bsOrQuoteBits{};
 	};
 
 	class escapeable {
 	  public:
 		template<typename source_type, typename dest_type> jsonifier_inline static escapeable copyAndFind(const source_type* source, dest_type* dest) {
-			simd_int_t values(gatherValuesU<simd_int_t>(source));
-			simd_base::storeu(values, dest);
+			simd_int_128 values(gatherValuesU<simd_int_128>(source));
+			storeu(values, dest);
 			escapeable returnData{};
-			simd_base::collectEscapeablesAsSimdBase(returnData.nextEscapeableVal, values);
+			returnData.nextEscapeableVal = simd_base::cmpeq(simd_base::shuffle(escapeableChars02, values), values);
+			returnData.nextEscapeableVal |= simd_base::cmpeq(simd_base::shuffle(escapeableChars03, values), values);
 			return returnData;
 		}
 
-		jsonifier_inline string_parsing_type nextEscapeable() {
+		jsonifier_inline uint16_t nextEscapeable() {
 			return tzcnt(nextEscapeableVal);
 		}
 
 	  protected:
-		string_parsing_type nextEscapeableVal{};
+		static jsonifier_constexpr std::array<uint8_t, 16> escapeableChars00{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x00u, 0x00u, 0x00u, 0x0Cu, 0x0Du,
+			0x00u, 0x00u };
+		static jsonifier_constexpr std::array<uint8_t, 16> escapeableChars01{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x00u,
+			0x00u, 0x00u };
+		static jsonifier_constexpr simd_int_128 escapeableChars02{ simdFromTable<simd_int_128>(escapeableChars00) };
+		static jsonifier_constexpr simd_int_128 escapeableChars03{ simdFromTable<simd_int_128>(escapeableChars01) };
+		uint16_t nextEscapeableVal{};
 	};
 
 	template<typename value_type> jsonifier_inline static uint32_t hexToU32NoCheck(const value_type* source) {
@@ -150,22 +149,16 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	enum class parse_string_result_type { starting = 0, has_quote_first = 1, has_backslash = 2, none = 3 };
-
-	struct parse_string_result {
-		parse_string_result_type type{};
-		string_parsing_type index{};
-	};
-
-	template<typename source_type, typename dest_type> inline static dest_type* parseString(const source_type* source, dest_type* destString, uint64_t lengthNew) {
-		while (true) {
-			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, destString); 
-			if (bsQuote.hasQuoteFirst()) {
-				return destString + bsQuote.quoteIndex();
-			}
-			if (bsQuote.hasBackslash()) {
-				auto bsDist			   = bsQuote.backslashIndex();
-				source_type escapeChar = source[bsDist + 1];
+	template<typename source_type, typename dest_type> jsonifier_inline static dest_type* parseString(const source_type* source, dest_type* destString, uint64_t lengthNew) {
+		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(0)) {
+			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, destString);
+			if (bsQuote.hasBackslashOrQuote()) {
+				auto bsDist			   = bsQuote.backslashOrQuoteIndex();
+				source_type escapeChar = source[bsDist];
+				if (escapeChar == '"') {
+					return destString + bsDist;
+				}
+				escapeChar = source[bsDist + 1];
 				if (escapeChar == 'u') {
 					source += bsDist;
 					destString += bsDist;
@@ -180,8 +173,8 @@ namespace jsonifier_internal {
 					source += bsDist + 2ULL;
 				}
 			} else {
-				source += BytesPerStep;
-				destString += BytesPerStep;
+				source += 16;
+				destString += 16;
 			}
 		}
 		return nullptr;
@@ -189,26 +182,25 @@ namespace jsonifier_internal {
 
 	template<typename value_type01, typename value_type02>
 	jsonifier_inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
-		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(BytesPerStep)) {
-			escapeable bsQuote	= escapeable ::copyAndFind(source, dest);
+		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(16)) {
+			escapeable bsQuote	= escapeable::copyAndFind(source, dest);
 			auto nextEscapeable = bsQuote.nextEscapeable();
-			if (nextEscapeable != BytesPerStep) {
+			if (nextEscapeable != 16) {
 				uint8_t escapeResult = escapeableChars<uint8_t>[source[nextEscapeable]];
 				if (escapeResult == 0u) {
 					return source;
 				}
-				dest[nextEscapeable]	 = '\\';
-				dest[nextEscapeable + 1] = escapeResult;
-				dest += nextEscapeable + 2;
-				indexNew += nextEscapeable + 2;
-				lengthNew -= (nextEscapeable + 1);
-				source += nextEscapeable + 1;
+				dest[nextEscapeable]							   = '\\';
+				dest[static_cast<uint64_t>(nextEscapeable) + 1ULL] = escapeResult;
+				dest += static_cast<uint64_t>(nextEscapeable) + 2ULL;
+				indexNew += static_cast<uint64_t>(nextEscapeable) + 2ULL;
+				lengthNew -= (nextEscapeable + 1ULL);
+				source += nextEscapeable + 1ULL;
 			} else {
-				lengthNew -= BytesPerStep;
-				indexNew += BytesPerStep;
-				source += BytesPerStep;
-				dest += BytesPerStep;
-				continue;
+				lengthNew -= 16ULL;
+				indexNew += 16ULL;
+				source += 16ULL;
+				dest += 16ULL;
 			}
 		}
 		return source;

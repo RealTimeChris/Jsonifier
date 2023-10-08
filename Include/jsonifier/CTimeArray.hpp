@@ -55,12 +55,12 @@ namespace jsonifier_internal {
 			return dataVal;
 		}
 
-		jsonifier_constexpr const_iterator begin() const {
-			return dataVal;
-		}
-
 		jsonifier_constexpr iterator end() {
 			return dataVal + count;
+		}
+
+		jsonifier_constexpr const_iterator begin() const {
+			return dataVal;
 		}
 
 		jsonifier_constexpr const_iterator end() const {
@@ -79,13 +79,6 @@ namespace jsonifier_internal {
 			return dataVal[index];
 		}
 
-		jsonifier_constexpr reference at(uint64_t index) {
-			if (index > count) {
-				std::abort();
-			}
-			return dataVal[index];
-		}
-
 		jsonifier_constexpr const_reference at(uint64_t index) const {
 			if (index > count) {
 				std::abort();
@@ -93,11 +86,7 @@ namespace jsonifier_internal {
 			return dataVal[index];
 		}
 
-		jsonifier_constexpr reference front() {
-			return dataVal[0];
-		}
-
-		jsonifier_constexpr size_type size() {
+		jsonifier_constexpr size_type size() const {
 			return count;
 		}
 
@@ -105,16 +94,8 @@ namespace jsonifier_internal {
 			return dataVal[0];
 		}
 
-		jsonifier_constexpr reference back() {
-			return dataVal[count - 1];
-		}
-
 		jsonifier_constexpr const_reference back() const {
 			return dataVal[count - 1];
-		}
-
-		jsonifier_constexpr pointer data() {
-			return dataVal;
 		}
 
 		jsonifier_constexpr const_pointer data() const {

@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 	}
 
 	jsonifier_inline bool isDigitType(uint8_t c) {
-		return validNumberValues[c];
+		return numberTable[c];
 	}
 
 	jsonifier_inline jsonifier::string_view getValueType(uint8_t charToCheck) {
@@ -119,7 +119,7 @@ namespace jsonifier_internal {
 		jsonifier_inline error(structural_iterator iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			intendedValue  = static_cast<uint8_t>(typeNew);
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<uint64_t>(iter.getCurrentStringIndex()));
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string::maxSize()) {
 				stringView = iter.getRootPtr();
 			}
@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 
 		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<uint64_t>(iter.getCurrentStringIndex()));
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string::maxSize()) {
 				stringView = iter.getRootPtr();
 			}

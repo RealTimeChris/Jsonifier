@@ -122,34 +122,12 @@ namespace jsonifier {
 		template<typename value_type>
 		concept indexable = stateless<value_type> || requires(value_type value) { value[Tag<0>()]; };
 
-		template<typename value_type, typename u>
-		concept same_as = std::same_as<u, unwrap<value_type>>;
-
-		template<typename value_type, typename u>
-		concept other_than = !std::same_as<unwrap<value_type>, u>;
-
-		template<typename value_type>
-		concept base_list_tuple = requires() { typename unwrap<value_type>::base_list; };
-
-		template<typename value_type>
-		concept ordered = requires(value_type const& object) {
-			{ object <=> object };
-		};
-
-		template<typename value_type>
-		concept equality_comparable = requires(value_type const& object) {
-			{ object == object } -> same_as<bool>;
-		};
-
 		template<typename value_type_01, typename value_type_02>
 		concept related_ptr = ( std::derived_from<unwrap<value_type_01>, unwrap<value_type_02>> || std::is_base_of_v<unwrap<value_type_01>, unwrap<value_type_02>> ||
 			std::same_as<unwrap<value_type_01>, unwrap<value_type_02>> )&&std::is_pointer_v<unwrap<value_type_01>>;
 
 		template<typename value_type>
 		concept bool_t = std::same_as<unwrap<value_type>, bool>;
-
-		template<typename value_type>
-		concept char_array_t = std::is_array_v<unwrap<value_type>> && std::is_same_v<unwrap<value_type>, char>;
 
 		template<typename value_type>
 		concept pointer_t = (std::is_pointer_v<unwrap<value_type>> || std::is_null_pointer_v<unwrap<value_type>>);
@@ -189,16 +167,13 @@ namespace jsonifier {
 		concept num_t = ( float_t<value_type> || unsigned_t<value_type> || signed_t<value_type> )&&!char_t<value_type>;
 
 		template<typename value_type>
-		concept has_data_and_size = has_data<value_type> && has_size<value_type>;
-
-		template<typename value_type>
 		concept has_substr = requires(value_type value) {
 			{ value.substr(std::declval<uint64_t>(), std::declval<uint64_t>()) };
 		};
 
 		template<typename value_type>
-		concept string_t = has_substr<unwrap<value_type>> && has_data_and_size<unwrap<value_type>> && !std::same_as<char, unwrap<value_type>> &&
-			vector_subscriptable<unwrap<value_type>> && !char_array_t<value_type> && !pointer_t<value_type>;
+		concept string_t = has_substr<unwrap<value_type>> && has_data<unwrap<value_type>> && has_size<unwrap<value_type>> && !std::same_as<char, unwrap<value_type>> &&
+			vector_subscriptable<unwrap<value_type>> && !pointer_t<value_type>;
 
 		template<typename value_type>
 		concept map_t = requires(value_type data) {
@@ -295,7 +270,7 @@ namespace jsonifier {
 		concept raw_array_t = std::is_array_v<unwrap<value_type>>;
 
 		template<typename value_type>
-		concept vector_like = has_resize<value_type> && vector_subscriptable<value_type> && has_data<value_type>;
+		concept buffer_like = has_resize<value_type> && vector_subscriptable<value_type> && has_data<value_type>;
 
 		template<typename value_type>
 		concept core_type = is_specialization_v<jsonifier::core<value_type>, jsonifier::core>::value;

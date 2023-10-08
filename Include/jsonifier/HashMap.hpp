@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 	}
 
 	template<uint64_t n, typename value_type> jsonifier_constexpr uint64_t toUint64N(const value_type* bytes) {
-		static_assert(n <= 8);
+		static_assert(n == 8);
 		if (std::is_constant_evaluated()) {
 			uint64_t res{};
 			for (uint64_t x = 0; x < n; ++x) {
@@ -119,12 +119,12 @@ namespace jsonifier_internal {
 		primitiveSwap(std::forward<pair<value_type, u>>(a.second), std::forward<pair<value_type, u>>(b.second));
 	}
 
-	template<typename... Tys, uint64_t... Is> jsonifier_constexpr void primitiveSwap(tuple<Tys...>&& a, tuple<Tys...>&& b, std::index_sequence<Is...>) {
+	template<typename... Tys, uint64_t... Is> jsonifier_constexpr void primitiveSwap(std::tuple<Tys...>&& a, std::tuple<Tys...>&& b, std::index_sequence<Is...>) {
 		using swallow = int32_t[];
 		( void )swallow{ (primitiveSwap(std::forward<Tys...>(get<Is>(a)), std::forward<Tys...>(get<Is>(b))), 0)... };
 	}
 
-	template<typename... Tys> jsonifier_constexpr void primitiveSwap(tuple<Tys...>& a, tuple<Tys...>& b) {
+	template<typename... Tys> jsonifier_constexpr void primitiveSwap(std::tuple<Tys...>& a, std::tuple<Tys...>& b) {
 		primitiveSwap(a, b, std::make_index_sequence<sizeof...(Tys)>());
 	}
 
@@ -178,11 +178,14 @@ namespace jsonifier_internal {
 	  public:
 		using result_type									= uint_type;
 		static jsonifier_constexpr result_type default_seed = 1u;
-		jsonifier_inline linear_congruential_engine()		= default;
+
+		jsonifier_constexpr linear_congruential_engine() = default;
+
 		jsonifier_constexpr linear_congruential_engine(result_type S) {
 			seed(S);
 		}
-		jsonifier_inline void seed(result_type S = default_seed) {
+
+		jsonifier_constexpr void seed(result_type S = default_seed) const {
 			state_ = S;
 		}
 
@@ -194,7 +197,7 @@ namespace jsonifier_internal {
 			return state_;
 		}
 
-		jsonifier_constexpr void discard(uint64_t n) {
+		jsonifier_constexpr void discard(uint64_t n) const {
 			while (n--)
 				operator()();
 		}
@@ -217,12 +220,13 @@ namespace jsonifier_internal {
 	template<typename hash_type> struct xsm1 {};
 
 	template<> struct xsm1<uint64_t> {
+		jsonifier_constexpr xsm1() noexcept = default;
 		template<typename value_type> jsonifier_constexpr uint64_t operator()(value_type&& value, const uint64_t seed) {
 			uint64_t h	 = (fnv64OffsetBasis ^ seed) * fnv64Prime;
 			const auto n = value.size();
 
 			if (n < 8) {
-				const auto shift = 64 - 8 * n;
+				auto shift = 64 - 8 * n;
 				h ^= toUint64(value.data(), n) << shift;
 				h ^= h >> 33;
 				h *= fnv64Prime;
@@ -246,6 +250,7 @@ namespace jsonifier_internal {
 	};
 
 	template<> struct xsm1<uint32_t> {
+		jsonifier_constexpr xsm1() noexcept = default;
 		jsonifier_constexpr uint32_t operator()(auto&& value, const uint32_t seed) {
 			uint64_t hash = xsm1<uint64_t>{}(value, seed);
 			return hash >> 32;
@@ -272,13 +277,12 @@ namespace jsonifier_internal {
 		ctime_array<uint64_t, n> hashes{};
 		ctime_array<uint64_t, n> buckets{};
 
-
 		default_prg_t gen{};
 		for (uint64_t x = 0; x < 1024; ++x) {
 			uint32_t seed  = gen();
 			uint64_t index = 0;
 			for (const auto& key: keys) {
-				const auto hash = xsm1<uint32_t>{}(key, seed);
+				auto hash = xsm1<uint32_t>{}(key, seed);
 				if (contains(std::span{ hashes.data(), index }, hash))
 					break;
 				hashes[index] = hash;
@@ -538,7 +542,7 @@ namespace jsonifier_internal {
 	};
 
 	// from
-	// https://stackoverflow.com/questions/55941964/how-to-filter-duplicate-types-from-tuple-c
+	// https://stackoverflow.com/questions/55941964/how-to-filter-duplicate-types-from-std::tuple-c
 	template<typename value_type, typename... value_types> struct unique {
 		using type = value_type;
 	};
@@ -548,23 +552,21 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct tuple_variant;
 
-	template<typename... value_types> struct tuple_variant<tuple<value_types...>> : unique<std::variant<>, value_types...> {};
+	template<typename... value_types> struct tuple_variant<std::tuple<value_types...>> : unique<std::variant<>, value_types...> {};
 
 	template<typename value_type> struct tuple_ptr_variant;
 
 	template<typename... value_types> struct tuple_ptr_variant<std::tuple<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
 
-	template<typename... value_types> struct tuple_ptr_variant<tuple<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
-
 	template<typename... value_types> struct tuple_ptr_variant<pair<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
 
-	template<typename tuple, typename = std::make_index_sequence<std::tuple_size<tuple>::value>> struct value_tuple_variant;
+	template<typename tuple_t, typename = std::make_index_sequence<std::tuple_size<tuple_t>::value>> struct value_tuple_variant;
 
 	template<typename tuple_t, size_t... I> struct value_tuple_variant<tuple_t, std::index_sequence<I...>> {
-		using type = typename tuple_variant<decltype(tupleCat(std::declval<tuple<std::tuple_element_t<1, std::tuple_element_t<I, tuple_t>>>>()...))>::type;
+		using type = typename tuple_variant<decltype(std::tuple_cat(std::declval<std::tuple<std::tuple_element_t<1, std::tuple_element_t<I, tuple_t>>>>()...))>::type;
 	};
 
-	template<typename tuple> using value_tuple_variant_t = typename value_tuple_variant<tuple>::type;
+	template<typename tuple_t> using value_tuple_variant_t = typename value_tuple_variant<tuple_t>::type;
 
 	struct bucket_size_compare {
 		template<typename b> bool jsonifier_constexpr operator()(b const& b0, b const& b1) const {

@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 	}
 
 	template<> jsonifier_inline bool containsValue<json_structural_type::Number>(uint8_t value) {
-		return validNumberValues[value];
+		return numberTable[value];
 	}
 
 	class derailleur {

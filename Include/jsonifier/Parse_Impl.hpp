@@ -112,10 +112,10 @@ namespace jsonifier_internal {
 			if (sizeNew > static_cast<int64_t>(parserNew.currentStringBuffer.size())) {
 				parserNew.currentStringBuffer.resize(static_cast<uint64_t>(sizeNew));
 			}
-			auto newerSize = parseString(newPtr + 1, parserNew.currentStringBuffer.data(), static_cast<uint64_t>(sizeNew)) - parserNew.currentStringBuffer.data();
-			if (newerSize > 0) {
-				value.resize(static_cast<uint64_t>(newerSize));
-				std::memcpy(value.data(), parserNew.currentStringBuffer.data(), static_cast<uint64_t>(newerSize));
+			sizeNew = parseString(newPtr + 1, parserNew.currentStringBuffer.data(), static_cast<uint64_t>(sizeNew)) - parserNew.currentStringBuffer.data();
+			if (sizeNew > 0) {
+				value.resize(static_cast<uint64_t>(sizeNew));
+				std::memcpy(value.data(), parserNew.currentStringBuffer.data(), static_cast<uint64_t>(sizeNew));
 			}
 		}
 	};

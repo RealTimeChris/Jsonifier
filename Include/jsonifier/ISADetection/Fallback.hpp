@@ -156,53 +156,41 @@ namespace jsonifier_internal {
 		return result;
 	}
 
+	jsonifier_inline simd_int_t setZeroSi128() {
+		return simd_int_t{};
+	}
+
 	jsonifier_inline simd_int_t set1Epi8(int8_t valueNew) {
 		simd_int_t returnValue{};
 		std::memset(&returnValue, valueNew, sizeof(simd_int_t));
 		return returnValue;
 	}
 
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::opOr(const simd_int_t& other, const simd_int_t& value) {
-		return orSi128(value, other);
-	}
-
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::opAnd(const simd_int_t& other, const simd_int_t& value) {
-		return andSi128(value, other);
-	}
-
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::opXor(const simd_int_t& other, const simd_int_t& value) {
-		return xorSi128(value, other);
-	}
-
-	jsonifier_inline string_parsing_type simd_base_internal<BitsPerStep>::cmpeq(const simd_int_t& other, const simd_int_t& value) {
+	jsonifier_inline string_parsing_type simd_base::cmpeq(const simd_int_t& other, const simd_int_t& value) {
 		return static_cast<string_parsing_type>(movemaskEpi8(cmpeqEpi8(value, other)));
 	}
 
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::opNot(const simd_int_t& value) {
-		return xorSi128(value, set1Epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
-	}
-
-	jsonifier_inline bool simd_base_internal<BitsPerStep>::opBool(const simd_int_t& value) {
-		return !testzSi128(value, value);
-	}
-
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
+	jsonifier_inline simd_int_t simd_base::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
 		return andNotSi128(other, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::shuffle(const simd_int_t& value, const simd_int_t& other) {
+	jsonifier_inline simd_int_t simd_base::shuffle(const simd_int_t& value, const simd_int_t& other) {
 		return shuffleEpi8(value, other);
 	}
 
-	template<typename value_type> jsonifier_inline void simd_base_internal<BitsPerStep>::storeu(const simd_int_t& value, value_type* storageLocation) {
-		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
+	jsonifier_inline simd_int_t simd_base::opOr(const simd_int_t& other, const simd_int_t& value) {
+		return orSi128(value, other);
 	}
 
-	template<typename value_type> jsonifier_inline void simd_base_internal<BitsPerStep>::store(const simd_int_t& value, value_type* storageLocation) {
-		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
+	jsonifier_inline simd_int_t simd_base::opAnd(const simd_int_t& other, const simd_int_t& value) {
+		return andSi128(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::setLSB(const simd_int_t& value, bool valueNew) {
+	jsonifier_inline simd_int_t simd_base::opXor(const simd_int_t& other, const simd_int_t& value) {
+		return xorSi128(value, other);
+	}
+
+	jsonifier_inline simd_int_t simd_base::setLSB(const simd_int_t& value, bool valueNew) {
 		if (valueNew) {
 			return orSi128(value, setEpi64x(0x00, 0x01));
 		} else {
@@ -210,29 +198,21 @@ namespace jsonifier_internal {
 		}
 	}
 
-	jsonifier_inline bool simd_base_internal<BitsPerStep>::getMSB(const simd_int_t& value) {
+	jsonifier_inline simd_int_t simd_base::opNot(const simd_int_t& value) {
+		return xorSi128(value, set1Epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
+	}
+
+	jsonifier_inline bool simd_base::getMSB(const simd_int_t& value) {
 		simd_int_t result = andSi128(value, setEpi64x(0x8000000000000000, 0x00));
 		return !testzSi128(result, result);
 	}
 
-	jsonifier_inline uint64_t prefixXor(uint64_t prevInString) {
-		prevInString ^= prevInString << 1;
-		prevInString ^= prevInString << 2;
-		prevInString ^= prevInString << 4;
-		prevInString ^= prevInString << 8;
-		prevInString ^= prevInString << 16;
-		prevInString ^= prevInString << 32;
-		return prevInString;
+	jsonifier_inline bool simd_base::opBool(const simd_int_t& value) {
+		return !testzSi128(value, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base_internal<BitsPerStep>::carrylessMultiplication(const simd_int_t& value, uint64_t& prevInString) {
-		int64_t values[SixtyFourBitsPerStep]{};
-		store(value, values);
-		values[0]	 = prefixXor(values[0]) ^ prevInString;
-		prevInString = uint64_t(static_cast<int64_t>(values[0]) >> 63);
-		values[1]	 = prefixXor(values[1]) ^ prevInString;
-		prevInString = uint64_t(static_cast<int64_t>(values[1]) >> 63);
-		return gatherValues<simd_int_t>(values);
+	jsonifier_inline simd_int_t simd_base::reset() {
+		return setZeroSi128();
 	}
 
 #endif

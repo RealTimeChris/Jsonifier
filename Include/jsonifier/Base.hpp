@@ -229,11 +229,13 @@ namespace jsonifier {
 		return array{ jsonifier_internal::copyTuple(args...) };
 	}
 
-	jsonifier_constexpr auto createObject(auto&&... args) {
+	template<typename... Args> jsonifier_constexpr auto createObject(Args&&... args) {
 		if jsonifier_constexpr (sizeof...(args) == 0) {
-			return object{ jsonifier_internal::tuple{} };
+			return object{ std::tuple<>{} };
 		} else {
-			return object{ jsonifier_internal::GroupBuilder<concepts::unwrap<decltype(jsonifier_internal::copyTuple(args...))>>::op(jsonifier_internal::copyTuple(args...)) };
+			auto newTuple	 = jsonifier_internal::copyTuple(args...);
+			using tuple_type = decltype(newTuple);
+			return object{ jsonifier_internal::GroupBuilder<tuple_type>::op(std::move(newTuple)) };
 		}
 	}
 

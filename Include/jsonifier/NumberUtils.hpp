@@ -858,7 +858,7 @@ namespace jsonifier_internal {
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-    
+
 		static_assert(std::same_as<float, jsonifier::concepts::unwrap<value_type>> || std::same_as<double, jsonifier::concepts::unwrap<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
