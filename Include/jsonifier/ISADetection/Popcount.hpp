@@ -21,6 +21,7 @@
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
+#pragma once
 
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
 
@@ -32,8 +33,10 @@ namespace jsonifier_internal {
 
 #else
 
-	inline uint64_t popcnt(uint64_t value) {
-		uint64_t count{};
+	template<jsonifier::concepts::unsigned_t value_type>
+		requires(sizeof(value_type) == 8)
+	inline static value_type popcnt(value_type value) {
+		value_type count{};
 
 		while (value > 0) {
 			count += value & 1;

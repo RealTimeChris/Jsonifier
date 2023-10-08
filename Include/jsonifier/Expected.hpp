@@ -27,47 +27,41 @@
 
 namespace jsonifier_internal {
 
-	template<typename ETy> class unexpected;
-
-	template<typename value_type, typename ETy> class expected;
-
-	template<typename value_type, typename ETy>
-		requires std::is_void_v<value_type>
-	class expected<value_type, ETy>;
-
-	template<typename ETy> class unexpected {
+	template<typename unexpected_type> class unexpected {
 	  public:
-		constexpr unexpected& operator=(ETy&& other) {
-			unex = std::move(other);
+		constexpr unexpected(){};
+
+		constexpr unexpected& operator=(unexpected_type&& other) {
+			std::uninitialized_move(&other, (&other) + 1, &unex);
 			return *this;
 		}
 
-		constexpr unexpected(ETy&& other) {
+		constexpr unexpected(unexpected_type&& other) {
 			*this = std::move(other);
 		}
 
-		constexpr unexpected& operator=(const ETy& other) {
+		constexpr unexpected& operator=(const unexpected_type& other) {
 			unex = other;
 			return *this;
 		}
 
-		constexpr unexpected(const ETy& other) {
+		constexpr unexpected(const unexpected_type& other) {
 			*this = other;
 		}
 
-		constexpr const ETy&& error() const&& {
+		constexpr const unexpected_type&& error() const&& {
 			return std::move(unex);
 		}
 
-		constexpr ETy&& error() && {
+		constexpr unexpected_type&& error() && {
 			return std::move(unex);
 		}
 
-		constexpr const ETy& error() const& {
+		constexpr const unexpected_type& error() const& {
 			return unex;
 		}
 
-		constexpr ETy& error() & {
+		constexpr unexpected_type& error() & {
 			return unex;
 		}
 
@@ -75,26 +69,58 @@ namespace jsonifier_internal {
 			std::swap(unex, other.unex);
 		}
 
-		friend constexpr bool operator==(const unexpected& lhs, const unexpected<ETy>& rhs) {
+		friend constexpr bool operator==(const unexpected& lhs, const unexpected<unexpected_type>& rhs) {
 			return lhs.unex == rhs.unex;
 		}
 
+		constexpr ~unexpected(){};
+
 	  protected:
-		ETy unex{};
+		unexpected_type unex{};
 	};
 
-	template<typename ETy> unexpected(ETy) -> unexpected<ETy>;
+	template<typename unexpected_type> unexpected(unexpected_type) -> unexpected<unexpected_type>;
 
-	template<typename value_type_new, typename ETy> class expected {
+	template<typename expected_type, typename unexpected_type_new> class expected {
 	  public:
-		using value_type				  = value_type_new;
-		using error_type				  = ETy;
-		using unexpected_type			  = unexpected<ETy>;
+		using value_type				  = expected_type;
+		using pointer					  = value_type*;
+		using error_type				  = unexpected_type_new;
+		using unexpected_type			  = unexpected_type_new;
 		template<typename U> using rebind = expected<U, error_type>;
 
-		constexpr expected() = default;
+		constexpr expected(){};
+
+		constexpr expected& operator=(expected&& other) {
+			hasValue = other.hasValue;
+			if (hasValue) {
+				val = std::move(other.val);
+			} else {
+				unex = std::move(other.unex);
+			}
+			return *this;
+		}
+
+		constexpr expected(expected&& other) : unex{} {
+			*this = std::move(other);
+		}
+
+		constexpr expected& operator=(const expected& other) {
+			hasValue = other.hasValue;
+			if (hasValue) {
+				val = other.val;
+			} else {
+				unex = other.unex;
+			}
+			return *this;
+		}
+
+		constexpr expected(const expected& other) : unex{} {
+			*this = other;
+		}
 
 		template<typename G> constexpr expected& operator=(unexpected<G>&& other) {
+			unex	 = std::move(other.error());
 			hasValue = false;
 			return *this;
 		}
@@ -112,6 +138,26 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
+		constexpr expected& operator=(error_type&& other) {
+			unex	 = std::move(other);
+			hasValue = false;
+			return *this;
+		}
+
+		constexpr expected(error_type&& other) {
+			*this = std::move(other);
+		}
+
+		constexpr expected& operator=(const error_type& other) {
+			unex	 = other;
+			hasValue = false;
+			return *this;
+		}
+
+		constexpr expected(const error_type& other) {
+			*this = other;
+		}
+
 		constexpr expected& operator=(value_type&& other) {
 			val		 = std::move(other);
 			hasValue = true;
@@ -120,6 +166,16 @@ namespace jsonifier_internal {
 
 		constexpr expected(value_type&& v) {
 			*this = std::move(v);
+		}
+
+		constexpr expected& operator=(const value_type& other) {
+			val		 = other;
+			hasValue = true;
+			return *this;
+		}
+
+		constexpr expected(const value_type& v) {
+			*this = v;
 		}
 
 		constexpr void swap(expected& other) {
@@ -131,11 +187,11 @@ namespace jsonifier_internal {
 			std::swap(hasValue, other.hasValue);
 		}
 
-		constexpr const value_type* operator->() const {
+		constexpr pointer operator->() const {
 			return &val;
 		}
 
-		constexpr value_type* operator->() {
+		constexpr pointer operator->() {
 			return &val;
 		}
 
@@ -179,23 +235,23 @@ namespace jsonifier_internal {
 			return val;
 		}
 
-		constexpr const ETy&& error() const&& {
+		constexpr const unexpected_type&& error() const&& {
 			return std::move(unex);
 		}
 
-		constexpr ETy&& error() && {
+		constexpr unexpected_type&& error() && {
 			return std::move(unex);
 		}
 
-		constexpr const ETy& error() const& {
+		constexpr const unexpected_type& error() const& {
 			return unex;
 		}
 
-		constexpr ETy& error() & {
+		constexpr unexpected_type& error() & {
 			return unex;
 		}
 
-		friend constexpr bool operator==(const expected& x, const expected<value_type, ETy>& y) {
+		friend constexpr bool operator==(const expected& x, const expected<value_type, unexpected_type>& y) {
 			return x.hasValue == y.hasValue && x.unex == y.unex && x.val == y.val;
 		}
 
@@ -205,21 +261,21 @@ namespace jsonifier_internal {
 		bool hasValue{};
 		union {
 			value_type val{};
-			ETy unex;
+			unexpected_type unex;
 		};
 	};
 
-	template<typename value_type_new, typename ETy>
+	template<typename value_type_new, typename unexpected_type_new>
 		requires std::is_void_v<value_type_new>
-	class expected<value_type_new, ETy> {
+	class expected<value_type_new, unexpected_type_new> {
 	  public:
 		using value_type	  = value_type_new;
-		using error_type	  = ETy;
-		using unexpected_type = unexpected<ETy>;
+		using error_type	  = unexpected_type_new;
+		using unexpected_type = unexpected_type_new;
 
 		template<typename U> using rebind = expected<U, error_type>;
 
-		constexpr expected() = default;
+		constexpr expected(){};
 
 		template<typename G> constexpr expected& operator=(unexpected<G>&& other) {
 			return *this;
@@ -249,19 +305,19 @@ namespace jsonifier_internal {
 			return false;
 		}
 
-		constexpr const ETy&& error() const&& {
+		constexpr const unexpected_type&& error() const&& {
 			return std::move(unex);
 		}
 
-		constexpr ETy&& error() && {
+		constexpr unexpected_type&& error() && {
 			return std::move(unex);
 		}
 
-		constexpr const ETy& error() const& {
+		constexpr const unexpected_type& error() const& {
 			return unex;
 		}
 
-		constexpr ETy& error() & {
+		constexpr unexpected_type& error() & {
 			return unex;
 		}
 
@@ -273,7 +329,7 @@ namespace jsonifier_internal {
 
 	  protected:
 		union {
-			ETy unex{};
+			unexpected_type unex{};
 		};
 	};
 

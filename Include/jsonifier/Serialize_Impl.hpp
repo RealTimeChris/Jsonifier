@@ -30,7 +30,7 @@
 
 namespace jsonifier_internal {
 
-	template<vector_like buffer_type> inline void writeCharacter(char c, buffer_type&& buffer, uint64_t& index) {
+	template<jsonifier::concepts::vector_like buffer_type> inline void writeCharacter(char c, buffer_type&& buffer, uint64_t& index) {
 		if (index >= buffer.size()) [[unlikely]] {
 			buffer.resize((buffer.size() + 1) * 2);
 		}
@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<char c, vector_like buffer_type> inline void writeCharacter(buffer_type&& buffer, uint64_t& index) {
+	template<char c, jsonifier::concepts::vector_like buffer_type> inline void writeCharacter(buffer_type&& buffer, uint64_t& index) {
 		if (index >= buffer.size()) [[unlikely]] {
 			buffer.resize((buffer.size() + 1) * 2);
 		}
@@ -48,108 +48,113 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<vector_like buffer_type> inline void writeCharacterUnChecked(char c, buffer_type&& buffer, uint64_t& index) {
+	template<jsonifier::concepts::vector_like buffer_type> inline void writeCharacterUnChecked(char c, buffer_type&& buffer, uint64_t& index) {
 		buffer[index] = c;
 		++index;
 	}
 
-	template<const jsonifier::string_view& str, vector_like buffer_type> inline void writeCharacters(buffer_type&& buffer, uint64_t& index) {
+	template<const jsonifier::string_view& str, jsonifier::concepts::vector_like buffer_type> inline void writeCharacters(buffer_type&& buffer, uint64_t& index) {
 		static constexpr jsonifier::string_view s = str;
 		static constexpr uint64_t n				  = s.size();
 
 		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(std::max(buffer.size() * 2, index + n));
+			buffer.resize((buffer.size() + n) * 2);
 		}
 
 		std::memcpy(buffer.data() + index, s.data(), n);
 		index += n;
 	}
 
-	template<string_literal str, vector_like buffer_type> inline void writeCharacters(buffer_type&& buffer, uint64_t& index) {
-		static constexpr auto s = str;
-		static constexpr auto n = s.size();
-
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(std::max(buffer.size() * 2, index + n));
-		}
-
-		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
-
-	template<vector_like buffer_type> inline void writeCharacters(const jsonifier::string_view str, buffer_type&& buffer, uint64_t& index) {
+	template<jsonifier::concepts::vector_like buffer_type> inline void writeCharacters(const jsonifier::string_view str, buffer_type&& buffer, uint64_t& index) {
 		const auto n = str.size();
 		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(std::max(buffer.size() * 2, index + n));
+			buffer.resize((buffer.size() + n) * 2);
 		}
 
 		std::memcpy(buffer.data() + index, str.data(), n);
 		index += n;
 	}
 
-	template<bool excludeKeys, null_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type&, buffer_type&& buffer, uint64_t& index) {
-			writeCharacters<"null">(buffer, index);
+	template<bool excludeKeys, jsonifier::concepts::null_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type&, buffer_type&& buffer, uint64_t& index) {
+			static constexpr jsonifier::string_view stringViewNew{ "null" };
+			writeCharacters<stringViewNew>(buffer, index);
 		}
 	};
 
-	template<bool excludeKeys, bool_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::bool_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			if (value) {
-				writeCharacters<"true">(buffer, index);
+				static constexpr jsonifier::string_view stringViewNew{ "true" };
+				writeCharacters<stringViewNew>(buffer, index);
 			} else {
-				writeCharacters<"false">(buffer, index);
+				static constexpr jsonifier::string_view stringViewNew{ "false" };
+				writeCharacters<stringViewNew>(buffer, index);
 			}
 		}
 	};
 
-	template<bool excludeKeys, num_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::num_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			if (index + 32 > buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + 64));
 			}
-			auto start = dataPtr(buffer) + index;
+			auto start = jsonifier::concepts::dataPtr(buffer) + index;
 			auto end   = toChars(start, value);
 			index += std::distance(start, end);
 		}
 	};
 
-	template<bool excludeKeys, enum_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::enum_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			if (index + 32 > buffer.size()) [[unlikely]] {
 				buffer.resize(std::max(buffer.size() * 2, index + 64));
 			}
-			auto start = dataPtr(buffer) + index;
+			auto start = jsonifier::concepts::dataPtr(buffer) + index;
 			auto end   = toChars(start, static_cast<int64_t>(value));
 			index += std::distance(start, end);
 		}
 	};
 
-	template<bool excludeKeys, char_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::char_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			writeCharacter<'"'>(buffer, index);
 			switch (value) {
-				case '"':
-					writeCharacters<"\\\"">(buffer, index);
+				case '"': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\\"" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\\':
-					writeCharacters<"\\\\">(buffer, index);
+				}
+				case '\\': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\\\" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\b':
-					writeCharacters<"\\b">(buffer, index);
+				}
+				case '\b': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\b" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\f':
-					writeCharacters<"\\f">(buffer, index);
+				}
+				case '\f': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\f" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\n':
-					writeCharacters<"\\n">(buffer, index);
+				}
+				case '\n': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\n" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\r':
-					writeCharacters<"\\r">(buffer, index);
+				}
+				case '\r': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\r" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
-				case '\t':
-					writeCharacters<"\\t">(buffer, index);
+				}
+				case '\t': {
+					static constexpr jsonifier::string_view stringViewNew{ "\\t" };
+					writeCharacters<stringViewNew>(buffer, index);
 					break;
+				}
 				default:
 					writeCharacter(value, buffer, index);
 			}
@@ -157,11 +162,11 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<bool excludeKeys, string_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::string_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			const auto n = value.size();
 
-			if constexpr (has_resize<buffer_type>) {
+			if constexpr (jsonifier::concepts::has_resize<buffer_type>) {
 				if ((index + (4 * n)) >= buffer.size()) [[unlikely]] {
 					buffer.resize(std::max(buffer.size() * 2, index + (4 * n)));
 				}
@@ -208,83 +213,16 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<bool excludeKeys, raw_json_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::raw_json_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			jsonifier::string newValue = static_cast<const jsonifier::string>(value);
 			serialize<excludeKeys>::op(newValue, buffer, index);
 		}
 	};
 
-	template<bool excludeKeys, array_tuple_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
-			static constexpr auto N = []() constexpr {
-				if constexpr (jsonifier_array_t<ref_unwrap<value_type>>) {
-					return std::tuple_size_v<core_t<ref_unwrap<value_type>>>;
-				} else {
-					return std::tuple_size_v<ref_unwrap<value_type>>;
-				}
-			}();
-
-			writeCharacter<'['>(buffer, index);
-			using V = ref_unwrap<value_type>;
-			forEach<N>([&](auto I) {
-				if constexpr (jsonifier_array_t<V>) {
-					auto& newMember = getMember(value, tuplet::get<I>(coreV<value_type>));
-					serialize<excludeKeys>::op(newMember, buffer, index);
-				} else {
-					serialize<excludeKeys>::op(tuplet::get<I>(value), buffer, index);
-				}
-				constexpr bool needsComma = I < N - 1;
-				if constexpr (needsComma) {
-					writeCharacter<','>(buffer, index);
-				}
-			});
-			writeCharacter<']'>(buffer, index);
-		}
-	};
-
-	template<array_tuple_t value_type> struct serialize_impl<true, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
-			static constexpr auto N = []() constexpr {
-				if constexpr (jsonifier_array_t<ref_unwrap<value_type>>) {
-					return std::tuple_size_v<core_t<ref_unwrap<value_type>>>;
-				} else {
-					return std::tuple_size_v<ref_unwrap<value_type>>;
-				}
-			}();
-
-			writeCharacter<'['>(buffer, index);
-			using V = ref_unwrap<value_type>;
-			forEach<N>([&](auto I) {
-				if constexpr (jsonifier_array_t<V>) {
-					auto& newMember	 = getMember(value, tuplet::get<I>(coreV<value_type>));
-					using MemberType = decltype(newMember);
-					if constexpr (has_excluded_keys<MemberType>) {
-						serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-					} else {
-						serialize<true>::op(newMember, buffer, index);
-					}
-				} else {
-					auto& newMember	 = tuplet::get<I>(value);
-					using MemberType = decltype(newMember);
-					if constexpr (has_excluded_keys<MemberType>) {
-						serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-					} else {
-						serialize<true>::op(newMember, buffer, index);
-					}
-				}
-				constexpr bool needsComma = I < N - 1;
-				if constexpr (needsComma) {
-					writeCharacter<','>(buffer, index);
-				}
-			});
-			writeCharacter<']'>(buffer, index);
-		}
-	};
-
-	template<bool excludeKeys, raw_array_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
-			const auto n = value.size();
+	template<bool excludeKeys, jsonifier::concepts::raw_array_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+			const auto n = std::size(value);
 			writeCharacter<'['>(buffer, index);
 			for (uint64_t x = 0; x < n; ++x) {
 				serialize<excludeKeys>::op(value[x], buffer, index);
@@ -297,29 +235,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<raw_array_t value_type> struct serialize_impl<true, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
-			const auto n = value.size();
-			writeCharacter<'['>(buffer, index);
-			for (uint64_t x = 0; x < n; ++x) {
-				auto& newMember	 = value[x];
-				using MemberType = decltype(newMember);
-				if constexpr (has_excluded_keys<MemberType>) {
-					serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-				} else {
-					serialize<true>::op(newMember, buffer, index);
-				}
-				const bool needsComma = x < n - 1;
-				if (needsComma) {
-					writeCharacter<','>(buffer, index);
-				}
-			}
-			writeCharacter<']'>(buffer, index);
-		}
-	};
-
-	template<bool excludeKeys, vector_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::vector_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			writeCharacter<'['>(buffer, index);
 
 			if (value.size()) {
@@ -337,27 +254,37 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<vector_t value_type> struct serialize_impl<true, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
-			writeCharacter<'['>(buffer, index);
-
-			if (value.size()) {
-				bool first = true;
-				for (auto iter = value.begin(); iter != value.end(); ++iter) {
-					if (first) {
-						first = false;
-					} else {
-						writeCharacter<','>(buffer, index);
-					}
-					auto& newMember	 = *iter;
-					using MemberType = decltype(newMember);
-					if constexpr (has_excluded_keys<MemberType>) {
-						serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-					} else {
-						serialize<true>::op(newMember, buffer, index);
-					}
+	template<bool excludeKeys, jsonifier::concepts::map_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+			writeCharacter<'{'>(buffer, index);
+			uint64_t currentIndex{};
+			for (auto& [key, valueNew]: value) {
+				serialize<excludeKeys>::op(key, buffer, index);
+				writeCharacter<':'>(buffer, index);
+				serialize<excludeKeys>::op(valueNew, buffer, index);
+				const bool needsComma = currentIndex < value.size() - 1;
+				if (needsComma) {
+					writeCharacter<','>(buffer, index);
 				}
-			}
+				++currentIndex;
+			};
+			writeCharacter<'}'>(buffer, index);
+		}
+	};
+
+	template<bool excludeKeys, jsonifier::concepts::jsonifier_array_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
+
+			writeCharacter<'['>(buffer, index);
+			forEach<N>([&](auto I) {
+				auto& newMember = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
+				serialize<excludeKeys>::op(newMember, buffer, index);
+				constexpr bool needsComma = I < N - 1;
+				if constexpr (needsComma) {
+					writeCharacter<','>(buffer, index);
+				}
+			});
 			writeCharacter<']'>(buffer, index);
 		}
 	};
@@ -371,20 +298,20 @@ namespace jsonifier_internal {
 		return false;
 	}
 
-	template<bool excludeKeys, object_t value_type> struct serialize_impl<excludeKeys, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<bool excludeKeys, jsonifier::concepts::jsonifier_object_t value_type> struct serialize_impl<excludeKeys, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			writeCharacter<'{'>(buffer, index);
-			using V					= ref_unwrap<value_type>;
-			static constexpr auto n = std::tuple_size_v<core_t<V>>;
+			using V					= value_type;
+			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<V>>;
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static constexpr auto item = tuplet::get<x>(coreV<V>);
+				static constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<V>);
 				using ItemType			   = decltype(item);
 				using MPtrT				   = std::tuple_element_t<1, ItemType>;
 				using ValT				   = member_t<V, MPtrT>;
 
-				if constexpr (null_t<ValT>) {
+				if constexpr (jsonifier::concepts::null_t<ValT>) {
 					auto isNull = [&]() {
 						if constexpr (std::is_member_pointer_v<std::tuple_element_t<1, ItemType>>) {
 							return !bool(value.*tuplet::get<1>(item));
@@ -403,20 +330,19 @@ namespace jsonifier_internal {
 					writeCharacter<','>(buffer, index);
 				}
 
-				using key = ref_unwrap<std::tuple_element_t<0, decltype(item)>>;
+				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, decltype(item)>>;
 
-				if constexpr (string_t<key> || char_t<key>) {
+				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);
 					if constexpr (needsEscaping(key)) {
 						serialize<excludeKeys>::op(key, buffer, index);
 						writeCharacter<':'>(buffer, index);
 					} else {
-						static constexpr auto quoted = JoinV<Chars<"\"">, key, Chars<"\":">>;
+						static constexpr jsonifier::string_view string01{ "\"" };
+						static constexpr jsonifier::string_view string02{ "\":" };
+						static constexpr auto quoted = JoinV<string01, key, string02>;
 						writeCharacters<quoted>(buffer, index);
 					}
-				} else {
-					static constexpr auto quoted = concatArrays(concatArrays("\"", tuplet::get<0>(item)), "\":", "");
-					serialize<excludeKeys>::op(quoted, buffer, index);
 				}
 				auto& newMember = getMember(value, tuplet::get<1>(item));
 				serialize<excludeKeys>::op(newMember, buffer, index);
@@ -425,20 +351,20 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<object_t value_type> struct serialize_impl<true, value_type> {
-		template<vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
+	template<jsonifier::concepts::jsonifier_object_t value_type> struct serialize_impl<true, value_type> {
+		template<jsonifier::concepts::vector_like buffer_type> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index) {
 			writeCharacter<'{'>(buffer, index);
-			using V					= ref_unwrap<value_type>;
-			static constexpr auto n = std::tuple_size_v<core_t<V>>;
+			using V					= value_type;
+			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<V>>;
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static constexpr auto item = tuplet::get<x>(coreV<V>);
+				static constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<V>);
 				using ItemType			   = decltype(item);
 				using MPtrT				   = std::tuple_element_t<1, ItemType>;
 				using ValT				   = member_t<V, MPtrT>;
 
-				if constexpr (null_t<ValT>) {
+				if constexpr (jsonifier::concepts::null_t<ValT>) {
 					auto isNull = [&]() {
 						if constexpr (std::is_member_pointer_v<std::tuple_element_t<1, ItemType>>) {
 							return !bool(value.*tuplet::get<1>(item));
@@ -451,9 +377,9 @@ namespace jsonifier_internal {
 					}
 				}
 
-				using key = ref_unwrap<std::tuple_element_t<0, ItemType>>;
+				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, ItemType>>;
 
-				if constexpr (string_t<key> || char_t<key>) {
+				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);
 					if (first) {
 						first = false;
@@ -464,22 +390,15 @@ namespace jsonifier_internal {
 						serialize<true>::op(key, buffer, index);
 						writeCharacter<':'>(buffer, index);
 					} else {
-						static constexpr auto quoted = JoinV<Chars<"\"">, key, Chars<"\":">>;
+						static constexpr jsonifier::string_view string01{ "\"" };
+						static constexpr jsonifier::string_view string02{ "\":" };
+						static constexpr auto quoted = JoinV<string01, key, string02>;
 						writeCharacters<quoted>(buffer, index);
-					}
-				} else {
-					static constexpr auto quoted = concatArrays(concatArrays("\"", tuplet::get<0>(item)), "\":", "");
-					auto& newMember				 = quoted;
-					using MemberType			 = decltype(newMember);
-					if constexpr (has_excluded_keys<MemberType>) {
-						serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-					} else {
-						serialize<true>::op(newMember, buffer, index);
 					}
 				}
 				auto& newMember	 = getMember(value, tuplet::get<1>(item));
 				using MemberType = decltype(newMember);
-				if constexpr (has_excluded_keys<MemberType>) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<MemberType>) {
 					serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
 				} else {
 					serialize<true>::op(newMember, buffer, index);
@@ -488,19 +407,20 @@ namespace jsonifier_internal {
 			writeCharacter<'}'>(buffer, index);
 		}
 
-		template<vector_like buffer_type, has_find KeyType> inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index, const KeyType& excludedKeys) {
+		template<jsonifier::concepts::vector_like buffer_type, jsonifier::concepts::has_find KeyType>
+		inline static void op(const value_type& value, buffer_type&& buffer, uint64_t& index, const KeyType& excludedKeys) {
 			writeCharacter<'{'>(buffer, index);
-			using V					= ref_unwrap<value_type>;
-			static constexpr auto n = std::tuple_size_v<core_t<V>>;
+			using V					= value_type;
+			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<V>>;
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static constexpr auto item = tuplet::get<x>(coreV<V>);
+				static constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<V>);
 				using ItemType			   = decltype(item);
 				using MPtrT				   = std::tuple_element_t<1, ItemType>;
 				using ValT				   = member_t<V, MPtrT>;
 
-				if constexpr (null_t<ValT>) {
+				if constexpr (jsonifier::concepts::null_t<ValT>) {
 					auto isNull = [&]() {
 						if constexpr (std::is_member_pointer_v<std::tuple_element_t<1, ItemType>>) {
 							return !bool(value.*tuplet::get<1>(item));
@@ -513,9 +433,9 @@ namespace jsonifier_internal {
 					}
 				}
 
-				using key = ref_unwrap<std::tuple_element_t<0, ItemType>>;
+				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, ItemType>>;
 
-				if constexpr (string_t<key> || char_t<key>) {
+				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);
 					if (excludedKeys.find(static_cast<const typename KeyType::key_type>(key)) != excludedKeys.end()) {
 						return;
@@ -529,22 +449,15 @@ namespace jsonifier_internal {
 						serialize<true>::op(key, buffer, index);
 						writeCharacter<':'>(buffer, index);
 					} else {
-						static constexpr auto quoted = JoinV<Chars<"\"">, key, Chars<"\":">>;
+						static constexpr jsonifier::string_view string01{ "\"" };
+						static constexpr jsonifier::string_view string02{ "\":" };
+						static constexpr auto quoted = JoinV<string01, key, string02>;
 						writeCharacters<quoted>(buffer, index);
-					}
-				} else {
-					static constexpr auto quoted = concatArrays(concatArrays("\"", tuplet::get<0>(item)), "\":", "");
-					auto& newMember				 = quoted;
-					using MemberType			 = decltype(newMember);
-					if constexpr (has_excluded_keys<MemberType>) {
-						serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
-					} else {
-						serialize<true>::op(newMember, buffer, index);
 					}
 				}
 				auto& newMember	 = getMember(value, tuplet::get<1>(item));
 				using MemberType = decltype(newMember);
-				if constexpr (has_excluded_keys<MemberType>) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<MemberType>) {
 					serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
 				} else {
 					serialize<true>::op(newMember, buffer, index);

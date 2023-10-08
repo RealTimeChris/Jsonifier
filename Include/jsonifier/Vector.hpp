@@ -24,10 +24,8 @@
 #pragma once
 
 #include <jsonifier/Allocator.hpp>
-#include <jsonifier/Compare.hpp>
 #include <jsonifier/Iterator.hpp>
-#include <source_location>
-#include <cstring>
+#include <jsonifier/Compare.hpp>
 
 namespace jsonifier {
 
@@ -35,7 +33,7 @@ namespace jsonifier {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
-		using const_pointer			 = const value_type*;
+		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using iterator				 = jsonifier_internal::iterator<value_type>;
@@ -327,20 +325,19 @@ namespace jsonifier {
 				return;
 			}
 
-			auto oldCapacity  = capacityVal;
-			capacityVal		  = sizeVal;
-			pointer newValues = getAlloc().allocate(capacityVal);
-			std::uninitialized_move(dataVal, dataVal + sizeVal, newValues);
-			getAlloc().deallocate(dataVal, oldCapacity);
-			dataVal = newValues;
+			vector<value_type> newVector{};
+			newVector.reserve(sizeVal);
+			std::uninitialized_move(dataVal, dataVal + sizeVal, newVector.data());
+			newVector.sizeVal = sizeVal;
+			swap(newVector);
 		}
 
 		inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
-				if (sizeNew > capacityVal) {
+				if (sizeNew > capacityVal) [[likely]] {
 					pointer newPtr = getAlloc().allocate(sizeNew);
 					try {
-						if (dataVal) {
+						if (dataVal && capacityVal > 0) [[likely]] {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							getAlloc().deallocate(dataVal, capacityVal);
 						}
@@ -350,11 +347,9 @@ namespace jsonifier {
 					}
 					capacityVal = sizeNew;
 					dataVal		= newPtr;
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
-				} else if (sizeNew > sizeVal) {
-					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
-				} else if (sizeNew < sizeVal) {
-					std::destroy(dataVal + sizeNew, dataVal + sizeVal);
+					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+				} else if (sizeNew > sizeVal) [[unlikely]] {
+					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				}
 				sizeVal = sizeNew;
 			} else {
@@ -362,20 +357,19 @@ namespace jsonifier {
 			}
 		}
 
-		inline void reserve(size_t capacityValNew) {
-			if (capacityValNew > capacityVal) [[likely]] {
-				pointer newPtr = getAlloc().allocate(capacityValNew);
+		inline void reserve(size_type capacityNew) {
+			if (capacityNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityNew);
 				try {
-					if (dataVal && sizeVal) [[likely]] {
+					if (dataVal && capacityVal > 0) [[likely]] {
 						std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						getAlloc().deallocate(dataVal, capacityVal);
 					}
 				} catch (...) {
-					getAlloc().deallocate(newPtr, capacityValNew);
+					getAlloc().deallocate(newPtr, capacityNew);
 					throw;
 				}
-
-				capacityVal = capacityValNew;
+				capacityVal = capacityNew;
 				dataVal		= newPtr;
 			}
 		}

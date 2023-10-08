@@ -21,27 +21,26 @@
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
-/// Most of the code in this header was sampled fromSimdjson - https://github.com/simdjson
+/// Most of the code in this header was sampled from simdjson - https://github.com/simdjson
 #pragma once
 
-#include <codecvt>
 #include <jsonifier/Allocator.hpp>
+#include <jsonifier/Tables.hpp>
 #include <jsonifier/Base.hpp>
 #include <jsonifier/Simd.hpp>
-#include <jsonifier/Tables.hpp>
 
 namespace jsonifier_internal {
 
-	template<typename simd_base_internal> class backslash_and_quote {
+	class backslash_and_quote {
 	  public:
 		static constexpr string_parsing_type bytesProcessed = BytesPerStep;
 
-		inline backslash_and_quote<simd_base_internal> static copyAndFind(string_view_ptr source, string_buffer_ptr dest) {
-			simd_base_internal values(source);
-			values.store(dest);
+		template<typename source_type, typename dest_type> inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
+			simd_base values(gatherValues<simd_base>(source));
+			values.store(destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = { values == uint8_t{ '\\' } };
-			returnData.quoteBits = { values == uint8_t{ '\"' } };
+			returnData.bsBits	 = { values == '\\' };
+			returnData.quoteBits = { values == '\"' };
 			return returnData;
 		}
 
@@ -54,11 +53,11 @@ namespace jsonifier_internal {
 		}
 
 		inline string_parsing_type quoteIndex() {
-			return tzCount(quoteBits);
+			return tzcnt(quoteBits);
 		}
 
 		inline string_parsing_type backslashIndex() {
-			return tzCount(bsBits);
+			return tzcnt(bsBits);
 		}
 
 	  protected:
@@ -66,45 +65,55 @@ namespace jsonifier_internal {
 		string_parsing_type bsBits{};
 	};
 
-	inline uint32_t hexToU32NoCheck(string_view_ptr source) {
-		uint32_t v1 = digitToVal32[630ULL + source[0]];
-		uint32_t v2 = digitToVal32[420ULL + source[1]];
-		uint32_t v3 = digitToVal32[210ULL + source[2]];
-		uint32_t v4 = digitToVal32[0ULL + source[3]];
+	template<typename value_type> inline static uint32_t hexToU32NoCheck(const value_type* source) {
+		uint32_t v1 = digitToVal32[630 + source[0]];
+		uint32_t v2 = digitToVal32[420 + source[1]];
+		uint32_t v3 = digitToVal32[210 + source[2]];
+		uint32_t v4 = digitToVal32[0 + source[3]];
 		return v1 | v2 | v3 | v4;
 	}
 
-	inline uint64_t codePointToUtf8(uint32_t codePoint, string_buffer_ptr c) {
+	inline static uint32_t codePointToUtf8(uint32_t codePoint, uint8_t* c) {
 		if (codePoint <= 0x7F) {
 			c[0] = uint8_t(codePoint);
 			return 1;
 		}
-		if (codePoint <= 0x7FF) {
-			c[0] = uint8_t((codePoint >> 6) + 192);
-			c[1] = uint8_t((codePoint & 63) + 128);
+		int32_t leading_zeros = lzcnt(codePoint);
+
+		if (leading_zeros >= 11) {
+			uint32_t pattern = pdep(0x3F00U, codePoint);
+			pattern |= 0xC0ULL;
+			c[0] = static_cast<uint8_t>(pattern >> 8);
+			c[1] = static_cast<uint8_t>(pattern & 0xFF);
 			return 2;
-		} else if (codePoint <= 0xffff) {
-			c[0] = uint8_t((codePoint >> 12) + 224);
-			c[1] = uint8_t(((codePoint >> 6) & 63) + 128);
-			c[2] = uint8_t((codePoint & 63) + 128);
+		} else if (leading_zeros >= 16) {
+			uint32_t pattern = pdep(0x0F0800U, codePoint);
+			pattern |= 0xE0ULL;
+			c[0] = static_cast<uint8_t>(pattern >> 16);
+			c[1] = static_cast<uint8_t>(pattern >> 8);
+			c[2] = static_cast<uint8_t>(pattern & 0xFF);
 			return 3;
-		} else if (codePoint <= 0x10FFFF) {
-			c[0] = uint8_t((codePoint >> 18) + 240);
-			c[1] = uint8_t(((codePoint >> 12) & 63) + 128);
-			c[2] = uint8_t(((codePoint >> 6) & 63) + 128);
-			c[3] = uint8_t((codePoint & 63) + 128);
+		} else if (leading_zeros >= 21) {
+			uint32_t pattern = pdep(0x01020400U, codePoint);
+			pattern |= 0xF0ULL;
+			c[0] = static_cast<uint8_t>(pattern >> 24);
+			c[1] = static_cast<uint8_t>(pattern >> 16);
+			c[2] = static_cast<uint8_t>(pattern >> 8);
+			c[3] = static_cast<uint8_t>(pattern & 0xFF);
 			return 4;
 		}
 		return 0;
 	}
 
-	inline bool handleUnicodeCodePoint(string_view_ptr* srcPtr, string_buffer_ptr* dstPtr) {
+	template<typename value_type01, typename value_type02> inline static bool handleUnicodeCodePoint(value_type01* srcPtr, value_type02* dstPtr) {
 		constexpr uint32_t subCodePoint = 0xfffd;
-		uint32_t codePoint				= hexToU32NoCheck(*srcPtr + 2);
+		constexpr auto backslash{ static_cast<uint8_t>('\\') };
+		constexpr auto u{ static_cast<uint8_t>('u') };
+		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			string_view_ptr srcData = *srcPtr;
-			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
+			value_type01 srcData = *srcPtr;
+			if (((srcData[0] << 8) | srcData[1]) != (backslash << 8 | u)) {
 				codePoint = subCodePoint;
 			} else {
 				uint32_t codePoint2 = hexToU32NoCheck(srcData + 2);
@@ -124,36 +133,31 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	inline string_buffer_ptr parsestring(string_view_ptr source, string_buffer_ptr dest, int64_t maxLength) {
-		while (maxLength > 0) {
-			auto bsQuote = backslash_and_quote<simd_base<StepSize>>::copyAndFind(source, dest);
+	template<typename source_type, typename dest_type> inline static dest_type* parseString(const source_type* source, dest_type* destString) {
+		while (true) {
+			auto bsQuote = backslash_and_quote::copyAndFind(source, destString);
 			if (bsQuote.hasQuoteFirst()) {
-				return dest + bsQuote.quoteIndex();
+				return destString + bsQuote.quoteIndex();
 			}
 			if (bsQuote.hasBackslash()) {
-				auto bsDist			= bsQuote.backslashIndex();
-				uint8_t escape_char = source[bsDist + 1];
-				if (escape_char == 'u') {
-					maxLength -= bsDist;
+				auto bsDist			   = bsQuote.backslashIndex();
+				source_type escapeChar = source[bsDist + 1];
+				if (escapeChar == 'u') {
 					source += bsDist;
-					dest += bsDist;
-					if (!handleUnicodeCodePoint(&source, &dest)) {
-						return nullptr;
-					}
+					destString += bsDist;
+					handleUnicodeCodePoint(&source, &destString);
 				} else {
-					uint8_t escapeResult = escapeMap[escape_char];
+					uint8_t escapeResult = escapeMap<uint8_t>[escapeChar];
 					if (escapeResult == 0u) {
 						return nullptr;
 					}
-					dest[bsDist] = escapeResult;
-					maxLength -= bsDist + 1ULL;
+					destString[bsDist] = escapeResult;
+					destString += bsDist + 1ULL;
 					source += bsDist + 2ULL;
-					dest += bsDist + 1ULL;
 				}
 			} else {
-				maxLength -= backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
-				source += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
-				dest += backslash_and_quote<simd_base<StepSize>>::bytesProcessed;
+				source += backslash_and_quote::bytesProcessed;
+				destString += backslash_and_quote::bytesProcessed;
 			}
 		}
 		return nullptr;
