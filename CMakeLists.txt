@@ -46,12 +46,12 @@ add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
-set(POPCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(LZCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(BMI_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-POPCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-LZCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-BMI_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 
 if(NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
