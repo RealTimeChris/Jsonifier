@@ -24,24 +24,33 @@
 #pragma once
 
 #include <jsonifier/Simd.hpp>
-#include <iterator>
 
 namespace jsonifier_internal {
 
 	class structural_iterator {
 	  public:
+		friend class derailleur;
+
 		using iterator_category = std::forward_iterator_tag;
-		using value_type		= string_view_ptr;
-		using pointer			= value_type*;
+		using value_type		= uint8_t;
+		using difference_type	= std::ptrdiff_t;
+		using pointer			= string_view_ptr*;
+		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		inline structural_iterator(pointer rootIndexNew, size_type originalLength) {
-			stringLength = originalLength;
+		inline structural_iterator() noexcept = default;
+
+		inline structural_iterator(structural_index* rootIndexNew, size_type originalLength) {
+			tapeLength	 = originalLength;
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
 		inline value_type operator*() const {
+			return (*currentIndex ? **currentIndex : defaultValue);
+		}
+
+		inline string_view_ptr operator->() {
 			return *currentIndex;
 		}
 
@@ -50,33 +59,24 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		inline size_type getCurrentIndex() const {
+		inline structural_iterator operator++(int32_t) {
+			structural_iterator oldIter{ *this };
+			++(*this);
+			return oldIter;
+		}
+
+		inline size_type getCurrentStringIndex() {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		inline size_type getRemainingLength() const {
-			return stringLength - getCurrentIndex();
-		}
-
 		inline bool operator==(const structural_iterator&) const {
-			return checkForstringOverRun();
-		}
-
-		inline bool operator==(uint8_t other) const {
-			if (checkForstringOverRun()) {
-				return false;
-			}
-			return ***this == other;
+			return (currentIndex - rootIndex) >= tapeLength || !(*currentIndex);
 		}
 
 	  protected:
-		size_type stringLength{};
+		static constexpr uint8_t defaultValue{ '\0' };
+		size_type tapeLength{};
 		pointer currentIndex{};
 		pointer rootIndex{};
-
-		inline bool checkForstringOverRun() const {
-			auto currentIndexTemp = getCurrentIndex();
-			return currentIndexTemp < 0 || currentIndexTemp >= stringLength;
-		}
 	};
 }

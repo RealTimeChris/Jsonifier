@@ -23,25 +23,14 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Concepts.hpp>
+#include <jsonifier/StringView.hpp>
+#include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/Tuple.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
-#include <jsonifier/RawJsonData.hpp>
-#include <jsonifier/StringView.hpp>
-#include <jsonifier/Tuple.hpp>
-
-#include <type_traits>
 #include <functional>
-#include <concepts>
-#include <iostream>
-#include <utility>
-#include <variant>
-#include <bitset>
-#include <memory>
-#include <chrono>
+#include <optional>
 #include <atomic>
-#include <vector>
-#include <span>
 
 namespace jsonifier_internal {
 
@@ -71,8 +60,11 @@ namespace jsonifier_internal {
 
 	template<typename... Args> constexpr bool falseV = false_t<Args...>::value;
 
-	template<size_t strLength, typename value_type> class string_literal {
+	template<size_t strLength, typename value_type_new> struct string_literal {
 	  public:
+		using value_type = value_type_new;
+		using pointer = value_type*;
+
 		static constexpr size_t sizeVal = (strLength > 0) ? (strLength - 1) : 0;
 
 		constexpr string_literal() = default;
@@ -81,15 +73,15 @@ namespace jsonifier_internal {
 			std::copy(str, str + strLength, string);
 		}
 
-		constexpr const value_type* data() const {
+		constexpr pointer data() const {
 			return string;
 		}
 
-		constexpr const value_type* begin() const {
+		constexpr const pointer begin() const {
 			return string;
 		}
 
-		constexpr const value_type* end() const {
+		constexpr const pointer end() const {
 			return string + sizeVal;
 		}
 
@@ -97,22 +89,11 @@ namespace jsonifier_internal {
 			return sizeVal;
 		}
 
-		constexpr const jsonifier::string_view stringView() const {
-			return { string, sizeVal };
-		}
-
 		value_type string[strLength];
 	};
 
-	template<size_t Count> constexpr auto stringLiteralFromView(const jsonifier::string_view_base<char>& str) {
-		constexpr string_literal<Count + 1, char> string{};
-		std::copy_n(str.data(), str.size(), string.string);
-		*(string.string + Count) = '\0';
-		return string;
-	}
-
 	template<string_literal str> struct chars_impl {
-		static constexpr jsonifier::string_view value{ str.string, jsonifier_internal::char_traits<char>::length(str.string) };
+		static constexpr jsonifier::string_view value{ str.string, str.sizeVal };
 	};
 
 	template<string_literal str> constexpr jsonifier::string_view Chars = chars_impl<str>::value;
@@ -157,7 +138,7 @@ namespace jsonifier_internal {
 
 	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<ref_unwrap<Func>>(f)(i), ...);
+			(std::forward<std::unwrap_ref_decay_t<Func>>(f)(i), ...);
 		});
 	}
 
@@ -184,7 +165,7 @@ namespace jsonifier_internal {
 	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using value_type = std::decay_t<decltype(member_ptr)>;
+		using value_type = std::unwrap_ref_decay_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type>) {
 			return value.*member_ptr;
 		} else if constexpr (std::is_member_function_pointer_v<value_type>) {
@@ -198,29 +179,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<ref_unwrap<mptr_t>&>()));
-}// namespace jsonifier_internal
+	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<std::unwrap_ref_decay_t<mptr_t>&>()));
 
-namespace jsonifier {
-
-	constexpr auto createArray(auto&&... args) {
-		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
-	}
-
-	constexpr auto createObject(auto&&... args) {
-		if constexpr (sizeof...(args) == 0) {
-			return object{ jsonifier_internal::tuplet::tuple{} };
-		} else {
-			return object{ jsonifier_internal::GroupBuilder<jsonifier_internal::ref_unwrap<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
-				jsonifier_internal::tuplet::copyTuple(args...)) };
-		}
-	}
-
-}// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	template<time_type value_type> class stop_watch {
+	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
@@ -233,8 +194,8 @@ namespace jsonifier_internal {
 		}
 
 		inline stop_watch& operator=(stop_watch&& other) {
-			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
@@ -243,8 +204,8 @@ namespace jsonifier_internal {
 		}
 
 		inline stop_watch& operator=(const stop_watch& other) {
-			this->totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			this->startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
@@ -283,5 +244,22 @@ namespace jsonifier_internal {
 		std::atomic<value_type> startTimeInTimeUnits{};
 	};
 
-	template<time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
+	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }// namespace jsonifier_internal
+
+namespace jsonifier {
+
+	constexpr auto createArray(auto&&... args) {
+		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
+	}
+
+	constexpr auto createObject(auto&&... args) {
+		if constexpr (sizeof...(args) == 0) {
+			return object{ jsonifier_internal::tuplet::tuple{} };
+		} else {
+			return object{ jsonifier_internal::GroupBuilder<std::unwrap_ref_decay_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
+				jsonifier_internal::tuplet::copyTuple(args...)) };
+		}
+	}
+
+}// namespace jsonifier

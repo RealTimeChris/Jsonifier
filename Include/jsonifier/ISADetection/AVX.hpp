@@ -29,36 +29,32 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-	constexpr uint64_t StepSize{ 128 };
-	constexpr uint64_t BytesPerStep{ StepSize / 8 };
-	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
-	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };
-	using string_parsing_type = uint16_t;
-
 	template<typename value_type>
-	concept avx_t = std::same_as<ref_unwrap<value_type>, avx_int_128>;
+	concept avx_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_128>;
 
 	template<typename value_type> inline avx_int_128 gatherValues128(const value_type* str) {
-		alignas(JSONIFIER_ALIGNMENT) double newArray[sizeof(avx_int_128) / sizeof(double)]{};
+		alignas(JsonifierAlignment) double newArray[sizeof(avx_int_128) / sizeof(double)]{};
 		std::memcpy(newArray, str, sizeof(avx_int_128));
 		return _mm_castpd_si128(_mm_load_pd(newArray));
 	}
 
-	template<float_t value_type> inline avx_float_128 gatherValues128(const value_type* str) {
+	template<jsonifier::concepts::float_t value_type> inline avx_float_128 gatherValues128(const value_type* str) {
 		return _mm_load_ps(str);
 	}
+
+	#define gatherValues(x) gatherValues128(x)
 
 	template<> class simd_base_internal<128> {
 	  public:
 		inline simd_base_internal() = default;
 
 		template<avx_t avx_type_new> inline simd_base_internal& operator=(avx_type_new&& data) {
-			value = std::forward<avx_type_new>(data);
+			value = _mm_load_si128(&data);
 			return *this;
 		}
 
 		template<avx_t avx_type_new> inline simd_base_internal(avx_type_new&& data) {
-			*this = std::forward<avx_type_new>(data);
+			*this = data;
 		}
 
 		inline simd_base_internal& operator=(uint8_t other) {
@@ -68,10 +64,6 @@ namespace jsonifier_internal {
 
 		inline explicit simd_base_internal(uint8_t other) {
 			*this = other;
-		}
-
-		inline simd_base_internal(const uint8_t values[BytesPerStep]) {
-			value = gatherValues128(values);
 		}
 
 		inline operator const avx_int_128&() const {
@@ -112,16 +104,16 @@ namespace jsonifier_internal {
 			return _mm_xor_si128(*this, _mm_set1_epi64x(std::numeric_limits<uint64_t>::max()));
 		}
 
-		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
-				static const simd_base_internal whitespaceTable{ arrayNew };
+				alignas(JsonifierAlignment) static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
+				static const simd_base_internal whitespaceTable{ gatherValues(arrayNew) };
 				addValues<index>(valuesNew[index].shuffle(whitespaceTable) == valuesNew[index]);
 				convertWhitespaceToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
 				static const simd_base_internal backslashes{ _mm_set1_epi8('\\') };
 				addValues<index>(valuesNew[index] == backslashes);
@@ -129,17 +121,17 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
-				static const simd_base_internal opTable{ arrayNew };
+				alignas(JsonifierAlignment) static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+				static const simd_base_internal opTable{ gatherValues(arrayNew) };
 				static const simd_base_internal chars{ uint8_t{ 0x20 } };
 				addValues<index>(valuesNew[index].shuffle(opTable) == (valuesNew[index] | chars));
 				convertStructuralsToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertQuotesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertQuotesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
 				static const simd_base_internal quotes{ _mm_set1_epi8('"') };
 				addValues<index>(valuesNew[index] == quotes);
@@ -147,13 +139,13 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<uint64_t index = 0> inline uint64_t getUint64() const {
-			static_assert(index < SixtyFourBytesPerStep, "Sorry, but that index value is incorrect.");
+		template<uint64_t index = 0> uint64_t getUint64() const {
+			static_assert(index < SixtyFourBitsPerStep, "Sorry, but that index value is incorrect.");
 			return static_cast<uint64_t>(_mm_extract_epi64(value, index));
 		}
 
 		template<uint64_t index = 0> inline void insertUint64(uint64_t valueNew) {
-			static_assert(index < SixtyFourBytesPerStep, "Sorry, but that index value is incorrect.");
+			static_assert(index < SixtyFourBitsPerStep, "Sorry, but that index value is incorrect.");
 			value = _mm_insert_epi64(value, static_cast<int64_t>(valueNew), index);
 		}
 
@@ -176,7 +168,7 @@ namespace jsonifier_internal {
 
 		template<uint64_t amount> inline simd_base_internal shl() const {
 			simd_base_internal currentValues{};
-			currentValues.insertUint64(getUint64() << amount);
+			currentValues.insertUint64<0>(getUint64<0>() << amount);
 			uint64_t shiftBetween = amount % 64;
 			currentValues.insertUint64<1>((getUint64<1>() << amount) | (getUint64() >> (64 - shiftBetween)));
 			return currentValues;
@@ -191,7 +183,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type> inline void store(value_type* storageLocation) {
-			alignas(JSONIFIER_ALIGNMENT) double newArray[SixtyFourBytesPerStep]{};
+			alignas(JsonifierAlignment) double newArray[SixtyFourBitsPerStep]{};
 			_mm_store_pd(newArray, _mm_castsi128_pd(value));
 			std::memcpy(storageLocation, newArray, sizeof(value));
 		}
@@ -205,7 +197,7 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		inline bool checkMSB() const {
+		inline bool getMSB() const {
 			avx_int_128 result = _mm_and_si128(*this, _mm_set_epi64x(0x8000000000000000, 0));
 			return !_mm_testz_si128(result, result);
 		}
@@ -224,7 +216,7 @@ namespace jsonifier_internal {
 		inline simd_base_internal follows(bool& overflow) const {
 			simd_base_internal result = shl<1>();
 			result.setLSB(overflow);
-			overflow = checkMSB();
+			overflow = getMSB();
 			return result;
 		}
 
@@ -251,11 +243,9 @@ namespace jsonifier_internal {
 		avx_int_128 value{};
 	};
 
-	inline simd_base<StepSize> makeSimdBase(uint64_t value) {
+	inline simd_base makeSimdBase(uint64_t value) {
 		return _mm_set1_epi64x(value);
 	}
-
-	#define load(value) gatherValues128(value)
 
 #endif
 

@@ -52,18 +52,20 @@
 #ifndef JSONIFIER_BMI
 	#define JSONIFIER_BMI (1 << 2)
 #endif
+#ifndef JSONIFIER_BMI2
+	#define JSONIFIER_BMI2 (1 << 3)
+#endif
 #ifndef JSONIFIER_AVX
-	#define JSONIFIER_AVX (1 << 3)
+	#define JSONIFIER_AVX (1 << 4)
 #endif
 #ifndef JSONIFIER_AVX2
-	#define JSONIFIER_AVX2 (1 << 4)
+	#define JSONIFIER_AVX2 (1 << 5)
 #endif
 #ifndef JSONIFIER_AVX512
-	#define JSONIFIER_AVX512 (1 << 5)
+	#define JSONIFIER_AVX512 (1 << 6)
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	#include <immintrin.h>
 
 using avx_int_512	= __m512i;
@@ -83,31 +85,58 @@ using avx_int_128 = __m128x;
 
 #endif
 
-#include <jsonifier/Concepts.hpp>
+#include <jsonifier/TypeEntities.hpp>
 #include <source_location>
 #include <iostream>
 #include <cstring>
 #include <cstdint>
 #include <bitset>
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 64 };
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 32 };
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
-#else
-constexpr uint64_t JSONIFIER_ALIGNMENT{ 16 };
-#endif
-
 namespace jsonifier_internal {
 
-	template<uint64_t StepSize> struct simd_base_internal {};
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-	template<uint64_t size> using simd_base		  = simd_base_internal<size>;
-	template<uint64_t size> using simd_base_small = simd_base_internal<size / 2>;
-	using string_view_ptr						  = const uint8_t*;
-	using structural_index						  = string_view_ptr;
-	using string_buffer_ptr						  = uint8_t*;
+	constexpr uint64_t BitPerStep{ 512 };
+	constexpr uint64_t BytesPerStep{ BitPerStep / 8 };
+	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+	constexpr uint64_t SixtyFourBitsPerStep{ BitPerStep / 64 };
+	constexpr uint64_t StridesPerStep{ BitPerStep / BytesPerStep };
+	using string_parsing_type = uint64_t;
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+
+	constexpr uint64_t BitPerStep{ 256 };
+	constexpr uint64_t BytesPerStep{ BitPerStep / 8 };
+	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+	constexpr uint64_t SixtyFourBitsPerStep{ BitPerStep / 64 };
+	constexpr uint64_t StridesPerStep{ BitPerStep / BytesPerStep };
+	using string_parsing_type = uint32_t;
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+
+	constexpr uint64_t BitPerStep{ 128 };
+	constexpr uint64_t BytesPerStep{ BitPerStep / 8 };
+	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+	constexpr uint64_t SixtyFourBitsPerStep{ BitPerStep / 64 };
+	constexpr uint64_t StridesPerStep{ BitPerStep / BytesPerStep };
+	using string_parsing_type = uint16_t;
+
+#else
+
+	constexpr uint64_t BitPerStep{ 128 };
+	constexpr uint64_t BytesPerStep{ BitPerStep / 8 };
+	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+	constexpr uint64_t SixtyFourBitsPerStep{ BitPerStep / 64 };
+	constexpr uint64_t StridesPerStep{ BitPerStep / BytesPerStep };
+	using string_parsing_type = uint16_t;
+
+#endif
+
+	template<uint64_t BitPerStep> struct simd_base_internal {};
+
+	using simd_base			= simd_base_internal<BitPerStep>;
+	using string_view_ptr	= const uint8_t*;
+	using structural_index	= string_view_ptr;
+	using string_buffer_ptr = uint8_t*;
 
 };

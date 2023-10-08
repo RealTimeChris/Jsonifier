@@ -71,10 +71,6 @@ namespace jsonifier_internal {
 			return N;
 		}
 
-		constexpr size_type maxSize() const {
-			return N;
-		}
-
 		constexpr reference operator[](uint64_t index) {
 			return dataVal[index];
 		}
@@ -113,11 +109,11 @@ namespace jsonifier_internal {
 			return dataVal[N - 1];
 		}
 
-		constexpr value_type* data() {
+		constexpr pointer data() {
 			return dataVal;
 		}
 
-		constexpr const value_type* data() const {
+		constexpr const_pointer data() const {
 			return dataVal;
 		}
 
@@ -127,7 +123,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		alignas(JSONIFIER_ALIGNMENT) value_type dataVal[N]{};
+		alignas(JsonifierAlignment) value_type dataVal[N]{};
 
 		template<size_t M, size_t... I> constexpr raw_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}
@@ -139,8 +135,8 @@ namespace jsonifier_internal {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using pointer				 = value_type*;
-		using const_pointer			 = const value_type*;
-		using iterator				 = pointer;
+		using const_pointer			 = const pointer;
+		using iterator				 = value_type*;
 		using const_iterator		 = const_pointer;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;

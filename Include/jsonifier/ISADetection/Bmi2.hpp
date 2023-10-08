@@ -23,11 +23,31 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/Popcount.hpp>
-#include <jsonifier/ISADetection/Lzcount.hpp>
-#include <jsonifier/ISADetection/Bmi.hpp>
-#include <jsonifier/ISADetection/Bmi2.hpp>
-#include <jsonifier/ISADetection/AVX.hpp>
-#include <jsonifier/ISADetection/AVX2.hpp>
-#include <jsonifier/ISADetection/AVX512.hpp>
-#include <jsonifier/ISADetection/Fallback.hpp>
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+
+namespace jsonifier_internal {
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI2)
+
+	#define pdep(x, y) _pdep_u64(x, y)
+
+#else
+
+	inline static uint64_t pdep(uint64_t src, uint64_t mask) {
+		uint64_t result	 = 0;
+		uint64_t src_bit = 1;
+
+		for (int i = 0; i < 64; i++) {
+			if (mask & 1) {
+				result |= (src & src_bit);
+				src_bit <<= 1;
+			}
+			mask >>= 1;
+		}
+
+		return result;
+	}
+
+#endif
+
+}

@@ -26,27 +26,31 @@
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
+#include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
-#include <type_traits>
-#include <utility>
 
 namespace jsonifier_internal {
 
-	template<bool printErrors, bool excludeKeys, typename value_type = void> struct parse_impl;
+	class parser;
 
-	template<bool printErrors, bool excludeKeys> struct parse {
-		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter) {
-			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter);
+	template<bool excludeKeys, typename value_type> struct parse_impl {};
+
+	template<bool excludeKeys> struct parse {
+		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, parserNew);
 		}
 
-		template<typename value_type, has_find KeyType> inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys) {
-			parse_impl<printErrors, excludeKeys, ref_unwrap<value_type>>::op(std::forward<ref_unwrap<value_type>>(value), iter, keys);
+		template<typename value_type, jsonifier::concepts::has_find KeyType>
+		inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, keys, parserNew);
 		}
 	};
 
 	class parser {
 	  public:
-		template<bool printErrors = false, bool refreshstring = false, bool excludeKeys = false, core_type value_type, string_t buffer_type>
+		template<bool, typename value_type> friend struct parse_impl;
+
+		template<bool excludeKeys = false, bool refreshstring = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
 		inline void parseJson(value_type&& data, buffer_type&& inStringNew) {
 			if (inStringNew.empty()) {
 				return;
@@ -56,35 +60,39 @@ namespace jsonifier_internal {
 			} else if (inStringNew != string) {
 				reset(std::forward<buffer_type>(inStringNew));
 			}
+			errors.clear();
 			auto newIter = begin();
 			if (!*newIter) {
 				return;
 			}
 			if constexpr (excludeKeys) {
-				if constexpr (has_excluded_keys<decltype(data)>) {
-					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys);
+				if constexpr (jsonifier::concepts::has_excluded_keys<decltype(data)>) {
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys, *this);
 				} else {
-					parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter);
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
 				}
 			} else {
-				parse<printErrors, excludeKeys>::op(std::forward<value_type>(data), newIter);
+				parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
 			}
+		}
+
+		inline jsonifier::vector<error>& getErrors() {
+			return errors;
 		}
 
 	  protected:
 		jsonifier::string_base<uint8_t> string{};
+		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
-		int64_t originalLength{};
 
 		template<typename value_type> inline void reset(value_type&& stringNew) {
 			string.resize(stringNew.size());
-			originalLength = stringNew.size();
 			std::memcpy(string.data(), stringNew.data(), stringNew.size());
 			section.reset(string);
 		}
 
 		inline structural_iterator begin() {
-			return structural_iterator{ section.getStructurals(), originalLength };
+			return structural_iterator{ section.getStructurals(), static_cast<int64_t>(section.getTapeLength()) };
 		}
 	};
 };

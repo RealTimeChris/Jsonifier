@@ -23,8 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StringView.hpp>
 #include <jsonifier/ISADetection.hpp>
+#include <jsonifier/StringView.hpp>
 #include <cmath>
 
 namespace jsonifier_internal {
@@ -85,31 +85,25 @@ namespace jsonifier_internal {
 		}
 
 		inline void generateJsonIndices() {
-			simd_base<StepSize> newPtr[StridesPerStep]{};
-			simd_base<StepSize> nextIsEscaped{};
-			simd_base<StepSize> currentValues{};
-			simd_base<StepSize> whitespace{};
-			simd_base<StepSize> backslash{};
-			simd_base<StepSize> quotes{};
-			simd_base<StepSize> op{};
+			simd_base newPtr[StridesPerStep]{};
+			simd_base whitespace{};
+			simd_base backslash{};
+			simd_base quotes{};
+			simd_base op{};
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals(stringBlockReader.fullBlock(), newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-				generateStructurals(stringBlockReader.fullBlock() + StepSize, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
+				generateStructurals(stringBlockReader.fullBlock(), newPtr, backslash, quotes, whitespace, op);
+				generateStructurals(stringBlockReader.fullBlock() + BitPerStep, newPtr, backslash, quotes, whitespace, op);
 				stringBlockReader.advanceIndex();
 			}
-			uint8_t block[StepSize * 2];
+			uint8_t block[BitPerStep * 2];
 			if (stringBlockReader.getRemainder(block) > 0) {
-				generateStructurals(block, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-				generateStructurals(block + StepSize, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
+				generateStructurals(block, newPtr, backslash, quotes, whitespace, op);
+				generateStructurals(block + BitPerStep, newPtr, backslash, quotes, whitespace, op);
 			}
 		}
 
-		inline size_type getstringLength() {
-			return stringView.size();
-		}
-
-		inline jsonifier::string_view_base<uint8_t> getStringView() {
-			return stringView;
+		inline size_type getTapeLength() {
+			return tapeIndex;
 		}
 
 		inline structural_index* getStructurals() {
@@ -117,14 +111,15 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		inline static const simd_base<StepSize> oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
+		inline static const simd_base oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
 		jsonifier::vector<structural_index> structuralIndices{};
-		string_block_reader<StepSize * 2> stringBlockReader{};
+		string_block_reader<BitPerStep * 2> stringBlockReader{};
 		jsonifier::string_view_base<uint8_t> stringView{};
 		size_type prevInstring{};
 		size_type stringIndex{};
 		size_type tapeIndex{};
 		bool storedLSB01{};
+		bool storedLSB02{};
 
 		inline size_type roundUpToMultipleOfEight(size_type num) {
 			size_type remainder = num % 8;
@@ -144,30 +139,34 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<size_type index = 0> inline void collectStringValues(string_view_ptr valuesNew, simd_base<StepSize>* newPtr) {
+		template<size_type index = 0> inline void collectStringValues(string_view_ptr valuesNew, simd_base* newPtr) {
 			if constexpr (index < StridesPerStep) {
-				newPtr[index] = load(valuesNew + (BytesPerStep * index));
+				newPtr[index] = gatherValues(valuesNew + (BytesPerStep * index));
 				collectStringValues<index + 1>(valuesNew, newPtr);
 			}
 		}
 
-		inline void generateStructurals(string_view_ptr valueNew, simd_base<StepSize>* newPtr, simd_base<StepSize>& currentValues, simd_base<StepSize>& whitespace,
-			simd_base<StepSize>& op, simd_base<StepSize>& quotes, simd_base<StepSize>& nextIsEscaped, simd_base<StepSize>& backslash) {
+		inline void generateStructurals(string_view_ptr valueNew, simd_base* newPtr, simd_base& backslash, simd_base& quotes, simd_base& whitespace, simd_base& op
+			) {
 			collectStringValues(valueNew, newPtr);
 			whitespace.convertWhitespaceToSimdBase(newPtr);
 			backslash.convertBackslashesToSimdBase(newPtr);
 			op.convertStructuralsToSimdBase(newPtr);
 			quotes.convertQuotesToSimdBase(newPtr);
-			addTapeValues(collectStructurals(currentValues, quotes, whitespace, op, backslash, nextIsEscaped));
-			stringIndex += StepSize;
+			addTapeValues(collectStructurals(backslash, quotes, whitespace, op));
+			stringIndex += BitPerStep;
 		}
 
-		template<size_type index = 0> inline void addTapeValues(simd_base<StepSize>&& structurals) {
-			alignas(JSONIFIER_ALIGNMENT) size_type newBits[StridesPerStep]{};
+		void addTapeValues(simd_base&& structurals) {
+			alignas(JsonifierAlignment) size_type newBits[StridesPerStep]{};
 			structurals.store<size_type>(newBits);
+			addTapeValuesHelper(std::move(structurals), newBits);
+		}
+
+		template<size_type index = 0> inline void addTapeValuesHelper(simd_base&& structurals, size_type* newBits) {
 			if constexpr (index < StridesPerStep) {
 				if (!newBits[index]) {
-					addTapeValues<index + 1>(std::forward<simd_base<StepSize>>(structurals));
+					addTapeValuesHelper<index + 1>(std::forward<simd_base>(structurals), newBits);
 					return;
 				}
 				auto cnt			  = popcnt(newBits[index]);
@@ -176,42 +175,41 @@ namespace jsonifier_internal {
 					newBits[index] = rollValuesIntoTape<0, index>(y, newBits[index]);
 				}
 				tapeIndex += cnt;
-				addTapeValues<index + 1>(std::forward<simd_base<StepSize>>(structurals));
+				addTapeValuesHelper<index + 1>(std::forward<simd_base>(structurals), newBits);
 			}
 		}
 
-		inline simd_base<StepSize> collectEscapedCharacters(simd_base<StepSize>& currentValues, simd_base<StepSize>& backslash, simd_base<StepSize>& nextIsEscaped) {
+		inline simd_base collectEscapedCharacters(simd_base& backslash) {
 			if (backslash.operator bool()) {
-				currentValues				= backslash.bitAndNot(nextIsEscaped).shl<1>();
-				currentValues				= currentValues | oddBits;
-				currentValues				= currentValues - backslash.bitAndNot(nextIsEscaped);
-				currentValues				= currentValues ^ oddBits;
-				simd_base<StepSize> escaped = currentValues ^ (backslash | nextIsEscaped);
-				nextIsEscaped.setLSB((currentValues & backslash).checkMSB());
-				return escaped;
+				simd_base nextIsEscaped{};
+				nextIsEscaped.setLSB(storedLSB02);
+				simd_base potentialEscape			= backslash.bitAndNot(nextIsEscaped);
+				simd_base maybeEscaped				= potentialEscape.shl<1>();
+				maybeEscaped						= maybeEscaped | oddBits;
+				maybeEscaped						= maybeEscaped - potentialEscape;
+				simd_base escapeAndTerminalCode		= maybeEscaped ^ oddBits;
+				storedLSB02							= (escapeAndTerminalCode & backslash).getMSB();
+				return escapeAndTerminalCode ^ (backslash | nextIsEscaped);
 			} else {
-				return {};
+				simd_base escaped{};
+				escaped.setLSB(storedLSB02);
+				storedLSB02 = false;
+				return escaped;
 			}
 		}
 
-		inline simd_base<StepSize> collectStructurals(simd_base<StepSize>& currentValues, simd_base<StepSize>& quotes, simd_base<StepSize>& whitespace, simd_base<StepSize>& op,
-			simd_base<StepSize>& backslash, simd_base<StepSize>& nextIsEscaped) {
-			currentValues				   = collectEscapedCharacters(currentValues, backslash, nextIsEscaped);
-			quotes						   = quotes.bitAndNot(currentValues);
-			currentValues				   = quotes.carrylessMultiplication(prevInstring);
-			simd_base<StepSize> stringTail = currentValues ^ quotes;
-			simd_base<StepSize> scalar	   = ~(op | whitespace);
-			currentValues				   = scalar.bitAndNot(quotes);
-			currentValues				   = currentValues.follows(storedLSB01);
-			currentValues				   = scalar.bitAndNot(currentValues);
-			currentValues				   = op | currentValues;
-			currentValues				   = currentValues.bitAndNot(stringTail);
-			return currentValues;
+		inline simd_base collectStructurals(simd_base& backslash, simd_base& quotes, simd_base& whitespace, simd_base& op) {
+			simd_base currentValues = collectEscapedCharacters(backslash);
+			quotes					= quotes.bitAndNot(currentValues);
+			currentValues			= quotes.carrylessMultiplication(prevInstring);
+			simd_base stringTail	= currentValues ^ quotes;
+			simd_base scalar		= ~(op | whitespace);
+			currentValues			= scalar.bitAndNot(quotes);
+			currentValues			= currentValues.follows(storedLSB01);
+			currentValues			= scalar.bitAndNot(currentValues);
+			currentValues			= op | currentValues;
+			return currentValues.bitAndNot(stringTail);
 		}
 	};
 
 }
-
-#if defined(load)
-	#undef load
-#endif

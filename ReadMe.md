@@ -155,26 +155,55 @@ In the `main` function, we create an instance of `MyObject` with the name "John"
 
 By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `jsonifier::jsonifier_core` class, you can easily serialize objects with excluded keys to JSON strings.
 
-## Enabling Error Message Output in Jsonifier
-----
-Jsonifier is a powerful JSON parsing library that allows you to easily parse JSON data in your C++ applications. By default, Jsonifier does not output detailed error messages during the parsing process. However, you can enable error message output to aid in debugging and understanding parsing issues.
+## Handling Parsing Errors
 
-To enable error message output in Jsonifier, you need to set a specific template parameter when calling the parseJson function. By setting this parameter to true, Jsonifier will generate detailed error messages if any parsing errors occur. Follow the steps below to enable error message output:
+Jsonifier allows you to collect and handle possible parsing errors during the JSON parsing process. To check for and display these errors, follow these steps:
 
-Locate the code block where you invoke the parseJson function.
-
-Look for the following line of code:
-```cpp
-parser.parseJson(/* ... */);
-```
-Modify the code to include the template parameter set to true, as shown below:
+1. After parsing the JSON, you can call the `getErrors` method on the `jsonifier::jsonifier_core` instance to retrieve a vector of error objects.
 
 ```cpp
-parser.parseJson<true>(/* ... */);
+auto errors = jsonifier.getErrors();
 ```
-Save the changes.
 
-Rebuild and run your application.
+2. Check if any errors were reported:
+
+```cpp
+if (!errors.empty()) {
+    for (const auto& error : errors) {
+        std::cout << "Jsonifier Error: " << error.reportError() << std::endl;
+    }
+}
+```
+
+This code snippet iterates through the error objects and prints a description of each error.
+
+## Example
+
+Here's a complete example of parsing JSON data and handling errors:
+
+```cpp
+#include <jsonifier/jsonifier.hpp>
+#include <iostream>
+
+int main() {
+    jsonifier::string buffer{ your_json_string };
+    obj_t obj;
+    jsonifier::jsonifier_core jsonifier;
+
+    jsonifier.parseJson<true>(obj, buffer);
+
+    auto errors = jsonifier.getErrors();
+    if (!errors.empty()) {
+        for (const auto& error : errors) {
+            std::cout << "Jsonifier Error: " << error.reportError() << std::endl;
+        }
+    }
+
+    // Process the parsed data in 'obj' here.
+
+    return 0;
+}
+```
 
 ### Interpreting Error Messages:
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
@@ -196,13 +225,14 @@ In the provided error message:
  Provides information about the specific function where the parsing error occurred.
 
  When you receive an error message, carefully review the provided information to understand the cause of the parsing error. Use this information to identify the part of the JSON data that caused the issue and take appropriate steps to resolve it.
+ 
+## Conclusion
 
- #### Conclusion
- Enabling error message output in Jsonifier can greatly assist in debugging and resolving parsing issues in your C++ applications. By following the steps outlined above, you can easily set the template parameter to true and gain access to detailed error messages during the JSON parsing process.
+Jsonifier makes parsing JSON in C++ easy and provides a convenient way to handle parsing errors. Refer to the [official documentation](https://github.com/RealTimeChris/jsonifier) for more details and advanced usage.
 
-If you have any further questions or require additional assistance, please refer to the Jsonifier documentation or reach out to our support team.
+Feel free to explore Jsonifier and incorporate it into your projects for efficient JSON parsing and serialization.
 
-Happy parsing with Jsonifier!
+Happy coding!
 
 ## CPU Architecture Selection
 ----
