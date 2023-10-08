@@ -48,12 +48,12 @@ class ClassLoader
     // PSR-4
     /**
      * @var array[]
-     * @psalm-var array<string, array<string, int>>
+     * @psalm-var array<string, array<string, int32_t>>
      */
     private $prefixLengthsPsr4 = array();
     /**
      * @var array[]
-     * @psalm-var array<string, array<int, string>>
+     * @psalm-var array<string, array<int32_t, string>>
      */
     private $prefixDirsPsr4 = array();
     /**
@@ -122,7 +122,7 @@ class ClassLoader
 
     /**
      * @return array[]
-     * @psalm-return array<string, array<int, string>>
+     * @psalm-return array<string, array<int32_t, string>>
      */
     public function getPrefixesPsr4()
     {

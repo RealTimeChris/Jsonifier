@@ -29,118 +29,223 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	constexpr uint64_t StepSize{ 512 };
-	constexpr uint64_t BytesPerStep{ StepSize / 8 };
-	constexpr uint64_t SixtyFourBytesPerStep{ StepSize / 64 };
-	constexpr uint64_t StridesPerStep{ StepSize / BytesPerStep };\
-	using string_parsing_type = uint64_t;
+	template<typename value_type>
+	concept avx_int_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_128>;
 
 	template<typename value_type>
-	concept avx_t = std::same_as<ref_unwrap<value_type>, avx_int_512>;
+	concept avx_int_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_256>;
 
-	template<typename value_type> inline avx_int_128 gatherValues128(const value_type* str) {
-		if constexpr (alignof(value_type) == 1) {
-			return _mm_loadu_epi8(str);
-		} else {
-			alignas(JSONIFIER_ALIGNMENT) double newArray[sizeof(avx_int_256) / sizeof(double)]{};
-			std::memcpy(newArray, str, sizeof(avx_int_256));
-			return _mm_castpd_si128(_mm_load_pd(newArray));
+	template<typename value_type>
+	concept avx_int_512_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_512>;
+
+	template<typename value_type>
+	concept avx_float_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_float_128>;
+
+	template<typename value_type>
+	concept avx_float_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_float_256>;
+
+	template<typename value_type>
+	concept avx_float_512_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_float_512>;
+
+	template<typename value_type>
+	concept simd_base_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_base_internal<BitsPerStep>>;
+
+	template<avx_int_128_t avx_type> inline avx_type gatherValues(jsonifier::concepts::char_type auto* str) {
+		alignas(JsonifierAlignment) double valuesNew[sizeof(avx_type)]{};
+		std::memcpy(valuesNew, str, sizeof(avx_type));
+		return _mm_castpd_si128(_mm_load_pd(valuesNew));
+	}
+
+	template<avx_int_256_t avx_type> inline avx_type gatherValues(jsonifier::concepts::char_type auto* str) {
+		alignas(JsonifierAlignment) double valuesNew[sizeof(avx_type)]{};
+		std::memcpy(valuesNew, str, sizeof(avx_type));
+		return _mm256_castpd_si256(_mm256_load_pd(valuesNew));
+	}
+
+	template<avx_int_512_t avx_type> inline avx_type gatherValues(jsonifier::concepts::char_type auto* str) {
+		return _mm512_load_si512(str);
+	}
+
+	template<avx_int_128_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm_castpd_si128(_mm_load_pd(str));
+	}
+
+	template<avx_int_256_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm256_castpd_si256(_mm256_load_pd(str));
+	}
+
+	template<avx_int_512_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm512_castpd_si512(_mm512_load_pd(str));
+	}
+
+	template<avx_float_128_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm_load_pd(str);
+	}
+
+	template<avx_float_256_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm256_load_pd(str);
+	}
+
+	template<avx_float_512_t avx_type> inline avx_type gatherValues(jsonifier::concepts::float_t auto* str) {
+		return _mm256_load_pd(str);
+	}
+
+	template<avx_int_128_t return_type> constexpr return_type simdValues(uint8_t value) {
+	#if !defined(_WIN32)
+		int64_t newArray[sizeof(avx_int_128) / sizeof(uint64_t)]{};
+		for (uint64_t x = 0; x < sizeof(avx_int_128) / sizeof(uint64_t); ++x) {
+			newArray[x] |= static_cast<int64_t>(value) << 56;
+			newArray[x] |= static_cast<int64_t>(value) << 48;
+			newArray[x] |= static_cast<int64_t>(value) << 40;
+			newArray[x] |= static_cast<int64_t>(value) << 32;
+			newArray[x] |= static_cast<int64_t>(value) << 24;
+			newArray[x] |= static_cast<int64_t>(value) << 16;
+			newArray[x] |= static_cast<int64_t>(value) << 8;
+			newArray[x] |= static_cast<int64_t>(value);
 		}
-	}
-
-	template<typename value_type> inline avx_int_256 gatherValues256(const value_type* str) {
-		if constexpr (alignof(value_type) == 1) {
-			return _mm256_loadu_epi8(str);
-		} else {
-			alignas(JSONIFIER_ALIGNMENT) double newArray[sizeof(avx_int_512) / sizeof(double)]{};
-			std::memcpy(newArray, str, sizeof(avx_int_256));
-			return _mm256_castpd_si256(_mm256_load_pd(newArray));
+		avx_int_128 returnValue{ newArray[0], newArray[1] };
+	#else
+		avx_int_128 returnValue{};
+		for (uint64_t x = 0; x < sizeof(avx_int_128); ++x) {
+			returnValue.m128i_u8[x] = value;
 		}
-	}
-
-	template<typename value_type> inline avx_int_512 gatherValues512(const value_type* str) {
-		if constexpr (alignof(value_type) == 1) {
-			return _mm512_loadu_si512(str);
-		} else {
-			return _mm512_load_si512(str);
-		}
-	}
-
-	template<float_t value_type> inline avx_float_128 gatherValues128(const value_type* str) {
-		return _mm_load_ps(str);
-	}
-
-	template<float_t value_type> inline avx_float_256 gatherValues256(const value_type* str) {
-		return _mm256_load_ps(str);
-	}
-
-	template<float_t value_type> inline avx_float_512 gatherValues512(const value_type* str) {
-		return _mm512_load_ps(str);
+	#endif
+		return returnValue;
 	}
 
 	template<> class simd_base_internal<256> {
 	  public:
 		inline simd_base_internal() = default;
 
-		inline simd_base_internal& operator=(avx_int_256&& data) {
-			value = std::forward<avx_int_256>(data);
+		inline simd_base_internal& operator=(simd_base_internal&& other) {
+			value = _mm256_load_si256(&other.value);
 			return *this;
 		}
 
-		inline simd_base_internal(avx_int_256&& data) {
-			value = std::forward<avx_int_256>(data);
+		inline simd_base_internal(simd_base_internal&& other) {
+			*this = std::move(other);
 		}
 
-		inline operator const avx_int_256&&() const {
-			return std::forward<const avx_int_256>(value);
+		inline simd_base_internal& operator=(const simd_base_internal& other) {
+			value = _mm256_load_si256(&other.value);
+			return *this;
 		}
 
-		inline simd_base_internal(const uint64_t values[SixtyFourBytesPerStep]) {
-			value = _mm256_setr_epi64x(values[0], values[1], values[2], values[3]);
+		inline simd_base_internal(const simd_base_internal& other) {
+			*this = other;
 		}
 
-		template<uint64_t index = 0> inline uint64_t getUint64() const {
-			static_assert(index < SixtyFourBytesPerStep, "Sorry, but that index value is incorrect.");
-			return static_cast<uint64_t>(_mm256_extract_epi64(value, index));
+		template<avx_int_256_t avx_type_new> inline simd_base_internal& operator=(avx_type_new&& data) {
+			value = _mm256_load_si256(&data);
+			return *this;
 		}
 
-		template<uint64_t index = 0> inline void insertUint64(uint64_t valueNew) {
-			static_assert(index < SixtyFourBytesPerStep, "Sorry, but that index value is incorrect.");
-			value = _mm256_insert_epi64(value, static_cast<int64_t>(valueNew), index);
+		template<avx_int_256_t avx_type_new> inline simd_base_internal(avx_type_new&& data) {
+			*this = data;
 		}
 
-		template<uint64_t index = 0> inline void processValue(avx_int_128& val, uint64_t* valuesNewer, uint64_t& prevInstring) const {
-			static const avx_int_128 allOnes{ _mm_set1_epi8('\xFF') };
-			valuesNewer[index] = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(val, allOnes, index % 2)) ^ prevInstring);
-			prevInstring	   = static_cast<int64_t>(valuesNewer[index]) >> 63;
+		inline operator const avx_int_256() const {
+			return _mm256_load_si256(&value);
+		}
+
+		template<uint64_t index = 0> inline void processValue(const avx_int_128& allOnes, avx_int_128& val, double* valuesNewer, uint64_t& prevInstring) const {
+			static uint64_t newValue{};
+			newValue	 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(val, allOnes, index % 2)) ^ prevInstring);
+			prevInstring = static_cast<uint64_t>(static_cast<int64_t>(newValue) >> 63);
+			std::memcpy(valuesNewer + index, &newValue, sizeof(double));
 		}
 
 		inline simd_base_internal carrylessMultiplication(uint64_t& prevInstring) const {
+			static constexpr avx_int_128 allOnes{ simdValues<avx_int_128>(0xFF) };
 			avx_int_128 valueLow{ _mm256_extracti128_si256(value, 0) };
 			avx_int_128 valueHigh{ _mm256_extracti128_si256(value, 1) };
-			alignas(JSONIFIER_ALIGNMENT) uint64_t valuesNewer[SixtyFourBytesPerStep]{};
-			processValue<0>(valueLow, valuesNewer, prevInstring);
-			processValue<1>(valueLow, valuesNewer, prevInstring);
-			processValue<2>(valueHigh, valuesNewer, prevInstring);
-			processValue<3>(valueHigh, valuesNewer, prevInstring);
-			return valuesNewer;
+			alignas(JsonifierAlignment) double valuesNewer[SixtyFourBitsPerStep]{};
+			processValue<0>(allOnes, valueLow, valuesNewer, prevInstring);
+			processValue<1>(allOnes, valueLow, valuesNewer, prevInstring);
+			processValue<2>(allOnes, valueHigh, valuesNewer, prevInstring);
+			processValue<3>(allOnes, valueHigh, valuesNewer, prevInstring);
+			return gatherValues<avx_int_256>(valuesNewer);
 		}
 
 	  protected:
 		avx_int_256 value{};
 	};
 
+	template<avx_int_512_t return_type> constexpr return_type simdTable(const uint8_t arrayNew[sizeof(avx_int_512)]) {
+	#if !defined(_WIN32)
+		int64_t newArray[sizeof(avx_int_512) / sizeof(uint64_t)]{};
+		for (uint64_t x = 0; x < sizeof(avx_int_512) / sizeof(uint64_t); ++x) {
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 7]) << 56;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 6]) << 48;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 5]) << 40;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 4]) << 32;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 3]) << 24;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 2]) << 16;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 1]) << 8;
+			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 0]);
+		}
+		avx_int_512 returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
+	#else
+		avx_int_512 returnValue{};
+		for (uint64_t x = 0; x < sizeof(avx_int_512); ++x) {
+			returnValue.m512i_u8[x] = arrayNew[x];
+		}
+	#endif
+		return returnValue;
+	}
+
+	template<avx_int_512_t return_type> constexpr return_type simdValues(uint8_t value) {
+	#if !defined(_WIN32)
+		int64_t newArray[sizeof(avx_int_512) / sizeof(uint64_t)]{};
+		for (uint64_t x = 0; x < sizeof(avx_int_512) / sizeof(uint64_t); ++x) {
+			newArray[x] |= static_cast<int64_t>(value) << 56;
+			newArray[x] |= static_cast<int64_t>(value) << 48;
+			newArray[x] |= static_cast<int64_t>(value) << 40;
+			newArray[x] |= static_cast<int64_t>(value) << 32;
+			newArray[x] |= static_cast<int64_t>(value) << 24;
+			newArray[x] |= static_cast<int64_t>(value) << 16;
+			newArray[x] |= static_cast<int64_t>(value) << 8;
+			newArray[x] |= static_cast<int64_t>(value);
+		}
+		avx_int_512 returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
+	#else
+		avx_int_512 returnValue{};
+		for (uint64_t x = 0; x < sizeof(avx_int_512); ++x) {
+			returnValue.m512i_u8[x] = value;
+		}
+	#endif
+		return returnValue;
+	}
+
 	template<> class simd_base_internal<512> {
 	  public:
 		inline simd_base_internal() = default;
 
-		template<avx_t avx_type_new> inline simd_base_internal& operator=(avx_type_new&& data) {
-			value = std::forward<avx_type_new>(data);
+		inline simd_base_internal& operator=(simd_base_internal&& other) noexcept {
+			value = _mm512_load_si512(&other.value);
 			return *this;
 		}
 
-		template<avx_t avx_type_new> inline simd_base_internal(avx_type_new&& data) {
-			*this = std::forward<avx_type_new>(data);
+		inline simd_base_internal(simd_base_internal&& other) noexcept {
+			*this = std::move(other);
+		}
+
+		inline simd_base_internal& operator=(const simd_base_internal& other) {
+			value = _mm512_load_si512(&other.value);
+			return *this;
+		}
+
+		inline simd_base_internal(const simd_base_internal& other) {
+			*this = other;
+		}
+
+		template<avx_int_512_t avx_type_new> constexpr simd_base_internal& operator=(avx_type_new&& data) {
+			value = data;
+			return *this;
+		}
+
+		template<avx_int_512_t avx_type_new> constexpr simd_base_internal(avx_type_new&& data) {
+			*this = data;
 		}
 
 		inline simd_base_internal& operator=(uint8_t other) {
@@ -152,12 +257,8 @@ namespace jsonifier_internal {
 			*this = other;
 		}
 
-		inline simd_base_internal(const uint8_t values[BytesPerStep]) {
-			value = gatherValues512(values);
-		}
-
-		inline operator const avx_int_512&() const {
-			return value;
+		inline operator const avx_int_512() const {
+			return _mm512_load_si512(&value);
 		}
 
 		inline explicit operator bool() const {
@@ -192,46 +293,46 @@ namespace jsonifier_internal {
 			return _mm512_xor_si512(*this, _mm512_set1_epi64(std::numeric_limits<uint64_t>::max()));
 		}
 
-		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertWhitespaceToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100,
-					100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100,
-					100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
-				static const simd_base_internal whitespaceTable{ arrayNew };
+				static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
+					'\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
+					'\n', 112, 100, '\r', 100, 100 };
+				static constexpr simd_base_internal whitespaceTable{ simdTable<avx_int_512>(arrayNew) };
 				addValues<index>(valuesNew[index].shuffle(whitespaceTable) == valuesNew[index]);
 				convertWhitespaceToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertBackslashesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				static const simd_base_internal backslashes{ _mm512_set1_epi8('\\') };
-				addValues<index>(valuesNew[index] == backslashes);
+				static constexpr simd_base_internal backslashesVal{ simdValues<avx_int_512>('\\') };
+				addValues<index>(valuesNew[index] == backslashesVal);
 				convertBackslashesToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertStructuralsToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				alignas(JSONIFIER_ALIGNMENT) static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{',
-					',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
-				static const simd_base_internal opTable{ arrayNew };
-				static const simd_base_internal chars{ uint8_t{ 0x20 } };
-				addValues<index>(valuesNew[index].shuffle(opTable) == (valuesNew[index] | chars));
+				static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0,
+					0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+				static constexpr simd_base_internal opTableVal{ simdTable<avx_int_512>(arrayNew) };
+				static constexpr simd_base_internal chars{ simdValues<avx_int_512>(0x20) };
+				addValues<index>(valuesNew[index].shuffle(opTableVal) == (valuesNew[index] | chars));
 				convertStructuralsToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
-		template<uint64_t index = 0> inline void convertQuotesToSimdBase(const simd_base_internal* valuesNew) {
+		template<uint64_t index = 0> inline void convertQuotesToSimdBase(simd_base_internal valuesNew[StridesPerStep]) {
 			if constexpr (index < StridesPerStep) {
-				static const simd_base_internal quotes{ _mm512_set1_epi8('"') };
-				addValues<index>(valuesNew[index] == quotes);
+				static constexpr simd_base_internal quotesVal{ simdValues<avx_int_512>('"') };
+				addValues<index>(valuesNew[index] == quotesVal);
 				convertQuotesToSimdBase<index + 1>(valuesNew);
 			}
 		}
 
 		template<uint64_t index = 0> inline void insertUint64(uint64_t valueNew) {
-			static_assert(index < SixtyFourBytesPerStep, "Sorry, but that index value is incorrect.");
+			static_assert(index < SixtyFourBitsPerStep, "Sorry, but that index value is incorrect.");
 			auto lower = _mm512_extracti64x4_epi64(value, index / 4);
 			lower	   = _mm256_insert_epi64(lower, static_cast<int64_t>(valueNew), index % 4);
 			value	   = _mm512_inserti64x4(value, lower, index / 4);
@@ -269,26 +370,25 @@ namespace jsonifier_internal {
 			_mm512_store_si512(storageLocation, value);
 		}
 
-		inline simd_base_internal& setLSB(bool valueNew) {
+		inline void setLSB(bool valueNew) {
 			if (valueNew) {
 				*this = _mm512_or_si512(*this, _mm512_set_epi64(0, 0, 0, 0, 0, 0, 0, 0x1));
 			} else {
 				*this = _mm512_andnot_si512(_mm512_set_epi64(0, 0, 0, 0, 0, 0, 0, 0x1), *this);
 			}
-			return *this;
 		}
 
-		inline bool checkMSB() const {
+		inline bool getMSB() const {
 			avx_int_512 result = _mm512_and_si512(*this, _mm512_set_epi64(0x8000000000000000, 0, 0, 0, 0, 0, 0, 0));
 			return static_cast<bool>(_mm512_test_epi64_mask(result, result));
 		}
 
-		inline simd_base<StepSize> carrylessMultiplication(string_parsing_type& prevInstring) const {
-			simd_base_small<StepSize> lowValues{ _mm512_extracti64x4_epi64(value, 0) };
-			simd_base_small<StepSize> highValues{ _mm512_extracti64x4_epi64(value, 1) };
+		inline simd_base carrylessMultiplication(string_parsing_type& prevInstring) const {
+			simd_base_internal<256> lowValues{ _mm512_extracti64x4_epi64(value, 0) };
+			simd_base_internal<256> highValues{ _mm512_extracti64x4_epi64(value, 1) };
 			lowValues  = lowValues.carrylessMultiplication(prevInstring);
 			highValues = highValues.carrylessMultiplication(prevInstring);
-			simd_base<StepSize> returnValue{};
+			simd_base returnValue{};
 			returnValue = _mm512_inserti64x4(returnValue, lowValues, 0);
 			returnValue = _mm512_inserti64x4(returnValue, highValues, 1);
 			return returnValue;
@@ -297,7 +397,7 @@ namespace jsonifier_internal {
 		inline simd_base_internal follows(bool& overflow) {
 			simd_base_internal result = shl<1>();
 			result.setLSB(overflow);
-			overflow = checkMSB();
+			overflow = getMSB();
 			return result;
 		}
 
@@ -324,11 +424,17 @@ namespace jsonifier_internal {
 		avx_int_512 value{};
 	};
 
-	inline simd_base<StepSize> makeSimdBase(int64_t value) {
-		return _mm512_set1_epi64(value);
+	template<simd_base_t simd_base_type> inline simd_base_type gatherValues(jsonifier::concepts::char_type auto* str) {
+		return _mm512_loadu_si512(str);
 	}
 
-	#define load(value) gatherValues512(value)
+	template<simd_base_t simd_base_type> constexpr simd_base_type simdValues(uint8_t values) {
+		return simdValues<avx_int_512>(values);
+	}
+
+	inline simd_base makeSimdBase(int64_t value) {
+		return _mm512_set1_epi64(value);
+	}
 
 #endif
 

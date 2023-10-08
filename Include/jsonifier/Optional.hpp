@@ -23,11 +23,10 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/Popcount.hpp>
-#include <jsonifier/ISADetection/Lzcount.hpp>
-#include <jsonifier/ISADetection/Bmi.hpp>
-#include <jsonifier/ISADetection/Bmi2.hpp>
-#include <jsonifier/ISADetection/AVX.hpp>
-#include <jsonifier/ISADetection/AVX2.hpp>
-#include <jsonifier/ISADetection/AVX512.hpp>
-#include <jsonifier/ISADetection/Fallback.hpp>
+#include <source_location>
+
+namespace jsonifier_internal {
+
+	template<typename first_type, typename second_type> class optional {};
+
+}

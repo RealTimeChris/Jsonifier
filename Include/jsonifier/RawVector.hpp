@@ -99,8 +99,8 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		alignas(JSONIFIER_ALIGNMENT) value_type data[N] = {};
-		size_type dsize									= 0;
+		alignas(JsonifierAlignment) value_type data[N]{};
+		size_type dsize{ 0 };
 	};
 
 }

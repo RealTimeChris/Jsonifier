@@ -32,9 +32,12 @@ namespace jsonifier_internal {
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type		= value_type_new;
-		using reference			= value_type&;
+		using difference_type	= std::ptrdiff_t;
 		using pointer			= value_type*;
-		using difference_type	= ptrdiff_t;
+		using reference			= value_type&;
+		using size_type			= int64_t;
+
+		constexpr iterator() noexcept = default;
 
 		constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
 

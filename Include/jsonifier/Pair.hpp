@@ -23,9 +23,6 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <type_traits>
-#include <iterator>
-
 namespace jsonifier_internal {
 
 	template<typename FirstType, typename SecondType> class pair {
@@ -57,7 +54,5 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type> using unwrap_ref_decay_t = typename std::unwrap_ref_decay<value_type>::type;
-
-	template<typename a, typename b> pair(a, b) -> pair<unwrap_ref_decay_t<a>, unwrap_ref_decay_t<b>>;
+	template<typename a, typename b> pair(a, b) -> pair<std::unwrap_ref_decay<a>, std::unwrap_ref_decay<b>>;
 }
