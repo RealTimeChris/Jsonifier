@@ -23,9 +23,6 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <type_traits>
-#include <iterator>
-
 namespace jsonifier_internal {
 
 	template<typename FirstType, typename SecondType> class pair {
@@ -36,28 +33,26 @@ namespace jsonifier_internal {
 		first_type first;
 		second_type second;
 
-		constexpr pair() = default;
+		jsonifier_constexpr pair() = default;
 
-		template<typename FirstTypeNew, typename SecondTypeNew> constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
+		template<typename FirstTypeNew, typename SecondTypeNew> jsonifier_constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
 			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {
 		}
 
 		template<typename FirstTypeNew>
 			requires(std::same_as<first_type, FirstTypeNew>)
-		constexpr pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {
+		jsonifier_constexpr pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {
 		}
 
 		template<typename SecondTypeNew>
 			requires(std::same_as<second_type, SecondTypeNew>)
-		constexpr pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {
+		jsonifier_constexpr pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {
 		}
 
-		constexpr bool operator==(const pair& other) const {
+		jsonifier_constexpr bool operator==(const pair& other) const {
 			return first == other.first && second == other.second;
 		}
 	};
 
-	template<typename value_type> using unwrap_ref_decay_t = typename std::unwrap_ref_decay<value_type>::type;
-
-	template<typename a, typename b> pair(a, b) -> pair<unwrap_ref_decay_t<a>, unwrap_ref_decay_t<b>>;
+	template<typename a, typename b> pair(a, b) -> pair<std::unwrap_ref_decay<a>, std::unwrap_ref_decay<b>>;
 }

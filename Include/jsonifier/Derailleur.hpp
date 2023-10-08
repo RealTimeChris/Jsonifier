@@ -29,25 +29,24 @@
 
 namespace jsonifier_internal {
 
-	enum class type_of_misread { Wrong_Type = 0, Damaged_Input = 1 };
+	template<json_structural_type currentValue> jsonifier_inline static bool containsValue(uint8_t value) {
+		return static_cast<uint8_t>(currentValue) == value;
+	}
 
-	template<bool printErrors> class derailleur {
+	template<> jsonifier_inline bool containsValue<json_structural_type::Bool>(uint8_t value) {
+		return value == 0x74u || value == 0x66u;
+	}
+
+	template<> jsonifier_inline bool containsValue<json_structural_type::Number>(uint8_t value) {
+		return numberTable[value];
+	}
+
+	class derailleur {
 	  public:
 		using size_type = uint64_t;
 
-		template<uint8_t c> inline static bool checkForMatchClosed(structural_iterator& iter, std::source_location location = std::source_location::current()) {
-			if (iter == c) {
-				++iter;
-				return true;
-			} else {
-				reportError<c>(iter, location);
-				skipToNextValue(iter);
-				return false;
-			}
-		}
-
-		template<uint8_t c> inline static bool checkForMatchOpen(structural_iterator& iter) {
-			if (iter == c) {
+		template<json_structural_type c> jsonifier_inline static bool checkForMatchClosed(structural_iterator& iter) {
+			if (containsValue<c>(*iter)) {
 				++iter;
 				return true;
 			} else {
@@ -55,19 +54,106 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipToNextValue(structural_iterator& iter) {
-			while (iter != ',' && iter != iter) {
-				switch (**iter) {
-					case '{': {
+		template<uint8_t c, std::forward_iterator iterator>
+		jsonifier_inline static bool checkForMatchClosed(iterator& iter, iterator& end, std::source_location location = std::source_location::current()) {
+			auto oldValue = *iter;
+			if (containsValue<c>(*iter)) {
+				++iter;
+				return true;
+			} else {
+				auto oldIter = iter;
+				skipValue(iter, end);
+				return false;
+			}
+		}
+
+		template<json_structural_type c> jsonifier_inline static bool checkForMatchOpen(structural_iterator& iter) {
+			if (*iter == static_cast<uint8_t>(c)) {
+				++iter;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		template<std::forward_iterator iterator> jsonifier_inline static void skipKey(iterator& iter, iterator& end) {
+			if jsonifier_constexpr (std::same_as<structural_iterator, iterator>) {
+				++iter;
+				return;
+			} else {
+				++iter;
+				while (iter != end) {
+					switch (*iter) {
+						case 0x22u: {
+							++iter;
+							return;
+						}
+						default: {
+							++iter;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		jsonifier_inline static void skipToEndOfArray(structural_iterator& iter) {
+			size_type currentDepth{ 1 };
+			while (iter != iter && currentDepth > 0) {
+				switch (*iter) {
+					case 0x5B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x5D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
+				}
+			}
+		}
+
+		jsonifier_inline static void skipToEndOfObject(structural_iterator& iter) {
+			size_type currentDepth{ 1 };
+			while (iter != iter && currentDepth > 0) {
+				switch (*iter) {
+					case 0x7B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x7D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
+				}
+			}
+		}
+
+		jsonifier_inline static void skipToNextValue(structural_iterator& iter) {
+			while (iter != iter && *iter != 0x2Cu) {
+				switch (*iter) {
+					case 0x7B: {
 						skipObject(iter);
 						break;
 					}
-					case '[': {
+					case 0x5B: {
 						skipArray(iter);
 						break;
 					}
-					case '\0': {
-						break;
+					case 0x00: {
+						return;
 					}
 					default: {
 						++iter;
@@ -76,18 +162,39 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipValue(structural_iterator& iter) {
-			switch (**iter) {
-				case '{': {
+		template<std::forward_iterator iterator> jsonifier_inline static void skipToNextValue(iterator& iter, iterator end) {
+			while (iter != end && *iter != 0x2Cu) {
+				switch (*iter) {
+					case 0x7B: {
+						skipObject(iter, end);
+						break;
+					}
+					case 0x5B: {
+						skipArray(iter, end);
+						break;
+					}
+					case 0x00: {
+						return;
+					}
+					default: {
+						++iter;
+					}
+				}
+			}
+		}
+
+		jsonifier_inline static void skipValue(structural_iterator& iter) {
+			switch (*iter) {
+				case 0x7B: {
 					skipObject(iter);
 					break;
 				}
-				case '[': {
+				case 0x5B: {
 					skipArray(iter);
 					break;
 				}
-				case '\0': {
-					break;
+				case 0x00: {
+					return;
 				}
 				default: {
 					++iter;
@@ -95,26 +202,51 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static size_type countArrayElements(structural_iterator iter) {
-			size_type currentDepth{ 1 };
-			size_type currentCount{ 1 };
-			if (iter == ']') {
-				++iter;
-				return {};
+		template<std::forward_iterator iterator> jsonifier_inline static void skipValue(iterator& iter, iterator end) {
+			switch (*iter) {
+				case 0x7B: {
+					skipObject(iter, end);
+					break;
+				}
+				case 0x5B: {
+					skipArray(iter, end);
+					break;
+				}
+				case 0x00: {
+					return;
+				}
+				default: {
+					++iter;
+				}
 			}
-			while (currentDepth > 0 && iter != iter) {
-				switch (**iter) {
-					case '[': {
+		}
+
+		template<std::forward_iterator iterator> jsonifier_inline static size_type countValueElements(iterator iter, iterator end) {
+			size_type currentDepth{ 1 };
+			size_type currentCount{ 0 };
+			while (iter != end && currentDepth > 0) {
+				switch (*iter) {
+					case 0x5B: {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case ']': {
+					case 0x5D: {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					case ',': {
+					case 0x7B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x7D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					case 0x2Cu: {
 						if (currentDepth == 1) {
 							++currentCount;
 						}
@@ -131,21 +263,17 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		inline static void skipObject(structural_iterator& iter) {
+		jsonifier_inline static void skipObject(structural_iterator& iter) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (iter == '}') {
-				++iter;
-				return;
-			}
-			while (currentDepth > 0 && iter != iter) {
-				switch (**iter) {
-					case '{': {
+			while (iter != iter && currentDepth > 0) {
+				switch (*iter) {
+					case 0x7B: {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case '}': {
+					case 0x7D: {
 						--currentDepth;
 						++iter;
 						break;
@@ -158,21 +286,17 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static void skipArray(structural_iterator& iter) {
+		template<std::forward_iterator iterator> jsonifier_inline static void skipObject(iterator& iter, iterator end) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (iter == ']') {
-				++iter;
-				return;
-			}
-			while (currentDepth > 0 && iter != iter) {
-				switch (**iter) {
-					case '[': {
+			while (iter != end && currentDepth > 0) {
+				switch (*iter) {
+					case 0x7B: {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case ']': {
+					case 0x7D: {
 						--currentDepth;
 						++iter;
 						break;
@@ -185,59 +309,49 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline static bool isTypeType(uint8_t c) {
-			static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
-		}
-
-		inline static bool isDigitType(uint8_t c) {
-			static constexpr uint8_t array01[]{ "0123456789-" };
-			return find(array01, std::size(array01), &c) != jsonifier::string::npos;
-		}
-
-		inline static jsonifier::string_view getValueType(uint8_t charToCheck) {
-			static constexpr jsonifier::string_view array{ "array" };
-			static constexpr jsonifier::string_view object{ "object" };
-			static constexpr jsonifier::string_view boolean{ "Bool" };
-			static constexpr jsonifier::string_view number{ "Number" };
-			static constexpr jsonifier::string_view str{ "string" };
-			static constexpr jsonifier::string_view null{ "Null" };
-			if (isDigitType(charToCheck)) {
-				return number;
-			} else if (charToCheck == 't' || charToCheck == 'f') {
-				return boolean;
-			} else if (charToCheck == '{') {
-				return object;
-			} else if (charToCheck == '[') {
-				return array;
-			} else if (charToCheck == '"') {
-				return str;
-			} else if (charToCheck == 'n') {
-				return null;
-			} else {
-				return {};
-			}
-		}
-
-		template<uint8_t c> inline static void reportError(structural_iterator& iter, std::source_location location) {
-			if (printErrors) {
-				if (collectMisReadType<c>(iter) == type_of_misread::Wrong_Type) {
-					std::cout << "It seems you mismatched a value for a value of type: " << getValueType(c) << ", the found value was actually: " << getValueType(**iter)
-							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
-							  << ", in function: " << location.function_name() << "()." << std::endl;
-				} else {
-					std::cout << "Failed to collect a '" << c << "', instead found a '" << **iter << "'"
-							  << ", at index: " << iter.getCurrentIndex() << ", in file: " << location.file_name() << ", at: " << location.line() << ":" << location.column()
-							  << ", in function: " << location.function_name() << "()." << std::endl;
+		jsonifier_inline static void skipArray(structural_iterator& iter) {
+			++iter;
+			size_type currentDepth{ 1 };
+			while (iter != iter && currentDepth > 0) {
+				switch (*iter) {
+					case 0x5B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x5D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
 				}
 			}
 		}
 
-		template<uint8_t c> inline static type_of_misread collectMisReadType(structural_iterator& iter) {
-			if (isTypeType(**iter) && isTypeType(c)) {
-				return type_of_misread::Wrong_Type;
-			} else {
-				return type_of_misread::Damaged_Input;
+		template<std::forward_iterator iterator> jsonifier_inline static void skipArray(iterator& iter, iterator end) {
+			++iter;
+			size_type currentDepth{ 1 };
+			while (iter != end && currentDepth > 0) {
+				switch (*iter) {
+					case 0x5B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x5D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
+				}
 			}
 		}
 	};

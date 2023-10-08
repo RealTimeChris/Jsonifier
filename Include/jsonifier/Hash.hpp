@@ -23,19 +23,28 @@
 /// Feb 3, 2023
 #pragma once
 
-#if !defined(NOMINMAX)
-	#define NOMINMAX
-#endif
+#include <source_location>
+#include <unordered_map>
+#include <exception>
+#include <string>
 
-#include <jsonifier/StructuralIterator.hpp>
-#include <jsonifier/Serialize_Impl.hpp>
-#include <jsonifier/JsonifierCore.hpp>
-#include <jsonifier/RawJsonData.hpp>
-#include <jsonifier/Parse_Impl.hpp>
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/HashMap.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/String.hpp>
-#include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Simd.hpp>
+namespace jsonifier_internal {
+
+	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value) {
+		uint64_t d = 5381;
+		for (const auto& c: value)
+			d = d * 33 + static_cast<uint64_t>(c);
+		return d;
+	}
+
+	// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+	// With the lowest bits removed, based on experimental setup.
+	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
+		uint64_t d = (0x811c9dc5 ^ seed) * static_cast<uint64_t>(0x01000193);
+		for (const auto& c: value)
+			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);
+		return d >> 8;
+	}
+
+	template<typename value_type> struct hash;
+}

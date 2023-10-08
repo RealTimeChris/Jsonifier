@@ -3,7 +3,7 @@
 [![Lines of Code](https://sloc.xyz/github/realtimechris/jsonifier)](https://github.com/RealTimeChris/Jsonifier/)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
+### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
 ## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
 
@@ -64,34 +64,34 @@ namespace TestNS {
 	};
 }
 
-namespace Jsonifier {
+namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
-		using ValueType = TestNS::fixed_object_t;
-		static constexpr auto parseValue = createObject("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+		using value_type = TestNS::fixed_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
-		using ValueType = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = createObject("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
+		using value_type = TestNS::fixed_name_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
-		using ValueType = TestNS::nested_object_t;
-		static constexpr auto parseValue = createObject("v3s", &ValueType::v3s, "id", &ValueType::id);
+		using value_type = TestNS::nested_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
-		using ValueType = TestNS::another_object_t;
-		static constexpr auto parseValue =
-			createObject("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
+		using value_type = TestNS::another_object_t;
+		static jsonifier_constexpr auto parseValue =
+			createObject("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
-		using ValueType = TestNS::obj_t;
-		static constexpr auto parseValue =
-			createObject("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object, "another_object", &ValueType::another_object, "string_array",
-				&ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean", &ValueType::boolean, "another_bool", &ValueType::another_bool);
+		using value_type = TestNS::obj_t;
+		static jsonifier_constexpr auto parseValue =
+			createObject("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
+				&value_type::string_array, "string", &value_type::string, "number", &value_type::number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};
 }
 
@@ -155,32 +155,61 @@ In the `main` function, we create an instance of `MyObject` with the name "John"
 
 By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `jsonifier::jsonifier_core` class, you can easily serialize objects with excluded keys to JSON strings.
 
-## Enabling Error Message Output in Jsonifier
-----
-Jsonifier is a powerful JSON parsing library that allows you to easily parse JSON data in your C++ applications. By default, Jsonifier does not output detailed error messages during the parsing process. However, you can enable error message output to aid in debugging and understanding parsing issues.
+## Handling Parsing Errors
 
-To enable error message output in Jsonifier, you need to set a specific template parameter when calling the parseJson function. By setting this parameter to true, Jsonifier will generate detailed error messages if any parsing errors occur. Follow the steps below to enable error message output:
+Jsonifier allows you to collect and handle possible parsing errors during the JSON parsing process. To check for and display these errors, follow these steps:
 
-Locate the code block where you invoke the parseJson function.
-
-Look for the following line of code:
-```cpp
-parser.parseJson(/* ... */);
-```
-Modify the code to include the template parameter set to true, as shown below:
+1. After parsing the JSON, you can call the `getErrors` method on the `jsonifier::jsonifier_core` instance to retrieve a vector of error objects.
 
 ```cpp
-parser.parseJson<true>(/* ... */);
+auto errors = jsonifier.getErrors();
 ```
-Save the changes.
 
-Rebuild and run your application.
+2. Check if any errors were reported:
+
+```cpp
+if (!errors.empty()) {
+    for (const auto& error : errors) {
+        std::cout << "Jsonifier Error: " << error.reportError() << std::endl;
+    }
+}
+```
+
+This code snippet iterates through the error objects and prints a description of each error.
+
+## Example
+
+Here's a complete example of parsing JSON data and handling errors:
+
+```cpp
+#include <jsonifier/jsonifier.hpp>
+#include <iostream>
+
+int32_t main() {
+    jsonifier::string buffer{ your_json_string };
+    obj_t obj;
+    jsonifier::jsonifier_core jsonifier;
+
+    jsonifier.parseJson<true>(obj, buffer);
+
+    auto errors = jsonifier.getErrors();
+    if (!errors.empty()) {
+        for (const auto& error : errors) {
+            std::cout << "Jsonifier Error: " << error.reportError() << std::endl;
+        }
+    }
+
+    // Process the parsed data in 'obj' here.
+
+    return 0;
+}
+```
 
 ### Interpreting Error Messages:
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
 ```
 In the provided error message:
 
@@ -196,13 +225,14 @@ In the provided error message:
  Provides information about the specific function where the parsing error occurred.
 
  When you receive an error message, carefully review the provided information to understand the cause of the parsing error. Use this information to identify the part of the JSON data that caused the issue and take appropriate steps to resolve it.
+ 
+## Conclusion
 
- #### Conclusion
- Enabling error message output in Jsonifier can greatly assist in debugging and resolving parsing issues in your C++ applications. By following the steps outlined above, you can easily set the template parameter to true and gain access to detailed error messages during the JSON parsing process.
+Jsonifier makes parsing JSON in C++ easy and provides a convenient way to handle parsing errors. Refer to the [official documentation](https://github.com/RealTimeChris/jsonifier) for more details and advanced usage.
 
-If you have any further questions or require additional assistance, please refer to the Jsonifier documentation or reach out to our support team.
+Feel free to explore Jsonifier and incorporate it into your projects for efficient JSON parsing and serialization.
 
-Happy parsing with Jsonifier!
+Happy coding!
 
 ## CPU Architecture Selection
 ----
@@ -226,9 +256,10 @@ AVX-512 is an extension of the AVX instruction set architecture, designed to pro
 ### Manual Configuration
 In addition to automatic CPU architecture detection, Jsonifier's CMake configuration also allows for manual control over specific CPU instructions. You can manually set the JSONIFIER_CPU_INSTRUCTIONS variable in the CMake configuration to fine-tune the instruction sets used. Here are the values you can use for different instruction sets:
 
-- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 5
-- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 4
-- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 3
+- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 6
+- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 5
+- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 4
+- JSONIFIER_CPU_INSTRUCTIONS for BMI2: Set to 1 << 3
 - JSONIFIER_CPU_INSTRUCTIONS for BMI: Set to 1 << 2
 - JSONIFIER_CPU_INSTRUCTIONS for LZCOUNT: Set to 1 << 1
 - JSONIFIER_CPU_INSTRUCTIONS for POPCNT: Set to 1 << 0
@@ -264,7 +295,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Jsonifier)
 
-target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
+target_link_libraries("${PROJECT_NAME}" PRIVATE jsonifier::Jsonifier)
 ```
 
 ## Installation (CMake)
@@ -277,5 +308,5 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
 	3. Enter the directory in a terminal, and enter `cmake -S . --preset=Windows_OR_Linux-Release_OR_Debug`.
 	4. Enter within the same terminal, `cmake --build --preset=Windows_OR_Linux-Release_OR_Debug`.
 	5. Enter within the same terminal, `cmake --install ./Build/Release_OR_Debug`.
-	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE Jsonifier::Jsonifier)`.
+	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE jsonifier::Jsonifier)`.
 
