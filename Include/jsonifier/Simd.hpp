@@ -23,151 +23,206 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StringView.hpp>
+#include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/ISADetection.hpp>
+#include <jsonifier/StringView.hpp>
 #include <cmath>
 
 namespace jsonifier_internal {
 
-	template<uint64_t stepSize> class string_block_reader {
+	class string_block_reader {
 	  public:
-		using size_type = uint64_t;
-
-		inline void reset(string_view_ptr stringViewNew, size_type lengthNew) {
-			lengthMinusStep = lengthNew < stepSize ? 0 : lengthNew - stepSize;
-			instring		= stringViewNew;
+		jsonifier_inline void reset(const uint8_t* stringViewNew, uint64_t lengthNew) noexcept {
+			lengthMinusStep = lengthNew < BitsPerStep ? 0 : lengthNew - BitsPerStep;
+			inString		= stringViewNew;
 			length			= lengthNew;
 			index			= 0;
 		}
 
-		inline size_type getRemainder(string_buffer_ptr dest) const {
+		jsonifier_inline uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
 			if (length == index) {
 				return 0;
 			}
-			std::memset(dest, 0x20, stepSize);
-			std::memcpy(dest, instring + index, (length - index));
+			std::memset(dest, 0x20, BitsPerStep);
+			std::memcpy(dest, inString + index, (length - index));
 			return length - index;
 		}
 
-		inline string_view_ptr fullBlock() {
-			return instring + index;
+		jsonifier_inline string_view_ptr fullBlock() noexcept {
+			const uint8_t* newPtr = inString + index;
+			index += BitsPerStep;
+			return newPtr;
 		}
 
-		inline void advanceIndex() {
-			index += stepSize;
-		}
-
-		inline bool hasFullBlock() const {
+		jsonifier_inline bool hasFullBlock() const noexcept {
 			return index < lengthMinusStep;
 		}
 
 	  protected:
-		size_type lengthMinusStep{};
-		string_view_ptr instring{};
-		size_type length{};
-		size_type index{};
+		const uint8_t* inString{};
+		uint64_t lengthMinusStep{};
+		uint64_t length{};
+		uint64_t index{};
 	};
 
-	class simd_string_reader {
+	class simd_string_reader : public simd_base {
 	  public:
 		using size_type = uint64_t;
+		using allocator = alloc_wrapper<structural_index>;
 
-		inline void reset(jsonifier::string_view_base<uint8_t> stringViewNew) {
-			structuralIndices.clear();
-			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size()));
-			stringBlockReader.reset(stringViewNew.data(), stringViewNew.size());
-			stringView	 = stringViewNew;
-			storedLSB01	 = false;
-			prevInstring = 0;
+		template<bool refreshString, jsonifier::concepts::string_t string_type> jsonifier_inline void reset(string_type&& stringViewNew) {
+			if jsonifier_constexpr (refreshString) {
+				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
+				stringLength = stringViewNew.size();
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				resetInternal();
+			} else if (jsonifier::string_view_base<uint8_t>{ stringView, stringLength } != stringViewNew) {
+				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
+				stringLength = stringViewNew.size();
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				resetInternal();
+			}
+		}
+
+		template<bool refreshString, jsonifier::concepts::string_t string_type>
+		jsonifier_inline std::string resetWithErrorPrintOut(string_type&& stringViewNew, size_type errorIndex) {
+			std::string returnValue{ "For the following string values: " };
+			if (errorIndex < std::string{}.max_size()) {
+				returnValue += std::string_view{ reinterpret_cast<const char*>(stringViewNew.data() + errorIndex), BitsPerStep };
+				returnValue += "\n";
+			}
+			if jsonifier_constexpr (refreshString) {
+				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
+				stringLength = stringViewNew.size();
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
+			} else if (jsonifier::string_view_base<uint8_t>{ stringView, stringLength } != stringViewNew) {
+				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
+				stringLength = stringViewNew.size();
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
+			}
+		}
+
+		jsonifier_inline void resetInternal() {
+			stringBlockReader.reset(stringView, stringLength);
+			prevInString = 0;
 			stringIndex	 = 0;
 			tapeIndex	 = 0;
 			generateJsonIndices();
 		}
 
-		inline void generateJsonIndices() {
-			simd_base<StepSize> newPtr[StridesPerStep]{};
-			simd_base<StepSize> nextIsEscaped{};
-			simd_base<StepSize> currentValues{};
-			simd_base<StepSize> whitespace{};
-			simd_base<StepSize> backslash{};
-			simd_base<StepSize> quotes{};
-			simd_base<StepSize> op{};
-			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals(stringBlockReader.fullBlock(), newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-				generateStructurals(stringBlockReader.fullBlock() + StepSize, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-				stringBlockReader.advanceIndex();
-			}
-			uint8_t block[StepSize * 2];
-			if (stringBlockReader.getRemainder(block) > 0) {
-				generateStructurals(block, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-				generateStructurals(block + StepSize, newPtr, currentValues, whitespace, op, quotes, nextIsEscaped, backslash);
-			}
+		jsonifier_inline std::string resetInternalWithErrorPrintOut(size_type errorIndex) {
+			stringBlockReader.reset(stringView, stringLength);
+			prevInString = 0;
+			stringIndex	 = 0;
+			tapeIndex	 = 0;
+			return generateJsonIndicesWithErrorPrintOut(errorIndex);
 		}
 
-		inline size_type getstringLength() {
-			return stringView.size();
+		jsonifier_inline structural_iterator begin() {
+			return structural_iterator{ getStructurals() };
 		}
 
-		inline jsonifier::string_view_base<uint8_t> getStringView() {
-			return stringView;
-		}
-
-		inline structural_index* getStructurals() {
+		jsonifier_inline structural_index* getStructurals() {
+			structuralIndices[tapeIndex] = nullptr;
 			return structuralIndices.data();
 		}
 
+		jsonifier_inline ~simd_string_reader(){};
+
 	  protected:
-		inline static const simd_base<StepSize> oddBits{ makeSimdBase(0xAAAAAAAAAAAAAAAAULL) };
-		jsonifier::vector<structural_index> structuralIndices{};
-		string_block_reader<StepSize * 2> stringBlockReader{};
-		jsonifier::string_view_base<uint8_t> stringView{};
-		size_type prevInstring{};
+		static jsonifier_constexpr simd_int_t oddBitsVal{ simdFromValue<simd_int_t>(0xAA) };
+		simd_int_t evenSeriesCodesAndOddBits{};
+		simd_int_t porentialStructuralStart{};
+		simd_int_t newPtr[StridesPerStep]{};
+		simd_int_t maybeEscapedAndOddBits{};
+		simd_int_t followsNonQuoteScalar{};
+		simd_int_t escapeAndTerminalCode{};
+		simd_int_t potentialScalarStart{};
+		simd_int_t nonQuoteScalar{};
+		simd_int_t nextIsEscaped{};
+		simd_int_t maybeEscaped{};
+		simd_int_t backslashes{};
+		simd_int_t structurals{};
+		simd_int_t stringTail{};
+		simd_int_t whitespace{};
+		simd_int_t inString{};
+		simd_int_t escaped{};
+		simd_int_t quotes{};
+		simd_int_t escape{};
+		simd_int_t scalar{};
+		simd_int_t op{};
+		alignas(BytesPerStep) size_type newBits[SixtyFourBitsPerStep]{};
+		bool overflow{};
+		structural_index_vector structuralIndices{};
+		string_block_reader stringBlockReader{};
+		string_view_ptr stringView{};
+		size_type stringLength{};
+		size_type prevInString{};
 		size_type stringIndex{};
 		size_type tapeIndex{};
-		bool storedLSB01{};
 
-		inline size_type roundUpToMultipleOfEight(size_type num) {
-			size_type remainder = num % 8;
-			if (remainder == 0) {
-				return num;
+
+		jsonifier_inline void generateJsonIndices() {
+			while (stringBlockReader.hasFullBlock()) {
+				generateStructurals(stringBlockReader.fullBlock());
 			}
-			return num + (8 - remainder);
+			uint8_t block[BitsPerStep]{};
+			if (stringBlockReader.getRemainder(block) > 0) {
+				generateStructurals(block);
+			}
 		}
 
-		template<size_type index = 0, size_type index02 = 0> inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
-			if constexpr (index < 8) {
-				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzCount(newBits) + (index02 * 64ULL) + stringIndex);
+		jsonifier_inline size_type getTapeLength() {
+			return tapeIndex - 1;
+		}
+
+		template<size_type index = 0, size_type index02> jsonifier_inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
+			if jsonifier_constexpr (index < StridesPerStep) {
+				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);
 				newBits													  = blsr(newBits);
-				return rollValuesIntoTape<index + 1, index02>(currentIndex, newBits);
+				return (newBits == 0) ? newBits : rollValuesIntoTape<index + 1, index02>(currentIndex, newBits);
 			} else {
 				return newBits;
 			}
 		}
 
-		template<size_type index = 0> inline void collectStringValues(string_view_ptr valuesNew, simd_base<StepSize>* newPtr) {
-			if constexpr (index < StridesPerStep) {
-				newPtr[index] = load(valuesNew + (BytesPerStep * index));
-				collectStringValues<index + 1>(valuesNew, newPtr);
-			}
+		template<size_type index> jsonifier_inline void collectStringValuesHelper(string_view_ptr valuesNew) {
+			newPtr[index] = gatherValuesU<simd_int_t>(valuesNew + (BytesPerStep * index));
 		}
 
-		inline void generateStructurals(string_view_ptr valueNew, simd_base<StepSize>* newPtr, simd_base<StepSize>& currentValues, simd_base<StepSize>& whitespace,
-			simd_base<StepSize>& op, simd_base<StepSize>& quotes, simd_base<StepSize>& nextIsEscaped, simd_base<StepSize>& backslash) {
-			collectStringValues(valueNew, newPtr);
-			whitespace.convertWhitespaceToSimdBase(newPtr);
-			backslash.convertBackslashesToSimdBase(newPtr);
-			op.convertStructuralsToSimdBase(newPtr);
-			quotes.convertQuotesToSimdBase(newPtr);
-			addTapeValues(collectStructurals(currentValues, quotes, whitespace, op, backslash, nextIsEscaped));
-			stringIndex += StepSize;
+		jsonifier_inline void collectStringValues(string_view_ptr valuesNew) {
+			collectStringValuesHelper<0>(valuesNew);
+			collectStringValuesHelper<1>(valuesNew);
+			collectStringValuesHelper<2>(valuesNew);
+			collectStringValuesHelper<3>(valuesNew);
+			collectStringValuesHelper<4>(valuesNew);
+			collectStringValuesHelper<5>(valuesNew);
+			collectStringValuesHelper<6>(valuesNew);
+			collectStringValuesHelper<7>(valuesNew);
 		}
 
-		template<size_type index = 0> inline void addTapeValues(simd_base<StepSize>&& structurals) {
-			alignas(JSONIFIER_ALIGNMENT) size_type newBits[StridesPerStep]{};
-			structurals.store<size_type>(newBits);
-			if constexpr (index < StridesPerStep) {
+		jsonifier_inline void generateStructurals(string_view_ptr valueNew) {
+			collectStringValues(valueNew);
+			collectWhitespaceAsSimdBase(whitespace, newPtr);
+			collectBackslashesAsSimdBase(backslashes, newPtr);
+			collectStructuralsAsSimdBase(op, newPtr);
+			collectQuotesAsSimdBase(quotes, newPtr);
+			collectStructurals();
+			addTapeValues();
+			stringIndex += BitsPerStep;
+		}
+
+		jsonifier_inline void addTapeValues() {
+			store(structurals, newBits);
+			addTapeValuesHelper<0>();
+		}
+
+		template<size_type index> jsonifier_inline void addTapeValuesHelper() {
+			if jsonifier_constexpr (index < SixtyFourBitsPerStep) {
 				if (!newBits[index]) {
-					addTapeValues<index + 1>(std::forward<simd_base<StepSize>>(structurals));
+					addTapeValuesHelper<index + 1>();
 					return;
 				}
 				auto cnt			  = popcnt(newBits[index]);
@@ -176,42 +231,170 @@ namespace jsonifier_internal {
 					newBits[index] = rollValuesIntoTape<0, index>(y, newBits[index]);
 				}
 				tapeIndex += cnt;
-				addTapeValues<index + 1>(std::forward<simd_base<StepSize>>(structurals));
+				addTapeValuesHelper<index + 1>();
 			}
 		}
 
-		inline simd_base<StepSize> collectEscapedCharacters(simd_base<StepSize>& currentValues, simd_base<StepSize>& backslash, simd_base<StepSize>& nextIsEscaped) {
-			if (backslash.operator bool()) {
-				currentValues				= backslash.bitAndNot(nextIsEscaped).shl<1>();
-				currentValues				= currentValues | oddBits;
-				currentValues				= currentValues - backslash.bitAndNot(nextIsEscaped);
-				currentValues				= currentValues ^ oddBits;
-				simd_base<StepSize> escaped = currentValues ^ (backslash | nextIsEscaped);
-				nextIsEscaped.setLSB((currentValues & backslash).checkMSB());
-				return escaped;
+		jsonifier_inline void collectEscapedCharactersHelper(const simd_int_t& potentialEscape) noexcept {
+			maybeEscaped			  = shl<1>(potentialEscape);
+			maybeEscapedAndOddBits	  = opOr(maybeEscaped, oddBitsVal);
+			evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
+			escapeAndTerminalCode	  = opXor(evenSeriesCodesAndOddBits, oddBitsVal);
+		}
+
+		jsonifier_inline void collectNonEmptyEscaped() noexcept {
+			collectEscapedCharactersHelper(bitAndNot(backslashes, nextIsEscaped));
+			escape		  = opAnd(escapeAndTerminalCode, backslashes);
+			escaped		  = opXor(escapeAndTerminalCode, opOr(backslashes, nextIsEscaped));
+			nextIsEscaped = setLSB(nextIsEscaped, getMSB(escape));
+		}
+
+		jsonifier_inline void collectEmptyEscaped() {
+			auto escapedNew = nextIsEscaped;
+			nextIsEscaped	= simd_int_t{};
+			escaped			= escapedNew;
+		}
+
+		jsonifier_inline void collectEscapedCharacters() {
+			return opBool(backslashes) ? collectNonEmptyEscaped() : collectEmptyEscaped();
+		}
+
+		jsonifier_inline void collectStructurals() {
+			collectEscapedCharacters();
+			quotes					 = bitAndNot(quotes, escaped);
+			inString				 = carrylessMultiplication(quotes, prevInString);
+			stringTail				 = opXor(inString, quotes);
+			scalar					 = opNot(opOr(op, whitespace));
+			nonQuoteScalar			 = bitAndNot(scalar, quotes);
+			followsNonQuoteScalar	 = follows(nonQuoteScalar, overflow);
+			potentialScalarStart	 = bitAndNot(scalar, followsNonQuoteScalar);
+			porentialStructuralStart = opOr(op, potentialScalarStart);
+			structurals				 = bitAndNot(porentialStructuralStart, stringTail);
+		}
+
+		jsonifier_inline std::string collectEscapedCharactersWithErrorPrintOut(size_type errorIndex) {
+			if (opBool(backslashes)) {
+				return collectNonEmptyEscapedWithErrorPrintOut(errorIndex);
 			} else {
+				collectEmptyEscaped();
 				return {};
 			}
 		}
 
-		inline simd_base<StepSize> collectStructurals(simd_base<StepSize>& currentValues, simd_base<StepSize>& quotes, simd_base<StepSize>& whitespace, simd_base<StepSize>& op,
-			simd_base<StepSize>& backslash, simd_base<StepSize>& nextIsEscaped) {
-			currentValues				   = collectEscapedCharacters(currentValues, backslash, nextIsEscaped);
-			quotes						   = quotes.bitAndNot(currentValues);
-			currentValues				   = quotes.carrylessMultiplication(prevInstring);
-			simd_base<StepSize> stringTail = currentValues ^ quotes;
-			simd_base<StepSize> scalar	   = ~(op | whitespace);
-			currentValues				   = scalar.bitAndNot(quotes);
-			currentValues				   = currentValues.follows(storedLSB01);
-			currentValues				   = scalar.bitAndNot(currentValues);
-			currentValues				   = op | currentValues;
-			currentValues				   = currentValues.bitAndNot(stringTail);
-			return currentValues;
+		jsonifier_inline std::string generateJsonIndicesWithErrorPrintOut(size_type errorIndex) {
+			std::string returnValue{};
+			while (stringBlockReader.hasFullBlock()) {
+				returnValue += generateStructuralsWithErrorPrintOut(stringBlockReader.fullBlock(), errorIndex);
+			}
+			uint8_t block[BitsPerStep]{};
+			if (stringBlockReader.getRemainder(block) > 0) {
+				returnValue += generateStructuralsWithErrorPrintOut(block, errorIndex);
+			}
+			return returnValue;
+		}
+
+		jsonifier_inline std::string generateStructuralsWithErrorPrintOut(string_view_ptr valueNew, size_type errorIndex) {
+			std::stringstream returnValue{};
+			collectStringValues(valueNew);
+			collectWhitespaceAsSimdBase(whitespace, newPtr);
+			collectBackslashesAsSimdBase(backslashes, newPtr);
+			collectStructuralsAsSimdBase(op, newPtr);
+			collectQuotesAsSimdBase(quotes, newPtr);
+			if (stringIndex == errorIndex) {
+				returnValue << "Whitespace Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(whitespace).data();
+				returnValue << "Backslash Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(backslashes).data();
+				returnValue << "Op Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(op).data();
+				returnValue << "Quote Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(quotes).data();
+			}
+			std::string returnValueNew = collectStructuralsWithErrorPrintOut(errorIndex);
+			if (stringIndex == errorIndex) {
+				returnValue << returnValueNew;
+			}
+			addTapeValues();
+			stringIndex += BitsPerStep;
+			return returnValue.str();
+		}
+
+		jsonifier_inline std::string collectEscapedCharactersHelperWithErrorPrintOut(const simd_int_t& potentialEscape, size_type errorIndex) noexcept {
+			std::stringstream returnValue{};
+			maybeEscaped			  = shl<1>(potentialEscape);
+			maybeEscapedAndOddBits	  = opOr(maybeEscaped, oddBitsVal);
+			evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
+			escapeAndTerminalCode	  = opXor(evenSeriesCodesAndOddBits, oddBitsVal);
+			if (stringIndex == errorIndex) {
+				returnValue << "Potential Escape Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(potentialEscape).data();
+				returnValue << "Maybe Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(maybeEscaped).data();
+				returnValue << "Maybe Escaped And Odd Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(maybeEscapedAndOddBits).data();
+				returnValue << "Even Series Codes And Odd Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(evenSeriesCodesAndOddBits).data();
+			}
+			return returnValue.str();
+		}
+
+		jsonifier_inline std::string collectNonEmptyEscapedWithErrorPrintOut(size_type errorIndex) noexcept {
+			std::stringstream returnValue{};
+			auto returnValueNew = collectEscapedCharactersHelperWithErrorPrintOut(bitAndNot(backslashes, nextIsEscaped), errorIndex);
+			escape				= opAnd(escapeAndTerminalCode, backslashes);
+			escaped				= opXor(escapeAndTerminalCode, opOr(backslashes, nextIsEscaped));
+			nextIsEscaped		= setLSB(nextIsEscaped, getMSB(escape));
+			if (stringIndex == errorIndex) {
+				returnValue << returnValueNew;
+				returnValue << "Escape And Terminal Code Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(escapeAndTerminalCode).data();
+				returnValue << "Escape Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(escape).data();
+				returnValue << "Next Is Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(nextIsEscaped).data();
+			}
+			return returnValue.str();
+		}
+
+		jsonifier_inline std::string collectStructuralsWithErrorPrintOut(size_type errorIndex) {
+			std::stringstream returnValue{};
+			std::string returnValueNew = collectEscapedCharactersWithErrorPrintOut(errorIndex);
+			quotes					   = bitAndNot(quotes, escaped);
+			inString				   = carrylessMultiplication(quotes, prevInString);
+			stringTail				   = opXor(inString, quotes);
+			scalar					   = opNot(opOr(op, whitespace));
+			nonQuoteScalar			   = bitAndNot(scalar, quotes);
+			followsNonQuoteScalar	   = follows(nonQuoteScalar, overflow);
+			potentialScalarStart	   = bitAndNot(scalar, followsNonQuoteScalar);
+			porentialStructuralStart   = opOr(op, potentialScalarStart);
+			structurals				   = bitAndNot(porentialStructuralStart, stringTail);
+			if (stringIndex == errorIndex) {
+				returnValue << returnValueNew;
+				returnValue << "Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(escaped).data();
+				returnValue << "Quoted Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(quotes).data();
+				returnValue << "In String Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(inString).data();
+				returnValue << "String Tail Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(stringTail).data();
+				returnValue << "Scalar Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(scalar).data();
+				returnValue << "Overflow Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(overflow).data();
+				returnValue << "NonQuote Scalar Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(nonQuoteScalar).data();
+				returnValue << "Follows NonQuote Scalar Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(followsNonQuoteScalar).data();
+				returnValue << "Potential Scalar Start Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(potentialScalarStart).data();
+				returnValue << "Potential Structural Start Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(porentialStructuralStart).data();
+				returnValue << "Final Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << printBits(structurals).data();
+			}
+			return returnValue.str();
 		}
 	};
 
-}
-
-#if defined(load)
-	#undef load
-#endif
+};

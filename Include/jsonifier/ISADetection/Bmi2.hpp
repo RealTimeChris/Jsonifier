@@ -23,19 +23,31 @@
 /// Feb 3, 2023
 #pragma once
 
-#if !defined(NOMINMAX)
-	#define NOMINMAX
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+
+namespace jsonifier_internal {
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI2)
+
+	#define pdep(x, y) _pdep_u32(x, y)
+
+#else
+
+	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type pdep(value_type src, value_type mask) {
+		value_type result  = 0;
+		value_type src_bit = 1;
+
+		for (int32_t i = 0; i < 64; i++) {
+			if (mask & 1) {
+				result |= (src & src_bit);
+				src_bit <<= 1;
+			}
+			mask >>= 1;
+		}
+
+		return result;
+	}
+
 #endif
 
-#include <jsonifier/StructuralIterator.hpp>
-#include <jsonifier/Serialize_Impl.hpp>
-#include <jsonifier/JsonifierCore.hpp>
-#include <jsonifier/RawJsonData.hpp>
-#include <jsonifier/Parse_Impl.hpp>
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/HashMap.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/String.hpp>
-#include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base.hpp>
-#include <jsonifier/Simd.hpp>
+}
