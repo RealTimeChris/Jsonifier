@@ -209,7 +209,7 @@ int32_t main() {
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a 0x2D, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
 ```
 In the provided error message:
 

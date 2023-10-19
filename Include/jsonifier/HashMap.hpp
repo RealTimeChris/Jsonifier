@@ -280,7 +280,7 @@ namespace jsonifier_internal {
 				h *= fnv64Prime;
 				return h;
 			}
-			using string_type							 = jsonifier::concepts::unwrap_t<value_type>;
+			using string_type							 = std::unwrap_ref_decay_t<value_type>;
 			const typename string_type::value_type* d0	 = value.data();
 			const typename string_type::value_type* end7 = value.data() + n - 7;
 			for (; d0 < end7; d0 += 8) {
@@ -919,6 +919,6 @@ namespace jsonifier_internal {
 
 	template<typename value_type> constexpr auto makeMap() {
 		constexpr auto indices = std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_t<value_type>>>{};
-		return makeMapImpl<jsonifier::concepts::unwrap_t<value_type>>(indices);
+		return makeMapImpl<std::unwrap_ref_decay_t<value_type>>(indices);
 	}
 }

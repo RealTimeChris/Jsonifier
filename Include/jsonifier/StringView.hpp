@@ -257,13 +257,13 @@ namespace jsonifier {
 
 		inline string_base<value_type_new> operator+(const value_type& rhs) {
 			string_base<value_type_new> newLhs{ *this };
-			newLhs.pushBack(rhs);
+			newLhs.push_back(rhs);
 			return newLhs;
 		}
 
 		inline string_base<value_type_new> operator+=(const value_type& rhs) {
 			string_base<value_type_new> newLhs{ *this };
-			newLhs.pushBack(rhs);
+			newLhs.push_back(rhs);
 			return newLhs;
 		}
 

@@ -859,10 +859,10 @@ namespace jsonifier_internal {
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::same_as<float, jsonifier::concepts::unwrap_t<value_type>> || std::same_as<double, jsonifier::concepts::unwrap_t<value_type>>);
+		static_assert(std::same_as<float, std::unwrap_ref_decay_t<value_type>> || std::same_as<double, std::unwrap_ref_decay_t<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-		using raw_t								= std::conditional_t<std::same_as<float, jsonifier::concepts::unwrap_t<value_type>>, uint32_t, uint64_t>;
+		using raw_t								= std::conditional_t<std::same_as<float, std::unwrap_ref_decay_t<value_type>>, uint32_t, uint64_t>;
 		const auto sigLeadingZeroes				= std::countl_zero(sig);
 		const auto sigNorm						= sig << sigLeadingZeroes;
 		const auto sig2Norm						= sig2FromExp10(exp);

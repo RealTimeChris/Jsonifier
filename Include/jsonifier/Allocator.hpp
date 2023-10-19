@@ -28,10 +28,6 @@
 
 namespace jsonifier_internal {
 
-	inline uint64_t findNextClosestMultiple(uint64_t number) {
-		return ((number % JsonifierAlignment == 0) ? number : number + (JsonifierAlignment - number % JsonifierAlignment));
-	}
-
 	template<typename value_type_new> class aligned_allocator : public std::pmr::polymorphic_allocator<value_type_new> {
 	  public:
 		using value_type = value_type_new;
@@ -43,12 +39,12 @@ namespace jsonifier_internal {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<pointer>(allocator::allocate_bytes(findNextClosestMultiple(n * sizeof(value_type)), JsonifierAlignment));
+			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<JsonifierAlignment>(n * sizeof(value_type)), JsonifierAlignment));
 		}
 
 		inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, findNextClosestMultiple(n * sizeof(value_type)), JsonifierAlignment);
+				allocator::deallocate_bytes(ptr, roundUpToMultiple<JsonifierAlignment>(n * sizeof(value_type)), JsonifierAlignment);
 			}
 		}
 

@@ -330,7 +330,7 @@ namespace jsonifier_internal {
 					writeCharacter<','>(buffer, index);
 				}
 
-				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, decltype(item)>>;
+				using key = std::unwrap_ref_decay_t<std::tuple_element_t<0, decltype(item)>>;
 
 				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);
@@ -377,7 +377,7 @@ namespace jsonifier_internal {
 					}
 				}
 
-				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, ItemType>>;
+				using key = std::unwrap_ref_decay_t<std::tuple_element_t<0, ItemType>>;
 
 				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);
@@ -433,7 +433,7 @@ namespace jsonifier_internal {
 					}
 				}
 
-				using key = jsonifier::concepts::unwrap_t<std::tuple_element_t<0, ItemType>>;
+				using key = std::unwrap_ref_decay_t<std::tuple_element_t<0, ItemType>>;
 
 				if constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
 					static constexpr jsonifier::string_view key = tuplet::get<0>(item);

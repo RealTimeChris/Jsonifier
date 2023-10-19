@@ -48,6 +48,19 @@ namespace jsonifier_internal {
 		Key_Parsing_Error		 = 7
 	};
 
+	enum class json_structural_type {
+		Object_Start = '{',
+		Object_End	 = '}',
+		Array_Start	 = '[',
+		Array_End	 = ']',
+		String		 = '"',
+		Bool		 = 't',
+		Number		 = '-',
+		Colon		 = ':',
+		Comma		 = ',',
+		Null		 = 'n',
+	};
+
 	inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
@@ -97,24 +110,30 @@ namespace jsonifier_internal {
 	  public:
 		friend class derailleur;
 
-		constexpr error(std::source_location locationNew = std::source_location::current()) noexcept {
-			location = locationNew;
-		};
+		inline error() noexcept = default;
 
-		constexpr error& operator=(error_code errorNew) {
+		inline error(structural_iterator& iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
+			intendedValue = static_cast<uint8_t>(typeNew);
+			errorIndex	  = iter.getCurrentStringIndex();
+			errorType	  = error_code::Parse_Error;
+			location	  = locationNew;
+			errorValue	  = *iter;
+		}
+
+		inline error& operator=(error_code errorNew) {
 			errorType = errorNew;
 			return *this;
 		}
 
-		constexpr error(error_code errorNew) {
+		inline error(error_code errorNew) {
 			*this = errorNew;
 		}
 
-		constexpr operator bool() {
+		inline operator bool() {
 			return errorType != error_code::Success;
 		}
 
-		constexpr bool operator==(const error& rhs) const {
+		inline bool operator==(const error& rhs) const {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex && errorValue == rhs.errorValue && intendedValue == rhs.intendedValue;
 		}
 
@@ -138,11 +157,14 @@ namespace jsonifier_internal {
 		uint8_t errorValue{};
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, const error& error) {
-		os << error.reportError();
-		return os;
+	template<json_structural_type typeNew> inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
+		error newError{ iter, typeNew, locationNew };
+		return newError;
 	}
 
-	using result = expected<bool, error>;
+	inline std::ostream& operator<<(std::ostream& os, const error& errorNew) {
+		os << errorNew.reportError();
+		return os;
+	}
 
 }

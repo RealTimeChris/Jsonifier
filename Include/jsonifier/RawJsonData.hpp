@@ -47,7 +47,7 @@ namespace jsonifier {
 
 	enum class json_type {
 		Unset  = '\0',
-		Object = '{',
+		Object = 0x7B,
 		Array  = '[',
 		String = '"',
 		Number = '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9',

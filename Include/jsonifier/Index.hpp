@@ -23,12 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#if defined(min)
-	#undef min
-#endif
-
-#if defined(max)
-	#undef max
+#if !defined(NOMINMAX)
+	#define NOMINMAX
 #endif
 
 #include <jsonifier/StructuralIterator.hpp>

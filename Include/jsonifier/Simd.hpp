@@ -76,14 +76,16 @@ namespace jsonifier_internal {
 		size_type index{};
 	};
 
-	class simd_string_reader {
+	class simd_string_reader : public simd_base {
 	  public:
 		using size_type = uint64_t;
 
-		inline void reset(jsonifier::string_view_base<uint8_t> stringViewNew) {
-			structuralIndices.clear();
-			structuralIndices.resize(roundUpToMultipleOfEight(stringViewNew.size()));
-			stringBlockReader.reset(stringViewNew.data(), stringViewNew.size());
+		inline void reset(string_view_ptr stringViewNew, size_type sizeNew) {
+			auto newSize = roundUpToMultiple<8>(sizeNew * 5 / 6);
+			if (newSize > structuralIndices.size()) {
+				structuralIndices.resize(newSize);
+			}
+			stringBlockReader.reset(stringViewNew, sizeNew);
 			stringView	 = stringViewNew;
 			storedLSB01	 = false;
 			prevInstring = 0;
@@ -93,11 +95,11 @@ namespace jsonifier_internal {
 		}
 
 		inline void generateJsonIndices() {
-			avx_int_t newPtr[StridesPerStep]{};
-			avx_int_t whitespace{};
-			avx_int_t backslash{};
-			avx_int_t quotes{};
-			avx_int_t op{};
+			simd_int_t newPtr[StridesPerStep]{};
+			simd_int_t whitespace{};
+			simd_int_t backslash{};
+			simd_int_t quotes{};
+			simd_int_t op{};
 			while (stringBlockReader.hasFullBlock()) {
 				generateStructurals(stringBlockReader.fullBlock(), newPtr, backslash, quotes, whitespace, op);
 				stringBlockReader.advanceIndex();
@@ -113,28 +115,24 @@ namespace jsonifier_internal {
 		}
 
 		inline structural_index* getStructurals() {
+			structuralIndices.at(tapeIndex) = nullptr;
 			return structuralIndices.data();
 		}
 
 	  protected:
-		static constexpr avx_int_t oddBitsVal{ simdValues<avx_int_t>(0xAA) };
+		static constexpr simd_int_t oddBitsVal{ simdValues<simd_int_t>(0xAA) };
 		jsonifier::vector<structural_index> structuralIndices{};
 		string_block_reader<BitsPerStep> stringBlockReader{};
-		jsonifier::string_view_base<uint8_t> stringView{};
+		string_view_ptr stringView{};
 		size_type prevInstring{};
 		size_type stringIndex{};
 		size_type tapeIndex{};
 		bool storedLSB01{};
 		bool storedLSB02{};
 
-		inline size_type roundUpToMultipleOfEight(size_type num) {
-			size_type remainder = num % 8;
-			return remainder == 0 ? num : num + (8 - remainder);
-		}
-
-		template<size_type index = 0, size_type index02 = 0> inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
+		template<size_type index = 0, size_type index02> inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
 			if constexpr (index < 8) {
-				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ULL) + stringIndex);
+				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ULL) + stringIndex);
 				newBits													  = blsr(newBits);
 				return (newBits == 0) ? newBits : rollValuesIntoTape<index + 1, index02>(currentIndex, newBits);
 			} else {
@@ -142,14 +140,22 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<size_type index = 0> inline void collectStringValues(string_view_ptr valuesNew, avx_int_t* newPtr) {
-			if constexpr (index < StridesPerStep) {
-				newPtr[index] = gatherValues<avx_int_t>(valuesNew + (BytesPerStep * index));
-				collectStringValues<index + 1>(valuesNew, newPtr);
-			}
+		template<size_type index> inline void collectStringValuesHelper(string_view_ptr valuesNew, simd_int_t* newPtr) {
+			newPtr[index] = gatherValues<simd_int_t>(valuesNew + (BytesPerStep * index));
 		}
 
-		inline void generateStructurals(string_view_ptr valueNew, avx_int_t* newPtr, avx_int_t& backslash, avx_int_t& quotes, avx_int_t& whitespace, avx_int_t& op) {
+		inline void collectStringValues(string_view_ptr valuesNew, simd_int_t* newPtr) {
+			collectStringValuesHelper<0>(valuesNew, newPtr);
+			collectStringValuesHelper<1>(valuesNew, newPtr);
+			collectStringValuesHelper<2>(valuesNew, newPtr);
+			collectStringValuesHelper<3>(valuesNew, newPtr);
+			collectStringValuesHelper<4>(valuesNew, newPtr);
+			collectStringValuesHelper<5>(valuesNew, newPtr);
+			collectStringValuesHelper<6>(valuesNew, newPtr);
+			collectStringValuesHelper<7>(valuesNew, newPtr);
+		}
+
+		inline void generateStructurals(string_view_ptr valueNew, simd_int_t* newPtr, simd_int_t& backslash, simd_int_t& quotes, simd_int_t& whitespace, simd_int_t& op) {
 			collectStringValues(valueNew, newPtr);
 			convertWhitespaceToSimdBase(whitespace, newPtr);
 			convertBackslashesToSimdBase(backslash, newPtr);
@@ -159,13 +165,13 @@ namespace jsonifier_internal {
 			stringIndex += BitsPerStep;
 		}
 
-		inline void addTapeValues(const avx_int_t& structurals) {
+		inline void addTapeValues(const simd_int_t& structurals) {
 			alignas(JsonifierAlignment) size_type newBits[StridesPerStep]{};
-			store<size_type>(structurals, newBits);
-			addTapeValuesHelper(std::move(structurals), newBits);
+			store(structurals, newBits);
+			addTapeValuesHelper<0>(structurals, newBits);
 		}
 
-		template<size_type index = 0> inline void addTapeValuesHelper(const avx_int_t& structurals, size_type* newBits) {
+		template<size_type index> inline void addTapeValuesHelper(const simd_int_t& structurals, size_type* newBits) {
 			if constexpr (index < StridesPerStep) {
 				if (!newBits[index]) {
 					addTapeValuesHelper<index + 1>(structurals, newBits);
@@ -181,43 +187,44 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline avx_int_t collectNonEmptyEscaped(const avx_int_t& backslash) {
-			avx_int_t nextIsEscaped{};
-			setLSB(nextIsEscaped, storedLSB02);
-			avx_int_t potentialEscape = bitAndNot(backslash, nextIsEscaped);
-			shl<1>(potentialEscape);
-			avx_int_t maybeEscaped			= potentialEscape;
-			maybeEscaped					= opOr(maybeEscaped, oddBitsVal);
-			maybeEscaped					= opSub(maybeEscaped, potentialEscape);
-			avx_int_t escapeAndTerminalCode = opXor(maybeEscaped, oddBitsVal);
-			escapeAndTerminalCode			= opAnd(escapeAndTerminalCode, backslash);
-			storedLSB02						= getMSB(escapeAndTerminalCode);
-			return opXor(escapeAndTerminalCode, opOr(backslash, nextIsEscaped));
+		inline simd_int_t collectEscapedCharactersHelper(const simd_int_t& potentialEscape) noexcept {
+			simd_int_t maybeEscaped				 = shl<1>(potentialEscape);
+			simd_int_t maybeEscapedAndOddBits	 = opOr(maybeEscaped, oddBitsVal);
+			simd_int_t evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
+			return opXor(evenSeriesCodesAndOddBits, oddBitsVal);
 		}
 
-		inline avx_int_t collectEmptyEscaped() {
-			avx_int_t escaped{};
-			setLSB(escaped, storedLSB02);
+		inline simd_int_t collectNonEmptyEscaped(const simd_int_t& backslash) noexcept {
+			simd_int_t nextIsEscaped{ setLSB(simd_int_t{}, storedLSB02) };
+			simd_int_t escapeAndTerminalCode = collectEscapedCharactersHelper(bitAndNot(backslash, nextIsEscaped));
+			simd_int_t escaped				 = opXor(escapeAndTerminalCode, opOr(backslash, nextIsEscaped));
+			simd_int_t escape				 = opAnd(escapeAndTerminalCode, backslash);
+			storedLSB02						 = getMSB(escape);
+			return escaped;
+		}
+
+		inline simd_int_t collectEmptyEscaped() {
+			simd_int_t escaped{ setLSB(simd_int_t{}, storedLSB02) };
 			storedLSB02 = false;
 			return escaped;
 		}
 
-		inline avx_int_t collectEscapedCharacters(avx_int_t& backslash) {
+		inline simd_int_t collectEscapedCharacters(simd_int_t& backslash) {
 			return opBool(backslash) ? collectNonEmptyEscaped(backslash) : collectEmptyEscaped();
 		}
 
-		inline avx_int_t collectStructurals(avx_int_t& backslash, avx_int_t& quotes, avx_int_t& whitespace, avx_int_t& op) {
-			avx_int_t currentValues = collectEscapedCharacters(backslash);
-			quotes					= bitAndNot(quotes, currentValues);
-			currentValues			= carrylessMultiplication(quotes, prevInstring);
-			avx_int_t stringTail	= opXor(currentValues, quotes);
-			avx_int_t scalar		= opNot(opOr(op, whitespace));
-			currentValues			= bitAndNot(scalar, quotes);
-			currentValues			= follows(currentValues, storedLSB01);
-			currentValues			= bitAndNot(scalar, currentValues);
-			currentValues			= opOr(op, currentValues);
+		inline simd_int_t collectStructurals(simd_int_t& backslash, simd_int_t& quotes, simd_int_t& whitespace, simd_int_t& op) {
+			simd_int_t currentValues = collectEscapedCharacters(backslash);
+			quotes					 = bitAndNot(quotes, currentValues);
+			currentValues			 = carrylessMultiplication(quotes, prevInstring);
+			simd_int_t stringTail	 = opXor(currentValues, quotes);
+			simd_int_t scalar		 = opNot(opOr(op, whitespace));
+			currentValues			 = bitAndNot(scalar, quotes);
+			currentValues			 = follows(currentValues, storedLSB01);
+			currentValues			 = bitAndNot(scalar, currentValues);
+			currentValues			 = opOr(op, currentValues);
 			return bitAndNot(currentValues, stringTail);
 		}
 	};
 
-}
+};

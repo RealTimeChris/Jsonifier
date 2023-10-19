@@ -143,7 +143,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> inline string_base& operator=(value_type_newer&& other) {
-			size_type sizeNew = other.size() * (sizeof(typename jsonifier::concepts::unwrap_t<value_type_newer>::value_type) / sizeof(value_type));
+			size_type sizeNew = other.size() * (sizeof(typename std::unwrap_ref_decay_t<value_type_newer>::value_type) / sizeof(value_type));
 			if (sizeNew > 0) {
 				reset();
 				string_base temp{};
@@ -176,7 +176,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::char_type value_type_newer> inline string_base& operator=(value_type_newer other) {
-			pushBack(other);
+			push_back(other);
 			return *this;
 		}
 
@@ -298,7 +298,7 @@ namespace jsonifier {
 			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
 		}
 
-		template<typename value_type_newer> inline void append(const value_type_newer* valuesNew, uint64_t sizeNew) {
+		template<typename value_type_newer> inline void append(value_type_newer* valuesNew, uint64_t sizeNew) {
 			if (sizeVal + sizeNew >= capacityVal) {
 				reserve(sizeVal + sizeNew);
 			}
@@ -359,7 +359,7 @@ namespace jsonifier {
 			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
 		}
 
-		inline void pushBack(value_type value) {
+		inline void push_back(value_type value) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve((sizeVal + 2) * 4);
 			}
@@ -395,8 +395,10 @@ namespace jsonifier {
 
 		template<typename value_type_newer> inline explicit operator std::basic_string<value_type_newer>() const {
 			std::basic_string<value_type_newer> returnValue{};
-			returnValue.resize(sizeVal);
-			std::memcpy(returnValue.data(), data(), returnValue.size());
+			if (sizeVal > 0) {
+				returnValue.resize(sizeVal);
+				std::memcpy(returnValue.data(), data(), returnValue.size());
+			}
 			return returnValue;
 		}
 
@@ -410,9 +412,8 @@ namespace jsonifier {
 
 		inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
-				const size_type sizeNewer = ((sizeNew + 1) + JsonifierAlignment - 1) / JsonifierAlignment * JsonifierAlignment;
-				if (sizeNewer > capacityVal) [[likely]] {
-					pointer newPtr = getAlloc().allocate(sizeNewer + 1);
+				if (sizeNew > capacityVal) [[likely]] {
+					pointer newPtr = getAlloc().allocate(sizeNew + 1);
 					try {
 						if (dataVal) [[likely]] {
 							if (sizeVal > 0) {
@@ -421,10 +422,10 @@ namespace jsonifier {
 							getAlloc().deallocate(dataVal, capacityVal + 1);
 						}
 					} catch (...) {
-						getAlloc().deallocate(newPtr, sizeNewer + 1);
+						getAlloc().deallocate(newPtr, sizeNew + 1);
 						throw;
 					}
-					capacityVal = sizeNewer;
+					capacityVal = sizeNew;
 					dataVal		= newPtr;
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				} else if (sizeNew > sizeVal) [[unlikely]] {
@@ -438,9 +439,8 @@ namespace jsonifier {
 		}
 
 		inline void reserve(size_type capacityNew) {
-			const size_type capacityNewer = ((capacityNew + 1) + JsonifierAlignment - 1) / JsonifierAlignment * JsonifierAlignment;
-			if (capacityNewer > capacityVal) [[likely]] {
-				pointer newPtr = getAlloc().allocate(capacityNewer + 1);
+			if (capacityNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityNew + 1);
 				try {
 					if (dataVal) [[likely]] {
 						if (sizeVal > 0) {
@@ -449,10 +449,10 @@ namespace jsonifier {
 						getAlloc().deallocate(dataVal, capacityVal + 1);
 					}
 				} catch (...) {
-					getAlloc().deallocate(newPtr, capacityNewer + 1);
+					getAlloc().deallocate(newPtr, capacityNew + 1);
 					throw;
 				}
-				capacityVal = capacityNewer;
+				capacityVal = capacityNew;
 				dataVal		= newPtr;
 			}
 		}
@@ -525,12 +525,12 @@ namespace jsonifier {
 
 		inline string_base operator+(const value_type& rhs) {
 			string_base newLhs{ *this };
-			newLhs.pushBack(rhs);
+			newLhs.push_back(rhs);
 			return newLhs;
 		}
 
 		inline string_base& operator+=(const value_type& rhs) {
-			pushBack(rhs);
+			push_back(rhs);
 			return *this;
 		}
 

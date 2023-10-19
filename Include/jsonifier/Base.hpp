@@ -82,7 +82,7 @@ namespace jsonifier_internal {
 
 	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<jsonifier::concepts::unwrap_t<Func>>(f)(i), ...);
+			(std::forward<std::unwrap_ref_decay_t<Func>>(f)(i), ...);
 		});
 	}
 
@@ -109,7 +109,7 @@ namespace jsonifier_internal {
 	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
 
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using value_type = jsonifier::concepts::unwrap_t<decltype(member_ptr)>;
+		using value_type = std::unwrap_ref_decay_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type>) {
 			return value.*member_ptr;
 		} else if constexpr (std::is_member_function_pointer_v<value_type>) {
@@ -123,7 +123,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<jsonifier::concepts::unwrap_t<mptr_t>&>()));
+	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<std::unwrap_ref_decay_t<mptr_t>&>()));
 
 	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
@@ -201,7 +201,7 @@ namespace jsonifier {
 		if constexpr (sizeof...(args) == 0) {
 			return object{ jsonifier_internal::tuplet::tuple{} };
 		} else {
-			return object{ jsonifier_internal::GroupBuilder<jsonifier::concepts::unwrap_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
+			return object{ jsonifier_internal::GroupBuilder<std::unwrap_ref_decay_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
 				jsonifier_internal::tuplet::copyTuple(args...)) };
 		}
 	}

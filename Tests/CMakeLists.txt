@@ -43,3 +43,19 @@ target_link_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
     "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
 )
+
+if (WIN32)
+	install(
+		FILES 
+		"$<TARGET_PDB_FILE:Json-Performance>"
+		DESTINATION "$<IF:$<CONFIG:Debug>,bin,bin>"
+		OPTIONAL
+	)
+endif()
+
+install(
+	FILES 
+	"$<TARGET_FILE:Json-Performance>"
+	DESTINATION "$<IF:$<CONFIG:Debug>,bin,bin>"
+	OPTIONAL
+)

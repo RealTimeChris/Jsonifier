@@ -29,20 +29,6 @@
 
 namespace jsonifier_internal {
 
-	enum class json_structural_type : uint8_t {
-		End			 = '\0',
-		Object_Start = '{',
-		Object_End	 = '}',
-		Array_Start	 = '[',
-		Array_End	 = ']',
-		Comma		 = ',',
-		Colon		 = ':',
-		String		 = '"',
-		Number		 = '-',
-		Bool		 = 't',
-		Null		 = 'n',
-	};
-
 	template<json_structural_type currentValue> inline static bool containsValue(uint8_t value) {
 		return static_cast<uint8_t>(currentValue) == value;
 	}
@@ -59,26 +45,17 @@ namespace jsonifier_internal {
 	  public:
 		using size_type = uint64_t;
 
-		template<json_structural_type c> inline static result checkForMatchClosed(structural_iterator& iter, std::source_location location = std::source_location::current()) {
-			auto foundValue = *iter;
-			if (containsValue<c>(foundValue)) {
+		template<json_structural_type c> inline static bool checkForMatchClosed(structural_iterator& iter) {
+			if (containsValue<c>(*iter)) {
 				++iter;
 				return true;
 			} else {
-				auto oldIter = iter.operator->();
-				skipValue(iter);
-				error returnValue{};
-				returnValue.errorIndex	  = oldIter - *iter.rootIndex;
-				returnValue.intendedValue = static_cast<uint8_t>(c);
-				returnValue.errorType	  = error_code::Parse_Error;
-				returnValue.errorValue	  = foundValue;
-				returnValue.location	  = location;
-				return returnValue;
+				return false;
 			}
 		}
 
 		template<uint8_t c, std::forward_iterator iterator>
-		inline static result checkForMatchClosed(iterator& iter, iterator& end, std::source_location location = std::source_location::current()) {
+		inline static bool checkForMatchClosed(iterator& iter, iterator& end, std::source_location location = std::source_location::current()) {
 			auto oldValue = *iter;
 			if (oldValue == c) {
 				++iter;
@@ -86,12 +63,7 @@ namespace jsonifier_internal {
 			} else {
 				auto oldIter = iter;
 				skipValue(iter, end);
-				error returnValue{};
-				returnValue.intendedValue = c;
-				returnValue.errorType	  = error_code::Parse_Error;
-				returnValue.errorValue	  = oldValue;
-				returnValue.location	  = location;
-				return returnValue;
+				return false;
 			}
 		}
 

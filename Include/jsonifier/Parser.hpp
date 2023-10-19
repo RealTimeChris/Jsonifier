@@ -37,12 +37,12 @@ namespace jsonifier_internal {
 
 	template<bool excludeKeys> struct parse {
 		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap_t<value_type>>::op(std::forward<jsonifier::concepts::unwrap_t<value_type>>(value), iter, parserNew);
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
 		inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap_t<value_type>>::op(std::forward<jsonifier::concepts::unwrap_t<value_type>>(value), iter, keys, parserNew);
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, keys, parserNew);
 		}
 	};
 
@@ -56,9 +56,11 @@ namespace jsonifier_internal {
 				return;
 			}
 			if constexpr (refreshString) {
-				reset(std::forward<buffer_type>(stringNew));
-			} else if (stringNew != string) {
-				reset(std::forward<buffer_type>(stringNew));
+				stringView = { reinterpret_cast<const uint8_t*>(stringNew.data()), stringNew.size() };
+				reset(stringView.data(), stringView.size());
+			} else if (stringView != stringNew) {
+				stringView = { reinterpret_cast<const uint8_t*>(stringNew.data()), stringNew.size() };
+				reset(stringView.data(), stringView.size());
 			}
 			errors.clear();
 			auto newIter = begin();
@@ -81,18 +83,16 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		jsonifier::string_base<uint8_t> string{};
+		jsonifier::string_view_base<uint8_t> stringView{};
 		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
 
-		template<typename value_type> inline void reset(value_type&& stringNew) {
-			string.resize(stringNew.size());
-			std::memcpy(string.data(), stringNew.data(), stringNew.size());
-			section.reset(string);
+		template<typename value_type> inline void reset(const value_type* stringNew, uint64_t sizeNew) {
+			section.reset(stringNew, sizeNew);
 		}
 
 		inline structural_iterator begin() {
-			return structural_iterator{ section.getStructurals(), static_cast<int64_t>(section.getTapeLength()) };
+			return structural_iterator{ section.getStructurals(), static_cast<int64_t>(stringView.size()) };
 		}
 	};
 };

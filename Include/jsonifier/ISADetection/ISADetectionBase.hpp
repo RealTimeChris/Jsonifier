@@ -113,16 +113,16 @@ using string_parsing_type = uint16_t;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	#include <immintrin.h>
 
-using avx_int_512	= __m512i;
-using avx_int_256	= __m256i;
-using avx_int_128	= __m128i;
-using avx_float_512 = __m512d;
-using avx_float_256 = __m256d;
-using avx_float_128 = __m128d;
+using simd_int_512	 = __m512i;
+using simd_int_256	 = __m256i;
+using simd_int_128	 = __m128i;
+using simd_float_512 = __m512d;
+using simd_float_256 = __m256d;
+using simd_float_128 = __m128d;
 
 #else
 
-union alignas(JsonifierAlignment) __m128x {
+typedef union alignas(JsonifierAlignment) __m128x {
 	int8_t m128x_int8[16];
 	int16_t m128x_int16[8];
 	int32_t m128x_int32[4];
@@ -131,14 +131,22 @@ union alignas(JsonifierAlignment) __m128x {
 	int16_t m128x_uint16[8];
 	int32_t m128x_uint32[4];
 	uint64_t m128x_uint64[2];
-};
+} __m128x;
 
-using avx_int_128 = __m128x;
+using simd_int_128 = __m128x;
 
 #endif
 
 namespace jsonifier_internal {
 
+	template<uint64_t multiple> inline uint64_t roundUpToMultiple(uint64_t num) {
+		uint64_t remainder = num % multiple;
+		return remainder == 0 ? num : num + (multiple - remainder);
+	}
+
+	template<uint64_t BitsPerStep> class simd_base_internal {};
+
+	using simd_base			= simd_base_internal<BitsPerStep>;
 	using string_view_ptr	= const uint8_t*;
 	using structural_index	= string_view_ptr;
 	using string_buffer_ptr = uint8_t*;

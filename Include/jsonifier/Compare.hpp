@@ -30,7 +30,7 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	template<typename value_type01, typename value_type02> inline uint64_t find(const value_type01* str, uint64_t length, const value_type02* sub, uint64_t subLength = 1) {
-		static constexpr uint64_t vecSize = sizeof(avx_int_512);
+		static constexpr uint64_t vecSize = sizeof(simd_int_512);
 		uint64_t remainingBytes{ length };
 		uint64_t index{};
 
@@ -40,10 +40,10 @@ namespace jsonifier_internal {
 		auto strNew = str;
 
 		while (remainingBytes >= vecSize) {
-			avx_int_512 currentVec = gatherValues<avx_int_512>(strNew);
+			simd_int_512 currentVec = gatherValues<simd_int_512>(strNew);
 
-			const avx_int_512 subVec = _mm512_set1_epi8(static_cast<char>(sub[0]));
-			uint64_t mask			 = static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(subVec, currentVec));
+			const simd_int_512 subVec = _mm512_set1_epi8(static_cast<char>(sub[0]));
+			uint64_t mask			  = static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(subVec, currentVec));
 			do {
 				if (mask != 0) {
 					uint64_t pos = tzcnt(mask);
@@ -80,20 +80,20 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::float_t value_type01, jsonifier::concepts::float_t value_type02>
 	inline bool compareValues16(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_128) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_128>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_128) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_128>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint16_t maskValue{ 0xffff };
 
-		auto destvector	  = gatherValues<avx_float_128>(string1);
-		auto sourcevector = gatherValues<avx_float_128>(string2);
+		auto destvector	  = gatherValues<simd_float_128>(string1);
+		auto sourcevector = gatherValues<simd_float_128>(string2);
 		if (_mm_movemask_pd(_mm_cmpeq_pd(destvector, sourcevector)) != maskValue) {
 			return false;
 		}
 
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_float_128>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_float_128>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_float_128>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_float_128>(string2 + x * vectorSize);
 			if (_mm_movemask_pd(_mm_cmpeq_pd(destvector, sourcevector)) != maskValue) {
 				return false;
 			}
@@ -107,18 +107,18 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool compareValues16(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_128) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_128>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_128) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_128>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint16_t maskValue{ 0xffff };
-		avx_int_128 destvector	 = gatherValues<avx_int_128>(string1);
-		avx_int_128 sourcevector = gatherValues<avx_int_128>(string2);
+		simd_int_128 destvector	  = gatherValues<simd_int_128>(string1);
+		simd_int_128 sourcevector = gatherValues<simd_int_128>(string2);
 		if (_mm_movemask_epi8(_mm_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_int_128>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_int_128>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_int_128>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_int_128>(string2 + x * vectorSize);
 			if (_mm_movemask_epi8(_mm_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 				return false;
 			}
@@ -131,18 +131,18 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::float_t value_type01, jsonifier::concepts::float_t value_type02>
 	inline bool compareValues32(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_256) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_256>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint32_t maskValue{ 0xffffffff };
-		avx_float_256 destvector   = gatherValues<avx_float_256>(string1);
-		avx_float_256 sourcevector = gatherValues<avx_float_256>(string2);
+		simd_float_256 destvector	= gatherValues<simd_float_256>(string1);
+		simd_float_256 sourcevector = gatherValues<simd_float_256>(string2);
 		if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_float_256>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_float_256>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_float_256>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_float_256>(string2 + x * vectorSize);
 			if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
 				return false;
 			}
@@ -154,18 +154,18 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool compareValues32(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_256) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_256>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint32_t maskValue{ 0xffffffff };
-		avx_int_256 destvector	 = gatherValues<avx_int_256>(string1);
-		avx_int_256 sourcevector = gatherValues<avx_int_256>(string2);
+		simd_int_256 destvector	  = gatherValues<simd_int_256>(string1);
+		simd_int_256 sourcevector = gatherValues<simd_int_256>(string2);
 		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_int_256>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_int_256>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_int_256>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_int_256>(string2 + x * vectorSize);
 			if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 				return false;
 			}
@@ -178,18 +178,18 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::float_t value_type01, jsonifier::concepts::float_t value_type02>
 	inline bool compareValues64(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_512) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_512>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_512) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_512>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint64_t maskValue{ 0xffffffffffffffff };
-		auto destvector	  = gatherValues<avx_float_512>(string1);
-		auto sourcevector = gatherValues<avx_float_512>(string2);
+		auto destvector	  = gatherValues<simd_float_512>(string1);
+		auto sourcevector = gatherValues<simd_float_512>(string2);
 		if (_mm512_cmpeq_epi8_mask(destvector, sourcevector) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_float_512>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_float_512>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_float_512>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_float_512>(string2 + x * vectorSize);
 			if (_mm512_cmpeq_epi8_mask(destvector, sourcevector) != maskValue) {
 				return false;
 			}
@@ -201,18 +201,18 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool compareValues64(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_512) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_512>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_512) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_512>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint64_t maskValue{ 0xffffffffffffffff };
-		avx_int_512 destvector	 = gatherValues<avx_int_512>(string1);
-		avx_int_512 sourcevector = gatherValues<avx_int_512>(string2);
+		simd_int_512 destvector	  = gatherValues<simd_int_512>(string1);
+		simd_int_512 sourcevector = gatherValues<simd_int_512>(string2);
 		if (_mm512_cmpeq_epi8_mask(destvector, sourcevector) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_int_512>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_int_512>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_int_512>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_int_512>(string2 + x * vectorSize);
 			if (_mm512_cmpeq_epi8_mask(destvector, sourcevector) != maskValue) {
 				return false;
 			}
@@ -238,7 +238,7 @@ namespace jsonifier_internal {
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
 	template<typename value_type01, typename value_type02> inline uint64_t find(const value_type01* str, uint64_t length, const value_type02* sub, uint64_t subLength = 1) {
-		static constexpr uint64_t vecSize = sizeof(avx_int_256);
+		static constexpr uint64_t vecSize = sizeof(simd_int_256);
 		uint64_t remainingBytes{ length };
 		uint64_t index{};
 
@@ -248,10 +248,10 @@ namespace jsonifier_internal {
 		auto strNew = str;
 
 		while (remainingBytes >= vecSize) {
-			avx_int_256 currentVec = gatherValues<avx_int_256>(strNew);
+			simd_int_256 currentVec = gatherValues<simd_int_256>(strNew);
 
-			const avx_int_256 subVec = _mm256_set1_epi8(static_cast<char>(sub[0]));
-			uint32_t mask			 = static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(subVec, currentVec)));
+			const simd_int_256 subVec = _mm256_set1_epi8(static_cast<char>(sub[0]));
+			uint32_t mask			  = static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(subVec, currentVec)));
 			do {
 				if (mask != 0) {
 					uint64_t pos = static_cast<uint64_t>(tzcnt(mask));
@@ -288,13 +288,13 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::float_t value_type01, jsonifier::concepts::float_t value_type02>
 	inline bool compareValues16(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_128) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_128>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_128) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_128>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint16_t maskValue{ 0xffff };
 
-		avx_float_128 destvector   = gatherValues128(string1);
-		avx_float_128 sourcevector = gatherValues128(string2);
+		simd_float_128 destvector	= gatherValues128(string1);
+		simd_float_128 sourcevector = gatherValues128(string2);
 		if (_mm_movemask_pd(_mm_cmpeq_pd(destvector, sourcevector)) != maskValue) {
 			return false;
 		}
@@ -315,18 +315,18 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool compareValues16(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_128) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_128>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_128) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_128>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint16_t maskValue{ 0xffff };
-		avx_int_128 destvector	 = gatherValues<avx_int_128>(string1);
-		avx_int_128 sourcevector = gatherValues<avx_int_128>(string2);
+		simd_int_128 destvector	  = gatherValues<simd_int_128>(string1);
+		simd_int_128 sourcevector = gatherValues<simd_int_128>(string2);
 		if (_mm_movemask_epi8(_mm_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_int_128>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_int_128>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_int_128>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_int_128>(string2 + x * vectorSize);
 			if (_mm_movemask_epi8(_mm_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
 				return false;
 			}
@@ -339,18 +339,18 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::float_t value_type01, jsonifier::concepts::float_t value_type02>
 	inline bool compareValues32(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_256) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_256>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint32_t maskValue{ 0xffffffff };
-		avx_float_256 destvector   = gatherValues<avx_float_256>(string1);
-		avx_float_256 sourcevector = gatherValues<avx_float_256>(string2);
+		simd_float_256 destvector	= gatherValues<simd_float_256>(string1);
+		simd_float_256 sourcevector = gatherValues<simd_float_256>(string2);
 		if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_float_256>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_float_256>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_float_256>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_float_256>(string2 + x * vectorSize);
 			if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
 				return false;
 			}
@@ -362,18 +362,18 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool compareValues32(const value_type01* string1, const value_type02* string2, uint64_t length) {
-		static constexpr uint64_t vectorSize = sizeof(avx_int_256) / sizeof(value_type01);
-		const uint64_t intervalCount		 = getIntervalCount<value_type01, avx_int_256>(length);
+		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
+		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
 		static constexpr uint32_t maskValue{ 0xffffffff };
-		avx_int_256 destvector	 = gatherValues<avx_int_256>(string1);
-		avx_int_256 sourcevector = gatherValues<avx_int_256>(string2);
+		simd_int_256 destvector	  = gatherValues<simd_int_256>(string1);
+		simd_int_256 sourcevector = gatherValues<simd_int_256>(string2);
 		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != static_cast<int32_t>(maskValue)) {
 			return false;
 		}
 		for (uint64_t x = 1; x < intervalCount; ++x) {
-			destvector	 = gatherValues<avx_int_256>(string1 + x * vectorSize);
-			sourcevector = gatherValues<avx_int_256>(string2 + x * vectorSize);
+			destvector	 = gatherValues<simd_int_256>(string1 + x * vectorSize);
+			sourcevector = gatherValues<simd_int_256>(string2 + x * vectorSize);
 			if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != static_cast<int32_t>(maskValue)) {
 				return false;
 			}
@@ -397,7 +397,7 @@ namespace jsonifier_internal {
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
 	template<typename value_type01, typename value_type02> inline uint64_t find(const value_type01* str, uint64_t length, const value_type02* sub, uint64_t subLength = 1) {
-		static constexpr uint64_t vecSize = sizeof(avx_int_128);
+		static constexpr uint64_t vecSize = sizeof(simd_int_128);
 		uint64_t remainingBytes{ length };
 		uint64_t index{};
 
@@ -407,10 +407,10 @@ namespace jsonifier_internal {
 		auto strNew = str;
 
 		while (remainingBytes >= vecSize) {
-			avx_int_128 currentVec = gatherValues<avx_int_128>(strNew);
+			simd_int_128 currentVec = gatherValues<simd_int_128>(strNew);
 
-			const avx_int_128 subVec = _mm_set1_epi8(static_cast<char>(sub[0]));
-			uint16_t mask			 = static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(subVec, currentVec)));
+			const simd_int_128 subVec = _mm_set1_epi8(static_cast<char>(sub[0]));
+			uint16_t mask			  = static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(subVec, currentVec)));
 			do {
 				if (mask != 0) {
 					uint64_t pos = static_cast<uint64_t>(tzcnt(mask));
