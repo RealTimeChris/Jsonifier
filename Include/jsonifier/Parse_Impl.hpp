@@ -246,7 +246,7 @@ namespace jsonifier_internal {
 				parserNew.errors.emplace_back(result.error());
 				return;
 			}
-			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<jsonifier::concepts::unwrap_t<value_type>>> };
+			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
 
 			forEach<N>([&](auto I) {
 				auto& newMember = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
@@ -273,7 +273,7 @@ namespace jsonifier_internal {
 				parserNew.errors.emplace_back(result.error());
 				return;
 			}
-			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<jsonifier::concepts::unwrap_t<value_type>>> };
+			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
 
 			forEach<N>([&](auto I) {
 				auto& newMember	  = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));

@@ -30,19 +30,19 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	template<typename value_type>
-	concept avx_int_128_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, avx_int_128>;
+	concept avx_int_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_128>;
 
 	template<typename value_type>
-	concept avx_int_256_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, avx_int_256>;
+	concept avx_int_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_int_256>;
 
 	template<typename value_type>
-	concept avx_float_128_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, avx_float_128>;
+	concept avx_float_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_float_128>;
 
 	template<typename value_type>
-	concept avx_float_256_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, avx_float_256>;
+	concept avx_float_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, avx_float_256>;
 
 	template<typename value_type>
-	concept simd_base_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_base_internal<BitsPerStep>>;
+	concept simd_base_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_base_internal<BitsPerStep>>;
 
 	template<avx_int_128_t avx_type, jsonifier::concepts::char_type char_type> inline avx_type gatherValues(char_type* str) {
 		alignas(JsonifierAlignment) double valuesNew[sizeof(avx_type)]{};

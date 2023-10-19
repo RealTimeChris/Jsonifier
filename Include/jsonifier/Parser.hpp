@@ -37,12 +37,12 @@ namespace jsonifier_internal {
 
 	template<bool excludeKeys> struct parse {
 		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap_t<value_type>>::op(std::forward<jsonifier::concepts::unwrap_t<value_type>>(value), iter, parserNew);
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
 		inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap_t<value_type>>::op(std::forward<jsonifier::concepts::unwrap_t<value_type>>(value), iter, keys, parserNew);
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, keys, parserNew);
 		}
 	};
 

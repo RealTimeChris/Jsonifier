@@ -3,62 +3,62 @@
 	#include "glaze/glaze.hpp"
 #ifdef JSONIFIER_CPU_INSTRUCTIONS
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_POPCNT | JSONIFIER_BMI |  JSONIFIER_BMI2|JSONIFIER_LZCNT |JSONIFIER_AVX2)
+	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2|JSONIFIER_BMI|JSONIFIER_POPCNT|JSONIFIER_BMI1|JSONIFIER_LZCNT)//
 #endif
 	#include <jsonifier/Index.hpp>
 #include <unordered_set>
 
 constexpr static std::string_view json0 = R"({"fixed_object": {
-      "int_array": [0, 1, 2, 3, 4, 5, 6],
-      "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-      "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4]
-   },
-   "fixed_name_object": {
-      "name0": "James",
-      "name1": "Abraham",
-      "name2": "Susan",
-      "name3": "Frank",
-      "name4": "Alicia"
-   },
-   "another_object": {
-      "string": "here is some text",
-      "another_string": "Hello World",
-      "boolean": false,
-      "nested_object": {
-         "v3s": [[0.12345, 0.23456, 0.001345],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298]],
-         "id": "298728949872"
-      }
-   },
-   "string_array": ["Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring"],
-   "string": "Hello world",
-   "number": 3.14,
-   "boolean": true,
-   "another_bool": false
+      "int_array": [0, 1, 2, 3, 4, 5, 6],                           
+      "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],                               
+      "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                              
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                          
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                             
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4]                      
+   },                      
+   "fixed_name_object": {                           
+      "name0": "James",                               
+      "name1": "Abraham",                               
+      "name2": "Susan",                                
+      "name3": "Frank",                               
+      "name4": "Alicia"                                 
+   },                            
+   "another_object": {                                 
+      "string": "here is some text",                                 
+      "another_string": "Hello World",                                 
+      "boolean": false,                                 
+      "nested_object": {                                 
+         "v3s": [[0.12345, 0.23456, 0.001345],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298]],                                 
+         "id": "298728949872"                                 
+      }                                 
+   },                                 
+   "string_array": ["Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring"],                                 
+   "string": "Hello world",                                 
+   "number": 3.14,                                 
+   "boolean": true,                                 
+   "another_bool": false                                 
 })";
 
 #include <chrono>
@@ -174,8 +174,7 @@ template<typename OTy> struct Test {
 			v.resize(1000);
 			for (uint64_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, test_struct>) {
-					v[x].testString = std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) +
-						std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000);
+					v[x].testString = std::to_string(100000000000000);
 					v[x].testBool = false;
 					v[x].testUint = 1000000000000000;
 					v[x].testInt  = 1000000000000000;
@@ -235,8 +234,7 @@ template<typename OTy> struct AbcTest {
 			v.resize(1000);
 			for (uint64_t x = 0; x < 1000; ++x) {
 				if constexpr (std::same_as<OTy, test_struct>) {
-					v[x].testString = std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) +
-						std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000) + std::to_string(100000000000000);
+					v[x].testString = std::to_string(100000000000000);
 					v[x].testBool	= false;
 					v[x].testUint	= 1000000000000000;
 					v[x].testInt	= 1000000000000000;
@@ -416,13 +414,14 @@ auto jsonifier_single_test(bool doWePrint = true) {
 
 	obj_t obj{};
 
-	results r{ "jsonifier", "https://github.com/RealTimeChris/jsonifier", 1 };
+	results r{ "jsonifier - Single Test:", "https://github.com/RealTimeChris/jsonifier", 1 };
 	jsonifier::jsonifier_core jsonifier{};
+	jsonifier.parseJson<false, true>(obj, buffer);
 
 	auto result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(obj, buffer);
+				jsonifier.parseJson<false, true>(obj, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -435,6 +434,7 @@ auto jsonifier_single_test(bool doWePrint = true) {
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
 	buffer.clear();
+	jsonifier.serializeJson(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -449,6 +449,7 @@ auto jsonifier_single_test(bool doWePrint = true) {
 	r.json_write = result;
 	buffer.clear();
 	Test<test_struct> uint64Test{};
+	jsonifier.serializeJson(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -462,12 +463,12 @@ auto jsonifier_single_test(bool doWePrint = true) {
 
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		 = result;
-	uint64Test.a.clear();
+	jsonifier.parseJson<false, true>(uint64Test, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64Test, buffer);
+				jsonifier.parseJson<false, true>(uint64Test, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -490,13 +491,14 @@ auto jsonifier_test(bool doWePrint = true) {
 
 	obj_t obj{};
 
-	results r{ "jsonifier", "https://github.com/RealTimeChris/jsonifier", iterations };
+	results r{ "jsonifier - Normal Test:", "https://github.com/RealTimeChris/jsonifier", iterations };
 	jsonifier::jsonifier_core jsonifier{};
+	jsonifier.parseJson<false, true>(obj, buffer);
 
 	auto result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(obj, buffer);
+				jsonifier.parseJson<false, true>(obj, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -509,6 +511,7 @@ auto jsonifier_test(bool doWePrint = true) {
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
 	buffer.clear();
+	jsonifier.serializeJson(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -523,6 +526,7 @@ auto jsonifier_test(bool doWePrint = true) {
 	r.json_write = result;
 	buffer.clear();
 	Test<test_struct> uint64Test{};
+	jsonifier.serializeJson(uint64Test, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -537,11 +541,12 @@ auto jsonifier_test(bool doWePrint = true) {
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		  = result;
 	uint64Test.a.clear();
+	jsonifier.parseJson<false, true>(uint64Test, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64Test, buffer);
+				jsonifier.parseJson<false, true>(uint64Test, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -564,9 +569,10 @@ auto jsonifier_test(bool doWePrint = true) {
 auto jsonifier_abc_test(bool doWePrint = true) {
 	jsonifier::string buffer{};
 
-	results r{ "jsonifier", "https://github.com/RealTimeChris/jsonifier", iterations_abc };
+	results r{ "jsonifier - Abc Test:", "https://github.com/RealTimeChris/jsonifier", iterations_abc };
 	jsonifier::jsonifier_core jsonifier{};
 	AbcTest<test_struct> uint64AbcTest{};
+	jsonifier.serializeJson(uint64AbcTest, buffer);
 
 	auto result = benchmark(
 		[&]() {
@@ -579,12 +585,13 @@ auto jsonifier_abc_test(bool doWePrint = true) {
 		iterations_abc);
 
 	r.json_byte_length_mixed = buffer.size();
-	r.json_write_mixed		  = result;
+	r.json_write_mixed		 = result;
+	jsonifier.parseJson<false, true>(uint64AbcTest, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64AbcTest, buffer);
+				jsonifier.parseJson<false, true>(uint64AbcTest, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -607,7 +614,10 @@ auto glaze_single_test(bool doWePrint = true) {
 
 	obj_t obj{};
 
-	results r{ "glaze", "https://github.com/RealTimeChris/glaze", 1 };
+	results r{ "glaze - Single Test:", "https://github.com/RealTimeChris/glaze", 1 };
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	auto result = benchmark(
 		[&]() {
@@ -624,6 +634,7 @@ auto glaze_single_test(bool doWePrint = true) {
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
 	buffer.clear();
+	glz::write_json(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -638,6 +649,7 @@ auto glaze_single_test(bool doWePrint = true) {
 	r.json_write = result;
 	buffer.clear();
 	Test<test_struct> uint64Test{};
+	glz::write_json(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -651,6 +663,9 @@ auto glaze_single_test(bool doWePrint = true) {
 
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		 = result;
+	if (auto error = glz::read_json(uint64Test, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
@@ -677,7 +692,10 @@ auto glaze_test(bool doWePrint = true) {
 
 	obj_t obj{};
 
-	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations };
+	results r{ "glaze - Normal Test:", "https://github.com/stephenberry/glaze", iterations };
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	auto result = benchmark(
 		[&]() {
@@ -694,6 +712,7 @@ auto glaze_test(bool doWePrint = true) {
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
 	buffer.clear();
+	glz::write_json(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -708,6 +727,7 @@ auto glaze_test(bool doWePrint = true) {
 	r.json_write = result;
 	buffer.clear();
 	Test<test_struct> uint64Test{};
+	glz::write_json(obj, buffer);
 
 	result = benchmark(
 		[&]() {
@@ -720,7 +740,10 @@ auto glaze_test(bool doWePrint = true) {
 		iterations);
 
 	r.json_byte_length_mixed = buffer.size();
-	r.json_write_mixed		  = result;
+	r.json_write_mixed		 = result;
+	if (auto error = glz::read_json(uint64Test, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
@@ -746,8 +769,9 @@ auto glaze_test(bool doWePrint = true) {
 auto glaze_abc_test(bool doWePrint = true) {
 	std::string buffer{};
 
-	results r{ "glaze", "https://github.com/RealTimeChris/glaze", iterations_abc };
+	results r{ "glaze - Abc Test:", "https://github.com/RealTimeChris/glaze", iterations_abc };
 	AbcTest<test_struct> uint64AbcTest{};
+	glz::write_json(uint64AbcTest, buffer);
 
 	auto result = benchmark(
 		[&]() {
@@ -760,7 +784,10 @@ auto glaze_abc_test(bool doWePrint = true) {
 		iterations_abc);
 
 	r.json_byte_length_mixed = buffer.size();
-	r.json_write_mixed		  = result;
+	r.json_write_mixed		 = result;
+	if (auto error = glz::read_json(uint64AbcTest, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
@@ -799,17 +826,19 @@ struct on_demand {
 	{ \
 		ondemand::array xNew = doc[#x].get_array().value(); \
 		if (obj.x.size() < 1000) { \
-			obj.x.resize(1000); \
+			obj.x.reserve(1000); \
 		} \
-	for (simdjson::ondemand::value value: xNew) {\
 	test_struct newValue{};\
+int32_t index{};\
+	for (simdjson::ondemand::value value: xNew) {\
 	auto newObject		= value.get_object();\
 	newValue.testInt	= newObject["testInt"].get_int64().value();\
 	newValue.testUint	= newObject["testUint"].get_uint64().value();\
 	newValue.testBool	= newObject["testBool"].get_bool().value();\
 	newValue.testString = newObject["testString"].get_string().value();\
 	newValue.testDouble = newObject["testDouble"].get_double().value();\
-	obj.x.emplace_back(newValue);\
+	obj.x[index]=std::move(newValue); \
+			++index;\
 }\
 	}
 
@@ -922,7 +951,7 @@ auto simdjson_test(bool doWePrint = true) {
 		},
 		iterations);
 
-	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations };
+	results r{ "simdjson (on demand) - Normal Test:", "https://github.com/simdjson/simdjson", iterations };
 
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
@@ -967,7 +996,7 @@ auto simdjson_single_test(bool doWePrint = true) {
 		},
 		1);
 
-	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", 1 };
+	results r{ "simdjson (on demand) - Single Test:", "https://github.com/simdjson/simdjson", 1 };
 
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
@@ -1053,7 +1082,7 @@ auto simdjson_abc_test(bool doWePrint = true) {
 		},
 		iterations_abc);
 
-	results r{ "simdjson (on demand)", "https://github.com/simdjson/simdjson", iterations_abc };
+	results r{ "simdjson (on demand) - Abc Test:", "https://github.com/simdjson/simdjson", iterations_abc };
 
 	r.json_byte_length_mixed = buffer.size();
 	r.json_read_mixed		  = result;
@@ -1074,11 +1103,17 @@ static std::string table_header = R"(
 
 std::string regular_test() {
 	jsonifier::vector<results> results{};
-	glaze_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		glaze_test(false);
+	}
 	results.emplace_back(glaze_test());
-	jsonifier_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		jsonifier_test(false);
+	}
 	results.emplace_back(jsonifier_test());
-	simdjson_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		simdjson_test(false);
+	}
 	results.emplace_back(simdjson_test());
 
 	std::string table{};
@@ -1095,11 +1130,17 @@ std::string regular_test() {
 
 std::string abc_test() {
 	jsonifier::vector<results> results{};
-	glaze_abc_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		glaze_abc_test(false);
+	}
 	results.emplace_back(glaze_abc_test());
-	jsonifier_abc_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		jsonifier_abc_test(false);
+	}
 	results.emplace_back(jsonifier_abc_test());
-	simdjson_abc_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		simdjson_abc_test(false);
+	}
 	results.emplace_back(simdjson_abc_test());
 
 	std::string table{};
@@ -1116,11 +1157,17 @@ std::string abc_test() {
 
 std::string single_test() {
 	jsonifier::vector<results> results{};
-	glaze_single_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		glaze_single_test(false);
+	}
 	results.emplace_back(glaze_single_test());
-	jsonifier_single_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		jsonifier_single_test(false);
+	}
 	results.emplace_back(jsonifier_single_test());
-	simdjson_single_test(false);
+	for (uint32_t x = 0; x < 10; ++x) {
+		simdjson_single_test(false);
+	}
 	results.emplace_back(simdjson_single_test());
 
 	std::string table{};
@@ -1234,13 +1281,14 @@ struct websocket_identify_data {
 	uint64_t largeThreshold{ 250 };
 	jsonifier::string botToken{};
 	int64_t intents{};
+	jsonifier::vector<jsonifier::string> _trace{};
 };
 
 
 template<> struct jsonifier::core<websocket_identify_data> {
 	using value_type				 = websocket_identify_data;
-	static constexpr auto parseValue =
-		createObject("token", &value_type::botToken, "shard", &value_type::shard, "intents", &value_type::intents, "large_threshold", &value_type::largeThreshold);
+	static constexpr auto parseValue = createObject("token", &value_type::botToken, "shard", &value_type::shard, "intents", &value_type::intents, "large_threshold",
+		&value_type::largeThreshold, "_trace", &value_type::_trace);
 };
 
 struct data {
@@ -1255,19 +1303,29 @@ template<> struct jsonifier::core<data> {
 int32_t main() {
 	try {
 		std::string jsonData{
-			"{\"d\":{\"token\":\"MTE0MjczMzY0NjYwMDYxNDAwNA.G00sMb.LOBpwLlyvnojJtK3j17LSIyNWf1K1ieHRIiYNU\",\"shard\":[0,1],\"intents\":3276799,\"large_threshold\":"
-			"250,\"presence\":{\"afk\":false,\"since\":0,\"status\":\"online\",\"activities\":[{\"name\":\"enter /help for a list of my "
-			"commands!\",\"type\":4,\"state\":\"enter /help for a list of my "
-			"commands!\",\"created_at\":0,\"details\":\"\",\"application_id\":\"0\"}]},\"properties\":{\"os\":\"Windows\",\"device\":\"DiscordCoreAPI\","
-			"\"browser\":\"DiscordCoreAPI\"}},\"op\":2,\"s\":0}"
+			"{\"t\":\"READY\",\"s\":1,\"op\":0,\"d\":{\"v\":10,\"user_settings\":{},\"user\":{\"verified\":true,\"username\":\"MBot-MusicHouse-2\",\"mfa_enabled\":false,\"id\":"
+			"\"1142733646600614004\",\"global_name\":null,\"flags\":0,\"email\":null,\"discriminator\":\"3055\",\"bot\":true,\"avatar\":\"88bd9ce7bf889c0d36fb4afd3725900b\"},"
+			"\"shard\":[0,1],\"session_type\":\"normal\",\"session_id\":\"70ecfbd34c64eb07a57fb28401564952\",\"resume_gateway_url\":\"wss://"
+			"gateway-us-east1-b.discord.gg\",\"relationships\":[],\"private_channels\":[],\"presences\":[],\"guilds\":[{\"unavailable\":true,\"id\":\"318872312596267018\"},{"
+			"\"unavailable\":true,\"id\":\"931640556814237706\"},{\"unavailable\":true,\"id\":\"991025447875784714\"},{\"unavailable\":true,\"id\":\"995048955215872071\"},{"
+			"\"unavailable\":true,\"id\":\"1022405038922006538\"},{\"unavailable\":true,\"id\":\"1032783776184533022\"},{\"unavailable\":true,\"id\":\"1078501504119476282\"},{"
+			"\"unavailable\":true,\"id\":\"1131853763506880522\"}],\"guild_join_requests\":[],\"geo_ordered_rtc_regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-"
+			"south\"],\"auth\":{},\"application\":{\"id\":\"1142733646600614004\",\"flags\":27828224},\"_trace\":[\"[\\\"gateway-prd-us-east1-b-8d78\\\",{\\\"micros\\\":149325,"
+			"\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":727,\\\"calls\\\":[]},\\\"session_lookup_time\\\",{\\\"micros\\\":371,\\\"calls\\\":[]},\\\"session_lookup_"
+			"finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-sessions-prd-2-295\\\",{\\\"micros\\\":145640,\\\"calls\\\":[\\\"start_session\\\",{\\\"micros\\\":"
+			"44795,\\\"calls\\\":[\\\"discord-api-7f9cb89cdf-vcwm8\\\",{\\\"micros\\\":39830,\\\"calls\\\":[\\\"get_user\\\",{\\\"micros\\\":7881},\\\"get_guilds\\\",{"
+			"\\\"micros\\\":4524},\\\"send_scheduled_deletion_message\\\",{\\\"micros\\\":11},\\\"guild_join_requests\\\",{\\\"micros\\\":990},\\\"authorized_ip_coro\\\",{"
+			"\\\"micros\\\":10}]}]},\\\"starting_guild_connect\\\",{\\\"micros\\\":334,\\\"calls\\\":[]},\\\"presence_started\\\",{\\\"micros\\\":11632,\\\"calls\\\":[]},"
+			"\\\"guilds_started\\\",{\\\"micros\\\":184,\\\"calls\\\":[]},\\\"guilds_connect\\\",{\\\"micros\\\":3,\\\"calls\\\":[]},\\\"presence_connect\\\",{\\\"micros\\\":"
+			"88639,\\\"calls\\\":[]},\\\"connect_finished\\\",{\\\"micros\\\":88648,\\\"calls\\\":[]},\\\"build_ready\\\",{\\\"micros\\\":44,\\\"calls\\\":[]},\\\"clean_ready\\\","
+			"{\\\"micros\\\":1,\\\"calls\\\":[]},\\\"optimize_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]},\\\"split_ready\\\",{\\\"micros\\\":1,\\\"calls\\\":[]}]}]}]\"]}}"
 		};
 		data dataNew{};
 		jsonifier::jsonifier_core parser{};
-		int32_t valueNew{ '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' };
-		int32_t valueTest{ '-' };
 
-		std::cout << "DATA NEW: " << alignof(double) << std::endl;
-		parser.parseJson<false, false>(dataNew, jsonData);
+		std::cout << "DATA NEW: " << jsonData << std::endl;
+		//parser.parseJson<false, true>(dataNew, jsonData);
+		//std::cout << "DATA NEW: " << dataNew.d._trace[0] << std::endl;
 		jsonData.clear();
 		//parser.serializeJson(dataNew, jsonData);
 

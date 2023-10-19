@@ -143,7 +143,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> inline string_base& operator=(value_type_newer&& other) {
-			size_type sizeNew = other.size() * (sizeof(typename jsonifier::concepts::unwrap_t<value_type_newer>::value_type) / sizeof(value_type));
+			size_type sizeNew = other.size() * (sizeof(typename std::unwrap_ref_decay_t<value_type_newer>::value_type) / sizeof(value_type));
 			if (sizeNew > 0) {
 				reset();
 				string_base temp{};
