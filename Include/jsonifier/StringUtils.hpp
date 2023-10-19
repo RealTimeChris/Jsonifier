@@ -36,11 +36,11 @@ namespace jsonifier_internal {
 		static constexpr string_parsing_type bytesProcessed = BytesPerStep;
 
 		template<typename source_type, typename dest_type> inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
-			simd_base values(gatherValues<simd_base>(source));
-			values.store(destString);
+			avx_int_t values(gatherValues<avx_int_t>(source));
+			store(values, destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = { values == '\\' };
-			returnData.quoteBits = { values == '\"' };
+			returnData.bsBits	 = { cmpEq(values, '\\') };
+			returnData.quoteBits = { cmpEq(values, '\"') };
 			return returnData;
 		}
 

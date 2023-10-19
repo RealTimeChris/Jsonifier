@@ -74,74 +74,71 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-	constexpr uint64_t BitsPerStep{ 512 };
-	constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
-	constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-	constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
-	using string_parsing_type = uint64_t;
+constexpr uint64_t BitsPerStep{ 512 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+using string_parsing_type = uint64_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	constexpr uint64_t BitsPerStep{ 256 };
-	constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
-	constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-	constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
-	using string_parsing_type = uint32_t;
+constexpr uint64_t BitsPerStep{ 256 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+using string_parsing_type = uint32_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
-	constexpr uint64_t BitsPerStep{ 128 };
-	constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
-	constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-	constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
-	using string_parsing_type = uint16_t;
+constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+using string_parsing_type = uint16_t;
 
 #else
 
-	constexpr uint64_t BitsPerStep{ 128 };
-	constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-	constexpr uint64_t JsonifierAlignment{ BytesPerStep };
-	constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-	constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
-	using string_parsing_type = uint16_t;
+constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t JsonifierAlignment{ BytesPerStep };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+using string_parsing_type = uint16_t;
 
-#endif	
+#endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	#include <immintrin.h>
 
-	using avx_int_512	= __m512i;
-	using avx_int_256	= __m256i;
-	using avx_int_128	= __m128i;
-	using avx_float_512 = __m512d;
-	using avx_float_256 = __m256d;
-	using avx_float_128 = __m128d;
+using avx_int_512	= __m512i;
+using avx_int_256	= __m256i;
+using avx_int_128	= __m128i;
+using avx_float_512 = __m512d;
+using avx_float_256 = __m256d;
+using avx_float_128 = __m128d;
 
 #else
 
-	typedef union alignas(JsonifierAlignment) __m128x {
-		int8_t values_int8[16];
-		int16_t values_int16[8];
-		int32_t values_int32[4];
-		int64_t values_int64[2];
-		uint8_t values_uint8[16];
-		int16_t values_uint16[8];
-		int32_t values_uint32[4];
-		uint64_t values_uint64[2];
-	} __m128x;
+union alignas(JsonifierAlignment) __m128x {
+	int8_t m128x_int8[16];
+	int16_t m128x_int16[8];
+	int32_t m128x_int32[4];
+	int64_t m128x_int64[2];
+	uint8_t m128x_uint8[16];
+	int16_t m128x_uint16[8];
+	int32_t m128x_uint32[4];
+	uint64_t m128x_uint64[2];
+};
 
-	using avx_int_128 = __m128x;
+using avx_int_128 = __m128x;
 
 #endif
 
 namespace jsonifier_internal {
 
-	template<uint64_t BitsPerStep> class simd_base_internal {};
-
-	using simd_base			= simd_base_internal<BitsPerStep>;
 	using string_view_ptr	= const uint8_t*;
 	using structural_index	= string_view_ptr;
 	using string_buffer_ptr = uint8_t*;

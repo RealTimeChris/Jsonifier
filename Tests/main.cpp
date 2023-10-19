@@ -3,62 +3,62 @@
 	#include "glaze/glaze.hpp"
 #ifdef JSONIFIER_CPU_INSTRUCTIONS
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_POPCNT | JSONIFIER_BMI |  JSONIFIER_BMI2|JSONIFIER_LZCNT |JSONIFIER_AVX2)
+	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVXF|JSONIFIER_BMI|JSONIFIER_POPCNT|JSONIFIER_BMI1|JSONIFIER_LZCNT)//
 #endif
 	#include <jsonifier/Index.hpp>
 #include <unordered_set>
 
 constexpr static std::string_view json0 = R"({"fixed_object": {
-      "int_array": [0, 1, 2, 3, 4, 5, 6],
-      "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-      "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,
-                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4]
-   },
-   "fixed_name_object": {
-      "name0": "James",
-      "name1": "Abraham",
-      "name2": "Susan",
-      "name3": "Frank",
-      "name4": "Alicia"
-   },
-   "another_object": {
-      "string": "here is some text",
-      "another_string": "Hello World",
-      "boolean": false,
-      "nested_object": {
-         "v3s": [[0.12345, 0.23456, 0.001345],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298],
-                  [0.3894675, 97.39827, 297.92387],
-                  [18.18, 87.289, 2988.298]],
-         "id": "298728949872"
-      }
-   },
-   "string_array": ["Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", 
-	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring"],
-   "string": "Hello world",
-   "number": 3.14,
-   "boolean": true,
-   "another_bool": false
+      "int_array": [0, 1, 2, 3, 4, 5, 6],                           
+      "float_array": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],                               
+      "double_array": [3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                              
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                          
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4,                             
+                        3288398.238, 233e22, 289e-1, 0.928759872, 0.22222848, 0.1, 0.2, 0.3, 0.4]                      
+   },                      
+   "fixed_name_object": {                           
+      "name0": "James",                               
+      "name1": "Abraham",                               
+      "name2": "Susan",                                
+      "name3": "Frank",                               
+      "name4": "Alicia"                                 
+   },                            
+   "another_object": {                                 
+      "string": "here is some text",                                 
+      "another_string": "Hello World",                                 
+      "boolean": false,                                 
+      "nested_object": {                                 
+         "v3s": [[0.12345, 0.23456, 0.001345],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298],                                 
+                  [0.3894675, 97.39827, 297.92387],                                 
+                  [18.18, 87.289, 2988.298]],                                 
+         "id": "298728949872"                                 
+      }                                 
+   },                                 
+   "string_array": ["Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger","SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring",                                  
+	"Cat", "Dog", "Elephant", "Tiger", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring", "SuperlongohmygoshIamsomuchlongerthanthepreviousstringsstring"],                                 
+   "string": "Hello world",                                 
+   "number": 3.14,                                 
+   "boolean": true,                                 
+   "another_bool": false                                 
 })";
 
 #include <chrono>
@@ -418,11 +418,12 @@ auto jsonifier_single_test(bool doWePrint = true) {
 
 	results r{ "jsonifier", "https://github.com/RealTimeChris/jsonifier", 1 };
 	jsonifier::jsonifier_core jsonifier{};
+	jsonifier.parseJson<false, true>(obj, buffer);
 
 	auto result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(obj, buffer);
+				jsonifier.parseJson<false, true>(obj, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -462,12 +463,12 @@ auto jsonifier_single_test(bool doWePrint = true) {
 
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		 = result;
-	uint64Test.a.clear();
+	jsonifier.parseJson<false, true>(uint64Test, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64Test, buffer);
+				jsonifier.parseJson<false, true>(uint64Test, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -492,11 +493,12 @@ auto jsonifier_test(bool doWePrint = true) {
 
 	results r{ "jsonifier", "https://github.com/RealTimeChris/jsonifier", iterations };
 	jsonifier::jsonifier_core jsonifier{};
+	jsonifier.parseJson<false, true>(obj, buffer);
 
 	auto result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(obj, buffer);
+				jsonifier.parseJson<false, true>(obj, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -537,11 +539,12 @@ auto jsonifier_test(bool doWePrint = true) {
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		  = result;
 	uint64Test.a.clear();
+	jsonifier.parseJson<false, true>(uint64Test, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64Test, buffer);
+				jsonifier.parseJson<false, true>(uint64Test, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -579,12 +582,13 @@ auto jsonifier_abc_test(bool doWePrint = true) {
 		iterations_abc);
 
 	r.json_byte_length_mixed = buffer.size();
-	r.json_write_mixed		  = result;
+	r.json_write_mixed		 = result;
+	jsonifier.parseJson<false, true>(uint64AbcTest, buffer);
 
 	result = benchmark(
 		[&]() {
 			try {
-				jsonifier.parseJson<false, false>(uint64AbcTest, buffer);
+				jsonifier.parseJson<false, true>(uint64AbcTest, buffer);
 			} catch (std::runtime_error& e) {
 				std::cout << "jsonifier Error: " << e.what() << std::endl;
 			}
@@ -608,6 +612,9 @@ auto glaze_single_test(bool doWePrint = true) {
 	obj_t obj{};
 
 	results r{ "glaze", "https://github.com/RealTimeChris/glaze", 1 };
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	auto result = benchmark(
 		[&]() {
@@ -651,6 +658,9 @@ auto glaze_single_test(bool doWePrint = true) {
 
 	r.json_byte_length_mixed = buffer.size();
 	r.json_write_mixed		 = result;
+	if (auto error = glz::read_json(uint64Test, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
@@ -678,6 +688,9 @@ auto glaze_test(bool doWePrint = true) {
 	obj_t obj{};
 
 	results r{ "glaze", "https://github.com/stephenberry/glaze", iterations };
+	if (auto error = glz::read_json(obj, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	auto result = benchmark(
 		[&]() {
@@ -720,7 +733,10 @@ auto glaze_test(bool doWePrint = true) {
 		iterations);
 
 	r.json_byte_length_mixed = buffer.size();
-	r.json_write_mixed		  = result;
+	r.json_write_mixed		 = result;
+	if (auto error = glz::read_json(uint64Test, buffer)) {
+		std::cout << "glaze Error: " << error << std::endl;
+	}
 
 	result = benchmark(
 		[&]() {
@@ -1074,11 +1090,11 @@ static std::string table_header = R"(
 
 std::string regular_test() {
 	jsonifier::vector<results> results{};
-	glaze_test(false);
+	//glaze_test(false);
 	results.emplace_back(glaze_test());
-	jsonifier_test(false);
+	//	jsonifier_test(false);
 	results.emplace_back(jsonifier_test());
-	simdjson_test(false);
+//	simdjson_test(false);
 	results.emplace_back(simdjson_test());
 
 	std::string table{};
@@ -1095,11 +1111,11 @@ std::string regular_test() {
 
 std::string abc_test() {
 	jsonifier::vector<results> results{};
-	glaze_abc_test(false);
+	//glaze_abc_test(false);
 	results.emplace_back(glaze_abc_test());
-	jsonifier_abc_test(false);
+	//jsonifier_abc_test(false);
 	results.emplace_back(jsonifier_abc_test());
-	simdjson_abc_test(false);
+	//simdjson_abc_test(false);
 	results.emplace_back(simdjson_abc_test());
 
 	std::string table{};
@@ -1116,11 +1132,11 @@ std::string abc_test() {
 
 std::string single_test() {
 	jsonifier::vector<results> results{};
-	glaze_single_test(false);
+	//glaze_single_test(false);
 	results.emplace_back(glaze_single_test());
-	jsonifier_single_test(false);
+	//jsonifier_single_test(false);
 	results.emplace_back(jsonifier_single_test());
-	simdjson_single_test(false);
+	//simdjson_single_test(false);
 	results.emplace_back(simdjson_single_test());
 
 	std::string table{};
@@ -1267,7 +1283,7 @@ int32_t main() {
 		int32_t valueTest{ '-' };
 
 		std::cout << "DATA NEW: " << alignof(double) << std::endl;
-		parser.parseJson<false, false>(dataNew, jsonData);
+		//parser.parseJson<false, true>(dataNew, jsonData);
 		jsonData.clear();
 		//parser.serializeJson(dataNew, jsonData);
 

@@ -118,7 +118,7 @@ namespace jsonifier_internal {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex && errorValue == rhs.errorValue && intendedValue == rhs.intendedValue;
 		}
 
-		inline jsonifier::string reportError() {
+		inline jsonifier::string reportError() const {
 			if (collectMisReadType(intendedValue, errorValue) == type_of_misread::Wrong_Type) {
 				return jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
 					", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
@@ -137,6 +137,11 @@ namespace jsonifier_internal {
 		uint64_t errorIndex{};
 		uint8_t errorValue{};
 	};
+
+	inline std::ostream& operator<<(std::ostream& os, const error& error) {
+		os << error.reportError();
+		return os;
+	}
 
 	using result = expected<bool, error>;
 

@@ -134,8 +134,7 @@ namespace jsonifier {
 		};
 
 		template<typename value_type_01, typename value_type_02>
-		concept related_ptr = ( std::derived_from<unwrap_t<value_type_01>, unwrap_t<value_type_02>> ||
-			std::is_base_of_v<unwrap_t<value_type_01>, unwrap_t<value_type_02>> ||
+		concept related_ptr = ( std::derived_from<unwrap_t<value_type_01>, unwrap_t<value_type_02>> || std::is_base_of_v<unwrap_t<value_type_01>, unwrap_t<value_type_02>> ||
 			std::same_as<unwrap_t<value_type_01>, unwrap_t<value_type_02>> )&&std::is_pointer_v<unwrap_t<value_type_01>>;
 
 		template<typename value_type>
@@ -166,9 +165,8 @@ namespace jsonifier {
 		concept float_t = std::floating_point<unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept char_t = std::same_as<unwrap_t<value_type>, char> || std::same_as<unwrap_t<value_type>, wchar_t> ||
-			std::same_as<unwrap_t<value_type>, char8_t> || std::same_as<unwrap_t<value_type>, char16_t> ||
-			std::same_as<unwrap_t<value_type>, char32_t>;
+		concept char_t = std::same_as<unwrap_t<value_type>, char> || std::same_as<unwrap_t<value_type>, wchar_t> || std::same_as<unwrap_t<value_type>, char8_t> ||
+			std::same_as<unwrap_t<value_type>, char16_t> || std::same_as<unwrap_t<value_type>, char32_t>;
 
 		template<typename value_type>
 		concept num_t = ( float_t<value_type> || unsigned_t<value_type> || signed_t<value_type> )&&!char_t<value_type>;
@@ -182,8 +180,7 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept string_t =
-			has_substr<unwrap_t<value_type>> && has_data_and_size<unwrap_t<value_type>> && !std::same_as<char, unwrap_t<value_type>> &&
+		concept string_t = has_substr<unwrap_t<value_type>> && has_data_and_size<unwrap_t<value_type>> && !std::same_as<char, unwrap_t<value_type>> &&
 			vector_subscriptable<unwrap_t<value_type>> && !char_array_t<value_type> && !pointer_t<value_type>;
 
 		template<typename value_type>
@@ -194,9 +191,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_emplace_back = requires(value_type data) {
-			{
-				data.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>())
-			} -> std::same_as<typename unwrap_t<value_type>::value_type&>;
+			{ data.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::value_type&>;
 		};
 
 		template<typename value_type>

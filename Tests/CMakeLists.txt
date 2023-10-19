@@ -37,3 +37,9 @@ target_link_libraries(
 	"Json-Performance" PUBLIC 
     Jsonifier::Jsonifier glaze::glaze simdjson fmt::fmt
 )
+
+target_link_options(
+	"Json-Performance" PUBLIC
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
+)
