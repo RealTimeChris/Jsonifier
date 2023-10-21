@@ -259,7 +259,7 @@ namespace jsonifier {
 			return sizeVal;
 		}
 
-		inline const_pointer data() const {
+		inline pointer data() const {
 			return dataVal;
 		}
 

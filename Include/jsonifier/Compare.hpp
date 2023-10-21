@@ -134,7 +134,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
 		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0xffffffff };
+		static constexpr uint32_t maskValue{ 0xffffffffu };
 		simd_float_256 destvector	= gatherValues<simd_float_256>(string1);
 		simd_float_256 sourcevector = gatherValues<simd_float_256>(string2);
 		if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
@@ -157,7 +157,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
 		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0xffffffff };
+		static constexpr uint32_t maskValue{ 0xffffffffu };
 		simd_int_256 destvector	  = gatherValues<simd_int_256>(string1);
 		simd_int_256 sourcevector = gatherValues<simd_int_256>(string2);
 		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != maskValue) {
@@ -342,7 +342,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
 		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0xffffffff };
+		static constexpr uint32_t maskValue{ 0xffffffffu };
 		simd_float_256 destvector	= gatherValues<simd_float_256>(string1);
 		simd_float_256 sourcevector = gatherValues<simd_float_256>(string2);
 		if (_mm256_movemask_pd(_mm256_cmp_pd(destvector, sourcevector, _CMP_EQ_OQ)) != maskValue) {
@@ -365,7 +365,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t vectorSize = sizeof(simd_int_256) / sizeof(value_type01);
 		const uint64_t intervalCount		 = getIntervalCount<value_type01, simd_int_256>(length);
 		const uint64_t remainder			 = length % vectorSize;
-		static constexpr uint32_t maskValue{ 0xffffffff };
+		static constexpr uint32_t maskValue{ 0xffffffffu };
 		simd_int_256 destvector	  = gatherValues<simd_int_256>(string1);
 		simd_int_256 sourcevector = gatherValues<simd_int_256>(string2);
 		if (_mm256_movemask_epi8(_mm256_cmpeq_epi8(destvector, sourcevector)) != static_cast<int32_t>(maskValue)) {
@@ -445,7 +445,8 @@ namespace jsonifier_internal {
 
 #else
 
-	template<typename value_type01, typename value_type02> inline uint64_t find(const value_type01* str, uint64_t length, value_type02* target, uint64_t subLength = 0) {
+	template<typename value_type01, typename value_type02>
+	inline uint64_t find(const value_type01* str, uint64_t length, value_type02* target, uint64_t subLength = std::char_traits<value_type02>::length(target)) {
 		std::basic_string_view<std::remove_pointer_t<value_type01>> newString{ target, subLength };
 		return std::basic_string_view<value_type01>{ static_cast<const value_type01*>(str), length }.find(newString);
 	}

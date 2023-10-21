@@ -82,8 +82,8 @@ namespace jsonifier_internal {
 
 	inline static void pow10TableGetSig128(int32_t exp10, uint64_t* hi, uint64_t* lo) {
 		int32_t idx = exp10 - (pow10SigTable128MinExp);
-		*hi			= pow10SigTable128[idx * 2ULL];
-		*lo			= pow10SigTable128[idx * 2ULL + 1ULL];
+		*hi			= pow10SigTable128[idx * 2ull];
+		*lo			= pow10SigTable128[idx * 2ull + 1ull];
 	}
 
 	inline static uint64_t sig2FromExp10(int32_t exp10) {
@@ -116,7 +116,7 @@ namespace jsonifier_internal {
 #define repeatIIn_1_18(x) \
 	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
-	static constexpr auto eBit		   = static_cast<uint8_t>('E' ^ 'e');
+	static constexpr auto eBit		   = static_cast<uint8_t>(0x45u ^ 0x65u);
 	static constexpr auto f64MaxDecExp = 308;
 	static constexpr auto f64MinDecExp = (-324);
 
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 			if (shft == 0) {
 				data.resize(data.size() + move);
 				for (; idx > 0; idx--) {
-					data[static_cast<uint64_t>(idx) + static_cast<uint64_t>(move) - 1ULL] = data[static_cast<uint64_t>(idx) - 1ULL];
+					data[static_cast<uint64_t>(idx) + static_cast<uint64_t>(move) - 1ull] = data[static_cast<uint64_t>(idx) - 1ull];
 				}
 				while (move)
 					data[--move] = 0;
@@ -176,7 +176,7 @@ namespace jsonifier_internal {
 				++idx;
 				for (; idx > 0; idx--) {
 					uint32_t num = data[idx] << shft;
-					num |= data[idx - 1ULL] >> (32 - shft);
+					num |= data[idx - 1ull] >> (32 - shft);
 					data[static_cast<uint64_t>(idx) + static_cast<uint64_t>(move)] = num;
 				}
 				data[move] = data[0] << shft;
@@ -279,19 +279,19 @@ namespace jsonifier_internal {
 		value_type02* tmp{};
 		value_type02* hdr = cur;
 		bool sign{};
-		sign = (*hdr == '-');
+		sign = (*hdr == 0x2Du);
 		cur += sign;
 		auto applySign = [&](auto&& val) -> value_type {
 			return static_cast<value_type>(val);
 		};
-		sig = static_cast<uint64_t>(*cur) - static_cast<uint64_t>('0');
+		sig = static_cast<uint64_t>(*cur) - static_cast<uint64_t>(0x30u);
 		if (sig > 9) {
 			return false;
 		}
-		static constexpr auto zero = static_cast<uint8_t>('0');
+		static constexpr auto zero = static_cast<uint8_t>(0x30u);
 #define expr_intg(x) \
 	if ((numTmp = static_cast<uint64_t>(cur[x] - static_cast<uint64_t>(zero))) <= 9) [[likely]] \
-		sig = static_cast<uint64_t>(numTmp) + sig * 10ULL; \
+		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
 	else { \
 		goto digi_sepr_##x; \
 	}
@@ -310,7 +310,7 @@ namespace jsonifier_internal {
 		return true; \
 	} \
 	dotPos = cur + x; \
-	if ((cur[x] == '.')) [[likely]] { \
+	if ((cur[x] == 0x2Eu)) [[likely]] { \
 		if (sig == 0) \
 			while (cur[fracZeroes + x + 1] == static_cast<uint64_t>(zero)) \
 				++fracZeroes; \
@@ -328,12 +328,12 @@ namespace jsonifier_internal {
 	}
 			repeatIIn_1_18(expr_frac)
 #undef expr_frac
-				cur += 20ULL + fracZeroes;
+				cur += 20ull + fracZeroes;
 		if (uint8_t(*cur - zero) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
-	digi_stop_##x : cur += x##ULL + 1ULL + fracZeroes; \
+	digi_stop_##x : cur += x##ull + 1ull + fracZeroes; \
 	goto digi_frac_end;
 		repeatIIn_1_18(expr_stop)
 #undef expr_stop
@@ -348,11 +348,11 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		if ((eBit | *cur) == 'e') {
+		if ((eBit | *cur) == 0x65u) {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
-		if (*cur == '.') {
+		if (*cur == 0x2Eu) {
 			dotPos = cur++;
 			if (uint8_t(*cur - static_cast<uint64_t>(zero)) > 9) {
 				return false;
@@ -360,12 +360,12 @@ namespace jsonifier_internal {
 		}
 	digi_frac_more:
 		sigCut = cur;
-		sig += (*cur >= '5');
+		sig += (*cur >= 0x35);
 		while (uint8_t(*++cur - static_cast<uint64_t>(zero)) < 10) {
 		}
 		if (!dotPos) {
 			dotPos = cur;
-			if (*cur == '.') {
+			if (*cur == 0x2Eu) {
 				if (uint8_t(*++cur - static_cast<uint64_t>(zero)) > 9) {
 					return false;
 				}
@@ -376,17 +376,17 @@ namespace jsonifier_internal {
 		expSig = static_cast<int32_t>(dotPos - sigCut);
 		expSig += (dotPos < sigCut);
 		tmp = cur - 1;
-		while (*tmp == '0' || *tmp == '.')
+		while (*tmp == 0x30u || *tmp == 0x2Eu)
 			tmp--;
 		if (tmp < sigCut) {
 			sigCut = nullptr;
 		}
-		if ((eBit | *cur) == 'e')
+		if ((eBit | *cur) == 0x65u)
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		expSig = -int32_t((cur - dotPos) - 1);
-		if ((eBit | *cur) != 'e') [[likely]] {
+		if ((eBit | *cur) != 0x65u) [[likely]] {
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
 				val = static_cast<value_type>(applySign(0));
 				return true;
@@ -397,12 +397,12 @@ namespace jsonifier_internal {
 			goto digi_exp_more;
 		}
 	digi_exp_more:
-		expSign = (*++cur == '-');
-		cur += (*cur == '+' || *cur == '-');
+		expSign = (*++cur == 0x2Du);
+		cur += (*cur == 0x2Bu || *cur == 0x2Du);
 		if (uint8_t(*cur - zero) > 9) [[unlikely]] {
 			goto digi_finish;
 		}
-		while (*cur == '0')
+		while (*cur == 0x30u)
 			++cur;
 		tmp = cur;
 		uint8_t c;
@@ -459,18 +459,18 @@ namespace jsonifier_internal {
 		value_type02* tmp{};
 		value_type02* hdr = cur;
 		bool sign{};
-		sign = (*hdr == '-');
+		sign = (*hdr == 0x2Du);
 		cur += sign;
 		auto applySign = [&](auto&& val) -> value_type {
 			return sign ? -static_cast<value_type>(val) : static_cast<value_type>(val);
 		};
-		sig = static_cast<uint64_t>(*cur) - static_cast<uint64_t>('0');
+		sig = static_cast<uint64_t>(*cur) - static_cast<uint64_t>(0x30u);
 		if (sig > 9) {
-			if (*cur == 'n' && cur[1] == 'u' && cur[2] == 'l' && cur[3] == 'l') {
+			if (*cur == 0x6Eu && cur[1] == 0x75 && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
 				cur += 4;
 				val = static_cast<value_type>(std::numeric_limits<value_type>::quiet_NaN());
 				return true;
-			} else if ((*cur | eBit) == 'n' && (cur[1] | eBit) == 'a' && (cur[2] | eBit) == 'n') {
+			} else if ((*cur | eBit) == 0x6Eu && (cur[1] | eBit) == 0x61u && (cur[2] | eBit) == 0x6Eu) {
 				cur += 3;
 				val = static_cast<value_type>(sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN());
 				return true;
@@ -478,10 +478,10 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-		static constexpr auto zero = static_cast<uint8_t>('0');
+		static constexpr auto zero = static_cast<uint8_t>(0x30u);
 #define expr_intg(x) \
 	if ((numTmp = static_cast<uint64_t>(cur[x] - static_cast<uint64_t>(zero))) <= 9) [[likely]] \
-		sig = static_cast<uint64_t>(numTmp) + sig * 10ULL; \
+		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
 	else { \
 		goto digi_sepr_##x; \
 	}
@@ -501,7 +501,7 @@ namespace jsonifier_internal {
 		return true; \
 	} \
 	dotPos = cur + x; \
-	if ((cur[x] == '.')) [[likely]] { \
+	if ((cur[x] == 0x2Eu)) [[likely]] { \
 		if (sig == 0) \
 			while (cur[fracZeroes + x + 1] == zero) \
 				++fracZeroes; \
@@ -519,12 +519,12 @@ namespace jsonifier_internal {
 	}
 			repeatIIn_1_18(expr_frac)
 #undef expr_frac
-				cur += 20ULL + fracZeroes;
+				cur += 20ull + fracZeroes;
 		if (uint8_t(*cur - static_cast<uint64_t>(zero)) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
-	digi_stop_##x : cur += x##ULL + 1ULL + fracZeroes; \
+	digi_stop_##x : cur += x##ull + 1ull + fracZeroes; \
 	goto digi_frac_end;
 		repeatIIn_1_18(expr_stop)
 #undef expr_stop
@@ -540,11 +540,11 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		if ((eBit | *cur) == 'e') {
+		if ((eBit | *cur) == 0x65u) {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
-		if (*cur == '.') {
+		if (*cur == 0x2Eu) {
 			dotPos = cur++;
 			if (uint8_t(*cur - zero) > 9) {
 				return false;
@@ -552,12 +552,12 @@ namespace jsonifier_internal {
 		}
 	digi_frac_more:
 		sigCut = cur;
-		sig += (*cur >= '5');
+		sig += (*cur >= 0x35);
 		while (uint8_t(*++cur - zero) < 10) {
 		}
 		if (!dotPos) {
 			dotPos = cur;
-			if (*cur == '.') {
+			if (*cur == 0x2Eu) {
 				if (uint8_t(*++cur - zero) > 9) {
 					return false;
 				}
@@ -568,17 +568,17 @@ namespace jsonifier_internal {
 		expSig = static_cast<int32_t>(dotPos - sigCut);
 		expSig += (dotPos < sigCut);
 		tmp = cur - 1;
-		while (*tmp == '0' || *tmp == '.')
+		while (*tmp == 0x30u || *tmp == 0x2Eu)
 			tmp--;
 		if (tmp < sigCut) {
 			sigCut = nullptr;
 		}
-		if ((eBit | *cur) == 'e')
+		if ((eBit | *cur) == 0x65u)
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		expSig = -int32_t((cur - dotPos) - 1);
-		if ((eBit | *cur) != 'e') [[likely]] {
+		if ((eBit | *cur) != 0x65u) [[likely]] {
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
 				val = static_cast<value_type>(applySign(0));
 				return true;
@@ -589,12 +589,12 @@ namespace jsonifier_internal {
 			goto digi_exp_more;
 		}
 	digi_exp_more:
-		expSign = (*++cur == '-');
-		cur += (*cur == '+' || *cur == '-');
+		expSign = (*++cur == 0x2Du);
+		cur += (*cur == 0x2Bu || *cur == 0x2Du);
 		if (uint8_t(*cur - zero) > 9) [[unlikely]] {
 			goto digi_finish;
 		}
-		while (*cur == '0')
+		while (*cur == 0x30u)
 			++cur;
 		tmp = cur;
 		uint8_t c;
@@ -652,7 +652,7 @@ namespace jsonifier_internal {
 		value_type02* tmp{};
 		value_type02* hdr = cur;
 		bool sign{};
-		sign = (*hdr == '-');
+		sign = (*hdr == 0x2Du);
 		cur += sign;
 		auto applySign = [&](auto&& val) -> value_type {
 			if constexpr (std::is_unsigned_v<value_type>) {
@@ -661,13 +661,13 @@ namespace jsonifier_internal {
 				return sign ? -static_cast<value_type>(val) : static_cast<value_type>(val);
 			}
 		};
-		sig = static_cast<uint64_t>(*cur) - '0';
+		sig = static_cast<uint64_t>(*cur) - 0x30u;
 		if (sig > 9) {
-			if (*cur == 'n' && cur[1] == 'u' && cur[2] == 'l' && cur[3] == 'l') {
+			if (*cur == 0x6Eu && cur[1] == 0x75 && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
 				cur += 4;
 				val = static_cast<value_type>(std::numeric_limits<value_type>::quiet_NaN());
 				return true;
-			} else if ((*cur | eBit) == 'n' && (cur[1] | eBit) == 'a' && (cur[2] | eBit) == 'n') {
+			} else if ((*cur | eBit) == 0x6Eu && (cur[1] | eBit) == 0x61u && (cur[2] | eBit) == 0x6Eu) {
 				cur += 3;
 				val = static_cast<value_type>(sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN());
 				return true;
@@ -675,10 +675,10 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-		static constexpr auto zero = static_cast<uint8_t>('0');
+		static constexpr auto zero = static_cast<uint8_t>(0x30u);
 #define expr_intg(x) \
 	if ((numTmp = static_cast<uint64_t>(cur[x] - static_cast<uint64_t>(zero))) <= 9) [[likely]] \
-		sig = static_cast<uint64_t>(numTmp) + sig * 10ULL; \
+		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
 	else { \
 		goto digi_sepr_##x; \
 	}
@@ -700,7 +700,7 @@ namespace jsonifier_internal {
 		return true; \
 	} \
 	dotPos = cur + x; \
-	if ((cur[x] == '.')) [[likely]] { \
+	if ((cur[x] == 0x2Eu)) [[likely]] { \
 		if (sig == 0) \
 			while (cur[fracZeroes + x + 1] == zero) \
 				++fracZeroes; \
@@ -718,12 +718,12 @@ namespace jsonifier_internal {
 	}
 			repeatIIn_1_18(expr_frac)
 #undef expr_frac
-				cur += 20ULL + fracZeroes;
+				cur += 20ull + fracZeroes;
 		if (uint8_t(*cur - zero) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
-	digi_stop_##x : cur += x##ULL + 1ULL + fracZeroes; \
+	digi_stop_##x : cur += x##ull + 1ull + fracZeroes; \
 	goto digi_frac_end;
 		repeatIIn_1_18(expr_stop)
 #undef expr_stop
@@ -741,11 +741,11 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		if ((eBit | *cur) == 'e') {
+		if ((eBit | *cur) == 0x65u) {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
-		if (*cur == '.') {
+		if (*cur == 0x2Eu) {
 			dotPos = cur++;
 			if (uint8_t(*cur - zero) > 9) {
 				return false;
@@ -753,12 +753,12 @@ namespace jsonifier_internal {
 		}
 	digi_frac_more:
 		sigCut = cur;
-		sig += (*cur >= '5');
+		sig += (*cur >= 0x35);
 		while (uint8_t(*++cur - zero) < 10) {
 		}
 		if (!dotPos) {
 			dotPos = cur;
-			if (*cur == '.') {
+			if (*cur == 0x2Eu) {
 				if (uint8_t(*++cur - zero) > 9) {
 					return false;
 				}
@@ -769,17 +769,17 @@ namespace jsonifier_internal {
 		expSig = static_cast<int32_t>(dotPos - sigCut);
 		expSig += (dotPos < sigCut);
 		tmp = cur - 1;
-		while (*tmp == '0' || *tmp == '.')
+		while (*tmp == 0x30u || *tmp == 0x2Eu)
 			tmp--;
 		if (tmp < sigCut) {
 			sigCut = nullptr;
 		}
-		if ((eBit | *cur) == 'e')
+		if ((eBit | *cur) == 0x65u)
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		expSig = -int32_t((cur - dotPos) - 1);
-		if ((eBit | *cur) != 'e') [[likely]] {
+		if ((eBit | *cur) != 0x65u) [[likely]] {
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
 				val = static_cast<value_type>(applySign(0));
 				return true;
@@ -790,12 +790,12 @@ namespace jsonifier_internal {
 			goto digi_exp_more;
 		}
 	digi_exp_more:
-		expSign = (*++cur == '-');
-		cur += (*cur == '+' || *cur == '-');
+		expSign = (*++cur == 0x2Du);
+		cur += (*cur == 0x2Bu || *cur == 0x2Du);
 		if (uint8_t(*cur - zero) > 9) [[unlikely]] {
 			goto digi_finish;
 		}
-		while (*cur == '0')
+		while (*cur == 0x30u)
 			++cur;
 		tmp = cur;
 		uint8_t c;
@@ -908,13 +908,13 @@ namespace jsonifier_internal {
 				}
 			} else if ((exp < pow10SigTable128MinExactExp || exp > pow10SigTable128MaxExactExp) || (mantisa & (roundMask << 1)) ||
 				(static_cast<uint64_t>(std::countr_zero(sigNorm)) + static_cast<uint64_t>(std::countr_zero(sig2Norm)) <
-					128ULL - std::numeric_limits<value_type>::digits - (2ULL - sigProductStartsWith1))) {
+					128ull - std::numeric_limits<value_type>::digits - (2ull - sigProductStartsWith1))) {
 				round = 1;
 			}
 		}
 
-		auto num = raw_t(sign) << (sizeof(raw_t) * 8ULL - 1ULL) | raw_t(mantisa >> mantissaShift) |
-			(raw_t(static_cast<uint64_t>(exp2) + std::numeric_limits<value_type>::max_exponent - 1ULL) << (std::numeric_limits<value_type>::digits - 1ULL));
+		auto num = raw_t(sign) << (sizeof(raw_t) * 8ull - 1ull) | raw_t(mantisa >> mantissaShift) |
+			(raw_t(static_cast<uint64_t>(exp2) + std::numeric_limits<value_type>::max_exponent - 1ull) << (std::numeric_limits<value_type>::digits - 1ull));
 		num += raw_t(round);
 		std::memcpy(&val, &num, sizeof(value_type));
 		return true;
@@ -924,44 +924,44 @@ namespace jsonifier_internal {
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 		uint32_t lz;
 
-		if (val < 100) {
+		if (val < 0x64u) {
 			lz = val < 10;
-			std::memcpy(&buf[0], &charTable<value_type>[val * 2ULL + lz], 2);
+			std::memcpy(&buf[0], &charTable<value_type>[val * 2ull + lz], 2);
 			buf -= lz;
-			return buf + 2ULL;
+			return buf + 2ull;
 		} else if (val < 10000) {
 			aa = (val * 5243) >> 19;
-			bb = val - aa * 100;
+			bb = val - aa * 0x64u;
 			lz = aa < 10;
-			std::memcpy(&buf[0], &charTable<value_type>[aa * 2ULL + lz], 2);
+			std::memcpy(&buf[0], &charTable<value_type>[aa * 2ull + lz], 2);
 			buf -= lz;
-			std::memcpy(&buf[2], &charTable<value_type>[2ULL * bb], 2);
+			std::memcpy(&buf[2], &charTable<value_type>[2ull * bb], 2);
 
-			return buf + 4ULL;
+			return buf + 4ull;
 		} else if (val < 1000000) {
 			aa	 = uint32_t((uint64_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
+			cc	 = bbcc - bb * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			return buf + 6ULL;
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			return buf + 6ull;
 		} else if (val < 100000000) {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa	 = (aabb * 5243) >> 19;
 			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
+			bb	 = aabb - aa * 0x64u;
+			dd	 = ccdd - cc * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable<value_type> + dd * 2ULL, 2);
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable<value_type> + dd * 2ull, 2);
 			return buf + 8;
 		} else {
 			aabbcc = uint32_t((uint64_t(val) * 3518437209ul) >> 45);
@@ -970,15 +970,15 @@ namespace jsonifier_internal {
 			bbcc   = aabbcc - aa * 10000;
 			bb	   = (bbcc * 5243) >> 19;
 			dd	   = (ddee * 5243) >> 19;
-			cc	   = bbcc - bb * 100;
-			ee	   = ddee - dd * 100;
+			cc	   = bbcc - bb * 0x64u;
+			ee	   = ddee - dd * 0x64u;
 			lz	   = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable<value_type> + dd * 2ULL, 2);
-			std::memcpy(buf + 8, charTable<value_type> + ee * 2ULL, 2);
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable<value_type> + dd * 2ull, 2);
+			std::memcpy(buf + 8, charTable<value_type> + ee * 2ull, 2);
 			return buf + 10;
 		}
 	}
@@ -986,7 +986,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::signed_t value_type02, typename value_type> inline static value_type* toChars(value_type* buf, value_type02 val) {
 		uint32_t neg  = uint32_t(-val);
 		uint64_t sign = val < 0;
-		*buf		  = '-';
+		*buf		  = 0x2Du;
 		return toChars(buf + sign, sign ? uint32_t(neg) : uint32_t(val));
 	}
 
@@ -996,64 +996,64 @@ namespace jsonifier_internal {
 		ccdd = val - aabb * 10000;
 		aa	 = (aabb * 5243) >> 19;
 		cc	 = (ccdd * 5243) >> 19;
-		bb	 = aabb - aa * 100;
-		dd	 = ccdd - cc * 100;
-		std::memcpy(buf, charTable<value_type> + aa * 2ULL, 2);
-		std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-		std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-		std::memcpy(buf + 6ULL, charTable<value_type> + dd * 2ULL, 2);
+		bb	 = aabb - aa * 0x64u;
+		dd	 = ccdd - cc * 0x64u;
+		std::memcpy(buf, charTable<value_type> + aa * 2ull, 2);
+		std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+		std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+		std::memcpy(buf + 6ull, charTable<value_type> + dd * 2ull, 2);
 		return buf + 8;
 	}
 
 	template<typename value_type> inline static value_type* toCharsU64Len4(value_type* buf, uint32_t val) {
 		uint32_t aa, bb;
 		aa = (val * 5243) >> 19;
-		bb = val - aa * 100;
-		std::memcpy(buf, charTable<value_type> + aa * 2ULL, 2);
-		std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-		return buf + 4ULL;
+		bb = val - aa * 0x64u;
+		std::memcpy(buf, charTable<value_type> + aa * 2ull, 2);
+		std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+		return buf + 4ull;
 	}
 
 	template<typename value_type> inline static value_type* toCharsU64Len18(value_type* buf, uint32_t val) {
 		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, lz;
 
-		if (val < 100) {
+		if (val < 0x64u) {
 			lz = val < 10;
-			std::memcpy(buf, charTable<value_type> + val * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + val * 2ull + lz, 2);
 			buf -= lz;
-			return buf + 2ULL;
+			return buf + 2ull;
 		} else if (val < 10000) {
 			aa = (val * 5243) >> 19;
-			bb = val - aa * 100;
+			bb = val - aa * 0x64u;
 			lz = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			return buf + 4ULL;
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			return buf + 4ull;
 		} else if (val < 1000000) {
 			aa	 = uint32_t((uint64_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
+			cc	 = bbcc - bb * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			return buf + 6ULL;
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			return buf + 6ull;
 		} else {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa	 = (aabb * 5243) >> 19;
 			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
+			bb	 = aabb - aa * 0x64u;
+			dd	 = ccdd - cc * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable<value_type> + dd * 2ULL, 2);
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable<value_type> + dd * 2ull, 2);
 			return buf + 8;
 		}
 	}
@@ -1065,26 +1065,26 @@ namespace jsonifier_internal {
 			aa	 = uint32_t((uint64_t(val) * 429497) >> 32);
 			bbcc = val - aa * 10000;
 			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
+			cc	 = bbcc - bb * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			return buf + 6ULL;
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			return buf + 6ull;
 		} else {
 			aabb = uint32_t((uint64_t(val) * 109951163) >> 40);
 			ccdd = val - aabb * 10000;
 			aa	 = (aabb * 5243) >> 19;
 			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
+			bb	 = aabb - aa * 0x64u;
+			dd	 = ccdd - cc * 0x64u;
 			lz	 = aa < 10;
-			std::memcpy(buf, charTable<value_type> + aa * 2ULL + lz, 2);
+			std::memcpy(buf, charTable<value_type> + aa * 2ull + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable<value_type> + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable<value_type> + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable<value_type> + dd * 2ULL, 2);
+			std::memcpy(buf + 2ull, charTable<value_type> + bb * 2ull, 2);
+			std::memcpy(buf + 4ull, charTable<value_type> + cc * 2ull, 2);
+			std::memcpy(buf + 6ull, charTable<value_type> + dd * 2ull, 2);
 			return buf + 8;
 		}
 	}
@@ -1098,7 +1098,7 @@ namespace jsonifier_internal {
 		if (val < 100000000) {
 			buf = toCharsU64Len18(buf, uint32_t(val));
 			return buf;
-		} else if (val < 100000000ULL * 100000000ULL) {
+		} else if (val < 100000000ull * 100000000ull) {
 			hgh = val / 100000000;
 			low = uint32_t(val - hgh * 100000000);
 			buf = toCharsU64Len18(buf, uint32_t(hgh));
@@ -1121,7 +1121,7 @@ namespace jsonifier_internal {
 	inline static char_type* toChars(char_type* buf, value_type val) {
 		uint64_t neg  = uint64_t(-val);
 		uint64_t sign = val < 0;
-		*buf		  = '-';
+		*buf		  = 0x2Du;
 		return toChars(buf + sign, sign ? uint64_t(neg) : uint64_t(val));
 	}
 
@@ -1146,7 +1146,7 @@ namespace jsonifier_internal {
 
 		cbl = 4 * sigBin - 2 + lowerBoundCloser;
 		cb	= 4 * sigBin;
-		cbr = 4 * sigBin + 2ULL;
+		cbr = 4 * sigBin + 2ull;
 
 		k = (expBin * 315653 - (lowerBoundCloser ? 131237 : 0)) >> 20;
 
@@ -1175,9 +1175,9 @@ namespace jsonifier_internal {
 		}
 
 		uInside = (lower <= 4 * s);
-		wInside = (upper >= 4 * s + 4ULL);
+		wInside = (upper >= 4 * s + 4ull);
 
-		mid		 = 4 * s + 2ULL;
+		mid		 = 4 * s + 2ull;
 		round_up = (vb > mid) || (vb == mid && (s & 1) != 0);
 
 		*sigDec = s + ((uInside != wInside) ? wInside : round_up);
@@ -1194,53 +1194,53 @@ namespace jsonifier_internal {
 		uint32_t ddee	   = abbccddee - abbcc * 10000;
 		uint32_t abb	   = uint32_t((uint64_t(abbcc) * 167773) >> 24);
 		uint32_t a		   = (abb * 41) >> 12;
-		uint32_t bb		   = abb - a * 100;
-		uint32_t cc		   = abbcc - abb * 100;
+		uint32_t bb		   = abb - a * 0x64u;
+		uint32_t cc		   = abbcc - abb * 0x64u;
 
-		buf[0] = static_cast<value_type>(a + static_cast<uint8_t>('0'));
+		buf[0] = static_cast<value_type>(a + static_cast<uint8_t>(0x30u));
 		buf += a > 0;
 		lz = bb < 10 && a == 0;
-		std::memcpy(buf, charTable<value_type> + (bb * 2ULL + lz), 2ULL);
+		std::memcpy(buf, charTable<value_type> + (bb * 2ull + lz), 2ull);
 		buf -= lz;
-		std::memcpy(buf + 2ULL, charTable<value_type> + 2ULL * cc, 2ULL);
+		std::memcpy(buf + 2ull, charTable<value_type> + 2ull * cc, 2ull);
 
 		if (ffgghhii) {
 			uint32_t dd	  = (ddee * 5243) >> 19;
-			uint32_t ee	  = ddee - dd * 100;
+			uint32_t ee	  = ddee - dd * 0x64u;
 			uint32_t ffgg = uint32_t((uint64_t(ffgghhii) * 109951163) >> 40);
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff	  = (ffgg * 5243) >> 19;
-			uint32_t gg	  = ffgg - ff * 100;
-			std::memcpy(buf + 4ULL, charTable<value_type> + 2ULL * dd, 2ULL);
-			std::memcpy(buf + 6ULL, charTable<value_type> + 2ULL * ee, 2ULL);
-			std::memcpy(buf + 8ULL, charTable<value_type> + 2ULL * ff, 2ULL);
-			std::memcpy(buf + 10ULL, charTable<value_type> + 2ULL * gg, 2ULL);
+			uint32_t gg	  = ffgg - ff * 0x64u;
+			std::memcpy(buf + 4ull, charTable<value_type> + 2ull * dd, 2ull);
+			std::memcpy(buf + 6ull, charTable<value_type> + 2ull * ee, 2ull);
+			std::memcpy(buf + 8ull, charTable<value_type> + 2ull * ff, 2ull);
+			std::memcpy(buf + 10ull, charTable<value_type> + 2ull * gg, 2ull);
 			if (hhii) {
 				uint32_t hh = (hhii * 5243) >> 19;
-				uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12ULL, charTable<value_type> + 2ULL * hh, 2ULL);
-				std::memcpy(buf + 14ULL, charTable<value_type> + 2ULL * ii, 2ULL);
+				uint32_t ii = hhii - hh * 0x64u;
+				std::memcpy(buf + 12ull, charTable<value_type> + 2ull * hh, 2ull);
+				std::memcpy(buf + 14ull, charTable<value_type> + 2ull * ii, 2ull);
 				tz1 = decTrailingZeroTable<value_type>[hh];
 				tz2 = decTrailingZeroTable<value_type>[ii];
-				tz	= ii ? tz2 : (tz1 + 2ULL);
+				tz	= ii ? tz2 : (tz1 + 2ull);
 				buf += 16 - tz;
 				return buf;
 			} else {
 				tz1 = decTrailingZeroTable<value_type>[ff];
 				tz2 = decTrailingZeroTable<value_type>[gg];
-				tz	= gg ? tz2 : (tz1 + 2ULL);
+				tz	= gg ? tz2 : (tz1 + 2ull);
 				buf += 12 - tz;
 				return buf;
 			}
 		} else {
 			if (ddee) {
 				uint32_t dd = (ddee * 5243) >> 19;
-				uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4ULL, charTable<value_type> + 2ULL * dd, 2ULL);
-				std::memcpy(buf + 6ULL, charTable<value_type> + 2ULL * ee, 2ULL);
+				uint32_t ee = ddee - dd * 0x64u;
+				std::memcpy(buf + 4ull, charTable<value_type> + 2ull * dd, 2ull);
+				std::memcpy(buf + 6ull, charTable<value_type> + 2ull * ee, 2ull);
 				tz1 = decTrailingZeroTable<value_type>[dd];
 				tz2 = decTrailingZeroTable<value_type>[ee];
-				tz	= ee ? tz2 : (tz1 + 2ULL);
+				tz	= ee ? tz2 : (tz1 + 2ull);
 				buf += 8 - tz;
 				return buf;
 			} else {
@@ -1277,10 +1277,10 @@ namespace jsonifier_internal {
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buffer, "null", 4);
-			return buffer + 4ULL;
+			return buffer + 4ull;
 		}
 		if (sign) {
-			*buffer = '-';
+			*buffer = 0x2Du;
 			++buffer;
 		}
 		if ((raw << 1) != 0) [[likely]] {
@@ -1290,7 +1290,7 @@ namespace jsonifier_internal {
 				sigBin = sigRaw;
 				expBin = 1 - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
 			} else {
-				sigBin = sigRaw | uint64_t(1ULL << (std::numeric_limits<value_type>::digits - 1));
+				sigBin = sigRaw | uint64_t(1ull << (std::numeric_limits<value_type>::digits - 1));
 				expBin = int32_t(expRaw) - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
 			}
 
@@ -1303,57 +1303,57 @@ namespace jsonifier_internal {
 			}
 
 			int32_t sigLen = 17;
-			sigLen -= (sigDec < 100000000ULL * 100000000ULL);
-			sigLen -= (sigDec < 100000000ULL * 10000000ULL);
+			sigLen -= (sigDec < 100000000ull * 100000000ull);
+			sigLen -= (sigDec < 100000000ull * 10000000ull);
 
 			int32_t dotPos = sigLen + expDec;
 
 			if (-6 < dotPos && dotPos <= 21) {
 				if (dotPos <= 0) {
-					auto numHdr = buffer + (2ULL - dotPos);
+					auto numHdr = buffer + (2ull - dotPos);
 					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-					buffer[0]	= '0';
-					buffer[1]	= '.';
-					buffer += 2ULL;
+					buffer[0]	= 0x30u;
+					buffer[1]	= 0x2Eu;
+					buffer += 2ull;
 					for (; buffer < numHdr; ++buffer)
-						*buffer = '0';
+						*buffer = 0x30u;
 					return numEnd;
 				} else {
-					memset(buffer, '0', 8);
-					memset(buffer + 8ULL, '0', 8);
-					memset(buffer + 16ULL, '0', 8);
-					auto numHdr = buffer + 1ULL;
+					memset(buffer, 0x30u, 8);
+					memset(buffer + 8ull, 0x30u, 8);
+					memset(buffer + 16ull, 0x30u, 8);
+					auto numHdr = buffer + 1ull;
 					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
 					for (int32_t x = 0; x < dotPos; x++)
-						buffer[x] = buffer[x + 1ULL];
-					buffer[dotPos] = '.';
+						buffer[x] = buffer[x + 1ull];
+					buffer[dotPos] = 0x2Eu;
 					return ((numEnd - numHdr) <= dotPos) ? buffer + dotPos : numEnd;
 				}
 			} else {
 				auto end = writeU64Len15To17Trim(buffer + 1, sigDec);
-				end -= (end == buffer + 2ULL);
+				end -= (end == buffer + 2ull);
 				expDec += sigLen - 1;
 				buffer[0] = buffer[1];
-				buffer[1] = '.';
-				end[0]	  = 'E';
+				buffer[1] = 0x2Eu;
+				end[0]	  = 0x45u;
 				buffer	  = end + 1;
-				buffer[0] = '-';
+				buffer[0] = 0x2Du;
 				buffer += expDec < 0;
 				expDec = std::abs(expDec);
-				if (expDec < 100) {
+				if (expDec < 0x64) {
 					uint32_t lz = expDec < 10;
-					std::memcpy(buffer, charTable<value_type> + (expDec * 2ULL + lz), 2ULL);
-					return buffer + 2ULL - lz;
+					std::memcpy(buffer, charTable<value_type> + (expDec * 2ull + lz), 2ull);
+					return buffer + 2ull - lz;
 				} else {
 					uint32_t hi = (uint32_t(expDec) * 656) >> 16;
-					uint32_t lo = uint32_t(expDec) - hi * 100;
-					buffer[0]	= uint8_t(hi) + '0';
-					std::memcpy(&buffer[1], charTable<value_type> + (lo * 2ULL), 2ULL);
-					return buffer + 3ULL;
+					uint32_t lo = uint32_t(expDec) - hi * 0x64u;
+					buffer[0]	= uint8_t(hi) + 0x30u;
+					std::memcpy(&buffer[1], charTable<value_type> + (lo * 2ull), 2ull);
+					return buffer + 3ull;
 				}
 			}
 		} else [[unlikely]] {
-			*buffer = '0';
+			*buffer = 0x30u;
 			return buffer + 1;
 		}
 	}

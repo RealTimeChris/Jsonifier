@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, size_t N> struct raw_array {
+	template<typename value_type_new, size_t count> struct ctime_array {
 	  public:
 		using value_type	  = value_type_new;
 		using reference		  = value_type&;
@@ -39,14 +39,14 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr raw_array() = default;
+		constexpr ctime_array() = default;
 
-		template<size_t M> constexpr raw_array(value_type const (&init)[M]) : raw_array(init, std::make_index_sequence<N>()) {
-			static_assert(M >= N);
+		template<size_t M> constexpr ctime_array(value_type const (&init)[M]) : ctime_array(init, std::make_index_sequence<count>()) {
+			static_assert(M >= count);
 		}
 
-		constexpr raw_array(const std::initializer_list<value_type>& other) {
-			for (uint64_t x = 0; x < other.size(); ++x) {
+		constexpr ctime_array(const std::initializer_list<value_type>& other) {
+			for (uint64_t x = 0; x < count; ++x) {
 				operator[](x) = std::move(other.begin()[x]);
 			}
 		}
@@ -60,15 +60,15 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator end() {
-			return dataVal + N;
+			return dataVal + count;
 		}
 
 		constexpr const_iterator end() const {
-			return dataVal + N;
+			return dataVal + count;
 		}
 
-		constexpr size_type size() const {
-			return N;
+		constexpr size_type maxSize() const {
+			return count;
 		}
 
 		constexpr reference operator[](uint64_t index) {
@@ -80,14 +80,14 @@ namespace jsonifier_internal {
 		}
 
 		constexpr reference at(uint64_t index) {
-			if (index > N) {
+			if (index > count) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
 		constexpr const_reference at(uint64_t index) const {
-			if (index > N) {
+			if (index > count) {
 				std::abort();
 			}
 			return dataVal[index];
@@ -97,16 +97,20 @@ namespace jsonifier_internal {
 			return dataVal[0];
 		}
 
+		constexpr size_type size() {
+			return count;
+		}
+
 		constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
 		constexpr reference back() {
-			return dataVal[N - 1];
+			return dataVal[count - 1];
 		}
 
 		constexpr const_reference back() const {
-			return dataVal[N - 1];
+			return dataVal[count - 1];
 		}
 
 		constexpr pointer data() {
@@ -118,18 +122,18 @@ namespace jsonifier_internal {
 		}
 
 		constexpr void fill(const value_type& val) {
-			for (uint64_t x = 0; x < N; ++x) {
+			for (uint64_t x = 0; x < count; ++x) {
 				dataVal[x] = val;
 			}
 		}
 
-		alignas(JsonifierAlignment) value_type dataVal[N]{};
+		value_type dataVal[count]{};
 
-		template<size_t M, size_t... I> constexpr raw_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
+		template<size_t M, size_t... I> constexpr ctime_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}
 	};
 
-	template<typename value_type_new> class raw_array<value_type_new, 0> {
+	template<typename value_type_new> class ctime_array<value_type_new, 0> {
 	  public:
 		using value_type			 = value_type_new;
 		using reference				 = value_type&;

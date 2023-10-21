@@ -76,7 +76,7 @@ namespace jsonifier_internal {
 
 		static constexpr size_type length(pointer first) {
 			size_type count = 0;
-			while (*first != '\0') {
+			while (*first != 0x00) {
 				++count;
 				++first;
 			}
@@ -295,7 +295,7 @@ namespace jsonifier {
 			}
 			std::memcpy(dataVal + sizeVal, sizeNew.data(), sizeNew.size());
 			sizeVal += sizeNew.size();
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		template<typename value_type_newer> inline void append(value_type_newer* valuesNew, uint64_t sizeNew) {
@@ -304,7 +304,7 @@ namespace jsonifier {
 			}
 			std::memcpy(dataVal + sizeVal, valuesNew, sizeNew);
 			sizeVal += sizeNew;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		template<typename Iterator01, typename Iterator02> inline void insert(Iterator01 where, Iterator02 start, Iterator02 end) {
@@ -322,7 +322,7 @@ namespace jsonifier {
 			std::memmove(dataVal + posNew + sizeNew, dataVal + posNew, (sizeVal - posNew) * sizeof(value_type));
 			std::memcpy(dataVal + posNew, start.operator->(), sizeNew * sizeof(value_type));
 			sizeVal += sizeNew;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		inline void insert(iterator valuesNew, value_type toInsert) {
@@ -344,7 +344,7 @@ namespace jsonifier {
 			}
 			traits_type::move(dataVal, dataVal + count, sizeVal - count);
 			sizeVal -= count;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		inline void erase(iterator count) {
@@ -356,7 +356,7 @@ namespace jsonifier {
 			}
 			traits_type::move(dataVal, dataVal + sizeNew, sizeVal - sizeNew);
 			sizeVal -= sizeNew;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		inline void push_back(value_type value) {
@@ -364,7 +364,7 @@ namespace jsonifier {
 				reserve((sizeVal + 2) * 4);
 			}
 			getAlloc().construct(&dataVal[sizeVal++], value);
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 		}
 
 		inline const_reference at(size_type index) const {
@@ -412,8 +412,9 @@ namespace jsonifier {
 
 		inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
-				if (sizeNew > capacityVal) [[likely]] {
-					pointer newPtr = getAlloc().allocate(sizeNew + 1);
+				size_type sizeNewer = jsonifier_internal::roundUpToMultiple<BytesPerStep>(sizeNew);
+				if (sizeNewer > capacityVal) [[likely]] {
+					pointer newPtr = getAlloc().allocate(sizeNewer + 1);
 					try {
 						if (dataVal) [[likely]] {
 							if (sizeVal > 0) {
@@ -422,25 +423,26 @@ namespace jsonifier {
 							getAlloc().deallocate(dataVal, capacityVal + 1);
 						}
 					} catch (...) {
-						getAlloc().deallocate(newPtr, sizeNew + 1);
+						getAlloc().deallocate(newPtr, sizeNewer + 1);
 						throw;
 					}
-					capacityVal = sizeNew;
+					capacityVal = sizeNewer;
 					dataVal		= newPtr;
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
-				} else if (sizeNew > sizeVal) [[unlikely]] {
+				} else if (sizeNewer > sizeVal) [[unlikely]] {
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				}
 				sizeVal = sizeNew;
-				getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
+				getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 			} else {
 				sizeVal = 0;
 			}
 		}
 
 		inline void reserve(size_type capacityNew) {
-			if (capacityNew > capacityVal) [[likely]] {
-				pointer newPtr = getAlloc().allocate(capacityNew + 1);
+			size_type capacityNewer = jsonifier_internal::roundUpToMultiple<BitsPerStep>(capacityNew);
+			if (capacityNewer > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityNewer + 1);
 				try {
 					if (dataVal) [[likely]] {
 						if (sizeVal > 0) {
@@ -449,10 +451,10 @@ namespace jsonifier {
 						getAlloc().deallocate(dataVal, capacityVal + 1);
 					}
 				} catch (...) {
-					getAlloc().deallocate(newPtr, capacityNew + 1);
+					getAlloc().deallocate(newPtr, capacityNewer + 1);
 					throw;
 				}
-				capacityVal = capacityNew;
+				capacityVal = capacityNewer;
 				dataVal		= newPtr;
 			}
 		}
@@ -499,13 +501,13 @@ namespace jsonifier {
 			std::swap(dataVal, other.dataVal);
 		}
 
-		template<typename value_type_newer, size_type N> inline friend string_base operator+(const value_type_newer (&lhs)[N], const string_base& rhs) {
+		template<typename value_type_newer, size_type size> inline friend string_base operator+(const value_type_newer (&lhs)[size], const string_base& rhs) {
 			string_base newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type N> inline friend string_base operator+=(const value_type_newer (&lhs)[N], const string_base& rhs) {
+		template<typename value_type_newer, size_type size> inline friend string_base operator+=(const value_type_newer (&lhs)[size], const string_base& rhs) {
 			string_base newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
@@ -557,13 +559,13 @@ namespace jsonifier {
 			return *this;
 		}
 
-		template<typename value_type_newer, size_type N> inline string_base operator+(const value_type_newer (&rhs)[N]) const {
+		template<typename value_type_newer, size_type size> inline string_base operator+(const value_type_newer (&rhs)[size]) const {
 			string_base newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type N> inline string_base& operator+=(const value_type_newer (&rhs)[N]) {
+		template<typename value_type_newer, size_type size> inline string_base& operator+=(const value_type_newer (&rhs)[size]) {
 			string_base newRhs{ rhs };
 			*this += newRhs;
 			return *this;

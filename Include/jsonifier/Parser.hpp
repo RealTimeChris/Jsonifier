@@ -55,20 +55,14 @@ namespace jsonifier_internal {
 			if (stringNew.empty()) {
 				return;
 			}
-			if constexpr (refreshString) {
-				stringView = { reinterpret_cast<const uint8_t*>(stringNew.data()), stringNew.size() };
-				reset(stringView.data(), stringView.size());
-			} else if (stringView != stringNew) {
-				stringView = { reinterpret_cast<const uint8_t*>(stringNew.data()), stringNew.size() };
-				reset(stringView.data(), stringView.size());
-			}
+			section.reset<refreshString>(stringNew);
 			errors.clear();
-			auto newIter = begin();
+			auto newIter = section.begin();
 			if (!*newIter) {
 				return;
 			}
 			if constexpr (excludeKeys) {
-				if constexpr (jsonifier::concepts::has_excluded_keys<decltype(data)>) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<std::unwrap_ref_decay_t<decltype(data)>>) {
 					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys, *this);
 				} else {
 					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
@@ -83,16 +77,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		jsonifier::string_view_base<uint8_t> stringView{};
 		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
-
-		template<typename value_type> inline void reset(const value_type* stringNew, uint64_t sizeNew) {
-			section.reset(stringNew, sizeNew);
-		}
-
-		inline structural_iterator begin() {
-			return structural_iterator{ section.getStructurals(), static_cast<int64_t>(stringView.size()) };
-		}
 	};
 };

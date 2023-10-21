@@ -25,7 +25,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
-#include <jsonifier/RawArray.hpp>
+#include <jsonifier/CTimeArray.hpp>
 #include <jsonifier/Pair.hpp>
 
 namespace jsonifier_internal {
@@ -36,7 +36,7 @@ namespace jsonifier_internal {
 
 		template<typename value_type> using type_t = typename value_type::type;
 
-		template<size_t N> using tag_range = std::make_index_sequence<N>;
+		template<size_t size> using tag_range = std::make_index_sequence<size>;
 
 		template<typename tup> using BaseListT = typename std::unwrap_ref_decay_t<tup>::base_list;
 
@@ -99,9 +99,9 @@ namespace jsonifier_internal {
 			return static_cast<f&&>(fNew)(static_cast<value_type&&>(object).identity_t<bases>::value...);
 		}
 		template<char... D> constexpr size_t sizetFromDigits() {
-			static_assert((('0' <= D && D <= '9') && ...), "Must be integral literal");
+			static_assert(((0x30u <= D && D <= 0x39u) && ...), "Must be integral literal");
 			size_t num = 0;
-			return ((num = num * 10 + (D - '0')), ..., num);
+			return ((num = num * 10 + (D - 0x30u)), ..., num);
 		}
 		template<typename First, typename> using first_t = First;
 
@@ -123,8 +123,8 @@ namespace jsonifier_internal {
 		template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
 
 		template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
-			static constexpr size_t N = sizeof...(value_type);
-			using super				  = tuple_base_t<value_type...>;
+			static constexpr size_t size = sizeof...(value_type);
+			using super					 = tuple_base_t<value_type...>;
 			using super::operator[];
 			using base_list	   = typename super::base_list;
 			using element_list = type_list<value_type...>;
@@ -135,7 +135,7 @@ namespace jsonifier_internal {
 				if (jsonifier::concepts::base_list_tuple<tuple2>) {
 					eqImpl(static_cast<u&&>(tup), base_list(), typename tuple2::base_list());
 				} else {
-					eqImpl(static_cast<u&&>(tup), tag_range<N>());
+					eqImpl(static_cast<u&&>(tup), tag_range<size>());
 				}
 				return *this;
 			}
@@ -181,10 +181,10 @@ namespace jsonifier_internal {
 		};
 
 		template<> struct tuple<> : tuple_base_t<> {
-			static constexpr size_t N = 0;
-			using super				  = tuple_base_t<>;
-			using base_list			  = type_list<>;
-			using element_list		  = type_list<>;
+			static constexpr size_t size = 0;
+			using super					 = tuple_base_t<>;
+			using base_list				 = type_list<>;
+			using element_list			 = type_list<>;
 
 			template<jsonifier::concepts::other_than<tuple> u>
 				requires jsonifier::concepts::stateless<u>
@@ -297,8 +297,8 @@ namespace std {
 namespace jsonifier_internal {
 
 	template<typename tuple, size_t... Is> auto tupleSplit(tuple&& tupleNew) {
-		static constexpr auto N	 = std::tuple_size_v<tuple>;
-		static constexpr auto is = std::make_index_sequence<N / 2>{};
+		static constexpr auto size = std::tuple_size_v<tuple>;
+		static constexpr auto is   = std::make_index_sequence<size / 2>{};
 		return std::make_pair(tupleSplitImpl<0>(tupleNew, is), tupleSplitImpl<1>(tupleNew, is));
 	}
 
@@ -309,15 +309,15 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t N> constexpr auto shrinkIndexArray(auto& arrayNew) {
-		raw_array<size_t, N> res{};
-		shrinkIndexArrayHelper<0, N>(res, arrayNew);
+	template<size_t size> constexpr auto shrinkIndexArray(auto& arrayNew) {
+		ctime_array<size_t, size> res{};
+		shrinkIndexArrayHelper<0, size>(res, arrayNew);
 		return res;
 	}
 
 	template<typename tuple> constexpr auto filter() {
 		constexpr auto n = std::tuple_size_v<tuple>;
-		raw_array<size_t, n> indices{};
+		ctime_array<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
 			using value_type = std::unwrap_ref_decay_t<std::tuple_element_t<I, tuple>>;
@@ -329,8 +329,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename Func, typename tuple> constexpr auto mapTuple(Func&& f, tuple&& tupleNew) {
-		constexpr auto N = std::tuple_size_v<std::unwrap_ref_decay_t<tuple>>;
-		return mapTuple(f, tupleNew, std::make_index_sequence<N>{});
+		constexpr auto size = std::tuple_size_v<std::unwrap_ref_decay_t<tuple>>;
+		return mapTuple(f, tupleNew, std::make_index_sequence<size>{});
 	}
 
 	template<uint64_t index, uint64_t indexLimit> constexpr void groupSizesHelper(auto& diffs, auto& indices) {
@@ -340,8 +340,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t n_groups> constexpr auto groupSizes(const raw_array<size_t, n_groups>& indices, size_t n_total) {
-		raw_array<size_t, n_groups> diffs;
+	template<size_t n_groups> constexpr auto groupSizes(const ctime_array<size_t, n_groups>& indices, size_t n_total) {
+		ctime_array<size_t, n_groups> diffs;
 		groupSizesHelper<0, n_groups - 1>(diffs, indices);
 		diffs[n_groups - 1] = n_total - indices[n_groups - 1];
 		return diffs;
@@ -365,11 +365,11 @@ namespace jsonifier_internal {
 	}
 
 	template<typename tuple> constexpr auto makeGroupsHelper() {
-		constexpr auto N = std::tuple_size_v<tuple>;
+		constexpr auto size = std::tuple_size_v<tuple>;
 
 		constexpr auto filtered = filter<tuple>();
 		constexpr auto starts	= shrinkIndexArray<filtered.second>(filtered.first);
-		constexpr auto sizes	= groupSizes(starts, N);
+		constexpr auto sizes	= groupSizes(starts, size);
 
 		return tuplet::makeTuple(starts, sizes);
 	}
@@ -380,7 +380,7 @@ namespace jsonifier_internal {
 		static constexpr auto sizes	 = tuplet::get<1>(h);
 
 		static constexpr auto op(tuple&& object) {
-			constexpr auto n_groups = starts.size();
+			constexpr auto n_groups = starts.maxSize();
 			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};

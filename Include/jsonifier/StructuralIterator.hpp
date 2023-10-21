@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Simd.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace jsonifier_internal {
 
@@ -40,8 +40,7 @@ namespace jsonifier_internal {
 
 		inline structural_iterator() noexcept = default;
 
-		inline structural_iterator(structural_index* rootIndexNew, size_type originalLength) {
-			tapeLength	 = originalLength;
+		inline structural_iterator(structural_index* rootIndexNew) {
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
@@ -70,12 +69,11 @@ namespace jsonifier_internal {
 		}
 
 		inline bool operator==(const structural_iterator&) const {
-			return (currentIndex - rootIndex) >= tapeLength || !(*currentIndex);
+			return !(*currentIndex);
 		}
 
 	  protected:
-		static constexpr uint8_t defaultValue{ '\0' };
-		size_type tapeLength{};
+		static constexpr uint8_t defaultValue{ 0x00 };
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

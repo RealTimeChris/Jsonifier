@@ -76,7 +76,6 @@
 
 constexpr uint64_t BitsPerStep{ 512 };
 constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t JsonifierAlignment{ BytesPerStep };
 constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
 constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint64_t;
@@ -85,7 +84,6 @@ using string_parsing_type = uint64_t;
 
 constexpr uint64_t BitsPerStep{ 256 };
 constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t JsonifierAlignment{ BytesPerStep };
 constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
 constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint32_t;
@@ -94,7 +92,6 @@ using string_parsing_type = uint32_t;
 
 constexpr uint64_t BitsPerStep{ 128 };
 constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t JsonifierAlignment{ BytesPerStep };
 constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
 constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
@@ -103,7 +100,6 @@ using string_parsing_type = uint16_t;
 
 constexpr uint64_t BitsPerStep{ 128 };
 constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t JsonifierAlignment{ BytesPerStep };
 constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
 constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
@@ -122,7 +118,7 @@ using simd_float_128 = __m128d;
 
 #else
 
-typedef union alignas(JsonifierAlignment) __m128x {
+typedef union alignas(BytesPerStep) __m128x {
 	int8_t m128x_int8[16];
 	int16_t m128x_int16[8];
 	int32_t m128x_int32[4];

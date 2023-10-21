@@ -30,7 +30,7 @@ namespace jsonifier_internal {
 	template<typename value_type_new> class iterator {
 	  public:
 		using iterator_concept	= std::contiguous_iterator_tag;
-		using iterator_category = std::random_access_iterator_tag;
+		using iterator_category = std::contiguous_iterator_tag;
 		using value_type		= value_type_new;
 		using difference_type	= std::ptrdiff_t;
 		using pointer			= value_type*;
@@ -94,6 +94,10 @@ namespace jsonifier_internal {
 
 		constexpr reference operator[](const difference_type iter) const {
 			return *(*this + iter);
+		}
+
+		constexpr difference_type operator+(const iterator& iter) const {
+			return value + iter.value;
 		}
 
 		constexpr difference_type operator-(const iterator& iter) const {

@@ -45,15 +45,7 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type {
-		Unset  = '\0',
-		Object = 0x7B,
-		Array  = '[',
-		String = '"',
-		Number = '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9',
-		Bool   = 't' | 'f',
-		Null   = 'n',
-	};
+	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
 
 	inline std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
 		{ "String", json_type::String }, { "Number", json_type::Number }, { "Bool", json_type::Bool }, { "Null", json_type::Null } };

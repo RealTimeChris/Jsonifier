@@ -39,12 +39,12 @@ namespace jsonifier_internal {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<JsonifierAlignment>(n * sizeof(value_type)), JsonifierAlignment));
+			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep));
 		}
 
 		inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, roundUpToMultiple<JsonifierAlignment>(n * sizeof(value_type)), JsonifierAlignment);
+				allocator::deallocate_bytes(ptr, roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep);
 			}
 		}
 

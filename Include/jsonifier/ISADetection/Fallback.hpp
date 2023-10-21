@@ -34,25 +34,23 @@ namespace jsonifier_internal {
 
 	using simd_int_t = simd_int_128;
 
-	template<typename ReturnT> inline ReturnT gatherValues(jsonifier::concepts::float_t auto* str);
-
 	inline uint64_t packUint64(const uint8_t* arr) {
 		return (static_cast<uint64_t>(arr[7]) << 56) | (static_cast<uint64_t>(arr[6]) << 48) | (static_cast<uint64_t>(arr[5]) << 40) | (static_cast<uint64_t>(arr[4]) << 32) |
 			(static_cast<uint64_t>(arr[3]) << 24) | (static_cast<uint64_t>(arr[2]) << 16) | (static_cast<uint64_t>(arr[1]) << 8) | static_cast<uint64_t>(arr[0]);
 	}
 
-	inline void packUint64Array(const uint8_t* input, simd_int_128& output) {
+	inline void packUint64Array(const uint8_t* input, simd_int_t& output) {
 		output.m128x_uint64[0] = packUint64(const_cast<string_buffer_ptr>(input));
 		output.m128x_uint64[1] = packUint64(const_cast<string_buffer_ptr>(input + 8));
 	}
 
 	template<simd_int_128_t avx_type> inline avx_type gatherValues(jsonifier::concepts::char_type auto* str) {
-		alignas(JsonifierAlignment) simd_int_128 newArray{};
+		simd_int_t newArray{};
 		packUint64Array(str, newArray);
 		return newArray;
 	}
 
-	template<uint64_t index = 0, uint64_t index02 = 0> inline void movemaskEpi8Helper02(int16_t& result, const simd_int_128& a) {
+	template<uint64_t index = 0, uint64_t index02 = 0> inline void movemaskEpi8Helper02(int16_t& result, const simd_int_t& a) {
 		if constexpr (index < 8) {
 			uint8_t value = (a.m128x_uint64[index02] >> (index * 8)) & 0xff;
 			int16_t mask  = (value >> 7) & 1;
@@ -61,7 +59,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t index = 0> inline int16_t movemaskEpi8(const simd_int_128& a) {
+	template<uint64_t index = 0> inline int16_t movemaskEpi8(const simd_int_t& a) {
 		int16_t result{};
 		if constexpr (index < 2) {
 			movemaskEpi8Helper02<0, index>(result, a);
@@ -70,50 +68,50 @@ namespace jsonifier_internal {
 		return result;
 	}
 
-	inline simd_int_128 orSi128(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 value{};
+	inline simd_int_t orSi128(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t value{};
 		value.m128x_uint64[0] = valOne.m128x_uint64[0] | valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] = valOne.m128x_uint64[1] | valTwo.m128x_uint64[1];
 		return value;
 	}
 
-	inline simd_int_128 andSi128(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 value{};
+	inline simd_int_t andSi128(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t value{};
 		value.m128x_uint64[0] = valOne.m128x_uint64[0] & valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] = valOne.m128x_uint64[1] & valTwo.m128x_uint64[1];
 		return value;
 	}
 
-	inline simd_int_128 andNotSi128(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 result{};
+	inline simd_int_t andNotSi128(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t result{};
 		result.m128x_uint64[0] = valTwo.m128x_uint64[0] & (~valOne.m128x_uint64[0]);
 		result.m128x_uint64[1] = valTwo.m128x_uint64[1] & (~valOne.m128x_uint64[1]);
 		return result;
 	}
 
-	inline simd_int_128 xorSi128(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 value{};
+	inline simd_int_t xorSi128(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t value{};
 		value.m128x_uint64[0] = valOne.m128x_uint64[0] ^ valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] = valOne.m128x_uint64[1] ^ valTwo.m128x_uint64[1];
 		return value;
 	}
 
-	inline simd_int_128 subEpi8(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 result{};
+	inline simd_int_t subEpi8(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t result{};
 		result.m128x_uint64[0] = valOne.m128x_uint64[0] - valTwo.m128x_uint64[0];
 		result.m128x_uint64[1] = valOne.m128x_uint64[1] - valTwo.m128x_uint64[1];
 		return result;
 	}
 
-	inline simd_int_128 notSi128(const simd_int_128& valOne) {
-		simd_int_128 result{};
+	inline simd_int_t notSi128(const simd_int_t& valOne) {
+		simd_int_t result{};
 		result.m128x_uint64[0] = ~valOne.m128x_uint64[0];
 		result.m128x_uint64[1] = ~valOne.m128x_uint64[1];
 		return result;
 	}
 
-	template<uint64_t index = 0> inline simd_int_128 cmpeqEpi8(const simd_int_128& a, const simd_int_128& b) {
-		simd_int_128 result{};
+	template<uint64_t index = 0> inline simd_int_t cmpeqEpi8(const simd_int_t& a, const simd_int_t& b) {
+		simd_int_t result{};
 		if constexpr (index < 2) {
 			cmpeqEpi8Helper<0, index>(result, a, b);
 			result = orSi128(result, cmpeqEpi8<index + 1>(a, b));
@@ -121,7 +119,7 @@ namespace jsonifier_internal {
 		return result;
 	}
 
-	template<uint64_t index = 0, uint64_t index02 = 0> inline void cmpeqEpi8Helper(simd_int_128& result, const simd_int_128& a, const simd_int_128& b) {
+	template<uint64_t index = 0, uint64_t index02 = 0> inline void cmpeqEpi8Helper(simd_int_t& result, const simd_int_t& a, const simd_int_t& b) {
 		if constexpr (index < 8) {
 			uint8_t a8 = (a.m128x_uint64[index02] >> (index * 8)) & 0xff;
 			uint8_t b8 = (b.m128x_uint64[index02] >> (index * 8)) & 0xff;
@@ -130,28 +128,28 @@ namespace jsonifier_internal {
 		}
 	}
 
-	inline bool testzSi128(const simd_int_128& valOne, const simd_int_128& valTwo) {
-		simd_int_128 result{};
+	inline bool testzSi128(const simd_int_t& valOne, const simd_int_t& valTwo) {
+		simd_int_t result{};
 		result.m128x_uint64[0] = valOne.m128x_uint64[0] & valTwo.m128x_uint64[0];
 		result.m128x_uint64[1] = valOne.m128x_uint64[1] & valTwo.m128x_uint64[1];
 		return result.m128x_uint64[0] == 0 && result.m128x_uint64[1] == 0;
 	}
 
-	inline simd_int_128 setEpi64x(uint64_t argOne, uint64_t argTwo) {
-		simd_int_128 returnValue{};
+	inline simd_int_t setEpi64x(uint64_t argOne, uint64_t argTwo) {
+		simd_int_t returnValue{};
 		returnValue.m128x_uint64[0] = argTwo;
 		returnValue.m128x_uint64[1] = argOne;
 		return returnValue;
 	}
 
-	inline simd_int_128 set1Epi64x(uint64_t argOne) {
-		simd_int_128 returnValue{};
+	inline simd_int_t set1Epi64x(uint64_t argOne) {
+		simd_int_t returnValue{};
 		returnValue.m128x_uint64[0] = argOne;
 		returnValue.m128x_uint64[1] = argOne;
 		return returnValue;
 	}
 
-	inline simd_int_128& insertUint16(simd_int_128& value, uint64_t position, uint16_t newValue) {
+	inline simd_int_t& insertUint16(simd_int_t& value, uint64_t position, uint16_t newValue) {
 		if (position < 0 || position >= 8) {
 			return value;
 		}
@@ -159,22 +157,22 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	inline simd_int_128& insertUint64(simd_int_128& value, uint64_t position, uint64_t newValue) {
+	inline simd_int_t& insertUint64(simd_int_t& value, uint64_t position, uint64_t newValue) {
 		if (position >= 0 && position < 2) {
 			value.m128x_uint64[position] = newValue;
 		}
 		return value;
 	}
 
-	inline uint64_t extractUint64(simd_int_128 value, uint64_t index) {
+	inline uint64_t extractUint64(simd_int_t value, uint64_t index) {
 		if (index >= 0 && index < 2) {
 			return static_cast<uint64_t>(value.m128x_uint64[index]);
 		}
 		return 0;
 	}
 
-	template<uint64_t index = 0> inline simd_int_128 shuffleEpi8(const simd_int_128& a, const simd_int_128& b) {
-		simd_int_128 result{};
+	template<uint64_t index = 0> inline simd_int_t shuffleEpi8(const simd_int_t& a, const simd_int_t& b) {
+		simd_int_t result{};
 		if constexpr (index < 16) {
 			static constexpr uint64_t i		   = index * 8;
 			static constexpr uint64_t bitIndex = i + 7;
@@ -193,14 +191,14 @@ namespace jsonifier_internal {
 		return result;
 	}
 
-	template<int64_t index = 0, int64_t index02> inline void shuffleEpi8Helper02(uint64_t& result, const simd_int_128& b) {
+	template<int64_t index = 0, int64_t index02 = 0> inline void shuffleEpi8Helper02(uint64_t& result, const simd_int_t& b) {
 		if constexpr (index >= index02) {
 			result = (result << 1) | ((b.m128x_uint64[index >> 6] >> (index & 0x3F)) & 1);
 			shuffleEpi8Helper02<index - 1, index02>(result, b);
 		}
 	}
 
-	template<uint64_t index = 0, uint64_t index02> inline void shuffleEpi8Helper03(simd_int_128& result, uint64_t& result02, const simd_int_128& a) {
+	template<uint64_t index = 0, uint64_t index02 = 0> inline void shuffleEpi8Helper03(simd_int_t& result, uint64_t& result02, const simd_int_t& a) {
 		if constexpr (index < index02) {
 			result.m128x_uint64[index >> 6] |= ((a.m128x_uint64[result02 >> 6] >> (result02 & 0x3F)) & 1ULL) << (index & 0x3F);
 			result02++;
@@ -208,9 +206,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	inline simd_int_128 set1Epi8(int8_t newValue) {
-		simd_int_128 returnValue{};
-		std::memset(&returnValue, newValue, sizeof(simd_int_128));
+	inline simd_int_t set1Epi8(int8_t newValue) {
+		simd_int_t returnValue{};
+		std::memset(&returnValue, newValue, sizeof(simd_int_t));
 		return returnValue;
 	}
 
@@ -271,7 +269,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertWhitespaceToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr uint8_t arrayNew[]{ 0x22, 100, 100, 100, 17, 100, 113, 2, 100, 0x09, '\n', 112, 100, '\r', 100, 100 };
+			static constexpr uint8_t arrayNew[]{ 0x20, 0x64, 0x64, 0x64, 0x11, 0x64, 0x71, 0x02, 0x64, 0x09, 0x0A, 0x70, 0x64, 0x0D, 0x64, 0x64 };
 			static constexpr simd_int_t whitespaceTable{ simdTable<simd_int_t>(arrayNew) };
 			convertWhitespaceToSimdBaseHelper<0>(whitespaceTable, value, valuesNew);
 			convertWhitespaceToSimdBaseHelper<1>(whitespaceTable, value, valuesNew);
@@ -288,7 +286,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertBackslashesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr simd_int_t backslashesVal{ simdValues<simd_int_t>('\\') };
+			static constexpr simd_int_t backslashesVal{ simdValues<simd_int_t>(0x5C) };
 			convertBackslashesToSimdBaseHelper<0>(backslashesVal, value, valuesNew);
 			convertBackslashesToSimdBaseHelper<1>(backslashesVal, value, valuesNew);
 			convertBackslashesToSimdBaseHelper<2>(backslashesVal, value, valuesNew);
@@ -305,7 +303,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertStructuralsToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', 0x7B, 0x2D, 0x7D, 0, 0 };
+			static constexpr uint8_t arrayNew[]{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00, 0x00 };
 			static constexpr simd_int_t opTableVal{ simdTable<simd_int_t>(arrayNew) };
 			static constexpr simd_int_t chars{ simdValues<simd_int_t>(0x20) };
 			convertStructuralsToSimdBaseHelper<0>(opTableVal, chars, value, valuesNew);
@@ -323,7 +321,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertQuotesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr simd_int_t quotesVal{ simdValues<simd_int_t>('"') };
+			static constexpr simd_int_t quotesVal{ simdValues<simd_int_t>(0x22u) };
 			convertQuotesToSimdBaseHelper<0>(quotesVal, value, valuesNew);
 			convertQuotesToSimdBaseHelper<1>(quotesVal, value, valuesNew);
 			convertQuotesToSimdBaseHelper<2>(quotesVal, value, valuesNew);
@@ -334,35 +332,35 @@ namespace jsonifier_internal {
 			convertQuotesToSimdBaseHelper<7>(quotesVal, value, valuesNew);
 		}
 
-		inline static uint64_t getUint64(const simd_int_t& value, uint64_t index) {
+		template<uint64_t index = 0> inline static uint64_t getUint64(const simd_int_t& value) {
 			return extractUint64(value, index);
 		}
 
-		inline static void insertUint64(simd_int_t& value, uint64_t valueNew, uint64_t index) {
+		template<uint64_t index = 0> inline static void insertUint64(simd_int_t& value, uint64_t valueNew) {
 			value = jsonifier_internal::insertUint64(value, index, valueNew);
 		}
 
-		inline static void insertUint16(simd_int_t& value, uint16_t valueNew, uint64_t index) {
-			value = jsonifier_internal::insertUint16(value, index, valueNew);
+		template<uint64_t index = 0> inline static void insertUint16(simd_int_t& value, uint16_t valueNew) {
+			jsonifier_internal::insertUint16(value, index, valueNew);
 		}
 
-		inline static simd_int_t bitAndNot(const simd_int_t& value, const simd_int_t& other) {
-			return andNotSi128(other, value);
+		inline static simd_int_t bitAndNot(const simd_int_t& other, const simd_int_t& value) {
+			return andNotSi128(value, other);
 		}
 
-		inline static simd_int_t shuffle(const simd_int_t& value, const simd_int_t& other) {
-			return shuffleEpi8(other, value);
+		inline static simd_int_t shuffle(const simd_int_t& other, const simd_int_t& value) {
+			return shuffleEpi8(value, other);
 		}
 
-		template<uint64_t index> inline static void addValues(simd_int_t& value, string_parsing_type valuesToAdd) {
-			insertUint16(value, valuesToAdd, index);
+		template<uint64_t index = 0> inline static void addValues(simd_int_t& value, string_parsing_type valuesToAdd) {
+			insertUint16<index>(value, valuesToAdd);
 		}
 
-		template<uint64_t amount> inline static simd_int_t shl(const simd_int_t& value) {
+		template<uint64_t amount> static inline simd_int_t shl(const simd_int_t& value) {
 			simd_int_t currentValues{};
-			insertUint64(currentValues, getUint64(value, 0) << amount, 0);
-			static constexpr uint64_t shiftBetween{ amount % 64 };
-			insertUint64(currentValues, (getUint64(value, 1) << amount) | (getUint64(value, 0) >> (64 - shiftBetween)), 1);
+			insertUint64<0>(currentValues, getUint64<0>(value) << amount);
+			static constexpr uint64_t shiftBetween = amount % 64;
+			insertUint64<1>(currentValues, (getUint64<1>(value) << amount) | (getUint64<0>(value) >> (64 - shiftBetween)));
 			return currentValues;
 		}
 
@@ -383,7 +381,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static bool getMSB(const simd_int_t& value) {
-			simd_int_128 result = andSi128(value, setEpi64x(0x8000000000000000, 0));
+			simd_int_t result = andSi128(value, setEpi64x(0x8000000000000000, 0));
 			return !testzSi128(result, result);
 		}
 
@@ -399,11 +397,11 @@ namespace jsonifier_internal {
 
 		inline static simd_int_t carrylessMultiplication(const simd_int_t& value, uint64_t& prevInString) {
 			simd_int_t valuesNew{};
-			simd_int_128 valueLow{ value };
-			insertUint64(valuesNew, prefixXor(valueLow.m128x_uint64[0]) ^ prevInString, 0);
-			prevInString = uint64_t(static_cast<int64_t>(getUint64(valuesNew, 0)) >> 63);
-			insertUint64(valuesNew, prefixXor(valueLow.m128x_uint64[1]) ^ prevInString, 1);
-			prevInString = uint64_t(static_cast<int64_t>(getUint64(valuesNew, 1)) >> 63);
+			simd_int_t valueLow{ value };
+			insertUint64<0>(valuesNew, prefixXor(valueLow.m128x_uint64[0]) ^ prevInString);
+			prevInString = uint64_t(static_cast<int64_t>(getUint64<0>(valuesNew)) >> 63);
+			insertUint64<1>(valuesNew, prefixXor(valueLow.m128x_uint64[1]) ^ prevInString);
+			prevInString = uint64_t(static_cast<int64_t>(getUint64<1>(valuesNew)) >> 63);
 			return valuesNew;
 		}
 
@@ -432,9 +430,6 @@ namespace jsonifier_internal {
 			std::cout << std::endl;
 			return value;
 		}
-
-	  protected:
-		simd_int_128 value{};
 	};
 
 #endif

@@ -26,7 +26,6 @@
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringView.hpp>
-#include <jsonifier/Optional.hpp>
 #include <jsonifier/Expected.hpp>
 #include <source_location>
 #include <unordered_map>
@@ -35,9 +34,9 @@
 
 namespace jsonifier_internal {
 
-	enum class type_of_misread { Wrong_Type = 0, Damaged_Input = 1 };
+	enum class type_of_misread : uint8_t { Wrong_Type = 0, Damaged_Input = 1 };
 
-	enum class error_code {
+	enum class error_code : uint8_t {
 		Success					 = 0,
 		Parse_Error				 = 1,
 		Number_Error			 = 2,
@@ -48,17 +47,18 @@ namespace jsonifier_internal {
 		Key_Parsing_Error		 = 7
 	};
 
-	enum class json_structural_type {
-		Object_Start = '{',
-		Object_End	 = '}',
-		Array_Start	 = '[',
-		Array_End	 = ']',
-		String		 = '"',
-		Bool		 = 't',
-		Number		 = '-',
-		Colon		 = ':',
-		Comma		 = ',',
-		Null		 = 'n',
+	enum class json_structural_type : uint8_t {
+		Unset		 = 0x00u,
+		Object_Start = 0x7Bu,
+		Object_End	 = 0x7Du,
+		Array_Start	 = 0x5Bu,
+		Array_End	 = 0x5Du,
+		String		 = 0x22u,
+		Bool		 = 0x74u,
+		Number		 = 0x2Du,
+		Colon		 = 0x3Au,
+		Comma		 = 0x2Cu,
+		Null		 = 0x6Eu
 	};
 
 	inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
@@ -67,7 +67,7 @@ namespace jsonifier_internal {
 
 	inline bool isTypeType(uint8_t c) {
 		static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-		return find(array01, std::size(array01), &c) != jsonifier::string::npos;
+		return find(array01, std::size(array01), &c, 1) != jsonifier::string::npos;
 	}
 
 	inline bool isDigitType(uint8_t c) {
@@ -81,18 +81,21 @@ namespace jsonifier_internal {
 		static constexpr jsonifier::string_view number{ "Number" };
 		static constexpr jsonifier::string_view str{ "String" };
 		static constexpr jsonifier::string_view null{ "Null" };
+		static constexpr jsonifier::string_view unset{ "Unset" };
 		if (isDigitType(charToCheck)) {
 			return number;
-		} else if (charToCheck == 't' || charToCheck == 'f') {
+		} else if (charToCheck == 0x74u || charToCheck == 0x66u) {
 			return boolean;
-		} else if (charToCheck == '{') {
+		} else if (charToCheck == 0x7B) {
 			return object;
-		} else if (charToCheck == '[') {
+		} else if (charToCheck == 0x5B) {
 			return array;
-		} else if (charToCheck == '"') {
+		} else if (charToCheck == 0x22u) {
 			return str;
-		} else if (charToCheck == 'n') {
+		} else if (charToCheck == 0x6Eu) {
 			return null;
+		} else if (charToCheck == 0x00u) {
+			return unset;
 		} else {
 			return {};
 		}

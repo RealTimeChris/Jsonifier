@@ -39,8 +39,8 @@ namespace jsonifier_internal {
 			simd_int_t values(gatherValues<simd_int_t>(source));
 			simd_base::storeu(values, destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = { simd_base::cmpeq(values, '\\') };
-			returnData.quoteBits = { simd_base::cmpeq(values, '\"') };
+			returnData.bsBits	 = { simd_base::cmpeq(values, 0x5C) };
+			returnData.quoteBits = { simd_base::cmpeq(values, 0x22u) };
 			return returnData;
 		}
 
@@ -66,10 +66,10 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> inline static uint32_t hexToU32NoCheck(const value_type* source) {
-		uint32_t v1 = digitToVal32[630 + source[0]];
-		uint32_t v2 = digitToVal32[420 + source[1]];
-		uint32_t v3 = digitToVal32[210 + source[2]];
-		uint32_t v4 = digitToVal32[0 + source[3]];
+		uint32_t v1 = digitToVal32<uint32_t>[630 + source[0]];
+		uint32_t v2 = digitToVal32<uint32_t>[420 + source[1]];
+		uint32_t v3 = digitToVal32<uint32_t>[210 + source[2]];
+		uint32_t v4 = digitToVal32<uint32_t>[0 + source[3]];
 		return v1 | v2 | v3 | v4;
 	}
 
@@ -82,24 +82,24 @@ namespace jsonifier_internal {
 
 		if (leading_zeros >= 11) {
 			uint32_t pattern = pdep(0x3F00U, codePoint);
-			pattern |= 0xC0ULL;
+			pattern |= 0xC0ull;
 			c[0] = static_cast<uint8_t>(pattern >> 8);
-			c[1] = static_cast<uint8_t>(pattern & 0xFF);
+			c[1] = static_cast<uint8_t>(pattern & 0xFFu);
 			return 2;
 		} else if (leading_zeros >= 16) {
 			uint32_t pattern = pdep(0x0F0800U, codePoint);
-			pattern |= 0xE0ULL;
+			pattern |= 0xE0ull;
 			c[0] = static_cast<uint8_t>(pattern >> 16);
 			c[1] = static_cast<uint8_t>(pattern >> 8);
-			c[2] = static_cast<uint8_t>(pattern & 0xFF);
+			c[2] = static_cast<uint8_t>(pattern & 0xFFu);
 			return 3;
 		} else if (leading_zeros >= 21) {
 			uint32_t pattern = pdep(0x01020400U, codePoint);
-			pattern |= 0xF0ULL;
+			pattern |= 0xF0ull;
 			c[0] = static_cast<uint8_t>(pattern >> 24);
 			c[1] = static_cast<uint8_t>(pattern >> 16);
 			c[2] = static_cast<uint8_t>(pattern >> 8);
-			c[3] = static_cast<uint8_t>(pattern & 0xFF);
+			c[3] = static_cast<uint8_t>(pattern & 0xFFu);
 			return 4;
 		}
 		return 0;
@@ -107,8 +107,8 @@ namespace jsonifier_internal {
 
 	template<typename value_type01, typename value_type02> inline static bool handleUnicodeCodePoint(value_type01* srcPtr, value_type02* dstPtr) {
 		constexpr uint32_t subCodePoint = 0xfffd;
-		constexpr auto backslash{ static_cast<uint8_t>('\\') };
-		constexpr auto u{ static_cast<uint8_t>('u') };
+		constexpr auto backslash{ static_cast<uint8_t>(0x5C) };
+		constexpr auto u{ static_cast<uint8_t>(0x75) };
 		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
@@ -142,18 +142,18 @@ namespace jsonifier_internal {
 			if (bsQuote.hasBackslash()) {
 				auto bsDist			   = bsQuote.backslashIndex();
 				source_type escapeChar = source[bsDist + 1];
-				if (escapeChar == 'u') {
+				if (escapeChar == 0x75) {
 					source += bsDist;
 					destString += bsDist;
 					handleUnicodeCodePoint(&source, &destString);
 				} else {
 					uint8_t escapeResult = escapeMap<uint8_t>[escapeChar];
-					if (escapeResult == 0u) {
+					if (escapeResult == 0x00u) {
 						return nullptr;
 					}
 					destString[bsDist] = escapeResult;
-					destString += bsDist + 1ULL;
-					source += bsDist + 2ULL;
+					destString += bsDist + 1ull;
+					source += bsDist + 2ull;
 				}
 			} else {
 				source += backslash_and_quote::bytesProcessed;

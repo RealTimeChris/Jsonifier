@@ -231,13 +231,15 @@ namespace jsonifier {
 			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
 		}
 
-		template<typename value_type_newer, size_type N> inline friend string_base<value_type_newer> operator+(const value_type_newer (&lhs)[N], const string_view_base& rhs) {
+		template<typename value_type_newer, size_type size>
+		inline friend string_base<value_type_newer> operator+(const value_type_newer (&lhs)[size], const string_view_base& rhs) {
 			string_base<value_type_newer> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type N> inline friend string_base<value_type_newer> operator+=(const value_type_newer (&lhs)[N], const string_view_base& rhs) {
+		template<typename value_type_newer, size_type size>
+		inline friend string_base<value_type_newer> operator+=(const value_type_newer (&lhs)[size], const string_view_base& rhs) {
 			string_base<value_type_newer> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
@@ -279,13 +281,13 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type N> inline string_base<value_type_newer> operator+(const value_type_newer (&rhs)[N]) const {
+		template<typename value_type_newer, size_type size> inline string_base<value_type_newer> operator+(const value_type_newer (&rhs)[size]) const {
 			string_base<value_type_newer> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type N> inline string_base<value_type_newer> operator+=(const value_type_newer (&rhs)[N]) {
+		template<typename value_type_newer, size_type size> inline string_base<value_type_newer> operator+=(const value_type_newer (&rhs)[size]) {
 			string_base<value_type_newer> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;

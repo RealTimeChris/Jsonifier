@@ -49,27 +49,27 @@ namespace jsonifier_internal {
 
 	using simd_int_t = simd_int_512;
 
-	template<simd_int_128_t avx_type, typename char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_int_128_t simd_type, typename char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm_loadu_si128(reinterpret_cast<const __m128i*>(str));
 	}
 
-	template<simd_int_256_t avx_type, typename char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_int_256_t simd_type, typename char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(str));
 	}
 
-	template<simd_int_512_t avx_type, typename char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_int_512_t simd_type, typename char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm512_loadu_si512(str);
 	}
 
-	template<simd_float_128_t avx_type, jsonifier::concepts::float_t char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_float_128_t simd_type, jsonifier::concepts::float_t char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm_loadu_pd(str);
 	}
 
-	template<simd_float_256_t avx_type, jsonifier::concepts::float_t char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_float_256_t simd_type, jsonifier::concepts::float_t char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm256_loadu_pd(str);
 	}
 
-	template<simd_float_512_t avx_type, jsonifier::concepts::float_t char_type> inline avx_type gatherValues(char_type* str) {
+	template<simd_float_512_t simd_type, jsonifier::concepts::float_t char_type> inline simd_type gatherValues(char_type* str) {
 		return _mm512_loadu_pd(str);
 	}
 
@@ -183,9 +183,9 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertWhitespaceToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr uint8_t arrayNew[]{ ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
-				'\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100, ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t',
-				'\n', 112, 100, '\r', 100, 100 };
+			static constexpr uint8_t arrayNew[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u, 0x20u, 0x64u,
+				0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u, 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u,
+				0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u, 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u };
 			static constexpr simd_int_t whitespaceTable{ simdTable<simd_int_t>(arrayNew) };
 			convertWhitespaceToSimdBaseHelper<0>(whitespaceTable, value, valuesNew);
 			convertWhitespaceToSimdBaseHelper<1>(whitespaceTable, value, valuesNew);
@@ -202,7 +202,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertBackslashesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr simd_int_t backslashesVal{ simdValues<simd_int_t>('\\') };
+			static constexpr simd_int_t backslashesVal{ simdValues<simd_int_t>(0x5Cu) };
 			convertBackslashesToSimdBaseHelper<0>(backslashesVal, value, valuesNew);
 			convertBackslashesToSimdBaseHelper<1>(backslashesVal, value, valuesNew);
 			convertBackslashesToSimdBaseHelper<2>(backslashesVal, value, valuesNew);
@@ -219,10 +219,11 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertStructuralsToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr uint8_t arrayNew[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, ':', '{', ',', '}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
+			static constexpr uint8_t arrayNew[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u, 0x00u, 0x00u,
+				0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+				0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
 			static constexpr simd_int_t opTableVal{ simdTable<simd_int_t>(arrayNew) };
-			static constexpr simd_int_t chars{ simdValues<simd_int_t>(0x20) };
+			static constexpr simd_int_t chars{ simdValues<simd_int_t>(0x20u) };
 			convertStructuralsToSimdBaseHelper<0>(opTableVal, chars, value, valuesNew);
 			convertStructuralsToSimdBaseHelper<1>(opTableVal, chars, value, valuesNew);
 			convertStructuralsToSimdBaseHelper<2>(opTableVal, chars, value, valuesNew);
@@ -238,7 +239,7 @@ namespace jsonifier_internal {
 		}
 
 		inline static void convertQuotesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static constexpr simd_int_t quotesVal{ simdValues<simd_int_t>('"') };
+			static constexpr simd_int_t quotesVal{ simdValues<simd_int_t>(0x22u) };
 			convertQuotesToSimdBaseHelper<0>(quotesVal, value, valuesNew);
 			convertQuotesToSimdBaseHelper<1>(quotesVal, value, valuesNew);
 			convertQuotesToSimdBaseHelper<2>(quotesVal, value, valuesNew);
@@ -303,10 +304,10 @@ namespace jsonifier_internal {
 		}
 
 		inline static simd_int_256 carrylessMultiplication256(const simd_int_256& value, uint64_t& prevInstring) {
-			static constexpr simd_int_128 allOnes{ simdValues<simd_int_128>(0xFF) };
+			static constexpr simd_int_128 allOnes{ simdValues<simd_int_128>(0xFFu) };
 			simd_int_128 valueLow{ _mm256_extracti128_si256(value, 0) };
 			simd_int_128 valueHigh{ _mm256_extracti128_si256(value, 1) };
-			alignas(JsonifierAlignment) uint64_t valuesNewer[SixtyFourBitsPerStep / 2]{};
+			uint64_t valuesNewer[SixtyFourBitsPerStep / 2]{};
 			processValue<0>(allOnes, valueLow, valuesNewer[0], prevInstring);
 			processValue<1>(allOnes, valueLow, valuesNewer[1], prevInstring);
 			processValue<2>(allOnes, valueHigh, valuesNewer[2], prevInstring);
@@ -338,9 +339,9 @@ namespace jsonifier_internal {
 			std::cout << std::endl;
 		}
 
-		inline const simd_int_t& printBits(const simd_int_t& value, const std::string& valuesTitle) noexcept {
-			alignas(JsonifierAlignment) uint8_t values[BytesPerStep]{};
-			store(value, values);
+		inline static const simd_int_t& printBits(const simd_int_t& value, const std::string& valuesTitle) noexcept {
+			uint8_t values[BytesPerStep]{};
+			storeu(value, values);
 			std::cout << valuesTitle;
 			for (string_parsing_type x = 0; x < BytesPerStep; ++x) {
 				for (string_parsing_type y = 0; y < 8; ++y) {

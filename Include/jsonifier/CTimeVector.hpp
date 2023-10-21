@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, uint64_t N> class raw_vector {
+	template<typename value_type_new, uint64_t N> class ctime_vector {
 	  public:
 		using value_type	  = value_type_new;
 		using reference		  = value_type&;
@@ -39,9 +39,9 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr raw_vector() = default;
+		constexpr ctime_vector() = default;
 
-		constexpr raw_vector(size_type count, const auto& value) : dsize(count) {
+		constexpr ctime_vector(size_type count, const auto& value) : sizeVal(count) {
 			for (size_type x = 0; x < N; ++x)
 				data[x] = value;
 		}
@@ -51,11 +51,11 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator end() {
-			return data + dsize;
+			return data + sizeVal;
 		}
 
 		constexpr size_type size() const {
-			return dsize;
+			return sizeVal;
 		}
 
 		constexpr reference operator[](size_type index) {
@@ -71,7 +71,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr reference back() {
-			return data[dsize - 1];
+			return data[sizeVal - 1];
 		}
 
 		constexpr const_reference front() const {
@@ -79,28 +79,24 @@ namespace jsonifier_internal {
 		}
 
 		constexpr const_reference back() const {
-			return data[dsize - 1];
+			return data[sizeVal - 1];
 		}
 
-		constexpr void push_back(const value_type& a) {
-			data[dsize++] = a;
-		}
-
-		constexpr void push_back(value_type&& a) {
-			data[dsize++] = std::forward<value_type>(a);
+		template<typename value_type_newer> constexpr void push_back(value_type_newer&& a) {
+			data[sizeVal++] = std::forward<value_type>(a);
 		}
 
 		constexpr void pop_back() {
-			--dsize;
+			--sizeVal;
 		}
 
 		constexpr void clear() {
-			dsize = 0;
+			sizeVal = 0;
 		}
 
 	  protected:
-		alignas(JsonifierAlignment) value_type data[N]{};
-		size_type dsize{ 0 };
+		value_type data[N]{};
+		size_type sizeVal = 0;
 	};
 
 }

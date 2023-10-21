@@ -1,4 +1,4 @@
-/*
+﻿/*
 	MIT License
 
 	Copyright (c) 2023 RealTimeChris
@@ -24,9 +24,10 @@
 #pragma once
 
 #include <jsonifier/StringView.hpp>
-#include <jsonifier/RawVector.hpp>
+#include <jsonifier/CTimeArray.hpp>
+#include <jsonifier/CTimeVector.hpp>
 #include <jsonifier/Expected.hpp>
-#include <jsonifier/RawArray.hpp>
+#include <jsonifier/Error.hpp>
 #include <jsonifier/Tuple.hpp>
 #include <jsonifier/Base.hpp>
 #include <algorithm>
@@ -203,8 +204,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t n, typename compare> constexpr raw_array<value_type, n> quicksort(raw_array<value_type, n> const& array, const compare& compareNew) {
-		raw_array<value_type, n> res = array;
+	template<typename value_type, uint64_t n, typename compare> constexpr ctime_array<value_type, n> quicksort(ctime_array<value_type, n> const& array, const compare& compareNew) {
+		ctime_array<value_type, n> res = array;
 		quicksort(res.begin(), res.end() - 1, compareNew);
 		return res;
 	}
@@ -321,8 +322,8 @@ namespace jsonifier_internal {
 	template<uint64_t n> constexpr uint32_t naivePerfectHash(auto&& keys) {
 		static_assert(n <= 20);
 		constexpr uint64_t m = naiveBucketSize<n>();
-		raw_array<uint64_t, n> hashes{};
-		raw_array<uint64_t, n> buckets{};
+		ctime_array<uint64_t, n> hashes{};
+		ctime_array<uint64_t, n> buckets{};
 
 
 		default_prg_t gen{};
@@ -354,9 +355,9 @@ namespace jsonifier_internal {
 		static_assert(n <= 20);
 		static constexpr uint64_t m = naiveBucketSize<n>();
 		uint32_t seed{};
-		raw_array<pair<jsonifier::string_view, Value>, n> items{};
-		raw_array<uint32_t, n * 1> hashes{};
-		raw_array<uint8_t, m> table{};
+		ctime_array<pair<jsonifier::string_view, Value>, n> items{};
+		ctime_array<uint32_t, n * 1> hashes{};
+		ctime_array<uint8_t, m> table{};
 
 		constexpr decltype(auto) begin() const {
 			return items.begin();
@@ -393,7 +394,7 @@ namespace jsonifier_internal {
 		naive_map<value_type, n> ht{};
 		constexpr uint64_t m = naiveBucketSize<n>();
 
-		raw_array<jsonifier::string_view, n> keys{};
+		ctime_array<jsonifier::string_view, n> keys{};
 		uint64_t x = 0;
 		for (const auto& pair: pairs) {
 			ht.items[x] = pair;
@@ -424,12 +425,12 @@ namespace jsonifier_internal {
 		uint8_t padding[3]{};
 	};
 
-	template<uint64_t n, bool IsFrontHash = true> constexpr single_char_hash_desc singleCharHash(const raw_array<jsonifier::string_view, n>& v) {
+	template<uint64_t n, bool IsFrontHash = true> constexpr single_char_hash_desc singleCharHash(const ctime_array<jsonifier::string_view, n>& v) {
 		if constexpr (n > 255) {
 			return {};
 		}
 
-		raw_array<uint8_t, n> hashes;
+		ctime_array<uint8_t, n> hashes;
 		for (uint64_t x = 0; x < n; ++x) {
 			if (v[x].size() == 0) {
 				return {};
@@ -456,9 +457,9 @@ namespace jsonifier_internal {
 	template<typename value_type, single_char_hash_desc D> struct single_char_map {
 		static constexpr auto n = D.n;
 		static_assert(n < 256);
-		raw_array<pair<jsonifier::string_view, value_type>, n> items{};
+		ctime_array<pair<jsonifier::string_view, value_type>, n> items{};
 		static constexpr uint64_t N_table = static_cast<uint64_t>(D.back) - D.front + 1;
-		raw_array<uint8_t, N_table> table{};
+		ctime_array<uint8_t, N_table> table{};
 
 		constexpr decltype(auto) begin() const {
 			return items.begin();
@@ -545,7 +546,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, const jsonifier::string_view& S> struct single_item {
-		raw_array<pair<jsonifier::string_view, value_type>, 1> items{};
+		ctime_array<pair<jsonifier::string_view, value_type>, 1> items{};
 
 		constexpr decltype(auto) end() const {
 			return items.end();
@@ -561,7 +562,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type, const jsonifier::string_view& string01, const jsonifier::string_view& string02> struct double_item {
-		raw_array<pair<jsonifier::string_view, value_type>, 2> items{};
+		ctime_array<pair<jsonifier::string_view, value_type>, 2> items{};
 
 		static constexpr auto s0 = string01;
 		static constexpr auto s1 = string02;
@@ -627,8 +628,8 @@ namespace jsonifier_internal {
 	template<uint64_t m> struct pmh_buckets {
 		static constexpr auto bucket_max = 2 * (1u << (log(m) / 2));
 
-		using bucket_t = raw_vector<uint64_t, bucket_max>;
-		raw_array<bucket_t, m> buckets;
+		using bucket_t = ctime_vector<uint64_t, bucket_max>;
+		ctime_array<bucket_t, m> buckets;
 		uint64_t seed;
 
 		struct bucket_ref {
@@ -654,18 +655,18 @@ namespace jsonifier_internal {
 			}
 		};
 
-		template<size_t... Is> raw_array<bucket_ref, m> constexpr makeBucketRefs(std::index_sequence<Is...>) const {
+		template<size_t... Is> ctime_array<bucket_ref, m> constexpr makeBucketRefs(std::index_sequence<Is...>) const {
 			return { { bucket_ref{ Is, &buckets[Is] }... } };
 		}
 
-		raw_array<bucket_ref, m> constexpr getSortedBuckets() const {
-			raw_array<bucket_ref, m> result{ makeBucketRefs(std::make_index_sequence<m>()) };
+		ctime_array<bucket_ref, m> constexpr getSortedBuckets() const {
+			ctime_array<bucket_ref, m> result{ makeBucketRefs(std::make_index_sequence<m>()) };
 			quicksort(result.begin(), result.end() - 1, bucket_size_compare{});
 			return result;
 		}
 	};
 
-	template<size_t m, typename Item, size_t n, typename key> pmh_buckets<m> constexpr makePmhBuckets(const raw_array<Item, n>& items, key const& keyNew, default_prg_t& prg) {
+	template<size_t m, typename Item, size_t n, typename key> pmh_buckets<m> constexpr makePmhBuckets(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t& prg) {
 		using result_t = pmh_buckets<m>;
 		using hasher   = hash<jsonifier::string_view>;
 		result_t result{};
@@ -690,7 +691,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t n> constexpr bool allDifferentFrom(raw_vector<value_type, n>& data, value_type& a) {
+	template<typename value_type, uint64_t n> constexpr bool allDifferentFrom(ctime_vector<value_type, n>& data, value_type& a) {
 		for (uint64_t x = 0; x < data.size(); ++x)
 			if (data[x] == a) [[unlikely]] {
 				return false;
@@ -724,19 +725,19 @@ namespace jsonifier_internal {
 
 	template<uint64_t m> struct pmh_tables {
 		constexpr pmh_tables() = default;
-		constexpr pmh_tables(uint64_t firstSeedNew, raw_array<seed_or_index, m> firstTableNew, raw_array<uint64_t, m> secondTableNew) {
+		constexpr pmh_tables(uint64_t firstSeedNew, ctime_array<seed_or_index, m> firstTableNew, ctime_array<uint64_t, m> secondTableNew) {
 			firstSeed	= firstSeedNew;
 			firstTable	= firstTableNew;
 			secondTable = secondTableNew;
 		}
 		uint64_t firstSeed;
-		raw_array<seed_or_index, m> firstTable;
-		raw_array<uint64_t, m> secondTable;
+		ctime_array<seed_or_index, m> firstTable;
+		ctime_array<uint64_t, m> secondTable;
 
 		template<typename KeyType> using hasher = hash<KeyType>;
 
-		template<typename ValueType> constexpr const hasher<ValueType> getHasher() const {
-			return hasher<ValueType>{};
+		template<typename value_type> constexpr const hasher<value_type> getHasher() const {
+			return hasher<value_type>{};
 		}
 
 		template<typename KeyType> constexpr uint64_t lookup(const KeyType& key) const {
@@ -749,15 +750,15 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t m, typename Item, size_t n, typename key> pmh_tables<m> constexpr makePmhTables(const raw_array<Item, n>& items, key const& keyNew, default_prg_t prg) {
+	template<size_t m, typename Item, size_t n, typename key> pmh_tables<m> constexpr makePmhTables(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t prg) {
 		auto step_one = makePmhBuckets<m>(items, keyNew, prg);
 		auto buckets  = step_one.getSortedBuckets();
 
-		raw_array<seed_or_index, m> G;
+		ctime_array<seed_or_index, m> G;
 		using hasher = hash<jsonifier::string_view_base<uint8_t>>;
 
 		constexpr uint64_t UNUSED = std::numeric_limits<uint64_t>::max();
-		raw_array<uint64_t, m> H;
+		ctime_array<uint64_t, m> H;
 		H.fill(UNUSED);
 
 		for (const auto& bucket: buckets) {
@@ -767,7 +768,7 @@ namespace jsonifier_internal {
 				G[bucket.hash] = { false, static_cast<uint64_t>(bucket[0]) };
 			} else if (bsize > 1) {
 				seed_or_index d{ true, prg() };
-				raw_vector<uint64_t, decltype(step_one)::bucket_max> bucket_slots;
+				ctime_vector<uint64_t, decltype(step_one)::bucket_max> bucket_slots;
 
 				while (bucket_slots.size() < bsize) {
 					auto slot = hasher{}(keyNew(items[bucket[bucket_slots.size()]]), d.value()) % m;
@@ -801,10 +802,10 @@ namespace jsonifier_internal {
 	};
 
 	template<typename key, typename Value, size_t n>
-	class unordered_map : protected string_compare_helper, protected raw_array<pair<key, Value>, n>, protected pmh_tables<nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1)> {
+	class unordered_map : protected string_compare_helper, protected ctime_array<pair<key, Value>, n>, protected pmh_tables<nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1)> {
 	  public:
 		static constexpr auto storageSize = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
-		using container_type			  = raw_array<pair<key, Value>, n>;
+		using container_type			  = ctime_array<pair<key, Value>, n>;
 		using tables_type				  = pmh_tables<storageSize>;
 
 		using key_type		  = key;
@@ -885,16 +886,16 @@ namespace jsonifier_internal {
 		if constexpr (n == 0) {
 			static_assert(falseV<value_type>, "Empty object in jsonifier::core.");
 		} else if constexpr (n == 1) {
-			return single_item<value_t, core_sv<value_type, I>::value...>{ raw_array<pair<jsonifier::string_view, value_t>, n>{
+			return single_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
 				pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
 					tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if constexpr (n == 2) {
-			return double_item<value_t, core_sv<value_type, I>::value...>{ raw_array<pair<jsonifier::string_view, value_t>, n>{
+			return double_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
 				pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
 					tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if constexpr (n128) {
 			constexpr auto frontDesc =
-				singleCharHash<n>(raw_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
+				singleCharHash<n>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 			if constexpr (frontDesc.valid) {
 				return makeSingleCharMap<value_t, frontDesc>(
@@ -902,7 +903,7 @@ namespace jsonifier_internal {
 						tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			} else {
 				constexpr auto backDesc = singleCharHash<n, false>(
-					raw_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
+					ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 				if constexpr (backDesc.valid) {
 					return makeSingleCharMap<value_t, backDesc>(

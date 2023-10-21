@@ -23,10 +23,9 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StringView.hpp>
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
 #include <functional>
 #include <optional>
@@ -86,14 +85,14 @@ namespace jsonifier_internal {
 		});
 	}
 
-	template<raw_array newArr> struct make_static {
+	template<ctime_array newArr> struct make_static {
 		static constexpr auto value = newArr;
 	};
 
 	template<const jsonifier::string_view&... strings> constexpr jsonifier::string_view join() {
 		constexpr auto joinedArr = []() {
 			constexpr size_t len = (strings.size() + ... + 0);
-			raw_array<char, len + 1> arr{};
+			ctime_array<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
 					arr[static_cast<uint64_t>(i++)] = c;
@@ -103,7 +102,7 @@ namespace jsonifier_internal {
 			return arr;
 		}();
 		auto& staticArr = make_static<joinedArr>::value;
-		return { staticArr.data(), staticArr.size() - 1 };
+		return { staticArr.data(), staticArr.maxSize() - 1 };
 	}
 
 	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();

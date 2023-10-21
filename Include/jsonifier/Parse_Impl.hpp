@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 		inline static void op(value_type&& value, structural_iterator& iter, parser&) {
 			auto newPtr = iter.operator->();
 			switch (*iter) {
-				case '"': {
+				case 0x22u: {
 					derailleur::skipValue(iter);
 					int64_t sizeNew = (iter.operator->() - newPtr) - 1;
 					if (sizeNew > 0) {
@@ -256,9 +256,9 @@ namespace jsonifier_internal {
 				derailleur::skipValue(iter);
 				return;
 			}
-			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
+			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
 
-			forEach<N>([&](auto I) {
+			forEach<size>([&](auto I) {
 				auto& newMember = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
 				parse<excludeKeys>::op(newMember, iter, parserNew);
 				if (iter == iter) {
@@ -286,11 +286,11 @@ namespace jsonifier_internal {
 				derailleur::skipValue(iter);
 				return;
 			}
-			static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
+			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<std::unwrap_ref_decay_t<value_type>>> };
 
-			forEach<N>([&](auto I) {
+			forEach<size>([&](auto I) {
 				auto& newMember	  = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
-				using member_type = decltype(newMember);
+				using member_type = std::unwrap_ref_decay_t<decltype(newMember)>;
 				if constexpr (jsonifier::concepts::has_excluded_keys<member_type>) {
 					parse<true>::op(newMember, iter, newMember.excludedKeys, parserNew);
 				} else {
@@ -410,7 +410,7 @@ namespace jsonifier_internal {
 					std::visit(
 						[&](auto& memberPtr) {
 							auto& newMember	  = getMember(value, memberPtr);
-							using member_type = decltype(newMember);
+							using member_type = std::unwrap_ref_decay_t<decltype(newMember)>;
 							if constexpr (jsonifier::concepts::has_excluded_keys<member_type>) {
 								parse<true>::op(newMember, iter, newMember.excludedKeys, parserNew);
 							} else {
@@ -476,7 +476,7 @@ namespace jsonifier_internal {
 					std::visit(
 						[&](auto& memberPtr) {
 							auto& newMember	  = getMember(value, memberPtr);
-							using member_type = decltype(newMember);
+							using member_type = std::unwrap_ref_decay_t<decltype(newMember)>;
 							if constexpr (jsonifier::concepts::has_excluded_keys<member_type>) {
 								parse<true>::op(newMember, iter, newMember.excludedKeys, parserNew);
 							} else {
