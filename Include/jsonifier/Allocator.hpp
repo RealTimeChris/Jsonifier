@@ -26,25 +26,42 @@
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
 #include <memory_resource>
 
+#if defined(_WIN32)
+void* alignedAlloc(uint64_t size) {
+	return _aligned_malloc(size, BytesPerStep);
+}
+
+template<typename value_type> void alignedFree(value_type* ptr) {
+	_aligned_free(ptr);
+}
+#else
+void* alignedAlloc(uint64_t size) {
+	return std::aligned_alloc(BytesPerStep, size);
+}
+
+template<typename value_type> void alignedFree(value_type* ptr) {
+	std::free(ptr);
+}
+#endif
+
 namespace jsonifier_internal {
 
-	template<typename value_type_new> class aligned_allocator : public std::pmr::polymorphic_allocator<value_type_new> {
+	template<typename value_type_new> class aligned_allocator {
 	  public:
 		using value_type = value_type_new;
 		using pointer	 = value_type*;
 		using size_type	 = uint64_t;
-		using allocator	 = std::pmr::polymorphic_allocator<value_type>;
 
 		inline pointer allocate(size_type n) {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep));
+			return static_cast<pointer>(alignedAlloc(roundUpToMultiple<BytesPerStep>(n * sizeof(value_type))));
 		}
 
-		inline void deallocate(pointer ptr, size_type n) {
+		inline void deallocate(pointer ptr, size_type) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep);
+				alignedFree(ptr);
 			}
 		}
 

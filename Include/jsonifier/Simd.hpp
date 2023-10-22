@@ -98,17 +98,17 @@ namespace jsonifier_internal {
 		simd_int_t escape{};
 		simd_int_t scalar{};
 		simd_int_t op{};
-		jsonifier::vector<structural_index>* structuralIndices;
 		string_block_reader<BitsPerStep> stringBlockReader{};
 		jsonifier::string_view_base<uint8_t> stringView{};
+		structural_index* structuralIndices{};
 		size_type prevInstring{};
 		size_type stringIndex{};
 		size_type tapeIndex{};
 		bool storedLSB01{};
 		bool storedLSB02{};
 
-		simd_structural_generator(jsonifier::string_view_base<uint8_t> stringViewNew, jsonifier::vector<structural_index>& structuralIndicesNew)
-			: structuralIndices{ &structuralIndicesNew } {
+		simd_structural_generator(jsonifier::string_view_base<uint8_t> stringViewNew, structural_index* structuralIndicesNew)
+			: structuralIndices{ structuralIndicesNew } {
 			stringView = stringViewNew;
 			stringBlockReader.reset(stringViewNew.data(), stringViewNew.size());
 			storedLSB01	 = false;
@@ -137,7 +137,7 @@ namespace jsonifier_internal {
 
 		template<size_type index = 0, size_type index02> inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
 			if constexpr (index < 8) {
-				(*structuralIndices)[index + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);
+				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView.data() + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);
 				newBits														 = blsr(newBits);
 				return (newBits == 0) ? newBits : rollValuesIntoTape<index + 1, index02>(currentIndex, newBits);
 			} else {
@@ -233,9 +233,10 @@ namespace jsonifier_internal {
 		}
 	};
 
-	class simd_string_reader : public simd_base {
+	class simd_string_reader : public simd_base, alloc_wrapper<structural_index> {
 	  public:
 		using size_type = uint64_t;
+		using allocator = alloc_wrapper<structural_index>;
 
 		template<bool refreshString, jsonifier::concepts::string_t string_type> inline void reset(string_type&& stringViewNew) {
 			if constexpr (refreshString) {
@@ -248,26 +249,38 @@ namespace jsonifier_internal {
 		}
 
 		inline void resetInternal() {
-			auto newSize = roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringView.size()) * 2.0f / 5.0f));
-			if (newSize > structuralIndices.size()) {
-				structuralIndices.resize(newSize);
+			if (tapeCapacity < stringView.size()) {
+				if (tapeCapacity > 0) {
+					allocator::deallocate(structuralIndices, tapeCapacity);
+				}
+				tapeCapacity	  = stringView.size();
+				structuralIndices = allocator::allocate(tapeCapacity);
 			}
 			simd_structural_generator structuralGenerator{ stringView, structuralIndices };
 			tapeIndex = structuralGenerator.getTapeLength();
 		}
 
 		inline structural_iterator begin() {
-			return structural_iterator{ this->structuralIndices.data() };
+			return structural_iterator{ this->structuralIndices };
 		}
 
 		inline structural_index* getStructurals() {
-			structuralIndices.at(tapeIndex) = nullptr;
-			return structuralIndices.data();
+			structuralIndices[tapeIndex] = nullptr;
+			return structuralIndices;
+		}
+
+		~simd_string_reader() {
+			if (tapeCapacity > 0) {
+				allocator::deallocate(structuralIndices, tapeCapacity);
+				tapeCapacity = 0;
+				structuralIndices = nullptr;
+			}
 		}
 
 	  protected:
-		jsonifier::vector<structural_index> structuralIndices{};
 		jsonifier::string_view_base<uint8_t> stringView{};
+		structural_index* structuralIndices{};
+		size_type tapeCapacity{};
 		size_type tapeIndex{};
 	};
 
