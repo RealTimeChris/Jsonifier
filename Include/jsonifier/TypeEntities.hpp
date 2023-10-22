@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 #include <concepts>
 #include <optional>
 #include <variant>
@@ -161,6 +162,15 @@ namespace jsonifier {
 		concept unsigned_int64_t = unsigned_t<value_type> && sizeof(value_type) == 8;
 
 		template<typename value_type>
+		concept signed_int16_t = signed_t<value_type> && sizeof(value_type) == 2;
+
+		template<typename value_type>
+		concept signed_int32_t = signed_t<value_type> && sizeof(value_type) == 4;
+
+		template<typename value_type>
+		concept signed_int64_t = signed_t<value_type> && sizeof(value_type) == 8;
+
+		template<typename value_type>
 		concept float_t = std::floating_point<std::unwrap_ref_decay_t<value_type>>;
 
 		template<typename value_type>
@@ -241,7 +251,7 @@ namespace jsonifier {
 		template<typename value_type>
 		concept has_resize = requires(value_type value) { value.resize(0); };
 
-		template<typename value_type> inline auto dataPtr(value_type& buffer) {
+		template<typename value_type> jsonifier_inline auto dataPtr(value_type& buffer) {
 			if constexpr (has_data<value_type>) {
 				return buffer.data();
 			} else {

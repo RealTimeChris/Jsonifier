@@ -65,16 +65,16 @@ namespace jsonifier_internal {
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
 
-	inline bool isTypeType(uint8_t c) {
+	jsonifier_inline bool isTypeType(uint8_t c) {
 		static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
 		return find(array01, std::size(array01), &c, 1) != jsonifier::string::npos;
 	}
 
-	inline bool isDigitType(uint8_t c) {
+	jsonifier_inline bool isDigitType(uint8_t c) {
 		return validNumberValues[c];
 	}
 
-	inline jsonifier::string_view getValueType(uint8_t charToCheck) {
+	jsonifier_inline jsonifier::string_view getValueType(uint8_t charToCheck) {
 		static constexpr jsonifier::string_view array{ "Array" };
 		static constexpr jsonifier::string_view object{ "Object" };
 		static constexpr jsonifier::string_view boolean{ "Bool" };
@@ -101,7 +101,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	inline static type_of_misread collectMisReadType(uint8_t c, uint8_t currentValue) {
+	jsonifier_inline static type_of_misread collectMisReadType(uint8_t c, uint8_t currentValue) {
 		if (isTypeType(currentValue) && isTypeType(c)) {
 			return type_of_misread::Wrong_Type;
 		} else {
@@ -113,40 +113,40 @@ namespace jsonifier_internal {
 	  public:
 		friend class derailleur;
 
-		inline error() noexcept = default;
+		jsonifier_inline error() noexcept = default;
 
-		inline error(structural_iterator& iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
+		jsonifier_inline error(structural_iterator& iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			intendedValue = static_cast<uint8_t>(typeNew);
-			errorIndex	  = iter.getCurrentStringIndex();
+			errorIndex	  = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorType	  = error_code::Parse_Error;
 			location	  = locationNew;
 			errorValue	  = *iter;
 		}
 
-		inline error& operator=(error_code errorNew) {
+		jsonifier_inline error& operator=(error_code errorNew) {
 			errorType = errorNew;
 			return *this;
 		}
 
-		inline error(error_code errorNew) {
+		jsonifier_inline error(error_code errorNew) {
 			*this = errorNew;
 		}
 
-		inline operator bool() {
+		jsonifier_inline operator bool() {
 			return errorType != error_code::Success;
 		}
 
-		inline bool operator==(const error& rhs) const {
+		jsonifier_inline bool operator==(const error& rhs) const {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex && errorValue == rhs.errorValue && intendedValue == rhs.intendedValue;
 		}
 
-		inline jsonifier::string reportError() const {
+		jsonifier_inline jsonifier::string reportError() const {
 			if (collectMisReadType(intendedValue, errorValue) == type_of_misread::Wrong_Type) {
 				return jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
 					", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
 					", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
 			} else {
-				return jsonifier::string{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + errorValue + "'" +
+				return jsonifier::string{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + static_cast<char>(errorValue) + "'" +
 					", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" +
 					jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
 			}
@@ -160,12 +160,12 @@ namespace jsonifier_internal {
 		uint8_t errorValue{};
 	};
 
-	template<json_structural_type typeNew> inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
+	template<json_structural_type typeNew> jsonifier_inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
 		error newError{ iter, typeNew, locationNew };
 		return newError;
 	}
 
-	inline std::ostream& operator<<(std::ostream& os, const error& errorNew) {
+	jsonifier_inline std::ostream& operator<<(std::ostream& os, const error& errorNew) {
 		os << errorNew.reportError();
 		return os;
 	}

@@ -29,7 +29,7 @@
 #include <jsonifier/Expected.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 #include <algorithm>
 #include <span>
 
@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 	}
 
 	struct string_compare_helper {
-		template<typename T0, typename T1> constexpr bool operator()(T0&& lhs, T1&& rhs) const {
+		template<typename T0, typename T1> jsonifier_constexpr bool operator()(T0&& lhs, T1&& rhs) const {
 			if (std::is_constant_evaluated()) {
 				return stringConstCompare(std::forward<T0>(lhs), std::forward<T1>(rhs));
 			} else {
@@ -74,42 +74,6 @@ namespace jsonifier_internal {
 				}
 				return false;
 			}
-		}
-	};
-
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
-		uint64_t d = 5381;
-		for (const auto& c: value)
-			d = d * 33 + static_cast<uint64_t>(c);
-		return d;
-	}
-
-	// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-	// With the lowest bits removed, based on experimental setup.
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
-		uint64_t d = (0x811c9dc5 ^ seed) * static_cast<uint64_t>(0x01000193);
-		for (const auto& c: value)
-			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);
-		return d >> 8;
-	}
-
-	template<typename value_type> struct hash;
-
-	template<typename value_type> struct hash<jsonifier::string_view_base<value_type>> {
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value) const {
-			return fnv1aHash(value);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<char> value) const {
-			return fnv1aHash(value);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<char> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
 		}
 	};
 
@@ -155,34 +119,34 @@ namespace jsonifier_internal {
 			(static_cast<uint64_t>(n <= 8ULL) * sizeof(unsigned long long)) + (n <= 128ULL);
 	}
 
-	template<uint64_t n> inline unsigned long long selectUintLeast(std::integral_constant<uint64_t, n>) {
+	template<uint64_t n> jsonifier_inline unsigned long long selectUintLeast(std::integral_constant<uint64_t, n>) {
 		static_assert(n < 2, "Unsupported type size.");
 		return {};
 	}
 
 	template<uint64_t n> using SelectUintLeastT = decltype(selectUintLeast(std::integral_constant<uint64_t, bitWeight(n)>()));
 
-	template<typename value_type> constexpr void primitiveSwap(value_type&& a, value_type&& b) {
+	template<typename value_type> jsonifier_constexpr void primitiveSwap(value_type&& a, value_type&& b) {
 		auto tmp = std::move(a);
 		a		 = std::move(b);
 		b		 = std::move(tmp);
 	}
 
-	template<typename value_type, typename u> constexpr void primitiveSwap(pair<value_type, u>&& a, pair<value_type, u>&& b) {
+	template<typename value_type, typename u> jsonifier_constexpr void primitiveSwap(pair<value_type, u>&& a, pair<value_type, u>&& b) {
 		primitiveSwap(std::forward<pair<value_type, u>>(a.first), std::forward<pair<value_type, u>>(b.first));
 		primitiveSwap(std::forward<pair<value_type, u>>(a.second), std::forward<pair<value_type, u>>(b.second));
 	}
 
-	template<typename... Tys, uint64_t... Is> constexpr void primitiveSwap(tuplet::tuple<Tys...>&& a, tuplet::tuple<Tys...>&& b, std::index_sequence<Is...>) {
+	template<typename... Tys, uint64_t... Is> jsonifier_constexpr void primitiveSwap(tuplet::tuple<Tys...>&& a, tuplet::tuple<Tys...>&& b, std::index_sequence<Is...>) {
 		using swallow = int32_t[];
 		( void )swallow{ (primitiveSwap(std::forward<Tys...>(tuplet::get<Is>(a)), std::forward<Tys...>(tuplet::get<Is>(b))), 0)... };
 	}
 
-	template<typename... Tys> constexpr void primitiveSwap(tuplet::tuple<Tys...>& a, tuplet::tuple<Tys...>& b) {
+	template<typename... Tys> jsonifier_constexpr void primitiveSwap(tuplet::tuple<Tys...>& a, tuplet::tuple<Tys...>& b) {
 		primitiveSwap(a, b, std::make_index_sequence<sizeof...(Tys)>());
 	}
 
-	template<typename iterator, typename compare> constexpr iterator partition(iterator left, iterator right, const compare& compareNew) {
+	template<typename iterator, typename compare> jsonifier_constexpr iterator partition(iterator left, iterator right, const compare& compareNew) {
 		auto pivot = left + (right - left) / 2;
 		auto value = *pivot;
 		primitiveSwap(*right, *pivot);
@@ -196,7 +160,7 @@ namespace jsonifier_internal {
 		return left;
 	}
 
-	template<typename iterator, typename compare> constexpr void quicksort(iterator left, iterator right, const compare& compareNew) {
+	template<typename iterator, typename compare> jsonifier_constexpr void quicksort(iterator left, iterator right, const compare& compareNew) {
 		while (0 < right - left) {
 			auto new_pivot = partition(left, right, compareNew);
 			quicksort(left, new_pivot, compareNew);
@@ -204,13 +168,13 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t n, typename compare> constexpr ctime_array<value_type, n> quicksort(ctime_array<value_type, n> const& array, const compare& compareNew) {
+	template<typename value_type, uint64_t n, typename compare> jsonifier_constexpr ctime_array<value_type, n> quicksort(ctime_array<value_type, n> const& array, const compare& compareNew) {
 		ctime_array<value_type, n> res = array;
 		quicksort(res.begin(), res.end() - 1, compareNew);
 		return res;
 	}
 
-	template<typename input_iter_1, typename input_iter_2> constexpr bool equal(input_iter_1 first1, input_iter_1 last1, input_iter_2 first2) {
+	template<typename input_iter_1, typename input_iter_2> jsonifier_constexpr bool equal(input_iter_1 first1, input_iter_1 last1, input_iter_2 first2) {
 		for (; first1 != last1; ++first1, ++first2) {
 			if (!(*first1 == *first2)) {
 				return false;
@@ -221,25 +185,25 @@ namespace jsonifier_internal {
 
 	template<typename uint_type, uint_type multiplier, uint_type increment, uint_type modulus> class linear_congruential_engine {
 		static_assert(std::is_unsigned<uint_type>::value, "uint_type must be an unsigned integral type.");
-		template<typename value_type> static constexpr uint_type modulo(value_type val, std::integral_constant<uint_type, 0>) {
+		template<typename value_type> static jsonifier_constexpr uint_type modulo(value_type val, std::integral_constant<uint_type, 0>) {
 			return static_cast<uint_type>(val);
 		}
-		template<typename value_type, uint_type m2> static constexpr uint_type modulo(value_type val, std::integral_constant<uint_type, m2>) {
+		template<typename value_type, uint_type m2> static jsonifier_constexpr uint_type modulo(value_type val, std::integral_constant<uint_type, m2>) {
 			return static_cast<uint_type>(val % m2);
 		}
 
 	  public:
 		using result_type						  = uint_type;
-		static constexpr result_type default_seed = 1u;
-		inline linear_congruential_engine()		  = default;
-		constexpr linear_congruential_engine(result_type S) {
+		static constexpr result_type default_seed	  = 1u;
+		jsonifier_inline linear_congruential_engine()		  = default;
+		jsonifier_constexpr linear_congruential_engine(result_type S) {
 			seed(S);
 		}
-		inline void seed(result_type S = default_seed) {
+		jsonifier_inline void seed(result_type S = default_seed) {
 			state_ = S;
 		}
 
-		constexpr result_type operator()() {
+		jsonifier_constexpr result_type operator()() {
 			using uint_least_t = SelectUintLeastT<log(multiplier) + log(modulus) + 4>;
 			uint_least_t tmp   = static_cast<uint_least_t>(multiplier) * state_ + increment;
 
@@ -247,12 +211,12 @@ namespace jsonifier_internal {
 			return state_;
 		}
 
-		constexpr void discard(unsigned long long n) {
+		jsonifier_constexpr void discard(unsigned long long n) {
 			while (n--)
 				operator()();
 		}
 
-		constexpr bool operator==(linear_congruential_engine const& other) const {
+		jsonifier_constexpr bool operator==(linear_congruential_engine const& other) const {
 			return state_ == other.state_;
 		}
 
@@ -299,13 +263,13 @@ namespace jsonifier_internal {
 	};
 
 	template<> struct xsm1<uint32_t> {
-		constexpr uint32_t operator()(auto&& value, const uint32_t seed) {
+		jsonifier_constexpr uint32_t operator()(auto&& value, const uint32_t seed) {
 			uint64_t hash = xsm1<uint64_t>{}(value, seed);
 			return hash >> 32;
 		}
 	};
 
-	constexpr bool contains(auto&& data, auto&& val) {
+	jsonifier_constexpr bool contains(auto&& data, auto&& val) {
 		const auto n = data.size();
 		for (uint64_t x = 0; x < n; ++x) {
 			if (data[x] == val) {
@@ -319,7 +283,7 @@ namespace jsonifier_internal {
 		return n < 8 ? 2 * n : 4 * n;
 	}
 
-	template<uint64_t n> constexpr uint32_t naivePerfectHash(auto&& keys) {
+	template<uint64_t n> jsonifier_constexpr uint32_t naivePerfectHash(auto&& keys) {
 		static_assert(n <= 20);
 		constexpr uint64_t m = naiveBucketSize<n>();
 		ctime_array<uint64_t, n> hashes{};
@@ -359,15 +323,15 @@ namespace jsonifier_internal {
 		ctime_array<uint32_t, n * 1> hashes{};
 		ctime_array<uint8_t, m> table{};
 
-		constexpr decltype(auto) begin() const {
+		jsonifier_constexpr decltype(auto) begin() const {
 			return items.begin();
 		}
 
-		constexpr decltype(auto) end() const {
+		jsonifier_constexpr decltype(auto) end() const {
 			return items.end();
 		}
 
-		constexpr expected<std::reference_wrapper<Value>, error_code> at(auto&& key) const {
+		jsonifier_constexpr expected<std::reference_wrapper<Value>, error_code> at(auto&& key) const {
 			const auto hash	 = xsm1<uint32_t>{}(key, seed);
 			const auto index = table[hash % m];
 			const auto& item = items[index];
@@ -377,7 +341,7 @@ namespace jsonifier_internal {
 			return item.second;
 		}
 
-		constexpr decltype(auto) find(auto&& key) const {
+		jsonifier_constexpr decltype(auto) find(auto&& key) const {
 			const auto hash	 = xsm1<uint32_t>{}(key, seed);
 			const auto index = table[hash % m];
 			if (hashes[index] != hash) [[unlikely]]
@@ -425,7 +389,7 @@ namespace jsonifier_internal {
 		uint8_t padding[3]{};
 	};
 
-	template<uint64_t n, bool IsFrontHash = true> constexpr single_char_hash_desc singleCharHash(const ctime_array<jsonifier::string_view, n>& v) {
+	template<uint64_t n, bool IsFrontHash = true> jsonifier_constexpr single_char_hash_desc singleCharHash(const ctime_array<jsonifier::string_view, n>& v) {
 		if constexpr (n > 255) {
 			return {};
 		}
@@ -461,14 +425,14 @@ namespace jsonifier_internal {
 		static constexpr uint64_t N_table = static_cast<uint64_t>(D.back) - D.front + 1;
 		ctime_array<uint8_t, N_table> table{};
 
-		constexpr decltype(auto) begin() const {
+		jsonifier_inline decltype(auto) begin() const {
 			return items.begin();
 		}
-		constexpr decltype(auto) end() const {
+		jsonifier_inline decltype(auto) end() const {
 			return items.end();
 		}
 
-		constexpr expected<std::reference_wrapper<value_type>, error_code> at(auto&& key) const {
+		jsonifier_constexpr expected<std::reference_wrapper<value_type>, error_code> at(auto&& key) const {
 			if (key.size() == 0) [[unlikely]] {
 				return unexpected(error_code::Unknown_Key);
 			}
@@ -498,7 +462,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		constexpr decltype(auto) find(auto&& key) const {
+		jsonifier_constexpr decltype(auto) find(auto&& key) const {
 			if (key.size() == 0) [[unlikely]] {
 				return items.end();
 			}
@@ -548,11 +512,11 @@ namespace jsonifier_internal {
 	template<typename value_type, const jsonifier::string_view& S> struct single_item {
 		ctime_array<pair<jsonifier::string_view, value_type>, 1> items{};
 
-		constexpr decltype(auto) end() const {
+		jsonifier_constexpr decltype(auto) end() const {
 			return items.end();
 		}
 
-		constexpr decltype(auto) find(auto&& key) const {
+		jsonifier_constexpr decltype(auto) find(auto&& key) const {
 			if (stringConstCompare(S, key)) [[likely]] {
 				return items.begin();
 			} else [[unlikely]] {
@@ -567,13 +531,13 @@ namespace jsonifier_internal {
 		static constexpr auto s0 = string01;
 		static constexpr auto s1 = string02;
 
-		constexpr decltype(auto) end() const {
+		jsonifier_constexpr decltype(auto) end() const {
 			return items.end();
 		}
 
 		static constexpr bool sameSize = s0.size() == s1.size();
 
-		constexpr decltype(auto) find(auto&& key) const {
+		jsonifier_constexpr decltype(auto) find(auto&& key) const {
 			if constexpr (sameSize) {
 				constexpr auto n = s0.size();
 				if (key.size() != n) {
@@ -620,7 +584,7 @@ namespace jsonifier_internal {
 	template<typename tuple> using value_tuple_variant_t = typename value_tuple_variant<tuple>::type;
 
 	struct bucket_size_compare {
-		template<typename b> bool constexpr operator()(b const& b0, b const& b1) const {
+		template<typename b> bool jsonifier_constexpr operator()(b const& b0, b const& b1) const {
 			return b0.size() > b1.size();
 		}
 	};
@@ -642,7 +606,7 @@ namespace jsonifier_internal {
 				return values->size();
 			}
 
-			constexpr const auto& operator[](uint64_t idx) const {
+			jsonifier_constexpr const auto& operator[](uint64_t idx) const {
 				return (*values)[idx];
 			}
 
@@ -655,18 +619,18 @@ namespace jsonifier_internal {
 			}
 		};
 
-		template<size_t... Is> ctime_array<bucket_ref, m> constexpr makeBucketRefs(std::index_sequence<Is...>) const {
+		template<size_t... Is> ctime_array<bucket_ref, m> jsonifier_constexpr makeBucketRefs(std::index_sequence<Is...>) const {
 			return { { bucket_ref{ Is, &buckets[Is] }... } };
 		}
 
-		ctime_array<bucket_ref, m> constexpr getSortedBuckets() const {
+		ctime_array<bucket_ref, m> jsonifier_constexpr getSortedBuckets() const {
 			ctime_array<bucket_ref, m> result{ makeBucketRefs(std::make_index_sequence<m>()) };
 			quicksort(result.begin(), result.end() - 1, bucket_size_compare{});
 			return result;
 		}
 	};
 
-	template<size_t m, typename Item, size_t n, typename key> pmh_buckets<m> constexpr makePmhBuckets(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t& prg) {
+	template<size_t m, typename Item, size_t n, typename key> pmh_buckets<m> jsonifier_constexpr makePmhBuckets(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t& prg) {
 		using result_t = pmh_buckets<m>;
 		using hasher   = hash<jsonifier::string_view>;
 		result_t result{};
@@ -691,7 +655,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t n> constexpr bool allDifferentFrom(ctime_vector<value_type, n>& data, value_type& a) {
+	template<typename value_type, uint64_t n> jsonifier_constexpr bool allDifferentFrom(ctime_vector<value_type, n>& data, value_type& a) {
 		for (uint64_t x = 0; x < data.size(); ++x)
 			if (data[x] == a) [[unlikely]] {
 				return false;
@@ -704,28 +668,28 @@ namespace jsonifier_internal {
 
 	  protected:
 		static constexpr value_type MinusOne = std::numeric_limits<value_type>::max();
-		static constexpr value_type HighBit	 = ~(MinusOne >> 1);
+		static constexpr value_type HighBit			   = ~(MinusOne >> 1);
 
 		value_type val = 0;
 
 	  public:
-		constexpr value_type value() const {
+		jsonifier_constexpr value_type value() const {
 			return val;
 		}
 
-		constexpr bool isSeed() const {
+		jsonifier_constexpr bool isSeed() const {
 			return val & HighBit;
 		}
 
-		constexpr seed_or_index(bool isSeed, value_type value) : val(isSeed ? (value | HighBit) : (value & ~HighBit)) {
+		jsonifier_constexpr seed_or_index(bool isSeed, value_type value) : val(isSeed ? (value | HighBit) : (value & ~HighBit)) {
 		}
 
-		constexpr seed_or_index() = default;
+		jsonifier_constexpr seed_or_index() = default;
 	};
 
 	template<uint64_t m> struct pmh_tables {
-		constexpr pmh_tables() = default;
-		constexpr pmh_tables(uint64_t firstSeedNew, ctime_array<seed_or_index, m> firstTableNew, ctime_array<uint64_t, m> secondTableNew) {
+		jsonifier_constexpr pmh_tables() = default;
+		jsonifier_constexpr pmh_tables(uint64_t firstSeedNew, ctime_array<seed_or_index, m> firstTableNew, ctime_array<uint64_t, m> secondTableNew) {
 			firstSeed	= firstSeedNew;
 			firstTable	= firstTableNew;
 			secondTable = secondTableNew;
@@ -736,7 +700,7 @@ namespace jsonifier_internal {
 
 		template<typename KeyType> using hasher = hash<KeyType>;
 
-		template<typename value_type> constexpr const hasher<value_type> getHasher() const {
+		template<typename value_type> jsonifier_constexpr const hasher<value_type> getHasher() const {
 			return hasher<value_type>{};
 		}
 
@@ -750,7 +714,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t m, typename Item, size_t n, typename key> pmh_tables<m> constexpr makePmhTables(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t prg) {
+	template<size_t m, typename Item, size_t n, typename key> pmh_tables<m> jsonifier_constexpr makePmhTables(const ctime_array<Item, n>& items, key const& keyNew, default_prg_t prg) {
 		auto step_one = makePmhBuckets<m>(items, keyNew, prg);
 		auto buckets  = step_one.getSortedBuckets();
 
@@ -821,24 +785,24 @@ namespace jsonifier_internal {
 		using iterator		  = typename container_type::iterator;
 		using const_iterator  = typename container_type::const_iterator;
 
-		constexpr unordered_map() = default;
+		jsonifier_constexpr unordered_map() = default;
 
-		constexpr unordered_map(container_type items) : container_type{ items }, tables_type{ makePmhTables<storageSize>(items, get_key{}, default_prg_t{}) } {
+		jsonifier_constexpr unordered_map(container_type items) : container_type{ items }, tables_type{ makePmhTables<storageSize>(items, get_key{}, default_prg_t{}) } {
 		}
 
-		constexpr unordered_map(std::initializer_list<value_type> items) : unordered_map{ container_type{ items } } {
+		jsonifier_constexpr unordered_map(std::initializer_list<value_type> items) : unordered_map{ container_type{ items } } {
 			constexpr_assert(items.size() == n, "Inconsistent initializer_list size and type size argument.");
 		}
 
-		constexpr const_iterator begin() const {
+		jsonifier_constexpr const_iterator begin() const {
 			return container_type::begin();
 		}
 
-		constexpr const_iterator end() const {
+		jsonifier_constexpr const_iterator end() const {
 			return container_type::end();
 		}
 
-		template<typename key_type_new> constexpr const_iterator find(const key_type_new& keyNew) const {
+		template<typename key_type_new> jsonifier_constexpr const_iterator find(const key_type_new& keyNew) const {
 			auto& kv = lookup(keyNew);
 			if (keyEq()(kv.first, keyNew)) {
 				return &kv;
@@ -848,11 +812,11 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		template<typename key_type_new> constexpr const auto& lookup(const key_type_new& keyNew) const {
+		template<typename key_type_new> jsonifier_constexpr const auto& lookup(const key_type_new& keyNew) const {
 			return container_type::operator[](tables_type::lookup(keyNew));
 		}
 
-		constexpr const key_equal& keyEq() const {
+		jsonifier_constexpr const key_equal& keyEq() const {
 			return *this;
 		}
 	};

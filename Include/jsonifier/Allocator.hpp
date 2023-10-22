@@ -33,26 +33,26 @@ namespace jsonifier_internal {
 		using value_type = value_type_new;
 		using pointer	 = value_type*;
 		using size_type	 = uint64_t;
-		using allocator	 = std::pmr::polymorphic_allocator<value_type>;
+		using allocator  = std::pmr::polymorphic_allocator<value_type_new>;
 
-		inline pointer allocate(size_type n) {
+		jsonifier_inline pointer allocate(size_type n) {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep));
+			return static_cast<pointer>(allocator::allocate_bytes(n * sizeof(value_type), BytesPerStep));
 		}
 
-		inline void deallocate(pointer ptr, size_type n) {
+		jsonifier_inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep);
+				allocator::deallocate_bytes(ptr, n * sizeof(value_type), BytesPerStep);
 			}
 		}
 
-		template<typename... Args> inline void construct(pointer p, Args&&... args) {
+		template<typename... Args> jsonifier_inline void construct(pointer p, Args&&... args) {
 			new (p) value_type(std::forward<Args>(args)...);
 		}
 
-		inline void destroy(pointer p) {
+		jsonifier_inline void destroy(pointer p) {
 			p->~value_type();
 		}
 	};
@@ -65,23 +65,23 @@ namespace jsonifier_internal {
 		using allocator		   = aligned_allocator<value_type>;
 		using allocator_traits = std::allocator_traits<allocator>;
 
-		inline pointer allocate(size_type count) {
+		jsonifier_inline pointer allocate(size_type count) {
 			return allocator_traits::allocate(*this, count);
 		}
 
-		inline void deallocate(pointer ptr, size_type count) {
+		jsonifier_inline void deallocate(pointer ptr, size_type count) {
 			allocator_traits::deallocate(*this, ptr, count);
 		}
 
-		template<typename... Args> inline void construct(pointer ptr, Args&&... args) {
+		template<typename... Args> jsonifier_inline void construct(pointer ptr, Args&&... args) {
 			allocator_traits::construct(*this, ptr, std::forward<Args>(args)...);
 		}
 
-		inline size_type maxSize() {
+		jsonifier_inline size_type maxSize() {
 			return allocator_traits::max_size(*this);
 		}
 
-		inline void destroy(pointer ptr) {
+		jsonifier_inline void destroy(pointer ptr) {
 			allocator_traits::destroy(*this, ptr);
 		}
 	};

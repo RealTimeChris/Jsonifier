@@ -24,6 +24,8 @@
 #pragma once
 
 #if !defined(__GNUC__)
+	#pragma warning(disable : 4710)
+	#pragma warning(disable : 4711)
 	#pragma warning(disable : 4251)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4514)
@@ -31,8 +33,19 @@
 	#pragma warning(disable : 4625)
 	#pragma warning(disable : 4626)
 	#pragma warning(disable : 4820)
+	#pragma warning(disable : 5267)
+	#pragma warning(disable : 5026)
 	#pragma warning(disable : 5027)
+	#pragma warning(disable : 5045)
 	#pragma warning(disable : 5246)
+#endif
+
+#if !defined(jsonifier_inline)
+	#define jsonifier_inline inline
+#endif
+
+#if !defined(jsonifier_constexpr)
+	#define jsonifier_constexpr constexpr
 #endif
 
 #ifndef JSONIFIER_CPU_INSTRUCTIONS
@@ -135,7 +148,7 @@ using simd_int_128 = __m128x;
 
 namespace jsonifier_internal {
 
-	template<uint64_t multiple> inline uint64_t roundUpToMultiple(uint64_t num) {
+	template<uint64_t multiple> jsonifier_inline uint64_t roundUpToMultiple(uint64_t num) {
 		uint64_t remainder = num % multiple;
 		return remainder == 0 ? num : num + (multiple - remainder);
 	}

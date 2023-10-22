@@ -33,9 +33,66 @@
 
 namespace jsonifier_internal {
 
-	class serializer;
+	struct benchmark_record {
+		int32_t totalIterations{};
+		const char* typeName{};
+		double totalTime{};
+	};
 
-	inline void printIfNDebug(const jsonifier::string& string) {
+	inline static std::unordered_map<uint64_t, benchmark_record> benchmarkRecords{};
+
+	jsonifier_inline void printAverage();
+
+	template<typename Function, typename... Args> class benchmark {
+	  public:
+		  
+		jsonifier_inline benchmark(Function&& function, Args&&... args, uint64_t uniqueId)  {
+			if (benchmarkRecords.contains(uniqueId)) {
+				benchmarkRecords[uniqueId] = runBenchmark(std::forward<Function>(function), benchmarkRecords[uniqueId], args...);
+			} else {
+				benchmarkRecords[uniqueId] = runBenchmark(std::forward<Function>(function), benchmark_record{}, args...);
+			}
+			if (!haveWeRegistered) {
+				atexit(jsonifier_internal::printAverage);
+				haveWeRegistered = true;
+			}
+			
+		}
+
+		jsonifier_inline static benchmark_record runBenchmark(Function&& function, benchmark_record record, Args&&... args) {
+			auto startTime = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			function(args...);
+			auto endTime = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			auto newTime = endTime - startTime;
+			++record.totalIterations;
+			record.totalTime += newTime.count();
+			record.typeName = typeid(Function).name();
+			return record;
+		}
+
+		jsonifier_inline static void printAverage(uint64_t uniqueId) {
+			std::cout << "Benchmark: " << benchmarkRecords[uniqueId].typeName << " took an average of "
+					  << benchmarkRecords[uniqueId].totalTime / static_cast<double>(benchmarkRecords[uniqueId].totalIterations) << "ns, over "
+					  << benchmarkRecords[uniqueId].totalIterations << " iterations" << std::endl;
+			benchmarkRecords.erase(uniqueId);
+		}
+
+		inline static bool haveWeRegistered{};
+
+		jsonifier_inline ~benchmark() {
+		}
+	};
+
+	jsonifier_inline void printAverage() {
+		for (auto& [key, value]: benchmarkRecords) {
+			std::cout << "Benchmark: " << value.typeName << " took an average of " << value.totalTime / static_cast<double>(value.totalIterations) << "ns, over "
+					  << value.totalIterations << " iterations" << std::endl;
+		}
+	}
+
+	template<typename Function> benchmark(Function) -> benchmark<Function>;
+
+	jsonifier_inline void printIfNDebug(const jsonifier::string& string) {
 #if !defined(NDEBUG)
 		std::cout << string << std::endl;
 #endif
@@ -44,7 +101,7 @@ namespace jsonifier_internal {
 	template<typename value_type = void> struct hash {
 		static_assert(std::is_integral<value_type>::value || std::is_enum<value_type>::value, "hash only supports integral types, specialize for other types.");
 
-		constexpr size_t operator()(value_type const& value, size_t seed) const {
+		jsonifier_constexpr size_t operator()(value_type const& value, size_t seed) const {
 			size_t key = seed ^ static_cast<size_t>(value);
 			key		   = (~key) + (key << 21);
 			key		   = key ^ (key >> 24);
@@ -89,7 +146,7 @@ namespace jsonifier_internal {
 		static constexpr auto value = newArr;
 	};
 
-	template<const jsonifier::string_view&... strings> constexpr jsonifier::string_view join() {
+	template<const jsonifier::string_view&... strings> jsonifier_constexpr jsonifier::string_view join() {
 		constexpr auto joinedArr = []() {
 			constexpr size_t len = (strings.size() + ... + 0);
 			ctime_array<char, len + 1> arr{};
@@ -107,7 +164,7 @@ namespace jsonifier_internal {
 
 	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
 
-	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
+	jsonifier_inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
 		using value_type = std::unwrap_ref_decay_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type>) {
 			return value.*member_ptr;
@@ -128,35 +185,35 @@ namespace jsonifier_internal {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
-		inline stop_watch(uint64_t newTime) {
+		jsonifier_inline stop_watch(uint64_t newTime) {
 			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
 		}
 
-		inline stop_watch(value_type newTime) {
+		jsonifier_inline stop_watch(value_type newTime) {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		inline stop_watch& operator=(stop_watch&& other) {
+		jsonifier_inline stop_watch& operator=(stop_watch&& other) {
 			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(stop_watch&& other) {
+		jsonifier_inline stop_watch(stop_watch&& other) {
 			*this = std::move(other);
 		}
 
-		inline stop_watch& operator=(const stop_watch& other) {
+		jsonifier_inline stop_watch& operator=(const stop_watch& other) {
 			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(const stop_watch& other) {
+		jsonifier_inline stop_watch(const stop_watch& other) {
 			*this = other;
 		}
 
-		inline bool hasTimeElapsed() {
+		jsonifier_inline bool hasTimeElapsed() {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
@@ -165,7 +222,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline void reset(value_type newTimeValue = value_type{}) {
+		jsonifier_inline void reset(value_type newTimeValue = value_type{}) {
 			if (newTimeValue != value_type{}) {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
@@ -174,11 +231,11 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline value_type getTotalWaitTime() const {
+		jsonifier_inline value_type getTotalWaitTime() const {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		inline value_type totalTimeElapsed() {
+		jsonifier_inline value_type totalTimeElapsed() {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 

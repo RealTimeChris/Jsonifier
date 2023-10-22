@@ -33,7 +33,7 @@ namespace jsonifier_internal {
 		1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
 		10000000000000000000ull };
 
-	template<typename value_type> constexpr value_type decTrailingZeroTable[]{ static_cast<value_type>(0x02u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
+	template<jsonifier::concepts::char_type value_type> constexpr value_type decTrailingZeroTable[]{ static_cast<value_type>(0x02u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),

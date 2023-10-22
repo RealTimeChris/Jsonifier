@@ -81,21 +81,10 @@ set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/Zi>>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
-	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/MP${THREAD_COUNT}>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-fcoroutines>"
+	"$<$<CXX_COMPILER_ID:GNU>:-fcoroutines>"
 	"${AVX_FLAG}"
-)
-
-target_link_options(
-	"${PROJECT_NAME}" INTERFACE 
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

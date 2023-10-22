@@ -39,89 +39,89 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr ctime_array() = default;
+		jsonifier_constexpr ctime_array() = default;
 
-		template<size_t M> constexpr ctime_array(value_type const (&init)[M]) : ctime_array(init, std::make_index_sequence<count>()) {
+		template<size_t M> jsonifier_constexpr ctime_array(value_type const (&init)[M]) : ctime_array(init, std::make_index_sequence<count>()) {
 			static_assert(M >= count);
 		}
 
-		constexpr ctime_array(const std::initializer_list<value_type>& other) {
+		jsonifier_constexpr ctime_array(const std::initializer_list<value_type>& other) {
 			for (uint64_t x = 0; x < count; ++x) {
 				operator[](x) = std::move(other.begin()[x]);
 			}
 		}
 
-		constexpr iterator begin() {
+		jsonifier_constexpr iterator begin() {
 			return dataVal;
 		}
 
-		constexpr const_iterator begin() const {
+		jsonifier_constexpr const_iterator begin() const {
 			return dataVal;
 		}
 
-		constexpr iterator end() {
+		jsonifier_constexpr iterator end() {
 			return dataVal + count;
 		}
 
-		constexpr const_iterator end() const {
+		jsonifier_constexpr const_iterator end() const {
 			return dataVal + count;
 		}
 
-		constexpr size_type maxSize() const {
+		jsonifier_constexpr size_type maxSize() const {
 			return count;
 		}
 
-		constexpr reference operator[](uint64_t index) {
+		jsonifier_constexpr reference operator[](uint64_t index) {
 			return dataVal[index];
 		}
 
-		constexpr const_reference operator[](uint64_t index) const {
+		jsonifier_constexpr const_reference operator[](uint64_t index) const {
 			return dataVal[index];
 		}
 
-		constexpr reference at(uint64_t index) {
+		jsonifier_constexpr reference at(uint64_t index) {
 			if (index > count) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		constexpr const_reference at(uint64_t index) const {
+		jsonifier_constexpr const_reference at(uint64_t index) const {
 			if (index > count) {
 				std::abort();
 			}
 			return dataVal[index];
 		}
 
-		constexpr reference front() {
+		jsonifier_constexpr reference front() {
 			return dataVal[0];
 		}
 
-		constexpr size_type size() {
+		jsonifier_constexpr size_type size() {
 			return count;
 		}
 
-		constexpr const_reference front() const {
+		jsonifier_constexpr const_reference front() const {
 			return dataVal[0];
 		}
 
-		constexpr reference back() {
+		jsonifier_constexpr reference back() {
 			return dataVal[count - 1];
 		}
 
-		constexpr const_reference back() const {
+		jsonifier_constexpr const_reference back() const {
 			return dataVal[count - 1];
 		}
 
-		constexpr pointer data() {
+		jsonifier_constexpr pointer data() {
 			return dataVal;
 		}
 
-		constexpr const_pointer data() const {
+		jsonifier_constexpr const_pointer data() const {
 			return dataVal;
 		}
 
-		constexpr void fill(const value_type& val) {
+		jsonifier_constexpr void fill(const value_type& val) {
 			for (uint64_t x = 0; x < count; ++x) {
 				dataVal[x] = val;
 			}
@@ -129,7 +129,7 @@ namespace jsonifier_internal {
 
 		value_type dataVal[count]{};
 
-		template<size_t M, size_t... I> constexpr ctime_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
+		template<size_t M, size_t... I> jsonifier_constexpr ctime_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}
 	};
 

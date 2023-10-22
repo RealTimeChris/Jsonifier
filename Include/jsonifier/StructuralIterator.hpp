@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 
 namespace jsonifier_internal {
 
@@ -38,38 +38,46 @@ namespace jsonifier_internal {
 		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		inline structural_iterator() noexcept = default;
+		jsonifier_inline structural_iterator() noexcept = default;
 
-		inline structural_iterator(structural_index* rootIndexNew) {
+		jsonifier_inline structural_iterator(structural_index* rootIndexNew) {
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
-		inline value_type operator*() const {
-			return (*currentIndex ? **currentIndex : defaultValue);
+		jsonifier_inline value_type operator*() const {
+			return (currentIndex && *currentIndex) ? **currentIndex : defaultValue;
 		}
 
-		inline string_view_ptr operator->() {
+		jsonifier_inline string_view_ptr operator->() const {
 			return *currentIndex;
 		}
 
-		inline structural_iterator& operator++() {
+		jsonifier_inline structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
 		}
 
-		inline structural_iterator operator++(int32_t) {
+		jsonifier_inline structural_iterator operator++(int32_t) {
 			structural_iterator oldIter{ *this };
 			++(*this);
 			return oldIter;
 		}
 
-		inline size_type getCurrentStringIndex() {
+		jsonifier_inline size_type getCurrentStringIndex() const {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		inline bool operator==(const structural_iterator&) const {
-			return !(*currentIndex);
+		jsonifier_inline bool operator==(const structural_iterator&other) const {
+			return currentIndex >= other.currentIndex;
+		}
+
+		jsonifier_inline bool operator<(const structural_iterator& other) const {
+			return currentIndex < other.currentIndex;
+		}
+
+		jsonifier_inline bool operator>=(const structural_iterator& other) const {
+			return currentIndex >= other.currentIndex;
 		}
 
 	  protected:

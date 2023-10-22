@@ -39,58 +39,58 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
-		constexpr ctime_vector() = default;
+		jsonifier_constexpr ctime_vector() = default;
 
-		constexpr ctime_vector(size_type count, const auto& value) : sizeVal(count) {
+		jsonifier_constexpr ctime_vector(size_type count, const auto& value) : sizeVal(count) {
 			for (size_type x = 0; x < N; ++x)
 				data[x] = value;
 		}
 
-		constexpr iterator begin() {
+		jsonifier_constexpr iterator begin() {
 			return data;
 		}
 
-		constexpr iterator end() {
+		jsonifier_constexpr iterator end() {
 			return data + sizeVal;
 		}
 
-		constexpr size_type size() const {
+		jsonifier_constexpr size_type size() const {
 			return sizeVal;
 		}
 
-		constexpr reference operator[](size_type index) {
+		jsonifier_constexpr reference operator[](size_type index) {
 			return data[index];
 		}
 
-		constexpr const_reference operator[](size_type index) const {
+		jsonifier_constexpr const_reference operator[](size_type index) const {
 			return data[index];
 		}
 
-		constexpr reference front() {
+		jsonifier_constexpr reference front() {
 			return data[0];
 		}
 
-		constexpr reference back() {
+		jsonifier_constexpr reference back() {
 			return data[sizeVal - 1];
 		}
 
-		constexpr const_reference front() const {
+		jsonifier_constexpr const_reference front() const {
 			return data[0];
 		}
 
-		constexpr const_reference back() const {
+		jsonifier_constexpr const_reference back() const {
 			return data[sizeVal - 1];
 		}
 
-		template<typename value_type_newer> constexpr void push_back(value_type_newer&& a) {
+		template<typename value_type_newer> jsonifier_constexpr void push_back(value_type_newer&& a) {
 			data[sizeVal++] = std::forward<value_type>(a);
 		}
 
-		constexpr void pop_back() {
+		jsonifier_constexpr void pop_back() {
 			--sizeVal;
 		}
 
-		constexpr void clear() {
+		jsonifier_constexpr void clear() {
 			sizeVal = 0;
 		}
 
