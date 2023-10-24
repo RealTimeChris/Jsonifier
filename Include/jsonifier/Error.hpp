@@ -61,12 +61,12 @@ namespace jsonifier_internal {
 		Null		 = 0x6Eu
 	};
 
-	inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
+	static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
 
 	jsonifier_inline bool isTypeType(uint8_t c) {
-		static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
+		static jsonifier_constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
 		return find(array01, std::size(array01), &c, 1) != jsonifier::string::npos;
 	}
 
@@ -75,13 +75,13 @@ namespace jsonifier_internal {
 	}
 
 	jsonifier_inline jsonifier::string_view getValueType(uint8_t charToCheck) {
-		static constexpr jsonifier::string_view array{ "Array" };
-		static constexpr jsonifier::string_view object{ "Object" };
-		static constexpr jsonifier::string_view boolean{ "Bool" };
-		static constexpr jsonifier::string_view number{ "Number" };
-		static constexpr jsonifier::string_view str{ "String" };
-		static constexpr jsonifier::string_view null{ "Null" };
-		static constexpr jsonifier::string_view unset{ "Unset" };
+		static jsonifier_constexpr jsonifier::string_view array{ "Array" };
+		static jsonifier_constexpr jsonifier::string_view object{ "Object" };
+		static jsonifier_constexpr jsonifier::string_view boolean{ "Bool" };
+		static jsonifier_constexpr jsonifier::string_view number{ "Number" };
+		static jsonifier_constexpr jsonifier::string_view str{ "String" };
+		static jsonifier_constexpr jsonifier::string_view null{ "Null" };
+		static jsonifier_constexpr jsonifier::string_view unset{ "Unset" };
 		if (isDigitType(charToCheck)) {
 			return number;
 		} else if (charToCheck == 0x74u || charToCheck == 0x66u) {

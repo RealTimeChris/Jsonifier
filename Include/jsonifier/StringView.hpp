@@ -40,7 +40,7 @@ namespace jsonifier {
 		const_pointer dataVal{};
 		size_type sizeVal{};
 
-		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+		static jsonifier_constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		jsonifier_constexpr string_view_base() : dataVal(), sizeVal(0) {
 		}
@@ -55,9 +55,14 @@ namespace jsonifier {
 			*this = stringNew;
 		}
 
-		template<uint64_t strLength> jsonifier_constexpr string_view_base(const value_type (&other)[strLength]) {
+		template<uint64_t strLength> jsonifier_constexpr string_view_base& operator=(const value_type (&other)[strLength]) {
 			dataVal = other;
 			sizeVal = strLength;
+			return *this;
+		}
+
+		template<uint64_t strLength> jsonifier_constexpr string_view_base(const value_type (&other)[strLength]) {
+			*this = other;
 		}
 
 		jsonifier_constexpr string_view_base(const_pointer pointerNew) : dataVal(pointerNew), sizeVal(traits_type::length(pointerNew)) {
@@ -245,13 +250,15 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::pointer_t string_type_newer> jsonifier_inline friend string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) {
+		template<jsonifier::concepts::pointer_t string_type_newer>
+		jsonifier_inline friend string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) {
 			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::pointer_t string_type_newer> jsonifier_inline friend string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) {
+		template<jsonifier::concepts::pointer_t string_type_newer>
+		jsonifier_inline friend string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) {
 			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
@@ -302,33 +309,3 @@ namespace jsonifier {
 	}
 
 }// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	template<typename value_type> struct hash<jsonifier::string_view_base<value_type>> {
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value) const {
-			return fnv1aHash(value);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<uint8_t> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<char> value) const {
-			return fnv1aHash(value);
-		}
-
-		constexpr uint64_t operator()(jsonifier::string_view_base<char> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-	};
-}
-
-namespace std {
-
-	template<> struct hash<jsonifier::string_view> {
-		jsonifier_inline size_t operator()(jsonifier ::string_view lhs) const {
-			return jsonifier_internal::hash<jsonifier::string_view> {}.operator()(lhs);
-		}
-	};
-}

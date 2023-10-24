@@ -29,13 +29,13 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
 include("CollectVersion")
 collect_version("jsonifier")
 
-set(PROJECT_NAME  "Jsonifier")
+set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(
-    "${PROJECT_NAME}"
-    VERSION "${PRODUCT_VERSION}"
-    LANGUAGES CXX
+  "${PROJECT_NAME}"
+  VERSION "${PRODUCT_VERSION}"
+  LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 20)
@@ -132,6 +132,11 @@ install(
 	FILE "${EXPORTED_TARGETS_FILE_NAME}"
 	NAMESPACE "${PROJECT_NAME}::"
 	DESTINATION "share/jsonifier"
+)
+
+install(
+	FILES "${CMAKE_SOURCE_DIR}/JsonData.json"
+	DESTINATION "${CMAKE_INSTALL_PREFIX}"
 )
 
 if (JSONIFIER_TEST)

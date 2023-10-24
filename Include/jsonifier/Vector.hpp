@@ -259,7 +259,7 @@ namespace jsonifier {
 			return sizeVal;
 		}
 
-		jsonifier_inline pointer data() const {
+		jsonifier_inline const_pointer data() const {
 			return dataVal;
 		}
 
@@ -333,7 +333,7 @@ namespace jsonifier {
 		}
 
 		jsonifier_inline void resize(size_type sizeNew) {
-			if (sizeNew > 0) [[likely]] {
+			if (static_cast<int64_t>(sizeNew) > 0) [[likely]] {
 				if (sizeNew > capacityVal) [[likely]] {
 					pointer newPtr = getAlloc().allocate(sizeNew);
 					try {
@@ -358,7 +358,7 @@ namespace jsonifier {
 		}
 
 		jsonifier_inline void reserve(size_type capacityNew) {
-			if (capacityNew > capacityVal) [[likely]] {
+			if (static_cast<int64_t>(capacityNew) > 0) [[likely]] {
 				pointer newPtr = getAlloc().allocate(capacityNew);
 				try {
 					if (dataVal && capacityVal > 0) [[likely]] {
@@ -431,53 +431,16 @@ namespace jsonifier {
 		}
 	};
 
-}// namespace jsonifier
+}// namespace jsonifier// namespace jsonifier
 
 namespace jsonifier_internal {
 
-	class structural_index_vector : public alloc_wrapper<structural_index> {
+	class structural_index_vector : public jsonifier::vector<structural_index> {
 	  public:
-		using allocator = alloc_wrapper<structural_index>;
-		using size_type = uint64_t;
-		using pointer	= structural_index*;
-		using reference = structural_index&;
+		using base = jsonifier::vector<structural_index>;
 
 		jsonifier_inline structural_index_vector() {
-			resize(16384);
+			base::resize(65536);
 		};
-
-		jsonifier_inline void resize(size_type newSize) {
-			if (newSize > currentSize) {
-				if (currentSize > 0) {
-					allocator::deallocate(indices, currentSize);
-				}
-				indices		= allocator::allocate(newSize);
-				currentSize = newSize;
-			}
-		}
-
-		jsonifier_inline reference operator[](size_type index) {
-			return indices[index];
-		}
-
-		jsonifier_inline pointer getIndices() {
-			return indices;
-		}
-
-		jsonifier_inline ~structural_index_vector() {
-			cleanup();
-		}
-
-	  protected:
-		structural_index* indices{};
-		size_type currentSize{};
-
-		jsonifier_inline void cleanup() {
-			if (currentSize > 0) {
-				allocator::deallocate(indices, currentSize);
-				currentSize = 0;
-				indices		= nullptr;
-			}
-		}
 	};
 }

@@ -63,7 +63,7 @@ namespace jsonifier {
 
 		template<size_t I> using Tag = std::integral_constant<size_t, I>;
 
-		template<size_t I> constexpr Tag<I> TagV{};
+		template<size_t I> jsonifier_constexpr Tag<I> TagV{};
 
 		template<typename value_type>
 		concept range = requires(value_type& value) {
@@ -162,15 +162,6 @@ namespace jsonifier {
 		concept unsigned_int64_t = unsigned_t<value_type> && sizeof(value_type) == 8;
 
 		template<typename value_type>
-		concept signed_int16_t = signed_t<value_type> && sizeof(value_type) == 2;
-
-		template<typename value_type>
-		concept signed_int32_t = signed_t<value_type> && sizeof(value_type) == 4;
-
-		template<typename value_type>
-		concept signed_int64_t = signed_t<value_type> && sizeof(value_type) == 8;
-
-		template<typename value_type>
 		concept float_t = std::floating_point<std::unwrap_ref_decay_t<value_type>>;
 
 		template<typename value_type>
@@ -252,7 +243,7 @@ namespace jsonifier {
 		concept has_resize = requires(value_type value) { value.resize(0); };
 
 		template<typename value_type> jsonifier_inline auto dataPtr(value_type& buffer) {
-			if constexpr (has_data<value_type>) {
+			if jsonifier_constexpr (has_data<value_type>) {
 				return buffer.data();
 			} else {
 				return buffer;
@@ -266,18 +257,18 @@ namespace jsonifier {
 		concept jsonifier_t = requires { jsonifier::core<std::unwrap_ref_decay_t<value_type>>::parseValue; };
 
 		struct empty_val {
-			static constexpr std::tuple<> parseValue{};
+			static jsonifier_constexpr std::tuple<> parseValue{};
 		};
 
-		template<typename value_type> constexpr auto coreWrapperV = [] {
-			if constexpr (jsonifier_t<value_type>) {
+		template<typename value_type> jsonifier_constexpr auto coreWrapperV = [] {
+			if jsonifier_constexpr (jsonifier_t<value_type>) {
 				return jsonifier::core<std::unwrap_ref_decay_t<value_type>>::parseValue;
 			} else {
 				return empty_val{};
 			}
 		}();
 
-		template<typename value_type> constexpr auto coreV = coreWrapperV<value_type>.parseValue;
+		template<typename value_type> jsonifier_constexpr auto coreV = coreWrapperV<value_type>.parseValue;
 
 		template<typename value_type> using core_t = std::unwrap_ref_decay_t<decltype(coreV<value_type>)>;
 

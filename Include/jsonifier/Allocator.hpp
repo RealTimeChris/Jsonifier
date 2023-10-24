@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/ISADetection/ISADetectionBase.hpp>
+#include <jsonifier/ISADetection.hpp>
 #include <memory_resource>
 
 namespace jsonifier_internal {
@@ -33,18 +34,18 @@ namespace jsonifier_internal {
 		using value_type = value_type_new;
 		using pointer	 = value_type*;
 		using size_type	 = uint64_t;
-		using allocator  = std::pmr::polymorphic_allocator<value_type_new>;
+		using allocator	 = std::pmr::polymorphic_allocator<value_type_new>;
 
 		jsonifier_inline pointer allocate(size_type n) {
 			if (n == 0) {
 				return nullptr;
 			}
-			return static_cast<pointer>(allocator::allocate_bytes(n * sizeof(value_type), BytesPerStep));
+			return static_cast<pointer>(allocator::allocate_bytes(roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep));
 		}
 
 		jsonifier_inline void deallocate(pointer ptr, size_type n) {
 			if (ptr) {
-				allocator::deallocate_bytes(ptr, n * sizeof(value_type), BytesPerStep);
+				allocator::deallocate_bytes(ptr, roundUpToMultiple<BytesPerStep>(n * sizeof(value_type)), BytesPerStep);
 			}
 		}
 

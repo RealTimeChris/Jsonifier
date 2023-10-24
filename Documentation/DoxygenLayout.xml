@@ -66,7 +66,7 @@
       <membergroups visible="yes"/>
     </memberdecl>
     <memberdef>
-      <inlineclasses title=""/>
+      <jsonifier_inlineclasses title=""/>
       <typedefs title=""/>
       <enums title=""/>
       <services title=""/>
@@ -103,7 +103,7 @@
       <membergroups visible="yes"/>
     </memberdecl>
     <memberdef>
-      <inlineclasses title=""/>
+      <jsonifier_inlineclasses title=""/>
       <typedefs title=""/>
       <sequences title=""/>
       <dictionaries title=""/>
@@ -147,7 +147,7 @@
       <membergroups visible="yes"/>
     </memberdecl>
     <memberdef>
-      <inlineclasses title=""/>
+      <jsonifier_inlineclasses title=""/>
       <defines title=""/>
       <typedefs title=""/>
       <sequences title=""/>
@@ -188,7 +188,7 @@
     </memberdecl>
     <memberdef>
       <pagedocs/>
-      <inlineclasses title=""/>
+      <jsonifier_inlineclasses title=""/>
       <defines title=""/>
       <typedefs title=""/>
       <sequences title=""/>

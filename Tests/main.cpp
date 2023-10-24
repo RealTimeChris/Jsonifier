@@ -36,7 +36,7 @@ template<typename OTy> struct TestGenerator {
 		return static_cast<uint64_t>(theResult);
 	}
 
-	inline static json_data generateJsonData() {
+	jsonifier_inline static json_data generateJsonData() {
 		std::string buffer{};
 		TestGenerator generator{};
 		glz::write_json(generator, buffer);
@@ -53,9 +53,9 @@ template<typename OTy> struct TestGenerator {
 			if (theValue == '\\') {
 				continue;
 			} else if (theValue == '"') {
-				returnString.push_back('\\');
+				returnString.push_back('"');
 			} else {
-				returnString.push_back(theValue);
+				
 			}
 		}
 		return returnString;
@@ -267,7 +267,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson(uint64Test, buffer);
+			parser.parseJson<false, true>(uint64Test, buffer);
 		},
 		1);
 	for (auto& value: parser.getErrors()) {
@@ -302,7 +302,7 @@ auto jsonifier_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson(uint64Test, buffer);
+			parser.parseJson<false, true>(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -337,7 +337,7 @@ auto jsonifier_abc_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson(uint64Test, buffer);
+			parser.parseJson<false, true>(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -371,8 +371,8 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			if (auto error = glz::read_json(uint64Test, buffer)) {
-				std::cout << "glaze Error: " << error << std::endl;
+			if (auto error = glz::read_json(uint64Test, buffer); error) {
+				std::cout << "glaze Error: " << glz::format_error(error, buffer) << std::endl;
 			}
 		},
 		1);
@@ -404,8 +404,8 @@ auto glaze_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			if (auto error = glz::read_json(uint64Test, buffer)) {
-				std::cout << "glaze Error: " << error << std::endl;
+			if (auto error = glz::read_json(uint64Test, buffer); error) {
+				std::cout << "glaze Error: " << glz::format_error(error, buffer) << std::endl;
 			}
 		},
 		iterations);
@@ -437,8 +437,8 @@ auto glaze_abc_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			if (auto error = glz::read_json(uint64Test, buffer)) {
-				std::cout << "glaze Error: " << error << std::endl;
+		if (auto error = glz::read_json(uint64Test, buffer); error) {
+				std::cout << "glaze Error: " << glz::format_error(error, buffer) << std::endl;
 			}
 		},
 		iterations);
@@ -821,13 +821,13 @@ struct Application {
 	uint64_t flags;
 	uint64_t id;
 };
-struct Auth{
+struct Auth {
 	int32_t value{};
 };
 
 struct ReadyData {
 	std::string trace;
-	Application application{};	
+	Application application{};
 	Auth auth;
 	std::vector<std::string> geoOrderedRtcRegions;
 	std::vector<std::string> guildJoinRequests;
@@ -882,7 +882,7 @@ template<> struct jsonifier::core<User> {
 };
 
 template<> struct jsonifier::core<ReadyData> {
-	using OTy						 = ReadyData;
+	using OTy = ReadyData;
 	constexpr static auto parseValue =
 		createObject("trace", &OTy::trace, "application", &OTy::application, "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
 			&OTy::guildJoinRequests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::privateChannels, "relationships", &OTy::relationships,
@@ -919,7 +919,7 @@ int32_t main() {
 		char* newPtr{ nullptr };
 		std::cout << "JSONIFIER SIZE: " << newString01 << std::endl;
 		std::cout << "JSONIFIER VALUE: " << reinterpret_cast<ptrdiff_t>(newString01.data()) << std::endl;
-		parser.parseJson(dataNew, newString01);
+		parser.parseJson<false, true>(dataNew, newString01);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "JSONIFIER ERROR: " << value << std::endl;
 		}

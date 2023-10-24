@@ -68,28 +68,28 @@ namespace Jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
-		static constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
+		static jsonifier_constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
 		using value_type = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
+		static jsonifier_constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
 		using value_type = TestNS::nested_object_t;
-		static constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
+		static jsonifier_constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
 		using value_type = TestNS::another_object_t;
-		static constexpr auto parseValue =
+		static jsonifier_constexpr auto parseValue =
 			createObject("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
 		using value_type = TestNS::obj_t;
-		static constexpr auto parseValue =
+		static jsonifier_constexpr auto parseValue =
 			createObject("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
 				&value_type::string_array, "string", &value_type::string, "number", &value_type::number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};

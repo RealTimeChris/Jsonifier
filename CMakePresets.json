@@ -1,250 +1,250 @@
 ﻿{
-  "version": 3,
-  "configurePresets": [
-    {
-      "binaryDir": "${sourceDir}/Build/${presetName}",
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows",
-        "type": "equals"
-      },
-      "generator": "Visual Studio 17 2022",
-      "hidden": true,
-      "installDir": "${sourceDir}/Install/${presetName}",
-      "name": "Windows-Base"
-    },
-    {
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "inherits": "Windows-Base",
-      "name": "Windows-Release"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Windows-Base",
-      "name": "Windows-Release-Dev"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "inherits": "Windows-Base",
-      "name": "Windows-Debug"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Windows-Base",
-      "name": "Windows-Debug-Dev"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "ASAN_ENABLED": true,
-        "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Windows-Base",
-      "name": "Windows-Release-Asan"
-    },
-    {
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "ASAN_ENABLED": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Windows-Base",
-      "name": "Windows-Debug-Asan"
-    },
-    {
-      "binaryDir": "${sourceDir}/Build/${presetName}",
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux",
-        "type": "equals"
-      },
-      "generator": "Unix Makefiles",
-      "hidden": true,
-      "name": "Linux-Base"
-    },
-    {
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "inherits": "Linux-Base",
-      "name": "Linux-Release"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Linux-Base",
-      "name": "Linux-Release-Dev"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "inherits": "Linux-Base",
-      "name": "Linux-Debug"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Linux-Base",
-      "name": "Linux-Debug-Dev"
-    },
-    {
-      "architecture": {
-        "strategy": "external",
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "ASAN_ENABLED": true,
-        "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Linux-Base",
-      "name": "Linux-Release-Asan"
-    },
-    {
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "ASAN_ENABLED": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": true
-      },
-      "inherits": "Linux-Base",
-      "name": "Linux-Debug-Asan"
-    }
-  ],
-  "buildPresets": [
-    {
-      "configurePreset": "Windows-Release",
-      "configuration": "Release",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Release",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Windows-Debug",
-      "configuration": "Debug",
-      "inheritConfigureEnvironment": true,
-      "name": "Windows-Debug",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Windows-Release-Asan",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Release",
-      "name": "Windows-Release-Asan",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Windows-Debug-Asan",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Debug",
-      "name": "Windows-Debug-Asan",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Windows-Release-Dev",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Release",
-      "name": "Windows-Release-Dev",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Windows-Debug-Dev",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Debug",
-      "name": "Windows-Debug-Dev",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Release",
-      "configuration": "Release",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Release",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Debug",
-      "configuration": "Debug",
-      "inheritConfigureEnvironment": true,
-      "name": "Linux-Debug",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Release-Asan",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Release",
-      "name": "Linux-Release-Asan",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Debug-Asan",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Debug",
-      "name": "Linux-Debug-Asan",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Release-Dev",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Release",
-      "name": "Linux-Release-Dev",
-      "verbose": true
-    },
-    {
-      "configurePreset": "Linux-Debug-Dev",
-      "inheritConfigureEnvironment": true,
-      "configuration": "Debug",
-      "name": "Linux-Debug-Dev",
-      "verbose": true
-    }
-  ]
+ "version": 3,
+ "configurePresets": [
+  {
+   "binaryDir": "${sourceDir}/Build/${presetName}",
+   "condition": {
+    "lhs": "${hostSystemName}",
+    "rhs": "Windows",
+    "type": "equals"
+   },
+   "generator": "Visual Studio 17 2022",
+   "hidden": true,
+   "installDir": "${sourceDir}/Install/${presetName}",
+   "name": "Windows-Base"
+  },
+  {
+   "architecture": {
+    "value": "x64",
+    "strategy": "external"
+   },
+   "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+   "inherits": "Windows-Base",
+   "name": "Windows-Release"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Windows-Base",
+   "name": "Windows-Release-Dev"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+   "inherits": "Windows-Base",
+   "name": "Windows-Debug"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Windows-Base",
+   "name": "Windows-Debug-Dev"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "ASAN_ENABLED": true,
+    "CMAKE_BUILD_TYPE": "Release",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Windows-Base",
+   "name": "Windows-Release-Asan"
+  },
+  {
+   "architecture": {
+    "value": "x64",
+    "strategy": "external"
+   },
+   "cacheVariables": {
+    "ASAN_ENABLED": true,
+    "CMAKE_BUILD_TYPE": "Debug",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Windows-Base",
+   "name": "Windows-Debug-Asan"
+  },
+  {
+   "binaryDir": "${sourceDir}/Build/${presetName}",
+   "condition": {
+    "lhs": "${hostSystemName}",
+    "rhs": "Linux",
+    "type": "equals"
+   },
+   "generator": "Unix Makefiles",
+   "hidden": true,
+   "name": "Linux-Base"
+  },
+  {
+   "architecture": {
+    "value": "x64",
+    "strategy": "external"
+   },
+   "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+   "inherits": "Linux-Base",
+   "name": "Linux-Release"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Linux-Base",
+   "name": "Linux-Release-Dev"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+   "inherits": "Linux-Base",
+   "name": "Linux-Debug"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Linux-Base",
+   "name": "Linux-Debug-Dev"
+  },
+  {
+   "architecture": {
+    "strategy": "external",
+    "value": "x64"
+   },
+   "cacheVariables": {
+    "ASAN_ENABLED": true,
+    "CMAKE_BUILD_TYPE": "Release",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Linux-Base",
+   "name": "Linux-Release-Asan"
+  },
+  {
+   "architecture": {
+    "value": "x64",
+    "strategy": "external"
+   },
+   "cacheVariables": {
+    "ASAN_ENABLED": true,
+    "CMAKE_BUILD_TYPE": "Debug",
+    "JSONIFIER_TEST": true
+   },
+   "inherits": "Linux-Base",
+   "name": "Linux-Debug-Asan"
+  }
+ ],
+ "buildPresets": [
+  {
+   "configurePreset": "Windows-Release",
+   "configuration": "Release",
+   "inheritConfigureEnvironment": true,
+   "name": "Windows-Release",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Windows-Debug",
+   "configuration": "Debug",
+   "inheritConfigureEnvironment": true,
+   "name": "Windows-Debug",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Windows-Release-Asan",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Release",
+   "name": "Windows-Release-Asan",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Windows-Debug-Asan",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Debug",
+   "name": "Windows-Debug-Asan",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Windows-Release-Dev",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Release",
+   "name": "Windows-Release-Dev",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Windows-Debug-Dev",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Debug",
+   "name": "Windows-Debug-Dev",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Release",
+   "configuration": "Release",
+   "inheritConfigureEnvironment": true,
+   "name": "Linux-Release",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Debug",
+   "configuration": "Debug",
+   "inheritConfigureEnvironment": true,
+   "name": "Linux-Debug",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Release-Asan",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Release",
+   "name": "Linux-Release-Asan",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Debug-Asan",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Debug",
+   "name": "Linux-Debug-Asan",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Release-Dev",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Release",
+   "name": "Linux-Release-Dev",
+   "verbose": true
+  },
+  {
+   "configurePreset": "Linux-Debug-Dev",
+   "inheritConfigureEnvironment": true,
+   "configuration": "Debug",
+   "name": "Linux-Debug-Dev",
+   "verbose": true
+  }
+ ]
 }
