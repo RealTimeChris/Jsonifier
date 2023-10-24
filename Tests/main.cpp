@@ -53,7 +53,7 @@ template<typename OTy> struct TestGenerator {
 			if (theValue == '\\') {
 				continue;
 			} else if (theValue == '"') {
-				returnString.push_back('\"');
+				returnString.push_back('\\');
 			} else {
 				returnString.push_back(theValue);
 			}
@@ -82,7 +82,7 @@ template<typename OTy> struct TestGenerator {
 			v.resize(10);
 			for (uint64_t x = 0; x < 10; ++x) {
 				if constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(150, 50);
+					auto arraySize01 = randomizeNumber(25, 10);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -789,8 +789,140 @@ std::string single_test(json_data& jsonData) {
 	return table;
 };
 
+#include <string>
+#include <vector>
+
+struct Calls {
+	std::string name;
+	uint64_t micros;
+	std::vector<Calls> calls;
+};
+
+struct GatewayTrace {
+	std::string traceId;
+	uint64_t micros;
+	std::vector<Calls> calls;
+};
+
+struct Guild {
+	uint64_t id;
+	bool unavailable;
+};
+
+struct User {
+	std::string avatar;
+	bool bot;
+	std::string discriminator;
+	// Add other user attributes here
+};
+
+
+struct Application {
+	uint64_t flags;
+	uint64_t id;
+};
+struct Auth{
+	int32_t value{};
+};
+
+struct ReadyData {
+	std::string trace;
+	Application application{};	
+	Auth auth;
+	std::vector<std::string> geoOrderedRtcRegions;
+	std::vector<std::string> guildJoinRequests;
+	std::vector<Guild> guilds;
+	std::vector<std::string> presences;
+	std::vector<std::string> privateChannels;
+	std::vector<std::string> relationships;
+	std::string resumeGatewayUrl;
+	std::string sessionId;
+	std::string sessionType;
+	std::string shard;
+	User user;
+	int v;
+};
+
+struct ReadyMessage {
+	int op;
+	int s;
+	std::string t;
+	ReadyData d;
+};
+
+template<> struct jsonifier::core<Auth> {
+	using OTy						 = Auth;
+	constexpr static auto parseValue = createObject("value", &OTy::value);
+};
+
+template<> struct jsonifier::core<Application> {
+	using OTy						 = Application;
+	constexpr static auto parseValue = createObject("flags", &OTy::flags, "id", &OTy::id);
+};
+
+template<> struct jsonifier::core<Calls> {
+	using OTy						 = Calls;
+	constexpr static auto parseValue = createObject("name", &OTy::name, "micros", &OTy::micros, "calls", &OTy::calls);
+};
+
+template<> struct jsonifier::core<GatewayTrace> {
+	using OTy						 = GatewayTrace;
+	constexpr static auto parseValue = createObject("trace_id", &OTy::traceId, "micros", &OTy::micros, "calls", &OTy::calls);
+};
+
+template<> struct jsonifier::core<Guild> {
+	using OTy						 = Guild;
+	constexpr static auto parseValue = createObject("id", &OTy::id, "unavailable", &OTy::unavailable);
+};
+
+template<> struct jsonifier::core<User> {
+	using OTy						 = User;
+	constexpr static auto parseValue = createObject("avatar", &OTy::avatar, "bot", &OTy::bot, "discriminator", &OTy::discriminator);
+	// Add other attributes as needed.
+};
+
+template<> struct jsonifier::core<ReadyData> {
+	using OTy						 = ReadyData;
+	constexpr static auto parseValue =
+		createObject("trace", &OTy::trace, "application", &OTy::application, "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
+			&OTy::guildJoinRequests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::privateChannels, "relationships", &OTy::relationships,
+			"resume_gateway_url", &OTy::resumeGatewayUrl, "session_id", &OTy::sessionId, "session_type", &OTy::sessionType, "shard", &OTy::shard, "user", &OTy::user, "v", &OTy::v);
+};
+
+template<> struct jsonifier::core<ReadyMessage> {
+	using OTy						 = ReadyMessage;
+	constexpr static auto parseValue = createObject("op", &OTy::op, "s", &OTy::s, "t", &OTy::t, "d", &OTy::d);
+};
+
 int32_t main() {
 	try {
+		jsonifier::string newString01{
+			"{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,\\\"calls\\\":[]},\\\"session_"
+			"lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-sessions-prd-2-51\\\",{"
+			"\\\"micros\\\":117233,\\\"calls\\\":[\\\"start_session\\\",{\\\"micros\\\":66751,\\\"calls\\\":[\\\"discord-api-79bdc49487-hv95g\\\",{\\\"micros\\\":59968,"
+			"\\\"calls\\\":[\\\"get_user\\\",{\\\"micros\\\":9341},\\\"get_guilds\\\",{\\\"micros\\\":7529},\\\"send_scheduled_deletion_message\\\",{\\\"micros\\\":11},\\\"guild_"
+			"join_requests\\\",{\\\"micros\\\":1},\\\"authorized_ip_coro\\\",{\\\"micros\\\":12}]}]},\\\"starting_guild_connect\\\",{\\\"micros\\\":419,\\\"calls\\\":[]},"
+			"\\\"presence_started\\\",{\\\"micros\\\":272,\\\"calls\\\":[]},\\\"guilds_started\\\",{\\\"micros\\\":157,\\\"calls\\\":[]},\\\"guilds_connect\\\",{\\\"micros\\\":29,"
+			"\\\"calls\\\":[]},\\\"presence_connect\\\",{\\\"micros\\\":49563,\\\"calls\\\":[]},\\\"connect_finished\\\",{\\\"micros\\\":49598,\\\"calls\\\":[]},\\\"build_"
+			"ready\\\",{\\\"micros\\\":33,\\\"calls\\\":[]},\\\"clean_ready\\\",{\\\"micros\\\":1,\\\"calls\\\":[]},\\\"optimize_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]},"
+			"\\\"split_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]}]}]}]\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},\"auth\":{},\"geo_ordered_rtc_"
+			"regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":318872312596267018,\"unavailable\":true},{"
+			"\"id\":931640556814237706,\"unavailable\":true},{\"id\":991025447875784714,\"unavailable\":true},{\"id\":995048955215872071,\"unavailable\":true},{\"id\":"
+			"1022405038922006538,\"unavailable\":true},{\"id\":1032783776184533022,\"unavailable\":true},{\"id\":1078501504119476282,\"unavailable\":true},{\"id\":"
+			"1131853763506880522,\"unavailable\":true}],\"presences\":[],\"private_channels\":[],\"relationships\":[],\"resume_gateway_url\":\"wss://"
+			"gateway-us-east1-d.discord.gg\",\"session_id\":\"5b405a8282550f72114b460169cd08f6\",\"session_type\":\"normal\",\"shard\":\"01\",\"user\":{\"avatar\":"
+			"\"88bd9ce7bf889c0d36fb4afd3725900b\",\"bot\":true,\"discriminator\":\"3055\",\"email\":null,\"flags\":0,\"global_name\":null,\"id\":1142733646600614004,\"mfa_"
+			"enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":10},\"op\":0,\"s\":1,\"t\":\"READY\"}"
+		};
+		ReadyMessage dataNew{};
+		jsonifier::jsonifier_core parser{};
+		char* newPtr{ nullptr };
+		std::cout << "JSONIFIER SIZE: " << newString01 << std::endl;
+		std::cout << "JSONIFIER VALUE: " << reinterpret_cast<ptrdiff_t>(newString01.data()) << std::endl;
+		parser.parseJson(dataNew, newString01);
+		for (auto& value: parser.getErrors()) {
+			std::cout << "JSONIFIER ERROR: " << value << std::endl;
+		}
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
