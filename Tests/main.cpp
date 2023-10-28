@@ -55,7 +55,7 @@ template<typename OTy> struct TestGenerator {
 			} else if (theValue == '"') {
 				returnString.push_back('"');
 			} else {
-				
+				returnString.push_back(theValue);
 			}
 		}
 		return returnString;
@@ -273,6 +273,11 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	for (auto& value: parser.getErrors()) {
 		std::cout << "Jsonifier Error: " << value << std::endl;
 	}
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
+		}
+	}
 
 	r.json_read = result;
 	buffer.clear();
@@ -285,6 +290,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 
 	r.json_byte_length = buffer.size();
 	r.json_write	   = result;
+	std::cout << "CURRENT BUFFER: " << buffer << std::endl;
 	buffer.clear();
 	if (doWePrint) {
 		r.print();
@@ -923,6 +929,7 @@ int32_t main() {
 		for (auto& value: parser.getErrors()) {
 			std::cout << "JSONIFIER ERROR: " << value << std::endl;
 		}
+		parser.serializeJson(dataNew, newString01);
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);

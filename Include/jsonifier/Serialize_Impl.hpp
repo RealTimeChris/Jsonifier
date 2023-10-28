@@ -176,7 +176,7 @@ namespace jsonifier_internal {
 			}
 			writeCharacter<'"'>(buffer, index);
 			if (origN >= BytesPerStep) {
-				indexNew = serializeString(value.data(), buffer.data() + index - 1, value.size(), index);
+				indexNew = serializeString(value.data(), buffer.data() + index - 1, value.size());
 			}
 			if (indexNew < value.size()) {
 				auto dataPtr = buffer.data();

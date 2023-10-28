@@ -165,7 +165,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02>
-	jsonifier_inline uint64_t serializeString(const value_type01* source, value_type02* dest, uint64_t length, uint64_t& index) {
+	jsonifier_inline uint64_t serializeString(const value_type01* source, value_type02* dest, uint64_t length) {
 		uint64_t newIndex{};
 		while (length >= BytesPerStep) {
 			string_parsing_type valuesNew{};
@@ -173,15 +173,15 @@ namespace jsonifier_internal {
 			if (valuesNew != 0) {
 				for (uint64_t x = 0; x < BytesPerStep; ++x) {
 					if (valuesNew & (1 << x)) {
-						dest[index++] = '\\';
-						dest[index++] = escapeTable<value_type01>()[source[x]];
+						dest[newIndex++] = '\\';
+						dest[newIndex++] = escapeTable<value_type01>()[source[x]];
 					} else {
-						dest[index++] = source[x];
+						dest[newIndex++] = source[x];
 					}
 				}
 			} else {
-				std::memcpy(dest + index, source, BytesPerStep);
-				index += BytesPerStep;
+				std::memcpy(dest + newIndex, source, BytesPerStep);
+				newIndex += BytesPerStep;
 			}
 			newIndex += BytesPerStep;
 			length -= BytesPerStep;
