@@ -36,39 +36,41 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, typename value_type> struct parse_impl {};
 
 	template<bool excludeKeys> struct parse {
-		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(value, iter, parserNew);
+		template<typename value_type> jsonifier_inline static void op(value_type&& value, structural_iterator& iter, structural_iterator& end, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, end, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(value, iter, keys, parserNew);
+		jsonifier_inline static void op(value_type&& value, structural_iterator& iter, structural_iterator& end, const KeyType& keys, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, end, keys, parserNew);
 		}
 	};
 
 	class parser {
 	  public:
 		template<bool, typename value_type> friend struct parse_impl;
+		template<bool> friend struct parse;
 
 		template<bool excludeKeys = false, bool refreshString = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		jsonifier_inline void parseJson(value_type& data, buffer_type&& stringNew) {
+		jsonifier_inline void parseJson(value_type&& data, buffer_type&& stringNew) {
 			if (stringNew.empty()) {
 				return;
 			}
-			section.reset<refreshString>(std::forward<buffer_type>(stringNew));
+			section.reset<refreshString>(stringNew);
 			errors.clear();
 			auto newIter = section.begin();
+			auto end	 = section.end();
 			if (!*newIter) {
 				return;
 			}
-			if jsonifier_constexpr (excludeKeys) {
-				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<std::unwrap_ref_decay_t<decltype(data)>>) {
-					parse<excludeKeys>::op(data, newIter, data.excludedKeys, *this);
+			if constexpr (excludeKeys) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<std::unwrap_ref_decay_t<decltype(data)>>) {
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, data.excludedKeys, *this);
 				} else {
-					parse<excludeKeys>::op(data, newIter, *this);
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, *this);
 				}
 			} else {
-				parse<excludeKeys>::op(data, newIter, *this);
+				parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, *this);
 			}
 		}
 
@@ -81,13 +83,5 @@ namespace jsonifier_internal {
 		buffer_string<char> currentKeyBuffer{};
 		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
-
-		jsonifier_inline buffer_string<uint8_t>& getStringBuffer() {
-			return currentStringBuffer;
-		}
-
-		jsonifier_inline buffer_string<char>& getKeyBuffer() {
-			return currentKeyBuffer;
-		}
 	};
 };

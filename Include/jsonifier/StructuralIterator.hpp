@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 
 namespace jsonifier_internal {
 
@@ -68,8 +68,16 @@ namespace jsonifier_internal {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		jsonifier_inline bool operator==(const structural_iterator&) const {
-			return !(*currentIndex);
+		jsonifier_inline bool operator==(const structural_iterator&other) const {
+			return currentIndex >= other.currentIndex;
+		}
+
+		jsonifier_inline bool operator<(const structural_iterator& other) const {
+			return currentIndex < other.currentIndex;
+		}
+
+		jsonifier_inline bool operator>=(const structural_iterator& other) const {
+			return currentIndex >= other.currentIndex;
 		}
 
 	  protected:

@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 
 		template<typename... value_type> struct type_list {};
 
-		template<typename... l, typename... r> jsonifier_constexpr auto operator+(type_list<l...>, type_list<r...>) {
+		template<typename... l, typename... r> constexpr auto operator+(type_list<l...>, type_list<r...>) {
 			return type_list<l..., r...>{};
 		}
 
@@ -76,7 +76,7 @@ namespace jsonifier_internal {
 			auto operator<=>(tuple_elem const&) const = default;
 			bool operator==(tuple_elem const&) const  = default;
 
-			jsonifier_constexpr auto operator<=>(tuple_elem const& other) const noexcept(noexcept(value <=> other.value))
+			constexpr auto operator<=>(tuple_elem const& other) const noexcept(noexcept(value <=> other.value))
 				requires(std::is_reference_v<value_type> && jsonifier::concepts::ordered<value_type>)
 			{
 				return value <=> other.value;
@@ -105,17 +105,17 @@ namespace jsonifier_internal {
 		}
 		template<typename First, typename> using first_t = First;
 
-		template<typename value_type, typename... Q> jsonifier_constexpr auto repeatType(type_list<Q...>) {
+		template<typename value_type, typename... Q> constexpr auto repeatType(type_list<Q...>) {
 			return type_list<first_t<value_type, Q>...>{};
 		}
-		template<typename... outer> jsonifier_constexpr auto getOuterBases(type_list<outer...>) {
+		template<typename... outer> constexpr auto getOuterBases(type_list<outer...>) {
 			return (repeatType<outer>(BaseListT<type_t<outer>>{}) + ...);
 		}
-		template<typename... outer> jsonifier_constexpr auto getInnerBases(type_list<outer...>) {
+		template<typename... outer> constexpr auto getInnerBases(type_list<outer...>) {
 			return (BaseListT<type_t<outer>>{} + ...);
 		}
 
-		template<typename value_type, typename... outer, typename... inner> jsonifier_constexpr auto catImpl(value_type tup, type_list<outer...>, type_list<inner...>)
+		template<typename value_type, typename... outer, typename... inner> constexpr auto catImpl(value_type tup, type_list<outer...>, type_list<inner...>)
 			-> tuple<type_t<inner>...> {
 			return { static_cast<type_t<outer>&&>(tup.identity_t<outer>::value).identity_t<inner>::value... };
 		}
@@ -123,14 +123,14 @@ namespace jsonifier_internal {
 		template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
 
 		template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
-			static jsonifier_constexpr size_t size = sizeof...(value_type);
-			using super							   = tuple_base_t<value_type...>;
+			static constexpr size_t size = sizeof...(value_type);
+			using super					 = tuple_base_t<value_type...>;
 			using super::operator[];
 			using base_list	   = typename super::base_list;
 			using element_list = type_list<value_type...>;
 			using super::declElem;
 
-			template<jsonifier::concepts::other_than<tuple> u> jsonifier_constexpr auto& operator=(u&& tup) {
+			template<jsonifier::concepts::other_than<tuple> u> constexpr auto& operator=(u&& tup) {
 				using tuple2 = std::unwrap_ref_decay_t<u>;
 				if (jsonifier::concepts::base_list_tuple<tuple2>) {
 					eqImpl(static_cast<u&&>(tup), base_list(), typename tuple2::base_list());
@@ -143,15 +143,15 @@ namespace jsonifier_internal {
 			auto operator<=>(tuple const&) const = default;
 			bool operator==(tuple const&) const	 = default;
 
-			template<typename f> jsonifier_constexpr auto map(f&& func) & {
+			template<typename f> constexpr auto map(f&& func) & {
 				return mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
-			template<typename f> jsonifier_constexpr auto map(f&& func) const& {
+			template<typename f> constexpr auto map(f&& func) const& {
 				return mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
-			template<typename f> jsonifier_constexpr auto map(f&& func) && {
+			template<typename f> constexpr auto map(f&& func) && {
 				return static_cast<tuple&&>(*this).mapImpl(base_list(), static_cast<f&&>(func));
 			}
 
@@ -166,29 +166,29 @@ namespace jsonifier_internal {
 				(void(tuple_elem<I, value_type>::value = get<I>(static_cast<u&&>(uNew))), ...);
 			}
 
-			template<typename f, typename... b> jsonifier_constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<std::unwrap_ref_decay_t<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) & -> tuple<std::unwrap_ref_decay_t<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
-			template<typename f, typename... b> jsonifier_constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<std::unwrap_ref_decay_t<decltype(func(b::value))>...> {
+			template<typename f, typename... b> constexpr auto mapImpl(type_list<b...>, f&& func) const& -> tuple<std::unwrap_ref_decay_t<decltype(func(b::value))>...> {
 				return { func(b::value)... };
 			}
 
 			template<typename f, typename... b>
-			jsonifier_constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<std::unwrap_ref_decay_t<decltype(func(static_cast<value_type&&>(b::value)))>...> {
+			constexpr auto mapImpl(type_list<b...>, f&& func) && -> tuple<std::unwrap_ref_decay_t<decltype(func(static_cast<value_type&&>(b::value)))>...> {
 				return { func(static_cast<value_type&&>(b::value))... };
 			}
 		};
 
 		template<> struct tuple<> : tuple_base_t<> {
-			static jsonifier_constexpr size_t size = 0;
-			using super							   = tuple_base_t<>;
-			using base_list						   = type_list<>;
-			using element_list					   = type_list<>;
+			static constexpr size_t size = 0;
+			using super					 = tuple_base_t<>;
+			using base_list				 = type_list<>;
+			using element_list			 = type_list<>;
 
 			template<jsonifier::concepts::other_than<tuple> u>
 				requires jsonifier::concepts::stateless<u>
-			jsonifier_constexpr auto& operator=(u&&) {
+			constexpr auto& operator=(u&&) {
 				return *this;
 			}
 
@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 				return true;
 			}
 
-			template<typename f> jsonifier_constexpr auto map(f&&) const {
+			template<typename f> constexpr auto map(f&&) const {
 				return tuple{};
 			}
 		};
@@ -234,8 +234,8 @@ namespace jsonifier_internal {
 			return static_cast<f&&>(func)(std::move(pair).first, std::move(pair).second);
 		}
 
-		template<jsonifier::concepts::base_list_tuple... value_type> jsonifier_constexpr auto tupleCat(value_type&&... ts) {
-			if jsonifier_constexpr (sizeof...(value_type) == 0) {
+		template<jsonifier::concepts::base_list_tuple... value_type> constexpr auto tupleCat(value_type&&... ts) {
+			if constexpr (sizeof...(value_type) == 0) {
 				return tuple<>();
 			} else {
 #if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
@@ -250,28 +250,28 @@ namespace jsonifier_internal {
 #else
 				using big_tuple = tuple<std::unwrap_ref_decay_t<value_type>...>;
 #endif
-				using outer_bases			   = BaseListT<big_tuple>;
-				jsonifier_constexpr auto outer = getOuterBases(outer_bases{});
-				jsonifier_constexpr auto inner = getInnerBases(outer_bases{});
+				using outer_bases	 = BaseListT<big_tuple>;
+				constexpr auto outer = getOuterBases(outer_bases{});
+				constexpr auto inner = getInnerBases(outer_bases{});
 				return catImpl(big_tuple{ static_cast<value_type&&>(ts)... }, outer, inner);
 			}
 		}
 
-		template<typename... value_types> jsonifier_constexpr auto makeTuple(value_types&&... args) {
+		template<typename... value_types> constexpr auto makeTuple(value_types&&... args) {
 			return tuple<std::unwrap_ref_decay_t<value_types>...>{ static_cast<value_types&&>(args)... };
 		}
 
-		template<typename... value_types> jsonifier_constexpr auto copyTuple(value_types... args) {
+		template<typename... value_types> constexpr auto copyTuple(value_types... args) {
 			return tuple<value_types...>{ args... };
 		}
 
-		template<typename... value_type> jsonifier_constexpr auto forwardAstuple(value_type&&... a) {
+		template<typename... value_type> constexpr auto forwardAstuple(value_type&&... a) {
 			return tuple<value_type&&...>{ static_cast<value_type&&>(a)... };
 		}
 	}
 
 	namespace tuplet::literals {
-		template<char... D> jsonifier_constexpr auto operator""_tag() -> jsonifier::concepts::Tag<sizetFromDigits<D...>()> {
+		template<char... D> constexpr auto operator""_tag() -> jsonifier::concepts::Tag<sizetFromDigits<D...>()> {
 			return {};
 		}
 	}
@@ -297,60 +297,60 @@ namespace std {
 namespace jsonifier_internal {
 
 	template<typename tuple, size_t... Is> auto tupleSplit(tuple&& tupleNew) {
-		static jsonifier_constexpr auto size = std::tuple_size_v<tuple>;
-		static jsonifier_constexpr auto is	 = std::make_index_sequence<size / 2>{};
+		static constexpr auto size = std::tuple_size_v<tuple>;
+		static constexpr auto is   = std::make_index_sequence<size / 2>{};
 		return std::make_pair(tupleSplitImpl<0>(tupleNew, is), tupleSplitImpl<1>(tupleNew, is));
 	}
 
 	template<uint64_t index, uint64_t indexLimit> jsonifier_constexpr void shrinkIndexArrayHelper(auto& arrayNew01, auto& arrayNew02) {
-		if jsonifier_constexpr (index < indexLimit) {
+		if constexpr (index < indexLimit) {
 			arrayNew01[index] = arrayNew02[index];
 			shrinkIndexArrayHelper<index + 1, indexLimit>(arrayNew01, arrayNew02);
 		}
 	}
 
-	template<size_t size> jsonifier_constexpr auto shrinkIndexArray(auto& arrayNew) {
+	template<size_t size> constexpr auto shrinkIndexArray(auto& arrayNew) {
 		ctime_array<size_t, size> res{};
 		shrinkIndexArrayHelper<0, size>(res, arrayNew);
 		return res;
 	}
 
-	template<typename tuple> jsonifier_constexpr auto filter() {
-		jsonifier_constexpr auto n = std::tuple_size_v<tuple>;
+	template<typename tuple> constexpr auto filter() {
+		constexpr auto n = std::tuple_size_v<tuple>;
 		ctime_array<size_t, n> indices{};
 		size_t x = 0;
 		forEach<n>([&](auto I) {
 			using value_type = std::unwrap_ref_decay_t<std::tuple_element_t<I, tuple>>;
-			if jsonifier_constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
+			if constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
 				indices[x++] = I - 1;
 			}
 		});
 		return std::make_pair(indices, x);
 	}
 
-	template<typename Func, typename tuple> jsonifier_constexpr auto mapTuple(Func&& f, tuple&& tupleNew) {
-		jsonifier_constexpr auto size = std::tuple_size_v<std::unwrap_ref_decay_t<tuple>>;
+	template<typename Func, typename tuple> constexpr auto mapTuple(Func&& f, tuple&& tupleNew) {
+		constexpr auto size = std::tuple_size_v<std::unwrap_ref_decay_t<tuple>>;
 		return mapTuple(f, tupleNew, std::make_index_sequence<size>{});
 	}
 
 	template<uint64_t index, uint64_t indexLimit> jsonifier_constexpr void groupSizesHelper(auto& diffs, auto& indices) {
-		if jsonifier_constexpr (index < indexLimit) {
+		if constexpr (index < indexLimit) {
 			diffs[index] = indices[index + 1] - indices[index];
 			groupSizesHelper<index + 1, indexLimit>(diffs, indices);
 		}
 	}
 
-	template<size_t n_groups> jsonifier_constexpr auto groupSizes(const ctime_array<size_t, n_groups>& indices, size_t n_total) {
+	template<size_t n_groups> constexpr auto groupSizes(const ctime_array<size_t, n_groups>& indices, size_t n_total) {
 		ctime_array<size_t, n_groups> diffs;
 		groupSizesHelper<0, n_groups - 1>(diffs, indices);
 		diffs[n_groups - 1] = n_total - indices[n_groups - 1];
 		return diffs;
 	}
 
-	template<size_t Start, typename tuple, size_t... Is> jsonifier_constexpr auto makeGroup(tuple&& object, std::index_sequence<Is...>) {
+	template<size_t Start, typename tuple, size_t... Is> constexpr auto makeGroup(tuple&& object, std::index_sequence<Is...>) {
 		auto get_elem = [&](auto x) {
-			jsonifier_constexpr auto I = decltype(x)::value;
-			if jsonifier_constexpr (I == 1) {
+			constexpr auto I = decltype(x)::value;
+			if constexpr (I == 1) {
 				return tuplet::get<Start + I>(object);
 			} else {
 				return jsonifier::string_view(tuplet::get<Start + I>(object));
@@ -360,28 +360,27 @@ namespace jsonifier_internal {
 		return r;
 	}
 
-	template<auto& GroupStartArr, auto& GroupSizeArr, typename tuple, size_t... GroupNumber>
-	jsonifier_constexpr auto makeGroupsImpl(tuple&& object, std::index_sequence<GroupNumber...>) {
+	template<auto& GroupStartArr, auto& GroupSizeArr, typename tuple, size_t... GroupNumber> constexpr auto makeGroupsImpl(tuple&& object, std::index_sequence<GroupNumber...>) {
 		return tuplet::copyTuple(makeGroup<tuplet::get<GroupNumber>(GroupStartArr)>(object, std::make_index_sequence<tuplet::get<GroupNumber>(GroupSizeArr)>{})...);
 	}
 
-	template<typename tuple> jsonifier_constexpr auto makeGroupsHelper() {
-		jsonifier_constexpr auto size = std::tuple_size_v<tuple>;
+	template<typename tuple> constexpr auto makeGroupsHelper() {
+		constexpr auto size = std::tuple_size_v<tuple>;
 
-		jsonifier_constexpr auto filtered = filter<tuple>();
-		jsonifier_constexpr auto starts	  = shrinkIndexArray<filtered.second>(filtered.first);
-		jsonifier_constexpr auto sizes	  = groupSizes(starts, size);
+		constexpr auto filtered = filter<tuple>();
+		constexpr auto starts	= shrinkIndexArray<filtered.second>(filtered.first);
+		constexpr auto sizes	= groupSizes(starts, size);
 
 		return tuplet::makeTuple(starts, sizes);
 	}
 
 	template<typename tuple> struct GroupBuilder {
-		static jsonifier_constexpr auto h	   = makeGroupsHelper<tuple>();
-		static jsonifier_constexpr auto starts = tuplet::get<0>(h);
-		static jsonifier_constexpr auto sizes  = tuplet::get<1>(h);
+		static constexpr auto h		 = makeGroupsHelper<tuple>();
+		static constexpr auto starts = tuplet::get<0>(h);
+		static constexpr auto sizes	 = tuplet::get<1>(h);
 
-		static jsonifier_constexpr auto op(tuple&& object) {
-			jsonifier_constexpr auto n_groups = starts.maxSize();
+		static constexpr auto op(tuple&& object) {
+			constexpr auto n_groups = starts.maxSize();
 			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};

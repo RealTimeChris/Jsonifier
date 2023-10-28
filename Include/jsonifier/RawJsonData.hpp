@@ -29,12 +29,6 @@
 
 namespace std {
 
-	template<> struct hash<jsonifier::string_view> {
-		jsonifier_inline uint64_t operator()(jsonifier::string_view string) const {
-			return jsonifier_internal::fnv1aHash(string);
-		}
-	};
-
 	template<> struct hash<jsonifier::string> {
 		jsonifier_inline uint64_t operator()(const jsonifier::string& string) const {
 			return jsonifier_internal::fnv1aHash(string);
@@ -47,7 +41,7 @@ namespace jsonifier {
 
 	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
 
-	jsonifier_inline std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
+	inline static std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
 		{ "String", json_type::String }, { "Number", json_type::Number }, { "Bool", json_type::Bool }, { "Null", json_type::Null } };
 
 	class raw_json_data {

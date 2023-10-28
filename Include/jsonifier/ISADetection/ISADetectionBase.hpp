@@ -24,20 +24,28 @@
 #pragma once
 
 #if !defined(__GNUC__)
+	#pragma warning(disable : 4710)
+	#pragma warning(disable : 4711)
 	#pragma warning(disable : 4251)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4514)
 	#pragma warning(disable : 4623)
 	#pragma warning(disable : 4625)
 	#pragma warning(disable : 4626)
-	#pragma warning(disable : 4710)
-	#pragma warning(disable : 4711)
 	#pragma warning(disable : 4820)
+	#pragma warning(disable : 5267)
 	#pragma warning(disable : 5026)
 	#pragma warning(disable : 5027)
 	#pragma warning(disable : 5045)
 	#pragma warning(disable : 5246)
-	#pragma warning(disable : 5267)
+#endif
+
+#if !defined(jsonifier_inline)
+	#define jsonifier_inline inline
+#endif
+
+#if !defined(jsonifier_constexpr)
+	#define jsonifier_constexpr constexpr
 #endif
 
 #ifndef JSONIFIER_CPU_INSTRUCTIONS
@@ -70,14 +78,6 @@
 	#define JSONIFIER_AVX512 (1 << 6)
 #endif
 
-#if !defined(jsonifier_constexpr)
-	#define jsonifier_constexpr constexpr
-#endif
-
-#if !defined(jsonifier_inline)
-	#define jsonifier_inline inline
-#endif
-
 #include <jsonifier/TypeEntities.hpp>
 #include <source_location>
 #include <iostream>
@@ -87,34 +87,34 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-jsonifier_constexpr uint64_t BitsPerStep{ 512 };
-jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+constexpr uint64_t BitsPerStep{ 512 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint64_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-jsonifier_constexpr uint64_t BitsPerStep{ 256 };
-jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+constexpr uint64_t BitsPerStep{ 256 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint32_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
-jsonifier_constexpr uint64_t BitsPerStep{ 128 };
-jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
 
 #else
 
-jsonifier_constexpr uint64_t BitsPerStep{ 128 };
-jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
 
 #endif
@@ -149,11 +149,8 @@ using simd_int_128 = __m128x;
 namespace jsonifier_internal {
 
 	template<uint64_t multiple> jsonifier_inline uint64_t roundUpToMultiple(uint64_t num) {
-		if (num % multiple == 0) {
-			return num;
-		} else {
-			return num + (multiple - (num % multiple));
-		}
+		uint64_t remainder = num % multiple;
+		return remainder == 0 ? num : num + (multiple - remainder);
 	}
 
 	template<uint64_t BitsPerStep> class simd_base_internal {};

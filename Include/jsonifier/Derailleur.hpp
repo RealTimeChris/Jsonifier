@@ -25,7 +25,7 @@
 
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/Error.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 
 namespace jsonifier_internal {
 
@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 		}
 
 		template<std::forward_iterator iterator> jsonifier_inline static void skipKey(iterator& iter, iterator& end) {
-			if jsonifier_constexpr (std::same_as<structural_iterator, iterator>) {
+			if constexpr (std::same_as<structural_iterator, iterator>) {
 				++iter;
 				return;
 			} else {
@@ -97,15 +97,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline static void skipToNextValue(structural_iterator& iter) {
-			while (iter != iter && *iter != 0x2Cu) {
+		jsonifier_inline static void skipToNextValue(structural_iterator& iter, structural_iterator& end) {
+			while (iter != end && *iter != 0x2Cu) {
 				switch (*iter) {
 					case 0x7B: {
-						skipObject(iter);
+						skipObject(iter, end);
 						break;
 					}
 					case 0x5B: {
-						skipArray(iter);
+						skipArray(iter, end);
 						break;
 					}
 					case 0x00: {
@@ -139,14 +139,14 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline static void skipValue(structural_iterator& iter) {
+		jsonifier_inline static void skipValue(structural_iterator& iter, structural_iterator& end) {
 			switch (*iter) {
 				case 0x7B: {
-					skipObject(iter);
+					skipObject(iter, end);
 					break;
 				}
 				case 0x5B: {
-					skipArray(iter);
+					skipArray(iter, end);
 					break;
 				}
 				case 0x00: {
@@ -177,10 +177,13 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline static size_type countValueElements(structural_iterator iter) {
+		jsonifier_inline static size_type countValueElements(structural_iterator iter, structural_iterator& end) {
 			size_type currentDepth{ 1 };
-			size_type currentCount{ 0 };
-			while (iter != iter && currentDepth > 0) {
+			if (*iter == 0x5D) {
+				return 0;
+			}
+			size_type currentCount{ 1 };
+			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					case 0x5B: {
 						++currentDepth;
@@ -260,14 +263,10 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		jsonifier_inline static void skipObject(structural_iterator& iter) {
+		jsonifier_inline static void skipObject(structural_iterator& iter, structural_iterator& end) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (*iter == 0x7D) {
-				++iter;
-				return;
-			}
-			while (iter != iter && currentDepth > 0) {
+			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					case 0x7B: {
 						++currentDepth;
@@ -290,10 +289,6 @@ namespace jsonifier_internal {
 		template<std::forward_iterator iterator> jsonifier_inline static void skipObject(iterator& iter, iterator end) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (*iter == 0x7D) {
-				++iter;
-				return;
-			}
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					case 0x7B: {
@@ -314,14 +309,33 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline static void skipArray(structural_iterator& iter) {
+		jsonifier_inline static void skipToEndOfArray(structural_iterator iter, structural_iterator& end) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (*iter == 0x5D) {
-				++iter;
-				return;
+			while (iter != end && currentDepth > 0) {
+				switch (*iter) {
+					case 0x5B: {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					case 0x5D: {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					default: {
+						++iter;
+						break;
+					}
+				}
 			}
-			while (iter != iter && currentDepth > 0) {
+		}
+
+		jsonifier_inline static void skipArray(structural_iterator& iter, structural_iterator& end) {
+			++iter;
+			size_type currentDepth{ 1 };
+			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					case 0x5B: {
 						++currentDepth;
@@ -344,10 +358,6 @@ namespace jsonifier_internal {
 		template<std::forward_iterator iterator> jsonifier_inline static void skipArray(iterator& iter, iterator end) {
 			++iter;
 			size_type currentDepth{ 1 };
-			if (*iter == 0x5D) {
-				++iter;
-				return;
-			}
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					case 0x5B: {

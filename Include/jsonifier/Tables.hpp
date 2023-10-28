@@ -27,35 +27,52 @@
 
 namespace jsonifier_internal {
 
-	jsonifier_constexpr double powersOfTenFloat[]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22 };
+	template<typename value_type> constexpr std::array<value_type, 255> makeCharMap() {
+		std::array<value_type, 255> returnArray{};
+		for (uint64_t x = 32; x < 128; ++x) {
+			returnArray[x] = static_cast<uint8_t>(x);
+		}
+		returnArray[8]	= 'b';
+		returnArray[9]	= 't';
+		returnArray[10] = 'n';
+		returnArray[12] = 'f';
+		returnArray[13] = 'r';
+		returnArray[34] = '"';
+		returnArray[92] = '\\';
+		return returnArray;
+	}
 
-	jsonifier_constexpr uint64_t powersOfTenInt[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
-		100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
+	constexpr std::array<uint8_t, 255> charMap{ makeCharMap<uint8_t>() };
+
+	constexpr double powersOfTenFloat[]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22 };
+
+	constexpr uint64_t powersOfTenInt[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull, 100000000000ull,
+		1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
 		10000000000000000000ull };
 
-	template<typename value_type> jsonifier_constexpr value_type decTrailingZeroTable[]{ static_cast<value_type>(0x02u), static_cast<value_type>(0x00u),
+	template<jsonifier::concepts::char_type value_type> constexpr value_type decTrailingZeroTable[]{ static_cast<value_type>(0x02u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u),
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x01u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
-		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u) };
+		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u) };
 
-	template<typename value_type> jsonifier_constexpr value_type digiTable[]{ static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
+	template<typename value_type> constexpr value_type digiTable[]{ static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
@@ -82,19 +99,7 @@ namespace jsonifier_internal {
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u) };
 
-	template<typename value_type> constexpr std::array<value_type, 93>& escapeTable() {
-		std::array<value_type, 93> returnArray{};
-		returnArray[8] = 'b';
-		returnArray[9] = 't';
-		returnArray[10] = 'n';
-		returnArray[12] = 'f';
-		returnArray[13] = 'r';
-		returnArray[34] = '"';
-		returnArray[92] = '\\';
-		return returnArray;
-	}
-
-	template<typename value_type> jsonifier_constexpr value_type escapeMap[]{ static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
+	template<typename value_type> constexpr value_type escapeMap[]{ static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
@@ -147,7 +152,7 @@ namespace jsonifier_internal {
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u) };
 
-	template<typename value_type> jsonifier_constexpr value_type charTable[]{ static_cast<value_type>(0x30u), static_cast<value_type>(0x30u), static_cast<value_type>(0x30u),
+	template<typename value_type> constexpr value_type charTable[]{ static_cast<value_type>(0x30u), static_cast<value_type>(0x30u), static_cast<value_type>(0x30u),
 		static_cast<value_type>(0x31u), static_cast<value_type>(0x30u), static_cast<value_type>(0x32u), static_cast<value_type>(0x30u), static_cast<value_type>(0x33u),
 		static_cast<value_type>(0x30u), static_cast<value_type>(0x34u), static_cast<value_type>(0x30u), static_cast<value_type>(0x35u), static_cast<value_type>(0x30u),
 		static_cast<value_type>(0x36u), static_cast<value_type>(0x30u), static_cast<value_type>(0x37u), static_cast<value_type>(0x30u), static_cast<value_type>(0x38u),
@@ -189,30 +194,30 @@ namespace jsonifier_internal {
 		static_cast<value_type>(0x36u), static_cast<value_type>(0x39u), static_cast<value_type>(0x37u), static_cast<value_type>(0x39u), static_cast<value_type>(0x38u),
 		static_cast<value_type>(0x39u), static_cast<value_type>(0x39u) };
 
-	jsonifier_constexpr bool structuralOrWhitespaceNegated[]{ true, true, true, true, true, true, true, true, true, false, false, true, true, false, true, true, true, true, true,
-		true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, false, true, true,
-		true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true, true, true, true, true, true,
-		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true, true,
+	constexpr bool structuralOrWhitespaceNegated[]{ true, true, true, true, true, true, true, true, true, false, false, true, true, false, true, true, true, true, true, true, true,
+		true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true,
+		true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+		true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true, true, true, true, true, true, true, true,
+		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true, true, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-		true, true, true, true, true, true, true, true, true, true, true, true, true };
+		true, true, true, true, true, true, true, true, true, true, true };
 
-	jsonifier_constexpr bool validNumberValues[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+	constexpr bool validNumberValues[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-	template<typename value_type> jsonifier_constexpr value_type digitToVal32[]{ static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
+	template<typename value_type> constexpr value_type digitToVal32[]{ static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
 		static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
 		static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
 		static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
@@ -435,7 +440,7 @@ namespace jsonifier_internal {
 		static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu),
 		static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu), static_cast<value_type>(0xffffffffu) };
 
-	jsonifier_constexpr uint64_t pow10SigTable128[]{ 0xBF29DCABA82FDEAEu, 0x7432EE873880FC33u, 0xEEF453D6923BD65Au, 0x113FAA2906A13B3Fu, 0x9558B4661B6565F8u, 0x4AC7CA59A424C507,
+	constexpr uint64_t pow10SigTable128[]{ 0xBF29DCABA82FDEAEu, 0x7432EE873880FC33u, 0xEEF453D6923BD65Au, 0x113FAA2906A13B3Fu, 0x9558B4661B6565F8u, 0x4AC7CA59A424C507,
 		0xBAAEE17FA23EBF76u, 0x5D79BCF00D2DF649u, 0xE95A99DF8ACE6F53u, 0xF4D82C2C107973DCu, 0x91D8A02BB6C10594u, 0x79071B9B8A4BE869u, 0xB64EC836A47146F9u, 0x9748E2826CDEE284,
 		0xE3E27A444D8D98B7u, 0xFD1B1B2308169B25u, 0x8E6D8C6AB0787F72u, 0xFE30F0F5E50E20F7u, 0xB208EF855C969F4Fu, 0xBDBD2D335E51A935u, 0xDE8B2B66B3BC4723u, 0xAD2C788035E61382,
 		0x8B16FB203055AC76u, 0x4C3BCB5021AFCC31u, 0xADDCB9E83C6B1793u, 0xDF4ABE242A1BBF3Du, 0xD953E8624B85DD78u, 0xD71D6DAD34A2AF0Du, 0x87D4713D6F33AA6Bu, 0x8672648C40E5AD68,

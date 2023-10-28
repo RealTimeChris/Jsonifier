@@ -26,7 +26,7 @@
 
 #include <jsonifier/Allocator.hpp>
 #include <jsonifier/Tables.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
@@ -37,8 +37,8 @@ namespace jsonifier_internal {
 			simd_int_t values(gatherValuesU<simd_int_t>(source));
 			simd_base::store(values, destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashes) };
-			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotes) };
+			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashesVal) };
+			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotesVal) };
 			return returnData;
 		}
 

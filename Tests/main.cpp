@@ -1,3 +1,4 @@
+
 #include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
 #include "glaze/glaze.hpp"
@@ -39,7 +40,13 @@ template<typename OTy> struct TestGenerator {
 	jsonifier_inline static json_data generateJsonData() {
 		std::string buffer{};
 		TestGenerator generator{};
+		jsonifier::jsonifier_core parser{};
 		glz::write_json(generator, buffer);
+		std::cout << "GLAZE BUFFER: " << buffer << std::endl;
+
+		buffer.clear();
+		parser.serializeJson(generator, buffer);
+		std::cout << "JSONIFIER BUFFER: " << buffer << std::endl;
 		json_data returnData{};
 		returnData.arraySizes = generator.arraySizes;
 		returnData.theData	  = buffer;
@@ -48,16 +55,40 @@ template<typename OTy> struct TestGenerator {
 
 	std::string generateString() {
 		std::string returnString{};
-		for (uint32_t x = 0; x < randomizeNumber(30.0f, 15.0f); x++) {
-			auto theValue = static_cast<char>((static_cast<float>(this->randomEngine()) / static_cast<float>(this->randomEngine.max()) * 93.0f) + 35.0f);
-			if (theValue == '\\') {
-				continue;
-			} else if (theValue == '"') {
-				returnString.push_back('"');
-			} else {
-				returnString.push_back(theValue);
+		//returnString.push_back('\"');
+		for (uint32_t x = 0; x < randomizeNumber(45.0f, 15.0f); x++) {
+			auto theValue = static_cast<char>((static_cast<float>(this->randomEngine()) / static_cast<float>(this->randomEngine.max()) * 93.0f) + 32.0f);
+			switch (theValue) {
+				case '\"': {
+					returnString.append(R"(\")");
+					break;
+				}
+				case '\\': {
+					returnString.append(R"(\\)");
+					break;
+				}
+				case '\r': {
+					returnString.append(R"(\\\r)");
+					break;
+				}
+				case '\t': {
+					returnString.append(R"(\\\t)");
+					break;
+				}
+				case '\f': {
+					returnString.append(R"(\\\f)");
+					break;
+				}
+				case '\n': {
+					returnString.append(R"(\\\n)");
+					break;
+				}
+				default:{
+					returnString.push_back(theValue);
+				}
 			}
 		}
+		//returnString.push_back('\"');
 		return returnString;
 	}
 
@@ -79,10 +110,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(10);
-			for (uint64_t x = 0; x < 10; ++x) {
+			v.resize(1);
+			for (uint64_t x = 0; x < 1; ++x) {
 				if constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(25, 10);
+					auto arraySize01 = randomizeNumber(12, 10);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -218,7 +249,7 @@ class FileLoader {
   public:
 	FileLoader(const char* filePathNew) {
 		filePath	   = filePathNew;
-		auto theStream = std::ofstream{ filePath, std::ios::binary | std::ios::out | std::ios::in };
+		auto theStream = std::ofstream{ filePath, std::ios::app | std::ios::binary | std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
 		fileContents = inputStream.str();
@@ -226,7 +257,7 @@ class FileLoader {
 	}
 
 	void saveFile(std::string fileToSave) {
-		auto theStream = std::ofstream{ filePath, std::ios::binary | std::ios::out | std::ios::in };
+		auto theStream = std::ofstream{ filePath, std::ios::app | std::ios::binary | std::ios::out | std::ios::in };
 		theStream << "";
 		theStream.write(fileToSave.data(), fileToSave.size());
 		theStream.close();
@@ -382,6 +413,11 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 			}
 		},
 		1);
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
+		}
+	}
 
 	r.json_read = result;
 	buffer.clear();
@@ -443,7 +479,7 @@ auto glaze_abc_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-		if (auto error = glz::read_json(uint64Test, buffer); error) {
+			if (auto error = glz::read_json(uint64Test, buffer); error) {
 				std::cout << "glaze Error: " << glz::format_error(error, buffer) << std::endl;
 			}
 		},
@@ -529,7 +565,7 @@ template<> void simdPullArray<std::string>(ondemand::array newX, jsonifier::vect
 			simdPullArray(newArray, newStruct.testUints); \
 			newArray = newObject["testBools"].get_array().value(); \
 			simdPullArray(newArray, newStruct.testBools); \
-			obj.x.emplace_back(std::move(newStruct));\
+			obj.x.emplace_back(std::move(newStruct)); \
 		} \
 	}
 
@@ -878,24 +914,36 @@ template<> struct jsonifier::core<ReadyMessage> {
 
 int32_t main() {
 	try {
-		jsonifier::string newString01{
-			"{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,\\\"calls\\\":[]},\\\"session_"
-			"lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-sessions-prd-2-51\\\",{"
-			"\\\"micros\\\":117233,\\\"calls\\\":[\\\"start_session\\\",{\\\"micros\\\":66751,\\\"calls\\\":[\\\"discord-api-79bdc49487-hv95g\\\",{\\\"micros\\\":59968,"
-			"\\\"calls\\\":[\\\"get_user\\\",{\\\"micros\\\":9341},\\\"get_guilds\\\",{\\\"micros\\\":7529},\\\"send_scheduled_deletion_message\\\",{\\\"micros\\\":11},\\\"guild_"
-			"join_requests\\\",{\\\"micros\\\":1},\\\"authorized_ip_coro\\\",{\\\"micros\\\":12}]}]},\\\"starting_guild_connect\\\",{\\\"micros\\\":419,\\\"calls\\\":[]},"
-			"\\\"presence_started\\\",{\\\"micros\\\":272,\\\"calls\\\":[]},\\\"guilds_started\\\",{\\\"micros\\\":157,\\\"calls\\\":[]},\\\"guilds_connect\\\",{\\\"micros\\\":29,"
-			"\\\"calls\\\":[]},\\\"presence_connect\\\",{\\\"micros\\\":49563,\\\"calls\\\":[]},\\\"connect_finished\\\",{\\\"micros\\\":49598,\\\"calls\\\":[]},\\\"build_"
-			"ready\\\",{\\\"micros\\\":33,\\\"calls\\\":[]},\\\"clean_ready\\\",{\\\"micros\\\":1,\\\"calls\\\":[]},\\\"optimize_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]},"
-			"\\\"split_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]}]}]}]\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},\"auth\":{},\"geo_ordered_rtc_"
-			"regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":318872312596267018,\"unavailable\":true},{"
-			"\"id\":931640556814237706,\"unavailable\":true},{\"id\":991025447875784714,\"unavailable\":true},{\"id\":995048955215872071,\"unavailable\":true},{\"id\":"
-			"1022405038922006538,\"unavailable\":true},{\"id\":1032783776184533022,\"unavailable\":true},{\"id\":1078501504119476282,\"unavailable\":true},{\"id\":"
-			"1131853763506880522,\"unavailable\":true}],\"presences\":[],\"private_channels\":[],\"relationships\":[],\"resume_gateway_url\":\"wss://"
-			"gateway-us-east1-d.discord.gg\",\"session_id\":\"5b405a8282550f72114b460169cd08f6\",\"session_type\":\"normal\",\"shard\":\"01\",\"user\":{\"avatar\":"
-			"\"88bd9ce7bf889c0d36fb4afd3725900b\",\"bot\":true,\"discriminator\":\"3055\",\"email\":null,\"flags\":0,\"global_name\":null,\"id\":1142733646600614004,\"mfa_"
-			"enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":10},\"op\":0,\"s\":1,\"t\":\"READY\"}"
-		};
+		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,"
+									   "\\\"calls\\\":[]},\\\"session_"
+									   "lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-"
+									   "sessions-prd-2-51\\\",{"
+									   "\\\"micros\\\":117233,\\\"calls\\\":[\\\"start_session\\\",{\\\"micros\\\":66751,\\\"calls\\\":[\\\"discord-api-79bdc49487-hv95g\\\",{"
+									   "\\\"micros\\\":59968,"
+									   "\\\"calls\\\":[\\\"get_user\\\",{\\\"micros\\\":9341},\\\"get_guilds\\\",{\\\"micros\\\":7529},\\\"send_scheduled_deletion_message\\\",{"
+									   "\\\"micros\\\":11},\\\"guild_"
+									   "join_requests\\\",{\\\"micros\\\":1},\\\"authorized_ip_coro\\\",{\\\"micros\\\":12}]}]},\\\"starting_guild_connect\\\",{\\\"micros\\\":"
+									   "419,\\\"calls\\\":[]},"
+									   "\\\"presence_started\\\",{\\\"micros\\\":272,\\\"calls\\\":[]},\\\"guilds_started\\\",{\\\"micros\\\":157,\\\"calls\\\":[]},\\\"guilds_"
+									   "connect\\\",{\\\"micros\\\":29,"
+									   "\\\"calls\\\":[]},\\\"presence_connect\\\",{\\\"micros\\\":49563,\\\"calls\\\":[]},\\\"connect_finished\\\",{\\\"micros\\\":49598,"
+									   "\\\"calls\\\":[]},\\\"build_"
+									   "ready\\\",{\\\"micros\\\":33,\\\"calls\\\":[]},\\\"clean_ready\\\",{\\\"micros\\\":1,\\\"calls\\\":[]},\\\"optimize_ready\\\",{"
+									   "\\\"micros\\\":0,\\\"calls\\\":[]},"
+									   "\\\"split_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]}]}]}]\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},"
+									   "\"auth\":{},\"geo_ordered_rtc_"
+									   "regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":"
+									   "318872312596267018,\"unavailable\":true},{"
+									   "\"id\":931640556814237706,\"unavailable\":true},{\"id\":991025447875784714,\"unavailable\":true},{\"id\":995048955215872071,"
+									   "\"unavailable\":true},{\"id\":"
+									   "1022405038922006538,\"unavailable\":true},{\"id\":1032783776184533022,\"unavailable\":true},{\"id\":1078501504119476282,\"unavailable\":"
+									   "true},{\"id\":"
+									   "1131853763506880522,\"unavailable\":true}],\"presences\":[],\"private_channels\":[],\"relationships\":[],\"resume_gateway_url\":\"wss://"
+									   "gateway-us-east1-d.discord.gg\",\"session_id\":\"5b405a8282550f72114b460169cd08f6\",\"session_type\":\"normal\",\"shard\":\"01\","
+									   "\"user\":{\"avatar\":"
+									   "\"88bd9ce7bf889c0d36fb4afd3725900b\",\"bot\":true,\"discriminator\":\"3055\",\"email\":null,\"flags\":0,\"global_name\":null,\"id\":"
+									   "1142733646600614004,\"mfa_"
+									   "enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":10},\"op\":0,\"s\":1,\"t\":\"READY\"}" };
 		ReadyMessage dataNew{};
 		jsonifier::jsonifier_core parser{};
 		char* newPtr{ nullptr };
@@ -907,17 +955,18 @@ int32_t main() {
 		}
 		parser.serializeJson(dataNew, newString01);
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
+		FileLoader fileLoader02{ "C:/users/chris/source/repos/Jsonifier/JsonData.json" };
+		fileLoader02.saveFile(glz::prettify(jsonData.theData));
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
 		auto abcTestResults	  = abc_test(jsonData);
 #if defined(_WIN32)
 		FileLoader fileLoader01{ "../../../ReadMe.md" };
-		FileLoader fileLoader02{ "../../../JsonData.json" };
-		fileLoader02.saveFile(glz::prettify(jsonData.theData));
+		
 #else
 		FileLoader fileLoader01{ "../ReadMe.md" };
-		FileLoader fileLoader02{ "../JsonData.json" };
-		fileLoader02.saveFile(glz::prettify(jsonData.theData));
+		FileLoader fileLoader03{ "../JsonData.json" };
+		fileLoader03.saveFile(glz::prettify(jsonData.theData));
 #endif
 		std::string newstring = fileLoader01;
 		std::string section01 = newstring.substr(0, newstring.find("Single Iteration Test Results:") + std::string("Single Iteration Test Results:").size() + 2);
