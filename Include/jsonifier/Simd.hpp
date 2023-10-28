@@ -82,16 +82,24 @@ namespace jsonifier_internal {
 		using size_type = uint64_t;
 
 		static jsonifier_constexpr simd_int_t oddBitsVal{ simdFromValue<simd_int_t>(0xAA) };
-		simd_int_t registers00to7[StridesPerStep]{};
-		simd_int_t register08{};
-		simd_int_t register09{};
-		simd_int_t register10{};
-		simd_int_t register11{};
-		simd_int_t register12{};
-		simd_int_t register13{};
-		simd_int_t register14{};
-		simd_int_t register15{};
-		simd_int_t register16{};
+		simd_int_t followsPotentialNonquoteScalar{};
+		simd_int_t evenSeriesCodesAndOddBits{};
+		simd_int_t newPtr[StridesPerStep]{};
+		simd_int_t maybeEscapedAndOddBits{};
+		simd_int_t escapeAndTerminalCode{};
+		simd_int_t currentValues{};
+		simd_int_t nextIsEscaped{};
+		simd_int_t prevInScalar{};
+		simd_int_t maybeEscaped{};
+		simd_int_t structurals{};
+		simd_int_t whitespace{};
+		simd_int_t stringTail{};
+		simd_int_t backslash{};
+		simd_int_t escaped{};
+		simd_int_t quotes{};
+		simd_int_t escape{};
+		simd_int_t scalar{};
+		simd_int_t op{};
 		bool storedLSB01{};
 		bool storedLSB02{};
 		string_block_reader<BitsPerStep> stringBlockReader{};
@@ -100,7 +108,7 @@ namespace jsonifier_internal {
 		size_type stringLength{};
 		size_type stringIndex{};
 		uint64_t prevInstring{};
-		uint64_t newBits[StridesPerStep]{};
+		uint64_t newBits[4]{};
 		size_type tapeIndex{};
 		jsonifier_inline simd_structural_generator() noexcept = default;
 		jsonifier_inline simd_structural_generator(size_type stringLengthNew, string_view_ptr stringViewNew, structural_index_vector* structuralIndicesNew) {
@@ -139,7 +147,7 @@ namespace jsonifier_internal {
 
 
 		template<size_type index> jsonifier_inline void collectStringValuesHelper(string_view_ptr valuesNew) {
-			registers00to7[index] = gatherValuesU<simd_int_t>(valuesNew + (BytesPerStep * index));
+			newPtr[index] = gatherValuesU<simd_int_t>(valuesNew + (BytesPerStep * index));
 		}
 
 		jsonifier_inline void collectStringValues(string_view_ptr valuesNew) {
@@ -155,27 +163,27 @@ namespace jsonifier_internal {
 
 		jsonifier_inline void generateStructurals(string_view_ptr valueNew) {
 			collectStringValues(valueNew);
-			convertWhitespaceToSimdBase(register08, registers00to7);
-			convertBackslashesToSimdBase(register09, registers00to7);
-			convertStructuralsToSimdBase(register10, registers00to7);
-			convertQuotesToSimdBase(register11, registers00to7);
-			register12 = collectStructurals();
+			convertWhitespaceToSimdBase(whitespace, newPtr);
+			convertBackslashesToSimdBase(backslash, newPtr);
+			convertStructuralsToSimdBase(op, newPtr);
+			convertQuotesToSimdBase(quotes, newPtr);
+			structurals = collectStructurals();
 			addTapeValues();
 			stringIndex += BitsPerStep;
 		}
 
 		jsonifier_inline void addTapeValues() {
 			alignas(BytesPerStep) size_type newBits[StridesPerStep]{};
-			store(register16, newBits);
-			addTapeValuesHelper<0>(register16);
+			store(structurals, newBits);
+			addTapeValuesHelper<0>(structurals, newBits);
 		}
 
-		jsonifier::vector<size_type> convertBitsToIndices(simd_int_t& registerNew) {
+		jsonifier::vector<size_type> convertBitsToIndices(const simd_int_t& structurals) {
 			jsonifier::vector<size_type> structuralIndices{};
 			
 			alignas(BytesPerStep) size_type newBits[StridesPerStep]{};
 			size_type tapeIndex{};
-			store(registerNew, newBits);
+			store(structurals, newBits);
 			for (size_type x = 0; x < StridesPerStep; ++x) {
 				if (!newBits[x]) {
 					continue;
@@ -195,10 +203,10 @@ namespace jsonifier_internal {
 			return structuralIndices;
 		}
 
-		template<size_type index = 0> jsonifier_inline void addTapeValuesHelper(simd_int_t& registerNew) {
+		template<size_type index = 0> jsonifier_inline void addTapeValuesHelper(simd_int_t& structurals, size_type* newBits) {
 			if constexpr (index < StridesPerStep) {
 				if (!newBits[index]) {
-					addTapeValuesHelper<index + 1>(registerNew);
+					addTapeValuesHelper<index + 1>(structurals, newBits);
 					return;
 				}
 				auto cnt			  = popcnt(newBits[index]);
@@ -207,19 +215,19 @@ namespace jsonifier_internal {
 					newBits[index] = rollValuesIntoTape<0, index>(y, newBits[index]);
 				}
 				tapeIndex += cnt;
-				addTapeValuesHelper<index + 1>(registerNew);
+				addTapeValuesHelper<index + 1>(structurals, newBits);
 			}
 		}
 
-		jsonifier_inline simd_int_t collectNonEmptyEscaped() {
-			register13						 = setLSB(simd_int_t{}, storedLSB02);
-			register14						 = bitAndNot(register09, register13);
-			register15						 = shl<1>(register14);
-			register15						 = opOr(register15, oddBitsVal);
-			register15						 = opSub(register15, register14);
-			register16						 = opXor(register15, oddBitsVal);
-			storedLSB02						 = getMSB(opAnd(register14, register09));
-			return opXor(register16, opOr(register09, register13));
+		jsonifier_inline simd_int_t collectNonEmptyEscaped(simd_int_t& backslash) {
+			simd_int_t nextIsEscaped		 = setLSB(simd_int_t{}, storedLSB02);
+			simd_int_t potentialEscape		 = bitAndNot(backslash, nextIsEscaped);
+			simd_int_t maybeEscaped			 = shl<1>(potentialEscape);
+			maybeEscaped					 = opOr(maybeEscaped, oddBitsVal);
+			maybeEscaped					 = opSub(maybeEscaped, potentialEscape);
+			simd_int_t escapeAndTerminalCode = opXor(maybeEscaped, oddBitsVal);
+			storedLSB02						 = getMSB(opAnd(escapeAndTerminalCode, backslash));
+			return opXor(escapeAndTerminalCode, opOr(backslash, nextIsEscaped));
 		}
 
 		jsonifier_inline simd_int_t collectEmptyEscaped() {
@@ -228,21 +236,21 @@ namespace jsonifier_internal {
 			return escaped;
 		}
 
-		jsonifier_inline simd_int_t collectEscapedCharacters() {
-			return opBool(register09) ? collectNonEmptyEscaped() : collectEmptyEscaped();
+		jsonifier_inline simd_int_t collectEscapedCharacters(simd_int_t& backslash) {
+			return opBool(backslash) ? collectNonEmptyEscaped(backslash) : collectEmptyEscaped();
 		}
 
 		jsonifier_inline simd_int_t collectStructurals() {
-			register13 = collectEscapedCharacters();
-			register11 = bitAndNot(register11, register13);
-			register13 = carrylessMultiplication(register11, prevInstring);
-			register14 = opXor(register13, register11);
-			register15 = opNot(opOr(register10, register08));
-			register13 = bitAndNot(register15, register11);
-			register13 = follows(register13, storedLSB01);
-			register13 = bitAndNot(register15, register13);
-			register13 = opOr(register10, register13);
-			return bitAndNot(register13, register14);
+			simd_int_t currentValues = collectEscapedCharacters(backslash);
+			quotes					 = bitAndNot(quotes, currentValues);
+			currentValues			 = carrylessMultiplication(quotes, prevInstring);
+			simd_int_t stringTail	 = opXor(currentValues, quotes);
+			simd_int_t scalar		 = opNot(opOr(op, whitespace));
+			currentValues			 = bitAndNot(scalar, quotes);
+			currentValues			 = follows(currentValues, storedLSB01);
+			currentValues			 = bitAndNot(scalar, currentValues);
+			currentValues			 = opOr(op, currentValues);
+			return bitAndNot(currentValues, stringTail);
 		}
 	};
 

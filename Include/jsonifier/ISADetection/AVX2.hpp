@@ -189,19 +189,19 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline static void convertEscapeablesToSimdBase(string_parsing_type& value, simd_int_t valuesNew) {
-			value |= cmpeq(shuffle(valuesNew, escapeTable01), valuesNew);
+			//value |= cmpeq(shuffle(valuesNew, escapeTable01), valuesNew);
 			value |= cmpeq(shuffle(valuesNew, escapeTable02), valuesNew);
 		}
 
 		jsonifier_inline static void convertWhitespaceToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			insertUint32<0>(value, cmpeq(shuffle(valuesNew[0], whitespaceTable), valuesNew[0]));
-			insertUint32<1>(value, cmpeq(shuffle(valuesNew[1], whitespaceTable), valuesNew[1]));
-			insertUint32<2>(value, cmpeq(shuffle(valuesNew[2], whitespaceTable), valuesNew[2]));
-			insertUint32<3>(value, cmpeq(shuffle(valuesNew[3], whitespaceTable), valuesNew[3]));
-			insertUint32<4>(value, cmpeq(shuffle(valuesNew[4], whitespaceTable), valuesNew[4]));
-			insertUint32<5>(value, cmpeq(shuffle(valuesNew[5], whitespaceTable), valuesNew[5]));
-			insertUint32<6>(value, cmpeq(shuffle(valuesNew[6], whitespaceTable), valuesNew[6]));
-			insertUint32<7>(value, cmpeq(shuffle(valuesNew[7], whitespaceTable), valuesNew[7]));
+			insertUint32<0>(value, cmpeq(shuffle(valuesNew[0], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[0]));
+			insertUint32<1>(value, cmpeq(shuffle(valuesNew[1], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[1]));
+			insertUint32<2>(value, cmpeq(shuffle(valuesNew[2], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[2]));
+			insertUint32<3>(value, cmpeq(shuffle(valuesNew[3], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[3]));
+			insertUint32<4>(value, cmpeq(shuffle(valuesNew[4], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[4]));
+			insertUint32<5>(value, cmpeq(shuffle(valuesNew[5], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[5]));
+			insertUint32<6>(value, cmpeq(shuffle(valuesNew[6], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[6]));
+			insertUint32<7>(value, cmpeq(shuffle(valuesNew[7], _mm256_load_si256(reinterpret_cast<const __m256i*>(arrayNew02))), valuesNew[7]));
 		}
 
 		jsonifier_inline static void convertBackslashesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {

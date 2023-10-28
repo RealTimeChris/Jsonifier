@@ -164,33 +164,6 @@ namespace jsonifier_internal {
 		return nullptr;
 	}
 
-	template<typename value_type01, typename value_type02>
-	jsonifier_inline uint64_t serializeString(const value_type01* source, value_type02* dest, uint64_t length) {
-		uint64_t newIndex{};
-		while (length >= BytesPerStep) {
-			string_parsing_type valuesNew{};
-			simd_base::convertEscapeablesToSimdBase(valuesNew, gatherValuesU<simd_int_t>(source));
-			if (valuesNew != 0) {
-				for (uint64_t x = 0; x < BytesPerStep; ++x) {
-					if (valuesNew & (1 << x)) {
-						dest[newIndex++] = '\\';
-						dest[newIndex++] = escapeTable<value_type01>()[source[x]];
-					} else {
-						dest[newIndex++] = source[x];
-					}
-				}
-			} else {
-				std::memcpy(dest + newIndex, source, BytesPerStep);
-				newIndex += BytesPerStep;
-			}
-			newIndex += BytesPerStep;
-			length -= BytesPerStep;
-			source += BytesPerStep;
-		}
-
-		return newIndex;
-	}
-
 	jsonifier_inline bool parseBool(string_view_ptr json) {
 		uint8_t valueNew[5]{ "true" };
 		return std::memcmp(valueNew, json, 4) == 0;

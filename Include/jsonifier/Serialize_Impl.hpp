@@ -166,7 +166,6 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, jsonifier::concepts::string_t value_type> struct serialize_impl<excludeKeys, value_type> {
 		template<jsonifier::concepts::vector_like buffer_type> jsonifier_inline static void op(const value_type& value, buffer_type& buffer, uint64_t& index) {
 			const auto origN = value.size();
-			uint64_t indexNew{};
 
 			if jsonifier_constexpr (jsonifier::concepts::has_resize<buffer_type>) {
 				const uint64_t k = index + (4 * origN);
@@ -175,54 +174,72 @@ namespace jsonifier_internal {
 				}
 			}
 			writeCharacter<'"'>(buffer, index);
-			if (origN >= BytesPerStep) {
-				indexNew = serializeString(value.data(), buffer.data() + index - 1, value.size());
-			}
-			if (indexNew < value.size()) {
-				auto dataPtr = buffer.data();
-
-				for (; indexNew < value.size(); ++indexNew) {
-					switch (value[indexNew]) {
-						case '"': {
-							std::memcpy(dataPtr + index, R"(\")", 2);
-							index += 2;
-							break;
+			auto source = value.data();
+			auto length = value.size();
+			auto dest	= buffer.data();
+			uint64_t indexNew{};
+			while (length > BytesPerStep) {
+				string_parsing_type valuesNew{};
+				simd_base::convertEscapeablesToSimdBase(valuesNew, gatherValuesU<simd_int_t>(source));
+				if (valuesNew != 0) {
+					for (uint64_t x = 0; x < BytesPerStep; ++x) {
+						if (valuesNew & (1 << x)) {
+							dest[indexNew++] = '\\';
+							dest[indexNew++] = escapeTable<typename value_type::value_type>()[source[x]];
+						} else {
+							dest[indexNew++] = source[x];
 						}
-						case '\\': {
-							std::memcpy(dataPtr + index, R"(\\)", 2);
-							index += 2;
-							break;
-						}
-						case '\b': {
-							std::memcpy(dataPtr + index, R"(\b)", 2);
-							index += 2;
-							break;
-						}
-						case '\f': {
-							std::memcpy(dataPtr + index, R"(\f)", 2);
-							index += 2;
-							break;
-						}
-						case '\n': {
-							std::memcpy(dataPtr + index, R"(\n)", 2);
-							index += 2;
-							break;
-						}
-						case '\r': {
-							std::memcpy(dataPtr + index, R"(\r)", 2);
-							index += 2;
-							break;
-						}
-						case '\t': {
-							std::memcpy(dataPtr + index, R"(\t)", 2);
-							index += 2;
-							break;
-						}
-							[[likely]] default: {
-								std::memcpy(dataPtr + index, &value[indexNew], 1);
-								++index;
-							}
 					}
+				} else {
+					std::memcpy(dest + indexNew, source, BytesPerStep);
+					indexNew += BytesPerStep;
+				}
+				indexNew += BytesPerStep;
+				length -= BytesPerStep;
+				source += BytesPerStep;
+			}
+
+			for (; indexNew < value.size(); ++indexNew) {
+				switch (value[indexNew]) {
+					case '"': {
+						std::memcpy(dest + index, R"(\")", 2);
+						index += 2;
+						break;
+					}
+					case '\\': {
+						std::memcpy(dest + index, R"(\\)", 2);
+						index += 2;
+						break;
+					}
+					case '\b': {
+						std::memcpy(dest + index, R"(\b)", 2);
+						index += 2;
+						break;
+					}
+					case '\f': {
+						std::memcpy(dest + index, R"(\f)", 2);
+						index += 2;
+						break;
+					}
+					case '\n': {
+						std::memcpy(dest + index, R"(\n)", 2);
+						index += 2;
+						break;
+					}
+					case '\r': {
+						std::memcpy(dest + index, R"(\r)", 2);
+						index += 2;
+						break;
+					}
+					case '\t': {
+						std::memcpy(dest + index, R"(\t)", 2);
+						index += 2;
+						break;
+					}
+						[[likely]] default : {
+							std::memcpy(dest + index, &value[indexNew], 1);
+							++index;
+						}
 				}
 			}
 			writeCharacter<'"'>(buffer, index);

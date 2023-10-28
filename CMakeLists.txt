@@ -134,11 +134,6 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-install(
-	FILES "${CMAKE_SOURCE_DIR}/JsonData.json"
-	DESTINATION "${CMAKE_INSTALL_PREFIX}"
-)
-
 if (JSONIFIER_TEST)
 	add_subdirectory("./Tests")
 endif()

@@ -482,63 +482,39 @@ struct on_demand {
 template<typename OTy2> void simdPullArray(ondemand::array newX, jsonifier::vector<OTy2>& newVector);
 
 template<> void simdPullArray<double>(ondemand::array newX, jsonifier::vector<double>& newVector) {
-	if (newVector.size() < 1000) {
-		newVector.resize(1000);
-	}
-	uint64_t currentIndex{};
 	for (ondemand::value value: newX) {
-		newVector[currentIndex++] = value.get_double();
+		newVector.emplace_back(value.get_double());
 	}
 }
 
 template<> void simdPullArray<int64_t>(ondemand::array newX, jsonifier::vector<int64_t>& newVector) {
-	if (newVector.size() < 1000) {
-		newVector.resize(1000);
-	}
-	uint64_t currentIndex{};
 	for (ondemand::value value: newX) {
-		newVector[currentIndex++] = value.get_int64();
+		newVector.emplace_back(value.get_int64());
 	}
 }
 
 template<> void simdPullArray<uint64_t>(ondemand::array newX, jsonifier::vector<uint64_t>& newVector) {
-	if (newVector.size() < 1000) {
-		newVector.resize(1000);
-	}
-	uint64_t currentIndex{};
 	for (ondemand::value value: newX) {
-		newVector[currentIndex++] = value.get_uint64();
+		newVector.emplace_back(value.get_uint64());
 	}
 }
 
 template<> void simdPullArray<bool>(ondemand::array newX, jsonifier::vector<bool>& newVector) {
-	if (newVector.size() < 1000) {
-		newVector.resize(1000);
-	}
-	uint64_t currentIndex{};
 	for (ondemand::value value: newX) {
-		newVector[currentIndex++] = value.get_bool();
+		newVector.emplace_back(value.get_bool());
 	}
 }
 
 template<> void simdPullArray<std::string>(ondemand::array newX, jsonifier::vector<std::string>& newVector) {
-	if (newVector.size() < 1000) {
-		newVector.resize(1000);
-	}
-	uint64_t currentIndex{};
 	for (ondemand::value value: newX) {
-		newVector[currentIndex++] = static_cast<std::string>(value.get_string().value());
+		newVector.emplace_back(static_cast<std::string>(value.get_string().value()));
 	}
 }
 
-#define SIMD_Pull(x, y) \
+#define SIMD_Pull(x) \
 	{ \
-		if (obj.x.size() < y) { \
-			obj.x.resize(y); \
-		} \
 		ondemand::array newX = doc[#x].get_array().value(); \
 		test_struct newStruct{}; \
-		int32_t currentIndex{}; \
 		ondemand::array newArray{}; \
 		ondemand::object newObject{}; \
 		for (ondemand::value value: newX) { \
@@ -553,38 +529,38 @@ template<> void simdPullArray<std::string>(ondemand::array newX, jsonifier::vect
 			simdPullArray(newArray, newStruct.testUints); \
 			newArray = newObject["testBools"].get_array().value(); \
 			simdPullArray(newArray, newStruct.testBools); \
-			obj.x[currentIndex] = std::move(newStruct); \
+			obj.x.emplace_back(std::move(newStruct));\
 		} \
 	}
 
 bool on_demand::read_in_order(Test<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes) {
 	ondemand::document doc = parser.iterate(json).value();
-	SIMD_Pull(a, arraySizes[0]);
-	SIMD_Pull(b, arraySizes[1]);
-	SIMD_Pull(c, arraySizes[2]);
-	SIMD_Pull(d, arraySizes[3]);
-	SIMD_Pull(e, arraySizes[4]);
-	SIMD_Pull(f, arraySizes[5]);
-	SIMD_Pull(g, arraySizes[6]);
-	SIMD_Pull(h, arraySizes[7]);
-	SIMD_Pull(i, arraySizes[8]);
-	SIMD_Pull(j, arraySizes[9]);
-	SIMD_Pull(k, arraySizes[10]);
-	SIMD_Pull(l, arraySizes[11]);
-	SIMD_Pull(m, arraySizes[12]);
-	SIMD_Pull(n, arraySizes[13]);
-	SIMD_Pull(o, arraySizes[14]);
-	SIMD_Pull(p, arraySizes[15]);
-	SIMD_Pull(q, arraySizes[16]);
-	SIMD_Pull(r, arraySizes[17]);
-	SIMD_Pull(s, arraySizes[18]);
-	SIMD_Pull(t, arraySizes[19]);
-	SIMD_Pull(u, arraySizes[20]);
-	SIMD_Pull(v, arraySizes[21]);
-	SIMD_Pull(w, arraySizes[22]);
-	SIMD_Pull(x, arraySizes[23]);
-	SIMD_Pull(y, arraySizes[24]);
-	SIMD_Pull(z, arraySizes[25]);
+	SIMD_Pull(a);
+	SIMD_Pull(b);
+	SIMD_Pull(c);
+	SIMD_Pull(d);
+	SIMD_Pull(e);
+	SIMD_Pull(f);
+	SIMD_Pull(g);
+	SIMD_Pull(h);
+	SIMD_Pull(i);
+	SIMD_Pull(j);
+	SIMD_Pull(k);
+	SIMD_Pull(l);
+	SIMD_Pull(m);
+	SIMD_Pull(n);
+	SIMD_Pull(o);
+	SIMD_Pull(p);
+	SIMD_Pull(q);
+	SIMD_Pull(r);
+	SIMD_Pull(s);
+	SIMD_Pull(t);
+	SIMD_Pull(u);
+	SIMD_Pull(v);
+	SIMD_Pull(w);
+	SIMD_Pull(x);
+	SIMD_Pull(y);
+	SIMD_Pull(z);
 	return false;
 }
 
@@ -653,32 +629,32 @@ struct on_demand_abc {
 
 bool on_demand_abc::read_out_of_order(AbcTest<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes) {
 	ondemand::document doc = parser.iterate(json).value();
-	SIMD_Pull(z, arraySizes[25]);
-	SIMD_Pull(y, arraySizes[24]);
-	SIMD_Pull(x, arraySizes[23]);
-	SIMD_Pull(w, arraySizes[22]);
-	SIMD_Pull(v, arraySizes[21]);
-	SIMD_Pull(u, arraySizes[20]);
-	SIMD_Pull(t, arraySizes[19]);
-	SIMD_Pull(s, arraySizes[18]);
-	SIMD_Pull(r, arraySizes[17]);
-	SIMD_Pull(q, arraySizes[16]);
-	SIMD_Pull(p, arraySizes[15]);
-	SIMD_Pull(o, arraySizes[14]);
-	SIMD_Pull(n, arraySizes[13]);
-	SIMD_Pull(m, arraySizes[12]);
-	SIMD_Pull(l, arraySizes[11]);
-	SIMD_Pull(k, arraySizes[10]);
-	SIMD_Pull(j, arraySizes[9]);
-	SIMD_Pull(i, arraySizes[8]);
-	SIMD_Pull(h, arraySizes[7]);
-	SIMD_Pull(g, arraySizes[6]);
-	SIMD_Pull(f, arraySizes[5]);
-	SIMD_Pull(e, arraySizes[4]);
-	SIMD_Pull(d, arraySizes[3]);
-	SIMD_Pull(c, arraySizes[2]);
-	SIMD_Pull(b, arraySizes[1]);
-	SIMD_Pull(a, arraySizes[0]);
+	SIMD_Pull(a);
+	SIMD_Pull(b);
+	SIMD_Pull(c);
+	SIMD_Pull(d);
+	SIMD_Pull(e);
+	SIMD_Pull(f);
+	SIMD_Pull(g);
+	SIMD_Pull(h);
+	SIMD_Pull(i);
+	SIMD_Pull(j);
+	SIMD_Pull(k);
+	SIMD_Pull(l);
+	SIMD_Pull(m);
+	SIMD_Pull(n);
+	SIMD_Pull(o);
+	SIMD_Pull(p);
+	SIMD_Pull(q);
+	SIMD_Pull(r);
+	SIMD_Pull(s);
+	SIMD_Pull(t);
+	SIMD_Pull(u);
+	SIMD_Pull(v);
+	SIMD_Pull(w);
+	SIMD_Pull(x);
+	SIMD_Pull(y);
+	SIMD_Pull(z);
 	return false;
 }
 

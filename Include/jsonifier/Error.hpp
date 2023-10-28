@@ -34,8 +34,6 @@
 
 namespace jsonifier_internal {
 
-	enum class type_of_misread : uint8_t { Wrong_Type = 0, Damaged_Input = 1 };
-
 	enum class error_code : uint8_t {
 		Success					 = 0,
 		Parse_Error				 = 1,
@@ -44,7 +42,10 @@ namespace jsonifier_internal {
 		Incorrect_Type			 = 4,
 		Setup_Error				 = 5,
 		Inadequate_String_Length = 6,
-		Key_Parsing_Error		 = 7
+		Key_Parsing_Error		 = 7,
+		Invalid_Escape			 = 8,
+		Wrong_Type				 = 0,
+		Damaged_Input			 = 1
 	};
 
 	enum class json_structural_type : uint8_t {
@@ -61,7 +62,7 @@ namespace jsonifier_internal {
 		Null		 = 0x6Eu
 	};
 
-	static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
+	jsonifier_inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
 
@@ -101,11 +102,11 @@ namespace jsonifier_internal {
 		}
 	}
 
-	jsonifier_inline static type_of_misread collectMisReadType(uint8_t c, uint8_t currentValue) {
+	jsonifier_inline static error_code collectMisReadType(uint8_t c, uint8_t currentValue) {
 		if (isTypeType(currentValue) && isTypeType(c)) {
-			return type_of_misread::Wrong_Type;
+			return error_code::Wrong_Type;
 		} else {
-			return type_of_misread::Damaged_Input;
+			return error_code::Damaged_Input;
 		}
 	}
 
@@ -120,6 +121,13 @@ namespace jsonifier_internal {
 			errorIndex	  = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorType	  = error_code::Parse_Error;
 			location	  = locationNew;
+			errorValue	  = *iter;
+		}
+
+		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
+			errorIndex	  = static_cast<uint64_t>(iter.getCurrentStringIndex());
+			location	  = locationNew;
+			errorType	  = typeNew;
 			errorValue	  = *iter;
 		}
 
@@ -141,14 +149,24 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline jsonifier::string reportError() const {
-			if (collectMisReadType(intendedValue, errorValue) == type_of_misread::Wrong_Type) {
-				return jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
-					", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
-					", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
-			} else {
-				return jsonifier::string{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + static_cast<char>(errorValue) + "'" +
-					", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" +
-					jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+			switch (errorType) {
+				case error_code::Wrong_Type: {
+					return jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
+						", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
+						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+				}
+				case error_code::Damaged_Input: {
+					return jsonifier::string{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + static_cast<char>(errorValue) + "'" +
+						", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" +
+						jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+				}
+				case error_code::Invalid_Escape: {
+					return jsonifier::string{ "Invalid escape at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
+						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+				}
+				default: {
+					return {};
+				}
 			}
 		}
 
@@ -159,6 +177,11 @@ namespace jsonifier_internal {
 		uint64_t errorIndex{};
 		uint8_t errorValue{};
 	};
+
+	template<error_code typeNew> jsonifier_inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
+		error newError{ iter, typeNew, locationNew };
+		return newError;
+	}
 
 	template<json_structural_type typeNew> jsonifier_inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
 		error newError{ iter, typeNew, locationNew };
