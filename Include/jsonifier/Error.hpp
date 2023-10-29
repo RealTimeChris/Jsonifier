@@ -125,10 +125,10 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
-			errorIndex	  = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			location	  = locationNew;
-			errorType	  = typeNew;
-			errorValue	  = *iter;
+			errorIndex = static_cast<uint64_t>(iter.getCurrentStringIndex());
+			location   = locationNew;
+			errorType  = typeNew;
+			errorValue = *iter;
 		}
 
 		jsonifier_inline error& operator=(error_code errorNew) {

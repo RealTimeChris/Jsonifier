@@ -39,14 +39,13 @@ namespace jsonifier_internal {
 		double totalTime{};
 	};
 
-	inline static std::unordered_map<uint64_t, benchmark_record> benchmarkRecords{};
+	jsonifier_inline static std::unordered_map<uint64_t, benchmark_record> benchmarkRecords{};
 
 	jsonifier_inline void printAverage();
 
 	template<typename Function, typename... Args> class benchmark {
 	  public:
-		  
-		jsonifier_inline benchmark(Function&& function, Args&&... args, uint64_t uniqueId)  {
+		jsonifier_inline benchmark(Function&& function, Args&&... args, uint64_t uniqueId) {
 			if (benchmarkRecords.contains(uniqueId)) {
 				benchmarkRecords[uniqueId] = runBenchmark(std::forward<Function>(function), benchmarkRecords[uniqueId], args...);
 			} else {
@@ -56,7 +55,6 @@ namespace jsonifier_internal {
 				atexit(jsonifier_internal::printAverage);
 				haveWeRegistered = true;
 			}
-			
 		}
 
 		jsonifier_inline static benchmark_record runBenchmark(Function&& function, benchmark_record record, Args&&... args) {
@@ -77,7 +75,7 @@ namespace jsonifier_internal {
 			benchmarkRecords.erase(uniqueId);
 		}
 
-		inline static bool haveWeRegistered{};
+		jsonifier_inline static bool haveWeRegistered{};
 
 		jsonifier_inline ~benchmark() {
 		}
@@ -120,9 +118,9 @@ namespace jsonifier_internal {
 
 	template<> struct false_t<random_core_type> : std::true_type {};
 
-	template<typename... Args> constexpr bool falseV = false_t<Args...>::value;
+	template<typename... Args> jsonifier_constexpr bool falseV = false_t<Args...>::value;
 
-	template<typename = void, size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
+	template<typename = void, size_t... Indices> jsonifier_constexpr auto indexer(std::index_sequence<Indices...>) {
 		return [](auto&& f) -> decltype(auto) {
 			return decltype(f)(f)(std::integral_constant<size_t, Indices>{}...);
 		};
@@ -132,23 +130,23 @@ namespace jsonifier_internal {
 	template<size_t Count, size_t... Is> struct gen_sequence : gen_sequence<Count - 1, Count - 1, Is...> {};
 	template<size_t... Is> struct gen_sequence<0, Is...> : sequence<Is...> {};
 
-	template<size_t n> constexpr auto indexer() {
+	template<size_t n> jsonifier_constexpr auto indexer() {
 		return indexer(std::make_index_sequence<n>{});
 	}
 
-	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
+	template<size_t n, typename Func> jsonifier_constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<std::unwrap_ref_decay_t<Func>>(f)(i), ...);
+			(std::forward<jsonifier::concepts::unwrap<Func>>(f)(i), ...);
 		});
 	}
 
 	template<ctime_array newArr> struct make_static {
-		static constexpr auto value = newArr;
+		static jsonifier_constexpr auto value = newArr;
 	};
 
 	template<const jsonifier::string_view&... strings> jsonifier_constexpr jsonifier::string_view join() {
-		constexpr auto joinedArr = []() {
-			constexpr size_t len = (strings.size() + ... + 0);
+		jsonifier_constexpr auto joinedArr = []() {
+			jsonifier_constexpr size_t len = (strings.size() + ... + 0);
 			ctime_array<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
@@ -162,24 +160,24 @@ namespace jsonifier_internal {
 		return { staticArr.data(), staticArr.maxSize() - 1 };
 	}
 
-	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
+	template<const jsonifier::string_view&... strings> jsonifier_constexpr auto JoinV = join<strings...>();
 
 	jsonifier_inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using value_type = std::unwrap_ref_decay_t<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<value_type>) {
+		using value_type = jsonifier::concepts::unwrap<decltype(member_ptr)>;
+		if jsonifier_constexpr (std::is_member_object_pointer_v<value_type>) {
 			return value.*member_ptr;
-		} else if constexpr (std::is_member_function_pointer_v<value_type>) {
+		} else if jsonifier_constexpr (std::is_member_function_pointer_v<value_type>) {
 			return member_ptr;
-		} else if constexpr (std::invocable<value_type, decltype(value)>) {
+		} else if jsonifier_constexpr (std::invocable<value_type, decltype(value)>) {
 			return std::invoke(member_ptr, value);
-		} else if constexpr (std::is_pointer_v<value_type>) {
+		} else if jsonifier_constexpr (std::is_pointer_v<value_type>) {
 			return *member_ptr;
 		} else {
 			return member_ptr;
 		}
 	}
 
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<std::unwrap_ref_decay_t<mptr_t>&>()));
+	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<jsonifier::concepts::unwrap<mptr_t>&>()));
 
 	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
@@ -249,15 +247,15 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	constexpr auto createArray(auto&&... args) {
+	jsonifier_constexpr auto createArray(auto&&... args) {
 		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
 	}
 
-	constexpr auto createObject(auto&&... args) {
-		if constexpr (sizeof...(args) == 0) {
+	jsonifier_constexpr auto createObject(auto&&... args) {
+		if jsonifier_constexpr (sizeof...(args) == 0) {
 			return object{ jsonifier_internal::tuplet::tuple{} };
 		} else {
-			return object{ jsonifier_internal::GroupBuilder<std::unwrap_ref_decay_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
+			return object{ jsonifier_internal::GroupBuilder<concepts::unwrap<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
 				jsonifier_internal::tuplet::copyTuple(args...)) };
 		}
 	}

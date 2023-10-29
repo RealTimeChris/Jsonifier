@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline value_type operator*() const {
-			return (currentIndex && *currentIndex) ? **currentIndex : defaultValue;
+			return (*currentIndex) ? **currentIndex : defaultValue;
 		}
 
 		jsonifier_inline string_view_ptr operator->() const {
@@ -68,20 +68,13 @@ namespace jsonifier_internal {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		jsonifier_inline bool operator==(const structural_iterator&other) const {
-			return currentIndex >= other.currentIndex;
-		}
-
-		jsonifier_inline bool operator<(const structural_iterator& other) const {
-			return currentIndex < other.currentIndex;
-		}
-
-		jsonifier_inline bool operator>=(const structural_iterator& other) const {
-			return currentIndex >= other.currentIndex;
+		jsonifier_inline bool operator==(const structural_iterator&) const {
+			return !(*currentIndex);
 		}
 
 	  protected:
-		static constexpr uint8_t defaultValue{ 0x00 };
+		static jsonifier_constexpr uint8_t defaultValue{ 0x00 };
+		int32_t currentIndexInt{};
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

@@ -389,7 +389,7 @@ namespace jsonifier {
 			if (rhs.size() != size()) {
 				return false;
 			}
-			if constexpr (!std::is_fundamental_v<value_type>) {
+			if jsonifier_constexpr (!std::is_fundamental_v<value_type>) {
 				for (size_type x = 0; x < sizeVal; ++x) {
 					if (!getObjectComparitor()(rhs.dataVal[x], dataVal[x])) {
 						return false;

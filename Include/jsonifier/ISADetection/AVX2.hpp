@@ -30,16 +30,16 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	template<typename value_type>
-	concept simd_int_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_int_128>;
+	concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_128>;
 
 	template<typename value_type>
-	concept simd_int_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_int_256>;
+	concept simd_int_256_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_256>;
 
 	template<typename value_type>
-	concept simd_float_128_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_float_128>;
+	concept simd_float_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_float_128>;
 
 	template<typename value_type>
-	concept simd_float_256_t = std::same_as<std::unwrap_ref_decay_t<value_type>, simd_float_256>;
+	concept simd_float_256_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_float_256>;
 
 	using simd_int_t = simd_int_256;
 
@@ -67,30 +67,30 @@ namespace jsonifier_internal {
 		return _mm256_loadu_pd(str);
 	}
 
-	template<simd_int_256_t return_type> jsonifier_constexpr return_type simdTable(const uint8_t arrayNew[sizeof(simd_int_t)]) {
+	template<simd_int_256_t return_type> jsonifier_constexpr return_type simdFromTable(const uint8_t arrayNew01[sizeof(simd_int_t)]) {
 	#if !defined(_WIN32)
 		int64_t newArray[sizeof(simd_int_t) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(simd_int_t) / sizeof(uint64_t); ++x) {
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 7]) << 56;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 6]) << 48;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 5]) << 40;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 4]) << 32;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 3]) << 24;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 2]) << 16;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 1]) << 8;
-			newArray[x] |= static_cast<int64_t>(arrayNew[(x * 8) + 0]);
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 7]) << 56;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 6]) << 48;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 5]) << 40;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 4]) << 32;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 3]) << 24;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 2]) << 16;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 1]) << 8;
+			newArray[x] |= static_cast<int64_t>(arrayNew01[(x * 8) + 0]);
 		}
 		simd_int_t returnValue{ newArray[0], newArray[1], newArray[2], newArray[3] };
 	#else
 		simd_int_t returnValue{};
 		for (uint64_t x = 0; x < sizeof(simd_int_t); ++x) {
-			returnValue.m256i_u8[x] = arrayNew[x];
+			returnValue.m256i_u8[x] = arrayNew01[x];
 		}
 	#endif
 		return returnValue;
 	}
 
-	template<simd_int_128_t return_type> jsonifier_constexpr return_type simdValues(uint8_t value) {
+	template<simd_int_128_t return_type> jsonifier_constexpr return_type simdFromValue(uint8_t value) {
 	#if !defined(_WIN32)
 		int64_t newArray[sizeof(simd_int_128) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(simd_int_128) / sizeof(uint64_t); ++x) {
@@ -113,7 +113,7 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<simd_int_256_t return_type> jsonifier_constexpr return_type simdValues(uint8_t value) {
+	template<simd_int_256_t return_type> jsonifier_constexpr return_type simdFromValue(uint8_t value) {
 	#if !defined(_WIN32)
 		int64_t newArray[sizeof(simd_int_t) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(simd_int_t) / sizeof(uint64_t); ++x) {
@@ -138,16 +138,12 @@ namespace jsonifier_internal {
 
 	template<> class simd_base_internal<256> {
 	  public:
-		static jsonifier_constexpr simd_int_t backslashesVal{ simdValues<simd_int_t>(0x5Cu) };
-		static jsonifier_constexpr simd_int_t quotesVal{ simdValues<simd_int_t>(0x22u) };
-		static jsonifier_constexpr uint8_t arrayNew03[]{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x09u, 0x00u, 0x00u, 0x0Cu, 0x0Du, 0x00u, 0x00u, 0x00u,
-			0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x09u, 0x00u, 0x00u, 0x0Cu, 0x0Du, 0x00u, 0x00u };
-		static jsonifier_constexpr uint8_t arrayNew00[]{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x09u, 0x00u, 0x00u, 0x5Cu, 0x0Du, 0x00u, 0x00u, 0x00u,
-			0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x09u, 0x00u, 0x00u, 0x5Cu, 0x0Du, 0x00u, 0x00u };
-		static jsonifier_constexpr uint8_t arrayNew02[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u, 0x20u,
+		static jsonifier_constexpr simd_int_t backslashes{ simdFromValue<simd_int_t>(0x5Cu) };
+		static jsonifier_constexpr simd_int_t quotes{ simdFromValue<simd_int_t>(0x22u) };
+		static jsonifier_constexpr uint8_t arrayNew00[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u, 0x20u,
 			0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u };
-		static jsonifier_constexpr uint8_t arrayNew[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u, 0x00u, 0x00u,
-			0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
+		static jsonifier_constexpr uint8_t arrayNew01[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u, 0x00u,
+			0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
 
 		jsonifier_inline simd_base_internal() = default;
 
@@ -156,7 +152,7 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline static simd_int_t opSub(const simd_int_t& other, const simd_int_t& value) {
-			return _mm256_sub_epi8(other, value);
+			return _mm256_sub_epi64(other, value);
 		}
 
 		jsonifier_inline static simd_int_t opAnd(const simd_int_t& other, const simd_int_t& value) {
@@ -175,67 +171,55 @@ namespace jsonifier_internal {
 			return _mm256_xor_si256(value, _mm256_set1_epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
 		}
 
-		jsonifier_inline static void convertEscapeablesToSimdBase(string_parsing_type& value, simd_int_t valuesNew) {
-			static jsonifier_constexpr simd_int_t escapeTable01{ simdTable<simd_int_t>(arrayNew03) };
-			static jsonifier_constexpr simd_int_t escapeTable02{ simdTable<simd_int_t>(arrayNew00) };
-			value |= cmpeq(shuffle(valuesNew, escapeTable01), valuesNew);
-			value |= cmpeq(shuffle(valuesNew, escapeTable02), valuesNew);
+		jsonifier_inline static void collectWhitespaceAsSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
+			static jsonifier_constexpr simd_int_t whitespaceTable{ simdFromTable<simd_int_t>(arrayNew00) };
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[0]), valuesNew[0]), 0);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[1]), valuesNew[1]), 1);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[2]), valuesNew[2]), 2);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[3]), valuesNew[3]), 3);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[4]), valuesNew[4]), 4);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[5]), valuesNew[5]), 5);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[6]), valuesNew[6]), 6);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(whitespaceTable, valuesNew[7]), valuesNew[7]), 7);
 		}
 
-		jsonifier_inline static void convertWhitespaceToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static jsonifier_constexpr simd_int_t whitespaceTable{ simdTable<simd_int_t>(arrayNew02) };
-			insertUint32<0>(value, cmpeq(shuffle(valuesNew[0], whitespaceTable), valuesNew[0]));
-			insertUint32<1>(value, cmpeq(shuffle(valuesNew[1], whitespaceTable), valuesNew[1]));
-			insertUint32<2>(value, cmpeq(shuffle(valuesNew[2], whitespaceTable), valuesNew[2]));
-			insertUint32<3>(value, cmpeq(shuffle(valuesNew[3], whitespaceTable), valuesNew[3]));
-			insertUint32<4>(value, cmpeq(shuffle(valuesNew[4], whitespaceTable), valuesNew[4]));
-			insertUint32<5>(value, cmpeq(shuffle(valuesNew[5], whitespaceTable), valuesNew[5]));
-			insertUint32<6>(value, cmpeq(shuffle(valuesNew[6], whitespaceTable), valuesNew[6]));
-			insertUint32<7>(value, cmpeq(shuffle(valuesNew[7], whitespaceTable), valuesNew[7]));
+		jsonifier_inline static void collectBackslashesAsSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[0], backslashes), 0);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[1], backslashes), 1);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[2], backslashes), 2);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[3], backslashes), 3);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[4], backslashes), 4);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[5], backslashes), 5);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[6], backslashes), 6);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[7], backslashes), 7);
 		}
 
-		jsonifier_inline static void convertBackslashesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			insertUint32<0>(value, cmpeq(valuesNew[0], backslashesVal));
-			insertUint32<1>(value, cmpeq(valuesNew[1], backslashesVal));
-			insertUint32<2>(value, cmpeq(valuesNew[2], backslashesVal));
-			insertUint32<3>(value, cmpeq(valuesNew[3], backslashesVal));
-			insertUint32<4>(value, cmpeq(valuesNew[4], backslashesVal));
-			insertUint32<5>(value, cmpeq(valuesNew[5], backslashesVal));
-			insertUint32<6>(value, cmpeq(valuesNew[6], backslashesVal));
-			insertUint32<7>(value, cmpeq(valuesNew[7], backslashesVal));
+		jsonifier_inline static void collectStructuralsAsSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
+			static jsonifier_constexpr simd_int_t opTableVal{ simdFromTable<simd_int_t>(arrayNew01) };
+			static jsonifier_constexpr simd_int_t chars{ simdFromValue<simd_int_t>(0x20u) };
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[0]), (opOr(valuesNew[0], chars))), 0);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[1]), (opOr(valuesNew[1], chars))), 1);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[2]), (opOr(valuesNew[2], chars))), 2);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[3]), (opOr(valuesNew[3], chars))), 3);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[4]), (opOr(valuesNew[4], chars))), 4);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[5]), (opOr(valuesNew[5], chars))), 5);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[6]), (opOr(valuesNew[6], chars))), 6);
+			value = _mm256_insert_epi32(value, cmpeq(shuffle(opTableVal, valuesNew[7]), (opOr(valuesNew[7], chars))), 7);
 		}
 
-		jsonifier_inline static void convertStructuralsToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			static jsonifier_constexpr simd_int_t opTableVal{ simdTable<simd_int_t>(arrayNew) };
-			static jsonifier_constexpr simd_int_t chars{ simdValues<simd_int_t>(0x20u) };
-			insertUint32<0>(value, cmpeq(shuffle(valuesNew[0], opTableVal), (opOr(valuesNew[0], chars))));
-			insertUint32<1>(value, cmpeq(shuffle(valuesNew[1], opTableVal), (opOr(valuesNew[1], chars))));
-			insertUint32<2>(value, cmpeq(shuffle(valuesNew[2], opTableVal), (opOr(valuesNew[2], chars))));
-			insertUint32<3>(value, cmpeq(shuffle(valuesNew[3], opTableVal), (opOr(valuesNew[3], chars))));
-			insertUint32<4>(value, cmpeq(shuffle(valuesNew[4], opTableVal), (opOr(valuesNew[4], chars))));
-			insertUint32<5>(value, cmpeq(shuffle(valuesNew[5], opTableVal), (opOr(valuesNew[5], chars))));
-			insertUint32<6>(value, cmpeq(shuffle(valuesNew[6], opTableVal), (opOr(valuesNew[6], chars))));
-			insertUint32<7>(value, cmpeq(shuffle(valuesNew[7], opTableVal), (opOr(valuesNew[7], chars))));
-		}
-
-		jsonifier_inline static void convertQuotesToSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
-			insertUint32<0>(value, cmpeq(valuesNew[0], quotesVal));
-			insertUint32<1>(value, cmpeq(valuesNew[1], quotesVal));
-			insertUint32<2>(value, cmpeq(valuesNew[2], quotesVal));
-			insertUint32<3>(value, cmpeq(valuesNew[3], quotesVal));
-			insertUint32<4>(value, cmpeq(valuesNew[4], quotesVal));
-			insertUint32<5>(value, cmpeq(valuesNew[5], quotesVal));
-			insertUint32<6>(value, cmpeq(valuesNew[6], quotesVal));
-			insertUint32<7>(value, cmpeq(valuesNew[7], quotesVal));
+		jsonifier_inline static void collectQuotesAsSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[0], quotes), 0);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[1], quotes), 1);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[2], quotes), 2);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[3], quotes), 3);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[4], quotes), 4);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[5], quotes), 5);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[6], quotes), 6);
+			value = _mm256_insert_epi32(value, cmpeq(valuesNew[7], quotes), 7);
 		}
 
 		jsonifier_inline static bool opBool(const simd_int_t& value) {
 			return !_mm256_testz_si256(value, value);
-		}
-
-		template<uint64_t index> jsonifier_inline static void insertUint32(simd_int_t& value, string_parsing_type valueNew) {
-			static_assert(index < StridesPerStep, "Sorry, but that index value is incorrect.");
-			value = _mm256_insert_epi32(value, static_cast<int32_t>(valueNew), index);
 		}
 
 		jsonifier_inline static simd_int_t bitAndNot(const simd_int_t& value, const simd_int_t& other) {
@@ -243,12 +227,19 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline static simd_int_t shuffle(const simd_int_t& value, const simd_int_t& other) {
-			return _mm256_shuffle_epi8(other, value);
+			return _mm256_shuffle_epi8(value, other);
 		}
 
-		template<uint64_t amount> jsonifier_inline static simd_int_t shl(const simd_int_t& value) {
-			static constexpr int32_t shiftMask{ 0b10010011 };
-			return opOr({ _mm256_slli_epi64(value, (amount % 64)) }, _mm256_srli_epi64(_mm256_permute4x64_epi64(value, shiftMask), 64 - (amount % 64)));
+		template<uint64_t amount> static jsonifier_inline simd_int_t shl(const simd_int_t& value) {
+			static jsonifier_constexpr uint64_t shiftBetween = amount % 64;
+			alignas(BytesPerStep) uint64_t newArray00[SixtyFourBitsPerStep]{};
+			alignas(BytesPerStep) uint64_t newArray01[SixtyFourBitsPerStep]{};
+			store(value, newArray00);
+			newArray01[0] = newArray00[0] << amount;
+			newArray01[1] = (newArray00[1] << amount) | newArray00[0] >> (64 - shiftBetween);
+			newArray01[2] = (newArray00[2] << amount) | newArray00[1] >> (64 - shiftBetween);
+			newArray01[3] = (newArray00[3] << amount) | newArray00[2] >> (64 - shiftBetween);
+			return gatherValues<simd_int_t>(newArray01);
 		}
 
 		template<typename value_type> jsonifier_inline static void storeu(const simd_int_t& value, value_type* storageLocation) {
@@ -261,32 +252,32 @@ namespace jsonifier_internal {
 
 		jsonifier_inline static simd_int_t setLSB(const simd_int_t& value, bool valueNew) {
 			if (valueNew) {
-				return _mm256_or_si256(value, _mm256_set_epi64x(0x00, 0x00, 0x00, 0x1));
+				return _mm256_or_si256(value, _mm256_set_epi64x(0x00, 0x00, 0x00, 0x01));
 			} else {
-				return _mm256_andnot_si256(_mm256_set_epi64x(0x00, 0x00, 0x00, 0x1), value);
+				return _mm256_andnot_si256(_mm256_set_epi64x(0x00, 0x00, 0x00, 0x01), value);
 			}
 		}
 
 		jsonifier_inline static bool getMSB(const simd_int_t& value) {
-			simd_int_t result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0));
+			simd_int_t result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0x00));
 			return !_mm256_testz_si256(result, result);
 		}
 
-		template<uint64_t index> jsonifier_inline static void processValue(const simd_int_128& allOnes, simd_int_128& val, uint64_t& valuesNewer, uint64_t& prevInstring) {
-			valuesNewer	 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(val, allOnes, index % 2)) ^ prevInstring);
-			prevInstring = static_cast<uint64_t>(static_cast<int64_t>(valuesNewer) >> 63);
+		template<uint64_t index> jsonifier_inline static void processValue(const simd_int_128& allOnes, simd_int_128& value, uint64_t& valuesNewer, uint64_t& prevInString) {
+			valuesNewer	 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(value, allOnes, index)) ^ prevInString);
+			prevInString = uint64_t(static_cast<int64_t>(valuesNewer) >> 63);
 		}
 
-		jsonifier_inline static simd_int_t carrylessMultiplication(const simd_int_t& value, uint64_t& prevInstring) {
-			static jsonifier_constexpr simd_int_128 allOnes{ simdValues<simd_int_128>(0xFFu) };
-			simd_int_128 valueLow{ _mm256_extracti128_si256(value, 0) };
-			simd_int_128 valueHigh{ _mm256_extracti128_si256(value, 1) };
-			alignas(BytesPerStep) uint64_t valuesNewer[SixtyFourBitsPerStep]{};
-			processValue<0>(allOnes, valueLow, valuesNewer[0], prevInstring);
-			processValue<1>(allOnes, valueLow, valuesNewer[1], prevInstring);
-			processValue<2>(allOnes, valueHigh, valuesNewer[2], prevInstring);
-			processValue<3>(allOnes, valueHigh, valuesNewer[3], prevInstring);
-			return gatherValues<simd_int_t>(valuesNewer);
+		jsonifier_inline static simd_int_t carrylessMultiplication(const simd_int_t& value, uint64_t& prevInString) {
+			static jsonifier_constexpr simd_int_128 allOnes{ simdFromValue<simd_int_128>(0xFFu) };
+			alignas(BytesPerStep) uint64_t valuesNewer02[SixtyFourBitsPerStep]{};
+			simd_int_128 valuesLow{ _mm256_extracti128_si256(value, 0) };
+			simd_int_128 valuesHigh{ _mm256_extracti128_si256(value, 1) };
+			processValue<0>(allOnes, valuesLow, valuesNewer02[0], prevInString);
+			processValue<1>(allOnes, valuesLow, valuesNewer02[1], prevInString);
+			processValue<0>(allOnes, valuesHigh, valuesNewer02[2], prevInString);
+			processValue<1>(allOnes, valuesHigh, valuesNewer02[3], prevInString);
+			return gatherValues<simd_int_t>(valuesNewer02);
 		}
 
 		jsonifier_inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {

@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 		}
 
 		template<std::forward_iterator iterator> jsonifier_inline static void skipKey(iterator& iter, iterator& end) {
-			if constexpr (std::same_as<structural_iterator, iterator>) {
+			if jsonifier_constexpr (std::same_as<structural_iterator, iterator>) {
 				++iter;
 				return;
 			} else {
@@ -97,15 +97,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline static void skipToNextValue(structural_iterator& iter, structural_iterator& end) {
-			while (iter != end && *iter != 0x2Cu) {
+		jsonifier_inline static void skipToNextValue(structural_iterator& iter) {
+			while (iter != iter && *iter != 0x2Cu) {
 				switch (*iter) {
 					case 0x7B: {
-						skipObject(iter, end);
+						skipObject(iter, iter);
 						break;
 					}
 					case 0x5B: {
-						skipArray(iter, end);
+						skipArray(iter, iter);
 						break;
 					}
 					case 0x00: {

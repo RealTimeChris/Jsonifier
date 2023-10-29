@@ -29,6 +29,8 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
 
+	#include <immintrin.h>
+
 	template<jsonifier::concepts::unsigned_int16_t value_type> jsonifier_inline static value_type blsr(value_type value) {
 		return static_cast<value_type>(_blsr_u32(static_cast<uint32_t>(value)));
 	}
@@ -45,7 +47,7 @@ namespace jsonifier_internal {
 	#if defined(__linux__)
 		return __tzcnt_u16(value);
 	#else
-		return _tzcnt_u16(value);
+		return _tzcnt_u16(static_cast<uint16_t>(value));
 	#endif
 	}
 

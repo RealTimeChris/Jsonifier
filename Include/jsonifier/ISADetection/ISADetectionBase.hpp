@@ -48,34 +48,38 @@
 	#define jsonifier_constexpr constexpr
 #endif
 
-#ifndef JSONIFIER_CPU_INSTRUCTIONS
+#if !defined(JSONIFIER_CPU_INSTRUCTIONS)
 	#define JSONIFIER_CPU_INSTRUCTIONS 0
 #endif
 
-#ifndef JSONIFIER_CHECK_FOR_INSTRUCTION
+#if !defined(JSONIFIER_CHECK_FOR_INSTRUCTION)
 	#define JSONIFIER_CHECK_FOR_INSTRUCTION(x) (JSONIFIER_CPU_INSTRUCTIONS & x)
 #endif
 
-#ifndef JSONIFIER_POPCNT
+#if !defined(JSONIFIER_POPCNT)
 	#define JSONIFIER_POPCNT (1 << 0)
 #endif
-#ifndef JSONIFIER_LZCNT
+#if !defined(JSONIFIER_LZCNT)
 	#define JSONIFIER_LZCNT (1 << 1)
 #endif
-#ifndef JSONIFIER_BMI
+#if !defined(JSONIFIER_BMI)
 	#define JSONIFIER_BMI (1 << 2)
 #endif
-#ifndef JSONIFIER_BMI2
+#if !defined(JSONIFIER_BMI2)
 	#define JSONIFIER_BMI2 (1 << 3)
 #endif
-#ifndef JSONIFIER_AVX
+#if !defined(JSONIFIER_AVX)
 	#define JSONIFIER_AVX (1 << 4)
 #endif
-#ifndef JSONIFIER_AVX2
+#if !defined(JSONIFIER_AVX2)
 	#define JSONIFIER_AVX2 (1 << 5)
 #endif
-#ifndef JSONIFIER_AVX512
+#if !defined(JSONIFIER_AVX512)
 	#define JSONIFIER_AVX512 (1 << 6)
+#endif
+
+#if !defined(JSONIFIER_ANY)
+	#define JSONIFIER_ANY (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512 | JSONIFIER_POPCNT | JSONIFIER_BMI | JSONIFIER_BMI2 | JSONIFIER_LZCNT)
 #endif
 
 #include <jsonifier/TypeEntities.hpp>
@@ -87,40 +91,43 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-constexpr uint64_t BitsPerStep{ 512 };
-constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+jsonifier_constexpr uint64_t BitsPerStep{ 512 };
+jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint64_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-constexpr uint64_t BitsPerStep{ 256 };
-constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+jsonifier_constexpr uint64_t BitsPerStep{ 256 };
+jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint32_t;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
-constexpr uint64_t BitsPerStep{ 128 };
-constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+jsonifier_constexpr uint64_t BitsPerStep{ 128 };
+jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
 
 #else
 
-constexpr uint64_t BitsPerStep{ 128 };
-constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+jsonifier_constexpr uint64_t BitsPerStep{ 128 };
+jsonifier_constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
+jsonifier_constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
+jsonifier_constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 using string_parsing_type = uint16_t;
 
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY)
+
 	#include <immintrin.h>
+
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 using simd_int_512	 = __m512i;
 using simd_int_256	 = __m256i;
@@ -129,7 +136,7 @@ using simd_float_512 = __m512d;
 using simd_float_256 = __m256d;
 using simd_float_128 = __m128d;
 
-#else
+	#else
 
 typedef union alignas(BytesPerStep) __m128x {
 	int8_t m128x_int8[16];
@@ -144,7 +151,10 @@ typedef union alignas(BytesPerStep) __m128x {
 
 using simd_int_128 = __m128x;
 
+	#endif
+
 #endif
+
 
 namespace jsonifier_internal {
 

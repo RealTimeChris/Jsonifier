@@ -121,9 +121,9 @@ namespace jsonifier_internal {
 			return dataVal;
 		}
 
-		jsonifier_constexpr void fill(const value_type& val) {
+		jsonifier_constexpr void fill(const value_type& value) {
 			for (uint64_t x = 0; x < count; ++x) {
-				dataVal[x] = val;
+				dataVal[x] = value;
 			}
 		}
 

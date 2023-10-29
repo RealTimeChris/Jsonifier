@@ -48,8 +48,8 @@ namespace jsonifier {
 
 		jsonifier_inline string_base() : capacityVal{}, sizeVal{}, dataVal{} {};
 
-		static constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
-		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+		static jsonifier_constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
+		static jsonifier_constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		jsonifier_inline string_base& operator=(string_base&& other) noexcept {
 			if (this != &other) {
@@ -84,7 +84,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> jsonifier_inline string_base& operator=(value_type_newer&& other) {
-			size_type sizeNew = other.size() * (sizeof(typename std::unwrap_ref_decay_t<value_type_newer>::value_type) / sizeof(value_type));
+			size_type sizeNew = other.size() * (sizeof(typename jsonifier::concepts::unwrap<value_type_newer>::value_type) / sizeof(value_type));
 			if (sizeNew > 0) {
 				reset();
 				string_base temp{};
@@ -359,6 +359,7 @@ namespace jsonifier {
 
 		jsonifier_inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
+				sizeNew = jsonifier_internal::roundUpToMultiple<BytesPerStep>(sizeNew);
 				if (sizeNew > capacityVal) [[likely]] {
 					pointer newPtr = getAlloc().allocate(sizeNew + 1);
 					try {
