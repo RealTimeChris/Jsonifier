@@ -86,12 +86,12 @@ namespace jsonifier_internal {
 			if constexpr (refreshString) {
 				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
 				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.0f / 5.0f)));
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 5.0f / 5.0f)));
 				resetInternal();
 			} else if (jsonifier::string_view_base<uint8_t>{ stringView, stringLength } != stringViewNew) {
 				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
 				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.0f / 5.0f)));
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 5.0f / 5.0f)));
 				resetInternal();
 			}
 		}
@@ -107,15 +107,11 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline structural_iterator begin() {
-			return structural_iterator{ structuralIndices.getIndices() };
-		}
-
-		jsonifier_inline structural_iterator end() {
-			return structural_iterator{ structuralIndices.getIndices() + tapeIndex };
+			return structural_iterator{ getStructurals(), static_cast<int64_t>(tapeIndex) };
 		}
 
 		jsonifier_inline structural_index* getStructurals() {
-			structuralIndices[tapeIndex] = nullptr;
+			structuralIndices[tapeIndex - 1] = nullptr;
 			return structuralIndices.getIndices();
 		}
 
