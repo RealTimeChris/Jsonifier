@@ -40,22 +40,21 @@ namespace jsonifier_internal {
 
 		jsonifier_inline structural_iterator() noexcept = default;
 
-		jsonifier_inline structural_iterator(structural_index* rootIndexNew, size_type tapeLengthNew) {
+		jsonifier_inline structural_iterator(structural_index* rootIndexNew) {
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
-			tapeLength	 = tapeLengthNew;
 		}
 
 		jsonifier_inline value_type operator*() const {
-			return *currentIndex[currentIndexInt] ? *currentIndex[currentIndexInt] : defaultValue;
+			return (currentIndex && *currentIndex) ? **currentIndex : defaultValue;
 		}
 
 		jsonifier_inline string_view_ptr operator->() const {
-			return currentIndex[currentIndexInt];
+			return *currentIndex;
 		}
 
 		jsonifier_inline structural_iterator& operator++() {
-			++currentIndexInt;
+			++currentIndex;
 			return *this;
 		}
 
@@ -66,21 +65,23 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline size_type getCurrentStringIndex() const {
-			return (currentIndex[currentIndexInt]) - (*rootIndex);
+			return (*currentIndex) - (*rootIndex);
 		}
 
 		jsonifier_inline bool operator==(const structural_iterator&other) const {
-			return !(currentIndex[currentIndexInt]);
+			return currentIndex >= other.currentIndex;
 		}
 
-		jsonifier_inline bool operator>=(const structural_iterator& other) const {;
-			return !(currentIndex[currentIndexInt]);
+		jsonifier_inline bool operator<(const structural_iterator& other) const {
+			return currentIndex < other.currentIndex;
+		}
+
+		jsonifier_inline bool operator>=(const structural_iterator& other) const {
+			return currentIndex >= other.currentIndex;
 		}
 
 	  protected:
 		static constexpr uint8_t defaultValue{ 0x00 };
-		int32_t currentIndexInt{};
-		size_type tapeLength{};
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

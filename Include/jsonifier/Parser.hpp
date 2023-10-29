@@ -36,13 +36,13 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, typename value_type> struct parse_impl {};
 
 	template<bool excludeKeys> struct parse {
-		template<typename value_type> jsonifier_inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter,parserNew);
+		template<typename value_type> jsonifier_inline static void op(value_type&& value, structural_iterator& iter, structural_iterator& end, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, end, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter,keys, parserNew);
+		jsonifier_inline static void op(value_type&& value, structural_iterator& iter, structural_iterator& end, const KeyType& keys, parser& parserNew) {
+			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, end, keys, parserNew);
 		}
 	};
 
@@ -59,17 +59,18 @@ namespace jsonifier_internal {
 			section.reset<refreshString>(stringNew);
 			errors.clear();
 			auto newIter = section.begin();
+			auto end	 = section.end();
 			if (!*newIter) {
 				return;
 			}
 			if constexpr (excludeKeys) {
 				if constexpr (jsonifier::concepts::has_excluded_keys<std::unwrap_ref_decay_t<decltype(data)>>) {
-					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys, *this);
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, data.excludedKeys, *this);
 				} else {
-					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
+					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, *this);
 				}
 			} else {
-				parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
+				parse<excludeKeys>::op(std::forward<value_type>(data), newIter, end, *this);
 			}
 		}
 

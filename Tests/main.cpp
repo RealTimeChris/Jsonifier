@@ -43,6 +43,7 @@ template<typename OTy> struct TestGenerator {
 		jsonifier::jsonifier_core parser{};
 		glz::write_json(generator, buffer);
 		std::cout << "GLAZE BUFFER: " << buffer << std::endl;
+
 		buffer.clear();
 		parser.serializeJson(generator, buffer);
 		std::cout << "JSONIFIER BUFFER: " << buffer << std::endl;
@@ -55,50 +56,38 @@ template<typename OTy> struct TestGenerator {
 	std::string generateString() {
 		std::string returnString{};
 		//returnString.push_back('\"');
-		auto newSize{ randomizeNumber(45.0f, 15.0f) * 2 };
-		int32_t index{};
-		returnString.resize(newSize * 2);
-		for (uint32_t x = 0; x < newSize; x++) {
-			auto theValue = static_cast<char>((static_cast<float>(this->randomEngine()) / static_cast<float>(this->randomEngine.max()) * 99.0f) + 28.0f);
+		for (uint32_t x = 0; x < randomizeNumber(45.0f, 15.0f); x++) {
+			auto theValue = static_cast<char>((static_cast<float>(this->randomEngine()) / static_cast<float>(this->randomEngine.max()) * 93.0f) + 32.0f);
 			switch (theValue) {
 				case '\"': {
-					std::memcpy(returnString.data() + index, R"(\")", 2);
-					index += 2;
+					returnString.append(R"(\")");
 					break;
 				}
 				case '\\': {
-					std::memcpy(returnString.data() + index, R"(\\)", 2);
-					index += 2;
+					returnString.append(R"(\\)");
 					break;
 				}
-				case 31: {
-					std::memcpy(returnString.data() + index, R"(\r)", 2);
-					index += 2;
+				case '\r': {
+					returnString.append(R"(\\\r)");
 					break;
 				}
-				case 30: {
-					std::memcpy(returnString.data() + index, R"(\t)", 2);
-					index += 2;
+				case '\t': {
+					returnString.append(R"(\\\t)");
 					break;
 				}
-				case 29: {
-					std::memcpy(returnString.data() + index, R"(\f)", 2);
-					index += 2;
+				case '\f': {
+					returnString.append(R"(\\\f)");
 					break;
 				}
-				case 28: {
-					std::memcpy(returnString.data() + index, R"(\n)", 2);
-					index += 2;
+				case '\n': {
+					returnString.append(R"(\\\n)");
 					break;
 				}
 				default:{
-					char theValueNew{ theValue };
-					std::memcpy(returnString.data() + index, &theValueNew, 1);
-					++index;
+					returnString.push_back(theValue);
 				}
 			}
 		}
-		returnString.resize(index);
 		//returnString.push_back('\"');
 		return returnString;
 	}
@@ -306,7 +295,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	results r{ "jsonifier", "Single Test", "https://github.com/realtimechris/jsonifier", 1 };
 	Test<test_struct> uint64Test{};
 	jsonifier::jsonifier_core parser{};
-	std::cout << "CURRENT BUFFER: " << buffer << std::endl;
+
 	auto result = benchmark(
 		[&]() {
 			parser.parseJson<false, true>(uint64Test, buffer);
@@ -317,7 +306,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	}
 	for (auto& value: uint64Test.a) {
 		for (auto& value02: value.testStrings) {
-			std::cout << "CURRENT STRING (JSONIFIER): " << value02 << std::endl;
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
 		}
 	}
 
@@ -332,6 +321,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 
 	r.json_byte_length = buffer.size();
 	r.json_write	   = result;
+	std::cout << "CURRENT BUFFER: " << buffer << std::endl;
 	buffer.clear();
 	if (doWePrint) {
 		r.print();
@@ -425,7 +415,7 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 		1);
 	for (auto& value: uint64Test.a) {
 		for (auto& value02: value.testStrings) {
-			std::cout << "CURRENT STRING (GLAZE): " << value02 << std::endl;
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
 		}
 	}
 
@@ -519,7 +509,7 @@ auto glaze_abc_test(const std::string bufferNew, bool doWePrint = true) {
 using namespace simdjson;
 
 struct on_demand {
-	bool read_in_order(Test<test_struct>& obj, const padded_string& json, const jsonifier::vector<int32_t>& arraySizes);
+	bool read_in_order(Test<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes);
 
   protected:
 	ondemand::parser parser{};
@@ -579,7 +569,7 @@ template<> void simdPullArray<std::string>(ondemand::array newX, jsonifier::vect
 		} \
 	}
 
-bool on_demand::read_in_order(Test<test_struct>& obj, const padded_string& json, const jsonifier::vector<int32_t>& arraySizes) {
+bool on_demand::read_in_order(Test<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes) {
 	ondemand::document doc = parser.iterate(json).value();
 	SIMD_Pull(a);
 	SIMD_Pull(b);
@@ -610,7 +600,7 @@ bool on_demand::read_in_order(Test<test_struct>& obj, const padded_string& json,
 	return false;
 }
 
-auto simdjson_single_test(const std::string& bufferNew, const jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
+auto simdjson_single_test(std::string bufferNew, jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 	on_demand parser{};
 
@@ -638,7 +628,7 @@ auto simdjson_single_test(const std::string& bufferNew, const jsonifier::vector<
 	return r;
 }
 
-auto simdjson_test(const std::string& bufferNew,const jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
+auto simdjson_test(std::string bufferNew, jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 	on_demand parser{};
 
@@ -667,13 +657,13 @@ auto simdjson_test(const std::string& bufferNew,const jsonifier::vector<int32_t>
 }
 
 struct on_demand_abc {
-	bool read_out_of_order(AbcTest<test_struct>& obj, const padded_string& json, const jsonifier::vector<int32_t>& arraySizes);
+	bool read_out_of_order(AbcTest<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes);
 
   protected:
 	ondemand::parser parser{};
 };
 
-bool on_demand_abc::read_out_of_order(AbcTest<test_struct>& obj, const padded_string& json, const jsonifier::vector<int32_t>& arraySizes) {
+bool on_demand_abc::read_out_of_order(AbcTest<test_struct>& obj, const padded_string& json, jsonifier::vector<int32_t>& arraySizes) {
 	ondemand::document doc = parser.iterate(json).value();
 	SIMD_Pull(a);
 	SIMD_Pull(b);
@@ -704,7 +694,7 @@ bool on_demand_abc::read_out_of_order(AbcTest<test_struct>& obj, const padded_st
 	return false;
 }
 
-auto simdjson_abc_test(const std::string& bufferNew, const jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
+auto simdjson_abc_test(const std::string bufferNew, jsonifier::vector<int32_t>& arraySizes, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 	on_demand_abc parser{};
 
@@ -722,6 +712,7 @@ auto simdjson_abc_test(const std::string& bufferNew, const jsonifier::vector<int
 		},
 		iterations);
 
+
 	r.json_byte_length = buffer.size();
 	r.json_read		   = result;
 	if (doWePrint) {
@@ -735,7 +726,7 @@ static std::string table_header = R"(
 | Library | Test | Write (MB/s) | Read (MB/s) |
 | ------------------------------------------------- | ---------- | ------------ | ----------- |)";
 
-std::string regular_test(const json_data& jsonData) {
+std::string regular_test(json_data& jsonData) {
 	jsonifier::vector<results> results{};
 	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_test(jsonData.theData, false);
@@ -762,7 +753,7 @@ std::string regular_test(const json_data& jsonData) {
 	return table;
 }
 
-std::string abc_test(const json_data& jsonData) {
+std::string abc_test(json_data& jsonData) {
 	jsonifier::vector<results> results{};
 	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_abc_test(jsonData.theData, false);
@@ -789,7 +780,7 @@ std::string abc_test(const json_data& jsonData) {
 	return table;
 }
 
-std::string single_test(const json_data& jsonData) {
+std::string single_test(json_data& jsonData) {
 	jsonifier::vector<results> results{};
 	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_single_test(jsonData.theData, false);
@@ -911,7 +902,7 @@ template<> struct jsonifier::core<User> {
 template<> struct jsonifier::core<ReadyData> {
 	using OTy = ReadyData;
 	constexpr static auto parseValue =
-		createObject("_trace", &OTy::trace, "application", &OTy::application, "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
+		createObject("trace", &OTy::trace, "application", &OTy::application, "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
 			&OTy::guildJoinRequests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::privateChannels, "relationships", &OTy::relationships,
 			"resume_gateway_url", &OTy::resumeGatewayUrl, "session_id", &OTy::sessionId, "session_type", &OTy::sessionType, "shard", &OTy::shard, "user", &OTy::user, "v", &OTy::v);
 };
@@ -958,15 +949,6 @@ int32_t main() {
 		char* newPtr{ nullptr };
 		std::cout << "JSONIFIER SIZE: " << newString01 << std::endl;
 		std::cout << "JSONIFIER VALUE: " << reinterpret_cast<ptrdiff_t>(newString01.data()) << std::endl;
-		jsonifier::string testStringNew{};
-		testStringNew.append(R"(\\)");
-		testStringNew.append(R"(\")");
-		std::cout << "CURRENT STRING: " << testStringNew << std::endl;
-		testStringNew.clear();
-		testStringNew.resize(4);
-		std::memcpy(testStringNew.data() + 0, R"(\\)", 2);
-		std::memcpy(testStringNew.data() + 2, R"(\")", 2);
-		std::cout << "CURRENT STRING: " << testStringNew << std::endl;
 		parser.parseJson<false, true>(dataNew, newString01);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "JSONIFIER ERROR: " << value << std::endl;

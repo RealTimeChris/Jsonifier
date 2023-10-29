@@ -177,31 +177,31 @@ namespace jsonifier_internal {
 			for (auto&& c: value) {
 				switch (c) {
 					case 0x22u:
-						std::memcpy(buffer.data() + index, R"(\")", 2);
+						buffer.append(R"(\")");
 						index += 2;
 						break;
 					case 0x5Cu:
-						std::memcpy(buffer.data() + index, R"(\\)", 2);
+						buffer.append(R"(\\)");
 						index += 2;
 						break;
 					case 0x08u:
-						std::memcpy(buffer.data() + index, R"(\\)", 2);
+						buffer.append(R"(\\)");
 						index += 2;
 						break;
 					case 0x09u:
-						std::memcpy(buffer.data() + index, R"(\t)", 2);
+						buffer.append(R"(\t)");
 						index += 2;
 						break;
 					case 0x0Au:
-						std::memcpy(buffer.data() + index, R"(\n)", 2);
+						buffer.append(R"(\n)");
 						index += 2;
 						break;
 					case 0x0Cu:
-						std::memcpy(buffer.data() + index, R"(\f)", 2);
+						buffer.append(R"(\f)");
 						index += 2;
 						break;
 					case 0x0Du:
-						std::memcpy(buffer.data() + index, R"(\\)", 2);
+						buffer.append(R"(\\)");
 						index += 2;
 						break;
 					default:
