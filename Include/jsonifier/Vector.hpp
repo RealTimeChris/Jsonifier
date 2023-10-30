@@ -275,10 +275,6 @@ namespace jsonifier {
 			return returnValue;
 		}
 
-		jsonifier_inline size_type maxSize() const {
-			return std::numeric_limits<size_type>::max() / sizeof(value_type);
-		}
-
 		template<typename... value_types> jsonifier_inline reference emplace_back(value_types&&... c) {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
@@ -332,8 +328,12 @@ namespace jsonifier {
 			swap(newVector);
 		}
 
+		jsonifier_constexpr static size_type maxSize() noexcept {
+			return (std::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
+		}
+
 		jsonifier_inline void resize(size_type sizeNew) {
-			if (sizeNew > 0) [[likely]] {
+			if (sizeNew > 0 && sizeNew < maxSize()) [[likely]] {
 				if (sizeNew > capacityVal) [[likely]] {
 					pointer newPtr = getAlloc().allocate(sizeNew);
 					try {
@@ -358,7 +358,7 @@ namespace jsonifier {
 		}
 
 		jsonifier_inline void reserve(size_type capacityNew) {
-			if (capacityNew > capacityVal) [[likely]] {
+			if (capacityNew > 0 && capacityNew < maxSize()) [[likely]] {
 				pointer newPtr = getAlloc().allocate(capacityNew);
 				try {
 					if (dataVal && capacityVal > 0) [[likely]] {
@@ -435,7 +435,7 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	class structural_index_vector : public alloc_wrapper<structural_index> {
+	class structural_index_vector : public jsonifier::vector<structural_index> {
 	  public:
 		using allocator = alloc_wrapper<structural_index>;
 		using size_type = uint64_t;
@@ -445,39 +445,5 @@ namespace jsonifier_internal {
 		jsonifier_inline structural_index_vector() {
 			resize(16384);
 		};
-
-		jsonifier_inline void resize(size_type newSize) {
-			if (newSize > currentSize) {
-				if (currentSize > 0) {
-					allocator::deallocate(indices, currentSize);
-				}
-				indices		= allocator::allocate(newSize);
-				currentSize = newSize;
-			}
-		}
-
-		jsonifier_inline reference operator[](size_type index) {
-			return indices[index];
-		}
-
-		jsonifier_inline pointer getIndices() {
-			return indices;
-		}
-
-		jsonifier_inline ~structural_index_vector() {
-			cleanup();
-		}
-
-	  protected:
-		structural_index* indices{};
-		size_type currentSize{};
-
-		jsonifier_inline void cleanup() {
-			if (currentSize > 0) {
-				allocator::deallocate(indices, currentSize);
-				currentSize = 0;
-				indices		= nullptr;
-			}
-		}
 	};
 }

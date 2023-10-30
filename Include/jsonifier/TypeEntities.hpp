@@ -151,7 +151,7 @@ namespace jsonifier {
 		concept signed_t = std::signed_integral<unwrap<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
-		concept unsigned_t = std::unsigned_integral<unwrap<value_type>> && !bool_t<value_type> && !signed_t<value_type>;
+		concept unsigned_t = std::unsigned_integral<unwrap<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
 		concept unsigned_int16_t = unsigned_t<value_type> && sizeof(value_type) == 2;
@@ -249,7 +249,7 @@ namespace jsonifier {
 		concept has_resize = requires(value_type value) { value.resize(0); };
 
 		template<typename value_type>
-		concept raw_json_t = std::same_as<unwrap<value_type>, jsonifier::raw_json_data> && !string_t<value_type>;
+		concept raw_json_t = std::same_as<unwrap<value_type>, jsonifier::raw_json_data>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<unwrap<value_type>>::parseValue; };

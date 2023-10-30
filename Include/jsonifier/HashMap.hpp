@@ -146,7 +146,7 @@ namespace jsonifier_internal {
 		primitiveSwap(a, b, std::make_index_sequence<sizeof...(Tys)>());
 	}
 
-	template<typename iterator, typename compare> jsonifier_constexpr iterator partition(iterator left, iterator right, const compare& compareNew) {
+	template<typename iterator, typename compare> jsonifier_constexpr iterator partition(iterator&& left, iterator&& right, const compare& compareNew) {
 		auto pivot = left + (right - left) / 2;
 		auto value = *pivot;
 		primitiveSwap(*right, *pivot);
@@ -160,7 +160,7 @@ namespace jsonifier_internal {
 		return left;
 	}
 
-	template<typename iterator, typename compare> jsonifier_constexpr void quicksort(iterator left, iterator right, const compare& compareNew) {
+	template<typename iterator, typename compare> jsonifier_constexpr void quicksort(iterator&& left, iterator&& right, const compare& compareNew) {
 		while (0 < right - left) {
 			auto new_pivot = partition(left, right, compareNew);
 			quicksort(left, new_pivot, compareNew);

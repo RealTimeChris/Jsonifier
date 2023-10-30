@@ -133,8 +133,8 @@ namespace jsonifier_internal {
 
 	template<simd_int_512_t return_type> jsonifier_constexpr return_type simdFromValue(uint8_t value) {
 	#if !defined(_WIN32)
-		int64_t newArray[sizeof(simd_int_512) / sizeof(uint64_t)]{};
-		for (uint64_t x = 0; x < sizeof(simd_int_512) / sizeof(uint64_t); ++x) {
+		int64_t newArray[sizeof(simd_int_t) / sizeof(uint64_t)]{};
+		for (uint64_t x = 0; x < sizeof(simd_int_t) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(value) << 56;
 			newArray[x] |= static_cast<int64_t>(value) << 48;
 			newArray[x] |= static_cast<int64_t>(value) << 40;
@@ -144,10 +144,10 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(value) << 8;
 			newArray[x] |= static_cast<int64_t>(value);
 		}
-		simd_int_512 returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
+		simd_int_t returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
 	#else
-		simd_int_512 returnValue{};
-		for (uint64_t x = 0; x < sizeof(simd_int_512); ++x) {
+		simd_int_t returnValue{};
+		for (uint64_t x = 0; x < sizeof(simd_int_t); ++x) {
 			returnValue.m512i_u8[x] = value;
 		}
 	#endif
@@ -239,7 +239,7 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline static bool opBool(const simd_int_t& value) {
-			return !_mm512_test_epi64_mask(value, value);
+			return _mm512_test_epi64_mask(value, value);
 		}
 
 		template<uint64_t index = 0> jsonifier_inline static void insertUint64(simd_int_t& value, uint64_t valueNew) {
@@ -311,16 +311,23 @@ namespace jsonifier_internal {
 			prevInString = uint64_t(static_cast<int64_t>(valuesNewer) >> 63);
 		}
 
-		jsonifier_inline static simd_int_256 carrylessMultiplication256(const simd_int_256& value, uint64_t& prevInString) {
+		jsonifier_inline static simd_int_t carrylessMultiplication256(const simd_int_256& value, uint64_t& prevInString) {
 			static jsonifier_constexpr simd_int_128 allOnes{ simdFromValue<simd_int_128>(0xFFu) };
 			alignas(BytesPerStep) uint64_t valuesNewer01[SixtyFourBitsPerStep]{};
 			alignas(BytesPerStep) uint64_t valuesNewer02[SixtyFourBitsPerStep]{};
 			store(value, valuesNewer01);
 			processValue<0>(allOnes, valuesNewer01[0], valuesNewer02[0], prevInString);
 			processValue<1>(allOnes, valuesNewer01[1], valuesNewer02[1], prevInString);
-			processValue<0>(allOnes, valuesNewer01[2], valuesNewer02[2], prevInString);
-			processValue<1>(allOnes, valuesNewer01[3], valuesNewer02[3], prevInString);
+			processValue<2>(allOnes, valuesNewer01[2], valuesNewer02[2], prevInString);
+			processValue<3>(allOnes, valuesNewer01[3], valuesNewer02[3], prevInString);
 			return gatherValues<simd_int_256>(valuesNewer02);
+		}
+
+		jsonifier_inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
+			simd_int_t result = shl<1>(value);
+			result			  = setLSB(result, overflow);
+			overflow		  = getMSB(value);
+			return result;
 		}
 
 		jsonifier_inline static simd_int_t carrylessMultiplication(const simd_int_t& value, string_parsing_type& prevInString) {

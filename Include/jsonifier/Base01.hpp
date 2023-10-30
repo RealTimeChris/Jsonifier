@@ -97,7 +97,7 @@ namespace jsonifier_internal {
 		static jsonifier_constexpr size_type length(const_pointer first) {
 			const_pointer newPtr = first;
 			size_type count		 = 0;
-			while (newPtr && *newPtr != value_type{}) {
+			while (newPtr && *newPtr != static_cast<uint8_t>('\0')) {
 				++count;
 				++newPtr;
 			}

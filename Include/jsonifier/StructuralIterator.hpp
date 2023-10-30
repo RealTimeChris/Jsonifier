@@ -64,6 +64,18 @@ namespace jsonifier_internal {
 			return oldIter;
 		}
 
+		jsonifier_inline string_view_ptr getEndPtr() {
+			auto newIndex = currentIndex;
+			while (*(newIndex + 1) != nullptr) {
+				++newIndex;
+			}
+			return *newIndex;
+		}
+
+		jsonifier_inline string_view_ptr getRootPtr() {
+			return *rootIndex;
+		}
+
 		jsonifier_inline size_type getCurrentStringIndex() const {
 			return (*currentIndex) - (*rootIndex);
 		}

@@ -29,7 +29,8 @@
    },
    "cacheVariables": {
     "CMAKE_BUILD_TYPE": "Release",
-    "JSONIFIER_TEST": true
+    "JSONIFIER_TEST": true,
+    "DEV": true
    },
    "inherits": "Windows-Base",
    "name": "Windows-Release-Dev"
@@ -48,10 +49,11 @@
     "strategy": "external",
     "value": "x64"
    },
-   "cacheVariables": {
-    "CMAKE_BUILD_TYPE": "Debug",
-    "JSONIFIER_TEST": true
-   },
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "JSONIFIER_TEST": true,
+      "DEV": true
+    },
    "inherits": "Windows-Base",
    "name": "Windows-Debug-Dev"
   },
@@ -106,10 +108,11 @@
     "strategy": "external",
     "value": "x64"
    },
-   "cacheVariables": {
-    "CMAKE_BUILD_TYPE": "Release",
-    "JSONIFIER_TEST": true
-   },
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "JSONIFIER_TEST": true,
+      "DEV": true
+    },
    "inherits": "Linux-Base",
    "name": "Linux-Release-Dev"
   },
@@ -127,10 +130,11 @@
     "strategy": "external",
     "value": "x64"
    },
-   "cacheVariables": {
-    "CMAKE_BUILD_TYPE": "Debug",
-    "JSONIFIER_TEST": true
-   },
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "JSONIFIER_TEST": true,
+      "DEV": true
+    },
    "inherits": "Linux-Base",
    "name": "Linux-Debug-Dev"
   },

@@ -283,15 +283,15 @@ namespace jsonifier_internal {
 			store(value, valuesNewer01);
 			processValue<0>(allOnes, valuesNewer01[0], valuesNewer02[0], prevInString);
 			processValue<1>(allOnes, valuesNewer01[1], valuesNewer02[1], prevInString);
-			processValue<0>(allOnes, valuesNewer01[2], valuesNewer02[2], prevInString);
-			processValue<1>(allOnes, valuesNewer01[3], valuesNewer02[3], prevInString);
+			processValue<2>(allOnes, valuesNewer01[2], valuesNewer02[2], prevInString);
+			processValue<3>(allOnes, valuesNewer01[3], valuesNewer02[3], prevInString);
 			return gatherValues<simd_int_t>(valuesNewer02);
 		}
 
-		jsonifier_inline static simd_int_t follows(const simd_int_t& value, simd_int_t& overflow) {
+		jsonifier_inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
 			simd_int_t result = shl<1>(value);
-			result			  = setLSB(result, getMSB(overflow));
-			overflow		  = setMSB(overflow, getMSB(value));
+			result			  = setLSB(result, overflow);
+			overflow		  = getMSB(value);
 			return result;
 		}
 	};

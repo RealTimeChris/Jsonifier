@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
+		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
 			parse_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, iter, keys, parserNew);
 		}
 	};
