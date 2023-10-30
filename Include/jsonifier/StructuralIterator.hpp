@@ -74,7 +74,6 @@ namespace jsonifier_internal {
 
 	  protected:
 		static jsonifier_constexpr uint8_t defaultValue{ 0x00 };
-		int32_t currentIndexInt{};
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

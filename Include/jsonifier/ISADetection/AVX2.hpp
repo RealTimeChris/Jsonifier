@@ -130,7 +130,7 @@ namespace jsonifier_internal {
 	#else
 		simd_int_t returnValue{};
 		for (uint64_t x = 0; x < sizeof(simd_int_t); ++x) {
-			returnValue.m256i_u8[x] = value;
+			returnValue.m256i_i8[x] = value;
 		}
 	#endif
 		return returnValue;
@@ -258,52 +258,41 @@ namespace jsonifier_internal {
 			}
 		}
 
+		jsonifier_inline static simd_int_t setMSB(const simd_int_t& value, bool valueNew) {
+			if (valueNew) {
+				return _mm256_or_si256(value, _mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0x00));
+			} else {
+				return _mm256_andnot_si256(_mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0x00), value);
+			}
+		}
+
 		jsonifier_inline static bool getMSB(const simd_int_t& value) {
 			simd_int_t result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0x00));
 			return !_mm256_testz_si256(result, result);
 		}
 
-		template<uint64_t index> jsonifier_inline static void processValue(const simd_int_128& allOnes, simd_int_128& value, uint64_t& valuesNewer, uint64_t& prevInString) {
-			valuesNewer	 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(value, allOnes, index)) ^ prevInString);
+		template<uint64_t index> jsonifier_inline static void processValue(const simd_int_128& allOnes, uint64_t& value, uint64_t& valuesNewer, uint64_t& prevInString) {
+			valuesNewer	 = _mm_cvtsi128_si64(_mm_clmulepi64_si128(_mm_set_epi64x(0ULL, value), allOnes, 0)) ^ prevInString;
 			prevInString = uint64_t(static_cast<int64_t>(valuesNewer) >> 63);
 		}
 
 		jsonifier_inline static simd_int_t carrylessMultiplication(const simd_int_t& value, uint64_t& prevInString) {
 			static jsonifier_constexpr simd_int_128 allOnes{ simdFromValue<simd_int_128>(0xFFu) };
+			alignas(BytesPerStep) uint64_t valuesNewer01[SixtyFourBitsPerStep]{};
 			alignas(BytesPerStep) uint64_t valuesNewer02[SixtyFourBitsPerStep]{};
-			simd_int_128 valuesLow{ _mm256_extracti128_si256(value, 0) };
-			simd_int_128 valuesHigh{ _mm256_extracti128_si256(value, 1) };
-			processValue<0>(allOnes, valuesLow, valuesNewer02[0], prevInString);
-			processValue<1>(allOnes, valuesLow, valuesNewer02[1], prevInString);
-			processValue<0>(allOnes, valuesHigh, valuesNewer02[2], prevInString);
-			processValue<1>(allOnes, valuesHigh, valuesNewer02[3], prevInString);
+			store(value, valuesNewer01);
+			processValue<0>(allOnes, valuesNewer01[0], valuesNewer02[0], prevInString);
+			processValue<1>(allOnes, valuesNewer01[1], valuesNewer02[1], prevInString);
+			processValue<0>(allOnes, valuesNewer01[2], valuesNewer02[2], prevInString);
+			processValue<1>(allOnes, valuesNewer01[3], valuesNewer02[3], prevInString);
 			return gatherValues<simd_int_t>(valuesNewer02);
 		}
 
-		jsonifier_inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
+		jsonifier_inline static simd_int_t follows(const simd_int_t& value, simd_int_t& overflow) {
 			simd_int_t result = shl<1>(value);
-			result			  = setLSB(result, overflow);
-			overflow		  = getMSB(value);
+			result			  = setLSB(result, getMSB(overflow));
+			overflow		  = setMSB(overflow, getMSB(value));
 			return result;
-		}
-
-		jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle) {
-			std::cout << valuesTitle;
-			std::cout << std::bitset<64>{ values };
-			std::cout << std::endl;
-		}
-
-		jsonifier_inline static const simd_int_t& printBits(const simd_int_t& value, const std::string& valuesTitle) noexcept {
-			uint8_t values[BytesPerStep]{};
-			storeu(value, values);
-			std::cout << valuesTitle;
-			for (string_parsing_type x = 0; x < BytesPerStep; ++x) {
-				for (string_parsing_type y = 0; y < 8; ++y) {
-					std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-				}
-			}
-			std::cout << std::endl;
-			return value;
 		}
 	};
 

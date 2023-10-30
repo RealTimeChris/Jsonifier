@@ -77,8 +77,8 @@ namespace jsonifier_internal {
 			allocator_traits::construct(*this, ptr, std::forward<Args>(args)...);
 		}
 
-		jsonifier_inline size_type maxSize() {
-			return allocator_traits::max_size(*this);
+		jsonifier_inline static size_type maxSize() {
+			return allocator_traits::max_size(allocator{});
 		}
 
 		jsonifier_inline void destroy(pointer ptr) {

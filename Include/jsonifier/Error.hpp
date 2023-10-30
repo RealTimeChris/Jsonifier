@@ -44,8 +44,8 @@ namespace jsonifier_internal {
 		Inadequate_String_Length = 6,
 		Key_Parsing_Error		 = 7,
 		Invalid_Escape			 = 8,
-		Wrong_Type				 = 0,
-		Damaged_Input			 = 1
+		Wrong_Type				 = 9,
+		Damaged_Input			 = 10
 	};
 
 	enum class json_structural_type : uint8_t {
@@ -117,15 +117,25 @@ namespace jsonifier_internal {
 		jsonifier_inline error() noexcept = default;
 
 		jsonifier_inline error(structural_iterator& iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
-			intendedValue = static_cast<uint8_t>(typeNew);
-			errorIndex	  = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			errorType	  = error_code::Parse_Error;
-			location	  = locationNew;
-			errorValue	  = *iter;
+			intendedValue  = static_cast<uint8_t>(typeNew);
+			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
+			
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(iter.getCurrentStringIndex());
+			std::cout << "CURRENT ERROR INDEX: " << errorIndex << ",CURRENT ERROR INDEX (REAL): " << errorIndexReal << std::endl;
+			if (errorIndexReal < jsonifier::string::maxSize()) {
+				stringView = iter.operator->() - errorIndex;
+			}
+			errorType  = error_code::Parse_Error;
+			location   = locationNew;
+			errorValue = *iter;
 		}
 
 		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
-			errorIndex = static_cast<uint64_t>(iter.getCurrentStringIndex());
+			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(iter.getCurrentStringIndex());
+			if (errorIndexReal < jsonifier::string::maxSize()) {
+				stringView = iter.operator->() - errorIndex;
+			}
 			location   = locationNew;
 			errorType  = typeNew;
 			errorValue = *iter;
@@ -149,20 +159,42 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline jsonifier::string reportError() const {
+			simd_string_reader section{};
+			jsonifier::string resultString{};
+			if (stringView) {
+				resultString = section.resetWithErrorPrintOut<true>(std::basic_string_view<uint8_t>{ stringView }, errorIndexReal);
+			}
+			jsonifier::string returnString{};
 			switch (errorType) {
 				case error_code::Wrong_Type: {
-					return jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
+					returnString += jsonifier::string{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
 						", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
 						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					if (stringView) {
+						returnString += "\nHere's some of the string's indices:\n" + resultString;
+					}
 				}
 				case error_code::Damaged_Input: {
 					return jsonifier::string{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + static_cast<char>(errorValue) + "'" +
 						", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" +
 						jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					if (stringView) {
+						returnString += "\nHere's some of the string's indices:\n" + resultString;
+					}
 				}
 				case error_code::Invalid_Escape: {
 					return jsonifier::string{ "Invalid escape at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
 						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					if (stringView) {
+						returnString += "\nHere's some of the string's indices:\n" + resultString;
+					}
+				}
+				case error_code::Parse_Error: {
+					return jsonifier::string{ "Invalid escape at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
+						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					if (stringView) {
+						returnString += "\nHere's some of the string's indices:\n" + resultString;
+					}
 				}
 				default: {
 					return {};
@@ -172,6 +204,8 @@ namespace jsonifier_internal {
 
 	  protected:
 		std::source_location location{};
+		string_view_ptr stringView{};
+		uint64_t errorIndexReal{};
 		uint8_t intendedValue{};
 		error_code errorType{};
 		uint64_t errorIndex{};

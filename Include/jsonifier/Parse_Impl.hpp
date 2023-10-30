@@ -147,7 +147,6 @@ namespace jsonifier_internal {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Array_End>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Array_End>(iter));
 						derailleur::skipToNextValue(iter);
-						continue;
 					}
 					return;
 				}
@@ -174,7 +173,6 @@ namespace jsonifier_internal {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Array_End>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Array_End>(iter));
 						derailleur::skipToNextValue(iter);
-						continue;
 					}
 					return;
 				}
@@ -186,7 +184,6 @@ namespace jsonifier_internal {
 						if (!derailleur::template checkForMatchClosed<json_structural_type::Array_End>(iter)) {
 							parserNew.errors.emplace_back(createError<json_structural_type::Array_End>(iter));
 							derailleur::skipToNextValue(iter);
-							continue;
 						}
 						return;
 					}

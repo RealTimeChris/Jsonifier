@@ -228,6 +228,14 @@ namespace jsonifier_internal {
 			return !_mm_testz_si128(result, result);
 		}
 
+		jsonifier_inline static simd_int_t setMSB(const simd_int_t& value, bool valueNew) {
+			if (valueNew) {
+				return _mm_or_si128(value, _mm_set_epi64x(0x8000000000000000, 0x00));
+			} else {
+				return _mm_andnot_si128(_mm_set_epi64x(0x8000000000000000, 0x00), value);
+			}
+		}
+
 		template<uint64_t index> jsonifier_inline static void processValue(const simd_int_128& allOnes, simd_int_128& value, uint64_t& valuesNewer, uint64_t& prevInString) {
 			valuesNewer	 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_clmulepi64_si128(value, allOnes, index % 2)) ^ prevInString);
 			prevInString = uint64_t(static_cast<int64_t>(valuesNewer) >> 63);
@@ -241,30 +249,11 @@ namespace jsonifier_internal {
 			return gatherValues<simd_int_t>(valuesNewer);
 		}
 
-		jsonifier_inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
+		jsonifier_inline static simd_int_t follows(const simd_int_t& value, simd_int_t& overflow) {
 			simd_int_t result = shl<1>(value);
-			result			  = setLSB(result, overflow);
-			overflow		  = getMSB(value);
+			result			  = setLSB(result, getMSB(overflow));
+			overflow		  = setMSB(overflow, getMSB(value));
 			return result;
-		}
-
-		jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle) {
-			std::cout << valuesTitle;
-			std::cout << std::bitset<64>{ values };
-			std::cout << std::endl;
-		}
-
-		jsonifier_inline static const simd_int_t& printBits(const simd_int_t& value, const std::string& valuesTitle) noexcept {
-			uint8_t values[BytesPerStep]{};
-			storeu(value, values);
-			std::cout << valuesTitle;
-			for (string_parsing_type x = 0; x < BytesPerStep; ++x) {
-				for (string_parsing_type y = 0; y < 8; ++y) {
-					std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-				}
-			}
-			std::cout << std::endl;
-			return value;
 		}
 	};
 

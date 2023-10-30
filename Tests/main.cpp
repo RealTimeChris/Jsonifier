@@ -1,7 +1,7 @@
-#if defined(JSONIFIER_CPU_INSTRUCTIONS)
-	#undef JSONIFIER_CPU_INSTRUCTIONS
-	#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2| JSONIFIER_BMI|JSONIFIER_BMI2|JSONIFIER_POPCNT|JSONIFIER_LZCNT)
-#endif
+//#if defined(JSONIFIER_CPU_INSTRUCTIONS)
+//#undef JSONIFIER_CPU_INSTRUCTIONS
+	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX512| JSONIFIER_BMI|JSONIFIER_BMI2|JSONIFIER_POPCNT|JSONIFIER_LZCNT)
+//#endif
 	#include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
 #include "glaze/glaze.hpp"
@@ -60,9 +60,8 @@ template<typename OTy> struct TestGenerator {
 			if (theValue >= 0 && theValue <= 127) {
 				switch (static_cast<uint8_t>(theValue)) {
 					case '\"':
-						returnString.push_back('\"');
+						returnString.push_back(static_cast<char>(theValue));
 						break;
-					case '\\':
 					default: {
 						returnString.push_back(static_cast<char>(theValue));
 						break;
@@ -71,6 +70,7 @@ template<typename OTy> struct TestGenerator {
 				
 			}
 		}
+		returnString.push_back(0x00);
 		return returnString;
 	}
 
@@ -95,7 +95,7 @@ template<typename OTy> struct TestGenerator {
 			v.resize(5);
 			for (uint64_t x = 0; x < 5; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(15, 3);
+					auto arraySize01 = randomizeNumber(5, 3);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -285,7 +285,11 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	for (auto& value: parser.getErrors()) {
 		std::cout << "Jsonifier Error: " << value << std::endl;
 	}
-
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
+		}
+	}
 	r.json_read = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
@@ -587,6 +591,11 @@ auto simdjson_single_test(const std::string& bufferNew, const jsonifier::vector<
 	} catch (const std::exception& error) {
 		std::cerr << "simdjson Error: " << error.what() << std::endl;
 	}
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			std::cout << "CURRENT STRING: " << value02 << std::endl;
+		}
+	}
 
 	r.json_read = result;
 	buffer.clear();
@@ -697,6 +706,9 @@ static std::string table_header = R"(
 std::string regular_test(const json_data& jsonData) {
 	jsonifier::vector<results> results{};
 	for (uint32_t x = 0; x < 2; ++x) {
+		simdjson_test(jsonData.theData, jsonData.arraySizes, false);
+	}
+	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_test(jsonData.theData, false);
 	}
 	results.emplace_back(glaze_test(jsonData.theData));
@@ -750,6 +762,9 @@ std::string abc_test(const json_data& jsonData) {
 
 std::string single_test(const json_data& jsonData) {
 	jsonifier::vector<results> results{};
+	for (uint32_t x = 0; x < 2; ++x) {
+		simdjson_single_test(jsonData.theData, jsonData.arraySizes, false);
+	}
 	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_single_test(jsonData.theData, false);
 	}
@@ -821,12 +836,12 @@ struct ReadyData {
 	std::string sessionType;
 	std::string shard;
 	User user;
-	int v;
+	int32_t v;
 };
 
 struct ReadyMessage {
-	int op;
-	int s;
+	int32_t op;
+	int32_t s;
 	std::string t;
 	ReadyData d;
 };
@@ -874,7 +889,25 @@ template<> struct jsonifier::core<ReadyMessage> {
 	using OTy								   = ReadyMessage;
 	jsonifier_constexpr static auto parseValue = createObject("op", &OTy::op, "s", &OTy::s, "t", &OTy::t, "d", &OTy::d);
 };
+int32_t roundDownToMultiple(int32_t value, int32_t multiple) {
+	// Calculate the rounded down value
+	int32_t remainder	 = value % multiple;
+	int32_t roundedValue = value - remainder;
 
+	return roundedValue;
+}
+
+template<uint64_t amount> static __m256i shl(const __m256i& value) {
+	static jsonifier_constexpr uint64_t shiftBetween = amount % 64;
+	alignas(BytesPerStep) uint64_t newArray00[SixtyFourBitsPerStep * 2]{};
+	alignas(BytesPerStep) uint64_t newArray01[SixtyFourBitsPerStep * 2]{};
+	_mm256_store_si256(reinterpret_cast<__m256i*>(newArray00), value);
+	newArray01[0] = ((newArray00[0] << amount) | newArray00[1] >> (64 - shiftBetween));
+	newArray01[1] = ((newArray00[1] << amount) | newArray00[2] >> (64 - shiftBetween));
+	newArray01[2] = ((newArray00[2] << amount) | newArray00[3] >> (64 - shiftBetween));
+	newArray01[3] = ((newArray00[3] << amount) & ~0x8000000000000000);
+	return _mm256_load_si256(reinterpret_cast<const __m256i*>(newArray01));
+}
 
 int32_t main() {
 	try {
@@ -909,8 +942,45 @@ int32_t main() {
 									   "1142733646600614004,\"mfa_"
 									   "enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":10},\"op\":0,\"s\":1,\"t\":\"READY\"}" };
 		ReadyMessage dataNew{};
+		int32_t value	 = 36803;
+		int32_t multiple = 256;
+
+		int32_t roundedValue = roundDownToMultiple(value, multiple);
+
+		std::cout << "Rounded down value: " << roundedValue << std::endl;
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson<false, true>(dataNew, newString01);
+		uint64_t newValue{ 0x8000000000000000 };
+		__m256i newValue01 = _mm256_setzero_si256();
+		newValue01		   = _mm256_insert_epi64(newValue01, 0xffffffffffffffff, 0);
+		newValue01		   = _mm256_insert_epi64(newValue01, 0xffffffffffffffff, 1);
+		newValue01		   = _mm256_insert_epi64(newValue01, 0xffffffffffffffff, 2);
+		newValue01		   = _mm256_insert_epi64(newValue01, 0xffffffffffffffff, 3);
+		//newValue01		   = _mm256_insert_epi64(newValue01, 0x8000000000000000, 3);
+		jsonifier_internal::printBits(newValue01, "MSB BITS: ");
+		//newValue01		   = shl<1>(newValue01);
+		auto newValue02	   = newValue01;
+		std::cout << "THE DATA: " << newString01 << std::endl;
+		jsonifier_internal::printBits(newValue01, "MSB SHIFTED BITS: ");
+		
+		uint64_t lowestNewBits{ 0x01uLL };
+		auto newValue03 = _mm256_insert_epi64(__m256i{}, lowestNewBits, 1);
+		//jsonifier_internal::simd_base::printBits(newValue03, "MSB BITS - 64 SET: ");
+		//lowestNewBits	= { static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) >> 63 };
+		//newValue03 = _mm256_insert_epi64(newValue01, static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) << 1 | lowestNewBits, 2);
+		//lowestNewBits	  = { static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) >> 63 };
+		//newValue03 = _mm256_insert_epi64(newValue01, static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) << 1 | lowestNewBits, 2);
+		//lowestNewBits	  = { static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 2)) >> 63 };
+		//newValue03 = _mm256_insert_epi64(newValue01, static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 2)) << 1 | lowestNewBits, 3);
+		//lowestNewBits	  = { static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 3)) >> 63 };
+		//newValue03 = _mm256_insert_epi64(newValue01, lowestNewBits, 1);
+		//lowestNewBits = static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) >> 63;
+		//newValue01	  = _mm256_insert_epi64(newValue01, static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 1)) << 1 | lowestNewBits, 2);
+		//lowestNewBits = static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 2)) >> 63;
+		//newValue01	  = _mm256_insert_epi64(newValue01, static_cast<uint64_t>(_mm256_extract_epi64(newValue02, 2)) << 1 | lowestNewBits, 3);
+		//simd_int_128 testValue01{ jsonifier_internal::simdFromValue<__m128x>(0xAA) };
+		//newValue01 = _mm256_insert_epi64(newValue01, lowestNewBits, 3);
+		//jsonifier_internal::simd_base::printBits(newValue03, "MSB BITS SHIFTED: ");
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
@@ -918,6 +988,10 @@ int32_t main() {
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		FileLoader fileLoader02{ "../../../../JsonData.json" };
 		//jsonData.theData = fileLoader02;
+		std::cout << "FOUND IT AT INDEX: " << jsonData.theData.find(R"(NBIKLqO$PmBMS&![7)") << std::endl;
+		std::cout << "CURRENT VALUE IS: " << +jsonData.theData[jsonData.theData.find(R"(NBIKLqO$PmBMS&![7)") + std::string{ R"(NBIKLqO$PmBMS&![7)" }.size()]
+				  << ", CURRENT VALUE 02: " << +jsonData.theData[jsonData.theData.find(R"(NBIKLqO$PmBMS&![7)") + std::string{ R"(NBIKLqO$PmBMS&![7)" }.size() + 1]
+				  << ", CURRENT VALUE 03: " << +jsonData.theData[jsonData.theData.find(R"(NBIKLqO$PmBMS&![7)") + std::string{ R"(NBIKLqO$PmBMS&![7)" }.size() + 2] << std::endl;
 		fileLoader02.saveFile(jsonData.theData);
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);

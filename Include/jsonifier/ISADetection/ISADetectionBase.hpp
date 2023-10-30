@@ -85,6 +85,7 @@
 #include <jsonifier/TypeEntities.hpp>
 #include <source_location>
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <cstdint>
 #include <bitset>
@@ -155,12 +156,47 @@ using simd_int_128 = __m128x;
 
 #endif
 
-
 namespace jsonifier_internal {
 
 	template<uint64_t multiple> jsonifier_inline uint64_t roundUpToMultiple(uint64_t num) {
 		uint64_t remainder = num % multiple;
 		return remainder == 0 ? num : num + (multiple - remainder);
+	}
+
+	template<uint64_t multiple> uint64_t roundDownToMultiple(uint64_t value) {
+		return value >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+	}
+
+	jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle) {
+		std::cout << valuesTitle;
+		std::cout << std::bitset<64>{ values };
+		std::cout << std::endl;
+	}
+
+	template<typename simd_type> jsonifier_inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+		uint8_t values[sizeof(simd_type)]{};
+		std::memcpy(values, &value, sizeof(simd_type));
+		std::cout << valuesTitle;
+		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		std::cout << std::endl;
+		return value;
+	}
+
+	template<typename simd_type> jsonifier_inline static std::string printBits(simd_type& value) noexcept {
+		uint8_t values[sizeof(simd_type)]{};
+		std::stringstream theStream{};
+		std::memcpy(values, &value, sizeof(simd_type));
+		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		theStream << std::endl;
+		return theStream.str();
 	}
 
 	template<uint64_t BitsPerStep> class simd_base_internal {};

@@ -66,39 +66,40 @@ namespace jsonifier_internal {
 	  public:
 		using value_type	= uint8_t;
 		using pointer		= value_type*;
-		using const_pointer = const pointer;
+		using const_pointer = const value_type*;
 		using size_type		= uint64_t;
 
-		static jsonifier_constexpr void move(pointer first1, pointer first2, size_type count) {
+		static jsonifier_constexpr void move(pointer firstNew, pointer first2, size_type count) {
 			if (std::is_constant_evaluated()) {
 				bool loopForward = true;
 
 				for (pointer source = first2; source != first2 + count; ++source) {
-					if (first1 == source) {
+					if (firstNew == source) {
 						loopForward = false;
 					}
 				}
 
 				if (loopForward) {
 					for (uint64_t index = 0; index != count; ++index) {
-						first1[index] = first2[index];
+						firstNew[index] = first2[index];
 					}
 				} else {
 					for (uint64_t index = count; index != 0; --index) {
-						first1[index - 1] = first2[index - 1];
+						firstNew[index - 1] = first2[index - 1];
 					}
 				}
 
 				return;
 			}
-			std::memmove(first1, first2, count * sizeof(value_type));
+			std::memmove(firstNew, first2, count * sizeof(value_type));
 		}
 
-		static jsonifier_constexpr size_type length(pointer first) {
-			size_type count = 0;
-			while (*first != 0x00) {
+		static jsonifier_constexpr size_type length(const_pointer first) {
+			const_pointer newPtr = first;
+			size_type count		 = 0;
+			while (newPtr && *newPtr != value_type{}) {
 				++count;
-				++first;
+				++newPtr;
 			}
 
 			return count;

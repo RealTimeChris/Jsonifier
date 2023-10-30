@@ -156,8 +156,8 @@ namespace jsonifier {
 			return result;
 		}
 
-		jsonifier_constexpr size_type maxSize() {
-			const size_type allocMax   = getAlloc().maxSize();
+		jsonifier_constexpr static size_type maxSize() {
+			const size_type allocMax   = allocator::maxSize();
 			const size_type storageMax = std::max(allocMax, static_cast<size_type>(bufSize));
 			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
@@ -247,11 +247,13 @@ namespace jsonifier {
 
 		template<typename value_type_newer> jsonifier_inline void append(value_type_newer* valuesNew, uint64_t sizeNew) {
 			if (sizeVal + sizeNew >= capacityVal) {
-				reserve(sizeVal + sizeNew);
+				resize(sizeVal + sizeNew);
 			}
-			std::memcpy(dataVal + sizeVal, valuesNew, sizeNew);
-			sizeVal += sizeNew;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			if (sizeNew > 0 && valuesNew) {
+				std::memcpy(dataVal + sizeVal, valuesNew, sizeNew);
+				sizeVal += sizeNew;
+				getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			}
 		}
 
 		template<typename Iterator01, typename Iterator02> jsonifier_inline void insert(Iterator01 where, Iterator02 start, Iterator02 end) {
@@ -351,10 +353,6 @@ namespace jsonifier {
 
 		jsonifier_inline void clear() {
 			sizeVal = 0;
-		}
-
-		jsonifier_inline size_type maxSize() const {
-			return std::numeric_limits<size_type>::max();
 		}
 
 		jsonifier_inline void resize(size_type sizeNew) {
@@ -491,7 +489,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t string_type_new> jsonifier_inline string_base& operator+=(const string_type_new& rhs) {
-			append(rhs.data(), rhs.size());
+			append(static_cast<string_base>(rhs));
 			return *this;
 		}
 
