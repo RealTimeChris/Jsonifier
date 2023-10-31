@@ -171,7 +171,7 @@ namespace jsonifier_internal {
 			result = orSi128(result, shuffleEpi8<index + 1>(a, b));
 		}
 		return result;
-	}	
+	}
 
 	jsonifier_inline simd_int_t set1Epi8(int8_t valueNew) {
 		simd_int_t returnValue{};

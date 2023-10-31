@@ -66,23 +66,16 @@ namespace jsonifier_internal {
 	class escapeable {
 	  public:
 		template<typename source_type, typename dest_type> jsonifier_inline static escapeable copyAndFind(const source_type* source, dest_type* destString) {
-			simd_int_t values(gatherValuesU<simd_int_t>(source));
-			simd_base::storeu(values, destString);
+			simd_int_t values(gatherValues<simd_int_t>(source));
+			simd_base::store(values, destString);
 			escapeable returnData{};
 			simd_base::collectEscapeablesAsSimdBase(returnData.nextEscapeableVal, values);
 			return returnData;
 		}
 
-		jsonifier_inline bool hasEscapeable() {
-			return nextEscapeableVal != 0 && tzcnt(nextEscapeableVal) != BytesPerStep;
-		}
-
 		jsonifier_inline string_parsing_type nextEscapeable() {
 			auto oldIndex = tzcnt(nextEscapeableVal);
-			if (oldIndex != BytesPerStep) {
-				nextEscapeableVal = blsr(nextEscapeableVal);
-			}
-			//std::cout << "NEXT ESCAPEABLE: " << oldIndex << std::endl;
+			nextEscapeableVal = blsr(nextEscapeableVal);
 			return oldIndex;
 		}
 
@@ -197,53 +190,48 @@ namespace jsonifier_internal {
 	jsonifier_inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
 		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(BytesPerStep)) {
 			escapeable bsQuote = escapeable::copyAndFind(source, dest);
-			if (bsQuote.hasEscapeable()) {
-				string_parsing_type nextEscapeableIndex{};
-				while (bsQuote.hasEscapeable() && nextEscapeableIndex != BytesPerStep) {
-					nextEscapeableIndex = bsQuote.nextEscapeable();
-					if (nextEscapeableIndex != BytesPerStep) {
-						//std::cout << "CURRENT ESCAPEABLE VALUE: " << source[nextEscapeableIndex] << std::endl;
-						//std::cout << "CURRENT ESCAPEABLE VALUE: " << +source[nextEscapeableIndex] << std::endl;
-						//std::cout << "NEXT ESCAPEABLE INDEX: " << nextEscapeableIndex << std::endl;
-						switch (source[nextEscapeableIndex]) {
-							case 0x22u:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\")", 2);
-								break;
-							case 0x5C:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\\)", 2);
-								break;
-							case 0x08:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\b)", 2);
-								break;
-							case 0x0C:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\f)", 2); 
-								break;
-							case 0x0A:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\n)", 2);
-								break;
-							case 0x0D:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\r)", 2);
-								break;
-							case 0x09:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\t)", 2);
-								break;
-							default:
-								*(dest + indexNew + nextEscapeableIndex) = source[indexNew + nextEscapeableIndex];
-						}
-						lengthNew -= nextEscapeableIndex;
-					} else {
-						lengthNew -= BytesPerStep;
-						indexNew += BytesPerStep;
-						source += BytesPerStep;
-						dest += BytesPerStep;
-					}
-				}
-			} else {
+			string_parsing_type nextEscapeableIndex{ bsQuote.nextEscapeable() };
+			auto incrementValues = [&] {
 				lengthNew -= BytesPerStep;
 				indexNew += BytesPerStep;
 				source += BytesPerStep;
 				dest += BytesPerStep;
-			}
+			};
+			auto appendValues = [&] {
+				switch (source[nextEscapeableIndex]) {
+					case 0x22u:
+						std::memcpy(dest + nextEscapeableIndex, R"(\")", 2);
+						break;
+					case 0x5C:
+						std::memcpy(dest + nextEscapeableIndex, R"(\\)", 2);
+						break;
+					case 0x08:
+						std::memcpy(dest + nextEscapeableIndex, R"(\b)", 2);
+						break;
+					case 0x0C:
+						std::memcpy(dest + nextEscapeableIndex, R"(\f)", 2);
+						break;
+					case 0x0A:
+						std::memcpy(dest + nextEscapeableIndex, R"(\n)", 2);
+						break;
+					case 0x0D:
+						std::memcpy(dest + nextEscapeableIndex, R"(\r)", 2);
+						break;
+					case 0x09:
+						std::memcpy(dest + nextEscapeableIndex, R"(\t)", 2);
+						break;
+					default:
+						break;
+				}
+				nextEscapeableIndex = bsQuote.nextEscapeable();
+				lengthNew -= BytesPerStep;
+			};
+			auto appendValues02 = [&] {
+				while (nextEscapeableIndex != BytesPerStep) {
+					nextEscapeableIndex != BytesPerStep ? appendValues() : incrementValues();
+				}
+			};
+			nextEscapeableIndex != BytesPerStep ? appendValues02() : incrementValues();
 		}
 		return source;
 	}

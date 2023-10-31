@@ -56,7 +56,7 @@ template<typename OTy> struct TestGenerator {
 	}
 
 	std::string generateString() {
-		auto length{ randomizeNumber(22.0f, 2.0f) * 2 };
+		auto length{ randomizeNumber(32.0f, 5.0f) * 2 };
 		static constexpr char charset[]	 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\"\r\b\t\n";
 		static constexpr int charsetSize = sizeof(charset) - 1;
 		std::mt19937 generator(std::random_device{}());
@@ -88,10 +88,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(1);
-			for (uint64_t x = 0; x < 1; ++x) {
+			v.resize(10);
+			for (uint64_t x = 0; x < 10; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(2, 1);
+					auto arraySize01 = randomizeNumber(10, 5);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -893,9 +893,7 @@ void printBits(__m256i avxVector) {
 int32_t main() {
 	try {
 		__m256i lowerVal{ _mm256_insert_epi64(__m256i{}, 0x01, 0x00) };
-		jsonifier::string newerString02{ "d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdas"
-										 "ddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3as"
-										 "d9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"" };
+		jsonifier::string newerString02{ "ddwerwerwerwerwrfwer3asd9d0k3kasdasd" };
 		jsonifier::string newerString03{};
 		newerString03.resize(1024);
 		uint64_t index{};
@@ -995,7 +993,10 @@ int32_t main() {
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
+		std::cout << "THE JSON STRING (PRE): " << newString01 << std::endl;
+		newString01.clear();
 		parser.serializeJson(dataNew, newString01);
+		std::cout << "THE JSON STRING: " << newString01 << std::endl;
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		FileLoader fileLoader02{ "C:/users/chris/source/repos/jsonifier/JsonData.json" };
 		//jsonData.theData = fileLoader02;
