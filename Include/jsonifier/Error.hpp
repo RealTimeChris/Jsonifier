@@ -119,12 +119,11 @@ namespace jsonifier_internal {
 		jsonifier_inline error(structural_iterator iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			intendedValue  = static_cast<uint8_t>(typeNew);
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			errorIndexReal = roundDownToMultiple<BitsPerStep>(iter.getCurrentStringIndex());
-			std::cout << "ROUNDED INDEX: " << errorIndexReal << ", ACTUAL INDEX: " << errorIndex << std::endl;
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<uint64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string::maxSize()) {
 				stringView = iter.getRootPtr();
 			}
-			stringLength = iter.getEndPtr() - iter.getRootPtr();
+			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			errorValue	 = *iter;
 			errorType	 = collectMisReadType(static_cast<uint8_t>(typeNew), errorValue);
@@ -132,7 +131,7 @@ namespace jsonifier_internal {
 
 		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
-			errorIndexReal = roundDownToMultiple<BytesPerStep>(iter.getCurrentStringIndex());
+			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<uint64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string::maxSize()) {
 				stringView = iter.getRootPtr();
 			}
@@ -208,6 +207,27 @@ namespace jsonifier_internal {
 					}
 #endif
 					return returnValue;
+				}
+				case error_code::Success: {
+					[[fallthrough]];
+				}
+				case error_code::Inadequate_String_Length: {
+					[[fallthrough]];
+				}
+				case error_code::Incorrect_Type: {
+					[[fallthrough]];
+				}
+				case error_code::Key_Parsing_Error: {
+					[[fallthrough]];
+				}
+				case error_code::Number_Error: {
+					[[fallthrough]];
+				}
+				case error_code::Unknown_Key: {
+					[[fallthrough]];
+				}
+				case error_code::Setup_Error: {
+					[[fallthrough]];
 				}
 				default: {
 					return {};

@@ -28,6 +28,15 @@
 
 namespace jsonifier_internal {
 
+	template<uint64_t multiple> jsonifier_inline uint64_t roundUpToMultiple(uint64_t num) {
+		uint64_t remainder = num % multiple;
+		return remainder == 0 ? num : num + (multiple - remainder);
+	}
+
+	template<uint64_t multiple> jsonifier_inline uint64_t roundDownToMultiple(uint64_t value) {
+		return value >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+	}
+
 	template<typename value_type_new> class aligned_allocator : public std::pmr::polymorphic_allocator<value_type_new> {
 	  public:
 		using value_type = value_type_new;

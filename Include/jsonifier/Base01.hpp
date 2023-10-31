@@ -29,6 +29,12 @@
 
 namespace jsonifier_internal {
 
+	jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle);
+
+	template<typename simd_type> jsonifier_inline static std::string printBits(simd_type& value) noexcept;
+
+	template<typename simd_type> jsonifier_inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
+
 	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value) {
 		uint64_t d = 5381;
 		for (const auto& c: value)

@@ -158,21 +158,6 @@ using simd_int_128 = __m128x;
 
 namespace jsonifier_internal {
 
-	jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle);
-
-	template<typename simd_type> jsonifier_inline static std::string printBits(simd_type& value) noexcept;
-
-	template<typename simd_type> jsonifier_inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
-
-	template<uint64_t multiple> jsonifier_inline uint64_t roundUpToMultiple(uint64_t num) {
-		uint64_t remainder = num % multiple;
-		return remainder == 0 ? num : num + (multiple - remainder);
-	}
-
-	template<uint64_t multiple> uint64_t roundDownToMultiple(uint64_t value) {
-		return value >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
-	}
-
 	template<uint64_t BitsPerStep> class simd_base_internal {};
 
 	using simd_base			= simd_base_internal<BitsPerStep>;

@@ -115,11 +115,11 @@ namespace jsonifier_internal {
 	}
 
 	jsonifier_constexpr uint64_t bitWeight(uint64_t n) {
-		return static_cast<uint64_t>(n <= 8ULL) * sizeof(uint32_t) + (static_cast<uint64_t>(n <= 8ULL) * sizeof(uint32_t)) +
-			(static_cast<uint64_t>(n <= 8ULL) * sizeof(unsigned long long)) + (n <= 128ULL);
+		return static_cast<uint64_t>(n <= 8ULL) * sizeof(uint32_t) + (static_cast<uint64_t>(n <= 8ULL) * sizeof(uint32_t)) + (static_cast<uint64_t>(n <= 8ULL) * sizeof(uint64_t)) +
+			(n <= 128ULL);
 	}
 
-	template<uint64_t n> jsonifier_inline unsigned long long selectUintLeast(std::integral_constant<uint64_t, n>) {
+	template<uint64_t n> jsonifier_inline uint64_t selectUintLeast(std::integral_constant<uint64_t, n>) {
 		static_assert(n < 2, "Unsupported type size.");
 		return {};
 	}
@@ -137,12 +137,12 @@ namespace jsonifier_internal {
 		primitiveSwap(std::forward<pair<value_type, u>>(a.second), std::forward<pair<value_type, u>>(b.second));
 	}
 
-	template<typename... Tys, uint64_t... Is> jsonifier_constexpr void primitiveSwap(tuplet::tuple<Tys...>&& a, tuplet::tuple<Tys...>&& b, std::index_sequence<Is...>) {
+	template<typename... Tys, uint64_t... Is> jsonifier_constexpr void primitiveSwap(tuple<Tys...>&& a, tuple<Tys...>&& b, std::index_sequence<Is...>) {
 		using swallow = int32_t[];
-		( void )swallow{ (primitiveSwap(std::forward<Tys...>(tuplet::get<Is>(a)), std::forward<Tys...>(tuplet::get<Is>(b))), 0)... };
+		( void )swallow{ (primitiveSwap(std::forward<Tys...>(get<Is>(a)), std::forward<Tys...>(get<Is>(b))), 0)... };
 	}
 
-	template<typename... Tys> jsonifier_constexpr void primitiveSwap(tuplet::tuple<Tys...>& a, tuplet::tuple<Tys...>& b) {
+	template<typename... Tys> jsonifier_constexpr void primitiveSwap(tuple<Tys...>& a, tuple<Tys...>& b) {
 		primitiveSwap(a, b, std::make_index_sequence<sizeof...(Tys)>());
 	}
 
@@ -212,7 +212,7 @@ namespace jsonifier_internal {
 			return state_;
 		}
 
-		jsonifier_constexpr void discard(unsigned long long n) {
+		jsonifier_constexpr void discard(uint64_t n) {
 			while (n--)
 				operator()();
 		}
@@ -566,20 +566,20 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct tuple_variant;
 
-	template<typename... value_types> struct tuple_variant<tuplet::tuple<value_types...>> : unique<std::variant<>, value_types...> {};
+	template<typename... value_types> struct tuple_variant<tuple<value_types...>> : unique<std::variant<>, value_types...> {};
 
 	template<typename value_type> struct tuple_ptr_variant;
 
 	template<typename... value_types> struct tuple_ptr_variant<std::tuple<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
 
-	template<typename... value_types> struct tuple_ptr_variant<tuplet::tuple<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
+	template<typename... value_types> struct tuple_ptr_variant<tuple<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
 
 	template<typename... value_types> struct tuple_ptr_variant<pair<value_types...>> : unique<std::variant<>, std::add_pointer_t<value_types>...> {};
 
 	template<typename tuple, typename = std::make_index_sequence<std::tuple_size<tuple>::value>> struct value_tuple_variant;
 
-	template<typename tuple, size_t... I> struct value_tuple_variant<tuple, std::index_sequence<I...>> {
-		using type = typename tuple_variant<decltype(tuplet::tupleCat(std::declval<tuplet::tuple<std::tuple_element_t<1, std::tuple_element_t<I, tuple>>>>()...))>::type;
+	template<typename tuple_t, size_t... I> struct value_tuple_variant<tuple_t, std::index_sequence<I...>> {
+		using type = typename tuple_variant<decltype(tupleCat(std::declval<tuple<std::tuple_element_t<1, std::tuple_element_t<I, tuple_t>>>>()...))>::type;
 	};
 
 	template<typename tuple> using value_tuple_variant_t = typename value_tuple_variant<tuple>::type;
@@ -829,7 +829,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, uint64_t I> struct core_sv {
-		static jsonifier_constexpr jsonifier::string_view value = tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
+		static jsonifier_constexpr jsonifier::string_view value = get<0>(get<I>(jsonifier::concepts::coreV<value_type>));
 	};
 
 	template<typename value_type, size_t... I> jsonifier_constexpr auto makeMapImpl(std::index_sequence<I...>) {
@@ -839,13 +839,11 @@ namespace jsonifier_internal {
 		static_assert(size == n);
 		auto naiveOrNormalHash = [&] {
 			if jsonifier_constexpr (size <= 20) {
-				return makeNaiveMap<value_t, n>(
-					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-						tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeNaiveMap<value_t, n>({ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			} else {
-				return makeUnorderedMap<jsonifier::string_view, value_t, n>(
-					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-						tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeUnorderedMap<jsonifier::string_view, value_t, n>({ pair<jsonifier::string_view, value_t>(
+					jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			}
 		};
 
@@ -853,29 +851,25 @@ namespace jsonifier_internal {
 		if jsonifier_constexpr (n == 0) {
 			static_assert(falseV<value_type>, "Empty object in jsonifier::core.");
 		} else if jsonifier_constexpr (n == 1) {
-			return single_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
-				pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-					tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... } };
+			return single_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{ pair<jsonifier::string_view, value_t>(
+				jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if jsonifier_constexpr (n == 2) {
-			return double_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
-				pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-					tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... } };
+			return double_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{ pair<jsonifier::string_view, value_t>(
+				jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if jsonifier_constexpr (n128) {
 			jsonifier_constexpr auto frontDesc =
-				singleCharHash<n>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
+				singleCharHash<n>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ get<0>(get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 			if jsonifier_constexpr (frontDesc.valid) {
-				return makeSingleCharMap<value_t, frontDesc>(
-					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-						tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeSingleCharMap<value_t, frontDesc>({ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			} else {
-				jsonifier_constexpr auto backDesc = singleCharHash<n, false>(
-					ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)) }... });
+				jsonifier_constexpr auto backDesc =
+					singleCharHash<n, false>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ get<0>(get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 				if jsonifier_constexpr (backDesc.valid) {
-					return makeSingleCharMap<value_t, backDesc>(
-						{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(tuplet::get<0>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>))),
-							tuplet::get<1>(tuplet::get<I>(jsonifier::concepts::coreV<value_type>)))... });
+					return makeSingleCharMap<value_t, backDesc>({ pair<jsonifier::string_view, value_t>(
+						jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 				} else {
 					return naiveOrNormalHash();
 				}

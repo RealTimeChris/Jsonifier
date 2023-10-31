@@ -1,7 +1,7 @@
-#if defined(JSONIFIER_CPU_INSTRUCTIONS)
-#undef JSONIFIER_CPU_INSTRUCTIONS
-	#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2|JSONIFIER_BMI|JSONIFIIER_BMI2|JSONIFIER_POPCNT|JSONIFIER_LZCNT)
-#endif
+//#if defined(JSONIFIER_CPU_INSTRUCTIONS)
+//#undef JSONIFIER_CPU_INSTRUCTIONS
+	//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVXF
+//#endif
 	#include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
 #include "glaze/glaze.hpp"
@@ -22,6 +22,10 @@ struct test_struct {
 struct json_data {
 	std::string theData{};
 	jsonifier::vector<int32_t> arraySizes{};
+};
+
+template<typename OTy> struct Test {
+	jsonifier::vector<OTy> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
 
 template<typename OTy> struct TestGenerator {
@@ -45,10 +49,6 @@ template<typename OTy> struct TestGenerator {
 		TestGenerator generator{};
 		jsonifier::jsonifier_core parser{};
 		parser.serializeJson(generator, buffer);
-		std::cout << "CURRENT BUFFER (JSONIFIER): " << buffer << std::endl;
-		buffer = std::string{};
-		glz::write_json(generator, buffer);
-		std::cout << "CURRENT BUFFER (GLAZE): " << buffer << std::endl;
 		json_data returnData{};
 		returnData.arraySizes = generator.arraySizes;
 		returnData.theData	  = buffer;
@@ -56,16 +56,17 @@ template<typename OTy> struct TestGenerator {
 	}
 
 	std::string generateString() {
-		auto length{ randomizeNumber(22.0f, 2.0f) * 2 };
-		static constexpr char charset[]	 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\"\r\b\t\n\f";
-		static constexpr int charsetSize = sizeof(charset) - 1;
+		auto length{ randomizeNumber(35.0f, 2.0f)};
+		static constexpr jsonifier::string_view charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\b\n\t\f\r";
+		static constexpr int32_t charsetSize			= charset.size();
 		std::mt19937 generator(std::random_device{}());
-		std::uniform_int_distribution<int> distribution(0, charsetSize - 1);
-		std::string result;
-
-		for (int i = 0; i < length; ++i) {
+		std::uniform_int_distribution<int32_t> distribution(0, charsetSize);
+		std::string result{};
+		char previousCharacter{};
+		for (int32_t i = 0; i < length; ++i) {
 			char randomChar = charset[distribution(generator)];
 			result += randomChar;
+			previousCharacter = randomChar;
 		}
 		return result;
 	}
@@ -88,10 +89,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(5);
-			for (uint64_t x = 0; x < 5; ++x) {
+			v.resize(250);
+			for (uint64_t x = 0; x < 250; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(15, 3);
+					auto arraySize01 = randomizeNumber(43, 15);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -133,10 +134,6 @@ template<typename OTy> struct TestGenerator {
 	}
 };
 
-template<typename OTy> struct Test {
-	jsonifier::vector<OTy> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-};
-
 GLZ_META(test_struct, testBools, testInts, testUints, testDoubles, testStrings);
 GLZ_META(Test<test_struct>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 GLZ_META(TestGenerator<test_struct>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
@@ -175,7 +172,7 @@ template<> struct jsonifier::core<AbcTest<test_struct>> {
 };
 
 #if defined(NDEBUG)
-jsonifier_constexpr static uint64_t iterations = 100;
+jsonifier_constexpr static uint64_t iterations = 1;
 #else
 jsonifier_constexpr static uint64_t iterations = 1;
 #endif
@@ -284,6 +281,11 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	r.json_read = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			//std::cout << "CURRENT VALUE: (JSONIFIER): " << value02 << std::endl;
+		}
+	}
 
 	result = benchmark(
 		[&]() {
@@ -386,6 +388,11 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 	r.json_read = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
+	for (auto& value: uint64Test.a) {
+		for (auto& value02: value.testStrings) {
+			//std::cout << "CURRENT VALUE: (GLAZE): " << value02 << std::endl;
+		}
+	}
 
 	result = benchmark(
 		[&]() {
@@ -692,9 +699,6 @@ static std::string table_header = R"(
 std::string regular_test(const json_data& jsonData) {
 	jsonifier::vector<results> results{};
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjson_test(jsonData.theData, jsonData.arraySizes, false);
-	}
-	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_test(jsonData.theData, false);
 	}
 	results.emplace_back(glaze_test(jsonData.theData));
@@ -748,9 +752,6 @@ std::string abc_test(const json_data& jsonData) {
 
 std::string single_test(const json_data& jsonData) {
 	jsonifier::vector<results> results{};
-	for (uint32_t x = 0; x < 2; ++x) {
-		simdjson_single_test(jsonData.theData, jsonData.arraySizes, false);
-	}
 	for (uint32_t x = 0; x < 2; ++x) {
 		glaze_single_test(jsonData.theData, false);
 	}
@@ -876,38 +877,8 @@ template<> struct jsonifier::core<ReadyMessage> {
 	jsonifier_constexpr static auto parseValue = createObject("op", &OTy::op, "s", &OTy::s, "t", &OTy::t, "d", &OTy::d);
 };
 
-
-void printBits(__m256i avxVector) {
-	// Use a pointer to access the data in the AVX vector
-	const int* data = reinterpret_cast<const int*>(&avxVector);
-
-	for (int i = 7; i >= 0; i--) {
-		for (int j = 31; j >= 0; j--) {
-			int bit = (data[i] >> j) & 1;
-			std::cout << bit;
-		}
-	}
-	std::cout << std::endl;
-}
-
 int32_t main() {
 	try {
-		__m256i lowerVal{ _mm256_insert_epi64(__m256i{}, 0x01, 0x00) };
-		//lowerVal.m256i_u64[3] = 0x01ull;
-		//jsonifier_internal::printBits(lowerVal, "FINAL BITS: ");
-		//lowerVal = jsonifier_internal::simd_base::shl<1>(lowerVal);
-		printBits(lowerVal);
-		auto theValue{ static_cast<int64_t>(std::numeric_limits<uint64_t>::max()) };
-		alignas(BytesPerStep) uint8_t values[sizeof(uint64_t)]{};
-		std::memcpy(values, &theValue, sizeof(uint64_t));
-		for (string_parsing_type x = 0; x < sizeof(uint64_t); ++x) {
-			for (string_parsing_type y = 0; y < 8; ++y) {
-				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-			}
-		}
-		for (uint64_t x = 0; x < 64; ++x) {
-			std::cout << (theValue & (1ull << x)) << std::endl;
-		}
 		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,"
 									   "\\\"calls\\\":[]},\\\"session_"
 									   "lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-"
@@ -944,11 +915,10 @@ int32_t main() {
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
-		parser.serializeJson(dataNew, newString01);
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		FileLoader fileLoader02{ "C:/users/chris/source/repos/jsonifier/JsonData.json" };
 		//jsonData.theData = fileLoader02;
-		fileLoader02.saveFile(jsonData.theData);
+		//fileLoader02.saveFile(jsonData.theData);
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
 		auto abcTestResults	  = abc_test(jsonData);
