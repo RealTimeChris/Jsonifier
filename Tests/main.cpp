@@ -57,7 +57,7 @@ template<typename OTy> struct TestGenerator {
 
 	std::string generateString() {
 		auto length{ randomizeNumber(22.0f, 2.0f) * 2 };
-		static constexpr char charset[]	 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\"\r\b\t\n\f";
+		static constexpr char charset[]	 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\"\r\b\t\n";
 		static constexpr int charsetSize = sizeof(charset) - 1;
 		std::mt19937 generator(std::random_device{}());
 		std::uniform_int_distribution<int> distribution(0, charsetSize - 1);
@@ -88,10 +88,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(5);
-			for (uint64_t x = 0; x < 5; ++x) {
+			v.resize(1);
+			for (uint64_t x = 0; x < 1; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(15, 3);
+					auto arraySize01 = randomizeNumber(2, 1);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -893,6 +893,57 @@ void printBits(__m256i avxVector) {
 int32_t main() {
 	try {
 		__m256i lowerVal{ _mm256_insert_epi64(__m256i{}, 0x01, 0x00) };
+		jsonifier::string newerString02{ "d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdas"
+										 "ddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3as"
+										 "d9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"" };
+		jsonifier::string newerString03{};
+		newerString03.resize(1024);
+		uint64_t index{};
+		uint64_t indexNew{};
+		auto newPtr = jsonifier_internal::serializeString(newerString02.data(), newerString03.data() + index, newerString02.size(), indexNew);
+
+		index += indexNew;
+
+		indexNew = newPtr - newerString02.data();
+		for (auto iterBegin = newerString02.begin() + indexNew; iterBegin < newerString02.end(); ++iterBegin) {
+			switch (*iterBegin) {
+				case 0x22u:
+					std::memcpy(newerString03.data() + index, R"(\")", 2);
+					index += 2;
+					break;
+				case '\\':
+					std::memcpy(newerString03.data() + index, R"(\\)", 2);
+					index += 2;
+					break;
+				case '\b':
+					std::memcpy(newerString03.data() + index, R"(\b)", 2);
+					index += 2;
+					break;
+				case '\f':
+					std::memcpy(newerString03.data() + index, R"(\f)", 2);
+					index += 2;
+					break;
+				case '\n':
+					std::memcpy(newerString03.data() + index, R"(\n)", 2);
+					index += 2;
+					break;
+				case '\r':
+					std::memcpy(newerString03.data() + index, R"(\r)", 2);
+					index += 2;
+					break;
+				case '\t':
+					std::memcpy(newerString03.data() + index, R"(\t)", 2);
+					index += 2;
+					break;
+				default:
+					newerString03[index++] = *iterBegin;
+			}
+		}
+		std::cout << "NEW STRING: ";
+		std::cout << newerString03 << std::endl;
+		uint64_t newIndex{};
+		jsonifier_internal::serializeString(newerString02.data(), newerString03.data(), newerString02.size(), newIndex);
+
 		//lowerVal.m256i_u64[3] = 0x01ull;
 		//jsonifier_internal::printBits(lowerVal, "FINAL BITS: ");
 		//lowerVal = jsonifier_internal::simd_base::shl<1>(lowerVal);

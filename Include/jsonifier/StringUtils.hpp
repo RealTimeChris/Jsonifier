@@ -35,7 +35,7 @@ namespace jsonifier_internal {
 	  public:
 		template<typename source_type, typename dest_type> jsonifier_inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
 			simd_int_t values(gatherValuesU<simd_int_t>(source));
-			simd_base::storeu(values, destString);
+			simd_base::store(values, destString);
 			backslash_and_quote returnData{};
 			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashes) };
 			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotes) };
@@ -61,6 +61,33 @@ namespace jsonifier_internal {
 	  protected:
 		string_parsing_type quoteBits{};
 		string_parsing_type bsBits{};
+	};
+
+	class escapeable {
+	  public:
+		template<typename source_type, typename dest_type> jsonifier_inline static escapeable copyAndFind(const source_type* source, dest_type* destString) {
+			simd_int_t values(gatherValuesU<simd_int_t>(source));
+			simd_base::storeu(values, destString);
+			escapeable returnData{};
+			simd_base::collectEscapeablesAsSimdBase(returnData.nextEscapeableVal, values);
+			return returnData;
+		}
+
+		jsonifier_inline bool hasEscapeable() {
+			return nextEscapeableVal != 0 && tzcnt(nextEscapeableVal) != BytesPerStep;
+		}
+
+		jsonifier_inline string_parsing_type nextEscapeable() {
+			auto oldIndex = tzcnt(nextEscapeableVal);
+			if (oldIndex != BytesPerStep) {
+				nextEscapeableVal = blsr(nextEscapeableVal);
+			}
+			//std::cout << "NEXT ESCAPEABLE: " << oldIndex << std::endl;
+			return oldIndex;
+		}
+
+	  protected:
+		string_parsing_type nextEscapeableVal{};
 	};
 
 	template<typename value_type> jsonifier_inline static uint32_t hexToU32NoCheck(const value_type* source) {
@@ -167,83 +194,58 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02>
-	jsonifier_inline value_type02* serializeString(const value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
-		while (lengthNew >= BytesPerStep) {
-			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, dest);
-			if (bsQuote.hasQuoteFirst()) {
-				return dest + bsQuote.quoteIndex();
-			}
-			if (bsQuote.hasBackslash()) {
-				auto bsDist		   = bsQuote.backslashIndex();
-				uint8_t escapeChar = source[bsDist + 1];
-				if (escapeChar == 'u') {
-					lengthNew -= bsDist;
-					indexNew += bsDist;
-					source += bsDist;
-					dest += bsDist;
-					if (!handleUnicodeCodePoint(&source, &dest)) {
-						return dest;
+	jsonifier_inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
+		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(BytesPerStep)) {
+			escapeable bsQuote = escapeable::copyAndFind(source, dest);
+			if (bsQuote.hasEscapeable()) {
+				string_parsing_type nextEscapeableIndex{};
+				while (bsQuote.hasEscapeable() && nextEscapeableIndex != BytesPerStep) {
+					nextEscapeableIndex = bsQuote.nextEscapeable();
+					if (nextEscapeableIndex != BytesPerStep) {
+						//std::cout << "CURRENT ESCAPEABLE VALUE: " << source[nextEscapeableIndex] << std::endl;
+						//std::cout << "CURRENT ESCAPEABLE VALUE: " << +source[nextEscapeableIndex] << std::endl;
+						//std::cout << "NEXT ESCAPEABLE INDEX: " << nextEscapeableIndex << std::endl;
+						switch (source[nextEscapeableIndex]) {
+							case 0x22u:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\")", 2);
+								break;
+							case 0x5C:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\\)", 2);
+								break;
+							case 0x08:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\b)", 2);
+								break;
+							case 0x0C:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\f)", 2); 
+								break;
+							case 0x0A:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\n)", 2);
+								break;
+							case 0x0D:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\r)", 2);
+								break;
+							case 0x09:
+								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\t)", 2);
+								break;
+							default:
+								*(dest + indexNew + nextEscapeableIndex) = source[indexNew + nextEscapeableIndex];
+						}
+						lengthNew -= nextEscapeableIndex;
+					} else {
+						lengthNew -= BytesPerStep;
+						indexNew += BytesPerStep;
+						source += BytesPerStep;
+						dest += BytesPerStep;
 					}
-				} else {
-					uint8_t escapeResult = escapeMap<value_type01>[escapeChar];
-					if (escapeResult == 0u) {
-						return dest;
-					}
-					switch (escapeResult) {
-						case 0x22u:
-							std::memcpy(dest, R"(\")", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x5Cu:
-							std::memcpy(dest, R"(\\)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x07u:
-							std::memcpy(dest, R"(\a)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x08u:
-							std::memcpy(dest, R"(\b)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x09u:
-							std::memcpy(dest, R"(\t)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x0Au:
-							std::memcpy(dest, R"(\n)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x0Cu:
-							std::memcpy(dest, R"(\f)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						case 0x0Du:
-							std::memcpy(dest, R"(\r)", 2);
-							dest += 2;
-							indexNew += 2;
-							break;
-						default:
-							dest[indexNew++] = escapeResult;
-					}
-					lengthNew -= bsDist + 2;
-					source += bsDist + 2;
 				}
 			} else {
-				source += BytesPerStep;
-				dest += BytesPerStep;
 				lengthNew -= BytesPerStep;
 				indexNew += BytesPerStep;
+				source += BytesPerStep;
+				dest += BytesPerStep;
 			}
 		}
-		return dest;
+		return source;
 	}
 
 	jsonifier_inline bool parseBool(string_view_ptr json) {

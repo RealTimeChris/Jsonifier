@@ -184,39 +184,37 @@ namespace jsonifier_internal {
 
 			auto newPtr = serializeString(value.data(), buffer.data() + index, value.size(), indexNew);
 
-			index += newPtr - (buffer.data() + index);
+			index += indexNew;
+
+			indexNew = newPtr - value.data();
 			for (auto iterBegin = value.begin() + indexNew; iterBegin < value.end(); ++iterBegin) {
 				switch (*iterBegin) {
 					case 0x22u:
 						std::memcpy(buffer.data() + index, R"(\")", 2);
 						index += 2;
 						break;
-					case 0x5Cu:
+					case '\\':
 						std::memcpy(buffer.data() + index, R"(\\)", 2);
 						index += 2;
 						break;
-					case 0x07u:
-						std::memcpy(buffer.data() + index, R"(\a)", 2);
-						index += 2;
-						break;
-					case 0x08u:
+					case '\b':
 						std::memcpy(buffer.data() + index, R"(\b)", 2);
 						index += 2;
 						break;
-					case 0x09u:
-						std::memcpy(buffer.data() + index, R"(\t)", 2);
-						index += 2;
-						break;
-					case 0x0Au:
-						std::memcpy(buffer.data() + index, R"(\n)", 2);
-						index += 2;
-						break;
-					case 0x0Cu:
+					case '\f':
 						std::memcpy(buffer.data() + index, R"(\f)", 2);
 						index += 2;
 						break;
-					case 0x0Du:
+					case '\n':
+						std::memcpy(buffer.data() + index, R"(\n)", 2);
+						index += 2;
+						break;
+					case '\r':
 						std::memcpy(buffer.data() + index, R"(\r)", 2);
+						index += 2;
+						break;
+					case '\t':
+						std::memcpy(buffer.data() + index, R"(\t)", 2);
 						index += 2;
 						break;
 					default:
@@ -293,7 +291,7 @@ namespace jsonifier_internal {
 
 			writeCharacter<structural_characters::Array_Start>(buffer, index);
 			forEach<size>([&](auto I) {
-				auto& newMember = getMember(value, tuplet::get<I>(jsonifier::concepts::coreV<value_type>));
+				auto& newMember = getMember(value, get<I>(jsonifier::concepts::coreV<value_type>));
 				serialize<excludeKeys>::op(newMember, buffer, index);
 				jsonifier_constexpr bool needsComma = I < size - 1;
 				if jsonifier_constexpr (needsComma) {
@@ -320,7 +318,7 @@ namespace jsonifier_internal {
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static jsonifier_constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<value_type>);
+				static jsonifier_constexpr auto item = get<x>(jsonifier::concepts::coreV<value_type>);
 				using item_type						 = decltype(item);
 				using member_ptr_t					 = std::tuple_element_t<1, item_type>;
 				using value_type_new				 = member_t<value_type, member_ptr_t>;
@@ -328,9 +326,9 @@ namespace jsonifier_internal {
 				if jsonifier_constexpr (jsonifier::concepts::null_t<value_type_new>) {
 					auto isNull = [&]() {
 						if jsonifier_constexpr (std::is_member_pointer_v<std::tuple_element_t<1, item_type>>) {
-							return !bool(value.*tuplet::get<1>(item));
+							return !bool(value.*get<1>(item));
 						} else {
-							return !bool(tuplet::get<1>(item)(value));
+							return !bool(get<1>(item)(value));
 						}
 					}();
 					if (isNull()) {
@@ -347,7 +345,7 @@ namespace jsonifier_internal {
 				using key = std::tuple_element_t<0, decltype(item)>;
 
 				if jsonifier_constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
-					static jsonifier_constexpr jsonifier::string_view key = tuplet::get<0>(item);
+					static jsonifier_constexpr jsonifier::string_view key = get<0>(item);
 					if jsonifier_constexpr (needsEscaping(key)) {
 						serialize<excludeKeys>::op(key, buffer, index);
 						writeCharacter<structural_characters::Colon>(buffer, index);
@@ -358,7 +356,7 @@ namespace jsonifier_internal {
 						writeCharacters<quoted>(buffer, index);
 					}
 				}
-				auto& newMember = getMember(value, tuplet::get<1>(item));
+				auto& newMember = getMember(value, get<1>(item));
 				serialize<excludeKeys>::op(newMember, buffer, index);
 			});
 			writeCharacter<structural_characters::Object_End>(buffer, index);
@@ -372,7 +370,7 @@ namespace jsonifier_internal {
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static jsonifier_constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<value_type>);
+				static jsonifier_constexpr auto item = get<x>(jsonifier::concepts::coreV<value_type>);
 				using item_type						 = decltype(item);
 				using member_ptr_t					 = std::tuple_element_t<1, item_type>;
 				using value_type_new				 = member_t<value_type, member_ptr_t>;
@@ -380,9 +378,9 @@ namespace jsonifier_internal {
 				if jsonifier_constexpr (jsonifier::concepts::null_t<value_type_new>) {
 					auto isNull = [&]() {
 						if jsonifier_constexpr (std::is_member_pointer_v<std::tuple_element_t<1, item_type>>) {
-							return !bool(value.*tuplet::get<1>(item));
+							return !bool(value.*get<1>(item));
 						} else {
-							return !bool(tuplet::get<1>(item)(value));
+							return !bool(get<1>(item)(value));
 						}
 					}();
 					if (isNull()) {
@@ -393,7 +391,7 @@ namespace jsonifier_internal {
 				using key = std::tuple_element_t<0, item_type>;
 
 				if jsonifier_constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
-					static jsonifier_constexpr jsonifier::string_view key = tuplet::get<0>(item);
+					static jsonifier_constexpr jsonifier::string_view key = get<0>(item);
 					if (first) {
 						first = false;
 					} else {
@@ -409,7 +407,7 @@ namespace jsonifier_internal {
 						writeCharacters<quoted>(buffer, index);
 					}
 				}
-				auto& newMember	 = getMember(value, tuplet::get<1>(item));
+				auto& newMember	 = getMember(value, get<1>(item));
 				using MemberType = decltype(newMember);
 				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<MemberType>) {
 					serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
@@ -427,7 +425,7 @@ namespace jsonifier_internal {
 
 			bool first = true;
 			forEach<n>([&](auto x) {
-				static jsonifier_constexpr auto item = tuplet::get<x>(jsonifier::concepts::coreV<value_type>);
+				static jsonifier_constexpr auto item = get<x>(jsonifier::concepts::coreV<value_type>);
 				using item_type						 = decltype(item);
 				using member_ptr_t					 = std::tuple_element_t<1, item_type>;
 				using value_type_new				 = member_t<value_type, member_ptr_t>;
@@ -435,9 +433,9 @@ namespace jsonifier_internal {
 				if jsonifier_constexpr (jsonifier::concepts::null_t<value_type_new>) {
 					auto isNull = [&]() {
 						if jsonifier_constexpr (std::is_member_pointer_v<std::tuple_element_t<1, item_type>>) {
-							return !bool(value.*tuplet::get<1>(item));
+							return !bool(value.*get<1>(item));
 						} else {
-							return !bool(tuplet::get<1>(item)(value));
+							return !bool(get<1>(item)(value));
 						}
 					}();
 					if (isNull()) {
@@ -448,7 +446,7 @@ namespace jsonifier_internal {
 				using key = std::tuple_element_t<0, item_type>;
 
 				if jsonifier_constexpr (jsonifier::concepts::string_t<key> || jsonifier::concepts::char_t<key>) {
-					static jsonifier_constexpr jsonifier::string_view key = tuplet::get<0>(item);
+					static jsonifier_constexpr jsonifier::string_view key = get<0>(item);
 					if (excludedKeys.find(static_cast<const typename KeyType::key_type>(key)) != excludedKeys.end()) {
 						return;
 					}
@@ -467,7 +465,7 @@ namespace jsonifier_internal {
 						writeCharacters<quoted>(buffer, index);
 					}
 				}
-				auto& newMember	 = getMember(value, tuplet::get<1>(item));
+				auto& newMember	 = getMember(value, get<1>(item));
 				using MemberType = decltype(newMember);
 				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<MemberType>) {
 					serialize<true>::op(newMember, buffer, index, newMember.excludedKeys);
