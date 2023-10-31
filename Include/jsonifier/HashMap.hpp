@@ -839,11 +839,13 @@ namespace jsonifier_internal {
 		static_assert(size == n);
 		auto naiveOrNormalHash = [&] {
 			if jsonifier_constexpr (size <= 20) {
-				return makeNaiveMap<value_t, n>({ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
-					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeNaiveMap<value_t, n>(
+					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+						get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			} else {
-				return makeUnorderedMap<jsonifier::string_view, value_t, n>({ pair<jsonifier::string_view, value_t>(
-					jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeUnorderedMap<jsonifier::string_view, value_t, n>(
+					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+						get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			}
 		};
 
@@ -851,25 +853,29 @@ namespace jsonifier_internal {
 		if jsonifier_constexpr (n == 0) {
 			static_assert(falseV<value_type>, "Empty object in jsonifier::core.");
 		} else if jsonifier_constexpr (n == 1) {
-			return single_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{ pair<jsonifier::string_view, value_t>(
-				jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
+			return single_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
+				pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if jsonifier_constexpr (n == 2) {
-			return double_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{ pair<jsonifier::string_view, value_t>(
-				jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
+			return double_item<value_t, core_sv<value_type, I>::value...>{ ctime_array<pair<jsonifier::string_view, value_t>, n>{
+				pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... } };
 		} else if jsonifier_constexpr (n128) {
 			jsonifier_constexpr auto frontDesc =
 				singleCharHash<n>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ get<0>(get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 			if jsonifier_constexpr (frontDesc.valid) {
-				return makeSingleCharMap<value_t, frontDesc>({ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
-					get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
+				return makeSingleCharMap<value_t, frontDesc>(
+					{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+						get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 			} else {
-				jsonifier_constexpr auto backDesc =
-					singleCharHash<n, false>(ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ get<0>(get<I>(jsonifier::concepts::coreV<value_type>)) }... });
+				jsonifier_constexpr auto backDesc = singleCharHash<n, false>(
+					ctime_array<jsonifier::string_view, n>{ jsonifier::string_view{ get<0>(get<I>(jsonifier::concepts::coreV<value_type>)) }... });
 
 				if jsonifier_constexpr (backDesc.valid) {
-					return makeSingleCharMap<value_t, backDesc>({ pair<jsonifier::string_view, value_t>(
-						jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))), get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
+					return makeSingleCharMap<value_t, backDesc>(
+						{ pair<jsonifier::string_view, value_t>(jsonifier::string_view(get<0>(get<I>(jsonifier::concepts::coreV<value_type>))),
+							get<1>(get<I>(jsonifier::concepts::coreV<value_type>)))... });
 				} else {
 					return naiveOrNormalHash();
 				}

@@ -255,7 +255,8 @@ namespace jsonifier {
 		if jsonifier_constexpr (sizeof...(args) == 0) {
 			return object{ jsonifier_internal::tuple{} };
 		} else {
-			return object{ jsonifier_internal::GroupBuilder<concepts::unwrap<decltype(jsonifier_internal::copyTuple(args...))>>::op(jsonifier_internal::copyTuple(args...)) };
+			return object{ jsonifier_internal::GroupBuilder<concepts::unwrap<decltype(jsonifier_internal::copyTuple(args...))>>::op(
+				jsonifier_internal::copyTuple(args...)) };
 		}
 	}
 

@@ -262,6 +262,16 @@ namespace jsonifier_internal {
 	template<typename... value_types> jsonifier_constexpr auto copyTuple(value_types... args) {
 		return tuple<value_types...>{ args... };
 	}
+
+	template<typename... value_type> jsonifier_constexpr auto forwardAstuple(value_type&&... a) {
+		return tuple<value_type&&...>{ static_cast<value_type&&>(a)... };
+	}
+
+	namespace literals {
+		template<char... D> jsonifier_constexpr auto operator""_tag() -> jsonifier::concepts::Tag<sizetFromDigits<D...>()> {
+			return {};
+		}
+	}
 }
 
 namespace std {
@@ -327,10 +337,10 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t groupCount> jsonifier_constexpr auto groupSizes(const ctime_array<size_t, groupCount>& indices, size_t n_total) {
-		ctime_array<size_t, groupCount> diffs;
-		groupSizesHelper<0, groupCount - 1>(diffs, indices);
-		diffs[groupCount - 1] = n_total - indices[groupCount - 1];
+	template<size_t n_groups> jsonifier_constexpr auto groupSizes(const ctime_array<size_t, n_groups>& indices, size_t n_total) {
+		ctime_array<size_t, n_groups> diffs;
+		groupSizesHelper<0, n_groups - 1>(diffs, indices);
+		diffs[n_groups - 1] = n_total - indices[n_groups - 1];
 		return diffs;
 	}
 
@@ -368,8 +378,8 @@ namespace jsonifier_internal {
 		static jsonifier_constexpr auto sizes  = get<1>(h);
 
 		static jsonifier_constexpr auto op(tuple&& object) {
-			jsonifier_constexpr auto groupCount = starts.maxSize();
-			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<groupCount>{});
+			jsonifier_constexpr auto n_groups = starts.maxSize();
+			return makeGroupsImpl<starts, sizes>(std::forward<tuple>(object), std::make_index_sequence<n_groups>{});
 		}
 	};
 

@@ -181,10 +181,8 @@ namespace jsonifier_internal {
 
 			writeCharacterUnChecked<structural_characters::Quotes>(buffer, index);
 
-			auto newPtr = value.data();
-
-			for (uint64_t indexNew{ static_cast<uint64_t>(newPtr - value.data()) }; indexNew < n; ++indexNew) {
-				switch (value[indexNew]) {
+			for (uint64_t x = 0; x < value.size(); ++x) {
+				switch (value[x]) {
 					case 0x22u:
 						std::memcpy(buffer.data() + index, R"(\")", 2);
 						index += 2;
@@ -214,7 +212,8 @@ namespace jsonifier_internal {
 						index += 2;
 						break;
 					default:
-						buffer[index++] = value[indexNew];
+						std::memcpy(buffer.data() + index, value.data() + x, 1);
+						++index;
 				}
 			}
 
