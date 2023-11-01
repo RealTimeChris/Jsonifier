@@ -45,7 +45,6 @@ template<typename OTy> struct TestGenerator {
 		TestGenerator generator{};
 		jsonifier::jsonifier_core parser{};
 		parser.serializeJson(generator, buffer);
-		std::cout << "RAW DATA: " << buffer << std::endl;
 		json_data returnData{};
 		returnData.arraySizes = generator.arraySizes;
 		returnData.theData	  = buffer;
@@ -281,11 +280,6 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	r.json_read = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
-	for (auto& value: uint64Test.a) {
-		for (auto& value02: value.testStrings) {
-			std::cout << "CURRENT VALUE: (JSONIFIER): " << value02 << std::endl;
-		}
-	}
 
 	result = benchmark(
 		[&]() {
@@ -894,6 +888,73 @@ void printBits(__m256i avxVector) {
 
 int32_t main() {
 	try {
+		__m256i lowerVal{ _mm256_insert_epi64(__m256i{}, 0x01, 0x00) };
+		jsonifier::string newerString02{ "d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdas"
+										 "ddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3as"
+										 "d9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"d\"\"werwerwerwer\"\"\r\bwrfwer3asd9d0k3kasdasdasdasasdasddasd0kafsf\\\r\b\f\\\"" };
+		jsonifier::string newerString03{};
+		newerString03.resize(1024);
+		uint64_t index{};
+		uint64_t indexNew{};
+		auto newPtr = jsonifier_internal::serializeString(newerString02.data(), newerString03.data() + index, newerString02.size(), indexNew);
+
+		index += indexNew;
+
+		indexNew = newPtr - newerString02.data();
+		for (auto iterBegin = newerString02.begin() + indexNew; iterBegin < newerString02.end(); ++iterBegin) {
+			switch (*iterBegin) {
+				case 0x22u:
+					std::memcpy(newerString03.data() + index, R"(\")", 2);
+					index += 2;
+					break;
+				case '\\':
+					std::memcpy(newerString03.data() + index, R"(\\)", 2);
+					index += 2;
+					break;
+				case '\b':
+					std::memcpy(newerString03.data() + index, R"(\b)", 2);
+					index += 2;
+					break;
+				case '\f':
+					std::memcpy(newerString03.data() + index, R"(\f)", 2);
+					index += 2;
+					break;
+				case '\n':
+					std::memcpy(newerString03.data() + index, R"(\n)", 2);
+					index += 2;
+					break;
+				case '\r':
+					std::memcpy(newerString03.data() + index, R"(\r)", 2);
+					index += 2;
+					break;
+				case '\t':
+					std::memcpy(newerString03.data() + index, R"(\t)", 2);
+					index += 2;
+					break;
+				default:
+					newerString03[index++] = *iterBegin;
+			}
+		}
+		std::cout << "NEW STRING: ";
+		std::cout << newerString03 << std::endl;
+		uint64_t newIndex{};
+		jsonifier_internal::serializeString(newerString02.data(), newerString03.data(), newerString02.size(), newIndex);
+
+		//lowerVal.m256i_u64[3] = 0x01ull;
+		//jsonifier_internal::printBits(lowerVal, "FINAL BITS: ");
+		//lowerVal = jsonifier_internal::simd_base::shl<1>(lowerVal);
+		printBits(lowerVal);
+		auto theValue{ static_cast<int64_t>(std::numeric_limits<uint64_t>::max()) };
+		alignas(BytesPerStep) uint8_t values[sizeof(uint64_t)]{};
+		std::memcpy(values, &theValue, sizeof(uint64_t));
+		for (string_parsing_type x = 0; x < sizeof(uint64_t); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		for (uint64_t x = 0; x < 64; ++x) {
+			std::cout << (theValue & (1ull << x)) << std::endl;
+		}
 		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,"
 									   "\\\"calls\\\":[]},\\\"session_"
 									   "lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-"
@@ -930,7 +991,6 @@ int32_t main() {
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
-		std::cout << "CURRENT STRING: " << dataNew.d.trace[0] << std::endl;
 		parser.serializeJson(dataNew, newString01);
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 		FileLoader fileLoader02{ "C:/users/chris/source/repos/jsonifier/JsonData.json" };

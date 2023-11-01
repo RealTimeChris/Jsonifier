@@ -23,10 +23,9 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StringView.hpp>
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Error.hpp>
 #include <jsonifier/Pair.hpp>
 #include <functional>
 #include <optional>
@@ -34,9 +33,64 @@
 
 namespace jsonifier_internal {
 
-	class serializer;
+	struct benchmark_record {
+		int32_t totalIterations{};
+		const char* typeName{};
+		double totalTime{};
+	};
 
-	inline void printIfNDebug(const jsonifier::string& string) {
+	jsonifier_inline static std::unordered_map<uint64_t, benchmark_record> benchmarkRecords{};
+
+	jsonifier_inline void printAverage();
+
+	template<typename Function, typename... Args> class benchmark {
+	  public:
+		jsonifier_inline benchmark(Function&& function, Args&&... args, uint64_t uniqueId) {
+			if (benchmarkRecords.contains(uniqueId)) {
+				benchmarkRecords[uniqueId] = runBenchmark(std::forward<Function>(function), benchmarkRecords[uniqueId], args...);
+			} else {
+				benchmarkRecords[uniqueId] = runBenchmark(std::forward<Function>(function), benchmark_record{}, args...);
+			}
+			if (!haveWeRegistered) {
+				atexit(jsonifier_internal::printAverage);
+				haveWeRegistered = true;
+			}
+		}
+
+		jsonifier_inline static benchmark_record runBenchmark(Function&& function, benchmark_record record, Args&&... args) {
+			auto startTime = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			function(args...);
+			auto endTime = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			auto newTime = endTime - startTime;
+			++record.totalIterations;
+			record.totalTime += newTime.count();
+			record.typeName = typeid(Function).name();
+			return record;
+		}
+
+		jsonifier_inline static void printAverage(uint64_t uniqueId) {
+			std::cout << "Benchmark: " << benchmarkRecords[uniqueId].typeName << " took an average of "
+					  << benchmarkRecords[uniqueId].totalTime / static_cast<double>(benchmarkRecords[uniqueId].totalIterations) << "ns, over "
+					  << benchmarkRecords[uniqueId].totalIterations << " iterations" << std::endl;
+			benchmarkRecords.erase(uniqueId);
+		}
+
+		jsonifier_inline static bool haveWeRegistered{};
+
+		jsonifier_inline ~benchmark() {
+		}
+	};
+
+	jsonifier_inline void printAverage() {
+		for (auto& [key, value]: benchmarkRecords) {
+			std::cout << "Benchmark: " << value.typeName << " took an average of " << value.totalTime / static_cast<double>(value.totalIterations) << "ns, over "
+					  << value.totalIterations << " iterations" << std::endl;
+		}
+	}
+
+	template<typename Function> benchmark(Function) -> benchmark<Function>;
+
+	jsonifier_inline void printIfNDebug(const jsonifier::string& string) {
 #if !defined(NDEBUG)
 		std::cout << string << std::endl;
 #endif
@@ -45,7 +99,7 @@ namespace jsonifier_internal {
 	template<typename value_type = void> struct hash {
 		static_assert(std::is_integral<value_type>::value || std::is_enum<value_type>::value, "hash only supports integral types, specialize for other types.");
 
-		constexpr size_t operator()(value_type const& value, size_t seed) const {
+		jsonifier_constexpr size_t operator()(value_type const& value, size_t seed) const {
 			size_t key = seed ^ static_cast<size_t>(value);
 			key		   = (~key) + (key << 21);
 			key		   = key ^ (key >> 24);
@@ -64,9 +118,9 @@ namespace jsonifier_internal {
 
 	template<> struct false_t<random_core_type> : std::true_type {};
 
-	template<typename... Args> constexpr bool falseV = false_t<Args...>::value;
+	template<typename... Args> jsonifier_constexpr bool falseV = false_t<Args...>::value;
 
-	template<typename = void, size_t... Indices> constexpr auto indexer(std::index_sequence<Indices...>) {
+	template<typename = void, size_t... Indices> jsonifier_constexpr auto indexer(std::index_sequence<Indices...>) {
 		return [](auto&& f) -> decltype(auto) {
 			return decltype(f)(f)(std::integral_constant<size_t, Indices>{}...);
 		};
@@ -76,24 +130,24 @@ namespace jsonifier_internal {
 	template<size_t Count, size_t... Is> struct gen_sequence : gen_sequence<Count - 1, Count - 1, Is...> {};
 	template<size_t... Is> struct gen_sequence<0, Is...> : sequence<Is...> {};
 
-	template<size_t n> constexpr auto indexer() {
+	template<size_t n> jsonifier_constexpr auto indexer() {
 		return indexer(std::make_index_sequence<n>{});
 	}
 
-	template<size_t n, typename Func> constexpr auto forEach(Func&& f) {
+	template<size_t n, typename Func> jsonifier_constexpr auto forEach(Func&& f) {
 		return indexer<n>()([&](auto&&... i) {
-			(std::forward<std::unwrap_ref_decay_t<Func>>(f)(i), ...);
+			(std::forward<jsonifier::concepts::unwrap<Func>>(f)(i), ...);
 		});
 	}
 
-	template<raw_array newArr> struct make_static {
-		static constexpr auto value = newArr;
+	template<ctime_array newArr> struct make_static {
+		static jsonifier_constexpr auto value = newArr;
 	};
 
-	template<const jsonifier::string_view&... strings> constexpr jsonifier::string_view join() {
-		constexpr auto joinedArr = []() {
-			constexpr size_t len = (strings.size() + ... + 0);
-			raw_array<char, len + 1> arr{};
+	template<const jsonifier::string_view&... strings> jsonifier_constexpr jsonifier::string_view join() {
+		jsonifier_constexpr auto joinedArr = []() {
+			jsonifier_constexpr size_t len = (strings.size() + ... + 0);
+			ctime_array<char, len + 1> arr{};
 			auto append = [i = 0, &arr](const auto& s) mutable {
 				for (auto c: s)
 					arr[static_cast<uint64_t>(i++)] = c;
@@ -103,61 +157,61 @@ namespace jsonifier_internal {
 			return arr;
 		}();
 		auto& staticArr = make_static<joinedArr>::value;
-		return { staticArr.data(), staticArr.size() - 1 };
+		return { staticArr.data(), staticArr.maxSize() - 1 };
 	}
 
-	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
+	template<const jsonifier::string_view&... strings> jsonifier_constexpr auto JoinV = join<strings...>();
 
-	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using value_type = std::unwrap_ref_decay_t<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<value_type>) {
+	jsonifier_inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
+		using value_type = jsonifier::concepts::unwrap<decltype(member_ptr)>;
+		if jsonifier_constexpr (std::is_member_object_pointer_v<value_type>) {
 			return value.*member_ptr;
-		} else if constexpr (std::is_member_function_pointer_v<value_type>) {
+		} else if jsonifier_constexpr (std::is_member_function_pointer_v<value_type>) {
 			return member_ptr;
-		} else if constexpr (std::invocable<value_type, decltype(value)>) {
+		} else if jsonifier_constexpr (std::invocable<value_type, decltype(value)>) {
 			return std::invoke(member_ptr, value);
-		} else if constexpr (std::is_pointer_v<value_type>) {
+		} else if jsonifier_constexpr (std::is_pointer_v<value_type>) {
 			return *member_ptr;
 		} else {
 			return member_ptr;
 		}
 	}
 
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<std::unwrap_ref_decay_t<mptr_t>&>()));
+	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<jsonifier::concepts::unwrap<mptr_t>&>()));
 
 	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
-		inline stop_watch(uint64_t newTime) {
+		jsonifier_inline stop_watch(uint64_t newTime) {
 			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
 		}
 
-		inline stop_watch(value_type newTime) {
+		jsonifier_inline stop_watch(value_type newTime) {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		inline stop_watch& operator=(stop_watch&& other) {
+		jsonifier_inline stop_watch& operator=(stop_watch&& other) {
 			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(stop_watch&& other) {
+		jsonifier_inline stop_watch(stop_watch&& other) {
 			*this = std::move(other);
 		}
 
-		inline stop_watch& operator=(const stop_watch& other) {
+		jsonifier_inline stop_watch& operator=(const stop_watch& other) {
 			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			return *this;
 		}
 
-		inline stop_watch(const stop_watch& other) {
+		jsonifier_inline stop_watch(const stop_watch& other) {
 			*this = other;
 		}
 
-		inline bool hasTimeElapsed() {
+		jsonifier_inline bool hasTimeElapsed() {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
@@ -166,7 +220,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline void reset(value_type newTimeValue = value_type{}) {
+		jsonifier_inline void reset(value_type newTimeValue = value_type{}) {
 			if (newTimeValue != value_type{}) {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
@@ -175,11 +229,11 @@ namespace jsonifier_internal {
 			}
 		}
 
-		inline value_type getTotalWaitTime() const {
+		jsonifier_inline value_type getTotalWaitTime() const {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		inline value_type totalTimeElapsed() {
+		jsonifier_inline value_type totalTimeElapsed() {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 
@@ -193,16 +247,15 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	constexpr auto createArray(auto&&... args) {
-		return array{ jsonifier_internal::tuplet::copyTuple(args...) };
+	jsonifier_constexpr auto createArray(auto&&... args) {
+		return array{ jsonifier_internal::copyTuple(args...) };
 	}
 
-	constexpr auto createObject(auto&&... args) {
-		if constexpr (sizeof...(args) == 0) {
-			return object{ jsonifier_internal::tuplet::tuple{} };
+	jsonifier_constexpr auto createObject(auto&&... args) {
+		if jsonifier_constexpr (sizeof...(args) == 0) {
+			return object{ jsonifier_internal::tuple{} };
 		} else {
-			return object{ jsonifier_internal::GroupBuilder<std::unwrap_ref_decay_t<decltype(jsonifier_internal::tuplet::copyTuple(args...))>>::op(
-				jsonifier_internal::tuplet::copyTuple(args...)) };
+			return object{ jsonifier_internal::GroupBuilder<concepts::unwrap<decltype(jsonifier_internal::copyTuple(args...))>>::op(jsonifier_internal::copyTuple(args...)) };
 		}
 	}
 

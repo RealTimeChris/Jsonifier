@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		jsonifier::string stringBuffer{};
+		buffer_string<uint8_t> stringBuffer{};
 	};
 
 }
