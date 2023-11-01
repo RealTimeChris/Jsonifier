@@ -101,6 +101,7 @@ namespace jsonifier_internal {
 		static jsonifier_constexpr simd_int_t quotes{ simdFromValue<simd_int_t>(0x22u) };
 		static jsonifier_constexpr uint8_t arrayNew00[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u };
 		static jsonifier_constexpr uint8_t arrayNew01[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
+		static jsonifier_constexpr uint8_t arrayNew02[]{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00, 0x08u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x0Du, 0x00u, 0x00u };
 
 		jsonifier_inline simd_base_internal() = default;
 
@@ -126,6 +127,11 @@ namespace jsonifier_internal {
 
 		jsonifier_inline static simd_int_t opNot(const simd_int_t& value) {
 			return _mm_xor_si128(value, _mm_set1_epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
+		}
+
+		jsonifier_inline static void collectEscapeablesAsSimdBase(string_parsing_type& value, simd_int_t valuesNew) {
+			static jsonifier_constexpr simd_int_t escapeTable{ simdFromTable<simd_int_t>(arrayNew02) };
+			value = cmpeq(shuffle(escapeTable, valuesNew), valuesNew);
 		}
 
 		jsonifier_inline static void collectWhitespaceAsSimdBase(simd_int_t& value, simd_int_t valuesNew[StridesPerStep]) {

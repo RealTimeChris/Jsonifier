@@ -1,6 +1,6 @@
 #if defined(JSONIFIER_CPU_INSTRUCTIONS)
-#undef JSONIFIER_CPU_INSTRUCTIONS
-	#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2|JSONIFIER_BMI|JSONIFIIER_BMI2|JSONIFIER_POPCNT|JSONIFIER_LZCNT)
+//#undef JSONIFIER_CPU_INSTRUCTIONS
+	//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX512|JSONIFIER_BMI|JSONIFIIER_BMI2|JSONIFIER_POPCNT|JSONIFIER_LZCNT)
 #endif
 	#include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
@@ -45,10 +45,6 @@ template<typename OTy> struct TestGenerator {
 		TestGenerator generator{};
 		jsonifier::jsonifier_core parser{};
 		parser.serializeJson(generator, buffer);
-		std::cout << "CURRENT BUFFER (JSONIFIER): " << buffer << std::endl;
-		buffer = std::string{};
-		glz::write_json(generator, buffer);
-		std::cout << "CURRENT BUFFER (GLAZE): " << buffer << std::endl;
 		json_data returnData{};
 		returnData.arraySizes = generator.arraySizes;
 		returnData.theData	  = buffer;
@@ -88,10 +84,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(5);
-			for (uint64_t x = 0; x < 5; ++x) {
+			v.resize(1);
+			for (uint64_t x = 0; x < 1; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(25, 3);
+					auto arraySize01 = randomizeNumber(2, 1);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());

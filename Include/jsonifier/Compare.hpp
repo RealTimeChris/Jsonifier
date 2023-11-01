@@ -448,8 +448,7 @@ namespace jsonifier_internal {
 
 #else
 
-	template<typename value_type01, typename value_type02>
-	jsonifier_inline uint64_t find(const value_type01* str, uint64_t length, value_type02* target, uint64_t subLength = 1) {
+	template<typename value_type01, typename value_type02> jsonifier_inline uint64_t find(const value_type01* str, uint64_t length, value_type02* target, uint64_t subLength = 1) {
 		std::basic_string_view<std::remove_pointer_t<value_type01>> newString{ target, subLength };
 		return std::basic_string_view<value_type01>{ static_cast<const value_type01*>(str), length }.find(newString);
 	}

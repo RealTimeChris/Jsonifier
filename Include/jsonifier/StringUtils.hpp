@@ -196,53 +196,23 @@ namespace jsonifier_internal {
 	template<typename value_type01, typename value_type02>
 	jsonifier_inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
 		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(BytesPerStep)) {
-			escapeable bsQuote = escapeable::copyAndFind(source, dest);
-			if (bsQuote.hasEscapeable()) {
-				string_parsing_type nextEscapeableIndex{};
-				while (bsQuote.hasEscapeable() && nextEscapeableIndex != BytesPerStep) {
-					nextEscapeableIndex = bsQuote.nextEscapeable();
-					if (nextEscapeableIndex != BytesPerStep) {
-						//std::cout << "CURRENT ESCAPEABLE VALUE: " << source[nextEscapeableIndex] << std::endl;
-						//std::cout << "CURRENT ESCAPEABLE VALUE: " << +source[nextEscapeableIndex] << std::endl;
-						//std::cout << "NEXT ESCAPEABLE INDEX: " << nextEscapeableIndex << std::endl;
-						switch (source[nextEscapeableIndex]) {
-							case 0x22u:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\")", 2);
-								break;
-							case 0x5C:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\\)", 2);
-								break;
-							case 0x08:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\b)", 2);
-								break;
-							case 0x0C:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\f)", 2); 
-								break;
-							case 0x0A:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\n)", 2);
-								break;
-							case 0x0D:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\r)", 2);
-								break;
-							case 0x09:
-								std::memcpy(dest + indexNew + nextEscapeableIndex, R"(\t)", 2);
-								break;
-							default:
-								*(dest + indexNew + nextEscapeableIndex) = source[indexNew + nextEscapeableIndex];
-						}
-						lengthNew -= nextEscapeableIndex;
-					} else {
-						lengthNew -= BytesPerStep;
-						indexNew += BytesPerStep;
-						source += BytesPerStep;
-						dest += BytesPerStep;
-					}
+			escapeable escapeables = escapeable::copyAndFind(source, dest);
+			string_parsing_type nextEscapeableIndex{ escapeables.nextEscapeable() };
+			auto checkForIncrementing = [&]() -> bool {
+				if (nextEscapeableIndex == BytesPerStep) {
+					lengthNew -= BytesPerStep;
+					indexNew += BytesPerStep;
+					source += BytesPerStep;
+					dest += BytesPerStep;
+					return true;
 				}
-			} else {
-				lengthNew -= BytesPerStep;
-				indexNew += BytesPerStep;
-				source += BytesPerStep;
-				dest += BytesPerStep;
+				return false;
+			};
+			while (!checkForIncrementing()) {
+				dest[indexNew + nextEscapeableIndex]	 = '\\';
+				dest[indexNew + nextEscapeableIndex + 1] = source[indexNew + nextEscapeableIndex];
+				lengthNew -= nextEscapeableIndex;
+				nextEscapeableIndex = escapeables.nextEscapeable();
 			}
 		}
 		return source;
