@@ -35,28 +35,32 @@ namespace jsonifier_internal {
 	  public:
 		template<typename source_type, typename dest_type> jsonifier_inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
 			simd_int_t values(gatherValuesU<simd_int_t>(source));
-			simd_base::storeu(values, destString);
+			simd_base::store(values, destString);
 			backslash_and_quote returnData{};
-			returnData.nextBackslashVal = simd_base::cmpeq(values, simd_base::backslashes);
-			returnData.nextQuoteVal		= simd_base::cmpeq(values, simd_base::quotes);
+			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashes) };
+			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotes) };
 			return returnData;
 		}
 
-		jsonifier_inline string_parsing_type nextBackslash() {
-			auto oldIndex	 = tzcnt(nextBackslashVal);
-			nextBackslashVal = blsr(nextBackslashVal);
-			return oldIndex;
+		jsonifier_inline bool hasQuoteFirst() {
+			return ((bsBits - 1) & quoteBits) != 0;
 		}
 
-		jsonifier_inline string_parsing_type nextQuote() {
-			auto oldIndex = tzcnt(nextQuoteVal);
-			nextQuoteVal  = blsr(nextQuoteVal);
-			return oldIndex;
+		jsonifier_inline bool hasBackslash() {
+			return ((quoteBits - 1) & bsBits) != 0;
+		}
+
+		jsonifier_inline string_parsing_type quoteIndex() {
+			return tzcnt(quoteBits);
+		}
+
+		jsonifier_inline string_parsing_type backslashIndex() {
+			return tzcnt(bsBits);
 		}
 
 	  protected:
-		string_parsing_type nextBackslashVal{};
-		string_parsing_type nextQuoteVal{};
+		string_parsing_type quoteBits{};
+		string_parsing_type bsBits{};
 	};
 
 	class escapeable {
@@ -74,8 +78,11 @@ namespace jsonifier_internal {
 		}
 
 		jsonifier_inline string_parsing_type nextEscapeable() {
-			auto oldIndex	  = tzcnt(nextEscapeableVal);
-			nextEscapeableVal = blsr(nextEscapeableVal);
+			auto oldIndex = tzcnt(nextEscapeableVal);
+			if (oldIndex != BytesPerStep) {
+				nextEscapeableVal = blsr(nextEscapeableVal);
+			}
+			//std::cout << "NEXT ESCAPEABLE: " << oldIndex << std::endl;
 			return oldIndex;
 		}
 
@@ -151,32 +158,19 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	enum class parse_string_result_type { starting = 0, has_quote_first = 1, has_backslash = 2, none = 3 };
-
-	struct parse_string_result {
-		parse_string_result_type type{};
-		string_parsing_type index{};
-	};
-
 	template<typename value_type01, typename value_type02> jsonifier_inline value_type02* parseString(const value_type01* source, value_type02* dest, uint64_t lengthNew) {
 		while (lengthNew >= BytesPerStep) {
 			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, dest);
-			string_parsing_type nextQuoteIndex{ bsQuote.nextQuote() };
-			string_parsing_type nextBackslashIndex{ bsQuote.nextBackslash() };
-			auto checkForFirstQuote = [&]() -> bool {
-				return nextQuoteIndex < nextBackslashIndex;
-			};
-			auto checkForCompletionOfCurrentIteraton = [&]() -> bool {
-				return nextQuoteIndex == BytesPerStep && nextBackslashIndex == BytesPerStep;
-			};
-			while (!checkForCompletionOfCurrentIteraton()) {
-				if (checkForFirstQuote()) {
-					return dest + nextQuoteIndex;
-				} 
-				auto bsDist		   = bsQuote.nextBackslash();
-				uint8_t escapeChar = source[nextBackslashIndex + 1];
+			if (bsQuote.hasQuoteFirst()) {
+				return dest + bsQuote.quoteIndex();
+			}
+			if (bsQuote.hasBackslash()) {
+				auto bsDist		   = bsQuote.backslashIndex();
+				uint8_t escapeChar = source[bsDist + 1];
 				if (escapeChar == 'u') {
 					lengthNew -= bsDist;
+					source += bsDist;
+					dest += bsDist;
 					if (!handleUnicodeCodePoint(&source, &dest)) {
 						return nullptr;
 					}
@@ -185,15 +179,16 @@ namespace jsonifier_internal {
 					if (escapeResult == 0u) {
 						return nullptr;
 					}
-					dest[nextBackslashIndex] = escapeResult;
+					dest[bsDist] = escapeResult;
 					lengthNew -= bsDist + 2;
+					source += bsDist + 2;
+					dest += bsDist + 1;
 				}
-				nextQuoteIndex	   = bsQuote.nextQuote();
-				nextBackslashIndex = bsQuote.nextBackslash();
+			} else {
+				lengthNew -= BytesPerStep;
+				source += BytesPerStep;
+				dest += BytesPerStep;
 			}
-			lengthNew -= BytesPerStep;
-			source += BytesPerStep;
-			dest += BytesPerStep;
 		}
 		return nullptr;
 	}

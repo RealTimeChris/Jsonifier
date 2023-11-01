@@ -36,63 +36,51 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, typename value_type> struct parse_impl {};
 
 	template<bool excludeKeys> struct parse {
-		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, parserNew);
+		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
+			parse_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, iter, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		inline static void op(value_type&& value, structural_iterator& iter, const KeyType& keys, parser& parserNew) {
-			parse_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<std::unwrap_ref_decay_t<value_type>>(value), iter, keys, parserNew);
+		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
+			parse_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, iter, keys, parserNew);
 		}
 	};
 
 	class parser {
 	  public:
 		template<bool, typename value_type> friend struct parse_impl;
+		template<bool> friend struct parse;
 
 		template<bool excludeKeys = false, bool refreshString = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		inline void parseJson(value_type&& data, buffer_type&& stringNew) {
+		jsonifier_inline void parseJson(value_type&& data, buffer_type&& stringNew) {
 			if (stringNew.empty()) {
 				return;
 			}
-			if constexpr (refreshString) {
-				reset(std::forward<buffer_type>(stringNew));
-			} else if (stringNew != string) {
-				reset(std::forward<buffer_type>(stringNew));
-			}
+			section.reset<refreshString>(std::forward<buffer_type>(stringNew));
 			errors.clear();
-			auto newIter = begin();
+			auto newIter = section.begin();
 			if (!*newIter) {
 				return;
 			}
-			if constexpr (excludeKeys) {
-				if constexpr (jsonifier::concepts::has_excluded_keys<decltype(data)>) {
-					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, data.excludedKeys, *this);
+			if jsonifier_constexpr (excludeKeys) {
+				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
+					parse<excludeKeys>::op(data, newIter, data.excludedKeys, *this);
 				} else {
-					parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
+					parse<excludeKeys>::op(data, newIter, *this);
 				}
 			} else {
-				parse<excludeKeys>::op(std::forward<value_type>(data), newIter, *this);
+				parse<excludeKeys>::op(data, newIter, *this);
 			}
 		}
 
-		inline jsonifier::vector<error>& getErrors() {
+		jsonifier_inline jsonifier::vector<error>& getErrors() {
 			return errors;
 		}
 
 	  protected:
-		jsonifier::string_base<uint8_t> string{};
+		buffer_string<uint8_t> currentStringBuffer{};
+		buffer_string<char> currentKeyBuffer{};
 		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
-
-		template<typename value_type> inline void reset(value_type&& stringNew) {
-			string.resize(stringNew.size());
-			std::memcpy(string.data(), stringNew.data(), stringNew.size());
-			section.reset(string);
-		}
-
-		inline structural_iterator begin() {
-			return structural_iterator{ section.getStructurals(), static_cast<int64_t>(section.getTapeLength()) };
-		}
 	};
 };

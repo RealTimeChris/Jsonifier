@@ -33,9 +33,7 @@ namespace jsonifier_internal {
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type>
-		requires(sizeof(value_type) == 8)
-	inline static value_type popcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int64_t value_type> jsonifier_inline static value_type popcnt(value_type value) {
 		value_type count{};
 
 		while (value > 0) {

@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Simd.hpp>
+#include <jsonifier/Base02.hpp>
 
 namespace jsonifier_internal {
 
@@ -38,44 +38,54 @@ namespace jsonifier_internal {
 		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		inline structural_iterator() noexcept = default;
+		jsonifier_inline structural_iterator() noexcept = default;
 
-		inline structural_iterator(structural_index* rootIndexNew, size_type originalLength) {
-			tapeLength	 = originalLength;
+		jsonifier_inline structural_iterator(structural_index* rootIndexNew) {
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
-		inline value_type operator*() const {
-			return (*currentIndex ? **currentIndex : defaultValue);
+		jsonifier_inline value_type operator*() const {
+			return (*currentIndex) ? **currentIndex : defaultValue;
 		}
 
-		inline string_view_ptr operator->() {
+		jsonifier_inline string_view_ptr operator->() const {
 			return *currentIndex;
 		}
 
-		inline structural_iterator& operator++() {
+		jsonifier_inline structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
 		}
 
-		inline structural_iterator operator++(int32_t) {
+		jsonifier_inline structural_iterator operator++(int32_t) {
 			structural_iterator oldIter{ *this };
 			++(*this);
 			return oldIter;
 		}
 
-		inline size_type getCurrentStringIndex() {
+		jsonifier_inline string_view_ptr getEndPtr() {
+			auto newIndex = currentIndex;
+			while (*(newIndex + 1) != nullptr) {
+				++newIndex;
+			}
+			return *newIndex;
+		}
+
+		jsonifier_inline string_view_ptr getRootPtr() {
+			return *rootIndex;
+		}
+
+		jsonifier_inline size_type getCurrentStringIndex() const {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		inline bool operator==(const structural_iterator&) const {
-			return (currentIndex - rootIndex) >= tapeLength || !(*currentIndex);
+		jsonifier_inline bool operator==(const structural_iterator&) const {
+			return !(*currentIndex);
 		}
 
 	  protected:
-		static constexpr uint8_t defaultValue{ '\0' };
-		size_type tapeLength{};
+		static jsonifier_constexpr uint8_t defaultValue{ 0x00 };
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

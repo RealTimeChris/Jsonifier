@@ -30,7 +30,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DDEV=true -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build

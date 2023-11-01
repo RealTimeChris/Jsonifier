@@ -79,12 +79,12 @@ class Vcpkg
 
     private function git(string $parameters, bool $sudo = false): void
     {
-        system(($sudo ? $this->sudo . ' ' : '') . $this->git . ' ' . $parameters);
+        system(($sudo ? $this->sudo . 0x22 : '') . $this->git . 0x22 . $parameters);
     }
 
     private function sudo(string $command): void
     {
-        system($this->sudo . ' ' . $command);
+        system($this->sudo . 0x22 . $command);
     }
 
     /**

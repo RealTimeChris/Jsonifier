@@ -51,7 +51,7 @@ set(INSTRUCTION_SET_NAMES "POPCNT" "LZCNT" "BMI" "BMI2" "AVX" "AVX2" "AVX512")
 set (INSTRUCTION_SET_CODE
     "auto result = _mm_popcnt_u64(uint64_t{})"
     "auto result = _lzcnt_u64(int64_t{})"
-    "auto result = _blsr_u64(uint64_t{}).result = _tzcnt_u16(uint16_t{})"
+    "auto result = _blsr_u64(uint64_t{}).result = _tzcnt_u32(uint16_t{})"
     "auto result = _pdep_u64(uint64_t{}, uint64_t{})"
     "auto result = _mm_castsi128_pd(__m128i{}).auto result02 = _mm_setzero_si128()"
     "auto result = _mm256_add_epi32(__m256i{}, __m256i{})"

@@ -23,12 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#if defined(min)
-	#undef min
-#endif
-
-#if defined(max)
-	#undef max
+#if !defined(NOMINMAX)
+	#define NOMINMAX
 #endif
 
 #include <jsonifier/StructuralIterator.hpp>
@@ -41,5 +37,5 @@
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Base02.hpp>
 #include <jsonifier/Simd.hpp>

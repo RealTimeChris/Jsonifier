@@ -29,13 +29,13 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
 include("CollectVersion")
 collect_version("jsonifier")
 
-set(PROJECT_NAME  "Jsonifier")
+set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(
-    "${PROJECT_NAME}"
-    VERSION "${PRODUCT_VERSION}"
-    LANGUAGES CXX
+  "${PROJECT_NAME}"
+  VERSION "${PRODUCT_VERSION}"
+  LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 20)
@@ -62,6 +62,7 @@ set_target_properties(
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
+	PUBLIC_HEADER "${HEADERS}"
 )
 
 target_include_directories(
@@ -72,6 +73,7 @@ target_include_directories(
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
+	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
 )
 
 set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE INTERNAL "For the CPU architecture selection.")
@@ -80,24 +82,10 @@ set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/EHsc>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
-	"$<$<CXX_COMPILER_ID:CLANG>:-pedantic>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
-	"$<$<CXX_COMPILER_ID:GNU>:-pedantic>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/MP${THREAD_COUNT}>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-fcoroutines>"
+	"$<$<CXX_COMPILER_ID:GNU>:-fcoroutines>"
 	"${AVX_FLAG}"
-)
-
-target_link_options(
-	"${PROJECT_NAME}" INTERFACE 
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

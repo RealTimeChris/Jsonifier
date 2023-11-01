@@ -67,31 +67,31 @@ namespace TestNS {
 namespace Jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
-		using ValueType = TestNS::fixed_object_t;
-		static constexpr auto parseValue = createObject("int_array", &ValueType::int_array, "float_array", &ValueType::float_array, "double_array", &ValueType::double_array);
+		using value_type = TestNS::fixed_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
-		using ValueType = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = createObject("name0", &ValueType::name0, "name1", &ValueType::name1, "name2", &ValueType::name2, "name3", &ValueType::name3, "name4", &ValueType::name4);
+		using value_type = TestNS::fixed_name_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
-		using ValueType = TestNS::nested_object_t;
-		static constexpr auto parseValue = createObject("v3s", &ValueType::v3s, "id", &ValueType::id);
+		using value_type = TestNS::nested_object_t;
+		static jsonifier_constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
-		using ValueType = TestNS::another_object_t;
-		static constexpr auto parseValue =
-			createObject("string", &ValueType::string, "another_string", &ValueType::another_string, "boolean", &ValueType::boolean, "nested_object", &ValueType::nested_object);
+		using value_type = TestNS::another_object_t;
+		static jsonifier_constexpr auto parseValue =
+			createObject("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
-		using ValueType = TestNS::obj_t;
-		static constexpr auto parseValue =
-			createObject("fixed_object", &ValueType::fixed_object, "fixed_name_object", &ValueType::fixed_name_object, "another_object", &ValueType::another_object, "string_array",
-				&ValueType::string_array, "string", &ValueType::string, "number", &ValueType::number, "boolean", &ValueType::boolean, "another_bool", &ValueType::another_bool);
+		using value_type = TestNS::obj_t;
+		static jsonifier_constexpr auto parseValue =
+			createObject("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
+				&value_type::string_array, "string", &value_type::string, "number", &value_type::number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};
 }
 
@@ -209,7 +209,7 @@ int32_t main() {
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a ',', at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
 ```
 In the provided error message:
 

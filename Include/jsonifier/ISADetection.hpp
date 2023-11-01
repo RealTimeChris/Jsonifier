@@ -31,3 +31,45 @@
 #include <jsonifier/ISADetection/AVX2.hpp>
 #include <jsonifier/ISADetection/AVX512.hpp>
 #include <jsonifier/ISADetection/Fallback.hpp>
+
+namespace jsonifier_internal {
+
+	jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle) {
+		std::cout << valuesTitle;
+		std::cout << std::bitset<64>{ values };
+		std::cout << std::endl;
+	}
+
+	template<typename simd_type> jsonifier_inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+		std::stringstream theStream{};
+		simd_base::store(value, values);
+		std::cout << valuesTitle;
+		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		std::cout << std::endl;
+		return value;
+	}
+
+	jsonifier_inline static std::string printBits(bool value) noexcept {
+		std::stringstream theStream{};
+		theStream << std::boolalpha << value << std::endl;
+		return theStream.str();
+	}
+
+	template<typename simd_type> jsonifier_inline static std::string printBits(simd_type& value) noexcept {
+		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+		std::stringstream theStream{};
+		simd_base::store(value, values);
+		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		theStream << std::endl;
+		return theStream.str();
+	}
+}

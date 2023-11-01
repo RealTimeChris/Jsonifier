@@ -31,23 +31,23 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, typename value_type = void> struct serialize_impl;
 
 	template<bool excludeKeys> struct serialize {
-		template<typename value_type, jsonifier::concepts::vector_like buffer_type> inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index) {
-			serialize_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index);
+		template<typename value_type, jsonifier::concepts::vector_like buffer_type> jsonifier_inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index) {
+			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index);
 		}
 
 		template<typename value_type, jsonifier::concepts::vector_like buffer_type, jsonifier::concepts::has_find KeyType>
-		inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index, const KeyType& keys) {
-			serialize_impl<excludeKeys, std::unwrap_ref_decay_t<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index, keys);
+		jsonifier_inline static void op(value_type&& value, buffer_type&& buffer, uint64_t& index, const KeyType& keys) {
+			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), index, keys);
 		}
 	};
 
 	class serializer {
 	  public:
 		template<bool excludeKeys = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::vector_like buffer_type>
-		inline void serializeJson(value_type&& data, buffer_type&& buffer) {
+		jsonifier_inline void serializeJson(value_type&& data, buffer_type&& buffer) {
 			uint64_t index{};
-			if constexpr (excludeKeys) {
-				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+			if jsonifier_constexpr (excludeKeys) {
+				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index, data.excludedKeys);
 				} else {
 					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
