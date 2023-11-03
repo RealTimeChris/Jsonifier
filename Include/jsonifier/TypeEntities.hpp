@@ -23,13 +23,20 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/ISADetectionBase.hpp>
 #include <concepts>
 #include <optional>
 #include <variant>
 #include <string>
 #include <chrono>
 #include <tuple>
+
+#if !defined(jsonifier_inline)
+	#define jsonifier_inline inline
+#endif
+
+#if !defined(jsonifier_constexpr)
+	#define jsonifier_constexpr constexpr
+#endif
 
 namespace jsonifier {
 
@@ -65,7 +72,7 @@ namespace jsonifier {
 
 		template<size_t I> jsonifier_constexpr Tag<I> TagV{};
 
-		template<typename value_type> using unwrap = std::remove_const_t<std::unwrap_ref_decay_t<value_type>>;
+		template<typename value_type> using unwrap = std::unwrap_ref_decay_t<value_type>;
 
 		template<typename value_type>
 		concept range = requires(value_type& value) {

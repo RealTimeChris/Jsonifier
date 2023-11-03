@@ -37,12 +37,12 @@ namespace jsonifier_internal {
 
 	template<bool excludeKeys> struct parse {
 		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, iter, parserNew);
+			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
-			parse_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, iter, parserNew, keys);
+			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew, keys);
 		}
 	};
 
@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 		template<bool> friend struct parse;
 
 		template<bool excludeKeys = false, bool refreshString = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		jsonifier_inline void parseJson(value_type&& data, buffer_type&& stringNew) {
+		jsonifier_inline void parseJson(value_type&& data, buffer_type& stringNew) {
 			if (stringNew.empty()) {
 				return;
 			}

@@ -292,9 +292,7 @@ namespace jsonifier {
 
 			std::destroy(dataVal, dataVal + count);
 
-			for (size_type i = 0; i < newSize; ++i) {
-				dataVal[i] = std::move(dataVal[i + count]);
-			}
+			std::uninitialized_move(dataVal + count, dataVal + count + newSize, dataVal);
 
 			sizeVal = newSize;
 		}
@@ -309,9 +307,7 @@ namespace jsonifier {
 
 			getAlloc().destroy(dataVal + eraseIndex);
 
-			for (size_type i = eraseIndex; i < newSize; ++i) {
-				dataVal[i] = std::move(dataVal[i + 1]);
-			}
+			std::uninitialized_move(dataVal + eraseIndex + 1, dataVal + sizeVal, dataVal + eraseIndex);
 
 			sizeVal = newSize;
 		}

@@ -112,7 +112,7 @@ namespace jsonifier_internal {
 			if (sizeNew > static_cast<int64_t>(parserNew.currentStringBuffer.size())) {
 				parserNew.currentStringBuffer.resize(static_cast<uint64_t>(sizeNew));
 			}
-			
+
 			auto newerSize = parseString(newPtr + 1, parserNew.currentStringBuffer.data(), static_cast<uint64_t>(sizeNew)) - parserNew.currentStringBuffer.data();
 			if (newerSize > 0) {
 				value.resize(static_cast<uint64_t>(newerSize));
@@ -427,7 +427,7 @@ namespace jsonifier_internal {
 				}
 				std::memcpy(parserNew.currentKeyBuffer.data(), start + 1, keySize - 2);
 				if (excludedKeys.find(static_cast<const typename KeyType::key_type>(parserNew.currentKeyBuffer)) != excludedKeys.end()) {
-					derailleur::skipValue(iter);
+					derailleur::skipToNextValue(iter);
 					continue;
 				}
 				if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {

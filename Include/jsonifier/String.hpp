@@ -285,7 +285,7 @@ namespace jsonifier {
 			++sizeVal;
 		}
 
-		jsonifier_inline void erase(size_type count) {
+		inline void erase(size_type count) {
 			if (count == 0) {
 				return;
 			} else if (count > sizeVal) {
@@ -293,10 +293,10 @@ namespace jsonifier {
 			}
 			traits_type::move(dataVal, dataVal + count, sizeVal - count);
 			sizeVal -= count;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
 		}
 
-		jsonifier_inline void erase(iterator count) {
+		inline void erase(iterator count) {
 			auto sizeNew = count - dataVal;
 			if (sizeNew == 0) {
 				return;
@@ -305,7 +305,7 @@ namespace jsonifier {
 			}
 			traits_type::move(dataVal, dataVal + sizeNew, sizeVal - sizeNew);
 			sizeVal -= sizeNew;
-			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>('\0'));
 		}
 
 		jsonifier_inline void push_back(value_type value) {
@@ -357,9 +357,9 @@ namespace jsonifier {
 
 		jsonifier_inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
-				sizeNew = jsonifier_internal::roundUpToMultiple<BytesPerStep>(sizeNew);
-				if (sizeNew > capacityVal) [[likely]] {
-					pointer newPtr = getAlloc().allocate(sizeNew + 1);
+				auto sizeNewer = jsonifier_internal::roundUpToMultiple<BytesPerStep>(sizeNew);
+				if (sizeNewer > capacityVal) [[likely]] {
+					pointer newPtr = getAlloc().allocate(sizeNewer + 1);
 					try {
 						if (dataVal) [[likely]] {
 							if (sizeVal > 0) {
@@ -368,13 +368,13 @@ namespace jsonifier {
 							getAlloc().deallocate(dataVal, capacityVal + 1);
 						}
 					} catch (...) {
-						getAlloc().deallocate(newPtr, sizeNew + 1);
+						getAlloc().deallocate(newPtr, sizeNewer + 1);
 						throw;
 					}
-					capacityVal = sizeNew;
+					capacityVal = sizeNewer;
 					dataVal		= newPtr;
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
-				} else if (sizeNew > sizeVal) [[unlikely]] {
+				} else if (sizeNewer > sizeVal) [[unlikely]] {
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				}
 				sizeVal = sizeNew;

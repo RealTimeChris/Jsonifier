@@ -33,8 +33,6 @@ namespace jsonifier_internal {
 
 	class backslash_and_quote {
 	  public:
-		static constexpr string_parsing_type bytesProcessed = BytesPerStep;
-
 		template<typename source_type, typename dest_type> inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
 			simd_int_t values(gatherValuesU<simd_int_t>(source));
 			simd_base::storeu(values, destString);

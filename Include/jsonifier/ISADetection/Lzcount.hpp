@@ -29,10 +29,6 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
-	template<jsonifier::concepts::unsigned_int16_t value_type> jsonifier_inline static value_type lzcnt(value_type value) {
-		return static_cast<value_type>(_lzcnt_u32(static_cast<uint32_t>(value)));
-	}
-
 	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type lzcnt(value_type value) {
 		return _lzcnt_u32(value);
 	}

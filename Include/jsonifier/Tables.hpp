@@ -27,23 +27,6 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> jsonifier_constexpr std::array<value_type, 255> makeCharMap() {
-		std::array<value_type, 255> returnArray{};
-		for (uint64_t x = 32; x < 128; ++x) {
-			returnArray[x] = static_cast<uint8_t>(x);
-		}
-		returnArray[8]	= 'b';
-		returnArray[9]	= 't';
-		returnArray[10] = 'n';
-		returnArray[12] = 'f';
-		returnArray[13] = 'r';
-		returnArray[34] = '"';
-		returnArray[92] = '\\';
-		return returnArray;
-	}
-
-	jsonifier_constexpr std::array<uint8_t, 255> charMap{ makeCharMap<uint8_t>() };
-
 	jsonifier_constexpr double powersOfTenFloat[]{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22 };
 
 	jsonifier_constexpr uint64_t powersOfTenInt[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
@@ -98,7 +81,7 @@ namespace jsonifier_internal {
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u) };
-	
+
 	template<typename value_type> jsonifier_constexpr value_type escapeMap[]{ static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u), static_cast<value_type>(0x00u),
 		static_cast<value_type>(0x08u), static_cast<value_type>(0x09u), static_cast<value_type>(0x0Au), static_cast<value_type>(0x00u), static_cast<value_type>(0x0Cu),

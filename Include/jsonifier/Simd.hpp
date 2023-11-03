@@ -245,7 +245,7 @@ namespace jsonifier_internal {
 		jsonifier_inline void collectNonEmptyEscaped() noexcept {
 			collectEscapedCharactersHelper(bitAndNot(backslashes, nextIsEscaped));
 			escape		  = opAnd(escapeAndTerminalCode, backslashes);
-			escaped		  = opOr(shl<1>(escape), nextIsEscaped);
+			escaped		  = opXor(escapeAndTerminalCode, opOr(backslashes, nextIsEscaped));
 			nextIsEscaped = setLSB(nextIsEscaped, getMSB(escape));
 		}
 
@@ -326,13 +326,13 @@ namespace jsonifier_internal {
 			evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
 			escapeAndTerminalCode	  = opXor(evenSeriesCodesAndOddBits, oddBitsVal);
 			if (stringIndex == errorIndex) {
-				returnValue << "Potential Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << "Potential Escape Bits, for Index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(potentialEscape).data();
 				returnValue << "Maybe Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(maybeEscaped).data();
-				returnValue << "Maybe Escaped And Odd Bits Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << "Maybe Escaped And Odd Bits, for Index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(maybeEscapedAndOddBits).data();
-				returnValue << "Even Series Codes And Odd Bits Bits, for Index: " + std::to_string(stringIndex) + ": ";
+				returnValue << "Even Series Codes And Odd Bits, for Index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(evenSeriesCodesAndOddBits).data();
 			}
 			return returnValue.str();
@@ -342,7 +342,7 @@ namespace jsonifier_internal {
 			std::stringstream returnValue{};
 			auto returnValueNew = collectEscapedCharactersHelperWithErrorPrintOut(bitAndNot(backslashes, nextIsEscaped), errorIndex);
 			escape				= opAnd(escapeAndTerminalCode, backslashes);
-			escaped				= opOr(shl<1>(escape), nextIsEscaped);
+			escaped				= opXor(escapeAndTerminalCode, opOr(backslashes, nextIsEscaped));
 			nextIsEscaped		= setLSB(nextIsEscaped, getMSB(escape));
 			if (stringIndex == errorIndex) {
 				returnValue << returnValueNew;

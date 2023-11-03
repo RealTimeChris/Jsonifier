@@ -49,6 +49,7 @@ file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include
 set(JSONIFIER-POPCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-LZCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-BMI_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
+set(JSONIFIER-BMI2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
@@ -83,8 +84,6 @@ target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/MP${THREAD_COUNT}>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-fcoroutines>"
-	"$<$<CXX_COMPILER_ID:GNU>:-fcoroutines>"
 	"${AVX_FLAG}"
 )
 

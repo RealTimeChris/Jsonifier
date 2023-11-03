@@ -1,8 +1,8 @@
-//#if defined(JSONIFIER_CPU_INSTRUCTIONS)
+#if defined(JSONIFIER_CPU_INSTRUCTIONS)
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-	//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVXF
-//#endif
-	#include "glaze/core/macros.hpp"
+//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX2
+#endif
+#include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
 #include "glaze/glaze.hpp"
 #include <unordered_set>
@@ -49,6 +49,8 @@ template<typename OTy> struct TestGenerator {
 		TestGenerator generator{};
 		jsonifier::jsonifier_core parser{};
 		parser.serializeJson(generator, buffer);
+		buffer.clear();
+		glz::write_json(generator, buffer);
 		json_data returnData{};
 		returnData.arraySizes = generator.arraySizes;
 		returnData.theData	  = buffer;
@@ -56,11 +58,11 @@ template<typename OTy> struct TestGenerator {
 	}
 
 	std::string generateString() {
-		auto length{ randomizeNumber(35.0f, 2.0f)};
-		static constexpr jsonifier::string_view charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\b\n\t\f\r";
+		auto length{ randomizeNumber(35.0f, 2.0f) };
+		static constexpr jsonifier::string_view charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\\r\b\t\f\n";
 		static constexpr int32_t charsetSize			= charset.size();
 		std::mt19937 generator(std::random_device{}());
-		std::uniform_int_distribution<int32_t> distribution(0, charsetSize);
+		std::uniform_int_distribution<int32_t> distribution(0, charsetSize - 1);
 		std::string result{};
 		char previousCharacter{};
 		for (int32_t i = 0; i < length; ++i) {
@@ -89,10 +91,10 @@ template<typename OTy> struct TestGenerator {
 
 	TestGenerator() {
 		auto fill = [&](auto& v) {
-			v.resize(250);
-			for (uint64_t x = 0; x < 250; ++x) {
+			v.resize(25);
+			for (uint64_t x = 0; x < 25; ++x) {
 				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
-					auto arraySize01 = randomizeNumber(43, 15);
+					auto arraySize01 = randomizeNumber(35, 15);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
 						v[x].testStrings.emplace_back(generateString());
@@ -172,7 +174,7 @@ template<> struct jsonifier::core<AbcTest<test_struct>> {
 };
 
 #if defined(NDEBUG)
-jsonifier_constexpr static uint64_t iterations = 1;
+jsonifier_constexpr static uint64_t iterations = 100;
 #else
 jsonifier_constexpr static uint64_t iterations = 1;
 #endif
@@ -278,7 +280,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	for (auto& value: parser.getErrors()) {
 		std::cout << "Jsonifier Error: " << value << std::endl;
 	}
-	r.json_read = result;
+	r.json_read		   = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
 	for (auto& value: uint64Test.a) {
@@ -385,7 +387,7 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 		},
 		1);
 
-	r.json_read = result;
+	r.json_read		   = result;
 	r.json_byte_length = buffer.size();
 	buffer.clear();
 	for (auto& value: uint64Test.a) {
@@ -674,10 +676,10 @@ auto simdjson_abc_test(const std::string& bufferNew, const jsonifier::vector<int
 	double result{};
 
 	try {
-	result = benchmark(
-		[&]() {
-			parser.read_out_of_order(obj, buffer, arraySizes);
-		},
+		result = benchmark(
+			[&]() {
+				parser.read_out_of_order(obj, buffer, arraySizes);
+			},
 			iterations);
 	} catch (const std::exception& error) {
 		std::cerr << "simdjson Error: " << error.what() << std::endl;
@@ -879,6 +881,15 @@ template<> struct jsonifier::core<ReadyMessage> {
 
 int32_t main() {
 	try {
+		jsonifier::vector<int32_t> testVector{};
+		for (uint64_t x = 0; x < 24; ++x) {
+			testVector.emplace_back(x);
+		}
+		testVector.erase(testVector.begin() + 2);
+		for (auto& value: testVector) {
+			std::cout << "CURRENT VALUE: " << value << std::endl;
+		}
+
 		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,"
 									   "\\\"calls\\\":[]},\\\"session_"
 									   "lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-"
@@ -916,12 +927,48 @@ int32_t main() {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
-		FileLoader fileLoader02{ "C:/users/chris/source/repos/jsonifier/JsonData.json" };
 		//jsonData.theData = fileLoader02;
-		//fileLoader02.saveFile(jsonData.theData);
+		FileLoader fileLoader{ "../../../JsonData.json" };
+		fileLoader.saveFile(glz::prettify(jsonData.theData));
+		std::string newTimeString{};
+		newTimeString.resize(1024);
+		std::tm resultTwo{};
+		std::time_t result = std::time(nullptr);
+		resultTwo		   = *localtime(&result);
+		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
 		auto abcTestResults	  = abc_test(jsonData);
+#if defined(_WIN32)
+		FileLoader fileLoader01{ "../../../ReadMe.md" };
+		FileLoader fileLoader02{ "../../../JsonData.json" };
+		fileLoader02.saveFile(glz::prettify(jsonData.theData));
+#else
+		FileLoader fileLoader01{ "../ReadMe.md" };
+		FileLoader fileLoader02{ "../JsonData.json" };
+		fileLoader02.saveFile(glz::prettify(jsonData.theData));
+#endif
+		std::string newstring = fileLoader01;
+		uint64_t currentStart{ 0 };
+		uint64_t currentEnd{ 0 };
+		currentEnd			  = newstring.find("Latest results (") + std::string{ "Latest results (" }.size();
+		std::string dateLine  = newstring.substr(currentStart, currentEnd);
+		currentStart		  = currentEnd + 2 + std::string{ "Jan 01, 2022" }.size();
+		currentEnd			  = newstring.find("Single Iteration Test Results:") + std::string{ "Single Iteration Test Results:" }.size();
+		std::string section01 = newstring.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newstring.find("Multi Iteration Test Results:");
+		currentEnd			  = newstring.find("Multi Iteration Test Results:") + std::string{ "Multi Iteration Test Results:" }.size();
+		std::string section02 = newstring.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newstring.find("## ABC Test (Out of Sequence Performance)");
+		currentEnd			  = newstring.find("In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining "
+														  "optimal performance regardless of the JSON document's scale.") +
+			std::string{ "In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining optimal "
+						 "performance regardless of the JSON document's scale." }
+				.size();
+		std::string section03	= newstring.substr(currentStart, (currentEnd - currentStart));
+		std::string newerString = dateLine + newTimeString + "):" + section01 + "\n" + singlTestResults + "\n\n" + section02 + "\n" + multiTestResults + "\n" +
+			"> 100 iterations on a 6 core (Intel i7 8700k)\n\n" + section03 + "\n" + abcTestResults + "\n" + "> 101 iterations on a 6 core (Intel i7 8700k)";
+		fileLoader01.saveFile(newerString);
 	} catch (std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}
