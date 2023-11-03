@@ -3,7 +3,7 @@
 [![Lines of Code](https://sloc.xyz/github/realtimechris/jsonifier)](https://github.com/RealTimeChris/Jsonifier/)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
+### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
 ## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
 
