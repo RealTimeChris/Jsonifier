@@ -26,19 +26,20 @@
 
 #include <jsonifier/Allocator.hpp>
 #include <jsonifier/Tables.hpp>
-#include <jsonifier/Base02.hpp>
+#include <jsonifier/Base.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
 
 	class backslash_and_quote {
 	  public:
+
 		template<typename source_type, typename dest_type> inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
-			simd_int_t values(gatherValuesU<simd_int_t>(source));
-			simd_base::storeu(values, destString);
+			auto values = gatherValuesU<simd_int_t>(source);
+			simd_base::store(values, destString);
 			backslash_and_quote returnData{};
-			returnData.bsBits	 = simd_base::cmpeq(values, simd_base::backslashes);
-			returnData.quoteBits = simd_base::cmpeq(values, simd_base::quotes);
+			returnData.bsBits	 = { simd_base::cmpeq(values, simd_base::backslashes) };
+			returnData.quoteBits = { simd_base::cmpeq(values, simd_base::quotes) };
 			return returnData;
 		}
 
@@ -50,7 +51,7 @@ namespace jsonifier_internal {
 			return ((quoteBits - 1) & bsBits) != 0;
 		}
 
-		inline string_parsing_type quoteIndex() {
+		inline string_parsing_type quoteIndex() { 
 			return tzcnt(quoteBits);
 		}
 
@@ -157,8 +158,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename source_type, typename dest_type> inline static dest_type* parseString(const source_type* source, dest_type* destString, uint64_t lengthNew) {
-		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(BytesPerStep)) {
-			auto bsQuote = backslash_and_quote::copyAndFind(source, destString);
+		while (true) {
+			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, destString); 
 			if (bsQuote.hasQuoteFirst()) {
 				return destString + bsQuote.quoteIndex();
 			}
@@ -166,24 +167,21 @@ namespace jsonifier_internal {
 				auto bsDist			   = bsQuote.backslashIndex();
 				source_type escapeChar = source[bsDist + 1];
 				if (escapeChar == 'u') {
-					destString += bsDist;
-					lengthNew -= bsDist;
 					source += bsDist;
+					destString += bsDist;
 					handleUnicodeCodePoint(&source, &destString);
 				} else {
-					uint8_t escapeResult = escapeMap<source_type>[escapeChar];
+					uint8_t escapeResult = escapeMap<uint8_t>[escapeChar];
 					if (escapeResult == 0u) {
 						return nullptr;
 					}
 					destString[bsDist] = escapeResult;
 					destString += bsDist + 1ULL;
-					lengthNew -= bsDist + 2ULL;
 					source += bsDist + 2ULL;
 				}
 			} else {
-				destString += BytesPerStep;
-				lengthNew -= BytesPerStep;
 				source += BytesPerStep;
+				destString += BytesPerStep;
 			}
 		}
 		return nullptr;

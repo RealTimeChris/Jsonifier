@@ -51,7 +51,7 @@ namespace jsonifier_internal {
 		template<bool, typename value_type> friend struct parse_impl;
 		template<bool> friend struct parse;
 
-		template<bool excludeKeys = false, bool refreshString = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		template<bool excludeKeys = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
 		jsonifier_inline void parseJson(value_type&& data, buffer_type& stringNew) {
 			if (stringNew.empty()) {
 				return;
@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 			}
 			if jsonifier_constexpr (excludeKeys) {
 				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
-					parse<excludeKeys>::op(data, newIter, data.excludedKeys, *this);
+					parse<excludeKeys>::op(data, newIter, *this, data.excludedKeys);
 				} else {
 					parse<excludeKeys>::op(data, newIter, *this);
 				}

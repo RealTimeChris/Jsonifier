@@ -27,7 +27,7 @@
 #include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Derailleur.hpp>
 #include <jsonifier/Parser.hpp>
-#include <jsonifier/Base02.hpp>
+#include <jsonifier/Base.hpp>
 #include <memory>
 
 namespace jsonifier_internal {
@@ -112,7 +112,6 @@ namespace jsonifier_internal {
 			if (sizeNew > static_cast<int64_t>(parserNew.currentStringBuffer.size())) {
 				parserNew.currentStringBuffer.resize(static_cast<uint64_t>(sizeNew));
 			}
-
 			auto newerSize = parseString(newPtr + 1, parserNew.currentStringBuffer.data(), static_cast<uint64_t>(sizeNew)) - parserNew.currentStringBuffer.data();
 			if (newerSize > 0) {
 				value.resize(static_cast<uint64_t>(newerSize));
@@ -197,7 +196,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Object_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Object_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfObject(iter);
 				return;
 			}
 			bool first{ true };
@@ -209,22 +208,29 @@ namespace jsonifier_internal {
 				} else [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Comma>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Comma>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfObject(iter);
 						return;
 					}
 				}
-
-				parse<excludeKeys>::op(parserNew.currentStringBuffer, iter, parserNew);
-				if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
-					parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
-					derailleur::skipValue(iter);
-					return;
+				if (derailleur::template checkForMatchOpen<json_structural_type::Null>(iter)) [[unlikely]] {
+					continue;
 				}
 
 				if jsonifier_constexpr (jsonifier::concepts::string_t<typename value_type::key_type>) {
+					parse<excludeKeys>::op(parserNew.currentStringBuffer, iter, parserNew);
+					if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
+						parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
+						derailleur::skipToEndOfObject(iter);
+						return;
+					}
 					parse<excludeKeys>::op(value[static_cast<typename value_type::key_type>(parserNew.currentStringBuffer)], iter, parserNew);
 				} else {
 					parse<excludeKeys>::op(parserNew.currentKeyBuffer, iter, parserNew);
+					if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
+						parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
+						derailleur::skipToEndOfObject(iter);
+						return;
+					}
 					parse<excludeKeys>::op(value[parserNew.currentKeyBuffer], iter, parserNew);
 				}
 			}
@@ -235,7 +241,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Array_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Array_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfArray(iter);
 				return;
 			}
 			static jsonifier_constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<jsonifier::concepts::unwrap<value_type>>> };
@@ -249,7 +255,7 @@ namespace jsonifier_internal {
 				if (!derailleur::template checkForMatchOpen<json_structural_type::Comma>(iter)) [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Array_End>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Array_End>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfArray(iter);
 					}
 					return;
 				}
@@ -261,7 +267,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Array_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Array_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfArray(iter);
 				return;
 			}
 			static jsonifier_constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<jsonifier::concepts::unwrap<value_type>>> };
@@ -280,7 +286,7 @@ namespace jsonifier_internal {
 				if (!derailleur::template checkForMatchOpen<json_structural_type::Comma>(iter)) [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Array_End>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Array_End>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfArray(iter);
 					}
 					return;
 				}
@@ -292,7 +298,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Object_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Object_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfObject(iter);
 				return;
 			}
 			bool first{ true };
@@ -304,7 +310,7 @@ namespace jsonifier_internal {
 				} else [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Comma>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Comma>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfObject(iter);
 						return;
 					}
 				}
@@ -312,13 +318,13 @@ namespace jsonifier_internal {
 				auto start = iter.operator->();
 				if (!derailleur::template checkForMatchClosed<json_structural_type::String>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::String>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
-				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - start) - 2 };
+				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
 				if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
 				static jsonifier_constexpr auto frozenMap = makeMap<value_type>();
@@ -333,7 +339,7 @@ namespace jsonifier_internal {
 						},
 						memberIt->second);
 				} else [[unlikely]] {
-					derailleur::skipToNextValue(iter);
+					derailleur::skipValue(iter);
 				}
 			}
 		}
@@ -343,7 +349,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Object_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Object_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfObject(iter);
 				return;
 			}
 			bool first{ true };
@@ -355,7 +361,7 @@ namespace jsonifier_internal {
 				} else [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Comma>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Comma>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfObject(iter);
 						return;
 					}
 				}
@@ -363,13 +369,13 @@ namespace jsonifier_internal {
 				auto start = iter.operator->();
 				if (!derailleur::template checkForMatchClosed<json_structural_type::String>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::String>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
-				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - start) - 2 };
+				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
 				if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
 				static jsonifier_constexpr auto frozenMap = makeMap<value_type>();
@@ -389,7 +395,7 @@ namespace jsonifier_internal {
 						},
 						memberIt->second);
 				} else [[unlikely]] {
-					derailleur::skipToNextValue(iter);
+					derailleur::skipValue(iter);
 				}
 			}
 		};
@@ -398,7 +404,7 @@ namespace jsonifier_internal {
 		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& excludedKeys) {
 			if (!derailleur::template checkForMatchClosed<json_structural_type::Object_Start>(iter)) {
 				parserNew.errors.emplace_back(createError<json_structural_type::Object_Start>(iter));
-				derailleur::skipValue(iter);
+				derailleur::skipToEndOfObject(iter);
 				return;
 			}
 			bool first{ true };
@@ -410,7 +416,7 @@ namespace jsonifier_internal {
 				} else [[likely]] {
 					if (!derailleur::template checkForMatchClosed<json_structural_type::Comma>(iter)) {
 						parserNew.errors.emplace_back(createError<json_structural_type::Comma>(iter));
-						derailleur::skipValue(iter);
+						derailleur::skipToEndOfObject(iter);
 						return;
 					}
 				}
@@ -418,7 +424,7 @@ namespace jsonifier_internal {
 				auto start = iter.operator->();
 				if (!derailleur::template checkForMatchClosed<json_structural_type::String>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::String>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
 				auto keySize = static_cast<uint64_t>(iter.operator->() - start);
@@ -432,7 +438,7 @@ namespace jsonifier_internal {
 				}
 				if (!derailleur::template checkForMatchClosed<json_structural_type::Colon>(iter)) {
 					parserNew.errors.emplace_back(createError<json_structural_type::Colon>(iter));
-					derailleur::skipValue(iter);
+					derailleur::skipToEndOfObject(iter);
 					return;
 				}
 				static jsonifier_constexpr auto frozenMap = makeMap<value_type>();
@@ -452,7 +458,7 @@ namespace jsonifier_internal {
 						},
 						memberIt->second);
 				} else [[unlikely]] {
-					derailleur::skipToNextValue(iter);
+					derailleur::skipValue(iter);
 				}
 			}
 		}

@@ -90,22 +90,6 @@ namespace jsonifier_internal {
 
 	template<typename Function> benchmark(Function) -> benchmark<Function>;
 
-	template<typename value_type = void> struct hash {
-		static_assert(std::is_integral<value_type>::value || std::is_enum<value_type>::value, "hash only supports integral types, specialize for other types.");
-
-		jsonifier_constexpr size_t operator()(value_type const& value, size_t seed) const {
-			size_t key = seed ^ static_cast<size_t>(value);
-			key		   = (~key) + (key << 21);
-			key		   = key ^ (key >> 24);
-			key		   = (key + (key << 3)) + (key << 8);
-			key		   = key ^ (key >> 14);
-			key		   = (key + (key << 2)) + (key << 4);
-			key		   = key ^ (key >> 28);
-			key		   = key + (key << 31);
-			return key;
-		}
-	};
-
 	template<typename... Args> struct false_t : std::false_type {};
 
 	struct random_core_type;

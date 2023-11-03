@@ -25,7 +25,7 @@
 
 #include <jsonifier/StructuralIterator.hpp>
 #include <jsonifier/Error.hpp>
-#include <jsonifier/Base02.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace jsonifier_internal {
 

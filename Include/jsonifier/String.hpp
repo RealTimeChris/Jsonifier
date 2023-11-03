@@ -24,7 +24,70 @@
 #pragma once
 
 #include <jsonifier/Vector.hpp>
-#include <jsonifier/Base01.hpp>
+#include <jsonifier/Hash.hpp>
+
+namespace jsonifier_internal {
+
+	template<typename value_type01, typename value_type02> jsonifier_constexpr bool stringConstCompare(const value_type01& string01, const value_type02& string02) {
+		if (string01.size() != string02.size()) [[unlikely]] {
+			return false;
+		}
+		using char_t = value_type01::value_type;
+		for (uint64_t x = 0; x < string01.size(); ++x) {
+			if (string01[x] != static_cast<char_t>(string02[x])) [[unlikely]] {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	template<typename value_type> class char_traits : public std::char_traits<value_type> {};
+
+	template<> class char_traits<uint8_t> {
+	  public:
+		using value_type	= uint8_t;
+		using pointer		= value_type*;
+		using const_pointer = const value_type*;
+		using size_type		= uint64_t;
+
+		static jsonifier_constexpr void move(pointer firstNew, pointer first2, size_type count) {
+			if (std::is_constant_evaluated()) {
+				bool loopForward = true;
+
+				for (pointer source = first2; source != first2 + count; ++source) {
+					if (firstNew == source) {
+						loopForward = false;
+					}
+				}
+
+				if (loopForward) {
+					for (uint64_t index = 0; index != count; ++index) {
+						firstNew[index] = first2[index];
+					}
+				} else {
+					for (uint64_t index = count; index != 0; --index) {
+						firstNew[index - 1] = first2[index - 1];
+					}
+				}
+
+				return;
+			}
+			std::memmove(firstNew, first2, count * sizeof(value_type));
+		}
+
+		static jsonifier_constexpr size_type length(const_pointer first) {
+			const_pointer newPtr = first;
+			size_type count		 = 0;
+			while (newPtr && *newPtr != static_cast<uint8_t>('\0')) {
+				++count;
+				++newPtr;
+			}
+
+			return count;
+		}
+	};
+
+}
 
 namespace jsonifier {
 

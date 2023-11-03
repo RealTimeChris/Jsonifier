@@ -37,5 +37,5 @@
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base02.hpp>
+#include <jsonifier/Base.hpp>
 #include <jsonifier/Simd.hpp>

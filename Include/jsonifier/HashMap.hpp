@@ -29,7 +29,7 @@
 #include <jsonifier/Expected.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base02.hpp>
+#include <jsonifier/Base.hpp>
 #include <algorithm>
 #include <span>
 
@@ -74,24 +74,6 @@ namespace jsonifier_internal {
 				}
 				return false;
 			}
-		}
-	};
-
-	template<typename value_type> struct hash<std::basic_string<value_type>> {
-		jsonifier_constexpr uint64_t operator()(std::basic_string<uint8_t> value) const {
-			return fnv1aHash(value);
-		}
-
-		jsonifier_constexpr uint64_t operator()(std::basic_string<uint8_t> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-
-		jsonifier_constexpr uint64_t operator()(std::basic_string<char> value) const {
-			return fnv1aHash(value);
-		}
-
-		jsonifier_constexpr uint64_t operator()(std::basic_string<char> value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
 		}
 	};
 
