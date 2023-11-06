@@ -1,6 +1,6 @@
 # Jsonifier
-![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=flat)
-[![Lines of Code](https://sloc.xyz/github/realtimechris/jsonifier)](https://github.com/RealTimeChris/Jsonifier/)
+![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=plastic)
+![Lines of Code](https://tokei.rs/b1/github/RealTimeChris/Jsonifier?color=light-blue&label=Lines%20Of%20Code%20&style=plastic)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
 ### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
@@ -9,15 +9,15 @@
 
 ## Compiler Support
 ----
-![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue)
-![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue)
-![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=GCC_13&labelColor=pewter&color=blue)
+![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue&branch=dev)
+![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue&branch=dev)
+![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=GCC_13&labelColor=pewter&color=blue&branch=dev)
 
 ## Operating System Support
 ----
-![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue)
-![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue)
-![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue)
+![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=dev)
+![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=dev)
+![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=dev)
 
 ## Usage - Serialization/Parsing
 ----
@@ -41,7 +41,7 @@ namespace TestNS {
 	};
 
 	struct nested_object_t {
-		std::vector<std::array<double, 3>> v3s{};
+		std::vector<ctime_array<double, 3>> v3s{};
 		std::string id{};
 	};
 
@@ -68,28 +68,28 @@ namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
+		static constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
 		using value_type = TestNS::fixed_name_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
+		static constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
 		using value_type = TestNS::nested_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
+		static constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
 		using value_type = TestNS::another_object_t;
-		static jsonifier_constexpr auto parseValue =
+		static constexpr auto parseValue =
 			createObject("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
 		using value_type = TestNS::obj_t;
-		static jsonifier_constexpr auto parseValue =
+		static constexpr auto parseValue =
 			createObject("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
 				&value_type::string_array, "string", &value_type::string, "number", &value_type::number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};

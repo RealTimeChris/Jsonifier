@@ -23,36 +23,40 @@
 /// Feb 20, 2023
 #pragma once
 
+#include <type_traits>
+
 namespace jsonifier_internal {
 
-	template<typename FirstType, typename SecondType> class pair {
+	template<typename first_type_new, typename second_type_new> class pair {
 	  public:
-		using first_type  = FirstType;
-		using second_type = SecondType;
+		using first_type  = first_type_new;
+		using second_type = second_type_new;
 
 		first_type first;
 		second_type second;
 
-		jsonifier_constexpr pair() = default;
+		constexpr pair() noexcept = default;
 
-		template<typename FirstTypeNew, typename SecondTypeNew> jsonifier_constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
-			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {
-		}
+		template<typename first_type_newer, typename second_type_newer> constexpr pair(first_type_newer&& firstNew, second_type_newer&& secondNew)
+			: first{ std::forward<first_type_newer>(firstNew) }, second{ std::forward<second_type_newer>(secondNew) } {};
 
-		template<typename FirstTypeNew>
-			requires(std::same_as<first_type, FirstTypeNew>)
-		jsonifier_constexpr pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {
-		}
+		template<typename = std::enable_if_t<!std::same_as<first_type, second_type>>> constexpr pair(first_type&& value) : first{ std::forward<first_type>(value) }, second{} {};
+		constexpr pair(second_type&& value) : first{}, second{ std::forward<second_type>(value) } {};
 
-		template<typename SecondTypeNew>
-			requires(std::same_as<second_type, SecondTypeNew>)
-		jsonifier_constexpr pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {
-		}
+		template<typename = std::enable_if_t<!std::same_as<first_type, second_type>>> constexpr pair(const first_type& value) : first{ value }, second{} {};
+		constexpr pair(const second_type& value) : first{}, second{ value } {};
 
-		jsonifier_constexpr bool operator==(const pair& other) const {
+		constexpr bool operator==(const pair& other) const {
 			return first == other.first && second == other.second;
 		}
 	};
+
+	template<class value_type01, class value_type02> constexpr pair<jsonifier::concepts::unwrap<value_type01>, jsonifier::concepts::unwrap<value_type02>> makePair(
+		value_type01&& _Val1, value_type02&& _Val2) noexcept(std::is_nothrow_constructible_v<jsonifier::concepts::unwrap<value_type01>, value_type01>&&
+			std::is_nothrow_constructible_v<jsonifier::concepts::unwrap<value_type02>, value_type02>) {
+		using pair_type = pair<jsonifier::concepts::unwrap<value_type01>, jsonifier::concepts::unwrap<value_type02>>;
+		return pair_type(std::forward<value_type01>(_Val1), std::forward<value_type02>(_Val2));
+	}
 
 	template<typename a, typename b> pair(a, b) -> pair<std::unwrap_ref_decay<a>, std::unwrap_ref_decay<b>>;
 }
