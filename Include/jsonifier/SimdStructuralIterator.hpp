@@ -27,44 +27,45 @@
 
 namespace jsonifier_internal {
 
-	class structural_iterator {
+	class simd_structural_iterator {
 	  public:
 		friend class derailleur;
 
+		using iterator_concept	= std::forward_iterator_tag;
 		using iterator_category = std::forward_iterator_tag;
 		using value_type		= uint8_t;
+		using pointer_internal	= string_view_ptr*;
+		using pointer			= string_view_ptr;
 		using difference_type	= std::ptrdiff_t;
-		using pointer			= string_view_ptr*;
-		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		jsonifier_inline structural_iterator() noexcept = default;
+		inline simd_structural_iterator() noexcept = default;
 
-		jsonifier_inline structural_iterator(structural_index* rootIndexNew) {
+		inline simd_structural_iterator(structural_index* rootIndexNew) {
 			currentIndex = rootIndexNew;
 			rootIndex	 = rootIndexNew;
 		}
 
-		jsonifier_inline value_type operator*() const {
+		inline value_type operator*() const {
 			return (*currentIndex) ? **currentIndex : defaultValue;
 		}
 
-		jsonifier_inline string_view_ptr operator->() const {
+		inline pointer operator->() const {
 			return *currentIndex;
 		}
 
-		jsonifier_inline structural_iterator& operator++() {
+		inline simd_structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
 		}
 
-		jsonifier_inline structural_iterator operator++(int32_t) {
-			structural_iterator oldIter{ *this };
+		inline simd_structural_iterator operator++(int32_t) {
+			simd_structural_iterator temp{ *this };
 			++(*this);
-			return oldIter;
+			return temp;
 		}
 
-		jsonifier_inline string_view_ptr getEndPtr() {
+		inline pointer getEndPtr() {
 			auto newIndex = currentIndex;
 			while (*(newIndex + 1) != nullptr) {
 				++newIndex;
@@ -72,21 +73,21 @@ namespace jsonifier_internal {
 			return *newIndex;
 		}
 
-		jsonifier_inline string_view_ptr getRootPtr() {
+		inline pointer getRootPtr() {
 			return *rootIndex;
 		}
 
-		jsonifier_inline size_type getCurrentStringIndex() const {
+		inline size_type getCurrentStringIndex() const {
 			return (*currentIndex) - (*rootIndex);
 		}
 
-		jsonifier_inline bool operator==(const structural_iterator&) const {
+		inline bool operator==(const simd_structural_iterator&) const {
 			return !(*currentIndex);
 		}
 
 	  protected:
-		static jsonifier_constexpr uint8_t defaultValue{ 0x00 };
-		pointer currentIndex{};
-		pointer rootIndex{};
+		static constexpr value_type defaultValue{ 0x00ll };
+		pointer_internal currentIndex{};
+		pointer_internal rootIndex{};
 	};
 }

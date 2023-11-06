@@ -29,17 +29,13 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int32_t value_type> inline value_type lzcnt(value_type value) {
 		return _lzcnt_u32(value);
-	}
-
-	template<jsonifier::concepts::unsigned_int64_t value_type> jsonifier_inline static value_type lzcnt(value_type value) {
-		return _lzcnt_u64(value);
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> jsonifier_inline static value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int32_t value_type> inline value_type lzcnt(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}
@@ -48,7 +44,7 @@ namespace jsonifier_internal {
 		value_type mask{ static_cast<value_type>(1) << (std::numeric_limits<value_type>::digits - 1) };
 
 		while ((value & mask) == 0) {
-			count++;
+			++count;
 			mask >>= 1;
 		}
 

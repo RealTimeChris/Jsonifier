@@ -23,46 +23,59 @@
 /// Feb 20, 2023
 #pragma once
 
+#include <jsonifier/SerializationIterator.hpp>
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
+#include <jsonifier/Error.hpp>
 
 namespace jsonifier_internal {
 
-	template<bool excludeKeys, typename value_type = void> struct serialize_impl;
+	template<typename value_type> struct serialize_impl {};
 
-	template<bool excludeKeys> struct serialize {
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type> jsonifier_inline static void op(const value_type& value, buffer_type& buffer, uint64_t& index) {
-			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, buffer, index);
+	class jsonifier_core;
+
+	struct serialize {
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator buffer_iterator_type>
+		inline static void op(value_type&& value, buffer_iterator_type&& buffer) {
+			serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_iterator_type>(buffer));
 		}
 
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(const value_type& value, buffer_type& buffer, uint64_t& index, const KeyType& keys) {
-			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, buffer, index, keys);
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator buffer_iterator_type, jsonifier::concepts::has_find key_type>
+		inline static void op(value_type&& value, buffer_iterator_type&& buffer, key_type&& keys) {
+			serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_iterator_type>(buffer), std::forward<key_type>(keys));
 		}
 	};
 
-	class serializer {
+	template<typename derived_type> class serializer {
 	  public:
-		template<bool excludeKeys = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
-		jsonifier_inline void serializeJson(value_type&& data, buffer_type& buffer) {
-			uint64_t index{};
-			if jsonifier_constexpr (excludeKeys) {
-				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index, data.excludedKeys);
-				} else {
-					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
-				}
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type> inline void serializeJson(value_type&& data, buffer_type&& buffer) {
+			iter.reset();
+			static_cast<derived_type*>(this)->errors.clear();
+			if constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<value_type>>) {
+				serialize::op(std::forward<value_type>(data), static_cast<serialization_iterator<buffer_string<uint8_t>>&&>(iter), data.jsonifierExcludedKeys);
 			} else {
-				serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
+				serialize::op(std::forward<value_type>(data), static_cast<serialization_iterator<buffer_string<uint8_t>>&&>(iter));
 			}
-			if (buffer.size() != index) [[unlikely]] {
-				buffer.resize(index);
+			if constexpr (jsonifier::concepts::has_resize<buffer_type>) {
+				if (buffer.size() != iter.currentSize) [[unlikely]] {
+					buffer.resize(iter.currentSize);
+				}
+				std::memcpy(buffer.data(), getCurrentStringBuffer().data(), iter.currentSize);
+			} else {
+				static_cast<derived_type*>(this)->errors.emplace_back(createError(error_code::Serialize_Error));
 			}
-			std::memcpy(buffer.data(), stringBuffer.data(), index);
+		}
+		
+		inline buffer_string<uint8_t>& getCurrentStringBuffer() {
+			return static_cast<derived_type*>(this)->currentStringBuffer;
 		}
 
 	  protected:
-		buffer_string<uint8_t> stringBuffer{};
+		serialization_iterator<buffer_string<uint8_t>> iter{ getCurrentStringBuffer() };
+
+		serializer() noexcept = default;
+
+		~serializer() noexcept = default;
 	};
 
 }

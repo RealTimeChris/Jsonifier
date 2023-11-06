@@ -25,9 +25,22 @@
 
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/Parser.hpp>
+#include <jsonifier/Error.hpp>
 
 namespace jsonifier {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+	class jsonifier_core : public jsonifier_internal::serializer<jsonifier_core>, public jsonifier_internal::parser<jsonifier_core> {
+	  public:
+		friend class serializer<jsonifier_core>;
+		friend class parser<jsonifier_core>;
+
+		inline jsonifier::vector<jsonifier_internal::error>& getErrors() {
+			return errors;
+		}
+
+	  protected:
+		jsonifier_internal::buffer_string<uint8_t> currentStringBuffer{};
+		jsonifier::vector<jsonifier_internal::error> errors{};
+	};
 
 }

@@ -23,7 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StructuralIterator.hpp>
+#include <jsonifier/SerialStructuralIterator.hpp>
+#include <jsonifier/SimdStructuralIterator.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Error.hpp>
@@ -31,56 +32,59 @@
 
 namespace jsonifier_internal {
 
-	class parser;
+	template<typename value_type> struct parse_impl {};
 
-	template<bool excludeKeys, typename value_type> struct parse_impl {};
-
-	template<bool excludeKeys> struct parse {
-		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew);
+	struct parse {
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type, jsonifier::concepts::is_parser parser_type>
+		inline static void op(value_type&& value, iterator_type&& iter, parser_type&& parserNew) {
+			parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<iterator_type>(iter), std::forward<parser_type>(parserNew));
 		}
 
-		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew, keys);
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type, jsonifier::concepts::is_parser parser_type,
+			jsonifier::concepts::has_find key_type>
+		inline static void op(value_type&& value, iterator_type&& iter, parser_type&& parserNew, key_type&& keys) {
+			parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<iterator_type>(iter), std::forward<parser_type>(parserNew),
+				std::forward<key_type>(keys));
 		}
 	};
 
-	class parser {
+	template<typename derived_type> class parser {
 	  public:
-		template<bool, typename value_type> friend struct parse_impl;
-		template<bool> friend struct parse;
+		template<typename value_type> friend struct parse_impl;
+		friend struct parse;
 
-		template<bool excludeKeys = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		jsonifier_inline void parseJson(value_type&& data, buffer_type& stringNew) {
-			if (stringNew.empty()) {
-				return;
-			}
-			section.reset<refreshString>(std::forward<buffer_type>(stringNew));
-			errors.clear();
-			auto newIter = section.begin();
-			if (!*newIter) {
-				return;
-			}
-			if jsonifier_constexpr (excludeKeys) {
-				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
-					parse<excludeKeys>::op(data, newIter, *this, data.excludedKeys);
-				} else {
-					parse<excludeKeys>::op(data, newIter, *this);
-				}
-			} else {
-				parse<excludeKeys>::op(data, newIter, *this);
-			}
+		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
+		inline void parseJson(value_type&& data, buffer_type&& stringNew) {
+			section.reset<refreshString>(stringNew.data(), stringNew.size());
+			static_cast<derived_type*>(this)->currentStringBuffer.clear();
+			static_cast<derived_type*>(this)->errors.clear();
+			parseValues(data, section.begin());
 		}
 
-		jsonifier_inline jsonifier::vector<error>& getErrors() {
-			return errors;
+		inline jsonifier::vector<error>& getErrors() {
+			return static_cast<derived_type*>(this)->errors;
+		}
+
+		inline buffer_string<uint8_t>& getCurrentStringBuffer() {
+			return static_cast<derived_type*>(this)->currentStringBuffer;
 		}
 
 	  protected:
-		buffer_string<uint8_t> currentStringBuffer{};
-		buffer_string<char> currentKeyBuffer{};
-		jsonifier::vector<error> errors{};
 		simd_string_reader section{};
+
+		parser() noexcept = default;
+
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type> inline void parseValues(value_type&& value, iterator_type&& iter) {
+			if (!iter.operator->()) {
+				return;
+			}
+			if constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<value_type>>) {
+				parse::op(std::forward<value_type>(value), std::forward<iterator_type>(iter), *this, value.jsonifierExcludedKeys);
+			} else {
+				parse::op(std::forward<value_type>(value), std::forward<iterator_type>(iter), *this);
+			}
+		}
+
+		~parser() noexcept = default;
 	};
 };

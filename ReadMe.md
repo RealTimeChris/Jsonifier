@@ -1,6 +1,6 @@
 # Jsonifier
-![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=flat)
-[![Lines of Code](https://sloc.xyz/github/realtimechris/jsonifier)](https://github.com/RealTimeChris/Jsonifier/)
+![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=plastic)
+![Lines of Code](https://tokei.rs/b1/github/RealTimeChris/Jsonifier?color=light-blue&label=Lines%20Of%20Code%20&style=plastic)
 
 ## A few classes for serializing and parsing objects into/from JSON strings - very rapidly.
 ### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
@@ -9,15 +9,15 @@
 
 ## Compiler Support
 ----
-![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue)
-![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue)
-![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=GCC_13&labelColor=pewter&color=blue)
+![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue&branch=dev)
+![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue&branch=dev)
+![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=GCC_13&labelColor=pewter&color=blue&branch=dev)
 
 ## Operating System Support
 ----
-![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue)
-![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue)
-![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue)
+![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=dev)
+![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=dev)
+![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=dev)
 
 ## Usage - Serialization/Parsing
 ----
@@ -68,28 +68,28 @@ namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
+		static constexpr auto parseValue = createObject("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
 		using value_type = TestNS::fixed_name_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
+		static constexpr auto parseValue = createObject("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
 		using value_type = TestNS::nested_object_t;
-		static jsonifier_constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
+		static constexpr auto parseValue = createObject("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
 		using value_type = TestNS::another_object_t;
-		static jsonifier_constexpr auto parseValue =
+		static constexpr auto parseValue =
 			createObject("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
 		using value_type = TestNS::obj_t;
-		static jsonifier_constexpr auto parseValue =
+		static constexpr auto parseValue =
 			createObject("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
 				&value_type::string_array, "string", &value_type::string, "number", &value_type::number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};
@@ -120,7 +120,7 @@ serializer.serializeJson(obj, buffer);
 ```
 ## Excluding Keys from Serialization at Runtime
 ----
-To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called excludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `jsonifier::jsonifier_core` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `excludedKeys` set.
+To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called jsonifierExcludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `jsonifier::jsonifier_core` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `jsonifierExcludedKeys` set.
 
 Here's an example of how you can do this:
 ```c++
@@ -131,10 +131,10 @@ class MyObject {
 public:
   std::string name;
   int32_t age;
-  std::set<std::string> excludedKeys;
+  std::set<std::string> jsonifierExcludedKeys;
 
   MyObject(const std::string& n, int32_t a) : name(n), age(a) {
-    excludedKeys.insert("age"); // add "age" key to excludedKeys set
+    jsonifierExcludedKeys.insert("age"); // add "age" key to jsonifierExcludedKeys set
   }
 };
 
@@ -147,13 +147,13 @@ int32_t main() {
 }
 ```
 
-In this example, we have a class called `MyObject` with three member variables: `name`, `age`, and `excludedKeys`. The `excludedKeys` variable is a set of strings that will contain the keys we want to exclude from the serialized output.
+In this example, we have a class called `MyObject` with three member variables: `name`, `age`, and `jsonifierExcludedKeys`. The `jsonifierExcludedKeys` variable is a set of strings that will contain the keys we want to exclude from the serialized output.
 
-In the constructor of `MyObject`, we add the key "age" to the `excludedKeys` set using the `insert` function. This means that when we serialize this object using the `serializeJson` member function of the `jsonifier::jsonifier_core` class, the "age" key will be excluded from the resulting JSON string.
+In the constructor of `MyObject`, we add the key "age" to the `jsonifierExcludedKeys` set using the `insert` function. This means that when we serialize this object using the `serializeJson` member function of the `jsonifier::jsonifier_core` class, the "age" key will be excluded from the resulting JSON string.
 
-In the `main` function, we create an instance of `MyObject` with the name "John" and age 30. We then create an instance of `jsonifier::jsonifier_core` and call its `serializeJson` member function to serialize the object to a JSON string. Since we added the "age" key to the `excludedKeys` set in the constructor, the resulting JSON string only contains the "name" key.
+In the `main` function, we create an instance of `MyObject` with the name "John" and age 30. We then create an instance of `jsonifier::jsonifier_core` and call its `serializeJson` member function to serialize the object to a JSON string. Since we added the "age" key to the `jsonifierExcludedKeys` set in the constructor, the resulting JSON string only contains the "name" key.
 
-By using the `excludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `jsonifier::jsonifier_core` class, you can easily serialize objects with excluded keys to JSON strings.
+By using the `jsonifierExcludedKeys` member variable and adding keys to the set, you can easily exclude certain keys from being serialized at runtime using the Jsonifier library. And with the `serializeJson` member function of the `jsonifier::jsonifier_core` class, you can easily serialize objects with excluded keys to JSON strings.
 
 ## Handling Parsing Errors
 
@@ -209,7 +209,7 @@ int32_t main() {
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::SimdStructuralIterator &)().
 ```
 In the provided error message:
 

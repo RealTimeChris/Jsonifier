@@ -30,19 +30,24 @@
 
 namespace jsonifier_internal {
 
-	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value) {
-		uint64_t d = 5381;
-		for (const auto& c: value)
-			d = d * 33 + static_cast<uint64_t>(c);
-		return d;
+	// https://en.wikipedia.org/wiki/Fowler�Noll�Vo_hash_function
+	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
+	static constexpr uint64_t fnv64OffsetBasis{ 0xcbf29ce484222325ull };
+	static constexpr uint64_t fnv64Prime{ 0x00000100000001B3ull };
+
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
+		uint64_t d{ fnv64OffsetBasis };
+		for (const auto& c: value) {
+			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(fnv64Prime);
+		}
+		return d >> 8;
 	}
 
-	// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-	// With the lowest bits removed, based on experimental setup.
-	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
-		uint64_t d = (0x811c9dc5 ^ seed) * static_cast<uint64_t>(0x01000193);
-		for (const auto& c: value)
-			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
+		uint64_t d = (fnv64OffsetBasis ^ seed) * static_cast<uint64_t>(fnv64Prime);
+		for (const auto& c: value) {
+			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(fnv64Prime);
+		}
 		return d >> 8;
 	}
 
