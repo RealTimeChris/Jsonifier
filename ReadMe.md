@@ -64,7 +64,7 @@ namespace TestNS {
 	};
 }
 
-namespace Jsonifier {
+namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
@@ -209,7 +209,7 @@ int32_t main() {
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierInternal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class JsonifierInternal::StructuralIterator &)().
+Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl jsonifier_internal::ParseNoKeys::op<true,struct DiscordCoreInternal::WebSocketMessage>(struct DiscordCoreInternal::WebSocketMessage &,class jsonifier_internal::StructuralIterator &)().
 ```
 In the provided error message:
 
@@ -294,7 +294,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Jsonifier)
 
-target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
+target_link_libraries("${PROJECT_NAME}" PRIVATE jsonifier::Jsonifier)
 ```
 
 ## Installation (CMake)
@@ -307,5 +307,5 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
 	3. Enter the directory in a terminal, and enter `cmake -S . --preset=Windows_OR_Linux-Release_OR_Debug`.
 	4. Enter within the same terminal, `cmake --build --preset=Windows_OR_Linux-Release_OR_Debug`.
 	5. Enter within the same terminal, `cmake --install ./Build/Release_OR_Debug`.
-	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE Jsonifier::Jsonifier)`.
+	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE jsonifier::Jsonifier)`.
 
