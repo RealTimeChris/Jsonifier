@@ -256,9 +256,10 @@ AVX-512 is an extension of the AVX instruction set architecture, designed to pro
 ### Manual Configuration
 In addition to automatic CPU architecture detection, Jsonifier's CMake configuration also allows for manual control over specific CPU instructions. You can manually set the JSONIFIER_CPU_INSTRUCTIONS variable in the CMake configuration to fine-tune the instruction sets used. Here are the values you can use for different instruction sets:
 
-- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 5
-- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 4
-- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 3
+- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 6
+- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 5
+- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 4
+- JSONIFIER_CPU_INSTRUCTIONS for BMI2: Set to 1 << 3
 - JSONIFIER_CPU_INSTRUCTIONS for BMI: Set to 1 << 2
 - JSONIFIER_CPU_INSTRUCTIONS for LZCOUNT: Set to 1 << 1
 - JSONIFIER_CPU_INSTRUCTIONS for POPCNT: Set to 1 << 0
