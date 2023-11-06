@@ -27,54 +27,51 @@
 
 namespace jsonifier_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	jsonifier_inline string_parsing_type simd_base::cmpeq(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE string_parsing_type simd_base::cmpeq(const simd_int_t& value, const simd_int_t& other) {
 		return static_cast<string_parsing_type>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(value, other)));
 	}
 
-	jsonifier_inline simd_int_t simd_base::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
-		return _mm256_andnot_si256(other, value);
-	}
-
-	jsonifier_inline simd_int_t simd_base::shuffle(const simd_int_t& value, const simd_int_t& other) {
+	JSONIFIER_INLINE simd_int_t simd_base::opShuffle(const simd_int_t& value, const simd_int_t& other) {
 		return _mm256_shuffle_epi8(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opOr(const simd_int_t& other, const simd_int_t& value) {
-		return _mm256_or_si256(value, other);
+	JSONIFIER_INLINE simd_int_t simd_base::opAndNot(const simd_int_t& value, const simd_int_t& other) {
+		return _mm256_andnot_si256(other, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opAnd(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE simd_int_t simd_base::opAnd(const simd_int_t& value, const simd_int_t& other) {
 		return _mm256_and_si256(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opXor(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE simd_int_t simd_base::opXor(const simd_int_t& value, const simd_int_t& other) {
 		return _mm256_xor_si256(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::setLSB(const simd_int_t& value, bool valueNew) {
-		if (valueNew) {
-			return _mm256_or_si256(value, _mm256_set_epi64x(0x00, 0x00, 0x00, 0x01));
-		} else {
-			return _mm256_andnot_si256(_mm256_set_epi64x(0x00, 0x00, 0x00, 0x01), value);
-		}
+	JSONIFIER_INLINE simd_int_t simd_base::opOr(const simd_int_t& value, const simd_int_t& other) {
+		return _mm256_or_si256(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opNot(const simd_int_t& value) {
-		return _mm256_xor_si256(value, _mm256_set1_epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
+	JSONIFIER_INLINE simd_int_t simd_base::setLSB(const simd_int_t& value, bool valueNew) {
+		simd_int_t mask = _mm256_set_epi64x(0x00ll, 0x00ll, 0x00ll, 0x01ll);
+		return valueNew ? _mm256_or_si256(value, mask) : _mm256_andnot_si256(mask, value);
 	}
 
-	jsonifier_inline bool simd_base::getMSB(const simd_int_t& value) {
-		simd_int_t result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000, 0x00, 0x00, 0x00));
+	JSONIFIER_INLINE simd_int_t simd_base::opNot(const simd_int_t& value) {
+		return _mm256_xor_si256(value, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
+
+	JSONIFIER_INLINE bool simd_base::getMSB(const simd_int_t& value) {
+		simd_int_t result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll));
 		return !_mm256_testz_si256(result, result);
 	}
 
-	jsonifier_inline bool simd_base::opBool(const simd_int_t& value) {
+	JSONIFIER_INLINE bool simd_base::opBool(const simd_int_t& value) {
 		return !_mm256_testz_si256(value, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base::reset() {
+	JSONIFIER_INLINE simd_int_t simd_base::reset() {
 		return _mm256_setzero_si256();
 	}
 

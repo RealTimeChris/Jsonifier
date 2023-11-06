@@ -137,10 +137,14 @@ class Vcpkg
         $portFileContent = 'vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO realtimechris/jsonifier
-    REF "v${VERSION}"
+    REF "v${VERSION}"    
     SHA512 ' . $sha512 . '
     HEAD_REF main
+    PATCHES
+        uninstall-head.patch
 )
+
+set(VCPKG_BUILD_TYPE release) # header-only
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
@@ -148,11 +152,11 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug")
-
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
 ';
-        // ./Vcpkg/ports/jsonifier/vcpkg.json
+
+     
+// ./Vcpkg/ports/jsonifier/vcpkg.json
         $versionFileContent = '{
   "name": "jsonifier",
   "version": ' . json_encode($this->getVersion()) . ',
@@ -163,10 +167,6 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
   "dependencies": [
     {
       "name": "vcpkg-cmake",
-      "host": true
-    },
-    {
-      "name": "vcpkg-cmake-config",
       "host": true
     }
   ]

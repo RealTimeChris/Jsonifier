@@ -27,54 +27,54 @@
 
 namespace jsonifier_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
-	jsonifier_inline string_parsing_type simd_base::cmpeq(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE string_parsing_type simd_base::cmpeq(const simd_int_t& value, const simd_int_t& other) {
 		return static_cast<string_parsing_type>(_mm_movemask_epi8(_mm_cmpeq_epi8(value, other)));
 	}
 
-	jsonifier_inline simd_int_t simd_base::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
-		return _mm_andnot_si128(other, value);
-	}
-
-	jsonifier_inline simd_int_t simd_base::shuffle(const simd_int_t& value, const simd_int_t& other) {
+	JSONIFIER_INLINE simd_int_t simd_base::opShuffle(const simd_int_t& value, const simd_int_t& other) {
 		return _mm_shuffle_epi8(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opOr(const simd_int_t& other, const simd_int_t& value) {
-		return _mm_or_si128(value, other);
+	JSONIFIER_INLINE simd_int_t simd_base::opAndNot(const simd_int_t& value, const simd_int_t& other) {
+		return _mm_andnot_si128(other, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opAnd(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE simd_int_t simd_base::opAnd(const simd_int_t& value, const simd_int_t& other) {
 		return _mm_and_si128(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::opXor(const simd_int_t& other, const simd_int_t& value) {
+	JSONIFIER_INLINE simd_int_t simd_base::opXor(const simd_int_t& value, const simd_int_t& other) {
 		return _mm_xor_si128(value, other);
 	}
 
-	jsonifier_inline simd_int_t simd_base::setLSB(const simd_int_t& value, bool valueNew) {
+	JSONIFIER_INLINE simd_int_t simd_base::opOr(const simd_int_t& value, const simd_int_t& other) {
+		return _mm_or_si128(value, other);
+	}
+
+	JSONIFIER_INLINE simd_int_t simd_base::setLSB(const simd_int_t& value, bool valueNew) {
 		if (valueNew) {
-			return _mm_or_si128(value, _mm_set_epi64x(0x00, 0x01));
+			return _mm_or_si128(value, _mm_set_epi64x(0x00ll, 0x01ll));
 		} else {
-			return _mm_andnot_si128(_mm_set_epi64x(0x00, 0x01), value);
+			return _mm_andnot_si128(_mm_set_epi64x(0x00ll, 0x01ll), value);
 		}
 	}
 
-	jsonifier_inline simd_int_t simd_base::opNot(const simd_int_t& value) {
-		return _mm_xor_si128(value, _mm_set1_epi64x(static_cast<int64_t>(std::numeric_limits<uint64_t>::max())));
+	JSONIFIER_INLINE simd_int_t simd_base::opNot(const simd_int_t& value) {
+		return _mm_xor_si128(value, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	jsonifier_inline bool simd_base::getMSB(const simd_int_t& value) {
-		simd_int_t result = _mm_and_si128(value, _mm_set_epi64x(0x8000000000000000, 0x00));
+	JSONIFIER_INLINE bool simd_base::getMSB(const simd_int_t& value) {
+		simd_int_t result = _mm_and_si128(value, _mm_set_epi64x(0x8000000000000000ll, 0x00ll));
 		return !_mm_testz_si128(result, result);
 	}
 
-	jsonifier_inline bool simd_base::opBool(const simd_int_t& value) {
+	JSONIFIER_INLINE bool simd_base::opBool(const simd_int_t& value) {
 		return !_mm_testz_si128(value, value);
 	}
 
-	jsonifier_inline simd_int_t simd_base::reset() {
+	JSONIFIER_INLINE simd_int_t simd_base::reset() {
 		return _mm_setzero_si128();
 	}
 

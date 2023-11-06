@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/StructuralIterator.hpp>
+#include <jsonifier/SimdStructuralIterator.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Error.hpp>
@@ -31,56 +31,50 @@
 
 namespace jsonifier_internal {
 
-	class parser;
+	template<typename value_type> struct parse_impl;
 
-	template<bool excludeKeys, typename value_type> struct parse_impl {};
-
-	template<bool excludeKeys> struct parse {
-		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew);
-		}
-
-		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew, keys);
+	struct parse {
+		template<bool shortStringsSupport, jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void op(value_type&& value, iterator_type&& iter) {
+			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+				parse_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter),
+					value.jsonifierExcludedKeys);
+			} else {
+				parse_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter));
+			}
 		}
 	};
 
-	class parser {
+	template<typename derived_type> class parser : protected simd_structural_iterator<parser<derived_type>, derived_type> {
 	  public:
-		template<bool, typename value_type> friend struct parse_impl;
-		template<bool> friend struct parse;
+		using iterator_type = simd_structural_iterator<parser<derived_type>, derived_type>;
 
-		template<bool excludeKeys = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		jsonifier_inline void parseJson(value_type&& data, buffer_type& stringNew) {
-			if (stringNew.empty()) {
+		template<typename value_type> friend struct parse_impl;
+
+		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
+		JSONIFIER_INLINE parser(const parser& other)			= delete;
+
+		template<bool refreshString = true, bool shortStringsSupport = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		JSONIFIER_INLINE void parseJson(value_type&& data, buffer_type&& stringNew) {
+			derivedRef.errors.clear();
+			section.reset<refreshString>(stringNew.data(), stringNew.size());
+			iterator_type::reset(section.begin());
+			if (!iterator_type::operator->()) {
 				return;
 			}
-			section.reset<refreshString>(std::forward<buffer_type>(stringNew));
-			errors.clear();
-			auto newIter = section.begin();
-			if (!*newIter) {
-				return;
-			}
-			if jsonifier_constexpr (excludeKeys) {
-				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
-					parse<excludeKeys>::op(data, newIter, *this, data.excludedKeys);
-				} else {
-					parse<excludeKeys>::op(data, newIter, *this);
-				}
-			} else {
-				parse<excludeKeys>::op(data, newIter, *this);
-			}
-		}
-
-		jsonifier_inline jsonifier::vector<error>& getErrors() {
-			return errors;
+			parse::template op<shortStringsSupport>(std::forward<value_type>(data), std::forward<iterator_type>(*this));
 		}
 
 	  protected:
-		buffer_string<uint8_t> currentStringBuffer{};
-		buffer_string<char> currentKeyBuffer{};
-		jsonifier::vector<error> errors{};
+		derived_type& derivedRef{ initializeSelfRef() };
 		simd_string_reader section{};
+
+		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
+
+		JSONIFIER_INLINE ~parser() noexcept = default;
+
+		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+			return *static_cast<derived_type*>(this);
+		}
 	};
 };

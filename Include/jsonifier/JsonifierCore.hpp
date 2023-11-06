@@ -25,9 +25,59 @@
 
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/Parser.hpp>
+#include <jsonifier/Error.hpp>
 
 namespace jsonifier {
 
-	class jsonifier_core : public jsonifier_internal::parser, public jsonifier_internal::serializer {};
+	class jsonifier_core : public jsonifier_internal::serializer<jsonifier_core>, public jsonifier_internal::parser<jsonifier_core> {
+	  public:
+		friend class jsonifier_internal::serialization_iterator<serializer<jsonifier_core>, jsonifier_core>;
+		friend class jsonifier_internal::simd_structural_iterator<parser<jsonifier_core>, jsonifier_core>;
+		friend class serializer<jsonifier_core>;
+		friend class parser<jsonifier_core>;
+
+		using serializer = jsonifier_internal::serializer<jsonifier_core>;
+		using parser	 = jsonifier_internal::parser<jsonifier_core>;
+
+		JSONIFIER_INLINE jsonifier_core() noexcept = default;
+
+		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
+			stringBuffer = std::move(other.stringBuffer);
+			section		 = std::move(other.section);
+			currentIndex = other.currentIndex;
+			currentSize	 = other.currentSize;
+			rootIndex	 = other.rootIndex;
+			errors		 = other.errors;
+			return *this;
+		}
+
+		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : serializer{}, parser{} {
+			*this = std::move(other);
+		}
+
+		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) {
+			stringBuffer = other.stringBuffer;
+			currentIndex = other.currentIndex;
+			currentSize	 = other.currentSize;
+			rootIndex	 = other.rootIndex;
+			section		 = other.section;
+			errors		 = other.errors;
+			return *this;
+		}
+
+		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) : serializer{}, parser{} {
+			*this = other;
+		}
+
+		JSONIFIER_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() {
+			return errors;
+		}
+
+		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
+
+	  protected:
+		jsonifier_internal::buffer_string<uint8_t> stringBuffer{};
+		jsonifier::vector<jsonifier_internal::error> errors{};
+	};
 
 }
