@@ -33,7 +33,7 @@ namespace jsonifier_internal {
 
 #else
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type pdep(value_type src, value_type mask) {
+	template<jsonifier::concepts::unsigned_int32_t value_type> inline value_type pdep(value_type src, value_type mask) {
 		value_type result  = 0;
 		value_type src_bit = 1;
 

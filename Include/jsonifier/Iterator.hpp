@@ -37,90 +37,90 @@ namespace jsonifier_internal {
 		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		jsonifier_constexpr iterator() noexcept = default;
+		constexpr iterator() noexcept = default;
 
-		jsonifier_constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
+		constexpr iterator(pointer pointerNew) : value{ pointerNew } {};
 
-		jsonifier_constexpr reference operator*() const {
+		constexpr reference operator*() const {
 			return *value;
 		}
 
-		jsonifier_constexpr pointer operator->() const {
+		constexpr pointer operator->() const {
 			return value;
 		}
 
-		jsonifier_constexpr iterator& operator++() {
+		constexpr iterator& operator++() {
 			++value;
 			return *this;
 		}
 
-		jsonifier_constexpr iterator operator++(int32_t) {
+		constexpr iterator operator++(int32_t) {
 			iterator temp{ *this };
 			++*this;
 			return temp;
 		}
 
-		jsonifier_constexpr iterator& operator--() {
+		constexpr iterator& operator--() {
 			--value;
 			return *this;
 		}
 
-		jsonifier_constexpr iterator operator--(int32_t) {
+		constexpr iterator operator--(int32_t) {
 			iterator temp{ *this };
 			--*this;
 			return temp;
 		}
 
-		jsonifier_constexpr iterator& operator+=(const difference_type iter) {
+		constexpr iterator& operator+=(const difference_type iter) {
 			value += iter;
 			return *this;
 		}
 
-		jsonifier_constexpr iterator operator+(const difference_type iter) const {
+		constexpr iterator operator+(const difference_type iter) const {
 			iterator temp{ *this };
 			temp += iter;
 			return temp;
 		}
 
-		jsonifier_constexpr iterator& operator-=(const difference_type iter) {
+		constexpr iterator& operator-=(const difference_type iter) {
 			return *this += -iter;
 		}
 
-		jsonifier_constexpr iterator operator-(const difference_type iter) const {
+		constexpr iterator operator-(const difference_type iter) const {
 			iterator temp{ *this };
 			temp -= iter;
 			return temp;
 		}
 
-		jsonifier_constexpr reference operator[](const difference_type iter) const {
+		constexpr reference operator[](const difference_type iter) const {
 			return *(*this + iter);
 		}
 
-		jsonifier_constexpr difference_type operator+(const iterator& iter) const {
+		constexpr difference_type operator+(const iterator& iter) const {
 			return value + iter.value;
 		}
 
-		jsonifier_constexpr difference_type operator-(const iterator& iter) const {
+		constexpr difference_type operator-(const iterator& iter) const {
 			return value - iter.value;
 		}
 
-		jsonifier_constexpr bool operator==(const iterator& iter) const {
+		constexpr bool operator==(const iterator& iter) const {
 			return value == iter.value;
 		}
 
-		jsonifier_constexpr bool operator>=(const iterator& iter) const {
+		constexpr bool operator>=(const iterator& iter) const {
 			return value >= iter.value;
 		}
 
-		jsonifier_constexpr bool operator<=(const iterator& iter) const {
+		constexpr bool operator<=(const iterator& iter) const {
 			return value <= iter.value;
 		}
 
-		jsonifier_constexpr bool operator>(const iterator& iter) const {
+		constexpr bool operator>(const iterator& iter) const {
 			return value > iter.value;
 		}
 
-		jsonifier_constexpr bool operator<(const iterator& iter) const {
+		constexpr bool operator<(const iterator& iter) const {
 			return value < iter.value;
 		}
 
