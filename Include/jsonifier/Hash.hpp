@@ -30,16 +30,18 @@
 
 namespace jsonifier_internal {
 
-	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value) {
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
 		uint64_t d = 5381;
-		for (const auto& c: value)
-			d = d * 33 + static_cast<uint64_t>(c);
+		auto sizeNew = value.size() > 10 ? 10 : value.size();
+		for (uint64_t x = 0; x < sizeNew; ++x) {
+			d = d * 33 + static_cast<uint64_t>(value[x]);
+		}
 		return d;
 	}
 
 	// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 	// With the lowest bits removed, based on experimental setup.
-	template<typename string_t> jsonifier_constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
 		uint64_t d = (0x811c9dc5 ^ seed) * static_cast<uint64_t>(0x01000193);
 		for (const auto& c: value)
 			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);

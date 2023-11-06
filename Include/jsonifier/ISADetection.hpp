@@ -34,13 +34,13 @@
 
 namespace jsonifier_internal {
 
-	jsonifier_inline static void printBits(uint64_t values, const std::string& valuesTitle) {
+	inline static void printBits(uint64_t values, const std::string& valuesTitle) {
 		std::cout << valuesTitle;
 		std::cout << std::bitset<64>{ values };
 		std::cout << std::endl;
 	}
 
-	template<typename simd_type> jsonifier_inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+	template<typename simd_type> inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
 		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
@@ -54,13 +54,13 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	jsonifier_inline static std::string printBits(bool value) noexcept {
+	inline static std::string printBits(bool value) noexcept {
 		std::stringstream theStream{};
 		theStream << std::boolalpha << value << std::endl;
 		return theStream.str();
 	}
 
-	template<typename simd_type> jsonifier_inline static std::string printBits(const simd_type& value) noexcept {
+	template<typename simd_type> inline static std::string printBits(const simd_type& value) noexcept {
 		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
