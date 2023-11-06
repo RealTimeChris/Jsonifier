@@ -33,55 +33,41 @@ namespace jsonifier_internal {
 
 	class backslash_and_quote {
 	  public:
-		template<typename source_type, typename dest_type> jsonifier_inline static backslash_and_quote copyAndFind(const source_type* source, dest_type* destString) {
+		template<typename value_type01, typename value_type02> inline static uint16_t copyAndFind(const value_type01* source, value_type02* dest) {
 			auto values = gatherValuesU<simd_int_128>(source);
-			storeu(values, destString);
-			backslash_and_quote returnData{};
-			returnData.bsOrQuoteBits = simd_base::cmpeq(values, backslashes128);
-			returnData.bsOrQuoteBits |= simd_base::cmpeq(values, quotes128);
+			storeu(values, dest);
+			uint16_t returnData{};
+			returnData = simd_base::cmpeq(values, backslashes128);
+			returnData |= simd_base::cmpeq(values, quotes128);
 			return returnData;
 		}
 
-		jsonifier_inline bool hasBackslashOrQuote() {
-			return bsOrQuoteBits != 0;
-		}
-
-		jsonifier_inline uint16_t backslashOrQuoteIndex() {
-			return tzcnt(bsOrQuoteBits);
-		}
-
 	  protected:
-		static jsonifier_constexpr simd_int_128 backslashes128{ simdFromValue<simd_int_128>(0x5Cu) };
-		static jsonifier_constexpr simd_int_128 quotes128{ simdFromValue<simd_int_128>(0x22u) };
-		uint16_t bsOrQuoteBits{};
+		static constexpr simd_int_128 backslashes128{ simdFromValue<simd_int_128>(0x5Cu) };
+		static constexpr simd_int_128 quotes128{ simdFromValue<simd_int_128>(0x22u) };
 	};
 
 	class escapeable {
 	  public:
-		template<typename source_type, typename dest_type> jsonifier_inline static escapeable copyAndFind(const source_type* source, dest_type* dest) {
+		template<typename value_type01, typename value_type02> inline static uint16_t copyAndFind(const value_type01* source, value_type02* dest) {
 			simd_int_128 values(gatherValuesU<simd_int_128>(source));
 			storeu(values, dest);
-			escapeable returnData{};
-			returnData.nextEscapeableVal = simd_base::cmpeq(simd_base::shuffle(escapeableChars02, values), values);
-			returnData.nextEscapeableVal |= simd_base::cmpeq(simd_base::shuffle(escapeableChars03, values), values);
+			uint16_t returnData{};
+			returnData = simd_base::cmpeq(simd_base::shuffle(escapeableChars02, values), values);
+			returnData |= simd_base::cmpeq(simd_base::shuffle(escapeableChars03, values), values);
 			return returnData;
 		}
 
-		jsonifier_inline uint16_t nextEscapeable() {
-			return tzcnt(nextEscapeableVal);
-		}
-
 	  protected:
-		static jsonifier_constexpr std::array<uint8_t, 16> escapeableChars00{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x00u, 0x00u, 0x00u, 0x0Cu, 0x0Du,
-			0x00u, 0x00u };
-		static jsonifier_constexpr std::array<uint8_t, 16> escapeableChars01{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x00u,
-			0x00u, 0x00u };
-		static jsonifier_constexpr simd_int_128 escapeableChars02{ simdFromTable<simd_int_128>(escapeableChars00) };
-		static jsonifier_constexpr simd_int_128 escapeableChars03{ simdFromTable<simd_int_128>(escapeableChars01) };
-		uint16_t nextEscapeableVal{};
+		static constexpr std::array<uint8_t, 16> escapeableChars00{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x00u, 0x00u, 0x00u, 0x0Cu, 0x0Du, 0x00u,
+			0x00u };
+		static constexpr std::array<uint8_t, 16> escapeableChars01{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x00u, 0x00u,
+			0x00u };
+		static constexpr simd_int_128 escapeableChars02{ simdFromTable<simd_int_128>(escapeableChars00) };
+		static constexpr simd_int_128 escapeableChars03{ simdFromTable<simd_int_128>(escapeableChars01) };
 	};
 
-	template<typename value_type> jsonifier_inline static uint32_t hexToU32NoCheck(const value_type* source) {
+	template<typename value_type> inline static uint32_t hexToU32NoCheck(const value_type* source) {
 		uint32_t v1 = digitToVal32<uint32_t>[630 + source[0]];
 		uint32_t v2 = digitToVal32<uint32_t>[420 + source[1]];
 		uint32_t v3 = digitToVal32<uint32_t>[210 + source[2]];
@@ -89,7 +75,7 @@ namespace jsonifier_internal {
 		return v1 | v2 | v3 | v4;
 	}
 
-	template<typename value_type> jsonifier_inline static uint32_t codePointToUtf8(uint32_t codePoint, value_type* c) {
+	template<typename value_type> inline static uint32_t codePointToUtf8(uint32_t codePoint, value_type* c) {
 		if (codePoint <= 0x7F) {
 			c[0] = value_type(codePoint);
 			return 1;
@@ -121,10 +107,10 @@ namespace jsonifier_internal {
 		return 0;
 	}
 
-	template<typename value_type01, typename value_type02> jsonifier_inline bool handleUnicodeCodePoint(value_type01* srcPtr, value_type02* dstPtr) {
-		static jsonifier_constexpr uint32_t subCodePoint = 0xfffd;
-		static jsonifier_constexpr uint8_t backslash{ '\\' };
-		static jsonifier_constexpr uint8_t u{ 'u' };
+	template<typename value_type01, typename value_type02> inline bool handleUnicodeCodePoint(value_type01* srcPtr, value_type02* dstPtr) {
+		static constexpr uint32_t subCodePoint = 0xfffd;
+		static constexpr uint8_t backslash{ '\\' };
+		static constexpr uint8_t u{ 'u' };
 		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
@@ -149,44 +135,43 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	template<typename source_type, typename dest_type> jsonifier_inline static dest_type* parseString(const source_type* source, dest_type* destString, uint64_t lengthNew) {
+	template<typename value_type01, typename value_type02> inline static value_type02* parseString(const value_type01* source, value_type02* dest, uint64_t lengthNew) {
 		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(0)) {
-			backslash_and_quote bsQuote = backslash_and_quote::copyAndFind(source, destString);
-			if (bsQuote.hasBackslashOrQuote()) {
-				auto bsDist			   = bsQuote.backslashOrQuoteIndex();
-				source_type escapeChar = source[bsDist];
+			auto bsDist = backslash_and_quote::copyAndFind(source, dest);
+			if (bsDist != 0) {
+				bsDist					= tzcnt(bsDist);
+				value_type01 escapeChar = source[bsDist];
 				if (escapeChar == '"') {
-					return destString + bsDist;
+					return dest + bsDist;
 				}
 				escapeChar = source[bsDist + 1];
 				if (escapeChar == 'u') {
 					source += bsDist;
-					destString += bsDist;
-					handleUnicodeCodePoint(&source, &destString);
+					dest += bsDist;
+					handleUnicodeCodePoint(&source, &dest);
 				} else {
 					uint8_t escapeResult = escapeMap<uint8_t>[escapeChar];
 					if (escapeResult == 0u) {
 						return nullptr;
 					}
-					destString[bsDist] = escapeResult;
-					destString += bsDist + 1ULL;
+					dest[bsDist] = escapeResult;
+					dest += bsDist + 1ULL;
 					source += bsDist + 2ULL;
 				}
 			} else {
+				dest += 16;
 				source += 16;
-				destString += 16;
 			}
 		}
 		return nullptr;
 	}
 
-	template<typename value_type01, typename value_type02>
-	jsonifier_inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
+	template<typename value_type01, typename value_type02> inline value_type01* serializeString(value_type01* source, value_type02* dest, uint64_t lengthNew, uint64_t& indexNew) {
 		while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(16)) {
-			escapeable bsQuote	= escapeable::copyAndFind(source, dest);
-			auto nextEscapeable = bsQuote.nextEscapeable();
-			if (nextEscapeable != 16) {
-				uint8_t escapeResult = escapeableChars<uint8_t>[source[nextEscapeable]];
+			auto nextEscapeable = escapeable::copyAndFind(source, dest);
+			if (nextEscapeable != 0) {
+				nextEscapeable		 = tzcnt(nextEscapeable);
+				uint8_t escapeResult = escapeableChars<uint8_t>[static_cast<uint8_t>(source[nextEscapeable])];
 				if (escapeResult == 0u) {
 					return source;
 				}
@@ -206,7 +191,7 @@ namespace jsonifier_internal {
 		return source;
 	}
 
-	jsonifier_inline bool parseBool(string_view_ptr json) {
+	inline bool parseBool(string_view_ptr json) {
 		uint8_t valueNew[5]{ "true" };
 		return std::memcmp(valueNew, json, 4) == 0;
 	}

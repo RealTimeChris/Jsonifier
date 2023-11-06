@@ -25,31 +25,31 @@
 
 namespace jsonifier_internal {
 
-	template<typename FirstType, typename SecondType> class pair {
+	template<typename first_type_new, typename second_type_new> class pair {
 	  public:
-		using first_type  = FirstType;
-		using second_type = SecondType;
+		using first_type  = first_type_new;
+		using second_type = second_type_new;
 
 		first_type first;
 		second_type second;
 
-		jsonifier_constexpr pair() = default;
+		constexpr pair() = default;
 
-		template<typename FirstTypeNew, typename SecondTypeNew> jsonifier_constexpr pair(FirstTypeNew&& firstNew, SecondTypeNew&& secondNew)
-			: first{ std::forward<FirstTypeNew>(firstNew) }, second{ std::forward<SecondTypeNew>(secondNew) } {
+		template<typename first_type_newer, typename second_type_newer> constexpr pair(first_type_newer&& firstNew, second_type_newer&& secondNew)
+			: first{ std::forward<first_type_newer>(firstNew) }, second{ std::forward<second_type_newer>(secondNew) } {
 		}
 
-		template<typename FirstTypeNew>
-			requires(std::same_as<first_type, FirstTypeNew>)
-		jsonifier_constexpr pair(FirstTypeNew&& firstNew) : first{ std::forward<FirstTypeNew>(firstNew) } {
+		template<typename first_type_newer>
+			requires(std::same_as<first_type, first_type_newer>)
+		constexpr pair(first_type_newer&& firstNew) : first{ std::forward<first_type_newer>(firstNew) } {
 		}
 
-		template<typename SecondTypeNew>
-			requires(std::same_as<second_type, SecondTypeNew>)
-		jsonifier_constexpr pair(SecondTypeNew&& firstNew) : second{ std::forward<SecondTypeNew>(firstNew) } {
+		template<typename second_type_newer>
+			requires(std::same_as<second_type, second_type_newer>)
+		constexpr pair(second_type_newer&& firstNew) : second{ std::forward<second_type_newer>(firstNew) } {
 		}
 
-		jsonifier_constexpr bool operator==(const pair& other) const {
+		constexpr bool operator==(const pair& other) const {
 			return first == other.first && second == other.second;
 		}
 	};

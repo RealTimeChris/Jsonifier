@@ -29,51 +29,43 @@ namespace jsonifier_internal {
 
 	template<typename unexpected_type> class unexpected {
 	  public:
-		jsonifier_constexpr unexpected(){};
+		constexpr unexpected(){};
 
-		jsonifier_constexpr unexpected& operator=(unexpected_type&& other) {
-			std::uninitialized_move(&other, (&other) + 1, &unex);
+		constexpr unexpected& operator=(unexpected_type&& other) {
+			unex = std::move(other);
 			return *this;
 		}
 
-		jsonifier_constexpr unexpected(unexpected_type&& other) {
+		constexpr unexpected(unexpected_type&& other) {
 			*this = std::move(other);
 		}
 
-		jsonifier_constexpr unexpected& operator=(const unexpected_type& other) {
+		constexpr unexpected& operator=(const unexpected_type& other) {
 			unex = other;
 			return *this;
 		}
 
-		jsonifier_constexpr unexpected(const unexpected_type& other) {
+		constexpr unexpected(const unexpected_type& other) {
 			*this = other;
 		}
 
-		jsonifier_constexpr const unexpected_type&& error() const&& {
+		constexpr unexpected_type error() const&& {
 			return std::move(unex);
 		}
 
-		jsonifier_constexpr unexpected_type&& error() && {
-			return std::move(unex);
-		}
-
-		jsonifier_constexpr const unexpected_type& error() const& {
+		constexpr unexpected_type error() const& {
 			return unex;
 		}
 
-		jsonifier_constexpr unexpected_type& error() & {
-			return unex;
-		}
-
-		jsonifier_constexpr void swap(unexpected& other) {
+		constexpr void swap(unexpected& other) {
 			std::swap(unex, other.unex);
 		}
 
-		friend jsonifier_constexpr bool operator==(const unexpected& lhs, const unexpected<unexpected_type>& rhs) {
+		friend constexpr bool operator==(const unexpected& lhs, const unexpected<unexpected_type>& rhs) {
 			return lhs.unex == rhs.unex;
 		}
 
-		jsonifier_constexpr ~unexpected(){};
+		constexpr ~unexpected(){};
 
 	  protected:
 		unexpected_type unex{};
@@ -83,15 +75,15 @@ namespace jsonifier_internal {
 
 	template<typename expected_type, typename unexpected_type_new> class expected {
 	  public:
-		using value_type				  = expected_type;
-		using pointer					  = value_type*;
-		using error_type				  = unexpected_type_new;
-		using unexpected_type			  = unexpected_type_new;
-		template<typename U> using rebind = expected<U, error_type>;
+		using value_type							   = expected_type;
+		using pointer								   = value_type*;
+		using error_type							   = unexpected_type_new;
+		using unexpected_type						   = unexpected_type_new;
+		template<typename value_type_new> using rebind = expected<value_type_new, error_type>;
 
-		jsonifier_constexpr expected(){};
+		constexpr expected(){};
 
-		jsonifier_constexpr expected& operator=(expected&& other) {
+		constexpr expected& operator=(expected&& other) {
 			hasValue = other.hasValue;
 			if (hasValue) {
 				val = std::move(other.val);
@@ -101,11 +93,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		jsonifier_constexpr expected(expected&& other) : unex{} {
+		constexpr expected(expected&& other) : unex{} {
 			*this = std::move(other);
 		}
 
-		jsonifier_constexpr expected& operator=(const expected& other) {
+		constexpr expected& operator=(const expected& other) {
 			hasValue = other.hasValue;
 			if (hasValue) {
 				val = other.val;
@@ -115,147 +107,132 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		jsonifier_constexpr expected(const expected& other) : unex{} {
+		constexpr expected(const expected& other) : unex{} {
 			*this = other;
 		}
 
-		template<typename G> jsonifier_constexpr expected& operator=(unexpected<G>&& other) {
+		constexpr expected& operator=(unexpected<unexpected_type>&& other) {
 			unex	 = std::move(other.error());
 			hasValue = false;
 			return *this;
 		}
 
-		template<typename G> jsonifier_constexpr expected(unexpected<G>&& other) {
+		constexpr expected(unexpected<unexpected_type>&& other) {
 			*this = std::move(other);
 		}
 
-		template<typename G> jsonifier_constexpr expected& operator=(const unexpected<G>& other) {
+		constexpr expected& operator=(const unexpected<unexpected_type>& other) {
+			unex	 = other.error();
 			hasValue = false;
 			return *this;
 		}
 
-		template<typename G> jsonifier_constexpr expected(const unexpected<G>& other) {
+		constexpr expected(const unexpected<unexpected_type>& other) {
 			*this = other;
 		}
 
-		jsonifier_constexpr expected& operator=(error_type&& other) {
+		constexpr expected& operator=(error_type&& other) {
 			unex	 = std::move(other);
 			hasValue = false;
 			return *this;
 		}
 
-		jsonifier_constexpr expected(error_type&& other) {
+		constexpr expected(error_type&& other) {
 			*this = std::move(other);
 		}
 
-		jsonifier_constexpr expected& operator=(const error_type& other) {
+		constexpr expected& operator=(const error_type& other) {
 			unex	 = other;
 			hasValue = false;
 			return *this;
 		}
 
-		jsonifier_constexpr expected(const error_type& other) {
+		constexpr expected(const error_type& other) {
 			*this = other;
 		}
 
-		jsonifier_constexpr expected& operator=(value_type&& other) {
+		constexpr expected& operator=(value_type&& other) {
 			val		 = std::move(other);
 			hasValue = true;
 			return *this;
 		}
 
-		jsonifier_constexpr expected(value_type&& v) {
+		constexpr expected(value_type&& v) {
 			*this = std::move(v);
 		}
 
-		jsonifier_constexpr expected& operator=(const value_type& other) {
+		constexpr expected& operator=(const value_type& other) {
 			val		 = other;
 			hasValue = true;
 			return *this;
 		}
 
-		jsonifier_constexpr expected(const value_type& v) {
+		constexpr expected(const value_type& v) {
 			*this = v;
 		}
 
-		jsonifier_constexpr void swap(expected& other) {
+		constexpr void swap(expected& other) {
+			std::swap(hasValue, other.hasValue);
 			if (hasValue) {
 				std::swap(val, other.val);
 			} else {
 				std::swap(unex, other.unex);
 			}
-			std::swap(hasValue, other.hasValue);
 		}
 
-		jsonifier_constexpr pointer operator->() const {
+		constexpr pointer operator->() const {
 			return &val;
 		}
 
-		jsonifier_constexpr pointer operator->() {
+		constexpr pointer operator->() {
 			return &val;
 		}
 
-		jsonifier_constexpr const value_type&& operator*() const&& {
+		constexpr const value_type&& operator*() const&& {
 			return std::move(val);
 		}
 
-		jsonifier_constexpr value_type&& operator*() && {
+		constexpr value_type&& operator*() && {
 			return std::move(val);
 		}
 
-		jsonifier_constexpr const value_type& operator*() const& {
+		constexpr const value_type& operator*() const& {
 			return val;
 		}
 
-		jsonifier_constexpr value_type& operator*() & {
+		constexpr value_type& operator*() & {
 			return val;
 		}
 
-		jsonifier_constexpr explicit operator bool() const {
+		constexpr explicit operator bool() const {
 			return hasValue;
 		}
 
-		jsonifier_constexpr bool has_value() const {
+		constexpr bool has_value() const {
 			return hasValue;
 		}
 
-		jsonifier_constexpr const value_type&& value() const&& {
+		constexpr value_type value() const&& {
 			return std::move(val);
 		}
 
-		jsonifier_constexpr value_type&& value() && {
-			return std::move(val);
-		}
-
-		jsonifier_constexpr const value_type& value() const& {
+		constexpr value_type value() const& {
 			return val;
 		}
 
-		jsonifier_constexpr value_type& value() & {
-			return val;
-		}
-
-		jsonifier_constexpr const unexpected_type&& error() const&& {
+		constexpr unexpected_type error() const&& {
 			return std::move(unex);
 		}
 
-		jsonifier_constexpr unexpected_type&& error() && {
-			return std::move(unex);
-		}
-
-		jsonifier_constexpr const unexpected_type& error() const& {
+		constexpr unexpected_type error() const& {
 			return unex;
 		}
 
-		jsonifier_constexpr unexpected_type& error() & {
-			return unex;
-		}
-
-		friend jsonifier_constexpr bool operator==(const expected& x, const expected<value_type, unexpected_type>& y) {
+		friend constexpr bool operator==(const expected& x, const expected<value_type, unexpected_type>& y) {
 			return x.hasValue == y.hasValue && x.unex == y.unex && x.val == y.val;
 		}
 
-		jsonifier_constexpr ~expected(){};
+		constexpr ~expected(){};
 
 	  protected:
 		bool hasValue{};
@@ -273,59 +250,53 @@ namespace jsonifier_internal {
 		using error_type	  = unexpected_type_new;
 		using unexpected_type = unexpected_type_new;
 
-		template<typename U> using rebind = expected<U, error_type>;
+		using rebind = expected<value_type_new, error_type>;
 
-		jsonifier_constexpr expected(){};
+		constexpr expected(){};
 
-		template<typename G> jsonifier_constexpr expected& operator=(unexpected<G>&& other) {
+		constexpr expected& operator=(unexpected<unexpected_type>&& other) {
+			unex = std::move(other);
 			return *this;
 		}
 
-		template<typename G> jsonifier_constexpr expected(unexpected<G>&& other) {
+		constexpr expected(unexpected<unexpected_type>&& other) {
 			*this = std::move(other);
 		}
 
-		template<typename G> jsonifier_constexpr expected& operator=(const unexpected<G>& other) {
+		constexpr expected& operator=(const unexpected<unexpected_type>& other) {
+			unex = other;
 			return *this;
 		}
 
-		template<typename G> jsonifier_constexpr expected(const unexpected<G>& other) {
+		constexpr expected(const unexpected<unexpected_type>& other) {
 			*this = other;
 		}
 
-		jsonifier_constexpr void swap(expected& other) {
+		constexpr void swap(expected& other) {
 			std::swap(unex, other.unex);
 		}
 
-		jsonifier_constexpr explicit operator bool() const {
+		constexpr explicit operator bool() const {
 			return false;
 		}
 
-		jsonifier_constexpr bool has_value() const {
+		constexpr bool has_value() const {
 			return false;
 		}
 
-		jsonifier_constexpr const unexpected_type&& error() const&& {
+		constexpr unexpected_type error() const&& {
 			return std::move(unex);
 		}
 
-		jsonifier_constexpr unexpected_type&& error() && {
-			return std::move(unex);
-		}
-
-		jsonifier_constexpr const unexpected_type& error() const& {
+		constexpr unexpected_type error() const& {
 			return unex;
 		}
 
-		jsonifier_constexpr unexpected_type& error() & {
-			return unex;
-		}
-
-		template<typename T2, typename E2> friend jsonifier_constexpr bool operator==(const expected& x, const expected<T2, E2>& y) {
+		template<typename value_type, typename E2> friend constexpr bool operator==(const expected& x, const expected<value_type, E2>& y) {
 			return x.unex == y.unex;
 		}
 
-		jsonifier_constexpr ~expected(){};
+		constexpr ~expected(){};
 
 	  protected:
 		union {

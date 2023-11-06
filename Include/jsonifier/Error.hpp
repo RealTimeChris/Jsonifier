@@ -62,27 +62,27 @@ namespace jsonifier_internal {
 		Null		 = 0x6Eu
 	};
 
-	jsonifier_inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
+	inline static std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
 
-	jsonifier_inline bool isTypeType(uint8_t c) {
-		static jsonifier_constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
+	inline bool isTypeType(uint8_t c) {
+		static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
 		return find(array01, std::size(array01), &c, 1) != jsonifier::string::npos;
 	}
 
-	jsonifier_inline bool isDigitType(uint8_t c) {
+	inline bool isDigitType(uint8_t c) {
 		return numberTable[c];
 	}
 
-	jsonifier_inline jsonifier::string_view getValueType(uint8_t charToCheck) {
-		static jsonifier_constexpr jsonifier::string_view array{ "Array" };
-		static jsonifier_constexpr jsonifier::string_view object{ "Object" };
-		static jsonifier_constexpr jsonifier::string_view boolean{ "Bool" };
-		static jsonifier_constexpr jsonifier::string_view number{ "Number" };
-		static jsonifier_constexpr jsonifier::string_view str{ "String" };
-		static jsonifier_constexpr jsonifier::string_view null{ "Null" };
-		static jsonifier_constexpr jsonifier::string_view unset{ "Unset" };
+	inline jsonifier::string_view getValueType(uint8_t charToCheck) {
+		static constexpr jsonifier::string_view array{ "Array" };
+		static constexpr jsonifier::string_view object{ "Object" };
+		static constexpr jsonifier::string_view boolean{ "Bool" };
+		static constexpr jsonifier::string_view number{ "Number" };
+		static constexpr jsonifier::string_view str{ "String" };
+		static constexpr jsonifier::string_view null{ "Null" };
+		static constexpr jsonifier::string_view unset{ "Unset" };
 		if (isDigitType(charToCheck)) {
 			return number;
 		} else if (charToCheck == 0x74u || charToCheck == 0x66u) {
@@ -102,7 +102,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	jsonifier_inline static error_code collectMisReadType(uint8_t c, uint8_t currentValue) {
+	inline static error_code collectMisReadType(uint8_t c, uint8_t currentValue) {
 		if (isTypeType(currentValue) && isTypeType(c)) {
 			return error_code::Wrong_Type;
 		} else {
@@ -114,9 +114,9 @@ namespace jsonifier_internal {
 	  public:
 		friend class derailleur;
 
-		jsonifier_inline error() noexcept = default;
+		inline error() noexcept = default;
 
-		jsonifier_inline error(structural_iterator iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
+		inline error(structural_iterator iter, json_structural_type typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			intendedValue  = static_cast<uint8_t>(typeNew);
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
@@ -129,7 +129,7 @@ namespace jsonifier_internal {
 			errorType	 = collectMisReadType(static_cast<uint8_t>(typeNew), errorValue);
 		}
 
-		jsonifier_inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
+		inline error(structural_iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string::maxSize()) {
@@ -140,24 +140,24 @@ namespace jsonifier_internal {
 			errorValue = *iter;
 		}
 
-		jsonifier_inline error& operator=(error_code errorNew) {
+		inline error& operator=(error_code errorNew) {
 			errorType = errorNew;
 			return *this;
 		}
 
-		jsonifier_inline error(error_code errorNew) {
+		inline error(error_code errorNew) {
 			*this = errorNew;
 		}
 
-		jsonifier_inline operator bool() {
+		inline operator bool() {
 			return errorType != error_code::Success;
 		}
 
-		jsonifier_inline bool operator==(const error& rhs) const {
+		inline bool operator==(const error& rhs) const {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex && errorValue == rhs.errorValue && intendedValue == rhs.intendedValue;
 		}
 
-		jsonifier_inline jsonifier::string reportError() const {
+		inline jsonifier::string reportError() const {
 #if defined(DEV)
 			simd_string_reader section{};
 			std::string resultString{};
@@ -246,17 +246,17 @@ namespace jsonifier_internal {
 		uint8_t errorValue{};
 	};
 
-	template<error_code typeNew> jsonifier_inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
+	template<error_code typeNew> inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
 		error newError{ iter, typeNew, locationNew };
 		return newError;
 	}
 
-	template<json_structural_type typeNew> jsonifier_inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
+	template<json_structural_type typeNew> inline error createError(structural_iterator& iter, std::source_location locationNew = std::source_location::current()) {
 		error newError{ iter, typeNew, locationNew };
 		return newError;
 	}
 
-	jsonifier_inline std::ostream& operator<<(std::ostream& os, const error& errorNew) {
+	inline std::ostream& operator<<(std::ostream& os, const error& errorNew) {
 		os << errorNew.reportError();
 		return os;
 	}

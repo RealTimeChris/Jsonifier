@@ -31,19 +31,19 @@ namespace jsonifier_internal {
 
 	#include <immintrin.h>
 
-	template<jsonifier::concepts::unsigned_int16_t value_type> jsonifier_inline static value_type blsr(value_type value) {
+	template<jsonifier::concepts::unsigned_int16_t value_type> inline static value_type blsr(value_type value) {
 		return static_cast<value_type>(_blsr_u32(static_cast<uint32_t>(value)));
 	}
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type blsr(value_type value) {
+	template<jsonifier::concepts::unsigned_int32_t value_type> inline static value_type blsr(value_type value) {
 		return _blsr_u32(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int64_t value_type> jsonifier_inline static value_type blsr(value_type value) {
+	template<jsonifier::concepts::unsigned_int64_t value_type> inline static value_type blsr(value_type value) {
 		return _blsr_u64(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int16_t value_type> jsonifier_inline static value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int16_t value_type> inline static value_type tzcnt(value_type value) {
 	#if defined(__linux__)
 		return __tzcnt_u16(value);
 	#else
@@ -51,17 +51,17 @@ namespace jsonifier_internal {
 	#endif
 	}
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> jsonifier_inline static value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int32_t value_type> inline static value_type tzcnt(value_type value) {
 		return _tzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int64_t value_type> jsonifier_inline static value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_int64_t value_type> inline static value_type tzcnt(value_type value) {
 		return _tzcnt_u64(value);
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> jsonifier_inline static value_type blsr(value_type value) {
+	template<jsonifier::concepts::unsigned_t value_type> inline static value_type blsr(value_type value) {
 		if (value == 0) {
 			return 0;
 		}
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 		return value & (value - 1);
 	}
 
-	template<jsonifier::concepts::unsigned_t value_type> jsonifier_inline static value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_t value_type> inline static value_type tzcnt(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

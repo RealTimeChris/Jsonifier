@@ -36,12 +36,12 @@ namespace jsonifier_internal {
 	template<bool excludeKeys, typename value_type> struct parse_impl {};
 
 	template<bool excludeKeys> struct parse {
-		template<typename value_type> jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
+		template<typename value_type> inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
 			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew);
 		}
 
 		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		jsonifier_inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
+		inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
 			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew, keys);
 		}
 	};
@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 		template<bool> friend struct parse;
 
 		template<bool excludeKeys = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		jsonifier_inline void parseJson(value_type&& data, buffer_type& stringNew) {
+		inline void parseJson(value_type&& data, buffer_type& stringNew) {
 			if (stringNew.empty()) {
 				return;
 			}
@@ -62,8 +62,8 @@ namespace jsonifier_internal {
 			if (!*newIter) {
 				return;
 			}
-			if jsonifier_constexpr (excludeKeys) {
-				if jsonifier_constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
+			if constexpr (excludeKeys) {
+				if constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
 					parse<excludeKeys>::op(data, newIter, *this, data.excludedKeys);
 				} else {
 					parse<excludeKeys>::op(data, newIter, *this);
@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		jsonifier_inline jsonifier::vector<error>& getErrors() {
+		inline jsonifier::vector<error>& getErrors() {
 			return errors;
 		}
 

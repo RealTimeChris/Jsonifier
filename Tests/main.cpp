@@ -1,6 +1,6 @@
 #if defined(JSONIFIER_CPU_INSTRUCTIONS)
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX2
+//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2F)
 #endif
 #include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>
@@ -46,7 +46,7 @@ template<typename OTy> struct TestGenerator {
 		return static_cast<double>(theResult);
 	}
 
-	jsonifier_inline static json_data generateJsonData() {
+	inline static json_data generateJsonData() {
 		std::string buffer{};
 		TestGenerator generator{};
 		jsonifier::jsonifier_core parser{};
@@ -89,7 +89,7 @@ template<typename OTy> struct TestGenerator {
 		auto fill = [&](auto& v) {
 			v.resize(15);
 			for (uint64_t x = 0; x < 15; ++x) {
-				if jsonifier_constexpr (std::same_as<OTy, test_struct>) {
+				if constexpr (std::same_as<OTy, test_struct>) {
 					auto arraySize01 = randomizeNumber(35, 10);
 					arraySizes.emplace_back(arraySize01);
 					for (uint64_t y = 0; y < arraySize01; ++y) {
@@ -138,13 +138,13 @@ GLZ_META(TestGenerator<test_struct>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o
 
 template<> struct jsonifier::core<test_struct> {
 	using OTy = test_struct;
-	jsonifier_constexpr static auto parseValue =
+	constexpr static auto parseValue =
 		createObject("testBools", &OTy::testBools, "testInts", &OTy::testInts, "testUints", &OTy::testUints, "testDoubles", &OTy::testDoubles, "testStrings", &OTy::testStrings);
 };
 
 template<> struct jsonifier::core<Test<test_struct>> {
 	using OTy								   = Test<test_struct>;
-	jsonifier_constexpr static auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+	constexpr static auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
 		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
 		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
@@ -157,22 +157,22 @@ GLZ_META(AbcTest<test_struct>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j
 
 template<> struct jsonifier::core<TestGenerator<test_struct>> {
 	using OTy								   = TestGenerator<test_struct>;
-	jsonifier_constexpr static auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
+	constexpr static auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
 		&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
 		&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct jsonifier::core<AbcTest<test_struct>> {
 	using OTy								   = AbcTest<test_struct>;
-	jsonifier_constexpr static auto parseValue = createObject("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
+	constexpr static auto parseValue = createObject("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
 		&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
 		&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 #if defined(NDEBUG)
-jsonifier_constexpr static uint64_t iterations = 100;
+constexpr static uint64_t iterations = 100;
 #else
-jsonifier_constexpr static uint64_t iterations = 1;
+constexpr static uint64_t iterations = 1;
 #endif
 
 struct results {
@@ -826,46 +826,52 @@ struct ReadyMessage {
 
 template<> struct jsonifier::core<Auth> {
 	using OTy								   = Auth;
-	jsonifier_constexpr static auto parseValue = createObject("value", &OTy::value);
+	constexpr static auto parseValue = createObject("value", &OTy::value);
 };
 
-template<> struct jsonifier::core<Application> {
-	using OTy								   = Application;
-	jsonifier_constexpr static auto parseValue = createObject("flags", &OTy::flags, "id", &OTy::id);
+/// @brief Data representing a file to be sent via multipart-form data.
+struct file {
+	jsonifier::string fileName{};///< The name of the file.
+	jsonifier::string data{};///< The data of the file.
+};
+
+template<> struct jsonifier::core<file> {
+	using OTy								   = file;
+	constexpr static auto parseValue = createArray(&OTy::data);
 };
 
 template<> struct jsonifier::core<Calls> {
 	using OTy								   = Calls;
-	jsonifier_constexpr static auto parseValue = createObject("name", &OTy::name, "micros", &OTy::micros, "calls", &OTy::calls);
+	constexpr static auto parseValue = createObject("name", &OTy::name, "micros", &OTy::micros, "calls", &OTy::calls);
 };
 
 template<> struct jsonifier::core<GatewayTrace> {
 	using OTy								   = GatewayTrace;
-	jsonifier_constexpr static auto parseValue = createObject("trace_id", &OTy::traceId, "micros", &OTy::micros, "calls", &OTy::calls);
+	constexpr static auto parseValue = createObject("trace_id", &OTy::traceId, "micros", &OTy::micros, "calls", &OTy::calls);
 };
 
 template<> struct jsonifier::core<Guild> {
 	using OTy								   = Guild;
-	jsonifier_constexpr static auto parseValue = createObject("id", &OTy::id, "unavailable", &OTy::unavailable);
+	constexpr static auto parseValue = createObject("id", &OTy::id, "unavailable", &OTy::unavailable);
 };
 
 template<> struct jsonifier::core<User> {
 	using OTy								   = User;
-	jsonifier_constexpr static auto parseValue = createObject("avatar", &OTy::avatar, "bot", &OTy::bot, "discriminator", &OTy::discriminator);
+	constexpr static auto parseValue = createObject("avatar", &OTy::avatar, "bot", &OTy::bot, "discriminator", &OTy::discriminator);
 	// Add other attributes as needed.
 };
 
 template<> struct jsonifier::core<ReadyData> {
 	using OTy = ReadyData;
-	jsonifier_constexpr static auto parseValue =
-		createObject("_trace", &OTy::trace, "application", &OTy::application, "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
+	constexpr static auto parseValue =
+		createObject("_trace", &OTy::trace,  "auth", &OTy::auth, "geo_ordered_rtc_regions", &OTy::geoOrderedRtcRegions, "guild_join_requests",
 			&OTy::guildJoinRequests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::privateChannels, "relationships", &OTy::relationships,
 			"resume_gateway_url", &OTy::resumeGatewayUrl, "session_id", &OTy::sessionId, "session_type", &OTy::sessionType, "shard", &OTy::shard, "user", &OTy::user, "v", &OTy::v);
 };
 
 template<> struct jsonifier::core<ReadyMessage> {
 	using OTy								   = ReadyMessage;
-	jsonifier_constexpr static auto parseValue = createObject("op", &OTy::op, "s", &OTy::s, "t", &OTy::t, "d", &OTy::d);
+	constexpr static auto parseValue = createObject("op", &OTy::op, "s", &OTy::s, "t", &OTy::t, "d", &OTy::d);
 };
 
 int32_t main() {
@@ -915,7 +921,7 @@ int32_t main() {
 		FileLoader fileLoader01{ "../ReadMe.md" };
 		FileLoader fileLoader02{ "../JsonData.json" };
 		fileLoader02.saveFile(glz::prettify(jsonData.theData));
-#endif	
+#endif
 		std::string newTimeString{};
 		newTimeString.resize(1024);
 		std::tm resultTwo{};
@@ -925,24 +931,24 @@ int32_t main() {
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
 		auto abcTestResults	  = abc_test(jsonData);
-		std::string newstring = fileLoader01;
+		std::string newString = fileLoader01;
 		uint64_t currentStart{ 0 };
 		uint64_t currentEnd{ 0 };
-		currentEnd			  = newstring.find("Latest results (") + std::string{ "Latest results (" }.size();
-		std::string dateLine  = newstring.substr(currentStart, currentEnd);
+		currentEnd			  = newString.find("Latest results (") + std::string{ "Latest results (" }.size();
+		std::string dateLine  = newString.substr(currentStart, currentEnd);
 		currentStart		  = currentEnd + 2 + std::string{ "Jan 01, 2022" }.size();
-		currentEnd			  = newstring.find("Single Iteration Test Results:") + std::string{ "Single Iteration Test Results:" }.size();
-		std::string section01 = newstring.substr(currentStart, (currentEnd - currentStart));
-		currentStart		  = newstring.find("Multi Iteration Test Results:");
-		currentEnd			  = newstring.find("Multi Iteration Test Results:") + std::string{ "Multi Iteration Test Results:" }.size();
-		std::string section02 = newstring.substr(currentStart, (currentEnd - currentStart));
-		currentStart		  = newstring.find("## ABC Test (Out of Sequence Performance)");
-		currentEnd			  = newstring.find("In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining "
+		currentEnd			  = newString.find("Single Iteration Test Results:") + std::string{ "Single Iteration Test Results:" }.size();
+		std::string section01 = newString.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newString.find("Multi Iteration Test Results:");
+		currentEnd			  = newString.find("Multi Iteration Test Results:") + std::string{ "Multi Iteration Test Results:" }.size();
+		std::string section02 = newString.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newString.find("## ABC Test (Out of Sequence Performance)");
+		currentEnd			  = newString.find("In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining "
 														  "optimal performance regardless of the JSON document's scale, or ordering of the keys being parsed.") +
 			std::string{ "In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining optimal "
 						 "performance regardless of the JSON document's scale, or ordering of the keys being parsed." }
 				.size();
-		std::string section03	= newstring.substr(currentStart, (currentEnd - currentStart));
+		std::string section03	= newString.substr(currentStart, (currentEnd - currentStart));
 		std::string newerString = dateLine + newTimeString + "):" + section01 + "\n" + singlTestResults + "\n\n" + section02 + "\n" + multiTestResults + "\n" + "> " +
 			std::to_string(iterations) + " iterations on a 6 core (Intel i7 8700k)\n\n" + section03 + "\n" + abcTestResults + "\n" + "> " + std::to_string(iterations) +
 			" iterations on a 6 core (Intel i7 8700k)";
