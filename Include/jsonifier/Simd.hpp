@@ -163,7 +163,6 @@ namespace jsonifier_internal {
 		jsonifier_inline size_type getTapeLength() {
 			return tapeIndex - 1;
 		}
-
 		template<size_type index = 0, size_type index02> jsonifier_inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
 			if jsonifier_constexpr (index < StridesPerStep) {
 				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);

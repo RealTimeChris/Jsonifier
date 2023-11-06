@@ -121,7 +121,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept indexable = stateless<value_type> || requires(value_type value) { value[Tag<0>()]; };
-
+    
 		template<typename value_type_01, typename value_type_02>
 		concept related_ptr = ( std::derived_from<unwrap<value_type_01>, unwrap<value_type_02>> || std::is_base_of_v<unwrap<value_type_01>, unwrap<value_type_02>> ||
 			std::same_as<unwrap<value_type_01>, unwrap<value_type_02>> )&&std::is_pointer_v<unwrap<value_type_01>>;

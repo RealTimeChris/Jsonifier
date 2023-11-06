@@ -1,6 +1,6 @@
-﻿#if defined(JSONIFIER_CPU_INSTRUCTIONS)
+#if defined(JSONIFIER_CPU_INSTRUCTIONS)
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX2
+//#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX512
 #endif
 #include "glaze/core/macros.hpp"
 #include <jsonifier/Index.hpp>

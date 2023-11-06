@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 		});
 		return std::make_pair(indices, x);
 	}
-
+  
 	template<uint64_t index, uint64_t indexLimit> jsonifier_constexpr void groupSizesHelper(auto& diffs, auto& indices) {
 		if jsonifier_constexpr (index < indexLimit) {
 			diffs[index] = indices[index + 1] - indices[index];

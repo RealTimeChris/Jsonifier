@@ -413,7 +413,7 @@ namespace jsonifier_internal {
 		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
 	}
 
-	template<simd_int_128_t return_type> jsonifier_constexpr return_type simdFromTable(const uint8_t arrayNew01[sizeof(simd_int_128)]) {
+	template<simd_int_128_t return_type> jsonifier_constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
 		simd_int_128 returnValue{};
 		for (uint64_t x = 0; x < sizeof(simd_int_128); ++x) {
 			returnValue.m128x_uint8[x] = arrayNew01[x];

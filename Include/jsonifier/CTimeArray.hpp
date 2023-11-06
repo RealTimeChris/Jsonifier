@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 		jsonifier_constexpr const_reference operator[](uint64_t index) const {
 			return dataVal[index];
 		}
-
+    
 		jsonifier_constexpr const_reference at(uint64_t index) const {
 			if (index > count) {
 				std::abort();
@@ -97,7 +97,7 @@ namespace jsonifier_internal {
 		jsonifier_constexpr const_reference back() const {
 			return dataVal[count - 1];
 		}
-
+    
 		jsonifier_constexpr const_pointer data() const {
 			return dataVal;
 		}

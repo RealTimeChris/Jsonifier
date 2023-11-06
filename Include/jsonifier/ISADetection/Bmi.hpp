@@ -30,7 +30,7 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
 
 	#include <immintrin.h>
-
+  
 	template<jsonifier::concepts::unsigned_int16_t value_type> jsonifier_inline static value_type blsr(value_type value) {
 		return static_cast<value_type>(_blsr_u32(static_cast<uint32_t>(value)));
 	}

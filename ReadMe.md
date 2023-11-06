@@ -64,7 +64,7 @@ namespace TestNS {
 	};
 }
 
-namespace Jsonifier {
+namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
@@ -295,7 +295,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Jsonifier)
 
-target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
+target_link_libraries("${PROJECT_NAME}" PRIVATE jsonifier::Jsonifier)
 ```
 
 ## Installation (CMake)
@@ -308,5 +308,5 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE Jsonifier::Jsonifier)
 	3. Enter the directory in a terminal, and enter `cmake -S . --preset=Windows_OR_Linux-Release_OR_Debug`.
 	4. Enter within the same terminal, `cmake --build --preset=Windows_OR_Linux-Release_OR_Debug`.
 	5. Enter within the same terminal, `cmake --install ./Build/Release_OR_Debug`.
-	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE Jsonifier::Jsonifier)`.
+	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE jsonifier::Jsonifier)`.
 
