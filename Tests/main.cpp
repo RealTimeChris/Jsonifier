@@ -35,7 +35,7 @@ template<typename OTy> struct TestGenerator {
 	std::mt19937 gen{ randomEngine() };
 	jsonifier::vector<int32_t> arraySizes{};
 
-	static constexpr jsonifier::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\\\r\b\f\t\n" };
+	static jsonifier_constexpr jsonifier::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\\\r\b\f\t\n" };
 
 	double randomizeNumber(double mean, double stdDeviation) {
 		std::normal_distribution<> normalDistributionTwo{ mean, stdDeviation };
@@ -915,7 +915,7 @@ int32_t main() {
 		FileLoader fileLoader01{ "../ReadMe.md" };
 		FileLoader fileLoader02{ "../JsonData.json" };
 		fileLoader02.saveFile(glz::prettify(jsonData.theData));
-#endif	
+#endif
 		std::string newTimeString{};
 		newTimeString.resize(1024);
 		std::tm resultTwo{};
@@ -925,24 +925,24 @@ int32_t main() {
 		auto singlTestResults = single_test(jsonData);
 		auto multiTestResults = regular_test(jsonData);
 		auto abcTestResults	  = abc_test(jsonData);
-		std::string newstring = fileLoader01;
+		std::string newString = fileLoader01;
 		uint64_t currentStart{ 0 };
 		uint64_t currentEnd{ 0 };
-		currentEnd			  = newstring.find("Latest results (") + std::string{ "Latest results (" }.size();
-		std::string dateLine  = newstring.substr(currentStart, currentEnd);
+		currentEnd			  = newString.find("Latest results (") + std::string{ "Latest results (" }.size();
+		std::string dateLine  = newString.substr(currentStart, currentEnd);
 		currentStart		  = currentEnd + 2 + std::string{ "Jan 01, 2022" }.size();
-		currentEnd			  = newstring.find("Single Iteration Test Results:") + std::string{ "Single Iteration Test Results:" }.size();
-		std::string section01 = newstring.substr(currentStart, (currentEnd - currentStart));
-		currentStart		  = newstring.find("Multi Iteration Test Results:");
-		currentEnd			  = newstring.find("Multi Iteration Test Results:") + std::string{ "Multi Iteration Test Results:" }.size();
-		std::string section02 = newstring.substr(currentStart, (currentEnd - currentStart));
-		currentStart		  = newstring.find("## ABC Test (Out of Sequence Performance)");
-		currentEnd			  = newstring.find("In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining "
+		currentEnd			  = newString.find("Single Iteration Test Results:") + std::string{ "Single Iteration Test Results:" }.size();
+		std::string section01 = newString.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newString.find("Multi Iteration Test Results:");
+		currentEnd			  = newString.find("Multi Iteration Test Results:") + std::string{ "Multi Iteration Test Results:" }.size();
+		std::string section02 = newString.substr(currentStart, (currentEnd - currentStart));
+		currentStart		  = newString.find("## ABC Test (Out of Sequence Performance)");
+		currentEnd			  = newString.find("In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining "
 														  "optimal performance regardless of the JSON document's scale, or ordering of the keys being parsed.") +
 			std::string{ "In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining optimal "
 						 "performance regardless of the JSON document's scale, or ordering of the keys being parsed." }
 				.size();
-		std::string section03	= newstring.substr(currentStart, (currentEnd - currentStart));
+		std::string section03	= newString.substr(currentStart, (currentEnd - currentStart));
 		std::string newerString = dateLine + newTimeString + "):" + section01 + "\n" + singlTestResults + "\n\n" + section02 + "\n" + multiTestResults + "\n" + "> " +
 			std::to_string(iterations) + " iterations on a 6 core (Intel i7 8700k)\n\n" + section03 + "\n" + abcTestResults + "\n" + "> " + std::to_string(iterations) +
 			" iterations on a 6 core (Intel i7 8700k)";

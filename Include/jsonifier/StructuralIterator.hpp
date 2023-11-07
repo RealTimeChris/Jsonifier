@@ -33,9 +33,7 @@ namespace jsonifier_internal {
 
 		using iterator_category = std::forward_iterator_tag;
 		using value_type		= uint8_t;
-		using difference_type	= std::ptrdiff_t;
 		using pointer			= string_view_ptr*;
-		using reference			= value_type&;
 		using size_type			= int64_t;
 
 		jsonifier_inline structural_iterator() noexcept = default;
@@ -85,7 +83,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		static jsonifier_constexpr uint8_t defaultValue{ 0x00 };
+		static jsonifier_constexpr value_type defaultValue{ 0x00 };
 		pointer currentIndex{};
 		pointer rootIndex{};
 	};

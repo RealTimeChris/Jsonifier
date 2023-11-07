@@ -37,9 +37,6 @@ namespace jsonifier {
 		using size_type				 = uint64_t;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
-		const_pointer dataVal{};
-		size_type sizeVal{};
-
 		static jsonifier_constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		jsonifier_constexpr string_view_base() : dataVal(), sizeVal(0) {
@@ -294,6 +291,10 @@ namespace jsonifier {
 			newLhs += rhs;
 			return newLhs;
 		}
+
+	  protected:
+		const_pointer dataVal{};
+		size_type sizeVal{};
 	};
 
 	using string_view = string_view_base<char>;
