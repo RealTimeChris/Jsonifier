@@ -30,7 +30,7 @@
 namespace std {
 
 	template<> struct hash<jsonifier::string> {
-		jsonifier_inline uint64_t operator()(const jsonifier::string& string) const {
+		inline uint64_t operator()(const jsonifier::string& string) const {
 			return jsonifier_internal::fnv1aHash(string);
 		}
 	};
@@ -41,7 +41,7 @@ namespace jsonifier {
 
 	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
 
-	jsonifier_inline static std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
+	inline static std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
 		{ "String", json_type::String }, { "Number", json_type::Number }, { "Bool", json_type::Bool }, { "Null", json_type::Null } };
 
 	class raw_json_data {
@@ -49,9 +49,9 @@ namespace jsonifier {
 		using object_type = std::unordered_map<jsonifier::string, raw_json_data>;
 		using array_type  = jsonifier::vector<raw_json_data>;
 
-		jsonifier_inline raw_json_data() = default;
+		inline raw_json_data() = default;
 
-		jsonifier_inline raw_json_data& operator=(bool value) {
+		inline raw_json_data& operator=(bool value) {
 			if (value) {
 				jsonData = "true";
 			} else {
@@ -60,46 +60,46 @@ namespace jsonifier {
 			return *this;
 		}
 
-		jsonifier_inline raw_json_data(bool value) {
+		inline raw_json_data(bool value) {
 			*this = value;
 		}
 
-		jsonifier_inline raw_json_data& operator=(double value) {
+		inline raw_json_data& operator=(double value) {
 			jsonData = toString(value);
 			return *this;
 		}
 
-		jsonifier_inline raw_json_data(double value) {
+		inline raw_json_data(double value) {
 			*this = value;
 		}
 
-		jsonifier_inline raw_json_data& operator=(int64_t value) {
+		inline raw_json_data& operator=(int64_t value) {
 			jsonData = toString(value);
 			return *this;
 		}
 
-		jsonifier_inline raw_json_data(int64_t value) {
+		inline raw_json_data(int64_t value) {
 			*this = value;
 		}
 
-		jsonifier_inline raw_json_data& operator=(const jsonifier::string& value) {
+		inline raw_json_data& operator=(const jsonifier::string& value) {
 			jsonData = value;
 			return *this;
 		}
 
-		jsonifier_inline raw_json_data(const jsonifier::string& value) {
+		inline raw_json_data(const jsonifier::string& value) {
 			*this = value;
 		}
 
-		jsonifier_inline const char* data() const {
+		inline const char* data() const {
 			return jsonData.data();
 		}
 
-		jsonifier_inline char* data() {
+		inline char* data() {
 			return jsonData.data();
 		}
 
-		jsonifier_inline json_type getType() {
+		inline json_type getType() {
 			if (jsonData.size() > 0) {
 				return typeMap[jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]))];
 			} else {
@@ -107,11 +107,11 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline void resize(uint64_t sizeNew) {
+		inline void resize(uint64_t sizeNew) {
 			jsonData.resize(sizeNew);
 		}
 
-		jsonifier_inline explicit operator object_type() {
+		inline explicit operator object_type() {
 			object_type results{};
 			if (jsonData.size() > 0) {
 				jsonifier::string::iterator newIter01 = jsonData.begin();
@@ -157,7 +157,7 @@ namespace jsonifier {
 			return {};
 		}
 
-		jsonifier_inline explicit operator array_type() {
+		inline explicit operator array_type() {
 			array_type results{};
 			if (jsonData.size() > 0) {
 				jsonifier::string::iterator newIter01 = jsonData.begin();
@@ -182,7 +182,7 @@ namespace jsonifier {
 			return {};
 		}
 
-		jsonifier_inline explicit operator string_view() {
+		inline explicit operator string_view() {
 			if (jsonData.size() > 0) {
 				return { jsonData.data() + 1, jsonData.size() - 1 };
 			} else {
@@ -190,7 +190,7 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline explicit operator string() const {
+		inline explicit operator string() const {
 			if (jsonData.size() > 0) {
 				return { jsonData.data() + 1, jsonData.size() - 1 };
 			} else {
@@ -198,7 +198,7 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline explicit operator double() const {
+		inline explicit operator double() const {
 			if (jsonData.size() > 0) {
 				return strToDouble(jsonData);
 			} else {
@@ -206,7 +206,7 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline explicit operator uint64_t() const {
+		inline explicit operator uint64_t() const {
 			if (jsonData.size() > 0) {
 				return strToUint64(jsonData);
 			} else {
@@ -214,7 +214,7 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline explicit operator int64_t() const {
+		inline explicit operator int64_t() const {
 			if (jsonData.size() > 0) {
 				return strToInt64(jsonData);
 			} else {
@@ -222,7 +222,7 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline explicit operator bool() const {
+		inline explicit operator bool() const {
 			if (jsonData == "true") {
 				return true;
 			} else {
@@ -230,11 +230,11 @@ namespace jsonifier {
 			}
 		}
 
-		jsonifier_inline jsonifier::string_view rawJson() {
+		inline jsonifier::string_view rawJson() {
 			return jsonData;
 		}
 
-		jsonifier_inline bool operator==(const raw_json_data& other) const {
+		inline bool operator==(const raw_json_data& other) const {
 			return jsonData == other.jsonData;
 		}
 
@@ -242,7 +242,7 @@ namespace jsonifier {
 		string jsonData{};
 	};
 
-	jsonifier_inline std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) {
+	inline std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) {
 		os << jsonValue.rawJson();
 		return os;
 	}
