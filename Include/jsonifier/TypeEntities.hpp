@@ -102,6 +102,14 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
+		concept has_capacity = requires(value_type value) {
+			{ value.capacity() } -> std::same_as<typename unwrap<value_type>::size_type>;
+		};
+
+		template<typename value_type>
+		concept has_resize = requires(value_type value) { value.resize(std::declval<typename value_type::size_type>()); };
+
+		template<typename value_type>
 		concept has_data = requires(value_type data) {
 			{ data.data() } -> std::same_as<typename unwrap<value_type>::const_pointer>;
 		} || requires(value_type data) {
@@ -218,9 +226,6 @@ namespace jsonifier {
 
 		template<class value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
-
-		template<typename value_type>
-		concept has_resize = requires(value_type value) { value.resize(0); };
 
 		template<typename value_type>
 		concept raw_json_t = std::same_as<unwrap<value_type>, jsonifier::raw_json_data>;

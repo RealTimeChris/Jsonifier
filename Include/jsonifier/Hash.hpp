@@ -32,8 +32,10 @@ namespace jsonifier_internal {
 
 	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
 		uint64_t d = 5381;
-		for (const auto& c: value)
-			d = d * 33 + static_cast<uint64_t>(c);
+		auto sizeNew = value.size() > 10 ? 10 : value.size();
+		for (uint64_t x = 0; x < sizeNew; ++x) {
+			d = d * 33 + static_cast<uint64_t>(value[x]);
+		}
 		return d;
 	}
 

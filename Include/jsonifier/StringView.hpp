@@ -226,7 +226,7 @@ namespace jsonifier {
 				return false;
 			}
 			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
-		}
+		} 
 
 		template<typename value_type_newer, size_type size>
 		inline friend string_base<value_type_newer> operator+(const value_type_newer (&lhs)[size], const string_view_base& rhs) {
@@ -276,7 +276,7 @@ namespace jsonifier {
 			string_base<value_type_new> newLhs{ *this };
 			newLhs.append(rhs.data(), rhs.size());
 			return newLhs;
-		}
+		} 
 
 		template<typename value_type_newer, size_type size> inline string_base<value_type_newer> operator+(const value_type_newer (&rhs)[size]) const {
 			string_base<value_type_newer> newLhs{ *this };

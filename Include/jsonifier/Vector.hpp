@@ -319,37 +319,8 @@ namespace jsonifier {
 		}
 
 		inline void resize(size_type sizeNew) {
-			if (sizeNew > 0 && sizeNew < maxSize()) [[likely]] {
-				if (sizeNew > capacityVal) [[likely]] {
-					pointer newPtr = getAlloc().allocate(sizeNew);
-					try {
-						if (sizeVal > 0) {
-							if constexpr (std::is_copy_constructible_v<value_type>) {
-								std::uninitialized_copy(dataVal, dataVal + sizeVal, newPtr);
-							} else if constexpr (std::is_move_constructible_v<value_type>) {
-								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
-							}
-						}
-						if (dataVal && capacityVal > 0) [[likely]] {
-							getAlloc().deallocate(dataVal, capacityVal);
-						}
-					} catch (...) {
-						getAlloc().deallocate(newPtr, sizeNew);
-						throw;
-					}
-					capacityVal = sizeNew;
-					dataVal		= newPtr;
-					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
-				} else if (sizeNew > sizeVal) [[unlikely]] {
-					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
-				}
-				sizeVal = sizeNew;
-			}
-		}
-
-		inline void reserve(size_type capacityNew) {
-			if (capacityNew > 0 && capacityNew < maxSize()) [[likely]] {
-				pointer newPtr = getAlloc().allocate(capacityNew);
+			if (sizeNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(sizeNew);
 				try {
 					if (sizeVal > 0) {
 						if constexpr (std::is_copy_constructible_v<value_type>) {
@@ -359,6 +330,31 @@ namespace jsonifier {
 						}
 					}
 					if (dataVal && capacityVal > 0) [[likely]] {
+						getAlloc().deallocate(dataVal, capacityVal);
+					}
+				} catch (...) {
+					getAlloc().deallocate(newPtr, sizeNew);
+					throw;
+				}
+				capacityVal = sizeNew;
+				dataVal		= newPtr;
+				std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+			} else if (sizeNew > sizeVal) [[unlikely]] {
+				std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+			} else if (sizeNew < sizeVal) {
+				std::destroy(dataVal + sizeNew, dataVal + sizeVal);
+			}
+			sizeVal = sizeNew;
+		}
+
+		inline void reserve(size_type capacityNew) {
+			if (capacityNew > capacityVal) [[likely]] {
+				pointer newPtr = getAlloc().allocate(capacityNew);
+				try {
+					if (dataVal && capacityVal > 0) [[likely]] {
+						if (sizeVal > 0) {
+							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
+						}
 						getAlloc().deallocate(dataVal, capacityVal);
 					}
 				} catch (...) {

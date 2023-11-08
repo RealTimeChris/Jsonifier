@@ -128,25 +128,30 @@ namespace jsonifier {
 
 		inline string_base& operator=(const string_base& other) {
 			if (this != &other) {
-				size_type sizeNew = other.size();
-				if (sizeNew > 0 && sizeNew < maxSize()) {
-					reset();
-					string_base temp{};
-					temp.reserve(sizeNew);
-					temp.sizeVal = sizeNew;
-					std::uninitialized_copy(other.data(), other.data() + sizeNew, temp.dataVal);
-					getAlloc().construct(&temp[sizeNew], static_cast<value_type>(0x00));
-					swap(temp);
-				}
+				swap(string_base{ other });
 			}
 			return *this;
 		}
 
 		inline string_base(const string_base& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = other;
+			size_type sizeNew = other.size();
+			if (sizeNew > 0 && sizeNew < maxSize()) {
+				reset();
+				string_base temp{};
+				temp.reserve(sizeNew);
+				temp.sizeVal = sizeNew;
+				std::uninitialized_copy(other.data(), other.data() + sizeNew, temp.dataVal);
+				getAlloc().construct(&temp[sizeNew], static_cast<value_type>(0x00));
+				swap(temp);
+			}
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer> inline string_base& operator=(value_type_newer&& other) {
+		template<jsonifier::concepts::string_t value_type_newer> inline string_base& operator=(const value_type_newer& other) {
+			swap(string_base{ other });
+			return *this;
+		}
+
+		template<jsonifier::concepts::string_t value_type_newer> inline explicit string_base(const value_type_newer& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			size_type sizeNew = other.size() * (sizeof(typename jsonifier::concepts::unwrap<value_type_newer>::value_type) / sizeof(value_type));
 			if (sizeNew > 0) {
 				reset();
@@ -157,14 +162,14 @@ namespace jsonifier {
 				getAlloc().construct(&temp[sizeNew], static_cast<value_type>(0x00));
 				swap(temp);
 			}
+		} 
+
+		template<jsonifier::concepts::pointer_t value_type_newer> inline string_base& operator=(value_type_newer other) {
+			swap(string_base{ std::forward<value_type_newer>(other) });
 			return *this;
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer> inline explicit string_base(value_type_newer&& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = std::forward<value_type_newer>(other);
-		}
-
-		template<jsonifier::concepts::pointer_t value_type_newer> inline string_base& operator=(value_type_newer other) {
+		template<jsonifier::concepts::pointer_t value_type_newer> inline string_base(value_type_newer other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeNew =
 				jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) * (sizeof(std::remove_pointer_t<value_type_newer>) / sizeof(value_type));
 			if (sizeNew) [[likely]] {
@@ -176,11 +181,6 @@ namespace jsonifier {
 				getAlloc().construct(&temp[sizeNew], static_cast<value_type>(0x00));
 				swap(temp);
 			}
-			return *this;
-		}
-
-		template<jsonifier::concepts::pointer_t value_type_newer> inline string_base(value_type_newer other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = std::forward<value_type_newer>(other);
 		}
 
 		template<jsonifier::concepts::char_type value_type_newer> inline string_base& operator=(value_type_newer other) {
@@ -420,8 +420,8 @@ namespace jsonifier {
 
 		inline void resize(size_type sizeNew) {
 			if (sizeNew > 0) [[likely]] {
-				auto sizeNewer = jsonifier_internal::roundUpToMultiple<BytesPerStep>(sizeNew);
-				if (sizeNewer > capacityVal) [[likely]] {
+				auto sizeNewer = jsonifier_internal::roundUpToMultiple<BitsPerStep>(sizeNew);
+				if (sizeNewer > capacityVal) {
 					pointer newPtr = getAlloc().allocate(sizeNewer + 1);
 					try {
 						if (dataVal) [[likely]] {
@@ -436,13 +436,20 @@ namespace jsonifier {
 					}
 					capacityVal = sizeNewer;
 					dataVal		= newPtr;
-					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
-				} else if (sizeNewer > sizeVal) [[unlikely]] {
-					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+					getAlloc().construct(newPtr + sizeNew, value_type{});
+					sizeVal = sizeNew;
+				} else if (sizeNewer > sizeVal) {
+					std::fill(dataVal + sizeVal, dataVal + sizeNewer, value_type{});
+					getAlloc().construct(dataVal + sizeNew, value_type{});
+					sizeVal = sizeNew;
+
+				} else if (sizeNewer < sizeVal) {
+					std::destroy(dataVal + sizeNewer, dataVal + sizeVal);
+					getAlloc().construct(dataVal + sizeNew, value_type{});
+					sizeVal = sizeNew;
 				}
-				sizeVal = sizeNew;
-				getAlloc().construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
 			} else {
+				std::destroy(dataVal, dataVal + sizeVal);
 				sizeVal = 0;
 			}
 		}
@@ -468,23 +475,23 @@ namespace jsonifier {
 			}
 		}
 
-		inline size_type capacity() const {
+		constexpr size_type capacity() const {
 			return capacityVal;
 		}
 
-		inline size_type size() const {
+		constexpr size_type size() const {
 			return sizeVal;
 		}
 
-		inline bool empty() const {
+		constexpr bool empty() const {
 			return sizeVal == 0;
 		}
 
-		inline pointer data() const {
+		constexpr pointer data() const {
 			return dataVal;
 		}
 
-		inline pointer data() {
+		constexpr pointer data() {
 			return dataVal;
 		}
 
@@ -504,7 +511,7 @@ namespace jsonifier {
 			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
 		}
 
-		inline void swap(string_base& other) {
+		template<typename string_base_new> inline void swap(string_base_new&& other) {
 			std::swap(capacityVal, other.capacityVal);
 			std::swap(sizeVal, other.sizeVal);
 			std::swap(dataVal, other.dataVal);
@@ -554,7 +561,7 @@ namespace jsonifier {
 		template<jsonifier::concepts::string_t string_type_new> inline string_base& operator+=(const string_type_new& rhs) {
 			append(static_cast<string_base>(rhs));
 			return *this;
-		}
+		} 
 
 		template<jsonifier::concepts::pointer_t string_type_new> inline string_base operator+(string_type_new&& rhs) {
 			string_base newLhs{ *this };
