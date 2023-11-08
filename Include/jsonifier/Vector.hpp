@@ -48,72 +48,70 @@ namespace jsonifier {
 
 		inline vector& operator=(vector&& other) noexcept {
 			if (this != &other && dataVal != other.dataVal) {
-				reset();
 				swap(other);
 			}
 			return *this;
 		}
 
 		inline vector(vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = std::move(other);
+			swap(other);
 		}
 
 		inline vector& operator=(const vector& other) {
 			if (this != &other) {
-				reset();
-				auto sizeValNew = other.size();
-				reserve(sizeValNew);
-				std::uninitialized_copy(other.data(), other.data() + sizeValNew, dataVal);
-				sizeVal = sizeValNew;
+				vector newVector{ other };
+				swap(newVector);
 			}
 			return *this;
 		}
 
 		inline vector(const vector& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = other;
-		}
-
-		inline vector& operator=(std::vector<value_type>&& other) {
-			reset();
-			auto sizeValNew = other.size();
-			reserve(sizeValNew);
-			std::uninitialized_move(other.data(), other.data() + sizeValNew, dataVal);
-			sizeVal = sizeValNew;
-			return *this;
-		}
-
-		inline explicit vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = std::move(other);
-		}
-
-		inline vector& operator=(const std::vector<value_type>& other) {
-			reset();
 			auto sizeValNew = other.size();
 			reserve(sizeValNew);
 			std::uninitialized_copy(other.data(), other.data() + sizeValNew, dataVal);
 			sizeVal = sizeValNew;
+		}
+
+		inline vector& operator=(std::vector<value_type>&& other) {
+			vector newVector{ other };
+			swap(other);
+			return *this;
+		}
+
+		inline explicit vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_move(other.data(), other.data() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
+		}
+
+		inline vector& operator=(const std::vector<value_type>& other) {
+			vector newVector{ other };
+			swap(newVector);
 			return *this;
 		}
 
 		inline explicit vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = other;
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_copy(other.data(), other.data() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
 		}
 
 		inline vector& operator=(std::initializer_list<value_type> other) {
-			reset();
-			auto sizeValNew = other.size();
-			reserve(sizeValNew);
-			std::uninitialized_move(other.begin(), other.begin() + sizeValNew, dataVal);
-			sizeVal = sizeValNew;
+			vector newVector{ other };
+			swap(newVector);
 			return *this;
 		}
 
 		inline explicit vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
-			*this = other;
+			auto sizeValNew = other.size();
+			reserve(sizeValNew);
+			std::uninitialized_move(other.begin(), other.begin() + sizeValNew, dataVal);
+			sizeVal = sizeValNew;
 		}
 
 		inline explicit vector(value_type&& other, size_type sizeNew) : capacityVal{}, sizeVal{}, dataVal{} {
-			reset();
 			auto sizeValNew = sizeNew;
 			reserve(sizeValNew);
 			std::uninitialized_fill(data(), data() + sizeValNew, other);
@@ -325,8 +323,14 @@ namespace jsonifier {
 				if (sizeNew > capacityVal) [[likely]] {
 					pointer newPtr = getAlloc().allocate(sizeNew);
 					try {
+						if (sizeVal > 0) {
+							if constexpr (std::is_copy_constructible_v<value_type>) {
+								std::uninitialized_copy(dataVal, dataVal + sizeVal, newPtr);
+							} else if constexpr (std::is_move_constructible_v<value_type>) {
+								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
+							}
+						}
 						if (dataVal && capacityVal > 0) [[likely]] {
-							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							getAlloc().deallocate(dataVal, capacityVal);
 						}
 					} catch (...) {
@@ -340,8 +344,6 @@ namespace jsonifier {
 					std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
 				}
 				sizeVal = sizeNew;
-			} else {
-				sizeVal = 0;
 			}
 		}
 
@@ -349,8 +351,14 @@ namespace jsonifier {
 			if (capacityNew > 0 && capacityNew < maxSize()) [[likely]] {
 				pointer newPtr = getAlloc().allocate(capacityNew);
 				try {
+					if (sizeVal > 0) {
+						if constexpr (std::is_copy_constructible_v<value_type>) {
+							std::uninitialized_copy(dataVal, dataVal + sizeVal, newPtr);
+						} else if constexpr (std::is_move_constructible_v<value_type>) {
+							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
+						}
+					}
 					if (dataVal && capacityVal > 0) [[likely]] {
-						std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						getAlloc().deallocate(dataVal, capacityVal);
 					}
 				} catch (...) {

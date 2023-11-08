@@ -171,7 +171,7 @@ namespace jsonifier_internal {
 			auto nextEscapeable = escapeable::copyAndFind(source, dest);
 			if (nextEscapeable != 0) {
 				nextEscapeable		 = tzcnt(nextEscapeable);
-				uint8_t escapeResult = escapeableChars<uint8_t>[source[nextEscapeable]];
+				uint8_t escapeResult = escapeableChars<uint8_t>[static_cast<uint8_t>(source[nextEscapeable])];
 				if (escapeResult == 0u) {
 					return source;
 				}

@@ -491,18 +491,25 @@ namespace jsonifier_internal {
 			return _mm_shuffle_epi8(value, other);
 		}
 
+		template<uint64_t index> inline static simd_int_t opSubHelper(uint64_t* values01, uint64_t* values02, uint8_t& carryInNew, uint8_t carryInFlag) {
+			if constexpr (index < SixtyFourBitsPerStep) {
+				carryInNew		= carryInFlag;
+				carryInFlag		= static_cast<uint8_t>(values01[index] < values02[index] + static_cast<uint64_t>(carryInFlag));
+				values02[index] = values01[index] - values02[index] - static_cast<uint64_t>(carryInNew);
+				return opSubHelper<index + 1>(values01, values02, carryInNew, carryInFlag);
+			} else {
+				return gatherValues<simd_int_t>(values01);
+			}
+		}
+
 		inline static simd_int_t opSub(const simd_int_t& other, const simd_int_t& value) {
 			alignas(BytesPerStep) uint64_t valuesNew01[SixtyFourBitsPerStep]{};
-			alignas(BytesPerStep) long long unsigned int valuesNew02[SixtyFourBitsPerStep]{};
-			uint8_t carryInFlag{};
+			alignas(BytesPerStep) uint64_t valuesNew02[SixtyFourBitsPerStep]{};
 			store(other, valuesNew01);
 			store(value, valuesNew02);
-			uint8_t carryInNew{};
-			for (uint64_t x = 0; x < SixtyFourBitsPerStep; ++x) {
-				carryInNew	   = carryInFlag;
-				carryInFlag	   = (valuesNew01[x] < valuesNew02[x] + carryInFlag);
-				valuesNew02[x] = valuesNew01[x] - valuesNew02[x] - carryInNew;
-			}
+			uint8_t carryInCurr{};
+			uint8_t carryInPrev{};
+			opSubHelper<0>(valuesNew01, valuesNew02, carryInCurr, carryInPrev);
 			return gatherValues<simd_int_t>(valuesNew02);
 		}
 
@@ -568,6 +575,16 @@ namespace jsonifier_internal {
 			return prevInString;
 		}
 
+		template<uint64_t index> inline static simd_int_t clmulHelper(int64_t* values, uint64_t& newValue) {
+			if constexpr (index < SixtyFourBitsPerStep) {
+				values[index] = prefixXor(values[index]) ^ static_cast<int64_t>(newValue);
+				newValue	  = uint64_t(values[index] >> 63);
+				return clmulHelper<index + 1>(values, newValue);
+			} else {
+				return gatherValues<simd_int_t>(values);
+			}
+		}
+
 		inline static simd_int_t carrylessMultiplication(const simd_int_t& value, bool& prevInString) {
 			alignas(BytesPerStep) int64_t values[SixtyFourBitsPerStep]{};
 			uint64_t newValue{};
@@ -575,10 +592,7 @@ namespace jsonifier_internal {
 				newValue = std::numeric_limits<uint64_t>::max();
 			}
 			store(value, values);
-			for (uint64_t x = 0; x < SixtyFourBitsPerStep; ++x) {
-				values[x] = prefixXor(values[x]) ^ static_cast<int64_t>(newValue);
-				newValue  = uint64_t(values[x] >> 63);
-			}
+			clmulHelper<0>(values, newValue);
 			prevInString = (newValue >> 63) & 1;
 			return gatherValues<simd_int_t>(values);
 		}
@@ -596,7 +610,7 @@ namespace jsonifier_internal {
 
 		inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
 			auto oldoverflow = overflow;
-			overflow = getMSB(value);
+			overflow		 = getMSB(value);
 			return setLSB(shl<1>(value), oldoverflow);
 		}
 	};
