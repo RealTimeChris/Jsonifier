@@ -501,7 +501,7 @@ namespace jsonifier_internal {
 				return gatherValues<simd_int_t>(values01);
 			}
 		}
-
+    
 		inline static simd_int_t opSub(const simd_int_t& other, const simd_int_t& value) {
 			alignas(BytesPerStep) uint64_t valuesNew01[SixtyFourBitsPerStep]{};
 			alignas(BytesPerStep) uint64_t valuesNew02[SixtyFourBitsPerStep]{};
@@ -584,7 +584,7 @@ namespace jsonifier_internal {
 				return gatherValues<simd_int_t>(values);
 			}
 		}
-
+    
 		inline static simd_int_t carrylessMultiplication(const simd_int_t& value, bool& prevInString) {
 			alignas(BytesPerStep) int64_t values[SixtyFourBitsPerStep]{};
 			uint64_t newValue{};
