@@ -30,22 +30,17 @@
 
 namespace jsonifier_internal {
 
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
-		uint64_t d	 = 5381;
-		auto sizeNew = value.size() > 10 ? 10 : value.size();
-		for (uint64_t x = 0; x < sizeNew; ++x) {
-			d = d * 33 + static_cast<uint64_t>(value[x]);
-		}
-		return d;
-	}
+	// https://en.wikipedia.org/wiki/Fowler�Noll�Vo_hash_function
+	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
+	constexpr uint32_t fnv32OffsetBasis{ 0x811c9dc5u };
+	constexpr uint32_t fnv32Prime{ 0x01000193u };
 
-	// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-	// With the lowest bits removed, based on experimental setup.
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
-		uint64_t d = (0x811c9dc5 ^ seed) * static_cast<uint64_t>(0x01000193);
-		for (const auto& c: value)
-			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(0x01000193);
-		return d >> 8;
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint32_t seed) {
+		uint32_t hash = (fnv32OffsetBasis ^ seed) * fnv32Prime;
+		for (const auto& valueNew: value) {
+			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv32Prime;
+		}
+		return static_cast<uint64_t>(hash >> 8);
 	}
 
 	template<typename value_type> struct hash;

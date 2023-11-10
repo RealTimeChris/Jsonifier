@@ -63,7 +63,6 @@ set_target_properties(
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
-	PUBLIC_HEADER "${HEADERS}"
 )
 
 target_include_directories(
@@ -71,9 +70,15 @@ target_include_directories(
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
 )
 
+target_compile_options (
+	"${PROJECT_NAME}" INTERFACE
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+)
+
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
+	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
 	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
 )
 
@@ -82,8 +87,6 @@ set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/MP${THREAD_COUNT}>"
 	"${AVX_FLAG}"
 )
 

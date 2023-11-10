@@ -20,28 +20,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(simdjson)
 
-FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG master
-  GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(fmt)
-
 add_executable(
   "Json-Performance" 
-  "main.cpp"
+  "./main.cpp"
 )
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-  Jsonifier::Jsonifier glaze::glaze simdjson fmt::fmt
+  Jsonifier::Jsonifier glaze::glaze simdjson
+)
+
+target_compile_options(
+	"Json-Performance" PUBLIC
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 )
 
 target_link_options(
 	"Json-Performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
 )
 
 if (WIN32)
@@ -52,6 +51,11 @@ if (WIN32)
 		OPTIONAL
 	)
 endif()
+
+target_compile_definitions(
+	"Json-Performance" PUBLIC 
+	"JSON_PATH=\"${CMAKE_SOURCE_DIR}/Tests/ConformanceTests\""
+)
 
 install(
 	FILES 

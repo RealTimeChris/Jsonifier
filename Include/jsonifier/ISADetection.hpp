@@ -23,25 +23,30 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/Popcount.hpp>
-#include <jsonifier/ISADetection/Lzcount.hpp>
-#include <jsonifier/ISADetection/Bmi.hpp>
-#include <jsonifier/ISADetection/Bmi2.hpp>
-#include <jsonifier/ISADetection/AVX.hpp>
-#include <jsonifier/ISADetection/AVX2.hpp>
-#include <jsonifier/ISADetection/AVX512.hpp>
-#include <jsonifier/ISADetection/Fallback.hpp>
+#include <jsonifier/ISA/Popcount.hpp>
+#include <jsonifier/ISA/Lzcount.hpp>
+#include <jsonifier/ISA/Bmi.hpp>
+#include <jsonifier/ISA/Bmi2.hpp>
+#include <jsonifier/ISA/AVX.hpp>
+#include <jsonifier/ISA/AVX2.hpp>
+#include <jsonifier/ISA/AVX512.hpp>
+#include <jsonifier/ISA/Fallback.hpp>
+#include <atomic>
 
 namespace jsonifier_internal {
 
-	inline static void printBits(uint64_t values, const std::string& valuesTitle) {
+	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
+		return static_cast<value_type01>(value1 > value2 ? value1 : value2);
+	}
+
+	JSONIFIER_INLINE void printBits(uint64_t values, const std::string& valuesTitle) {
 		std::cout << valuesTitle;
 		std::cout << std::bitset<64>{ values };
 		std::cout << std::endl;
 	}
 
-	template<typename simd_type> inline static const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
-		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+	template<typename simd_type> JSONIFIER_INLINE const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
 		std::cout << valuesTitle;
@@ -54,14 +59,14 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	inline static std::string printBits(bool value) noexcept {
+	JSONIFIER_INLINE std::string printBits(bool value) noexcept {
 		std::stringstream theStream{};
 		theStream << std::boolalpha << value << std::endl;
 		return theStream.str();
 	}
 
-	template<typename simd_type> inline static std::string printBits(const simd_type& value) noexcept {
-		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+	template<typename simd_type> JSONIFIER_INLINE std::string printBits(const simd_type& value) noexcept {
+		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
 		for (uint64_t x = 0; x < BytesPerStep; ++x) {
@@ -72,4 +77,73 @@ namespace jsonifier_internal {
 		theStream << std::endl;
 		return theStream.str();
 	}
+
+	template<jsonifier::concepts::time_type value_type> class stop_watch {
+	  public:
+		using hr_clock = std::chrono::high_resolution_clock;
+
+		JSONIFIER_INLINE stop_watch(uint64_t newTime) {
+			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
+		}
+
+		JSONIFIER_INLINE stop_watch(value_type newTime) {
+			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
+		}
+
+		JSONIFIER_INLINE stop_watch& operator=(stop_watch&& other) {
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE stop_watch(stop_watch&& other) {
+			*this = std::move(other);
+		}
+
+		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) {
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE stop_watch(const stop_watch& other) {
+			*this = other;
+		}
+
+		JSONIFIER_INLINE bool hasTimeElapsed() {
+			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
+				totalNumberOfTimeUnits.load(std::memory_order_acquire)) [[likely]] {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		JSONIFIER_INLINE void reset(value_type newTimeValue = value_type{}) {
+			if (newTimeValue != value_type{}) [[likely]] {
+				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
+				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
+			} else {
+				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
+			}
+		}
+
+		JSONIFIER_INLINE value_type getTotalWaitTime() const {
+			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
+		}
+
+		JSONIFIER_INLINE value_type totalTimeElapsed() {
+			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
+		}
+
+	  protected:
+		std::atomic<value_type> totalNumberOfTimeUnits{};
+		std::atomic<value_type> startTimeInTimeUnits{};
+	};
+
+	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }

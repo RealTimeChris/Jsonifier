@@ -23,6 +23,7 @@
 /// Feb 20, 2023
 #pragma once
 
+#include <jsonifier/Iterator.hpp>
 #include <iterator>
 
 namespace jsonifier_internal {
@@ -34,16 +35,17 @@ namespace jsonifier_internal {
 		using const_reference = const value_type&;
 		using pointer		  = value_type*;
 		using const_pointer	  = const value_type*;
-		using iterator		  = pointer;
-		using const_iterator  = const_pointer;
+		using iterator		  = jsonifier_internal::iterator<value_type>;
+		using const_iterator  = jsonifier_internal::iterator<const value_type>;
 		using size_type		  = uint64_t;
 		using difference_type = std::ptrdiff_t;
 
 		constexpr ctime_vector() = default;
 
-		constexpr ctime_vector(size_type count, const auto& value) : sizeVal(count) {
-			for (size_type x = 0; x < N; ++x)
+		template<typename value_type_newer> constexpr ctime_vector(size_type count, const value_type_newer& value) : sizeVal(count) {
+			for (size_type x = 0; x < N; ++x) {
 				data[x] = value;
+			}
 		}
 
 		constexpr iterator begin() {
@@ -82,8 +84,8 @@ namespace jsonifier_internal {
 			return data[sizeVal - 1];
 		}
 
-		template<typename value_type_newer> constexpr void push_back(value_type_newer&& a) {
-			data[sizeVal++] = std::forward<value_type>(a);
+		template<typename value_type_newer> constexpr void pushBack(value_type_newer&& a) {
+			data[sizeVal++] = static_cast<value_type>(a);
 		}
 
 		constexpr void pop_back() {

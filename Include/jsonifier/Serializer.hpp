@@ -25,44 +25,56 @@
 
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
+#include <jsonifier/Error.hpp>
 
 namespace jsonifier_internal {
 
-	template<bool excludeKeys, typename value_type = void> struct serialize_impl;
+	template<typename value_type = void> struct serialize_impl;
 
-	template<bool excludeKeys> struct serialize {
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type> inline static void op(const value_type& value, buffer_type& buffer, uint64_t& index) {
-			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, buffer, index);
-		}
-
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::has_find KeyType>
-		inline static void op(const value_type& value, buffer_type& buffer, uint64_t& index, const KeyType& keys) {
-			serialize_impl<excludeKeys, jsonifier::concepts::unwrap<value_type>>::op(value, buffer, index, keys);
+	struct serialize {
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+				serialize_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index),
+					value.jsonifierExcludedKeys);
+			} else {
+				serialize_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+					std::forward<index_type>(index));
+			}
 		}
 	};
 
-	class serializer {
+	template<typename derived_type> class serializer {
 	  public:
-		template<bool excludeKeys = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
-		inline void serializeJson(value_type&& data, buffer_type& buffer) {
-			uint64_t index{};
-			if constexpr (excludeKeys) {
-				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index, data.excludedKeys);
-				} else {
-					serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
-				}
-			} else {
-				serialize<excludeKeys>::op(std::forward<value_type>(data), stringBuffer, index);
+		template<typename value_type> friend struct serialize_impl;
+
+		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
+		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
+
+		template<bool prettify = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
+		JSONIFIER_INLINE void serializeJson(value_type&& data, buffer_type&& iter) {
+			derivedRef.errors.clear();
+			derivedRef.index = 0;
+			serialize::impl(std::forward<value_type>(data), derivedRef.stringBuffer, derivedRef.index);
+			if (iter.size() != derivedRef.index) {
+				iter.resize(derivedRef.index);
 			}
-			if (buffer.size() != index) [[unlikely]] {
-				buffer.resize(index);
+			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), derivedRef.index);
+			if constexpr (prettify) {
+				iter = derivedRef.prettify(iter);
 			}
-			std::memcpy(buffer.data(), stringBuffer.data(), index);
 		}
 
 	  protected:
-		buffer_string<uint8_t> stringBuffer{};
+		derived_type& derivedRef{ initializeSelfRef() };
+
+		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+
+		JSONIFIER_INLINE ~serializer() noexcept = default;
+
+		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+			return *static_cast<derived_type*>(this);
+		}
 	};
 
 }
