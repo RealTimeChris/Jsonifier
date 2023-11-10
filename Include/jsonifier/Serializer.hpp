@@ -59,6 +59,7 @@ namespace jsonifier_internal {
 				buffer.resize(index);
 			}
 			std::memcpy(buffer.data(), stringBuffer.data(), index);
+			buffer[index] = '\0';
 		}
 
 	  protected:

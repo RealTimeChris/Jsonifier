@@ -72,14 +72,12 @@ namespace jsonifier_internal {
 
 		template<bool refreshString, jsonifier::concepts::string_t string_type> inline void reset(string_type&& stringViewNew) {
 			if constexpr (refreshString) {
-				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
-				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				currentParseBuffer = { reinterpret_cast<const uint8_t*>(stringViewNew.data()), stringViewNew.size() };
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(currentParseBuffer.size()) * 4.5f / 5.0f)));
 				resetInternal();
-			} else if (jsonifier::string_view_base<uint8_t>{ stringView, stringLength } != stringViewNew) {
-				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
-				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+			} else if (currentParseBuffer != stringViewNew) {
+				currentParseBuffer = { reinterpret_cast<const uint8_t*>(stringViewNew.data()), stringViewNew.size() };
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(currentParseBuffer.size()) * 4.5f / 5.0f)));
 				resetInternal();
 			}
 		}
@@ -91,27 +89,25 @@ namespace jsonifier_internal {
 				returnValue += "\n";
 			}
 			if constexpr (refreshString) {
-				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
-				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+				currentParseBuffer			   = { reinterpret_cast<const uint8_t*>(stringViewNew.data()), stringViewNew.size() };
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(currentParseBuffer.size()) * 4.5f / 5.0f)));
 				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
-			} else if (jsonifier::string_view_base<uint8_t>{ stringView, stringLength } != stringViewNew) {
-				stringView	 = reinterpret_cast<const uint8_t*>(stringViewNew.data());
-				stringLength = stringViewNew.size();
-				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(stringLength) * 4.5f / 5.0f)));
+			} else if (currentParseBuffer != stringViewNew) {
+				currentParseBuffer = { reinterpret_cast<const uint8_t*>(stringViewNew.data()), stringViewNew.size() };
+				structuralIndices.resize(roundUpToMultiple<8>(static_cast<uint64_t>(static_cast<float>(currentParseBuffer.size()) * 4.5f / 5.0f)));
 				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
 			}
 		}
 
 		inline void resetInternal() {
-			stringBlockReader.reset(stringView, stringLength);
+			stringBlockReader.reset(currentParseBuffer.data(), currentParseBuffer.size());
 			stringIndex = 0;
 			tapeIndex	= 0;
 			generateJsonIndices();
 		}
 
 		inline std::string resetInternalWithErrorPrintOut(size_type errorIndex) {
-			stringBlockReader.reset(stringView, stringLength);
+			stringBlockReader.reset(currentParseBuffer.data(), currentParseBuffer.size());
 			stringIndex = 0;
 			tapeIndex	= 0;
 			return generateJsonIndicesWithErrorPrintOut(errorIndex);
@@ -139,12 +135,11 @@ namespace jsonifier_internal {
 		simd_int_t quotes{};
 		simd_int_t op{};
 		alignas(BytesPerStep) size_type newBits[SixtyFourBitsPerStep]{};
+		jsonifier::string_view_base<uint8_t> currentParseBuffer{};
 		bool prevInString{};
 		bool overflow{};
 		structural_index_vector structuralIndices{};
 		string_block_reader stringBlockReader{};
-		string_view_ptr stringView{};
-		size_type stringLength{};
 		size_type stringIndex{};
 		size_type tapeIndex{};
 
@@ -162,9 +157,10 @@ namespace jsonifier_internal {
 		inline size_type getTapeLength() {
 			return tapeIndex - 1;
 		}
+
 		template<size_type index = 0, size_type index02> inline size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
 			if constexpr (index < StridesPerStep) {
-				structuralIndices[index + (currentIndex * 8) + tapeIndex] = stringView + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);
+				structuralIndices[index + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt(newBits) + (index02 * 64ull) + stringIndex);
 				newBits													  = blsr(newBits);
 				return (newBits == 0) ? newBits : rollValuesIntoTape<index + 1, index02>(currentIndex, newBits);
 			} else {

@@ -227,7 +227,7 @@ class FileLoader {
   public:
 	FileLoader(const char* filePathNew) {
 		filePath	   = filePathNew;
-		auto theStream = std::ofstream{ filePath, std::ios::binary | std::ios::out | std::ios::in };
+		auto theStream = std::ofstream{ filePath.data(), std::ios::binary | std::ios::out | std::ios::in };
 		std::stringstream inputStream{};
 		inputStream << theStream.rdbuf();
 		fileContents = inputStream.str();
@@ -235,7 +235,7 @@ class FileLoader {
 	}
 
 	void saveFile(std::string fileToSave) {
-		auto theStream = std::ofstream{ filePath, std::ios::binary | std::ios::out | std::ios::in | std::ios::trunc };
+		auto theStream = std::ofstream{ filePath.data(), std::ios::binary | std::ios::out | std::ios::in | std::ios::trunc };
 		theStream << "";
 		theStream.write(fileToSave.data(), fileToSave.size());
 		theStream.close();
@@ -275,7 +275,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	jsonifier::jsonifier_core parser{};
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson<true,  true>(uint64Test, buffer);
 		},
 		1);
 	for (auto& value: parser.getErrors()) {
@@ -313,7 +313,7 @@ auto jsonifier_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson<true,  true>(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -348,7 +348,7 @@ auto jsonifier_abc_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson<true,  true>(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -584,7 +584,7 @@ auto simdjson_single_test(const std::string& bufferNew, const jsonifier::vector<
 	uint64_t result{};
 	result = benchmark(
 		[&]() {
-			parser.read_in_order(uint64Test, buffer, arraySizes);
+			parser.read_in_order(uint64Test, padded_string{ buffer }, arraySizes);
 		},
 		1);
 
@@ -608,7 +608,7 @@ auto simdjson_test(const std::string& bufferNew, const jsonifier::vector<int32_t
 	uint64_t result{};
 	result = benchmark(
 		[&]() {
-			parser.read_in_order(uint64Test, buffer, arraySizes);
+			parser.read_in_order(uint64Test, padded_string{ buffer }, arraySizes);
 		},
 		iterations);
 
@@ -670,7 +670,7 @@ auto simdjson_abc_test(const std::string& bufferNew, const jsonifier::vector<int
 
 	result = benchmark(
 		[&]() {
-			parser.read_out_of_order(obj, buffer, arraySizes);
+			parser.read_out_of_order(obj, padded_string{ buffer }, arraySizes);
 		},
 		iterations);
 
@@ -831,8 +831,8 @@ template<> struct jsonifier::core<Auth> {
 
 /// @brief Data representing a file to be sent via multipart-form data.
 struct file {
-	jsonifier::string fileName{};///< The name of the file.
-	jsonifier::string data{};///< The data of the file.
+	std::string fileName{};///< The name of the file.
+	std::string data{};///< The data of the file.
 };
 
 template<> struct jsonifier::core<file> {
@@ -876,42 +876,30 @@ template<> struct jsonifier::core<ReadyMessage> {
 
 int32_t main() {
 	try {
-		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\"[\\\"gateway-prd-us-east1-d-26rq\\\",{\\\"micros\\\":122986,\\\"calls\\\":[\\\"id_created\\\",{\\\"micros\\\":861,"
-									   "\\\"calls\\\":[]},\\\"session_"
-									   "lookup_time\\\",{\\\"micros\\\":4526,\\\"calls\\\":[]},\\\"session_lookup_finished\\\",{\\\"micros\\\":17,\\\"calls\\\":[]},\\\"discord-"
-									   "sessions-prd-2-51\\\",{"
-									   "\\\"micros\\\":117233,\\\"calls\\\":[\\\"start_session\\\",{\\\"micros\\\":66751,\\\"calls\\\":[\\\"discord-api-79bdc49487-hv95g\\\",{"
-									   "\\\"micros\\\":59968,"
-									   "\\\"calls\\\":[\\\"get_user\\\",{\\\"micros\\\":9341},\\\"get_guilds\\\",{\\\"micros\\\":7529},\\\"send_scheduled_deletion_message\\\",{"
-									   "\\\"micros\\\":11},\\\"guild_"
-									   "join_requests\\\",{\\\"micros\\\":1},\\\"authorized_ip_coro\\\",{\\\"micros\\\":12}]}]},\\\"starting_guild_connect\\\",{\\\"micros\\\":"
-									   "419,\\\"calls\\\":[]},"
-									   "\\\"presence_started\\\",{\\\"micros\\\":272,\\\"calls\\\":[]},\\\"guilds_started\\\",{\\\"micros\\\":157,\\\"calls\\\":[]},\\\"guilds_"
-									   "connect\\\",{\\\"micros\\\":29,"
-									   "\\\"calls\\\":[]},\\\"presence_connect\\\",{\\\"micros\\\":49563,\\\"calls\\\":[]},\\\"connect_finished\\\",{\\\"micros\\\":49598,"
-									   "\\\"calls\\\":[]},\\\"build_"
-									   "ready\\\",{\\\"micros\\\":33,\\\"calls\\\":[]},\\\"clean_ready\\\",{\\\"micros\\\":1,\\\"calls\\\":[]},\\\"optimize_ready\\\",{"
-									   "\\\"micros\\\":0,\\\"calls\\\":[]},"
-									   "\\\"split_ready\\\",{\\\"micros\\\":0,\\\"calls\\\":[]}]}]}]\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},"
-									   "\"auth\":{},\"geo_ordered_rtc_"
-									   "regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":"
-									   "318872312596267018,\"unavailable\":true},{"
-									   "\"id\":931640556814237706,\"unavailable\":true},{\"id\":991025447875784714,\"unavailable\":true},{\"id\":995048955215872071,"
-									   "\"unavailable\":true},{\"id\":"
-									   "1022405038922006538,\"unavailable\":true},{\"id\":1032783776184533022,\"unavailable\":true},{\"id\":1078501504119476282,\"unavailable\":"
-									   "true},{\"id\":"
-									   "1131853763506880522,\"unavailable\":true}],\"presences\":[],\"private_channels\":[],\"relationships\":[],\"resume_gateway_url\":\"wss://"
-									   "gateway-us-east1-d.discord.gg\",\"session_id\":\"5b405a8282550f72114b460169cd08f6\",\"session_type\":\"normal\",\"shard\":\"01\","
-									   "\"user\":{\"avatar\":"
-									   "\"88bd9ce7bf889c0d36fb4afd3725900b\",\"bot\":true,\"discriminator\":\"3055\",\"email\":null,\"flags\":0,\"global_name\":null,\"id\":"
-									   "1142733646600614004,\"mfa_"
-									   "enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":-10},\"op\":0,\"s\":1,\"t\":\"READY\"}" };
+		std::string newString01{ "{\"d\":{\"_trace\":[\""
+			"\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},"
+			"\"auth\":{},\"geo_ordered_rtc_"
+			"regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":"
+			"318872312596267018,\"unavailable\":true},{"
+			"\"id\":931640556814237706,\"unavailable\":true},{\"id\":991025447875784714,\"unavailable\":true},{\"id\":995048955215872071,"
+			"\"unavailable\":true},{\"id\":"
+			"1022405038922006538,\"unavailable\":true},{\"id\":1032783776184533022,\"unavailable\":true},{\"id\":1078501504119476282,\"unavailable\":"
+			"true},{\"id\":"
+			"1131853763506880522,\"unavailable\":true}],\"presences\":[],\"private_channels\":[],\"relationships\":[],\"resume_gateway_url\":\"wss://"
+			"gateway-us-east1-d.discord.gg\",\"session_id\":\"5b405a8282550f72114b460169cd08f6\",\"session_type\":\"normal\",\"shard\":\"01\","
+			"\"user\":{\"avatar\":"
+			"\"88bd9ce7bf889c0d36fb4afd3725900b\",\"bot\":true,\"discriminator\":\"3055\",\"email\":null,\"flags\":0,\"global_name\":null,\"id\":"
+			"1142733646600614004,\"mfa_"
+			"enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":-10},\"op\":0,\"s\":1,\"t\":\"READY\"}" };
 		ReadyMessage dataNew{};
 		jsonifier::jsonifier_core parser{};
-		parser.parseJson<false, true>(dataNew, newString01);
+		parser.parseJson<true,  true>(dataNew, newString01);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
+		newString01.clear();
+		parser.serializeJson<true>(dataNew, newString01);
+		std::cout << "NEW STRING: " << newString01 << std::endl;
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 #if defined(_WIN32)
 		FileLoader fileLoader01{ "../../../ReadMe.md" };

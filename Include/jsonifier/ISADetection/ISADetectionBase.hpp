@@ -83,12 +83,9 @@
 #endif
 
 #include <jsonifier/TypeEntities.hpp>
-#include <source_location>
 #include <iostream>
 #include <sstream>
 #include <cstring>
-#include <cstdint>
-#include <string>
 #include <bitset>
 #include <array>
 
@@ -174,9 +171,7 @@ namespace jsonifier_internal {
 	using structural_index	= string_view_ptr;
 	using string_buffer_ptr = uint8_t*;
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
 	template<typename value_type>
 	concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_128>;
@@ -205,7 +200,7 @@ namespace jsonifier_internal {
 	}
 
 	template<simd_int_128_t return_type> constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
-		#if !defined(_WIN32)
+	#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 7)]) << 56;
@@ -218,17 +213,17 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 0)]);
 		}
 		return_type returnValue{ newArray[0], newArray[1] };
-		#else
+	#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m128i_u8[x] = arrayNew01[x];
 		}
-		#endif
+	#endif
 		return returnValue;
 	}
 
 	template<simd_int_128_t return_type> constexpr return_type simdFromValue(uint8_t value) {
-		#if !defined(_WIN32)
+	#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(value) << 56;
@@ -241,16 +236,16 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(value);
 		}
 		return_type returnValue{ newArray[0], newArray[1] };
-		#else
+	#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m128i_u8[x] = value;
 		}
-		#endif
+	#endif
 		return returnValue;
 	}
 
-		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
 	template<typename value_type>
 	concept simd_int_256_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_256>;
@@ -279,7 +274,7 @@ namespace jsonifier_internal {
 	}
 
 	template<simd_int_256_t return_type> constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
-			#if !defined(_WIN32)
+		#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 7) % 16]) << 56;
@@ -292,17 +287,17 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 0) % 16]);
 		}
 		return_type returnValue{ newArray[0], newArray[1], newArray[2], newArray[3] };
-			#else
+		#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m256i_u8[x] = arrayNew01[x % 16];
 		}
-			#endif
+		#endif
 		return returnValue;
 	}
 
 	template<simd_int_256_t return_type> constexpr return_type simdFromValue(uint8_t value) {
-			#if !defined(_WIN32)
+		#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(value) << 56;
@@ -315,16 +310,16 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(value);
 		}
 		return_type returnValue{ newArray[0], newArray[1], newArray[2], newArray[3] };
-			#else
+		#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m256i_u8[x] = value;
 		}
-			#endif
+		#endif
 		return returnValue;
 	}
 
-			#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 
 	template<typename value_type>
 	concept simd_int_512_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_512>;
@@ -353,7 +348,7 @@ namespace jsonifier_internal {
 	}
 
 	template<simd_int_512_t return_type> constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
-				#if !defined(_WIN32)
+			#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 7) % 16]) << 56;
@@ -366,17 +361,17 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(arrayNew01[((x * 8) + 0) % 16]);
 		}
 		return_type returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
-				#else
+			#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m512i_u8[x] = arrayNew01[x % 16];
 		}
-				#endif
+			#endif
 		return returnValue;
 	}
 
 	template<simd_int_512_t return_type> constexpr return_type simdFromValue(uint8_t value) {
-				#if !defined(_WIN32)
+			#if !defined(_WIN32)
 		int64_t newArray[sizeof(return_type) / sizeof(uint64_t)]{};
 		for (uint64_t x = 0; x < sizeof(return_type) / sizeof(uint64_t); ++x) {
 			newArray[x] |= static_cast<int64_t>(value) << 56;
@@ -389,61 +384,58 @@ namespace jsonifier_internal {
 			newArray[x] |= static_cast<int64_t>(value);
 		}
 		return_type returnValue{ newArray[0], newArray[1], newArray[2], newArray[3], newArray[4], newArray[5], newArray[6], newArray[7] };
-				#else
+			#else
 		return_type returnValue{};
 		for (uint64_t x = 0; x < sizeof(return_type); ++x) {
 			returnValue.m512i_u8[x] = value;
 		}
-				#endif
+			#endif
 		return returnValue;
 	}
-
-			#endif
 
 		#endif
 
 	#endif
 
 #else
+	 template<typename value_type>
+	 concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_128>;
 
-	template<typename value_type>
-	concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_128>;
+	 template<simd_int_128_t simd_type, typename char_type> inline simd_type gatherValues(char_type* str) {
+		 simd_type returnValue{};
+		 std::memcpy(&returnValue, str, sizeof(simd_type));
+		 return returnValue;
+	 }
 
-	template<simd_int_128_t simd_type, typename char_type> inline simd_type gatherValues(char_type* str) {
-		simd_type returnValue{};
-		std::memcpy(&returnValue, str, sizeof(simd_type));
-		return returnValue;
-	}
+	 template<simd_int_128_t simd_type, typename char_type> inline simd_type gatherValuesU(char_type* str) {
+		 simd_type returnValue{};
+		 std::memcpy(&returnValue, str, sizeof(simd_type));
+		 return returnValue;
+	 }
 
-	template<simd_int_128_t simd_type, typename char_type> inline simd_type gatherValuesU(char_type* str) {
-		simd_type returnValue{};
-		std::memcpy(&returnValue, str, sizeof(simd_type));
-		return returnValue;
-	}
+	 template<typename value_type> inline void storeu(const simd_int_t& value, value_type* storageLocation) {
+		 std::memcpy(storageLocation, &value, sizeof(simd_int_t));
+	 }
 
-	template<typename value_type> inline void storeu(const simd_int_t& value, value_type* storageLocation) {
-		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
-	}
+	 template<typename value_type> inline void store(const simd_int_t& value, value_type* storageLocation) {
+		 std::memcpy(storageLocation, &value, sizeof(simd_int_t));
+	 }
 
-	template<typename value_type> inline void store(const simd_int_t& value, value_type* storageLocation) {
-		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
-	}
+	 template<simd_int_128_t return_type> constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
+		 simd_int_128 returnValue{};
+		 for (uint64_t x = 0; x < sizeof(simd_int_128); ++x) {
+			 returnValue.m128x_uint8[x] = arrayNew01[x];
+		 }
+		 return returnValue;
+	 }
 
-	template<simd_int_128_t return_type> constexpr return_type simdFromTable(std::array<uint8_t, 16> arrayNew01) {
-		simd_int_128 returnValue{};
-		for (uint64_t x = 0; x < sizeof(simd_int_128); ++x) {
-			returnValue.m128x_uint8[x] = arrayNew01[x];
-		}
-		return returnValue;
-	}
-
-	template<simd_int_128_t return_type> constexpr return_type simdFromValue(uint8_t value) {
-		simd_int_128 returnValue{};
-		for (uint64_t x = 0; x < sizeof(simd_int_128); ++x) {
-			returnValue.m128x_uint8[x] = value;
-		}
-		return returnValue;
-	}
+	 template<simd_int_128_t return_type> constexpr return_type simdFromValue(uint8_t value) {
+		 simd_int_128 returnValue{};
+		 for (uint64_t x = 0; x < sizeof(simd_int_128); ++x) {
+			 returnValue.m128x_uint8[x] = value;
+		 }
+		 return returnValue;
+	 }
 
 #endif
 
@@ -467,11 +459,11 @@ namespace jsonifier_internal {
 
 		inline static simd_int_t shuffle(const simd_int_t& value, const simd_int_t& other);
 
-		inline static simd_int_t opOr(const simd_int_t& other, const simd_int_t& value);
-
 		inline static simd_int_t opAnd(const simd_int_t& other, const simd_int_t& value);
 
 		inline static simd_int_t opXor(const simd_int_t& other, const simd_int_t& value);
+
+		inline static simd_int_t opOr(const simd_int_t& other, const simd_int_t& value);
 
 		inline static simd_int_t setLSB(const simd_int_t& value, bool valueNew);
 
@@ -597,15 +589,21 @@ namespace jsonifier_internal {
 			return gatherValues<simd_int_t>(values);
 		}
 
+		template<uint64_t amount, uint64_t index> inline static simd_int_t shlHelper(uint64_t* newArray00, uint64_t* newArray01) {
+			if constexpr (index < SixtyFourBitsPerStep) {
+				newArray01[index] = (newArray00[index] << amount) | (newArray00[index - 1] >> (64 - amount));
+				return shlHelper<amount, index + 1>(newArray00, newArray01);
+			} else {
+				return gatherValues<simd_int_t>(newArray01);
+			}
+		}
+
 		template<uint64_t amount> inline static simd_int_t shl(const simd_int_t& value) {
 			alignas(BytesPerStep) uint64_t newArray00[SixtyFourBitsPerStep]{};
 			alignas(BytesPerStep) uint64_t newArray01[SixtyFourBitsPerStep]{};
 			store(value, newArray00);
 			newArray01[0] = (newArray00[0] << amount);
-			for (uint64_t x = 1; x < SixtyFourBitsPerStep; ++x) {
-				newArray01[x] = (newArray00[x] << amount) | (newArray00[x - 1] >> (64 - amount));
-			}
-			return gatherValues<simd_int_t>(newArray01);
+			return shlHelper<amount, 1>(newArray00, newArray01);
 		}
 
 		inline static simd_int_t follows(const simd_int_t& value, bool& overflow) {
