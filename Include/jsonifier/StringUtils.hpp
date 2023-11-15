@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 			simd_int_128 values(gatherValuesU<simd_int_128>(source));
 			storeu(values, dest);
 			return static_cast<uint16_t>(
-				simd_base::cmpeq(simd_base::shuffle(escapeableChars02, values), values) | simd_base::cmpeq(simd_base::shuffle(escapeableChars03, values), values));
+				simd_base::cmpeq(simd_base::opShuffle(escapeableChars02, values), values) | simd_base::cmpeq(simd_base::opShuffle(escapeableChars03, values), values));
 		}
 
 	  protected:
@@ -75,22 +75,22 @@ namespace jsonifier_internal {
 			c[0] = value_type(codePoint);
 			return 1;
 		}
-		uint32_t leading_zeros = lzcnt(codePoint);
+		uint32_t leadingZeros = lzcnt(codePoint);
 
-		if (leading_zeros >= 11) {
+		if (leadingZeros >= 11) {
 			uint32_t pattern = pdep(0x3F00U, codePoint);
 			pattern |= 0xC0ull;
 			c[0] = static_cast<value_type>(pattern >> 8);
 			c[1] = static_cast<value_type>(pattern & 0xFFu);
 			return 2;
-		} else if (leading_zeros >= 16) {
+		} else if (leadingZeros >= 16) {
 			uint32_t pattern = pdep(0x0F0800U, codePoint);
 			pattern |= 0xE0ull;
 			c[0] = static_cast<value_type>(pattern >> 16);
 			c[1] = static_cast<value_type>(pattern >> 8);
 			c[2] = static_cast<value_type>(pattern & 0xFFu);
 			return 3;
-		} else if (leading_zeros >= 21) {
+		} else if (leadingZeros >= 21) {
 			uint32_t pattern = pdep(0x01020400U, codePoint);
 			pattern |= 0xF0ull;
 			c[0] = static_cast<value_type>(pattern >> 24);
@@ -103,27 +103,24 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type01, typename value_type02> inline bool handleUnicodeCodePoint(value_type01* srcPtr, value_type02* dstPtr) {
-		static constexpr uint32_t subCodePoint = 0xfffd;
-		static constexpr uint8_t backslash{ '\\' };
-		static constexpr uint8_t u{ 'u' };
 		uint32_t codePoint = hexToU32NoCheck(*srcPtr + 2);
 		*srcPtr += 6;
 		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
 			value_type01 srcData = *srcPtr;
-			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<std::remove_pointer_t<value_type01>>(backslash) << 8) | static_cast<std::remove_pointer_t<value_type01>>(u))) {
-				codePoint = subCodePoint;
+			if (((srcData[0] << 8) | srcData[1]) != ((static_cast<std::remove_pointer_t<value_type01>>('\\') << 8) | static_cast<std::remove_pointer_t<value_type01>>('u'))) {
+				codePoint = 0xfffd;
 			} else {
 				uint32_t codePoint02 = hexToU32NoCheck(srcData + 2);
 				uint32_t lowBit		 = codePoint02 - 0xdc00;
 				if (lowBit >> 10) {
-					codePoint = subCodePoint;
+					codePoint = 0xfffd;
 				} else {
 					codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
 					*srcPtr += 6;
 				}
 			}
 		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
-			codePoint = subCodePoint;
+			codePoint = 0xfffd;
 		}
 		uint64_t offset = codePointToUtf8(codePoint, *dstPtr);
 		*dstPtr += offset;

@@ -57,28 +57,6 @@ namespace jsonifier_internal {
 		});
 	}
 
-	template<ctime_array newArr> struct make_static {
-		static constexpr auto value = newArr;
-	};
-
-	template<const jsonifier::string_view&... strings> constexpr jsonifier::string_view join() {
-		constexpr auto joinedArr = []() {
-			constexpr size_t len = (strings.size() + ... + 0);
-			ctime_array<char, len + 1> arr{};
-			auto append = [i = 0, &arr](const auto& s) mutable {
-				for (auto c: s)
-					arr[static_cast<uint64_t>(i++)] = c;
-			};
-			(append(strings), ...);
-			arr[len] = 0;
-			return arr;
-		}();
-		auto& staticArr = make_static<joinedArr>::value;
-		return { staticArr.data(), staticArr.size() - 1 };
-	}
-
-	template<const jsonifier::string_view&... strings> constexpr auto JoinV = join<strings...>();
-
 	inline decltype(auto) getMember(auto&& value, auto& member_ptr) {
 		using value_type = jsonifier::concepts::unwrap<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type>) {

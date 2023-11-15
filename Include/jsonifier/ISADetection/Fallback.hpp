@@ -170,11 +170,11 @@ namespace jsonifier_internal {
 		return static_cast<string_parsing_type>(movemaskEpi8(cmpeqEpi8(value, other)));
 	}
 
-	inline simd_int_t simd_base::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
+	inline simd_int_t simd_base::opAndNot(const simd_int_t& value, const simd_int_t& other) {
 		return andNotSi128(other, value);
 	}
 
-	inline simd_int_t simd_base::shuffle(const simd_int_t& value, const simd_int_t& other) {
+	inline simd_int_t simd_base::opShuffle(const simd_int_t& value, const simd_int_t& other) {
 		return shuffleEpi8(value, other);
 	}
 

@@ -71,7 +71,8 @@ template<typename OTy> struct TestGenerator {
 	}
 
 	double generateDouble() {
-		return static_cast<double>(randomizeNumber(1000000.34342f, 10000.3435454f));
+		auto newValue = static_cast<double>(randomizeNumber(1000000.34342f, 10000.3435454f));
+		return generateBool() ? newValue : -newValue;
 	};
 
 	bool generateBool() {
@@ -83,7 +84,8 @@ template<typename OTy> struct TestGenerator {
 	};
 
 	int64_t generateInt() {
-		return static_cast<int64_t>(randomizeNumber(1000000.0f, 10000.0f));
+		auto newValue = static_cast<int64_t>(randomizeNumber(1000000.0f, 10000.0f));
+		return generateBool() ? newValue : -newValue;
 	};
 
 	TestGenerator() {
@@ -276,7 +278,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	jsonifier::jsonifier_core parser{};
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson(uint64Test, buffer);
 		},
 		1);
 	for (auto& value: parser.getErrors()) {
@@ -309,7 +311,7 @@ auto jsonifier_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -344,7 +346,7 @@ auto jsonifier_abc_test(const std::string bufferNew, bool doWePrint = true) {
 
 	auto result = benchmark(
 		[&]() {
-			parser.parseJson<false, true>(uint64Test, buffer);
+			parser.parseJson(uint64Test, buffer);
 		},
 		iterations);
 	for (auto& value: parser.getErrors()) {
@@ -876,7 +878,7 @@ template<> struct jsonifier::core<testStruct> {
 
 int32_t main() {
 	try {
-		std::string newString01{ "{\"d\":{\"_trace\":[\""
+		jsonifier::string newString01{ "{\"d\":{\"_trace\":[\""
 			"\"],\"application\":{\"flags\":27828224,\"id\":1142733646600614004},"
 			"\"auth\":{},\"geo_ordered_rtc_"
 			"regions\":[\"newark\",\"us-east\",\"us-central\",\"atlanta\",\"us-south\"],\"guild_join_requests\":[],\"guilds\":[{\"id\":"
@@ -893,13 +895,12 @@ int32_t main() {
 			"enabled\":false,\"username\":\"MBot-MusicHouse-2\",\"verified\":true},\"user_settings\":{},\"v\":-10},\"op\":0,\"s\":1,\"t\":\"READY\"}" };
 		ReadyMessage dataNew{};
 		jsonifier::jsonifier_core parser{};
-		parser.parseJson<false, true>(dataNew, newString01);
+		parser.parseJson(dataNew, newString01);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		newString01.clear();
 		parser.serializeJson(dataNew, newString01);
-		std::cout << "NEW STRING: " << newString01 << std::endl;
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 #if defined(_WIN32)
 		FileLoader fileLoader01{ "../../../ReadMe.md" };

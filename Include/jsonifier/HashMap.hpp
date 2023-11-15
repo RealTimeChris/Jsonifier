@@ -331,7 +331,10 @@ namespace jsonifier_internal {
 		constexpr seed_or_index() = default;
 	};
 
-	template<uint64_t m> struct pmh_tables {
+	template<uint64_t m> struct pmh_tables : public hash<jsonifier::string_view>,
+											 public hash<jsonifier::string_view_base<uint8_t>>,
+											 public hash<buffer_string<uint8_t>>,
+											 public hash<buffer_string<char>> {
 		constexpr pmh_tables() = default;
 		constexpr pmh_tables(uint64_t firstSeedNew, ctime_array<seed_or_index, m> firstTableNew, ctime_array<uint64_t, m> secondTableNew) {
 			firstSeed	= firstSeedNew;
@@ -342,18 +345,18 @@ namespace jsonifier_internal {
 		ctime_array<seed_or_index, m> firstTable;
 		ctime_array<uint64_t, m> secondTable;
 
-		template<typename KeyType> using hasher = hash<KeyType>;
+		template<typename key_type> using hasher = hash<key_type>;
 
 		template<typename value_type> constexpr const hasher<value_type> getHasher() const {
-			return hasher<value_type>{};
+			return *this;
 		}
 
-		template<typename KeyType> constexpr uint64_t lookup(const KeyType& key) const {
-			auto const d = firstTable[getHasher<KeyType>()(key, static_cast<uint64_t>(firstSeed)) % m];
+		template<typename key_type> constexpr uint64_t lookup(const key_type& key) const {
+			auto const d = firstTable[getHasher<key_type>()(key, static_cast<uint64_t>(firstSeed)) % m];
 			if (!d.isSeed()) [[unlikely]] {
 				return static_cast<uint64_t>(d.value());
 			} else [[likely]] {
-				return secondTable[getHasher<KeyType>()(key, static_cast<uint64_t>(d.value())) % m];
+				return secondTable[getHasher<key_type>()(key, static_cast<uint64_t>(d.value())) % m];
 			}
 		}
 	};

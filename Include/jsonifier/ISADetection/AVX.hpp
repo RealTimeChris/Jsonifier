@@ -33,11 +33,11 @@ namespace jsonifier_internal {
 		return static_cast<string_parsing_type>(_mm_movemask_epi8(_mm_cmpeq_epi8(value, other)));
 	}
 
-	inline simd_int_t simd_base::bitAndNot(const simd_int_t& value, const simd_int_t& other) {
+	inline simd_int_t simd_base::opAndNot(const simd_int_t& value, const simd_int_t& other) {
 		return _mm_andnot_si128(other, value);
 	}
 
-	inline simd_int_t simd_base::shuffle(const simd_int_t& value, const simd_int_t& other) {
+	inline simd_int_t simd_base::opShuffle(const simd_int_t& value, const simd_int_t& other) {
 		return _mm_shuffle_epi8(value, other);
 	}
 

@@ -37,9 +37,11 @@ namespace jsonifier_internal {
 		using reference			= value_type&;
 		using size_type			= int64_t;
 
-		constexpr iterator() noexcept : ptr(nullptr){}
+		constexpr iterator() noexcept : ptr(nullptr) {
+		}
 
-		constexpr iterator(const pointer ptrNew) noexcept : ptr(ptrNew){}
+		constexpr iterator(const pointer ptrNew) noexcept : ptr(ptrNew) {
+		}
 
 		constexpr reference operator*() const noexcept {
 			return *operator->();
@@ -109,7 +111,7 @@ namespace jsonifier_internal {
 			return ptr == right.ptr;
 		}
 
-		constexpr std:: strong_ordering operator<=>(const iterator& right) const noexcept {
+		constexpr std::strong_ordering operator<=>(const iterator& right) const noexcept {
 			return ptr <=> right.ptr;
 		}
 

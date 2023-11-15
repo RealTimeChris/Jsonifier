@@ -165,15 +165,15 @@ namespace jsonifier_internal {
 			}
 		}
 
+		template<uint64_t index> void collectStringValuesHelper(string_view_ptr values) {
+			if constexpr (index < StridesPerStep) {
+				newPtr[index] = gatherValuesU<simd_int_t>(values + (BytesPerStep * index));
+				collectStringValuesHelper<index + 1>(values);
+			}
+		}
+
 		inline void collectStringValues(string_view_ptr values) {
-			newPtr[0] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 0));
-			newPtr[1] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 1));
-			newPtr[2] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 2));
-			newPtr[3] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 3));
-			newPtr[4] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 4));
-			newPtr[5] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 5));
-			newPtr[6] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 6));
-			newPtr[7] = gatherValuesU<simd_int_t>(values + (BytesPerStep * 7));
+			collectStringValuesHelper<0>(values);
 		}
 
 		inline void generateStructurals(string_view_ptr values) {
@@ -209,7 +209,7 @@ namespace jsonifier_internal {
 		}
 
 		inline void collectNonEmptyEscaped() noexcept {
-			simd_int_t potentialEscape			 = bitAndNot(backslashes, nextIsEscaped);
+			simd_int_t potentialEscape			 = opAndNot(backslashes, nextIsEscaped);
 			simd_int_t maybeEscaped				 = shl<1>(potentialEscape);
 			simd_int_t maybeEscapedAndOddBits	 = opOr(maybeEscaped, oddBitsVal);
 			simd_int_t evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
@@ -230,15 +230,15 @@ namespace jsonifier_internal {
 
 		inline void collectStructurals() {
 			collectEscapedCharacters();
-			quotes								= bitAndNot(quotes, escaped);
+			quotes								= opAndNot(quotes, escaped);
 			simd_int_t inString					= carrylessMultiplication(quotes, prevInString);
 			simd_int_t stringTail				= opXor(inString, quotes);
 			simd_int_t scalar					= opNot(opOr(op, whitespace));
-			simd_int_t nonQuoteScalar			= bitAndNot(scalar, quotes);
+			simd_int_t nonQuoteScalar			= opAndNot(scalar, quotes);
 			simd_int_t followsNonQuoteScalar	= follows(nonQuoteScalar, overflow);
-			simd_int_t potentialScalarStart		= bitAndNot(scalar, followsNonQuoteScalar);
+			simd_int_t potentialScalarStart		= opAndNot(scalar, followsNonQuoteScalar);
 			simd_int_t porentialStructuralStart = opOr(op, potentialScalarStart);
-			structurals							= bitAndNot(porentialStructuralStart, stringTail);
+			structurals							= opAndNot(porentialStructuralStart, stringTail);
 		}
 
 		inline std::string collectEscapedCharactersWithErrorPrintOut(size_type errorIndex) {
@@ -290,7 +290,7 @@ namespace jsonifier_internal {
 
 		inline std::string collectNonEmptyEscapedWithErrorPrintOut(size_type errorIndex) noexcept {
 			std::stringstream returnValue{};
-			simd_int_t potentialEscape			 = bitAndNot(backslashes, nextIsEscaped);
+			simd_int_t potentialEscape			 = opAndNot(backslashes, nextIsEscaped);
 			simd_int_t maybeEscaped				 = shl<1>(potentialEscape);
 			simd_int_t maybeEscapedAndOddBits	 = opOr(maybeEscaped, oddBitsVal);
 			simd_int_t evenSeriesCodesAndOddBits = opSub(maybeEscapedAndOddBits, potentialEscape);
@@ -317,15 +317,15 @@ namespace jsonifier_internal {
 		inline std::string collectStructuralsWithErrorPrintOut(size_type errorIndex) {
 			std::stringstream returnValue{};
 			std::string returnValueNew			= collectEscapedCharactersWithErrorPrintOut(errorIndex);
-			quotes								= bitAndNot(quotes, escaped);
+			quotes								= opAndNot(quotes, escaped);
 			simd_int_t inString					= carrylessMultiplication(quotes, prevInString);
 			simd_int_t stringTail				= opXor(inString, quotes);
 			simd_int_t scalar					= opNot(opOr(op, whitespace));
-			simd_int_t nonQuoteScalar			= bitAndNot(scalar, quotes);
+			simd_int_t nonQuoteScalar			= opAndNot(scalar, quotes);
 			simd_int_t followsNonQuoteScalar	= follows(nonQuoteScalar, overflow);
-			simd_int_t potentialScalarStart		= bitAndNot(scalar, followsNonQuoteScalar);
+			simd_int_t potentialScalarStart		= opAndNot(scalar, followsNonQuoteScalar);
 			simd_int_t porentialStructuralStart = opOr(op, potentialScalarStart);
-			structurals							= bitAndNot(porentialStructuralStart, stringTail);
+			structurals							= opAndNot(porentialStructuralStart, stringTail);
 			if (stringIndex == errorIndex) {
 				returnValue << returnValueNew;
 				returnValue << "Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";

@@ -33,25 +33,25 @@ namespace jsonifier_internal {
 
 	class parser;
 
-	template<bool excludeKeys, typename value_type> struct parse_impl {};
+	template<typename value_type> struct parse_impl {};
 
-	template<bool excludeKeys> struct parse {
-		template<typename value_type> inline static void op(value_type& value, structural_iterator& iter, parser& parserNew) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew);
+	struct parse {
+		template<typename value_type> inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew) {
+			parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), iter, parserNew);
 		}
 
-		template<typename value_type, jsonifier::concepts::has_find KeyType>
-		inline static void op(value_type& value, structural_iterator& iter, parser& parserNew, const KeyType& keys) {
-			parse_impl<excludeKeys, value_type>::op(value, iter, parserNew, keys);
+		template<typename value_type, jsonifier::concepts::has_find key_type>
+		inline static void op(value_type&& value, structural_iterator& iter, parser& parserNew, const key_type& keys) {
+			parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), iter, parserNew, keys);
 		}
 	};
 
 	class parser {
 	  public:
-		template<bool, typename value_type> friend struct parse_impl;
-		template<bool> friend struct parse;
+		template<typename value_type> friend struct parse_impl;
+		friend struct parse;
 
-		template<bool excludeKeys = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
 		inline void parseJson(value_type&& data, buffer_type& stringNew) {
 			if (stringNew.empty()) {
 				return;
@@ -62,14 +62,10 @@ namespace jsonifier_internal {
 			if (!*newIter) {
 				return;
 			}
-			if constexpr (excludeKeys) {
-				if constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<decltype(data)>>) {
-					parse<excludeKeys>::op(data, newIter, *this, data.excludedKeys);
-				} else {
-					parse<excludeKeys>::op(data, newIter, *this);
-				}
+			if constexpr (jsonifier::concepts::has_excluded_keys<jsonifier::concepts::unwrap<value_type>>) {
+				parse::op(std::forward<value_type>(data), newIter, *this, data.jsonifierExcludedKeys);
 			} else {
-				parse<excludeKeys>::op(data, newIter, *this);
+				parse::op(std::forward<value_type>(data), newIter, *this);
 			}
 		}
 

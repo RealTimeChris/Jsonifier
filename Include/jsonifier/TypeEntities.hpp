@@ -64,7 +64,7 @@ namespace jsonifier {
 
 		template<size_t index> constexpr tag<index> TagV{};
 
-		template<typename value_type> using unwrap = std::unwrap_ref_decay_t<value_type>;
+		template<typename value_type> using unwrap = std::remove_const_t<std::unwrap_ref_decay_t<value_type>>;
 
 		template<typename value_type>
 		concept range = requires(value_type& value) {
@@ -201,7 +201,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_excluded_keys = requires(value_type value) {
-			{ value.excludedKeys };
+			{ value.jsonifierExcludedKeys };
 		};
 
 		template<class value_type>

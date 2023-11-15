@@ -34,101 +34,105 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> inline value_type* toCharsU64Len8(value_type* buf, uint64_t value) {
+	template<typename value_type> inline value_type* toCharsU64Len8(value_type* buf, uint64_t val) {
 		uint64_t aa, bb, cc, dd, aabb, ccdd;
-		aabb = uint64_t((uint64_t(value) * 109951163) >> 40);
-		ccdd = value - aabb * 10000;
-		aa	 = (aabb * 5243) >> 19;
-		cc	 = (ccdd * 5243) >> 19;
-		bb	 = aabb - aa * 100;
-		dd	 = ccdd - cc * 100;
-		std::memcpy(buf, charTable + aa * 2ULL, 2);
-		std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-		std::memcpy(buf + 4ULL, charTable + cc * 2ULL, 2);
-		std::memcpy(buf + 6ULL, charTable + dd * 2ULL, 2);
+		aabb = static_cast<uint64_t>(static_cast<uint64_t>(val * 109951163ULL) >> 40);
+		ccdd = val - aabb * 10000ULL;
+		aa	 = (aabb * 5243ULL) >> 19;
+		cc	 = (ccdd * 5243ULL) >> 19;
+		bb	 = aabb - aa * 100ULL;
+		dd	 = ccdd - cc * 100ULL;
+		std::memcpy(buf + 0, charTable + aa * 2, 2);
+		std::memcpy(buf + 2, charTable + bb * 2, 2);
+		std::memcpy(buf + 4, charTable + cc * 2, 2);
+		std::memcpy(buf + 6, charTable + dd * 2, 2);
 		return buf + 8;
 	}
 
-	template<typename value_type> inline value_type* toCharsU64Len4(value_type* buf, uint64_t value) {
+	template<typename value_type> inline value_type* toCharsU64Len4(value_type* buf, uint64_t val) {
 		uint64_t aa, bb;
-		aa = (value * 5243) >> 19;
-		bb = value - aa * 100;
-		std::memcpy(buf, charTable + aa * 2ULL, 2);
-		std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-		return buf + 4ULL;
+		aa = (val * 5243ULL) >> 19;
+		bb = val - aa * 100ULL;
+		std::memcpy(buf + 0, charTable + aa * 2, 2);
+		std::memcpy(buf + 2, charTable + bb * 2, 2);
+		return buf + 4;
 	}
 
-	template<typename value_type> inline value_type* toCharsU64Len18(value_type* buf, uint64_t value) {
+	template<typename value_type> inline value_type* toCharsU64Len18(value_type* buf, uint64_t val) {
 		uint64_t aa, bb, cc, dd, aabb, bbcc, ccdd, lz;
 
-		if (value < 100) {
-			lz = value < 10;
-			std::memcpy(buf, charTable + value * 2ULL + lz, 2);
+		if (val < 100ULL) {
+			lz = val < 10ULL;
+			std::memcpy(buf + 0, charTable + val * 2 + lz, 2);
 			buf -= lz;
-			return buf + 2ULL;
-		} else if (value < 10000) {
-			aa = (value * 5243) >> 19;
-			bb = value - aa * 100;
-			lz = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ULL + lz, 2);
+			return buf + 2;
+
+		} else if (val < 10000ULL) {
+			aa = (val * 5243ULL) >> 19;
+			bb = val - aa * 100ULL;
+			lz = aa < 10ULL;
+			std::memcpy(buf + 0, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-			return buf + 4ULL;
-		} else if (value < 1000000) {
-			aa	 = uint64_t((uint64_t(value) * 429497) >> 32);
-			bbcc = value - aa * 10000;
-			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ULL + lz, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			return buf + 4;
+
+		} else if (val < 1000000ULL) {
+			aa	 = static_cast<uint64_t>(static_cast<uint64_t>(val * 429497ULL) >> 32);
+			bbcc = val - aa * 10000ULL;
+			bb	 = (bbcc * 5243ULL) >> 19;
+			cc	 = bbcc - bb * 100ULL;
+			lz	 = aa < 10ULL;
+			std::memcpy(buf + 0, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable + cc * 2ULL, 2);
-			return buf + 6ULL;
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			return buf + 6;
+
 		} else {
-			aabb = uint64_t((uint64_t(value) * 109951163) >> 40);
-			ccdd = value - aabb * 10000;
-			aa	 = (aabb * 5243) >> 19;
-			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ULL + lz, 2);
+			aabb = static_cast<uint64_t>(static_cast<uint64_t>(val * 109951163ULL) >> 40);
+			ccdd = val - aabb * 10000ULL;
+			aa	 = (aabb * 5243ULL) >> 19;
+			cc	 = (ccdd * 5243ULL) >> 19;
+			bb	 = aabb - aa * 100ULL;
+			dd	 = ccdd - cc * 100ULL;
+			lz	 = aa < 10ULL;
+			std::memcpy(buf + 0, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable + dd * 2ULL, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 		}
 	}
 
-	template<typename value_type> inline value_type* toCharsU64Len58(value_type* buf, uint64_t value) {
+	template<typename value_type> inline value_type* toCharsU64Len58(value_type* buf, uint64_t val) {
 		uint64_t aa, bb, cc, dd, aabb, bbcc, ccdd, lz;
 
-		if (value < 1000000) {
-			aa	 = uint64_t((uint64_t(value) * 429497) >> 32);
-			bbcc = value - aa * 10000;
-			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ULL + lz, 2);
+		if (val < 1000000ULL) {
+			aa	 = static_cast<uint64_t>(static_cast<uint64_t>(val * 429497ULL) >> 32);
+			bbcc = val - aa * 10000ULL;
+			bb	 = (bbcc * 5243ULL) >> 19;
+			cc	 = bbcc - bb * 100ULL;
+			lz	 = aa < 10ULL;
+			std::memcpy(buf + 0, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable + cc * 2ULL, 2);
-			return buf + 6ULL;
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			return buf + 6;
+
 		} else {
-			aabb = uint64_t((uint64_t(value) * 109951163) >> 40);
-			ccdd = value - aabb * 10000;
-			aa	 = (aabb * 5243) >> 19;
-			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2ULL + lz, 2);
+			aabb = static_cast<uint64_t>(static_cast<uint64_t>(val * 109951163ULL) >> 40);
+			ccdd = val - aabb * 10000ULL;
+			aa	 = (aabb * 5243ULL) >> 19;
+			cc	 = (ccdd * 5243ULL) >> 19;
+			bb	 = aabb - aa * 100ULL;
+			dd	 = ccdd - cc * 100ULL;
+			lz	 = aa < 10ULL;
+			std::memcpy(buf + 0, charTable + aa * 2 + lz, 2);
 			buf -= lz;
-			std::memcpy(buf + 2ULL, charTable + bb * 2ULL, 2);
-			std::memcpy(buf + 4ULL, charTable + cc * 2ULL, 2);
-			std::memcpy(buf + 6ULL, charTable + dd * 2ULL, 2);
+			std::memcpy(buf + 2, charTable + bb * 2, 2);
+			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			std::memcpy(buf + 6, charTable + dd * 2, 2);
 			return buf + 8;
 		}
 	}
@@ -137,21 +141,21 @@ namespace jsonifier_internal {
 		uint64_t tmp, hgh;
 		uint64_t mid, low;
 
-		if (value < 100000000) {
-			buf = toCharsU64Len18(buf, uint64_t(value));
+		if (value < 100000000ULL) {
+			buf = toCharsU64Len18(buf, static_cast<uint64_t>(value));
 			return buf;
 		} else if (value < 100000000ULL * 100000000ULL) {
 			hgh = value / 100000000ULL;
-			low = uint64_t(value - hgh * 100000000ULL);
-			buf = toCharsU64Len18(buf, uint64_t(hgh));
+			low = static_cast<uint64_t>(value - hgh * 100000000ULL);
+			buf = toCharsU64Len18(buf, static_cast<uint64_t>(hgh));
 			buf = toCharsU64Len8(buf, low);
 			return buf;
 		} else {
 			tmp = value / 100000000ULL;
-			low = uint64_t(value - tmp * 100000000ULL);
-			hgh = uint64_t(tmp / 10000ULL);
-			mid = uint64_t(tmp - hgh * 10000ULL);
-			buf = toCharsU64Len58(buf, uint64_t(hgh));
+			low = static_cast<uint64_t>(value - tmp * 100000000ULL);
+			hgh = static_cast<uint64_t>(tmp / 10000ULL);
+			mid = static_cast<uint64_t>(tmp - hgh * 10000ULL);
+			buf = toCharsU64Len58(buf, static_cast<uint64_t>(hgh));
 			buf = toCharsU64Len4(buf, mid);
 			buf = toCharsU64Len8(buf, low);
 			return buf;
@@ -159,10 +163,10 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::signed_t value_type, typename char_type> inline char_type* toChars(char_type* buf, value_type value) {
-		uint64_t neg  = uint64_t(-value);
+		uint64_t neg  = static_cast<uint64_t>(-value);
 		uint64_t sign = value < 0;
 		*buf		  = '-';
-		return toChars(buf + sign, sign ? uint64_t(neg) : uint64_t(value));
+		return toChars(buf + sign, sign ? static_cast<uint64_t>(neg) : static_cast<uint64_t>(value));
 	}
 
 }// namespace jsonifier_internal

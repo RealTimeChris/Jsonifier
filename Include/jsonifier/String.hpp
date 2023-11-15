@@ -402,6 +402,7 @@ namespace jsonifier {
 		}
 
 		inline void clear() {
+			allocator::construct(dataVal, '\0');
 			sizeVal = 0;
 		}
 

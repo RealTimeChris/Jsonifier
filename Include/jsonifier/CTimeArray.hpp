@@ -42,8 +42,8 @@ namespace jsonifier_internal {
 
 		constexpr ctime_array() = default;
 
-		template<size_t M> constexpr ctime_array(value_type const (&init)[M]) : ctime_array(init, std::make_index_sequence<count>()) {
-			static_assert(M >= count);
+		template<size_t N> constexpr ctime_array(value_type const (&init)[N]) : ctime_array(init, std::make_index_sequence<count>()) {
+			static_assert(N >= count);
 		}
 
 		constexpr ctime_array(const std::initializer_list<value_type>& other) {
@@ -111,7 +111,7 @@ namespace jsonifier_internal {
 
 		value_type dataVal[count]{};
 
-		template<size_t M, size_t... I> constexpr ctime_array(value_type const (&init)[M], std::index_sequence<I...>) : dataVal{ init[I]... } {
+		template<size_t N, size_t... I> constexpr ctime_array(value_type const (&init)[N], std::index_sequence<I...>) : dataVal{ init[I]... } {
 		}
 	};
 
