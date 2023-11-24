@@ -125,9 +125,9 @@ template<> struct jsonifier::core<ReadyMessage> {
 	using OTy						 = ReadyMessage;
 	static constexpr auto parseValue = createObject("d", &OTy::d, "op", &OTy::op, "s", &OTy::s, "t", &OTy::t);
 };
- 
+
 template<> struct glz::meta<Application> {
-	using OTy						 = Application;
+	using OTy					= Application;
 	static constexpr auto value = object("id", &OTy::id, "flags", &OTy::flags);
 };
 
@@ -137,31 +137,31 @@ template<> struct glz::meta<UserSettings> {
 };
 
 template<> struct glz::meta<auth> {
-	using OTy						 = auth;
+	using OTy					= auth;
 	static constexpr auto value = object();
 };
 
 template<> struct glz::meta<Guild> {
-	using OTy						 = Guild;
+	using OTy					= Guild;
 	static constexpr auto value = object("id", &OTy::id, "unavailable", &OTy::unavailable);
 };
 
 template<> struct glz::meta<User> {
-	using OTy						 = User;
-	static constexpr auto value = object("avatar", &OTy::avatar, "bot", &OTy::bot, "discriminator", &OTy::discriminator, "email", &OTy::email, "flags", &OTy::flags,
-		"global_name", &OTy::global_name, "id", &OTy::id, "mfa_enabled", &OTy::mfa_enabled, "username", &OTy::username, "verified", &OTy::verified);
+	using OTy					= User;
+	static constexpr auto value = object("avatar", &OTy::avatar, "bot", &OTy::bot, "discriminator", &OTy::discriminator, "email", &OTy::email, "flags", &OTy::flags, "global_name",
+		&OTy::global_name, "id", &OTy::id, "mfa_enabled", &OTy::mfa_enabled, "username", &OTy::username, "verified", &OTy::verified);
 };
 
 template<> struct glz::meta<ReadyData> {
-	using OTy						 = ReadyData;
-	static constexpr auto value = object("_trace", &OTy::_trace, "application", &OTy::application, "geo_ordered_rtc_regions", &OTy::geo_ordered_rtc_regions,
-		"guild_join_requests", &OTy::guild_join_requests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::private_channels, "relationships",
-		&OTy::relationships, "resume_gateway_url", &OTy::resume_gateway_url, "session_id", &OTy::session_id, "session_type", &OTy::session_type, "shard", &OTy::shard, "user", &OTy::user,
+	using OTy					= ReadyData;
+	static constexpr auto value = object("_trace", &OTy::_trace, "application", &OTy::application, "geo_ordered_rtc_regions", &OTy::geo_ordered_rtc_regions, "guild_join_requests",
+		&OTy::guild_join_requests, "guilds", &OTy::guilds, "presences", &OTy::presences, "private_channels", &OTy::private_channels, "relationships", &OTy::relationships,
+		"resume_gateway_url", &OTy::resume_gateway_url, "session_id", &OTy::session_id, "session_type", &OTy::session_type, "shard", &OTy::shard, "user", &OTy::user,
 		"user_settings", &OTy::user_settings, "v", &OTy::v, "auth", &OTy::authVal);
 };
 
 template<> struct glz::meta<ReadyMessage> {
-	using OTy						 = ReadyMessage;
+	using OTy					= ReadyMessage;
 	static constexpr auto value = object("d", &OTy::d, "op", &OTy::op, "s", &OTy::s, "t", &OTy::t);
 };
 
@@ -303,25 +303,25 @@ template<> struct jsonifier::core<test_struct> {
 };
 
 template<> struct jsonifier::core<Test<test_struct>> {
-	using OTy								   = Test<test_struct>;
-	static constexpr auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
-			&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-			&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	using OTy						 = Test<test_struct>;
+	static constexpr auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v",
+		&OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 
 template<> struct jsonifier::core<TestGenerator<test_struct>> {
-	using OTy								   = TestGenerator<test_struct>;
-	static constexpr auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i",
-			&OTy::i, "j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u",
-			&OTy::u, "v", &OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+	using OTy						 = TestGenerator<test_struct>;
+	static constexpr auto parseValue = createObject("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v",
+		&OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
 };
 
 template<> struct jsonifier::core<AbcTest<test_struct>> {
-	using OTy								   = AbcTest<test_struct>;
-	static constexpr auto parseValue = createObject("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r",
-			&OTy::r, "q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f",
-			&OTy::f, "e", &OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+	using OTy						 = AbcTest<test_struct>;
+	static constexpr auto parseValue = createObject("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e",
+		&OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
 
 GLZ_META(AbcTest<test_struct>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
@@ -438,7 +438,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 	for (auto& value: parser.getErrors()) {
 		std::cout << "Jsonifier Error: " << value << std::endl;
 	}
-	r.json_read		   = result;
+	r.json_read = result;
 	buffer.clear();
 
 	result = benchmark(
@@ -447,7 +447,7 @@ auto jsonifier_single_test(const std::string bufferNew, bool doWePrint = true) {
 		},
 		1);
 	r.json_byte_length = buffer.size();
-	r.json_write = result;
+	r.json_write	   = result;
 	buffer.clear();
 	if (doWePrint) {
 		r.print();
@@ -581,7 +581,7 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 		},
 		1);
 
-	r.json_read		   = result;
+	r.json_read = result;
 	buffer.clear();
 
 	result = benchmark(
@@ -590,7 +590,7 @@ auto glaze_single_test(const std::string bufferNew, bool doWePrint = true) {
 		},
 		1);
 	r.json_byte_length = buffer.size();
-	r.json_write = result;
+	r.json_write	   = result;
 	buffer.clear();
 	if (doWePrint) {
 		r.print();
@@ -918,7 +918,7 @@ std::string regular_test(const json_data& jsonData) {
 	}
 	results.emplace_back(glaze_test(jsonData.theData));
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjson_test(jsonData.theData,false);
+		simdjson_test(jsonData.theData, false);
 	}
 	results.emplace_back(simdjson_test(jsonData.theData));
 
@@ -945,7 +945,7 @@ std::string abc_test(const json_data& jsonData) {
 	}
 	results.emplace_back(glaze_abc_test(jsonData.theData));
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjson_abc_test(jsonData.theData,false);
+		simdjson_abc_test(jsonData.theData, false);
 	}
 	results.emplace_back(simdjson_abc_test(jsonData.theData));
 
@@ -995,7 +995,7 @@ std::string single_test(const json_data& jsonData) {
 	}
 	results.emplace_back(jsonifier_single_test(jsonData.theData));
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjson_single_test(jsonData.theData,false);
+		simdjson_single_test(jsonData.theData, false);
 	}
 	results.emplace_back(simdjson_single_test(jsonData.theData));
 
@@ -1054,11 +1054,11 @@ struct TestStructNew {
 };
 
 template<> struct jsonifier::core<TestStructNew> {
-	using OTy= TestStructNew;
+	using OTy						 = TestStructNew;
 	static constexpr auto parseValue = createObject("value", &OTy::value);
 };
 
-template<typename value_type> struct TestStructNew02  {
+template<typename value_type> struct TestStructNew02 {
 	uint64_t value{ 1142732033978814564 };
 };
 
@@ -1082,7 +1082,7 @@ int32_t main() {
 		newResult;
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 #if defined(_WIN32)
-		FileLoader fileLoader01{ "../../../ReadMe.md" }; 
+		FileLoader fileLoader01{ "../../../ReadMe.md" };
 		FileLoader fileLoader02{ "../../../JsonData.json" };
 		fileLoader02.saveFile(glz::prettify(jsonData.theData));
 #else
@@ -1100,7 +1100,7 @@ int32_t main() {
 		auto singlTestResults	= single_test(jsonData);
 		auto multiTestResults	= regular_test(jsonData);
 		auto abcTestResults		= abc_test(jsonData);
-		std::string newString = fileLoader01;
+		std::string newString	= fileLoader01;
 		uint64_t currentStart{ 0 };
 		uint64_t currentEnd{ 0 };
 		currentEnd			  = newString.find("Latest results (") + std::string{ "Latest results (" }.size();
