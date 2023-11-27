@@ -82,8 +82,6 @@ set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/MP${THREAD_COUNT}>"
 	"${AVX_FLAG}"
 )
 

@@ -23,7 +23,6 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/SerializationIterator.hpp>
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Error.hpp>
@@ -33,39 +32,36 @@ namespace jsonifier_internal {
 	template<typename value_type = void> struct serialize_impl;
 
 	struct serialize {
-		template<bool shortStringsSupport, jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void op(value_type&& value, iterator_type&& iter) {
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void op(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				serialize_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter),
+				serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index),
 					value.jsonifierExcludedKeys);
 			} else {
-				serialize_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter));
+				serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			}
 		}
 	};
 
-	template<typename derived_type> class serializer : protected serialization_iterator<serializer<derived_type>, derived_type> {
+	template<typename derived_type> class serializer {
 	  public:
-		using iterator_type = serialization_iterator<serializer<derived_type>, derived_type>;
-
 		template<typename value_type> friend struct serialize_impl;
 
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
-		template<bool shortStringsSupport = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE void serializeJson(value_type&& data, buffer_type&& iter) {
-			iterator_type::reset();
 			derivedRef.errors.clear();
-			serialize::template op<shortStringsSupport>(std::forward<value_type>(data), std::forward<iterator_type>(*this));
-			if (iter.size() != iterator_type::currentSize) [[unlikely]] {
-				iter.resize(iterator_type::currentSize);
-			}
-			std::memcpy(iter.data(), iterator_type::data(), iterator_type::currentSize);
+			index = 0;
+			serialize::op(std::forward<value_type>(data), derivedRef.stringBuffer, index);
+			iter.resize(index);
+			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), index);
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		uint64_t index{};
 
 		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 

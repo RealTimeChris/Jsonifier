@@ -29,52 +29,53 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
 
+namespace jsonifier {
+
+	template<uint64_t> class jsonifier_core;
+}
+
 namespace jsonifier_internal {
 
 	template<typename value_type> struct parse_impl;
 
 	struct parse {
-		template<bool shortStringsSupport, jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void op(value_type&& value, iterator_type&& iter) {
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void op(value_type&& data, iterator_type&& iter) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter),
-					value.jsonifierExcludedKeys);
+				parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(data), std::forward<iterator_type>(iter), data.jsonifierExcludedKeys);
 			} else {
-				parse_impl<jsonifier::concepts::unwrap<value_type>>::template op<shortStringsSupport>(std::forward<value_type>(value), std::forward<iterator_type>(iter));
+				parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(data), std::forward<iterator_type>(iter));
 			}
 		}
 	};
 
-	template<typename derived_type> class parser : protected simd_structural_iterator<parser<derived_type>, derived_type> {
+	template<typename derived_type, bool doWeUseInitialBuffer> class parser {
 	  public:
-		using iterator_type = simd_structural_iterator<parser<derived_type>, derived_type>;
+		using iterator_type = simd_structural_iterator<parser<derived_type, doWeUseInitialBuffer>, derived_type, doWeUseInitialBuffer>;
 
 		template<typename value_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
-		template<bool refreshString = true, bool shortStringsSupport = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_INLINE void parseJson(value_type&& data, buffer_type&& stringNew) {
 			derivedRef.errors.clear();
-			section.reset<refreshString>(stringNew.data(), stringNew.size());
-			iterator_type::reset(section.begin());
-			if (!iterator_type::operator->()) {
-				return;
-			}
-			parse::template op<shortStringsSupport>(std::forward<value_type>(data), std::forward<iterator_type>(*this));
+			section.template reset<refreshString>(stringNew.data(), stringNew.size());
+			iterator_type iter{ section.begin(), derivedRef.stringBuffer, derivedRef.errors };
+			parse::op(std::forward<value_type>(data), iter);
 		}
 
 	  protected:
+		simd_string_reader<doWeUseInitialBuffer> section{};
 		derived_type& derivedRef{ initializeSelfRef() };
-		simd_string_reader section{};
 
 		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
-
-		JSONIFIER_INLINE ~parser() noexcept = default;
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
 		}
+
+		JSONIFIER_INLINE ~parser() noexcept = default;
 	};
 };

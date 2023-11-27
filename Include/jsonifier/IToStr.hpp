@@ -130,9 +130,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type01 val) noexcept {
+	template<jsonifier::concepts::uint64_type value_type01, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type01 val) noexcept {
 		if (val < 100000000) {
-			buf = toCharsU64Len18(buf, static_cast<uint64_t>(val));
+			buf = toCharsU64Len18(buf, val);
 			return buf;
 		} else if (val < 100000000ull * 100000000ull) {
 			const uint64_t hgh = static_cast<uint64_t>(val) / 100000000ull;
@@ -152,9 +152,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type01 val) noexcept {
+	template<jsonifier::concepts::int64_type value_type01, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type01 val) noexcept {
 		*buf = 0x2Du;
-		return toChars(buf + (static_cast<int64_t>(val) < 0), uint64_t(static_cast<int64_t>(val) ^ (static_cast<int64_t>(val) >> 63)) - (static_cast<int64_t>(val) >> 63));
+		return toChars(buf + (val < 0), uint64_t(val ^ (val >> 63)) - (val >> 63));
 	}
 
 }// namespace jsonifier_internal

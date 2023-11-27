@@ -32,39 +32,6 @@
 
 namespace jsonifier_internal {
 
-	template<typename = void, size_t... indices> constexpr auto indexer(std::index_sequence<indices...>&&) {
-		return [](auto f) -> decltype(auto) {
-			return decltype(f)(f)(std::integral_constant<size_t, indices>{}...);
-		};
-	}
-
-	template<size_t n, typename funtion_type> constexpr auto forEach(funtion_type&& f) {
-		return indexer(std::make_index_sequence<n>{})([&](auto... x) {
-			(std::forward<jsonifier::concepts::unwrap<funtion_type>>(f)(x), ...);
-		});
-	}
-
-	template<typename value_type> constexpr decltype(auto) convSv(value_type&& value) noexcept {
-		if constexpr (std::is_convertible_v<value_type, jsonifier::string_view>) {
-			return jsonifier::string_view{ value };
-		} else {
-			return std::forward<value_type>(value);
-		}
-	}
-
-	JSONIFIER_INLINE decltype(auto) getMember(auto&& value, auto& member_ptr) {
-		using value_type = jsonifier::concepts::unwrap<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<value_type>) {
-			return value.*member_ptr;
-		} else if constexpr (std::is_pointer_v<value_type>) {
-			return *member_ptr;
-		} else {
-			return member_ptr;
-		}
-	}
-
-	template<typename value_type, typename mptr_t> using member_t = decltype(getMember(std::declval<value_type>(), std::declval<jsonifier::concepts::unwrap<mptr_t>&>()));
-
 	template<jsonifier::concepts::time_type value_type> class stop_watch {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
@@ -78,8 +45,10 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE stop_watch& operator=(stop_watch&& other) {
-			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
 			return *this;
 		}
 
@@ -88,8 +57,10 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) {
-			totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
 			return *this;
 		}
 
@@ -99,7 +70,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE bool hasTimeElapsed() {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
-				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
+				totalNumberOfTimeUnits.load(std::memory_order_acquire)) [[likely]] {
 				return true;
 			} else {
 				return false;
@@ -107,7 +78,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void reset(value_type newTimeValue = value_type{}) {
-			if (newTimeValue != value_type{}) {
+			if (newTimeValue != value_type{}) [[likely]] {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
 			} else {
@@ -133,23 +104,17 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<typename... value_types> constexpr auto createArray(value_types&&... args) {
-		constexpr auto newSize = sizeof...(value_types);
-		if constexpr (newSize > 0) {
-			return jsonifier_internal::array{ std::make_tuple(std::forward<value_types>(args)...) };
-		} else {
-			return jsonifier_internal::array{ jsonifier::concepts::empty_val{} };
-		}
+	template<typename value_types> constexpr decltype(auto) createScalarValue(value_types&& args) {
+		return scalar_value{ std::make_tuple(std::forward<value_types>(args)) };
 	}
 
-	template<typename... value_types> constexpr auto createObject(value_types&&... args) {
-		constexpr auto newSize = sizeof...(value_types);
-		if constexpr (newSize > 0) {
+	template<typename... value_types> constexpr decltype(auto) createValue(value_types&&... args) {
+		if constexpr (sizeof...(value_types) > 0) {
 			auto newTuple	 = std::make_tuple(jsonifier_internal::convSv(std::forward<value_types>(args))...);
 			using tuple_type = jsonifier::concepts::unwrap<decltype(newTuple)>;
-			return jsonifier_internal::object{ jsonifier_internal::group_builder<tuple_type>::op(std::move(newTuple)) };
+			return value{ jsonifier_internal::group_builder<tuple_type>::op(std::move(newTuple)) };
 		} else {
-			return jsonifier_internal::object{ jsonifier::concepts::empty_val{} };
+			return value{ jsonifier::concepts::empty_val{} };
 		}
 	}
 

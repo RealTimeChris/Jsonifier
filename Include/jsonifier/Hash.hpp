@@ -32,23 +32,15 @@ namespace jsonifier_internal {
 
 	// https://en.wikipedia.org/wiki/Fowler�Noll�Vo_hash_function
 	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
-	static constexpr uint64_t fnv64OffsetBasis{ 0xcbf29ce484222325ull };
-	static constexpr uint64_t fnv64Prime{ 0x00000100000001B3ull };
+	constexpr uint32_t fnv64OffsetBasis{ 0x811c9dc5u };
+	constexpr uint32_t fnv64Prime{ 0x01000193u };
 
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value) {
-		uint64_t d{ fnv64OffsetBasis };
-		for (const auto& c: value) {
-			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(fnv64Prime);
+	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint32_t seed) {
+		uint32_t hash = (fnv64OffsetBasis ^ seed) * fnv64Prime;
+		for (const auto& valueNew: value) {
+			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv64Prime;
 		}
-		return d >> 8;
-	}
-
-	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint64_t seed) {
-		uint64_t d = (fnv64OffsetBasis ^ seed) * static_cast<uint64_t>(fnv64Prime);
-		for (const auto& c: value) {
-			d = (d ^ static_cast<uint64_t>(c)) * static_cast<uint64_t>(fnv64Prime);
-		}
-		return d >> 8;
+		return static_cast<uint64_t>(hash >> 8);
 	}
 
 	template<typename value_type> struct hash;

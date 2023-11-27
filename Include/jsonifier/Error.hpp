@@ -25,7 +25,6 @@
 
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringView.hpp>
-#include <jsonifier/Expected.hpp>
 #include <jsonifier/Simd.hpp>
 #include <source_location>
 #include <unordered_map>
@@ -49,27 +48,27 @@ namespace jsonifier_internal {
 		Serialize_Error			 = 11
 	};
 
-	enum class json_structural_type : uint8_t {
-		Unset		 = 0x00u,
-		Object_Start = 0x7Bu,
-		Object_End	 = 0x7Du,
-		Array_Start	 = 0x5Bu,
-		Array_End	 = 0x5Du,
-		String		 = 0x22u,
-		Bool		 = 0x74u,
-		Number		 = 0x2Du,
-		Colon		 = 0x3Au,
-		Comma		 = 0x2Cu,
-		Null		 = 0x6Eu
+	enum json_structural_type : uint8_t {
+		Jsonifier_Unset		   = 0x00u,
+		Jsonifier_Object_Start = 0x7Bu,
+		Jsonifier_Object_End   = 0x7Du,
+		Jsonifier_Array_Start  = 0x5Bu,
+		Jsonifier_Array_End	   = 0x5Du,
+		Jsonifier_String	   = 0x22u,
+		Jsonifier_Bool		   = 0x74u,
+		Jsonifier_Number	   = 0x2Du,
+		Jsonifier_Colon		   = 0x3Au,
+		Jsonifier_Comma		   = 0x2Cu,
+		Jsonifier_Null		   = 0x6Eu
 	};
 
-	inline std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
+	JSONIFIER_INLINE std::unordered_map<error_code, jsonifier::string> errorMap{ { error_code::Success, "Success" }, { error_code::Parse_Error, "Parse Error." },
 		{ error_code::Number_Error, "Number Error." }, { error_code::Unknown_Key, "Unknown Key" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Inadequate_String_Length, "Inadequate String Length" }, { error_code::Key_Parsing_Error, "Key Parsing Error" } };
 
 	JSONIFIER_INLINE bool isTypeType(uint8_t c) {
 		static constexpr uint8_t array01[]{ "0123456789-ftn\"{[" };
-		return find(array01, std::size(array01), &c, 1) != jsonifier::string::npos;
+		return jsonifier::string_view_base<uint8_t>{ array01, std::size(array01) }.find(c) != jsonifier::string::npos;
 	}
 
 	JSONIFIER_INLINE bool isDigitType(uint8_t c) {
@@ -84,17 +83,17 @@ namespace jsonifier_internal {
 		static constexpr jsonifier::string_view str{ "String" };
 		static constexpr jsonifier::string_view null{ "Null" };
 		static constexpr jsonifier::string_view unset{ "Unset" };
-		if (isDigitType(charToCheck)) {
+		if (isDigitType(charToCheck)) [[likely]] {
 			return number;
-		} else if (charToCheck == 0x74u || charToCheck == 0x66u) {
+		} else if (charToCheck == 0x74u || charToCheck == 0x66u) [[likely]] {
 			return boolean;
-		} else if (charToCheck == 0x7B) {
+		} else if (charToCheck == 0x7B) [[unlikely]] {
 			return object;
-		} else if (charToCheck == 0x5B) {
+		} else if (charToCheck == 0x5B) [[unlikely]] {
 			return array;
-		} else if (charToCheck == 0x22u) {
+		} else if (charToCheck == 0x22u) [[unlikely]] {
 			return str;
-		} else if (charToCheck == 0x6Eu) {
+		} else if (charToCheck == 0x6Eu) [[unlikely]] {
 			return null;
 		} else {
 			return unset;
@@ -102,7 +101,7 @@ namespace jsonifier_internal {
 	}
 
 	JSONIFIER_INLINE error_code collectMisReadType(uint8_t c, uint8_t currentValue) {
-		if (isTypeType(currentValue) && isTypeType(c)) {
+		if (isTypeType(currentValue) && isTypeType(c)) [[likely]] {
 			return error_code::Wrong_Type;
 		} else {
 			return error_code::Damaged_Input;
@@ -120,7 +119,7 @@ namespace jsonifier_internal {
 			intendedValue  = static_cast<uint8_t>(typeNew);
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
-			if (errorIndexReal < jsonifier::string{}.maxSize()) {
+			if (errorIndexReal < jsonifier::string{}.max_size()) {
 				stringView = iter.getRootPtr();
 			}
 			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
@@ -133,7 +132,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE error(const iterator& iter, error_code typeNew, std::source_location locationNew = std::source_location::current()) noexcept {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
-			if (errorIndexReal < jsonifier::string{}.maxSize()) {
+			if (errorIndexReal < jsonifier::string{}.max_size()) {
 				stringView = iter.getRootPtr();
 			}
 			location   = locationNew;
@@ -160,8 +159,8 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE jsonifier::string reportError() const {
 #if defined(DEV)
-			simd_string_reader section{};
-			std::string resultString{};
+			simd_string_reader<true> section{};
+			jsonifier::string resultString{};
 			if (stringView) {
 				resultString = section.resetWithErrorPrintOut<true>(stringView, stringLength, errorIndexReal);
 			}

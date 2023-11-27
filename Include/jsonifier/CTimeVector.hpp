@@ -42,9 +42,10 @@ namespace jsonifier_internal {
 
 		constexpr ctime_vector() = default;
 
-		constexpr ctime_vector(size_type count, const auto& value) : sizeVal(count) {
-			for (size_type x = 0; x < N; ++x)
+		template<typename value_type_newer> constexpr ctime_vector(size_type count, const value_type_newer& value) : sizeVal(count) {
+			for (size_type x = 0; x < N; ++x) {
 				data[x] = value;
+			}
 		}
 
 		constexpr iterator begin() {
@@ -84,7 +85,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type_newer> constexpr void pushBack(value_type_newer&& a) {
-			data[sizeVal++] = std::forward<value_type>(a);
+			data[sizeVal++] = static_cast<value_type>(a);
 		}
 
 		constexpr void pop_back() {

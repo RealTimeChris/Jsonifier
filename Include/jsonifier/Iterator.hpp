@@ -119,7 +119,7 @@ namespace jsonifier_internal {
 			return ptr <=> right.ptr;
 		}
 
-	  private:
+	  protected:
 		pointer ptr{};
 	};
 

@@ -23,16 +23,20 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/Popcount.hpp>
-#include <jsonifier/ISADetection/Lzcount.hpp>
-#include <jsonifier/ISADetection/Bmi.hpp>
-#include <jsonifier/ISADetection/Bmi2.hpp>
-#include <jsonifier/ISADetection/AVX.hpp>
-#include <jsonifier/ISADetection/AVX2.hpp>
-#include <jsonifier/ISADetection/AVX512.hpp>
-#include <jsonifier/ISADetection/Fallback.hpp>
+#include <jsonifier/ISA/Popcount.hpp>
+#include <jsonifier/ISA/Lzcount.hpp>
+#include <jsonifier/ISA/Bmi.hpp>
+#include <jsonifier/ISA/Bmi2.hpp>
+#include <jsonifier/ISA/AVX.hpp>
+#include <jsonifier/ISA/AVX2.hpp>
+#include <jsonifier/ISA/AVX512.hpp>
+#include <jsonifier/ISA/Fallback.hpp>
 
 namespace jsonifier_internal {
+
+	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
+		return static_cast<value_type01>(value1 > value2 ? value1 : value2);
+	}
 
 	JSONIFIER_INLINE void printBits(uint64_t values, const std::string& valuesTitle) {
 		std::cout << valuesTitle;
@@ -41,7 +45,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type> JSONIFIER_INLINE const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
-		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
 		std::cout << valuesTitle;
@@ -61,7 +65,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type> JSONIFIER_INLINE std::string printBits(const simd_type& value) noexcept {
-		alignas(BytesPerStep) uint8_t values[sizeof(simd_type)]{};
+		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
 		for (uint64_t x = 0; x < BytesPerStep; ++x) {
