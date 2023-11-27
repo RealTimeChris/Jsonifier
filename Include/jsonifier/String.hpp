@@ -93,7 +93,7 @@ namespace jsonifier {
 
 	template<typename value_type> class string_view_base;
 
-	template<typename value_type_new> class string_base : protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, bool doWeUseInitialBuffer = false> class string_base : protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -109,13 +109,17 @@ namespace jsonifier {
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
-		JSONIFIER_INLINE string_base() : capacityVal{}, sizeVal{}, dataVal{} {};
+		JSONIFIER_INLINE string_base() : capacityVal{}, sizeVal{}, dataVal{} {
+			if constexpr (doWeUseInitialBuffer) {
+				resize(1024 * 1024 * 4);
+			}
+		};
 
 		static constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		JSONIFIER_INLINE string_base& operator=(string_base&& other) noexcept {
-			if (this != &other) {
+			if (this != &other) [[likely]] {
 				string_base{ other }.swap(*this);
 			}
 			return *this;
@@ -126,7 +130,7 @@ namespace jsonifier {
 		};
 
 		JSONIFIER_INLINE string_base& operator=(const string_base& other) {
-			if (this != &other) {
+			if (this != &other) [[likely]] {
 				string_base{ other }.swap(*this);
 			}
 			return *this;
@@ -134,11 +138,11 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE string_base(const string_base& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			size_type newSize = other.size();
-			if (newSize > 0 && newSize < maxSize()) [[likely]] {
+			if (newSize > 0 && newSize < max_size()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other.data(), other.data() + newSize, dataVal);
-				allocator::construct(&(*this)[newSize], static_cast<value_type>(0x00));
+				allocator::construct(&(*this)[newSize], value_type{});
 			}
 		}
 
@@ -149,11 +153,11 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE explicit string_base(const value_type_newer& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			size_type newSize = other.size() * (sizeof(typename jsonifier::concepts::unwrap<value_type_newer>::value_type) / sizeof(value_type));
-			if (newSize > 0 && newSize < maxSize()) [[likely]] {
+			if (newSize > 0 && newSize < max_size()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other.data(), other.data() + newSize, dataVal);
-				allocator::construct(&(*this)[newSize], static_cast<value_type>(0x00));
+				allocator::construct(&(*this)[newSize], value_type{});
 			}
 		}
 
@@ -165,50 +169,50 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto newSize =
 				jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) * (sizeof(std::remove_pointer_t<value_type_newer>) / sizeof(value_type));
-			if (newSize > 0 && newSize < maxSize()) [[likely]] {
+			if (newSize > 0 && newSize < max_size()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other, other + newSize, dataVal);
-				allocator::construct(&(*this)[newSize], static_cast<value_type>(0x00));
+				allocator::construct(&(*this)[newSize], value_type{});
 			}
 		}
 
-		template<jsonifier::concepts::char_type value_type_newer> JSONIFIER_INLINE string_base& operator=(value_type_newer other) {
+		template<jsonifier::concepts::char_t value_type_newer> JSONIFIER_INLINE string_base& operator=(value_type_newer other) {
 			pushBack(static_cast<value_type>(other));
 			return *this;
 		}
 
-		template<jsonifier::concepts::char_type value_type_newer> JSONIFIER_INLINE string_base(value_type_newer other) : capacityVal{}, sizeVal{}, dataVal{} {
+		template<jsonifier::concepts::char_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
 		JSONIFIER_INLINE string_base(const_pointer other, uint64_t newSize) : capacityVal{}, sizeVal{}, dataVal{} {
-			if (newSize > 0 && newSize < maxSize()) [[likely]] {
+			if (newSize > 0 && newSize < max_size()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other, other + newSize, dataVal);
-				allocator::construct(&(*this)[newSize], static_cast<value_type>(0x00));
+				allocator::construct(&(*this)[newSize], value_type{});
 			}
 		}
 
 		JSONIFIER_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
-			if (position >= sizeVal) {
+			if (static_cast<int64_t>(position) >= static_cast<int64_t>(sizeVal)) [[unlikely]] {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
 			count = std::min(count, sizeVal - position);
 
 			string_base result{};
-			if (count > 0) {
+			if (count > 0) [[likely]] {
 				result.resize(count);
 				std::memcpy(result.dataVal, dataVal + position, count * sizeof(value_type));
 			}
 			return result;
 		}
 
-		constexpr size_type maxSize() {
-			const size_type allocMax   = allocator::maxSize();
-			const size_type storageMax = std::max(allocMax, static_cast<size_type>(bufSize));
+		constexpr size_type max_size() {
+			const size_type allocMax   = allocator::max_size(*this);
+			const size_type storageMax = jsonifier_internal::max(allocMax, static_cast<size_type>(bufSize));
 			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
@@ -244,65 +248,45 @@ namespace jsonifier {
 			return const_reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_INLINE size_type find(const_pointer args, size_type position = 0) const {
-			auto newSize = traits_type::length(args);
-			if (position + newSize > sizeVal) {
-				return npos;
-			}
-			auto foundValue = jsonifier_internal::find(dataVal + position, sizeVal - position, args, newSize);
-			return foundValue == npos ? npos : foundValue + position;
+		template<typename... arg_types> JSONIFIER_INLINE size_type find(arg_types&&... args) const {
+			return operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
 		}
 
-		template<jsonifier::concepts::char_type value_type_newer> JSONIFIER_INLINE size_type find(value_type_newer args, size_type position = 0) const {
-			value_type newValue{ static_cast<value_type>(args) };
-			if (position + 1 > sizeVal) {
-				return npos;
-			}
-			auto foundValue = jsonifier_internal::find(dataVal + position, sizeVal - position, &newValue, 1);
-			return foundValue == npos ? npos : foundValue + position;
-		}
-
-		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE size_type find(const value_type_newer& args, size_type position = 0) const {
-			if (position + args.size() > sizeVal) {
-				return npos;
-			}
-			auto foundValue = jsonifier_internal::find(dataVal + position, sizeVal - position, args.data(), args.size());
-			return foundValue == npos ? npos : foundValue + position;
-		}
-
-		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstOf(arg_types&&... args) const {
+		template<typename... arg_types> constexpr size_type findFirstOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE size_type findLastOf(arg_types&&... args) const {
+		template<typename... arg_types> constexpr size_type findLastOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstNotOf(arg_types&&... args) const {
+		template<typename... arg_types> constexpr size_type findFirstNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE size_type findLastNotOf(arg_types&&... args) const {
+		template<typename... arg_types> constexpr size_type findLastNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE void append(const string_base& newSize) {
-			if (sizeVal + newSize.size() >= capacityVal) {
+			if (sizeVal + newSize.size() >= capacityVal) [[unlikely]] {
 				reserve(sizeVal + newSize.size());
 			}
-			std::memcpy(dataVal + sizeVal, newSize.data(), newSize.size());
-			sizeVal += newSize.size();
-			allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			if (newSize.size() > 0) [[likely]] {
+				std::memcpy(dataVal + sizeVal, newSize.data(), newSize.size());
+				sizeVal += newSize.size();
+				allocator::construct(&dataVal[sizeVal], value_type{});
+			}
 		}
 
 		template<typename value_type_newer> JSONIFIER_INLINE void append(value_type_newer* values, uint64_t newSize) {
-			if (sizeVal + newSize >= capacityVal) {
+			if (sizeVal + newSize >= capacityVal) [[unlikely]] {
 				resize(sizeVal + newSize);
 			}
-			if (newSize > 0 && values) {
+			if (newSize > 0 && values) [[likely]] {
 				std::memcpy(dataVal + sizeVal, values, newSize);
 				sizeVal += newSize;
-				allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
 		}
 
@@ -310,23 +294,23 @@ namespace jsonifier {
 			int64_t newSize = end - start;
 			auto posNew		= where.operator->() - dataVal;
 
-			if (newSize <= 0) {
+			if (newSize <= 0) [[unlikely]] {
 				return;
 			}
 
-			if (sizeVal + newSize >= capacityVal) {
+			if (sizeVal + newSize >= capacityVal) [[unlikely]] {
 				reserve(sizeVal + newSize);
 			}
 
 			std::memmove(dataVal + posNew + newSize, dataVal + posNew, (sizeVal - posNew) * sizeof(value_type));
 			std::memcpy(dataVal + posNew, start.operator->(), newSize * sizeof(value_type));
 			sizeVal += newSize;
-			allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			allocator::construct(&dataVal[sizeVal], value_type{});
 		}
 
 		JSONIFIER_INLINE void insert(iterator values, value_type toInsert) {
 			auto positionNew = values - begin();
-			if (sizeVal + 1 >= capacityVal) {
+			if (sizeVal + 1 >= capacityVal) [[unlikely]] {
 				reserve((sizeVal + 1) * 2);
 			}
 			auto newSize = sizeVal - positionNew;
@@ -336,9 +320,9 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE void erase(size_type count) {
-			if (count == 0) {
+			if (count == 0) [[unlikely]] {
 				return;
-			} else if (count > sizeVal) {
+			} else if (count > sizeVal) [[likely]] {
 				count = sizeVal;
 			}
 			traits_type::move(dataVal, dataVal + count, sizeVal - count);
@@ -348,9 +332,9 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE void erase(iterator count) {
 			auto newSize = count - dataVal;
-			if (newSize == 0) {
+			if (newSize == 0) [[unlikely]] {
 				return;
-			} else if (newSize > static_cast<int64_t>(sizeVal)) {
+			} else if (newSize > static_cast<int64_t>(sizeVal)) [[unlikely]] {
 				newSize = static_cast<int64_t>(sizeVal);
 			}
 			traits_type::move(dataVal, dataVal + newSize, sizeVal - newSize);
@@ -359,22 +343,22 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE void pushBack(value_type value) {
-			if (sizeVal + 1 >= capacityVal) {
+			if (sizeVal + 1 >= capacityVal) [[unlikely]] {
 				reserve((sizeVal + 2) * 4);
 			}
 			allocator::construct(&dataVal[sizeVal++], value);
-			allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+			allocator::construct(&dataVal[sizeVal], value_type{});
 		}
 
 		JSONIFIER_INLINE const_reference at(size_type index) const {
-			if (index >= sizeVal) {
+			if (index >= sizeVal) [[unlikely]] {
 				throw std::runtime_error{ "Sorry, but that index is beyond the end of this string." };
 			}
 			return dataVal[index];
 		}
 
 		JSONIFIER_INLINE reference at(size_type index) {
-			if (index >= sizeVal) {
+			if (index >= sizeVal) [[unlikely]] {
 				throw std::runtime_error{ "Sorry, but that index is beyond the end of this string." };
 			}
 			return dataVal[index];
@@ -392,18 +376,18 @@ namespace jsonifier {
 			return { dataVal, sizeVal };
 		}
 
-		template<typename value_type_newer> JSONIFIER_INLINE explicit operator std::basic_string<value_type_newer>() const {
-			std::basic_string<value_type_newer> returnValue{};
-			if (sizeVal > 0) {
+		template<typename value_type_newer> JSONIFIER_INLINE explicit operator jsonifier::string_base<value_type_newer>() const {
+			jsonifier::string_base<value_type_newer> returnValue{};
+			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
 			return returnValue;
 		}
 
-		template<typename value_type_newer> JSONIFIER_INLINE explicit operator string_base<value_type_newer>() const {
-			string_base<value_type_newer> returnValue{};
-			if (sizeVal > 0) {
+		template<typename value_type_newer> JSONIFIER_INLINE explicit operator std::basic_string<value_type_newer>() const {
+			std::basic_string<value_type_newer> returnValue{};
+			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
@@ -411,7 +395,7 @@ namespace jsonifier {
 		}
 
 		virtual JSONIFIER_INLINE void clear() {
-			if (sizeVal > 0) {
+			if (sizeVal > 0) [[likely]] {
 				allocator::construct(dataVal, static_cast<value_type>(0x00u));
 			}
 			sizeVal = 0;
@@ -419,11 +403,11 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE void resize(size_type newSize) {
 			if (newSize > 0) [[likely]] {
-				if (newSize > capacityVal) {
+				if (newSize > capacityVal) [[likely]] {
 					pointer newPtr = allocator::allocate(newSize + 1);
 					try {
 						if (dataVal) [[likely]] {
-							if (sizeVal > 0) {
+							if (sizeVal > 0) [[likely]] {
 								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							}
 							allocator::deallocate(dataVal, capacityVal + 1);
@@ -434,14 +418,14 @@ namespace jsonifier {
 					}
 					capacityVal = newSize;
 					dataVal		= newPtr;
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 					allocator::construct(newPtr + newSize, value_type{});
 					sizeVal = newSize;
-				} else if (newSize > sizeVal) {
-					std::fill(dataVal + sizeVal, dataVal + newSize, value_type{});
+				} else if (newSize > sizeVal) [[likely]] {
+					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 					allocator::construct(dataVal + newSize, value_type{});
 					sizeVal = newSize;
-
-				} else if (newSize < sizeVal) {
+				} else if (newSize < sizeVal) [[likely]] {
 					std::destroy(dataVal + newSize, dataVal + sizeVal);
 					allocator::construct(dataVal + newSize, value_type{});
 					sizeVal = newSize;
@@ -457,7 +441,7 @@ namespace jsonifier {
 				pointer newPtr = allocator::allocate(capacityNew + 1);
 				try {
 					if (dataVal) [[likely]] {
-						if (sizeVal > 0) {
+						if (sizeVal > 0) [[likely]] {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
 						allocator::deallocate(dataVal, capacityVal + 1);
@@ -468,7 +452,7 @@ namespace jsonifier {
 				}
 				capacityVal = capacityNew;
 				dataVal		= newPtr;
-				allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00));
+				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
 		}
 
@@ -484,28 +468,22 @@ namespace jsonifier {
 			return sizeVal == 0;
 		}
 
-		constexpr pointer data() const {
+		JSONIFIER_INLINE pointer data() const {
 			return dataVal;
 		}
 
-		constexpr pointer data() {
+		JSONIFIER_INLINE pointer data() {
 			return dataVal;
 		}
 
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		JSONIFIER_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) {
 			auto rhsLength = traits_type::length(rhs);
-			if (lhs.size() != rhsLength) {
-				return false;
-			}
-			return jsonifier_internal::jsonifier_core_internal::compare(rhs, lhs.data(), rhsLength);
+			return rhsLength == lhs.size() && jsonifier_internal::jsonifier_core_internal::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) {
-			if (rhs.size() != lhs.size()) {
-				return false;
-			}
-			return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), lhs.data(), rhs.size());
+			return rhs.size() == lhs.size() && jsonifier_internal::jsonifier_core_internal::compare(lhs.data(), rhs.data(), rhs.size());
 		}
 
 		template<typename string_base_new> JSONIFIER_INLINE void swap(string_base_new&& other) {
@@ -594,8 +572,8 @@ namespace jsonifier {
 		pointer dataVal{};
 
 		JSONIFIER_INLINE void reset() {
-			if (dataVal && capacityVal) {
-				if (sizeVal) {
+			if (dataVal && capacityVal) [[likely]] {
+				if (sizeVal) [[likely]] {
 					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
@@ -613,42 +591,3 @@ namespace jsonifier {
 		return os;
 	}
 }// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	template<typename value_type_new> class buffer_string : public jsonifier::string_base<value_type_new> {
-	  public:
-		using base					 = jsonifier::string_base<value_type_new>;
-		using value_type			 = base::value_type;
-		using pointer				 = base::pointer;
-		using const_pointer			 = base::const_pointer;
-		using reference				 = base::reference;
-		using const_reference		 = base::const_reference;
-		using difference_type		 = base::difference_type;
-		using iterator				 = base::iterator;
-		using const_iterator		 = base::const_iterator;
-		using reverse_iterator		 = base::reverse_iterator;
-		using const_reverse_iterator = base::const_reverse_iterator;
-		using size_type				 = base::size_type;
-		using allocator				 = base::allocator;
-		using traits_type			 = base::traits_type;
-
-		JSONIFIER_INLINE buffer_string() {
-			base::resize(16384);
-		};
-
-		JSONIFIER_INLINE void clear() override {
-			base::sizeVal = 0;
-		}
-	};
-
-	template<typename value_type> struct hash<buffer_string<value_type>> {
-		JSONIFIER_INLINE uint64_t operator()(const buffer_string<uint8_t>& value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-
-		JSONIFIER_INLINE uint64_t operator()(const buffer_string<char>& value, uint64_t seed) const {
-			return fnv1aHash(value, seed);
-		}
-	};
-}

@@ -29,9 +29,9 @@
 
 namespace std {
 
-	template<> struct hash<jsonifier::string> {
-		JSONIFIER_INLINE uint64_t operator()(const jsonifier::string& string) const {
-			return jsonifier_internal::fnv1aHash(string);
+	template<jsonifier::concepts::string_t string_type> struct hash<string_type> {
+		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const {
+			return jsonifier_internal::fnv1aHash(string, 0);
 		}
 	};
 
@@ -188,7 +188,7 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE explicit operator string_view() {
 			if (jsonData.size() > 0) {
-				return { jsonData.data() + 1, jsonData.size() - 1 };
+				return { jsonData.data() + 1, jsonData.size() - 2 };
 			} else {
 				return {};
 			}
@@ -196,7 +196,7 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE explicit operator string() const {
 			if (jsonData.size() > 0) {
-				return { jsonData.data() + 1, jsonData.size() - 1 };
+				return { jsonData.data() + 1, jsonData.size() - 2 };
 			} else {
 				return {};
 			}

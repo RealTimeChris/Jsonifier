@@ -23,19 +23,19 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+#include <jsonifier/ISA/ISADetectionBase.hpp>
 
 namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
 		return _lzcnt_u32(value);
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

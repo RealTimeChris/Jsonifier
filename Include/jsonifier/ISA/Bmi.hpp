@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+#include <jsonifier/ISA/ISADetectionBase.hpp>
 
 namespace jsonifier_internal {
 
@@ -31,19 +31,23 @@ namespace jsonifier_internal {
 
 	#include <immintrin.h>
 
-	template<jsonifier::concepts::unsigned_int16_t value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
-		return static_cast<value_type>(_blsr_u32(static_cast<uint32_t>(value)));
-	}
-
-	template<jsonifier::concepts::unsigned_int32_t value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
 		return _blsr_u32(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int64_t value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
 		return _blsr_u64(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int16_t value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::uint8_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	#if defined(__linux__)
+		return static_cast<uint8_t>(__tzcnt_u16(static_cast<uint8_t>(value)));
+	#else
+		return static_cast<uint8_t>(_tzcnt_u16(static_cast<uint8_t>(value)));
+	#endif
+	}
+
+	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 	#if defined(__linux__)
 		return __tzcnt_u16(value);
 	#else
@@ -51,11 +55,11 @@ namespace jsonifier_internal {
 	#endif
 	}
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 		return _tzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::unsigned_int64_t value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 		return _tzcnt_u64(value);
 	}
 

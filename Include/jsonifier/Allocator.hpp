@@ -23,13 +23,13 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+#include <jsonifier/ISA/ISADetectionBase.hpp>
 #include <memory_resource>
 
 namespace jsonifier_internal {
 
-	template<uint64_t multiple> JSONIFIER_INLINE uint64_t roundUpToMultiple(uint64_t num) {
-		uint64_t remainder = num % multiple;
+	template<typename value_type, value_type multiple> JSONIFIER_INLINE value_type roundUpToMultiple(value_type num) {
+		value_type remainder = num % multiple;
 		return remainder == 0 ? num : num + (multiple - remainder);
 	}
 
@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 #if defined(_MSC_VER)
 
 	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
+		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<uint64_t, BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
 	}
 
 	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 #else
 
 	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(size * sizeof(value_type))));
+		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<uint64_t, BytesPerStep>(size * sizeof(value_type))));
 	}
 
 	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
@@ -66,14 +66,14 @@ namespace jsonifier_internal {
 		using size_type	 = uint64_t;
 
 		JSONIFIER_INLINE pointer allocate(size_type n) {
-			if (n == 0) {
+			if (n == 0) [[unlikely]] {
 				return nullptr;
 			}
 			return jsonifierAlignedAlloc<value_type>(n);
 		}
 
 		JSONIFIER_INLINE void deallocate(pointer ptr, size_type) {
-			if (ptr) {
+			if (ptr) [[likely]] {
 				jsonifierFree(ptr);
 			}
 		}
@@ -87,7 +87,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type_new> class alloc_wrapper : public aligned_allocator<value_type_new> {
+	template<typename value_type_new> class alloc_wrapper : public std::allocator_traits<aligned_allocator<value_type_new>>, public aligned_allocator<value_type_new> {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;

@@ -33,11 +33,11 @@ namespace jsonifier_internal {
 		return static_cast<uint8_t>(currentValue) == value;
 	}
 
-	template<> JSONIFIER_INLINE bool containsValue<json_structural_type::Bool>(uint8_t value) {
+	template<> JSONIFIER_INLINE bool containsValue<json_structural_type::Jsonifier_Bool>(uint8_t value) {
 		return value == 0x74u || value == 0x66u;
 	}
 
-	template<> JSONIFIER_INLINE bool containsValue<json_structural_type::Number>(uint8_t value) {
+	template<> JSONIFIER_INLINE bool containsValue<json_structural_type::Jsonifier_Number>(uint8_t value) {
 		return numberTable[value];
 	}
 
@@ -46,118 +46,114 @@ namespace jsonifier_internal {
 		using size_type = uint64_t;
 
 		template<json_structural_type c, jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static bool checkForMatchClosed(iterator&& iter) {
-			if (containsValue<c>(*iter)) {
+			if (containsValue<c>(*iter)) [[likely]] {
 				++iter;
 				return true;
-			} else {
+			} else [[unlikely]] {
 				return false;
 			}
 		}
 
 		template<uint8_t c, jsonifier::concepts::is_fwd_iterator iterator>
 		JSONIFIER_INLINE static bool checkForMatchClosed(iterator&& iter, iterator&& end, std::source_location location = std::source_location::current()) {
-			auto oldValue = *iter;
-			if (containsValue<c>(*iter)) {
+			if (containsValue<c>(*iter)) [[likely]] {
 				++iter;
 				return true;
-			} else {
-				auto oldIter = iter;
+			} else [[unlikely]] {
 				skipValue(iter, end);
 				return false;
 			}
 		}
 
-		template<json_structural_type c, jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static bool checkForMatchOpen(iterator&& iter) {
-			if (*iter == static_cast<uint8_t>(c)) {
+		template<uint8_t c, jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static bool checkForMatchOpen(iterator&& iter) {
+			if (*iter == c) [[likely]] {
 				++iter;
 				return true;
-			} else {
+			} else [[unlikely]] {
 				return false;
 			}
 		}
 
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter) {
+			++iter;
+			return;
+		}
+
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter, iterator&& end) {
-			if constexpr (std::same_as<simd_structural_iterator<parser<jsonifier::jsonifier_core>, jsonifier::jsonifier_core>, iterator>) {
-				++iter;
-				return;
-			} else {
-				++iter;
-				while (iter != end) {
-					switch (*iter) {
-						case 0x22u: {
-							++iter;
-							return;
-						}
-						default: {
+			++iter;
+			while (iter != end) {
+				switch (*iter) {
+					[[unlikely]] case 0x22u : {
+						++iter;
+						return;
+					}
+						[[likely]] default : {
 							++iter;
 							break;
 						}
-					}
 				}
 			}
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToEndOfArray(iterator&& iter) {
 			size_type currentDepth{ 1 };
-			while (iter != iter && currentDepth > 0) {
+			while (iter && currentDepth > 0) {
 				switch (*iter) {
-					case 0x5B: {
+					[[unlikely]] case 0x5B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x5D: {
+					[[unlikely]] case 0x5D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToEndOfObject(iterator&& iter) {
 			size_type currentDepth{ 1 };
-			while (iter != iter && currentDepth > 0) {
+			while (iter && currentDepth > 0) {
 				switch (*iter) {
-					case 0x7B: {
+					[[unlikely]] case 0x7B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x7D: {
+					[[unlikely]] case 0x7D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter) {
-			while (iter != iter && *iter != 0x2Cu) {
+			while (iter && *iter != 0x2Cu) {
 				switch (*iter) {
-					case 0x7B: {
-						skipObject(std::forward<iterator>(iter));
+					[[unlikely]] case 0x7B : {
+						skipObject(iter);
 						break;
 					}
-					case 0x5B: {
-						skipArray(std::forward<iterator>(iter));
+					[[unlikely]] case 0x5B : {
+						skipArray(iter);
 						break;
 					}
-					case 0x00ll: {
-						return;
-					}
-					default: {
-						++iter;
-					}
+					[[unlikely]] case 0x00ll : { return; }
+						[[likely]] default : {
+							++iter;
+						}
 				}
 			}
 		}
@@ -165,98 +161,142 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter, iterator&& end) {
 			while (iter != end && *iter != 0x2Cu) {
 				switch (*iter) {
-					case 0x7B: {
-						skipObject(std::forward<iterator>(iter), std::forward<iterator>(end));
+					[[unlikely]] case 0x7B : {
+						skipObject(iter, end);
 						break;
 					}
-					case 0x5B: {
-						skipArray(std::forward<iterator>(iter), std::forward<iterator>(end));
+					[[unlikely]] case 0x5B : {
+						skipArray(iter, end);
 						break;
 					}
-					case 0x00ll: {
-						return;
-					}
-					default: {
-						++iter;
-					}
+					[[unlikely]] case 0x00ll : { return; }
+						[[likely]] default : {
+							++iter;
+						}
 				}
 			}
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipValue(iterator&& iter) {
 			switch (*iter) {
-				case 0x7B: {
-					skipObject(std::forward<iterator>(iter));
+				[[unlikely]] case 0x7B : {
+					skipObject(iter);
 					break;
 				}
-				case 0x5B: {
-					skipArray(std::forward<iterator>(iter));
+				[[unlikely]] case 0x5B : {
+					skipArray(iter);
 					break;
 				}
-				case 0x00ll: {
-					return;
-				}
-				default: {
-					++iter;
-				}
+				[[unlikely]] case 0x00ll : { return; }
+					[[likely]] default : {
+						++iter;
+					}
 			}
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipValue(iterator&& iter, iterator&& end) {
 			switch (*iter) {
-				case 0x7B: {
-					skipObject(std::forward<iterator>(iter), std::forward<iterator>(end));
+				[[unlikely]] case 0x7B : {
+					skipObject(iter, end);
 					break;
 				}
-				case 0x5B: {
-					skipArray(std::forward<iterator>(iter), std::forward<iterator>(end));
+				[[unlikely]] case 0x5B : {
+					skipArray(iter, end);
 					break;
 				}
-				case 0x00ll: {
-					return;
-				}
-				default: {
-					++iter;
-				}
+				[[unlikely]] case 0x00ll : { return; }
+					[[likely]] default : {
+						++iter;
+					}
 			}
 		}
 
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter, iterator end) {
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter) {
+			auto newValue = *iter;
 			size_type currentDepth{ 1 };
-			size_type currentCount{ 0 };
-			while (iter != end && currentDepth > 0) {
+			if (newValue == ']' || newValue == '}') [[unlikely]] {
+				return 0;
+			}
+			size_type currentCount{ 1 };
+			while (iter && currentDepth > 0) {
 				switch (*iter) {
-					case 0x5B: {
+					[[unlikely]] case 0x5B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x5D: {
+					[[unlikely]] case 0x5D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					case 0x7B: {
+					[[unlikely]] case 0x7B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x7D: {
+					[[unlikely]] case 0x7D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					case 0x2Cu: {
-						if (currentDepth == 1) {
+					[[unlikely]] case 0x2Cu : {
+						if (currentDepth == 1) [[likely]] {
 							++currentCount;
 						}
 						++iter;
 						break;
 					}
-					default: {
+						[[likely]] default : {
+							++iter;
+							break;
+						}
+				}
+			}
+			++iter;
+			return currentCount;
+		}
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter, iterator end) {
+			size_type currentDepth{ 1 };
+			++iter;
+			if (*iter == ']' || *iter == '}') [[unlikely]] {
+				return 0;
+			}
+			size_type currentCount{ 1 };
+			while (iter != end && currentDepth > 0) {
+				switch (*iter) {
+					[[unlikely]] case 0x5B : {
+						++currentDepth;
 						++iter;
 						break;
 					}
+					[[unlikely]] case 0x5D : {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					[[unlikely]] case 0x7B : {
+						++currentDepth;
+						++iter;
+						break;
+					}
+					[[unlikely]] case 0x7D : {
+						--currentDepth;
+						++iter;
+						break;
+					}
+					[[unlikely]] case 0x2Cu : {
+						if (currentDepth == 1) [[likely]] {
+							++currentCount;
+						}
+						++iter;
+						break;
+					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 			return currentCount;
@@ -266,22 +306,22 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipObject(iterator&& iter) {
 			++iter;
 			size_type currentDepth{ 1 };
-			while (iter != iter && currentDepth > 0) {
+			while (iter && currentDepth > 0) {
 				switch (*iter) {
-					case 0x7B: {
+					[[unlikely]] case 0x7B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x7D: {
+					[[unlikely]] case 0x7D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}
@@ -291,20 +331,20 @@ namespace jsonifier_internal {
 			size_type currentDepth{ 1 };
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
-					case 0x7B: {
+					[[unlikely]] case 0x7B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x7D: {
+					[[unlikely]] case 0x7D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}
@@ -312,22 +352,22 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipArray(iterator&& iter) {
 			++iter;
 			size_type currentDepth{ 1 };
-			while (iter != iter && currentDepth > 0) {
+			while (iter && currentDepth > 0) {
 				switch (*iter) {
-					case 0x5B: {
+					[[unlikely]] case 0x5B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x5D: {
+					[[unlikely]] case 0x5D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}
@@ -337,20 +377,20 @@ namespace jsonifier_internal {
 			size_type currentDepth{ 1 };
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
-					case 0x5B: {
+					[[unlikely]] case 0x5B : {
 						++currentDepth;
 						++iter;
 						break;
 					}
-					case 0x5D: {
+					[[unlikely]] case 0x5D : {
 						--currentDepth;
 						++iter;
 						break;
 					}
-					default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 		}

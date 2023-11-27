@@ -30,37 +30,33 @@
 #include <chrono>
 #include <tuple>
 
+namespace jsonifier_internal {
+
+	template<typename derived_type, bool doWeUseInitialBuffer> class parser;
+}
+
 namespace jsonifier {
 
 	class raw_json_data;
 
-	template<typename value_type> class vector;
+	template<typename value_type_new, bool doWeUseInitialBuffer> class vector;
 
 	template<typename value_type> struct core {};
 
-}
-
-namespace jsonifier_internal {
-
-	template<typename derived_type> class parser;
-
-	template<typename value_type> struct array {
+	template<typename value_type> struct value {
 		value_type parseValue;
 	};
 
-	template<typename value_type> struct object {
+	template<typename value_type> struct scalar_value {
 		value_type parseValue;
 	};
-}
-
-namespace jsonifier {
 
 	namespace concepts {
 		// from
 		// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 		template<class, template<class...> class> constexpr bool is_specialization_v = false;
 
-		template<template<class...> class T, class... Args> constexpr bool is_specialization_v<T<Args...>, T> = true;
+		template<template<class...> class value_type, class... Args> constexpr bool is_specialization_v<value_type<Args...>, value_type> = true;
 
 		template<size_t index> using tag = std::integral_constant<size_t, index>;
 
@@ -119,9 +115,6 @@ namespace jsonifier {
 		concept stateless = std::is_empty_v<unwrap<value_type>>;
 
 		template<typename value_type>
-		concept is_parser = is_specialization_v<jsonifier_internal::parser<unwrap<value_type>>, jsonifier_internal::parser>;
-
-		template<typename value_type>
 		concept void_t = std::is_void_v<unwrap<value_type>>;
 
 		template<typename value_type>
@@ -144,32 +137,34 @@ namespace jsonifier {
 		concept unsigned_t = std::unsigned_integral<unwrap<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
-		concept unsigned_int16_t = unsigned_t<value_type> && sizeof(value_type) == 2;
+		concept uint8_type = unsigned_t<value_type> && sizeof(value_type) == 1;
 
 		template<typename value_type>
-		concept unsigned_int32_t = unsigned_t<value_type> && sizeof(value_type) == 4;
+		concept uint16_type = unsigned_t<value_type> && sizeof(value_type) == 2;
 
 		template<typename value_type>
-		concept unsigned_int64_t = unsigned_t<value_type> && sizeof(value_type) == 8;
+		concept uint32_type = unsigned_t<value_type> && sizeof(value_type) == 4;
 
 		template<typename value_type>
-		concept signed_int16_t = signed_t<value_type> && sizeof(value_type) == 2;
+		concept uint64_type = unsigned_t<value_type> && sizeof(value_type) == 8;
 
 		template<typename value_type>
-		concept signed_int32_t = signed_t<value_type> && sizeof(value_type) == 4;
+		concept int16_type = signed_t<value_type> && sizeof(value_type) == 2;
 
 		template<typename value_type>
-		concept signed_int64_t = signed_t<value_type> && sizeof(value_type) == 8;
+		concept int32_type = signed_t<value_type> && sizeof(value_type) == 4;
+
+		template<typename value_type>
+		concept int64_type = signed_t<value_type> && sizeof(value_type) == 8;
 
 		template<typename value_type>
 		concept float_t = std::floating_point<unwrap<value_type>>;
 
 		template<typename value_type>
-		concept char_t = std::same_as<unwrap<value_type>, char> || std::same_as<unwrap<value_type>, wchar_t> || std::same_as<unwrap<value_type>, char8_t> ||
-			std::same_as<unwrap<value_type>, char16_t> || std::same_as<unwrap<value_type>, char32_t>;
+		concept char_type = std::same_as<unwrap<value_type>, char>;
 
 		template<typename value_type>
-		concept num_t = ( float_t<value_type> || unsigned_t<value_type> || signed_t<value_type> )&&!char_t<value_type>;
+		concept num_t = ( float_t<value_type> || unsigned_t<value_type> || signed_t<value_type> )&&!char_type<value_type>;
 
 		template<typename value_type>
 		concept has_substr = requires(value_type value) {
@@ -197,7 +192,7 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept copyable = std::copy_constructible<value_type>;
+		concept copyable = std::copy_constructible<unwrap<value_type>>;
 
 		template<typename value_type>
 		concept unique_ptr_t = requires(value_type value) {
@@ -209,7 +204,7 @@ namespace jsonifier {
 		concept shared_ptr_t = requires(value_type value) {
 			typename unwrap<value_type>::element_type;
 			typename unwrap<value_type>::deleter_type;
-		} && has_release<value_type> && std::copy_constructible<unwrap<value_type>>;
+		} && has_release<value_type> && copyable<value_type>;
 
 		template<typename value_type>
 		concept has_find = requires(value_type value) {
@@ -230,9 +225,6 @@ namespace jsonifier {
 			bool(value);
 			{ *value };
 		};
-
-		template<typename value_type01, typename value_type02>
-		concept same_as = std::convertible_to<unwrap<value_type01>, unwrap<value_type02>> || std::same_as<unwrap<value_type01>, unwrap<value_type02>>;
 
 		template<class value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
@@ -266,19 +258,19 @@ namespace jsonifier {
 		template<typename value_type> using core_wrapper_t = unwrap<decltype(coreWrapperV<value_type>)>;
 
 		template<typename value_type>
-		concept jsonifier_array_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, jsonifier_internal::array>;
+		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
 
 		template<typename value_type>
-		concept jsonifier_object_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, jsonifier_internal::object>;
+		concept jsonifier_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, value>;
 
 		template<typename value_type>
 		concept enum_t = std::is_enum_v<unwrap<value_type>>;
 
 		template<typename value_type>
-		concept vector_t = ( !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> )&&!jsonifier_array_t<value_type> && !has_substr<value_type>;
+		concept vector_t = ( !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> )&&!jsonifier_value_t<value_type> && !has_substr<value_type>;
 
 		template<typename value_type>
-		concept raw_array_t = std::is_array_v<value_type>;
+		concept raw_array_t = std::is_array_v<unwrap<value_type>> || std::is_pointer_v<unwrap<value_type>>;
 
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
@@ -290,14 +282,40 @@ namespace jsonifier {
 		concept time_type = is_specialization_v<std::chrono::duration<unwrap<value_type>>, std::chrono::duration>;
 
 		template<typename value_type>
-		concept uint8_type = std::same_as<unwrap<value_type>, uint8_t>;
-
-		template<typename value_type>
-		concept char_type = uint8_type<value_type> || char_t<value_type>;
+		concept char_t = uint8_type<value_type> || char_type<value_type>;
 
 		template<typename value_type>
 		concept integer_t = std::integral<unwrap<value_type>> && !bool_t<value_type>;
 
+		template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
+			static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
+			static constexpr integer_type_new mask{ maskNew };
+			using type		   = simd_type;
+			using integer_type = integer_type_new;
+		};
+
+		template<typename... types> struct type_list;
+
+		template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
+			using current_type				  = value_type;
+			using remaining_types			  = type_list<rest...>;
+			static constexpr std::size_t size = 1 + sizeof...(rest);
+		};
+
+		template<typename value_type> struct type_list<value_type> {
+			using current_type				  = value_type;
+			static constexpr std::size_t size = 1;
+		};
+
+		template<typename type_list, std::size_t Index> struct get_type_at_index;
+
+		template<typename value_type, typename... rest> struct get_type_at_index<type_list<value_type, rest...>, 0> {
+			using type = value_type;
+		};
+
+		template<typename value_type, typename... rest, std::size_t Index> struct get_type_at_index<type_list<value_type, rest...>, Index> {
+			using type = typename get_type_at_index<type_list<rest...>, Index - 1>::type;
+		};
 	}
 
 }// namespace jsonifier_internal

@@ -29,25 +29,24 @@
 
 namespace jsonifier {
 
-	class jsonifier_core : public jsonifier_internal::serializer<jsonifier_core>, public jsonifier_internal::parser<jsonifier_core> {
+	template<uint64_t doWeUseInitialBuffer = true> class jsonifier_core : public jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>,
+																		  public jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer> {
 	  public:
-		friend class jsonifier_internal::serialization_iterator<serializer<jsonifier_core>, jsonifier_core>;
-		friend class jsonifier_internal::simd_structural_iterator<parser<jsonifier_core>, jsonifier_core>;
-		friend class serializer<jsonifier_core>;
-		friend class parser<jsonifier_core>;
+		using serializer = jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
+		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
 
-		using serializer = jsonifier_internal::serializer<jsonifier_core>;
-		using parser	 = jsonifier_internal::parser<jsonifier_core>;
+		friend class jsonifier_internal::simd_structural_iterator<parser, jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
+		friend class jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
 
 		JSONIFIER_INLINE jsonifier_core() noexcept = default;
 
 		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
-			stringBuffer = std::move(other.stringBuffer);
-			section		 = std::move(other.section);
-			currentIndex = other.currentIndex;
-			currentSize	 = other.currentSize;
-			rootIndex	 = other.rootIndex;
-			errors		 = other.errors;
+			if (this != &other) [[likely]] {
+				stringBuffer	= std::move(other.stringBuffer);
+				parser::section = std::move(other.parser::section);
+				errors			= std::move(other.errors);
+			}
 			return *this;
 		}
 
@@ -56,12 +55,11 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) {
-			stringBuffer = other.stringBuffer;
-			currentIndex = other.currentIndex;
-			currentSize	 = other.currentSize;
-			rootIndex	 = other.rootIndex;
-			section		 = other.section;
-			errors		 = other.errors;
+			if (this != &other) [[likely]] {
+				stringBuffer	= other.stringBuffer;
+				parser::section = other.parser::section;
+				errors			= other.errors;
+			}
 			return *this;
 		}
 
@@ -76,7 +74,7 @@ namespace jsonifier {
 		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
 
 	  protected:
-		jsonifier_internal::buffer_string<uint8_t> stringBuffer{};
+		string_base<uint8_t, doWeUseInitialBuffer> stringBuffer{};
 		jsonifier::vector<jsonifier_internal::error> errors{};
 	};
 

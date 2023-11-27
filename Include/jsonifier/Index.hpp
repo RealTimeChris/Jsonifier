@@ -33,6 +33,7 @@
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
+#include <jsonifier/Prettify.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>

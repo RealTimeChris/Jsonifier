@@ -29,7 +29,8 @@
 
 namespace jsonifier {
 
-	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, bool doWeUseInitialBuffer = false> class vector : protected std::equal_to<value_type_new>,
+																						protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -44,7 +45,11 @@ namespace jsonifier {
 		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
-		JSONIFIER_INLINE vector() = default;
+		JSONIFIER_INLINE vector() {
+			if constexpr (doWeUseInitialBuffer) {
+				resize(static_cast<uint64_t>(static_cast<float>(1024 * 1024 * 4) * 0.85f));
+			}
+		}
 
 		JSONIFIER_INLINE vector& operator=(vector&& other) noexcept {
 			if (this != &other && dataVal != other.dataVal) {
@@ -73,12 +78,12 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(std::vector<value_type> other) {
+		JSONIFIER_INLINE vector& operator=(std::vector<value_type>&& other) {
 			vector{ other }.swap(*this);
 			return *this;
 		}
 
-		JSONIFIER_INLINE explicit vector(std::vector<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
+		JSONIFIER_INLINE explicit vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -280,6 +285,24 @@ namespace jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
+		JSONIFIER_INLINE reference emplace_back(value_type&& c) {
+			if (sizeVal + 1 >= capacityVal) {
+				reserve(capacityVal * 2 + 2);
+			}
+			allocator::construct(&dataVal[sizeVal++], std::move(c));
+
+			return dataVal[sizeVal - 1];
+		}
+
+		JSONIFIER_INLINE reference emplace_back(const value_type& c) {
+			if (sizeVal + 1 >= capacityVal) {
+				reserve(capacityVal * 2 + 2);
+			}
+			allocator::construct(&dataVal[sizeVal++], c);
+
+			return dataVal[sizeVal - 1];
+		}
+
 		JSONIFIER_INLINE void erase(size_type count) {
 			if (count >= sizeVal) {
 				return;
@@ -344,9 +367,9 @@ namespace jsonifier {
 				}
 				capacityVal = newSize;
 				dataVal		= newPtr;
-				std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 			} else if (newSize > sizeVal) [[unlikely]] {
-				std::uninitialized_fill(dataVal + sizeVal, dataVal + capacityVal, value_type{});
+				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 			} else if (newSize < sizeVal) {
 				std::destroy(dataVal + newSize, dataVal + sizeVal);
 			}
@@ -422,18 +445,3 @@ namespace jsonifier {
 	};
 
 }// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	class structural_index_vector : public jsonifier::vector<structural_index> {
-	  public:
-		using allocator = alloc_wrapper<structural_index>;
-		using size_type = uint64_t;
-		using pointer	= structural_index*;
-		using reference = structural_index&;
-
-		JSONIFIER_INLINE structural_index_vector() {
-			resize(16384);
-		};
-	};
-}

@@ -23,29 +23,25 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection/ISADetectionBase.hpp>
+#include <jsonifier/ISA/ISADetectionBase.hpp>
 
 namespace jsonifier_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI2)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
 
-	#define pdep(x, y) _pdep_u32(x, y)
+	#define popcnt(value) _mm_popcnt_u64(value)
 
 #else
 
-	template<jsonifier::concepts::unsigned_int32_t value_type> JSONIFIER_INLINE value_type pdep(value_type src, value_type mask) {
-		value_type result  = 0;
-		value_type src_bit = 1;
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		value_type count{};
 
-		for (int32_t x = 0; x < 64; x++) {
-			if (mask & 1) {
-				result |= (src & src_bit);
-				src_bit <<= 1;
-			}
-			mask >>= 1;
+		while (value > 0) {
+			count += value & 1;
+			value >>= 1;
 		}
 
-		return result;
+		return count;
 	}
 
 #endif
