@@ -28,7 +28,7 @@
 #include <jsonifier/CTimeVector.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Tuple.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/ISADetection.hpp>
 #include <algorithm>
 #include <span>
 
@@ -133,10 +133,10 @@ namespace jsonifier_internal {
 		uint_type state{ 1u };
 
 		static_assert(std::unsigned_integral<uint_type>, "uint_type must be an unsigned integral type.");
-		template<typename value_type> constexpr static uint_type modulo(value_type value, std::integral_constant<uint_type, 0>) {
+		template<typename value_type> constexpr uint_type modulo(value_type value, std::integral_constant<uint_type, 0>) {
 			return value;
 		}
-		template<typename value_type, uint_type m2> constexpr static uint_type modulo(value_type value, std::integral_constant<uint_type, m2>) {
+		template<typename value_type, uint_type m2> constexpr uint_type modulo(value_type value, std::integral_constant<uint_type, m2>) {
 			return value % m2;
 		}
 	};
@@ -177,7 +177,7 @@ namespace jsonifier_internal {
 	};
 
 	template<uint32_t m> struct pmh_buckets {
-		constexpr static auto bucketMax = 2 * (1u << (log(m) / 2));
+		static constexpr auto bucketMax = 2 * (1u << (log(m) / 2));
 
 		using bucket_t = ctime_vector<uint32_t, bucketMax>;
 		std::array<bucket_t, m> buckets;
@@ -255,8 +255,8 @@ namespace jsonifier_internal {
 		using value_type = uint32_t;
 
 	  protected:
-		constexpr static value_type minusOne = std::numeric_limits<value_type>::max();
-		constexpr static value_type highBit	 = ~(minusOne >> 1);
+		static constexpr value_type minusOne = std::numeric_limits<value_type>::max();
+		static constexpr value_type highBit	 = ~(minusOne >> 1);
 
 		value_type val{ 0 };
 
@@ -291,10 +291,10 @@ namespace jsonifier_internal {
 
 		template<typename key_type> constexpr uint64_t lookup(const key_type& key) const {
 			auto const d = m > 0 ? firstTable[hasher<key_type>::operator()(key, firstSeed) % m] : seed_or_index{};
-			if (!d.isSeed()) [[unlikely]] {
-				return m > 0 ? d.value() : 0;
-			} else [[likely]] {
+			if (d.isSeed()) [[likely]] {
 				return m > 0 ? secondTable[hasher<key_type>::operator()(key, d.value()) % m] : 0;
+			} else [[unlikely]] {
+				return m > 0 ? d.value() : 0;
 			}
 		}
 	};
@@ -349,7 +349,7 @@ namespace jsonifier_internal {
 																							 protected string_compare_helper,
 																							 protected pmh_tables<nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1)> {
 	  public:
-		constexpr static auto storageSize = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
+		static constexpr auto storageSize = nextHighestPowerOfTwo(n) * (n < 32 ? 2 : 1);
 		using container_type			  = std::array<std::pair<key_type_new, value_type_new>, n>;
 		using tables_type				  = pmh_tables<storageSize>;
 
@@ -370,13 +370,20 @@ namespace jsonifier_internal {
 		}
 
 		template<typename key_type_newer> constexpr const_iterator find(key_type_newer&& keyNew) const {
-			auto kv		 = tables_type::lookup(keyNew);
-			auto newIter = container_type::begin() + static_cast<ptrdiff_t>(kv);
-			if (key_equal::operator()(newIter->first, keyNew)) {
+			auto newIter = container_type::begin() + static_cast<ptrdiff_t>(tables_type::lookup(std::forward<key_type_newer>(keyNew)));
+
+			if (newIter != container_type::end() && key_equal::operator()(newIter->first, keyNew)) {
 				return newIter;
-			} else {
-				return end();
 			}
+
+			return container_type::end();
+		}
+
+		constexpr value_type& operator[](const key_type_new& newKey) {
+			auto kv = tables_type::lookup(newKey);
+
+			auto iter = container_type::begin() + static_cast<ptrdiff_t>(kv);
+			return iter->second;
 		}
 	};
 
@@ -393,6 +400,6 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> constexpr auto makeMap() {
-		return makeMapImpl<jsonifier::concepts::unwrap<value_type>>(std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_t<value_type>>>{});
+		return makeMapImpl<jsonifier::concepts::unwrap_t<value_type>>(std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_t<value_type>>>{});
 	}
 }

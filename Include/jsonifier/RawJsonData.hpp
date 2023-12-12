@@ -37,12 +37,36 @@ namespace std {
 
 }
 
-namespace jsonifier_internal {
+namespace jsonifier {
 
 	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
 
-	inline std::unordered_map<jsonifier::string_view, json_type> typeMap{ { "", json_type::Unset }, { "Object", json_type::Object }, { "Array", json_type::Array },
-		{ "String", json_type::String }, { "Number", json_type::Number }, { "Bool", json_type::Bool }, { "Null", json_type::Null } };
+	class raw_json_data;
+
+}
+
+namespace jsonifier_internal {
+
+	template<typename value_type> inline value_type constructValueFromRawJsonData(const jsonifier::string& newData);
+
+	template<> inline std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
+	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& newData);
+
+	template<> inline jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(const jsonifier::string& newData);
+
+	template<> inline jsonifier::string constructValueFromRawJsonData<jsonifier::string>(const jsonifier::string& newData);
+
+	template<> inline double constructValueFromRawJsonData<double>(const jsonifier::string& newData);
+
+	template<> inline uint64_t constructValueFromRawJsonData<uint64_t>(const jsonifier::string& newData);
+
+	template<> inline int64_t constructValueFromRawJsonData<int64_t>(const jsonifier::string& newData);
+
+	template<> inline bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData);
+
+	inline std::unordered_map<jsonifier::string_view, jsonifier::json_type> typeMap{ { "", jsonifier::json_type::Unset }, { "Object", jsonifier::json_type::Object },
+		{ "Array", jsonifier::json_type::Array }, { "String", jsonifier::json_type::String }, { "Number", jsonifier::json_type::Number }, { "Bool", jsonifier::json_type::Bool },
+		{ "Null", jsonifier::json_type::Null } };
 
 }
 
@@ -50,41 +74,11 @@ namespace jsonifier {
 
 	class raw_json_data {
 	  public:
+		template<typename value_type> friend inline value_type constructValueFromRawJsonData(const jsonifier::string& newData);
 		using object_type = std::unordered_map<jsonifier::string, raw_json_data>;
 		using array_type  = jsonifier::vector<raw_json_data>;
 
 		JSONIFIER_INLINE raw_json_data() = default;
-
-		JSONIFIER_INLINE raw_json_data& operator=(bool value) {
-			if (value) {
-				jsonData = "true";
-			} else {
-				jsonData = "false";
-			}
-			return *this;
-		}
-
-		JSONIFIER_INLINE raw_json_data(bool value) {
-			*this = value;
-		}
-
-		JSONIFIER_INLINE raw_json_data& operator=(double value) {
-			jsonData = toString(value);
-			return *this;
-		}
-
-		JSONIFIER_INLINE raw_json_data(double value) {
-			*this = value;
-		}
-
-		JSONIFIER_INLINE raw_json_data& operator=(int64_t value) {
-			jsonData = toString(value);
-			return *this;
-		}
-
-		JSONIFIER_INLINE raw_json_data(int64_t value) {
-			*this = value;
-		}
 
 		JSONIFIER_INLINE raw_json_data& operator=(const jsonifier::string& value) {
 			jsonData = value;
@@ -103,7 +97,7 @@ namespace jsonifier {
 			return jsonData.data();
 		}
 
-		JSONIFIER_INLINE jsonifier_internal::json_type getType() {
+		JSONIFIER_INLINE json_type getType() const {
 			if (jsonData.size() > 0) {
 				return jsonifier_internal::typeMap[jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]))];
 			} else {
@@ -116,121 +110,58 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE explicit operator object_type() {
-			object_type results{};
-			if (jsonData.size() > 0) {
-				jsonifier::string::iterator newIter01 = jsonData.begin();
-				jsonifier::string::iterator newIter02 = jsonData.begin() + 1;
-				jsonifier::string::iterator endIter01 = jsonData.end();
-				jsonifier_internal::derailleur::skipToNextValue(endIter01, endIter01);
-				auto newCount = jsonifier_internal::derailleur::countValueElements(newIter01 + 1, endIter01);
-				for (uint64_t x = 0; x < newCount; ++x) {
-					auto newIter03 = newIter02;
-					if (x == 0) {
-						++newIter02;
-						++newIter02;
-						jsonifier_internal::derailleur::skipKey(newIter02, endIter01);
-						auto stringSize = static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 2);
-						auto newKey		= jsonifier::string{ newIter03.operator->() + 1, stringSize };
-						newIter03		= newIter02 + 1;
-						jsonifier_internal::derailleur::skipToNextValue(newIter02, endIter01);
-						results.emplace(std::pair<jsonifier::string, raw_json_data>{ newKey,
-							raw_json_data{ jsonifier::string{ newIter03.operator->(), static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->()) } } });
-					} else if (x == newCount - 1) {
-						++newIter02;
-						jsonifier_internal::derailleur::skipKey(newIter02, endIter01);
-						auto stringSize = static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 3);
-						auto newKey		= jsonifier::string{ newIter03.operator->() + 2, stringSize };
-
-						newIter03 = newIter02 + 1;
-						jsonifier_internal::derailleur::skipToNextValue(newIter02, endIter01);
-						results.emplace(std::pair<jsonifier::string, raw_json_data>{ newKey,
-							raw_json_data{ jsonifier::string{ newIter03.operator->(), static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 1) } } });
-					} else {
-						++newIter02;
-						jsonifier_internal::derailleur::skipKey(newIter02, endIter01);
-						auto stringSize = static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 3);
-						auto newKey		= jsonifier::string{ newIter03.operator->() + 2, stringSize };
-						newIter03		= newIter02 + 1;
-						jsonifier_internal::derailleur::skipToNextValue(newIter02, endIter01);
-						results.emplace(std::pair<jsonifier::string, raw_json_data>{ newKey,
-							raw_json_data{ jsonifier::string{ newIter03.operator->(), static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->()) } } });
-					}
-				}
-				return results;
+			if (getType() == json_type::Object) {
+				return constructValueFromRawJsonData<object_type>(jsonData);
+			} else {
+				return {};
 			}
-			return {};
 		}
 
 		JSONIFIER_INLINE explicit operator array_type() {
-			array_type results{};
-			if (jsonData.size() > 0) {
-				jsonifier::string::iterator newIter01 = jsonData.begin();
-				jsonifier::string::iterator newIter02 = jsonData.begin() + 1;
-				jsonifier::string::iterator endIter01 = jsonData.end();
-				jsonifier_internal::derailleur::skipToNextValue(endIter01, endIter01);
-				auto newCount = jsonifier_internal::derailleur::countValueElements(newIter01 + 1, endIter01);
-				for (uint64_t x = 0; x < newCount; ++x) {
-					auto newIter03 = newIter02;
-					jsonifier_internal::derailleur::skipToNextValue(newIter02, endIter01);
-					++newIter02;
-					if (x == newCount - 1) {
-						results.emplace_back(
-							raw_json_data{ jsonifier::string{ newIter03.operator->(), static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 2) } });
-					} else {
-						results.emplace_back(
-							raw_json_data{ jsonifier::string{ newIter03.operator->(), static_cast<uint64_t>(newIter02.operator->() - newIter03.operator->() - 1) } });
-					}
-				}
-				return results;
-			}
-			return {};
-		}
-
-		JSONIFIER_INLINE explicit operator string_view() {
-			if (jsonData.size() > 0) {
-				return { jsonData.data() + 1, jsonData.size() - 2 };
+			if (getType() == json_type::Array) {
+				return constructValueFromRawJsonData<array_type>(jsonData);
 			} else {
 				return {};
 			}
 		}
 
 		JSONIFIER_INLINE explicit operator string() const {
-			if (jsonData.size() > 0) {
-				return { jsonData.data() + 1, jsonData.size() - 2 };
+			if (getType() == json_type::String) {
+				return constructValueFromRawJsonData<string>(jsonData);
 			} else {
 				return {};
 			}
 		}
 
 		JSONIFIER_INLINE explicit operator double() const {
-			if (jsonData.size() > 0) {
-				return strToDouble(jsonData);
+			if (getType() == json_type::Number) {
+				return constructValueFromRawJsonData<double>(jsonData);
 			} else {
 				return {};
 			}
 		}
 
 		JSONIFIER_INLINE explicit operator uint64_t() const {
-			if (jsonData.size() > 0) {
-				return strToUint64(jsonData);
+			if (getType() == json_type::Number) {
+				return constructValueFromRawJsonData<uint64_t>(jsonData);
 			} else {
 				return {};
 			}
 		}
 
 		JSONIFIER_INLINE explicit operator int64_t() const {
-			if (jsonData.size() > 0) {
-				return strToInt64(jsonData);
+			if (getType() == json_type::Number) {
+				return constructValueFromRawJsonData<int64_t>(jsonData);
 			} else {
 				return {};
 			}
 		}
 
 		JSONIFIER_INLINE explicit operator bool() const {
-			if (jsonData == "true") {
-				return true;
+			if (getType() == json_type::Bool) {
+				return constructValueFromRawJsonData<bool>(jsonData);
 			} else {
-				return false;
+				return {};
 			}
 		}
 
@@ -251,4 +182,167 @@ namespace jsonifier {
 		return os;
 	}
 
+}
+
+namespace jsonifier_internal {
+
+	template<> inline std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
+	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) {
+		jsonifier::raw_json_data::object_type results{};
+		if (jsonData.size() > 0) {
+			jsonifier::string::const_iterator newIter01 = jsonData.begin();
+			jsonifier::string::const_iterator newIter02 = jsonData.begin() + 1;
+			jsonifier::string::const_iterator endIter01 = jsonData.end();
+
+			auto collectCharacter = [&](auto character) {
+				newIter02 = newIter01;
+				while (newIter01 < endIter01) {
+					if (*newIter01 == character) {
+						++newIter01;
+						break;
+					}
+					++newIter01;
+				}
+			};
+
+			auto collectValue = [&](bool endValue) {
+				newIter02 = newIter01;
+				derailleur::skipToNextValue(newIter02, endIter01);
+				jsonifier::string newString{};
+				auto newSize = newIter02 - newIter01;
+				if (endValue) {
+					--newSize;
+				}
+				newString.resize(static_cast<uint64_t>(newSize));
+				std::memcpy(newString.data(), newIter01.operator->(), static_cast<uint64_t>(newSize));
+				newIter01 = newIter02;
+				return newString;
+			};
+
+			auto collectKey = [&]() {
+				while (newIter02 < endIter01) {
+					if (*newIter02 == '"' && *(newIter01 - 1) !='\\') {
+						++newIter02;
+						break;
+					}
+					++newIter02;
+				}
+				newIter01 = newIter02 + 1;
+				while (newIter01 < endIter01) {
+					if (*newIter01 == '"' && *(newIter01 - 1) != '\\') {
+						break;
+					}
+					++newIter01;
+				}
+				jsonifier::string newString{};
+				auto newSize = newIter01 - newIter02;
+				newString.resize(static_cast<uint64_t>(newSize));
+				std::memcpy(newString.data(), newIter02.operator->(), static_cast<uint64_t>(newSize));
+				newIter01 = newIter02;
+				return newString;
+			};
+
+			skipWs(newIter01);
+			collectCharacter('{');
+			auto newCount = derailleur::countValueElements(newIter02, endIter01);
+			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
+				skipWs(newIter01);
+				auto newKey = collectKey();
+				skipWs(newIter01);
+				collectCharacter(':');
+				skipWs(newIter01);
+				bool endValue{ x == newCount - 1 };
+				results[newKey] = collectValue(endValue);
+				skipWs(newIter01);
+				collectCharacter(',');
+			}
+		}
+		return results;
+	}
+
+	template<> inline jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(const jsonifier::string& jsonData) {
+		jsonifier::raw_json_data::array_type results{};
+		if (jsonData.size() > 0) {
+			jsonifier::string::const_iterator newIter01 = jsonData.begin();
+			jsonifier::string::const_iterator newIter02 = jsonData.begin() + 1;
+			jsonifier::string::const_iterator endIter01 = jsonData.end();
+
+			auto collectCharacter = [&](auto character) {
+				newIter02 = newIter01;
+				while (newIter01 < endIter01) {
+					if (*newIter01 == character) {
+						++newIter01;
+						break;
+					}
+					++newIter01;
+				}
+			};
+
+			auto collectValue = [&](bool endValue) {
+				newIter02 = newIter01;
+				derailleur::skipToNextValue(newIter02, endIter01);
+				jsonifier::string newString{};
+				auto newSize = newIter02 - newIter01;
+				if (endValue) {
+					--newSize;
+				}
+				newString.resize(static_cast<uint64_t>(newSize));
+				std::memcpy(newString.data(), newIter01.operator->(), static_cast<uint64_t>(newSize));
+				newIter01 = newIter02;
+				return newString;
+			};
+
+			skipWs(newIter01);
+			collectCharacter('[');
+			auto newCount = derailleur::countValueElements(newIter02, endIter01);
+			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
+				skipWs(newIter01);
+				bool endValue{ x == newCount - 1 };
+				results.emplace_back(collectValue(endValue));
+				skipWs(newIter01);
+				collectCharacter(',');
+			}
+		}
+		return results;
+	}
+
+	template<> inline jsonifier::string constructValueFromRawJsonData<jsonifier::string>(const jsonifier::string& jsonData) {
+		if (jsonData.size() > 1) {
+			return { jsonData.data() + 1, jsonData.size() - 2 };
+		} else {
+			return {};
+		}
+	}
+
+	template<> inline double constructValueFromRawJsonData<double>(const jsonifier::string& jsonData) {
+		if (jsonData.size() > 0) {
+			return strToDouble(jsonData);
+		} else {
+			return {};
+		}
+	}
+
+	template<> inline uint64_t constructValueFromRawJsonData<uint64_t>(const jsonifier::string& jsonData) {
+		if (jsonData.size() > 0) {
+			return strToUint64(jsonData);
+		} else {
+			return {};
+		}
+	}
+
+	template<> inline int64_t constructValueFromRawJsonData<int64_t>(const jsonifier::string& jsonData) {
+		if (jsonData.size() > 0) {
+			return strToInt64(jsonData);
+		} else {
+			return {};
+		}
+	}
+
+	template<> inline bool constructValueFromRawJsonData<bool>(const jsonifier::string& jsonData) {
+		if (jsonData == "true") {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

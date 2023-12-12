@@ -24,15 +24,11 @@
 #pragma once
 
 #include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/Validator.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
-
-namespace jsonifier {
-
-	template<uint64_t> class jsonifier_core;
-}
 
 namespace jsonifier_internal {
 
@@ -40,34 +36,40 @@ namespace jsonifier_internal {
 
 	struct parse {
 		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void op(value_type&& data, iterator_type&& iter) {
+		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(data), std::forward<iterator_type>(iter), data.jsonifierExcludedKeys);
+				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter), data.jsonifierExcludedKeys);
 			} else {
-				parse_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(data), std::forward<iterator_type>(iter));
+				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
 			}
 		}
 	};
 
-	template<typename derived_type, bool doWeUseInitialBuffer> class parser {
+	template<typename derived_type> class parser {
 	  public:
-		using iterator_type = simd_structural_iterator<parser<derived_type, doWeUseInitialBuffer>, derived_type, doWeUseInitialBuffer>;
-
 		template<typename value_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
 		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE void parseJson(value_type&& data, buffer_type&& stringNew) {
+		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& stringNew) {
 			derivedRef.errors.clear();
-			section.template reset<refreshString>(stringNew.data(), stringNew.size());
-			iterator_type iter{ section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			parse::op(std::forward<value_type>(data), iter);
+			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
+			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
+				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+				return false;
+			}
+			parse::impl(std::forward<value_type>(data), iter);
+			if (iter) {
+				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+				return false;
+			}
+			return true;
 		}
 
 	  protected:
-		simd_string_reader<doWeUseInitialBuffer> section{};
 		derived_type& derivedRef{ initializeSelfRef() };
 
 		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};

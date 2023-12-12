@@ -32,13 +32,13 @@ namespace jsonifier_internal {
 
 	// https://en.wikipedia.org/wiki/Fowler�Noll�Vo_hash_function
 	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
-	constexpr uint32_t fnv64OffsetBasis{ 0x811c9dc5u };
-	constexpr uint32_t fnv64Prime{ 0x01000193u };
+	constexpr uint32_t fnv32OffsetBasis{ 0x811c9dc5u };
+	constexpr uint32_t fnv32Prime{ 0x01000193u };
 
 	template<typename string_t> constexpr uint64_t fnv1aHash(const string_t& value, uint32_t seed) {
-		uint32_t hash = (fnv64OffsetBasis ^ seed) * fnv64Prime;
+		uint32_t hash = (fnv32OffsetBasis ^ seed) * fnv32Prime;
 		for (const auto& valueNew: value) {
-			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv64Prime;
+			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv32Prime;
 		}
 		return static_cast<uint64_t>(hash >> 8);
 	}

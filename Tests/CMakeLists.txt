@@ -22,7 +22,7 @@ FetchContent_MakeAvailable(simdjson)
 
 add_executable(
   "Json-Performance" 
-  "main.cpp"
+  "./main.cpp"
 )
 
 target_link_libraries(
@@ -51,6 +51,11 @@ if (WIN32)
 		OPTIONAL
 	)
 endif()
+
+target_compile_definitions(
+	"Json-Performance" PUBLIC 
+	"JSON_PATH=\"${CMAKE_SOURCE_DIR}/Tests/ConformanceTests\""
+)
 
 install(
 	FILES 

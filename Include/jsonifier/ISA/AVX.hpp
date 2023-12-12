@@ -31,10 +31,10 @@ namespace jsonifier_internal {
 
 	using avx_list = jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>>;
 
-	using avx_integer_list = jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, 16>,
-		jsonifier::concepts::type_holder<8, uint64_t, uint64_t, 8>, jsonifier::concepts::type_holder<1, uint8_t, uint8_t, 2>>;
+	using avx_integer_list =
+		jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, 16>, jsonifier::concepts::type_holder<8, uint64_t, uint64_t, 8>>;
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE string_parsing_type simd_base::cmpeq(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE string_parsing_type simd_base::opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return static_cast<string_parsing_type>(
 			_mm_movemask_epi8(_mm_cmpeq_epi8(std::forward<simd_int_t01>(std::forward<simd_int_t01>(value)), std::forward<simd_int_t02>(other))));
 	}
@@ -59,8 +59,8 @@ namespace jsonifier_internal {
 		return _mm_or_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t simd_base::setLSB(simd_int_t01&& value, bool valueNew) {
-		jsonifier::concepts::unwrap<simd_int_t> mask = _mm_set_epi64x(0x00ll, 0x01ll);
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t simd_base::opSetLSB(simd_int_t01&& value, bool valueNew) {
+		jsonifier::concepts::unwrap_t<simd_int_t> mask = _mm_set_epi64x(0x00ll, 0x01ll);
 		return valueNew ? _mm_or_si128(value, mask) : _mm_andnot_si128(mask, value);
 	}
 
@@ -68,7 +68,7 @@ namespace jsonifier_internal {
 		return _mm_xor_si128(std::forward<simd_int_t01>(value), _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool simd_base::getMSB(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool simd_base::opGetMSB(simd_int_t01&& value) {
 		simd_int_t result = _mm_and_si128(std::forward<simd_int_t01>(value), _mm_set_epi64x(0x8000000000000000ll, 0x00ll));
 		return !_mm_testz_si128(result, result);
 	}

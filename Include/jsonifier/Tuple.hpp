@@ -30,7 +30,7 @@ namespace jsonifier_internal {
 
 	template<typename tuple_t> struct group_builder {
 	  public:
-		static constexpr auto op(tuple_t&& object) {
+		static constexpr auto impl(tuple_t&& object) {
 			return makeGroupsImpl<starts, sizes>(std::forward<tuple_t>(object), std::make_index_sequence<nGroups>{});
 		}
 
@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 			std::array<size_t, n> indices{};
 			size_t x		= 0;
 			auto filterImpl = [&](auto index, auto&& filterImpl) {
-				using value_type = jsonifier::concepts::unwrap<std::tuple_element_t<index, tuple_t>>;
+				using value_type = jsonifier::concepts::unwrap_t<std::tuple_element_t<index, tuple_t>>;
 				if constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
 					indices[x++] = index - 1;
 				}
@@ -121,6 +121,22 @@ namespace jsonifier_internal {
 			return *member_ptr;
 		} else {
 			return member_ptr;
+		}
+	}
+
+}
+
+namespace jsonifier {
+
+	template<typename... value_types> constexpr decltype(auto) createValue(value_types&&... args) {
+		if constexpr (sizeof...(value_types) > 0 && sizeof...(value_types) % 2 == 0) {
+			auto newTuple	 = std::make_tuple(jsonifier_internal::convSv(std::forward<value_types>(args))...);
+			using tuple_type = jsonifier::concepts::unwrap_t<decltype(newTuple)>;
+			return value{ jsonifier_internal::group_builder<tuple_type>::impl(std::move(newTuple)) };
+		} else if constexpr (sizeof...(value_types) == 1) {
+			return scalar_value{ std::make_tuple(std::forward<value_types>(args)...) };
+		} else {
+			return value{ jsonifier::concepts::empty_val{} };
 		}
 	}
 
