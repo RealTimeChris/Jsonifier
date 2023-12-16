@@ -47,7 +47,7 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE vector() {
 			if constexpr (doWeUseInitialBuffer) {
-				resize(static_cast<uint64_t>(static_cast<float>(1024 * 1024 * 4) * 0.85f));
+				resize(static_cast<uint64_t>(static_cast<double>(1024 * 1024 * 4) * 0.85f));
 			}
 		}
 

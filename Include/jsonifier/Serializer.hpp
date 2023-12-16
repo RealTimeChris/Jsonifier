@@ -33,12 +33,13 @@ namespace jsonifier_internal {
 
 	struct serialize {
 		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void op(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index),
+				serialize_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index),
 					value.jsonifierExcludedKeys);
 			} else {
-				serialize_impl<jsonifier::concepts::unwrap<value_type>>::op(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+				serialize_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+					std::forward<index_type>(index));
 			}
 		}
 	};
@@ -50,13 +51,18 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
-		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
+		template<bool prettify = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE void serializeJson(value_type&& data, buffer_type&& iter) {
 			derivedRef.errors.clear();
 			index = 0;
-			serialize::op(std::forward<value_type>(data), derivedRef.stringBuffer, index);
-			iter.resize(index);
+			serialize::impl(std::forward<value_type>(data), derivedRef.stringBuffer, index);
+			if (iter.size() != index) {
+				iter.resize(index);
+			}
 			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), index);
+			if constexpr (prettify) {
+				iter = derivedRef.prettify(iter);
+			}
 		}
 
 	  protected:

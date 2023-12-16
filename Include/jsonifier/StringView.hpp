@@ -52,6 +52,16 @@ namespace jsonifier {
 			*this = stringNew;
 		}
 
+		template<jsonifier::concepts::string_t value_type_newer> constexpr string_view_base& operator=(value_type_newer&& stringNew) {
+			dataVal = stringNew.data();
+			sizeVal = stringNew.size();
+			return *this;
+		}
+
+		template<jsonifier::concepts::string_t value_type_newer> constexpr string_view_base(value_type_newer&& stringNew) {
+			*this = stringNew;
+		}
+
 		template<typename value_type_newer, jsonifier::concepts::same_character_size<value_type>> constexpr string_view_base& operator=(const value_type_newer& stringNew) {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
@@ -115,7 +125,7 @@ namespace jsonifier {
 			return dataVal;
 		}
 
-		constexpr size_type max_size() const {
+		constexpr size_type maxSize() const {
 			return std::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
@@ -197,7 +207,7 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) {
-			auto rhsLength = traits_type::length(rhs);
+			auto rhsLength = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
 			return rhsLength == lhs.size() && jsonifier_internal::jsonifier_core_internal::compare(lhs.data(), rhs, rhsLength);
 		}
 

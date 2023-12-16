@@ -130,8 +130,8 @@ union __m128x {
 };
 
 using simd_int_128 = __m128x;
-using simd_int_512 = int64_t;
 using simd_int_256 = int32_t;
+using simd_int_512 = int64_t;
 
 #endif
 
@@ -141,7 +141,7 @@ constexpr uint64_t BitsPerStep{ 512 };
 using string_parsing_type = uint64_t;
 using simd_int_t		  = simd_int_512;
 template<typename value_type>
-concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap<value_type>>;
+concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
@@ -149,7 +149,7 @@ constexpr uint64_t BitsPerStep{ 256 };
 using string_parsing_type = uint32_t;
 using simd_int_t		  = simd_int_256;
 template<typename value_type>
-concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap<value_type>>;
+concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
 
 #else
 
@@ -157,7 +157,7 @@ constexpr uint64_t BitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 using simd_int_t		  = simd_int_128;
 template<typename value_type>
-concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap<value_type>>;
+concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
 
 #endif
 
@@ -167,7 +167,7 @@ constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 
 namespace jsonifier_internal {
 
-	template<typename return_type, typename value_type, size_t N, size_t... indices>
+	template<typename return_type, typename value_type, uint64_t N, size_t... indices>
 	constexpr return_type createArray(const value_type (&newArray)[N], std::index_sequence<indices...>) {
 		return return_type{ newArray[indices % N]... };
 	}
@@ -180,7 +180,7 @@ namespace jsonifier_internal {
 #else
 		constexpr uint64_t valueSize{ sizeof(uint64_t) };
 		int64_t newArray[16 / sizeof(int64_t)]{};
-		for (size_t x = 0; x < 16; ++x) {
+		for (uint64_t x = 0; x < 16; ++x) {
 			newArray[x / sizeof(int64_t)] |= static_cast<int64_t>(value) << ((x % 8) * 8);
 		}
 #endif
@@ -196,7 +196,7 @@ namespace jsonifier_internal {
 #else
 		constexpr uint64_t valueSize{ sizeof(uint64_t) };
 		int64_t newArray[16 / sizeof(int64_t)]{};
-		for (size_t x = 0; x < 16; ++x) {
+		for (uint64_t x = 0; x < 16; ++x) {
 			newArray[x / sizeof(int64_t)] |= static_cast<int64_t>(valuesNew01[x % 16]) << ((x % 8) * 8);
 		}
 #endif
@@ -215,13 +215,13 @@ namespace jsonifier_internal {
 	using string_buffer_ptr = uint8_t*;
 
 	template<typename value_type>
-	concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_128>;
+	concept simd_int_128_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_int_128>;
 
 	template<typename value_type>
-	concept simd_int_256_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_256>;
+	concept simd_int_256_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_int_256>;
 
 	template<typename value_type>
-	concept simd_int_512_t = std::same_as<jsonifier::concepts::unwrap<value_type>, simd_int_512>;
+	concept simd_int_512_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_int_512>;
 
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
@@ -321,7 +321,7 @@ namespace jsonifier_internal {
 
 	class simd_base {
 	  public:
-		template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static string_parsing_type cmpeq(simd_int_t01&& value, simd_int_t02&& other);
+		template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static string_parsing_type opCmpEq(simd_int_t01&& value, simd_int_t02&& other);
 
 		template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opShuffle(simd_int_t01&& value, simd_int_t02&& other);
 
@@ -333,64 +333,66 @@ namespace jsonifier_internal {
 
 		template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other);
 
-		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t setLSB(simd_int_t01&& value, bool valueNew);
+		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew);
 
 		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value);
 
-		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool getMSB(simd_int_t01&& value);
+		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value);
 
 		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value);
 
 		JSONIFIER_INLINE static simd_int_t reset();
 
 		template<simd_int_128_t simd_int_t01, simd_int_128_t simd_int_t02>
-		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap<simd_int_t01>, simd_int_t>, simd_int_128> opShuffle(simd_int_t01&& value,
+		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap_t<simd_int_t01>, simd_int_t>, simd_int_128> opShuffle(simd_int_t01&& value,
 			simd_int_t02&& other) {
 			return _mm_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 		}
 
 		template<simd_int_128_t simd_int_t01, simd_int_128_t simd_int_t02>
-		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap<simd_int_t01>, simd_int_t>, uint16_t> cmpeq(simd_int_t01&& value, simd_int_t02&& other) {
+		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap_t<simd_int_t01>, simd_int_t>, uint16_t> opCmpEq(simd_int_t01&& value,
+			simd_int_t02&& other) {
 			return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(value, other)));
 		}
 
 		template<simd_int_256_t simd_int_t01, simd_int_256_t simd_int_t02>
-		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap<simd_int_t01>, simd_int_t>, simd_int_256> opShuffle(simd_int_t01&& value,
+		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap_t<simd_int_t01>, simd_int_t>, simd_int_256> opShuffle(simd_int_t01&& value,
 			simd_int_t02&& other) {
 			return _mm256_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 		}
 
 		template<simd_int_256_t simd_int_t01, simd_int_256_t simd_int_t02>
-		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap<simd_int_t01>, simd_int_t>, uint32_t> cmpeq(simd_int_t01&& value, simd_int_t02&& other) {
+		JSONIFIER_INLINE static std::enable_if_t<!std::same_as<jsonifier::concepts::unwrap_t<simd_int_t01>, simd_int_t>, uint32_t> opCmpEq(simd_int_t01&& value,
+			simd_int_t02&& other) {
 			return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(value, other)));
 		}
 
 		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectStructuralsAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
 			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
-			((valuesNew[indices] = cmpeq(opShuffle(opTable<simd_int_t>, values[indices]), opOr(chars<simd_int_t>, values[indices]))), ...);
+			((valuesNew[indices] = opCmpEq(opShuffle(opTable<simd_int_t>, values[indices]), opOr(chars<simd_int_t>, values[indices]))), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
 		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectWhitespaceAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
 			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
-			((valuesNew[indices] = cmpeq(opShuffle(whitespaceTable<simd_int_t>, values[indices]), values[indices])), ...);
+			((valuesNew[indices] = opCmpEq(opShuffle(whitespaceTable<simd_int_t>, values[indices]), values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
 		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectBackslashesAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
 			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
-			((valuesNew[indices] = cmpeq(backslashes<simd_int_t>, values[indices])), ...);
+			((valuesNew[indices] = opCmpEq(backslashes<simd_int_t>, values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
 		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectQuotesAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
 			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
-			((valuesNew[indices] = cmpeq(quotes<simd_int_t>, values[indices])), ...);
+			((valuesNew[indices] = opCmpEq(quotes<simd_int_t>, values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
-		static constexpr size_t power(size_t base, size_t exponent) {
-			size_t result = 1;
+		static constexpr uint64_t power(uint64_t base, uint64_t exponent) {
+			uint64_t result = 1;
 			while (exponent > 0) {
 				if (exponent & 1) {
 					result *= base;
@@ -401,18 +403,18 @@ namespace jsonifier_internal {
 			return result;
 		}
 
-		template<size_t index> JSONIFIER_INLINE static size_t prefixXorImpl(size_t prevInString) {
+		template<uint64_t index> JSONIFIER_INLINE static uint64_t prefixXorImpl(uint64_t prevInString) {
 			prevInString ^= prevInString << index;
 			return prevInString;
 		}
 
-		template<size_t... indices> JSONIFIER_INLINE static size_t prefixXor(size_t prevInString, std::index_sequence<indices...>) {
+		template<size_t... indices> JSONIFIER_INLINE static uint64_t prefixXor(uint64_t prevInString, std::index_sequence<indices...>) {
 			((prevInString = prefixXorImpl<power(2, indices)>(prevInString)), ...);
 			return prevInString;
 		}
 
 		template<simd_int_type simd_int_t01, size_t... indices>
-		JSONIFIER_INLINE static simd_int_t carrylessMultiplication(simd_int_t01&& value, int64_t& prevInString, std::index_sequence<indices...>) {
+		JSONIFIER_INLINE static simd_int_t opCLMul(simd_int_t01&& value, int64_t& prevInString, std::index_sequence<indices...>) {
 			JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep]{};
 			store(value, values);
 			((values[indices] = prefixXor(values[indices], std::make_index_sequence<6>{}) ^ prevInString, prevInString = static_cast<int64_t>(values[indices]) >> 63), ...);
@@ -421,29 +423,29 @@ namespace jsonifier_internal {
 
 		template<simd_int_type simd_int_t01, size_t... indices>
 		JSONIFIER_INLINE static simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other, std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN uint64_t values01[SixtyFourBitsPerStep]{};
-			JSONIFIER_ALIGN uint64_t values02[SixtyFourBitsPerStep]{};
-			store(value, values01);
-			store(other, values02);
+			JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2]{};
+			store(value, values);
+			store(other, values + SixtyFourBitsPerStep);
 			bool carryInNew{};
-			((values02[indices] = values01[indices] - values02[indices] - static_cast<uint64_t>(carryInNew), carryInNew = values02[indices] > values01[indices]), ...);
-			return gatherValues<simd_int_t>(values02);
+			((values[indices + SixtyFourBitsPerStep] = values[indices] - values[indices + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew),
+				 carryInNew							 = values[indices + SixtyFourBitsPerStep] > values[indices]),
+				...);
+			return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
 		}
 
-		template<uint64_t amount, size_t... indices, simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t shl(simd_int_t01&& value, std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN uint64_t values01[SixtyFourBitsPerStep]{};
-			JSONIFIER_ALIGN uint64_t values02[SixtyFourBitsPerStep]{};
+		template<uint64_t amount, size_t... indices, simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opShl(simd_int_t01&& value, std::index_sequence<indices...>) {
+			JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2]{};
 			static constexpr uint64_t shiftAmount{ 64 - amount };
-			store(value, values01);
-			values02[0] = values01[0] << amount;
-			((values02[indices + 1] = values01[indices + 1] << amount | values01[indices] >> (shiftAmount)), ...);
-			return gatherValues<simd_int_t>(values02);
+			store(value, values);
+			values[SixtyFourBitsPerStep] = values[0] << amount;
+			((values[indices + 1 + SixtyFourBitsPerStep] = values[indices + 1] << amount | values[indices] >> (shiftAmount)), ...);
+			return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
 		}
 
-		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t follows(simd_int_t01&& value, bool& overflow) {
+		template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
 			bool oldOverflow = overflow;
-			overflow		 = getMSB(value);
-			return setLSB(shl<1>(value, std::make_index_sequence<SixtyFourBitsPerStep - 1>{}), oldOverflow);
+			overflow		 = opGetMSB(value);
+			return opSetLSB(opShl<1>(value, std::make_index_sequence<SixtyFourBitsPerStep - 1>{}), oldOverflow);
 		}
 	};
 

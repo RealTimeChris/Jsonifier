@@ -43,13 +43,16 @@ namespace jsonifier_internal {
 		auto applySign = [&](auto&& value) -> value_type01 {
 			return sign ? -static_cast<value_type01>(value) : static_cast<value_type01>(value);
 		};
+		if (*cur == 0x30u && numberTable[*(cur + 1)] || *(cur + 1) == 0x78u) {
+			return false;
+		}
 		cur += sign;
 		sig = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
 		if (sig > 9) {
 			if (*cur == 0x6Eu && cur[1] == 0x75u && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
 				value = applySign(0);
 				return true;
-			} else if ((*cur | eBit) == 0x6Eu && (cur[1] | eBit) == 0x61u && (cur[2] | eBit) == 0x6Eu) {
+			} else if (( *cur | eBit<char_type> ) == 0x6Eu && ( cur[1] | eBit<char_type> ) == 0x61u && ( cur[2] | eBit<char_type> ) == 0x6Eu) {
 				value = applySign(std::numeric_limits<value_type01>::quiet_NaN());
 				return true;
 			} else {
@@ -90,14 +93,15 @@ namespace jsonifier_internal {
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(x) \
-	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[cur[x + 1 + fracZeros]]); numTmp <= 9) [[likely]] sig = numTmp + sig * 10; \
+	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[static_cast<uint64_t>(x + 1 + fracZeros)])]); numTmp <= 9) [[likely]] sig = \
+						numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##x; \
 	}
 			repeat_in_1_18(expr_frac)
 #undef expr_frac
 				cur += 20ull + fracZeros;
-		if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9)
+		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]]
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
@@ -116,28 +120,28 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		if ((eBit | *cur) == 0x65u) {
+		if ((eBit<char_type> | *cur) == 0x65u) {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
 		if (*cur == 0x2Eu) {
 			dotPos = cur++;
-			if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9) {
+			if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
 				return false;
 			}
 		}
 	digi_frac_more:
 		sigCut = cur;
-		sig += (*cur >= 0x35u);
-		while (asciiToValueTable[*++cur] < 10) {
+		sig += (*cur >= 0x35);
+		while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
 		}
 		if (!dotPos) {
 			dotPos = cur;
-			if (*cur == 0x2Eu) {
-				if (asciiToValueTable[*++cur] > 9) {
+			if (*cur == 0x2E) {
+				if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*++cur)]; newValue > 9) [[unlikely]] {
 					return false;
 				}
-				while (asciiToValueTable[*++cur] < 10) {
+				while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
 				}
 			}
 		}
@@ -149,12 +153,12 @@ namespace jsonifier_internal {
 		if (tmp < sigCut) {
 			sigCut = nullptr;
 		}
-		if ((eBit | *cur) == 0x65u)
+		if ((eBit<char_type> | *cur) == 0x65u)
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		expSig = -int64_t((cur - dotPos) - 1);
-		if ((eBit | *cur) != 0x65u) [[likely]] {
+		if ((eBit<char_type> | *cur) != 0x65u) [[likely]] {
 			if (expSig < f64MinDecExp - 19) [[unlikely]] {
 				value = applySign(0);
 				return true;
@@ -167,7 +171,7 @@ namespace jsonifier_internal {
 	digi_exp_more : {
 		expSign = (*++cur == 0x2Du);
 		cur += (*cur == 0x2Bu || *cur == 0x2Du);
-		if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9) [[unlikely]] {
+		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
 			goto digi_finish;
 		}
 		while (*cur == 0x30u)
@@ -221,11 +225,14 @@ namespace jsonifier_internal {
 		uint64_t fracZeros{}, numTmp{}, sig{};
 		int64_t exp{}, expSig{}, expLit{};
 		sig = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
+		if (*cur == 0x30u && numberTable[*(cur + 1)] || *(cur + 1) == 0x78u) {
+			return false;
+		}
 		if (sig > 9) {
 			if (*cur == 0x6Eu && cur[1] == 0x75u && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
 				value = static_cast<value_type01>(0);
 				return true;
-			} else if ((*cur | eBit) == 0x6Eu && (cur[1] | eBit) == 0x61u && (cur[2] | eBit) == 0x6Eu) {
+			} else if (( *cur | eBit<char_type> ) == 0x6Eu && ( cur[1] | eBit<char_type> ) == 0x61u && ( cur[2] | eBit<char_type> ) == 0x6Eu) {
 				value = static_cast<value_type01>(std::numeric_limits<value_type01>::quiet_NaN());
 				return true;
 			} else {
@@ -266,14 +273,15 @@ namespace jsonifier_internal {
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(x) \
-	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[cur[x + 1 + fracZeros]]); numTmp <= 9) [[likely]] sig = numTmp + sig * 10; \
+	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[static_cast<uint64_t>(x + 1 + fracZeros)])]); numTmp <= 9) [[likely]] sig = \
+						numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##x; \
 	}
 			repeat_in_1_18(expr_frac)
 #undef expr_frac
 				cur += 20ull + fracZeros;
-		if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9)
+		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]]
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(x) \
@@ -292,28 +300,28 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		if ((eBit | *cur) == 0x65u) {
+		if ((eBit<char_type> | *cur) == 0x65u) {
 			dotPos = cur;
 			goto digi_exp_more;
 		}
 		if (*cur == 0x2Eu) {
 			dotPos = cur++;
-			if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9) {
+			if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
 				return false;
 			}
 		}
 	digi_frac_more:
 		sigCut = cur;
-		sig += (*cur >= 0x35u);
-		while (asciiToValueTable[*++cur] < 10) {
+		sig += (*cur >= 0x35);
+		while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
 		}
 		if (!dotPos) {
 			dotPos = cur;
-			if (*cur == 0x2Eu) {
-				if (asciiToValueTable[*++cur] > 9) {
+			if (*cur == 0x2E) {
+				if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*++cur)]; newValue > 9) [[unlikely]] {
 					return false;
 				}
-				while (asciiToValueTable[*++cur] < 10) {
+				while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
 				}
 			}
 		}
@@ -325,12 +333,12 @@ namespace jsonifier_internal {
 		if (tmp < sigCut) {
 			sigCut = nullptr;
 		}
-		if ((eBit | *cur) == 0x65u)
+		if ((eBit<char_type> | *cur) == 0x65u)
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
 		expSig = -int64_t((cur - dotPos) - 1);
-		if ((eBit | *cur) != 0x65u) [[likely]] {
+		if ((eBit<char_type> | *cur) != 0x65u) [[likely]] {
 			if (expSig < f64MinDecExp - 19) [[unlikely]] {
 				value = static_cast<value_type01>(0);
 				return true;
@@ -342,7 +350,7 @@ namespace jsonifier_internal {
 		}
 	digi_exp_more : {
 		cur += (*cur == 0x2Bu || *cur == 0x2Du);
-		if (asciiToValueTable[static_cast<uint64_t>(*cur)] > 9) [[unlikely]] {
+		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
 			goto digi_finish;
 		}
 		while (*cur == 0x30u)

@@ -31,6 +31,7 @@
 #include <jsonifier/ISA/AVX2.hpp>
 #include <jsonifier/ISA/AVX512.hpp>
 #include <jsonifier/ISA/Fallback.hpp>
+#include <atomic>
 
 namespace jsonifier_internal {
 
@@ -76,4 +77,73 @@ namespace jsonifier_internal {
 		theStream << std::endl;
 		return theStream.str();
 	}
+
+	template<jsonifier::concepts::time_type value_type> class stop_watch {
+	  public:
+		using hr_clock = std::chrono::high_resolution_clock;
+
+		JSONIFIER_INLINE stop_watch(uint64_t newTime) {
+			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
+		}
+
+		JSONIFIER_INLINE stop_watch(value_type newTime) {
+			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
+		}
+
+		JSONIFIER_INLINE stop_watch& operator=(stop_watch&& other) {
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE stop_watch(stop_watch&& other) {
+			*this = std::move(other);
+		}
+
+		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) {
+			if (this != &other) [[likely]] {
+				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE stop_watch(const stop_watch& other) {
+			*this = other;
+		}
+
+		JSONIFIER_INLINE bool hasTimeElapsed() {
+			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
+				totalNumberOfTimeUnits.load(std::memory_order_acquire)) [[likely]] {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		JSONIFIER_INLINE void reset(value_type newTimeValue = value_type{}) {
+			if (newTimeValue != value_type{}) [[likely]] {
+				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
+				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
+			} else {
+				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
+			}
+		}
+
+		JSONIFIER_INLINE value_type getTotalWaitTime() const {
+			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
+		}
+
+		JSONIFIER_INLINE value_type totalTimeElapsed() {
+			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
+		}
+
+	  protected:
+		std::atomic<value_type> totalNumberOfTimeUnits{};
+		std::atomic<value_type> startTimeInTimeUnits{};
+	};
+
+	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }

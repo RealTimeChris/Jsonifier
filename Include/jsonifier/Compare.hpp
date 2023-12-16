@@ -29,10 +29,8 @@ namespace jsonifier_internal {
 
 	using integer_list = jsonifier::concepts::type_list<uint64_t, uint32_t, uint16_t, uint8_t>;
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-	template<size_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
-	#if defined(_WIN32)
+	template<uint64_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+#if defined(_WIN32)
 		using integer_type = typename jsonifier::concepts::get_type_at_index<integer_list, index>::type;
 		static constexpr uint64_t size{ sizeof(integer_type) };
 		integer_type value01[2]{};
@@ -51,23 +49,26 @@ namespace jsonifier_internal {
 		} else {
 			return true;
 		}
-	#else
+#else
 		return std::memcmp(string1, string2, lengthNew) == 0;
-	#endif
+#endif
 	}
 
-	template<size_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+
+	template<uint64_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+	#if defined(_WIN32)
 		using integer_type					 = typename jsonifier::concepts::get_type_at_index<avx_list, index>::type::integer_type;
 		using simd_type						 = typename jsonifier::concepts::get_type_at_index<avx_list, index>::type::type;
 		static constexpr uint64_t vectorSize = sizeof(simd_type);
 		static constexpr integer_type maskValue{ jsonifier::concepts::get_type_at_index<avx_list, index>::type::mask };
 		while (lengthNew >= vectorSize) {
-			if (simd_base::cmpeq(gatherValuesU<simd_type>(string1), gatherValuesU<simd_type>(string2)) != maskValue) {
+			if (simd_base::opCmpEq(gatherValuesU<simd_type>(string1), gatherValuesU<simd_type>(string2)) != maskValue) {
 				return false;
 			}
+			lengthNew -= vectorSize;
 			string1 += vectorSize;
 			string2 += vectorSize;
-			lengthNew -= vectorSize;
 		}
 		if constexpr (index < avx_list::size - 1) {
 			if (lengthNew > 0) {
@@ -77,13 +78,16 @@ namespace jsonifier_internal {
 			return compareShort(string1, string2, lengthNew);
 		}
 		return true;
+	#else
+		return std::memcmp(string1, string2, lengthNew) == 0;
+	#endif
 	}
 
 #else
 
 	JSONIFIER_INLINE bool compare(const void* string1, const void* string2, uint64_t lengthNew) {
-		std::basic_string_view<std::remove_pointer_t<char>> string01{ static_cast<const char*>(string1), lengthNew };
-		std::basic_string_view<std::remove_pointer_t<char>> string02{ static_cast<const char*>(string2), lengthNew };
+		std::string_view string01{ static_cast<const char*>(string1), lengthNew };
+		std::string_view string02{ static_cast<const char*>(string2), lengthNew };
 		return string01 == string02;
 	}
 

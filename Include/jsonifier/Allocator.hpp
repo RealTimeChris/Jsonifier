@@ -28,9 +28,9 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type, value_type multiple> JSONIFIER_INLINE value_type roundUpToMultiple(value_type num) {
-		value_type remainder = num % multiple;
-		return remainder == 0 ? num : num + (multiple - remainder);
+	template<typename value_type, value_type multiple> JSONIFIER_INLINE value_type roundUpToMultiple(value_type val) {
+		value_type remainder = val % multiple;
+		return remainder == 0 ? val : val + (multiple - remainder);
 	}
 
 	template<int64_t multiple> JSONIFIER_INLINE uint64_t roundDownToMultiple(int64_t value) {
@@ -59,17 +59,18 @@ namespace jsonifier_internal {
 
 #endif
 
-	template<typename value_type_new> class aligned_allocator {
+	template<typename value_type_new> class alloc_wrapper {
 	  public:
-		using value_type = value_type_new;
-		using pointer	 = value_type*;
-		using size_type	 = uint64_t;
+		using value_type	   = value_type_new;
+		using pointer		   = value_type*;
+		using size_type		   = uint64_t;
+		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_INLINE pointer allocate(size_type n) {
-			if (n == 0) [[unlikely]] {
+		JSONIFIER_INLINE pointer allocate(size_type count) {
+			if (count == 0) [[unlikely]] {
 				return nullptr;
 			}
-			return jsonifierAlignedAlloc<value_type>(n);
+			return jsonifierAlignedAlloc<value_type>(count);
 		}
 
 		JSONIFIER_INLINE void deallocate(pointer ptr, size_type) {
@@ -78,33 +79,8 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer p, arg_types&&... args) {
-			new (p) value_type(std::forward<arg_types>(args)...);
-		}
-
-		JSONIFIER_INLINE void destroy(pointer p) {
-			p->~value_type();
-		}
-	};
-
-	template<typename value_type_new> class alloc_wrapper : public std::allocator_traits<aligned_allocator<value_type_new>>, public aligned_allocator<value_type_new> {
-	  public:
-		using value_type	   = value_type_new;
-		using pointer		   = value_type*;
-		using size_type		   = uint64_t;
-		using allocator		   = aligned_allocator<value_type>;
-		using allocator_traits = std::allocator_traits<allocator>;
-
-		JSONIFIER_INLINE pointer allocate(size_type count) {
-			return allocator_traits::allocate(*this, count);
-		}
-
-		JSONIFIER_INLINE void deallocate(pointer ptr, size_type count) {
-			allocator_traits::deallocate(*this, ptr, count);
-		}
-
 		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) {
-			allocator_traits::construct(*this, ptr, std::forward<arg_types>(args)...);
+			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE size_type maxSize() {
@@ -112,7 +88,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void destroy(pointer ptr) {
-			allocator_traits::destroy(*this, ptr);
+			ptr->~value_type();
 		}
 	};
 

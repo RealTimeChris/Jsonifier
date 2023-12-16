@@ -1,0 +1,44 @@
+## Validating JSON Data with Jsonifier
+
+Jsonifier automatically validates JSON data against RFC standards when using the `parseJson` function. Below is an example of how to validate JSON using the `jsonifier_core::validate()` function.
+
+### Using the `validate` Function
+----
+To use the `jsonifier_core::validate()` function, call it as follows. It returns true if successful or false if validation fails. Additionally, you can follow the [steps here](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Errors.md) to check possible validation errors.
+
+```cpp
+#include "jsonifier/Index.hpp"
+
+jsonifier::jsonifier_core parser{};
+std::string buffer = "{\"key\": \"value\"}";
+
+// Validate JSON data
+parser.validate(buffer);
+
+// Print errors
+for (auto& value : parser.getErrors()) {
+    std::cout << "Jsonifier Error: " << value << std::endl;
+}
+```
+
+### Using `parseJson` (Automatic Validation)
+----
+Jsonifier automatically validates JSON data during the parsing process. Simply call `jsonifier_core::parseJson()`.
+
+```cpp
+#include "jsonifier/Index.hpp"
+
+jsonifier::jsonifier_core parser{};
+twitter_message discordTest{};
+std::string buffer = "{\"key\": \"value\"}";
+
+// Parse and automatically validate JSON
+parser.parseJson(discordTest, buffer);
+
+// Print errors
+for (auto& value : parser.getErrors()) {
+    std::cout << "Jsonifier Error: " << value << std::endl;
+}
+```
+
+In both examples, the `validate` function checks if the provided JSON data is valid according to RFC standards. Additionally, when using `parseJson`, JSON validation is performed automatically during the parsing process.

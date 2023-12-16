@@ -23,47 +23,51 @@
 /// Feb 20, 2023
 #pragma once
 
+#include <jsonifier/Validate_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
+#include <jsonifier/Prettifier.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/Error.hpp>
 
 namespace jsonifier {
 
-	template<uint64_t doWeUseInitialBuffer = true> class jsonifier_core : public jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>,
-																		  public jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer> {
+	template<bool doWeUseInitialBuffer = true> class jsonifier_core : public jsonifier_internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier_internal::validator<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>> {
 	  public:
-		using serializer = jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
-		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
-
-		friend class jsonifier_internal::simd_structural_iterator<parser, jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
+		friend class jsonifier_internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
 		friend class jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
-		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>, doWeUseInitialBuffer>;
+		friend class jsonifier_internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
 		JSONIFIER_INLINE jsonifier_core() noexcept = default;
 
 		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if (this != &other) [[likely]] {
-				stringBuffer	= std::move(other.stringBuffer);
-				parser::section = std::move(other.parser::section);
-				errors			= std::move(other.errors);
+				stringBuffer = std::move(other.stringBuffer);
+				section		 = std::move(other.section);
+				errors		 = std::move(other.errors);
 			}
 			return *this;
 		}
 
-		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : serializer{}, parser{} {
+		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = std::move(other);
-		}
+		};
 
 		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) {
 			if (this != &other) [[likely]] {
-				stringBuffer	= other.stringBuffer;
-				parser::section = other.parser::section;
-				errors			= other.errors;
+				stringBuffer = other.stringBuffer;
+				section		 = other.section;
+				errors		 = other.errors;
 			}
 			return *this;
 		}
 
-		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) : serializer{}, parser{} {
+		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = other;
 		}
 
@@ -74,8 +78,15 @@ namespace jsonifier {
 		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
 
 	  protected:
+		using prettifier = jsonifier_internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
+		using serializer = jsonifier_internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
+		using validator	 = jsonifier_internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
+		using minifier	 = jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
+		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
+
+		jsonifier_internal::simd_string_reader<doWeUseInitialBuffer> section{};
 		string_base<uint8_t, doWeUseInitialBuffer> stringBuffer{};
-		jsonifier::vector<jsonifier_internal::error> errors{};
+		vector<jsonifier_internal::error> errors{};
 	};
 
 }

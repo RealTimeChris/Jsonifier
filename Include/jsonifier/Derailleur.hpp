@@ -25,7 +25,7 @@
 
 #include <jsonifier/SimdStructuralIterator.hpp>
 #include <jsonifier/Error.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/ISADetection.hpp>
 
 namespace jsonifier_internal {
 
@@ -44,35 +44,6 @@ namespace jsonifier_internal {
 	class derailleur {
 	  public:
 		using size_type = uint64_t;
-
-		template<json_structural_type c, jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static bool checkForMatchClosed(iterator&& iter) {
-			if (containsValue<c>(*iter)) [[likely]] {
-				++iter;
-				return true;
-			} else [[unlikely]] {
-				return false;
-			}
-		}
-
-		template<uint8_t c, jsonifier::concepts::is_fwd_iterator iterator>
-		JSONIFIER_INLINE static bool checkForMatchClosed(iterator&& iter, iterator&& end, std::source_location location = std::source_location::current()) {
-			if (containsValue<c>(*iter)) [[likely]] {
-				++iter;
-				return true;
-			} else [[unlikely]] {
-				skipValue(iter, end);
-				return false;
-			}
-		}
-
-		template<uint8_t c, jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static bool checkForMatchOpen(iterator&& iter) {
-			if (*iter == c) [[likely]] {
-				++iter;
-				return true;
-			} else [[unlikely]] {
-				return false;
-			}
-		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter) {
 			++iter;
@@ -214,7 +185,7 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter) {
 			auto newValue = *iter;
 			size_type currentDepth{ 1 };
-			if (newValue == ']' || newValue == '}') [[unlikely]] {
+			if (newValue == 0x5Du || newValue == 0x7Du) [[unlikely]] {
 				return 0;
 			}
 			size_type currentCount{ 1 };
@@ -260,7 +231,7 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter, iterator end) {
 			size_type currentDepth{ 1 };
 			++iter;
-			if (*iter == ']' || *iter == '}') [[unlikely]] {
+			if (*iter == 0x5Du || *iter == 0x7Du) [[unlikely]] {
 				return 0;
 			}
 			size_type currentCount{ 1 };

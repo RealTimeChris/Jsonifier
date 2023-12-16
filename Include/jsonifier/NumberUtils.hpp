@@ -26,6 +26,7 @@
 
 #include <jsonifier/Allocator.hpp>
 #include <jsonifier/Tables.hpp>
+#include <jsonifier/String.hpp>
 
 #include <jsonifier/IToStr.hpp>
 #include <jsonifier/DToStr.hpp>
