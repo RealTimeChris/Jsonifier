@@ -32,39 +32,30 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> struct parse_impl;
-
-	struct parse {
-		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter), data.jsonifierExcludedKeys);
-			} else {
-				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
-			}
-		}
-	};
+	template<typename derived_type, typename value_type> struct parse_impl;
 
 	template<typename derived_type> class parser {
 	  public:
-		template<typename value_type> friend struct parse_impl;
+		template<typename derived_type_new, typename value_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
-		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& stringNew) {
+		template<bool minified = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& in) {
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.template reset<refreshString, !minified>(in.data(), in.size());
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;
 			}
-			parse::impl(std::forward<value_type>(data), iter);
-			if (iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
-				return false;
+			impl(std::forward<value_type>(data), iter);
+			if constexpr (!minified) {
+				if (iter) {
+					derivedRef.errors.emplace_back(createError(error_code::No_Input));
+					return false;
+				}
 			}
 			return true;
 		}
@@ -76,6 +67,16 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
+		}
+
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
+			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter),
+					data.jsonifierExcludedKeys);
+			} else {
+				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
+			}
 		}
 
 		JSONIFIER_INLINE ~parser() noexcept = default;

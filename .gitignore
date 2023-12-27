@@ -1,10 +1,9 @@
 .vs/
 out/
-Build/
 Output Files/
 Output/
 Documentation/docs
+Build/
 Install/
 DetectArchitecture.exe
 DetectArchitecture.obj
-JsonData.json

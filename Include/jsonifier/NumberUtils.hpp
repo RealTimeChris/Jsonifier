@@ -25,7 +25,6 @@
 #pragma once
 
 #include <jsonifier/Allocator.hpp>
-#include <jsonifier/Tables.hpp>
 #include <jsonifier/String.hpp>
 
 #include <jsonifier/IToStr.hpp>
@@ -38,11 +37,11 @@ namespace jsonifier {
 	template<typename value_type = char, jsonifier::concepts::num_t value_type01> JSONIFIER_INLINE jsonifier::string_base<value_type> toString(const value_type01& value) {
 		string_base<value_type> returnstring{};
 		returnstring.resize(64);
-		if constexpr (jsonifier::concepts::unsigned_t<value_type01> && sizeof(value) < 8) {
+		if constexpr (jsonifier::concepts::unsigned_type<value_type01> && sizeof(value) < 8) {
 			uint64_t newValue{ static_cast<uint64_t>(value) };
 			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
-		} else if constexpr (jsonifier::concepts::signed_t<value_type01> && sizeof(value) < 8) {
+		} else if constexpr (jsonifier::concepts::signed_type<value_type01> && sizeof(value) < 8) {
 			int64_t newValue{ static_cast<int64_t>(value) };
 			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
@@ -56,7 +55,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE double strToDouble(const jsonifier::string& string) {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::parseNumber(newValue, newPtr, string.size());
 		}
 		return newValue;
 	}
@@ -72,7 +72,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE int64_t strToInt64(const jsonifier::string& string) {
 		int64_t newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -88,7 +89,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE uint64_t strToUint64(const jsonifier::string& string) {
 		uint64_t newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}

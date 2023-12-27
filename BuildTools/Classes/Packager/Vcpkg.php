@@ -140,8 +140,6 @@ class Vcpkg
     REF "v${VERSION}"    
     SHA512 ' . $sha512 . '
     HEAD_REF main
-    PATCHES
-        uninstall-head.patch
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only

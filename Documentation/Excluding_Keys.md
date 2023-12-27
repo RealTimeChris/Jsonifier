@@ -9,11 +9,11 @@ Here's an example of how you can do this:
 
 class MyObject {
 public:
-  std::string name;
+  jsonifier::string name;
   int32_t age;
-  std::set<std::string> jsonifierExcludedKeys;
+  std::set<jsonifier::string> jsonifierExcludedKeys;
 
-  MyObject(const std::string& n, int32_t a) : name(n), age(a) {
+  MyObject(const jsonifier::string& n, int32_t a) : name(n), age(a) {
     jsonifierExcludedKeys.insert("age"); // add "age" key to jsonifierExcludedKeys set
   }
 };
@@ -21,7 +21,7 @@ public:
 int32_t main() {
   MyObject obj("John", 30);
   jsonifier::jsonifier_core jsonifier{};
-  std::string jsonBuffer{};
+  jsonifier::string jsonBuffer{};
   jsonifier.serializeJson<true>(obj, jsonBuffer); // {"name":"John"}
   return 0;
 }

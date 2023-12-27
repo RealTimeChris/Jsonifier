@@ -28,13 +28,13 @@
 #endif
 
 #include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/JsonifierCore.hpp>
 #include <jsonifier/Prettify_Impl.hpp>
 #include <jsonifier/ISADetection.hpp>
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Minify_Impl.hpp>
-#include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/Parser.hpp>

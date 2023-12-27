@@ -25,45 +25,36 @@
 
 #include <jsonifier/ISA/ISADetectionBase.hpp>
 
-namespace jsonifier_internal {
+namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<typename value_type> constexpr value_type lzcntInternal(value_type value) {
-		if (value == 0) {
-			return sizeof(value_type) * 8;
-		}
-
-		value_type count{};
-		value_type mask{ static_cast<value_type>(1) << (std::numeric_limits<value_type>::digits - 1) };
-
-		while ((value & mask) == 0) {
-			++count;
-			mask >>= 1;
-		}
-
-		return count;
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+		return _lzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::uint32_type value_type> constexpr value_type lzcnt(value_type value) {
-		if (std::is_constant_evaluated()) {
-			return lzcntInternal(value);
-		} else {
-			return _lzcnt_u32(value);
-		}
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+		return _lzcnt_u64(value);
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> constexpr value_type lzcnt(value_type value) {
-		if (std::is_constant_evaluated()) {
-			return lzcntInternal(value);
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
+		unsigned long leading_zero = 0;
+		if (_BitScanReverse64(&leading_zero, value)) {
+			return 63 - leading_zero;
 		} else {
-			return _lzcnt_u64(value);
+			return 64;
 		}
+	#else
+		return __builtin_clzll(value);
+	#endif
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> constexpr value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> constexpr value_type lzcnt(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}
