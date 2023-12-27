@@ -40,29 +40,31 @@ namespace jsonifier_internal {
 		Damaged_Input				   = 3,
 		Serialize_Error				   = 4,
 		No_Input					   = 5,
-		Requires_Array_Or_Object	   = 6,
-		Missing_Colon				   = 7,
-		Missing_Comma_Or_Closing_Brace = 8,
-		Invalid_Escape_Characters	   = 9,
-		Invalid_String_Characters	   = 10,
-		Invalid_Null_Value			   = 11,
-		Invalid_Bool_Value			   = 12,
-		Invalid_Number_Value		   = 13,
-		Broken_Array_Start			   = 14,
-		Broken_Object_Start			   = 15,
-		Prettify_Error				   = 16,
-		Minify_Error				   = 17,
-		Validate_Error				   = 18
+		Invalid_Input				   = 6,
+		Requires_Array_Or_Object	   = 7,
+		Missing_Colon				   = 8,
+		Missing_Comma_Or_Closing_Brace = 9,
+		Invalid_Escape_Characters	   = 10,
+		Invalid_String_Characters	   = 11,
+		Invalid_Null_Value			   = 12,
+		Invalid_Bool_Value			   = 13,
+		Invalid_Number_Value		   = 14,
+		Broken_Array_Start			   = 15,
+		Broken_Object_Start			   = 16,
+		Prettify_Error				   = 17,
+		Minify_Error				   = 18,
+		Validate_Error				   = 19
 	};
 
 	inline std::unordered_map<error_code, jsonifier::string_view> errorMap{ { error_code::Success, "Success" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Damaged_Input, "Damaged Input" }, { error_code::Serialize_Error, "Serialize Error" },
-		{ error_code::No_Input, "No Input" }, { error_code::Requires_Array_Or_Object, "Requires Array Or Object" }, { error_code::Missing_Colon, "Missing Colon" },
-		{ error_code::Missing_Comma_Or_Closing_Brace, "Missing Comma Or Closing Brace" }, { error_code::Invalid_Escape_Characters, "Invalid Escape Characters" },
-		{ error_code::Invalid_String_Characters, "Invalid String Characters" }, { error_code::Invalid_Null_Value, "Invalid Null Value" },
-		{ error_code::Invalid_Bool_Value, "Invalid Bool Value" }, { error_code::Invalid_Number_Value, "Invalid Number Value" },
-		{ error_code::Broken_Array_Start, "Broken Array Start" }, { error_code::Broken_Object_Start, "Broken Object Start" }, { error_code::Prettify_Error, "Prettify Error" },
-		{ error_code::Minify_Error, "Minify Error" }, { error_code::Validate_Error, "Validate Error" } };
+		{ error_code::Invalid_Input, "Invalid Input" }, { error_code::No_Input, "No Input" }, { error_code::Requires_Array_Or_Object, "Requires Array Or Object" },
+		{ error_code::Missing_Colon, "Missing Colon" }, { error_code::Missing_Comma_Or_Closing_Brace, "Missing Comma Or Closing Brace" },
+		{ error_code::Invalid_Escape_Characters, "Invalid Escape Characters" }, { error_code::Invalid_String_Characters, "Invalid String Characters" },
+		{ error_code::Invalid_Null_Value, "Invalid Null Value" }, { error_code::Invalid_Bool_Value, "Invalid Bool Value" },
+		{ error_code::Invalid_Number_Value, "Invalid Number Value" }, { error_code::Broken_Array_Start, "Broken Array Start" },
+		{ error_code::Broken_Object_Start, "Broken Object Start" }, { error_code::Prettify_Error, "Prettify Error" }, { error_code::Minify_Error, "Minify Error" },
+		{ error_code::Validate_Error, "Validate Error" } };
 
 
 	enum json_structural_type : uint8_t {
@@ -248,6 +250,9 @@ namespace jsonifier_internal {
 				}
 				case error_code::No_Input: {
 					return "There was no string being input.";
+				}
+				case error_code::Invalid_Input: {
+					return "There was invalid string input.";
 				}
 				case error_code::Success: {
 					[[fallthrough]];

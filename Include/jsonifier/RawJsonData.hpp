@@ -89,24 +89,12 @@ namespace jsonifier {
 			*this = value;
 		}
 
-		JSONIFIER_INLINE const char* data() const {
-			return jsonData.data();
-		}
-
-		JSONIFIER_INLINE char* data() {
-			return jsonData.data();
-		}
-
 		JSONIFIER_INLINE json_type getType() const {
 			if (jsonData.size() > 0) {
 				return jsonifier_internal::typeMap[jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]))];
 			} else {
 				return jsonifier_internal::typeMap[""];
 			}
-		}
-
-		JSONIFIER_INLINE void resize(uint64_t newSize) {
-			jsonData.resize(newSize);
 		}
 
 		JSONIFIER_INLINE explicit operator object_type() {
@@ -221,7 +209,7 @@ namespace jsonifier_internal {
 
 			auto collectKey = [&]() {
 				while (newIter02 < endIter01) {
-					if (*newIter02 == '"' && *(newIter01 - 1) !='\\') {
+					if (*newIter02 == '"' && *(newIter01 - 1) != '\\') {
 						++newIter02;
 						break;
 					}

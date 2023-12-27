@@ -57,13 +57,13 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
 			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
+			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) [[unlikely]] {
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;
 			}
 			parse::impl(std::forward<value_type>(data), iter);
-			if (iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+			if (iter) [[unlikely]] {
+				derivedRef.errors.emplace_back(createError(error_code::Invalid_Input));
 				return false;
 			}
 			return true;

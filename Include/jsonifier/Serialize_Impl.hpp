@@ -286,8 +286,7 @@ namespace jsonifier_internal {
 
 		static constexpr jsonifier::string_view key = get<0>(item);
 		if constexpr ((( !std::is_void_v<key_type> ) || ...)) {
-			constexpr jsonifier::string_view keyNew = key;
-			if (((excludedKeys.find(static_cast<jsonifier::concepts::unwrap_t<key_type...>::key_type>(keyNew)) != excludedKeys.end()) && ...)) [[unlikely]] {
+			if (((excludedKeys.find(static_cast<jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) && ...)) [[unlikely]] {
 				if constexpr (indexNew < n - 1 && areWeFirst) {
 					serializeObjects<n, indexNew + 1, true>(value, buffer, index, excludedKeys...);
 				} else if constexpr (indexNew < n - 1) {

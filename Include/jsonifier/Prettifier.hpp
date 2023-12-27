@@ -51,14 +51,14 @@ namespace jsonifier_internal {
 			uint64_t index{ prettify::impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer) };
 			if constexpr (jsonifier::concepts::has_resize<string_type>) {
 				jsonifier::concepts::unwrap_t<string_type> newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
+				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
 					newString.resize(index);
 					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				}
 				return newString;
 			} else {
 				jsonifier::string newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
+				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
 					newString.resize(index);
 					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				}

@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minify(string_type&& in) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size() * 2) {
+			if (derivedRef.stringBuffer.size() < in.size() * 2) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 2);
 			}
 			derivedRef.errors.clear();
@@ -90,14 +90,14 @@ namespace jsonifier_internal {
 			uint64_t index{ minify::impl(iter, derivedRef.stringBuffer) };
 			if constexpr (jsonifier::concepts::has_resize<string_type>) {
 				jsonifier::concepts::unwrap_t<string_type> newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
+				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
 					newString.resize(index);
 					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				}
 				return newString;
 			} else {
 				jsonifier::string newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
+				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
 					newString.resize(index);
 					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				}

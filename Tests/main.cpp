@@ -660,15 +660,6 @@ template<typename OTy> struct TestGenerator {
 		return theResult;
 	}
 
-	template<typename value_type> value_type randomizeNumberUniform(value_type min, value_type max) {
-		std::uniform_int_distribution<> normalDistributionTwo{ static_cast<value_type>(min), static_cast<value_type>(max) };
-		auto theResult = normalDistributionTwo(randomEngine);
-		if (theResult < 0) {
-			theResult = -theResult;
-		}
-		return theResult;
-	}
-
 	JSONIFIER_INLINE static json_data generateJsonData() {
 		std::string buffer{};
 		TestGenerator generator{};
@@ -680,7 +671,7 @@ template<typename OTy> struct TestGenerator {
 	}
 
 	std::string generateString() {
-		auto length{ randomizeNumberUniform(35, 45) };
+		auto length{ randomizeNumber(35.0f, 45.0f) };
 		static int32_t charsetSize = charset.size();
 		std::mt19937 generator(std::random_device{}());
 		std::uniform_int_distribution<int32_t> distribution(0, charsetSize - 1);
@@ -1493,113 +1484,6 @@ struct on_demand {
 	ondemand::parser parser{};
 };
 
-template<typename OTy2> void simdPullArray(ondemand::array newX, jsonifier::vector<OTy2>& newVector);
-template<typename OTy2> void simdPullArray(ondemand::array newX, std::vector<OTy2>& newVector);
-
-void simdPullMap(ondemand::object newX, std::unordered_map<std::string, std::string>& newVector) {
-	for (auto iter = newX.begin(); iter != newX.end(); ++iter) {
-		newVector.emplace(static_cast<std::string>(iter.operator*().key().value().raw()), static_cast<std::string>(iter.operator*().value().get_string().value()));
-	}
-}
-
-template<> void simdPullArray<double>(ondemand::array newX, std::vector<double>& newVector) {
-	for (ondemand::value value: newX) {
-		double newValue{};
-		if (!value.get_double().get(newValue)) {
-			newVector.emplace_back(newValue);
-		}
-	}
-}
-
-template<> void simdPullArray<int64_t>(ondemand::array newX, std::vector<int64_t>& newVector) {
-	for (ondemand::value value: newX) {
-		int64_t newValue{};
-		if (!value.get_int64().get(newValue)) {
-			newVector.emplace_back(newValue);
-		}
-	}
-}
-
-template<> void simdPullArray<uint64_t>(ondemand::array newX, std::vector<uint64_t>& newVector) {
-	for (ondemand::value value: newX) {
-		uint64_t newValue{};
-		if (!value.get_uint64().get(newValue)) {
-			newVector.emplace_back(newValue);
-		}
-	}
-}
-
-template<> void simdPullArray<bool>(ondemand::array newX, jsonifier::vector<bool>& newVector) {
-	for (ondemand::value value: newX) {
-		bool newValue{};
-		if (!value.get_bool().get(newValue)) {
-			newVector.emplace_back(newValue);
-		}
-	}
-}
-
-template<> void simdPullArray<std::string>(ondemand::array newX, std::vector<std::string>& newVector) {
-	for (ondemand::value value: newX) {
-		std::string_view newValue{};
-		if (!value.get_string().get(newValue)) {
-			newVector.emplace_back(newValue);
-		}
-	}
-}
-
-	#define SIMD_Pull(x) \
-		{ \
-			ondemand::array newX = doc[#x].get_array().value(); \
-			ondemand::array newArray{}; \
-			ondemand::object newObject{}; \
-			for (ondemand::value value: newX) { \
-				test_struct newStruct{}; \
-				newObject = value.get_object(); \
-				newArray  = newObject["testInts"].get_array().value(); \
-				simdPullArray(newArray, newStruct.testInts); \
-				newArray = newObject["testDoubles"].get_array().value(); \
-				simdPullArray(newArray, newStruct.testDoubles); \
-				newArray = newObject["testStrings"].get_array().value(); \
-				simdPullArray(newArray, newStruct.testStrings); \
-				newArray = newObject["testUints"].get_array().value(); \
-				simdPullArray(newArray, newStruct.testUints); \
-				newArray = newObject["testBools"].get_array().value(); \
-				simdPullArray(newArray, newStruct.testBools); \
-				obj.x.emplace_back(std::move(newStruct)); \
-			} \
-		}
-
-bool on_demand::readInOrder(Test<test_struct>& obj, const padded_string& json) {
-	ondemand::document doc = parser.iterate(json).value();
-	SIMD_Pull(a);
-	SIMD_Pull(b);
-	SIMD_Pull(c);
-	SIMD_Pull(d);
-	SIMD_Pull(e);
-	SIMD_Pull(f);
-	SIMD_Pull(g);
-	SIMD_Pull(h);
-	SIMD_Pull(i);
-	SIMD_Pull(j);
-	SIMD_Pull(k);
-	SIMD_Pull(l);
-	SIMD_Pull(m);
-	SIMD_Pull(n);
-	SIMD_Pull(o);
-	SIMD_Pull(p);
-	SIMD_Pull(q);
-	SIMD_Pull(r);
-	SIMD_Pull(s);
-	SIMD_Pull(t);
-	SIMD_Pull(u);
-	SIMD_Pull(v);
-	SIMD_Pull(w);
-	SIMD_Pull(x);
-	SIMD_Pull(y);
-	SIMD_Pull(z);
-	return false;
-}
-
 auto simdjsonSingleTest(const jsonifier::string& bufferNew, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 	on_demand parser{};
@@ -1667,37 +1551,6 @@ struct on_demand_abc {
 	ondemand::parser parser{};
 };
 
-bool on_demand_abc::readOutOfOrder(AbcTest<test_struct>& obj, const padded_string& json) {
-	ondemand::document doc = parser.iterate(json).value();
-	SIMD_Pull(z);
-	SIMD_Pull(y);
-	SIMD_Pull(x);
-	SIMD_Pull(w);
-	SIMD_Pull(v);
-	SIMD_Pull(u);
-	SIMD_Pull(t);
-	SIMD_Pull(s);
-	SIMD_Pull(r);
-	SIMD_Pull(q);
-	SIMD_Pull(p);
-	SIMD_Pull(o);
-	SIMD_Pull(n);
-	SIMD_Pull(m);
-	SIMD_Pull(l);
-	SIMD_Pull(k);
-	SIMD_Pull(j);
-	SIMD_Pull(i);
-	SIMD_Pull(h);
-	SIMD_Pull(g);
-	SIMD_Pull(f);
-	SIMD_Pull(e);
-	SIMD_Pull(d);
-	SIMD_Pull(c);
-	SIMD_Pull(b);
-	SIMD_Pull(a);
-	return false;
-}
-
 template<typename value_type> value_type getValue(simdjson::ondemand::value value) {
 	value_type result;
 	if (!value.get(result)) {
@@ -1722,28 +1575,46 @@ template<> std::string getValue<std::string>(simdjson::ondemand::value value) {
 	return "";
 }
 
-template<typename value_type> std::vector<value_type> getValues(simdjson::ondemand::value value) {
-	std::vector<value_type> roles;
-	for (const simdjson::ondemand::value& role: value) {
-		roles.emplace_back(getValue<value_type>(role));
+template<typename value_type> void getValues(std::vector<value_type>& returnValue, simdjson::ondemand::value value) {
+	auto oldSize = returnValue.size();
+	auto iter	 = value.begin();
+	for (uint64_t x = 0; x < oldSize; ++x, ++iter) {
+		returnValue[x] = getValue<value_type>(iter.operator*().value());
 	}
-	return roles;
+	for (; iter != value.end(); ++iter) {
+		returnValue.emplace_back(getValue<value_type>(iter.operator*().value()));
+	}
 }
 
-template<typename value_type> std::vector<value_type> getValues(simdjson::ondemand::value value, const std::string& key) {
+template<typename value_type> void getValues(std::vector<value_type>& returnValue, simdjson::ondemand::value value, const std::string& key) {
 	simdjson::ondemand::value field;
 	if (!value[key].get(field)) {
-		return getValues<value_type>(field);
+		getValues<value_type>(returnValue, field);
 	}
-	return std::vector<value_type>{};
 }
 
-template<> std::vector<std::string> getValues<std::string>(simdjson::ondemand::value value) {
-	std::vector<std::string> roles;
-	for (const simdjson::ondemand::value& role: value) {
-		roles.emplace_back(getValue<std::string>(role));
+template<typename value_type> void getValues02(jsonifier::vector<value_type>& returnValue, simdjson::ondemand::value value) {
+	auto oldSize = returnValue.size();
+	auto iter	 = value.begin();
+	for (uint64_t x = 0; x < oldSize; ++x, ++iter) {
+		returnValue[x] = getValue<value_type>(iter.operator*().value());
 	}
-	return roles;
+	for (; iter != value.end(); ++iter) {
+		returnValue.emplace_back(getValue<value_type>(iter.operator*().value()));
+	}
+}
+
+template<typename value_type> void getValues02(jsonifier::vector<value_type>& returnValue, simdjson::ondemand::value value, const std::string& key) {
+	simdjson::ondemand::value field;
+	if (!value[key].get(field)) {
+		getValues02<value_type>(returnValue, field);
+	}
+}
+
+template<> void getValues<std::string>(std::vector<std::string>& returnValues, simdjson::ondemand::value value) {
+	for (const simdjson::ondemand::value& role: value) {
+		returnValues.emplace_back(getValue<std::string>(role));
+	}
 }
 
 template<> search_metadata getValue<search_metadata>(simdjson::ondemand::value jsonData) {
@@ -1766,7 +1637,7 @@ template<> hashtag getValue<hashtag>(simdjson::ondemand::value jsonData) {
 	hashtag tag;
 
 	tag.text	= getValue<std::string>(jsonData, "text");
-	tag.indices = getValues<int64_t>(jsonData, "indices");
+	getValues<int64_t>(tag.indices, jsonData, "indices");
 
 	return tag;
 }
@@ -1797,7 +1668,7 @@ template<> media getValue<media>(simdjson::ondemand::value jsonData) {
 
 	mediaItem.id				= getValue<double>(jsonData, "id");
 	mediaItem.idStr				= getValue<std::string>(jsonData, "id_str");
-	mediaItem.indices			= getValues<int64_t>(jsonData, "indices");
+	getValues<int64_t>(mediaItem.indices, jsonData, "indices");
 	mediaItem.mediaUrl			= getValue<std::string>(jsonData, "media_url");
 	mediaItem.mediaUrlHttps		= getValue<std::string>(jsonData, "media_url_https");
 	mediaItem.displayUrl		= getValue<std::string>(jsonData, "display_url");
@@ -1815,7 +1686,7 @@ template<> url getValue<url>(simdjson::ondemand::value jsonData) {
 
 	urlData.expandedUrl = getValue<std::string>(jsonData, "expanded_url");
 	urlData.displayUrl	= getValue<std::string>(jsonData, "display_url");
-	urlData.indices		= getValues<int64_t>(jsonData, "indices");
+	getValues<int64_t>(urlData.indices, jsonData, "indices");
 
 	return urlData;
 }
@@ -1827,17 +1698,17 @@ template<> user_mention getValue<user_mention>(simdjson::ondemand::value jsonDat
 	mention.name	   = getValue<std::string>(jsonData, "name");
 	mention.id		   = getValue<int64_t>(jsonData, "id");
 	mention.idStr	   = getValue<std::string>(jsonData, "id_str");
-	mention.indices	   = getValues<int64_t>(jsonData, "indices");
+	getValues<int64_t>(mention.indices, jsonData, "indices");
 
 	return mention;
 }
 
 template<> status_entities getValue<status_entities>(simdjson::ondemand::value jsonData) {
 	status_entities entities;
-	entities.hashtags	  = getValues<hashtag>(jsonData, "hashtags");
-	entities.urls		  = getValues<url>(jsonData, "urls");
-	entities.userMentions = getValues<user_mention>(jsonData, "user_mentions");
-	entities.symbols	  = getValues<std::string>(jsonData, "symbols");
+	getValues<hashtag>(entities.hashtags, jsonData, "hashtags");
+	getValues<url>(entities.urls, jsonData, "urls");
+	getValues<user_mention>(entities.userMentions, jsonData, "user_mentions");
+	getValues<std::string>(entities.symbols, jsonData, "symbols");
 
 	return entities;
 }
@@ -1854,7 +1725,7 @@ template<> metadata getValue<metadata>(simdjson::ondemand::value jsonData) {
 template<> description getValue<description>(simdjson::ondemand::value jsonData) {
 	description desc;
 
-	desc.urls = getValues<url>(jsonData, "urls");
+	getValues<url>(desc.urls, jsonData, "urls");
 
 	return desc;
 }
@@ -1935,7 +1806,7 @@ template<> status getValue<status>(simdjson::ondemand::value jsonData) {
 
 template<> twitter_message getValue<twitter_message>(simdjson::ondemand::value jsonData) {
 	twitter_message message;
-	message.statuses	   = getValues<status>(jsonData, "statuses");
+	getValues<status>(message.statuses, jsonData, "statuses");
 	message.searchMetadata = getValue<search_metadata>(jsonData, "search_metadata");
 
 	return message;
@@ -2044,7 +1915,7 @@ template<> guild_member_data getValue<guild_member_data>(simdjson::ondemand::val
 	guild_member_data memberData;
 
 	memberData.communicationDisabledUntil = getValue<std::string>(jsonData, "communication_disabled_until");
-	memberData.roles					  = getValues<std::string>(jsonData, "roles");
+	getValues<std::string>(memberData.roles, jsonData, "roles");
 	memberData.premiumSince				  = getValue<std::string>(jsonData, "premium_since");
 	memberData.permissions				  = getValue<std::string>(jsonData, "permissions");
 	memberData.joinedAt					  = getValue<std::string>(jsonData, "joined_at");
@@ -2063,19 +1934,19 @@ template<> guild_member_data getValue<guild_member_data>(simdjson::ondemand::val
 template<> guild_data getValue<guild_data>(simdjson::ondemand::value jsonData) {
 	guild_data guildData;
 
-	guildData.guildScheduledEvents = getValues<guild_scheduled_event_data>(jsonData, "guild_scheduled_events");
+	getValues<guild_scheduled_event_data>(guildData.guildScheduledEvents, jsonData, "guild_scheduled_events");
 
-	guildData.members = getValues<guild_member_data>(jsonData, "members");
+	getValues<guild_member_data>(guildData.members, jsonData, "members");
 
 	guildData.defaultMessageNotifications = getValue<uint64_t>(jsonData, "default_message_notifications");
 
-	guildData.channels = getValues<channel_data>(jsonData, "channels");
+	getValues<channel_data>(guildData.channels, jsonData, "channels");
 
 	guildData.maxStageVideoChannelUsers = getValue<uint64_t>(jsonData, "max_stage_video_channel_users");
 	guildData.publicUpdatesChannelId	= getValue<std::string>(jsonData, "public_updates_channel_id");
 	guildData.premiumSubscriptionCount	= getValue<uint64_t>(jsonData, "premium_subscription_count");
 
-	guildData.features = getValues<std::string>(jsonData, "features");
+	getValues<std::string>(guildData.features, jsonData, "features");
 
 	guildData.approximatePresenceCount	= getValue<uint64_t>(jsonData, "approximate_presence_count");
 	guildData.safetyAlertsChannelId		= getValue<std::string>(jsonData, "safety_alerts_channel_id");
@@ -2084,7 +1955,7 @@ template<> guild_data getValue<guild_data>(simdjson::ondemand::value jsonData) {
 	guildData.explicitContentFilter		= getValue<uint64_t>(jsonData, "explicit_content_filter");
 	guildData.maxVideoChannelUsers		= getValue<uint64_t>(jsonData, "max_video_channel_users");
 
-	guildData.roles = getValues<role_data>(jsonData, "roles");
+	getValues<role_data>(guildData.roles, jsonData, "roles");
 
 	guildData.systemChannelId	 = getValue<std::string>(jsonData, "system_channel_id");
 	guildData.widgetChannelId	 = getValue<std::string>(jsonData, "widget_channel_id");
@@ -2134,6 +2005,83 @@ template<> discord_message getValue<discord_message>(simdjson::ondemand::value j
 	message.d = getValue<guild_data>(jsonData, "d");
 
 	return message;
+}
+
+#define SIMD_Pull(x) \
+		{ \
+			ondemand::array newX = doc[#x].get_array().value(); \
+			ondemand::array newArray{}; \
+			for (ondemand::value value: newX) { \
+				test_struct newStruct{}; \
+				getValues<int64_t>(newStruct.testInts ,value, "testInts"); \
+				getValues<double>(newStruct.testDoubles ,value, "testDoubles"); \
+				getValues<std::string>(newStruct.testStrings ,value, "testStrings"); \
+				getValues02<bool>(newStruct.testBools ,value, "testBools"); \
+				getValues<uint64_t>(newStruct.testUints ,value, "testUints"); \
+				obj.x.emplace_back(std::move(newStruct)); \
+			} \
+		}
+
+bool on_demand::readInOrder(Test<test_struct>& obj, const padded_string& json) {
+	ondemand::document doc = parser.iterate(json).value();
+	SIMD_Pull(a);
+	SIMD_Pull(b);
+	SIMD_Pull(c);
+	SIMD_Pull(d);
+	SIMD_Pull(e);
+	SIMD_Pull(f);
+	SIMD_Pull(g);
+	SIMD_Pull(h);
+	SIMD_Pull(i);
+	SIMD_Pull(j);
+	SIMD_Pull(k);
+	SIMD_Pull(l);
+	SIMD_Pull(m);
+	SIMD_Pull(n);
+	SIMD_Pull(o);
+	SIMD_Pull(p);
+	SIMD_Pull(q);
+	SIMD_Pull(r);
+	SIMD_Pull(s);
+	SIMD_Pull(t);
+	SIMD_Pull(u);
+	SIMD_Pull(v);
+	SIMD_Pull(w);
+	SIMD_Pull(x);
+	SIMD_Pull(y);
+	SIMD_Pull(z);
+	return false;
+}
+
+bool on_demand_abc::readOutOfOrder(AbcTest<test_struct>& obj, const padded_string& json) {
+	ondemand::document doc = parser.iterate(json).value();
+	SIMD_Pull(z);
+	SIMD_Pull(y);
+	SIMD_Pull(x);
+	SIMD_Pull(w);
+	SIMD_Pull(v);
+	SIMD_Pull(u);
+	SIMD_Pull(t);
+	SIMD_Pull(s);
+	SIMD_Pull(r);
+	SIMD_Pull(q);
+	SIMD_Pull(p);
+	SIMD_Pull(o);
+	SIMD_Pull(n);
+	SIMD_Pull(m);
+	SIMD_Pull(l);
+	SIMD_Pull(k);
+	SIMD_Pull(j);
+	SIMD_Pull(i);
+	SIMD_Pull(h);
+	SIMD_Pull(g);
+	SIMD_Pull(f);
+	SIMD_Pull(e);
+	SIMD_Pull(d);
+	SIMD_Pull(c);
+	SIMD_Pull(b);
+	SIMD_Pull(a);
+	return false;
 }
 
 auto simdjsonMinifyTest(const jsonifier::string& discordData, bool doWePrint = true) {
