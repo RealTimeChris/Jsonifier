@@ -27,77 +27,157 @@
 
 namespace jsonifier_internal {
 
-	using integer_list = jsonifier::concepts::type_list<uint64_t, uint32_t, uint16_t, uint8_t>;
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(const char_type01* lhs, const char_type02* rhs, uint64_t count) noexcept {
+		static constexpr uint64_t n{ 8 };
+		if (count > 7) {
+			uint64_t v[2];
+			while (count > n) {
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
+				if (v[0] != v[1]) {
+					return false;
+				}
+				count -= n;
+				lhs += n;
+				rhs += n;
+			}
 
-	template<uint64_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
-#if defined(_WIN32)
-		using integer_type = typename jsonifier::concepts::get_type_at_index<integer_list, index>::type;
-		static constexpr uint64_t size{ sizeof(integer_type) };
-		integer_type value01[2]{};
-		while (lengthNew >= size) {
-			std::memcpy(value01, string1, sizeof(integer_type));
-			std::memcpy(value01 + 1, string2, sizeof(integer_type));
-			lengthNew -= size;
-			string1 += size;
-			string2 += size;
-			if (value01[0] != value01[1]) {
-				return false;
+			const auto shift = n - count;
+			lhs -= shift;
+			rhs -= shift;
+
+			std::copy(lhs, lhs + 1, v);
+			std::copy(rhs, rhs + 1, v + 1);
+			return v[0] == v[1];
+		}
+		{
+			static constexpr uint64_t n{ sizeof(uint32_t) };
+			if (count >= n) {
+				uint32_t v[2];
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
+				if (v[0] != v[1]) {
+					return false;
+				}
+				count -= n;
+				lhs += n;
+				rhs += n;
 			}
 		}
-		if constexpr (index < integer_list::size - 1) {
-			return compareShort<index + 1>(string1, string2, lengthNew);
+		{
+			static constexpr uint64_t n{ sizeof(uint16_t) };
+			if (count >= n) {
+				uint16_t v[2];
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
+				if (v[0] != v[1]) {
+					return false;
+				}
+				count -= n;
+				lhs += n;
+				rhs += n;
+			}
+		}
+		if (count && *lhs != *rhs) {
+			return false;
+		}
+		return true;
+	}
+
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+		{
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 2>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 2>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 2>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 2>::type::mask;
+			simd_type value01{};
+			simd_type value02{};
+			while (lengthNew >= vectorSize) {
+				value01 = gatherValuesU<simd_type>(string1);
+				value02 = gatherValuesU<simd_type>(string2);
+				if (simd_base::opCmpEq(value01, value02) != maskValue) {
+					return false;
+				}
+				lengthNew -= vectorSize;
+				string1 += vectorSize;
+				string2 += vectorSize;
+			}
+		}
+#endif
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+		{
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 1>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 1>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 1>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 1>::type::mask;
+			simd_type value01{};
+			simd_type value02{};
+			while (lengthNew >= vectorSize) {
+				value01 = gatherValuesU<simd_type>(string1);
+				value02 = gatherValuesU<simd_type>(string2);
+				if (simd_base::opCmpEq(value01, value02) != maskValue) {
+					return false;
+				}
+				lengthNew -= vectorSize;
+				string1 += vectorSize;
+				string2 += vectorSize;
+			}
+		}
+
+#endif
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+		{
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 0>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 0>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 0>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 0>::type::mask;
+			simd_type value01{};
+			simd_type value02{};
+			while (lengthNew >= vectorSize) {
+				value01 = gatherValuesU<simd_type>(string1);
+				value02 = gatherValuesU<simd_type>(string2);
+				if (simd_base::opCmpEq(value01, value02) != maskValue) {
+					return false;
+				}
+				lengthNew -= vectorSize;
+				string1 += vectorSize;
+				string2 += vectorSize;
+			}
+		}
+#endif
+		return compareShort(string1, string2, lengthNew);
+	}
+
+	template<uint64_t Count, typename char_type01> JSONIFIER_INLINE bool compare(const char_type01* lhs, const char_type01* rhs) noexcept {
+		static constexpr uint64_t n{ 8 };
+		if constexpr (Count > n) {
+			return compare(lhs, rhs, Count);
+		} else if constexpr (Count == n) {
+			uint64_t v[2];
+			std::memcpy(v, lhs, Count);
+			std::memcpy(v + 1, rhs, Count);
+			return v[0] == v[1];
+		} else if constexpr (Count > 4) {
+			uint64_t v[2]{};
+			std::memcpy(v, lhs, Count);
+			std::memcpy(v + 1, rhs, Count);
+			return v[0] == v[1];
+		} else if constexpr (Count > 2) {
+			uint32_t v[2]{};
+			std::memcpy(v, lhs, Count);
+			std::memcpy(v + 1, rhs, Count);
+			return v[0] == v[1];
+		} else if constexpr (Count == 2) {
+			uint16_t v[2];
+			std::memcpy(v, lhs, Count);
+			std::memcpy(v + 1, rhs, Count);
+			return v[0] == v[1];
+		} else if constexpr (Count == 1) {
+			return *lhs == *rhs;
 		} else {
 			return true;
 		}
-#else
-		return std::memcmp(string1, string2, lengthNew) == 0;
-#endif
 	}
-
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-	template<uint64_t index = 0, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
-	#if defined(_WIN32)
-		using integer_type					 = typename jsonifier::concepts::get_type_at_index<avx_list, index>::type::integer_type;
-		using simd_type						 = typename jsonifier::concepts::get_type_at_index<avx_list, index>::type::type;
-		static constexpr uint64_t vectorSize = sizeof(simd_type);
-		static constexpr integer_type maskValue{ jsonifier::concepts::get_type_at_index<avx_list, index>::type::mask };
-		while (lengthNew >= vectorSize) {
-			if (simd_base::opCmpEq(gatherValuesU<simd_type>(string1), gatherValuesU<simd_type>(string2)) != maskValue) {
-				return false;
-			}
-			lengthNew -= vectorSize;
-			string1 += vectorSize;
-			string2 += vectorSize;
-		}
-		if constexpr (index < avx_list::size - 1) {
-			if (lengthNew > 0) {
-				return compare<index + 1>(string1, string2, lengthNew);
-			}
-		} else if (lengthNew > 0) {
-			return compareShort(string1, string2, lengthNew);
-		}
-		return true;
-	#else
-		return std::memcmp(string1, string2, lengthNew) == 0;
-	#endif
-	}
-
-#else
-
-	JSONIFIER_INLINE bool compare(const void* string1, const void* string2, uint64_t lengthNew) {
-		std::string_view string01{ static_cast<const char*>(string1), lengthNew };
-		std::string_view string02{ static_cast<const char*>(string2), lengthNew };
-		return string01 == string02;
-	}
-
-#endif
-
-	class jsonifier_core_internal {
-	  public:
-		template<typename value_type01, typename value_type02> JSONIFIER_INLINE static bool compare(const value_type01* string1, const value_type02* string2, uint64_t lengthNew) {
-			return jsonifier_internal::compare(string1, string2, lengthNew);
-		}
-	};
 
 }// namespace jsonifier_internal

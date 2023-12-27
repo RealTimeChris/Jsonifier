@@ -29,12 +29,7 @@ namespace jsonifier_internal {
 
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
-	using avx_list = jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>>;
-
-	using avx_integer_list =
-		jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, 16>, jsonifier::concepts::type_holder<8, uint64_t, uint64_t, 8>>;
-
-	template<simd_int_type simd_int_t01, size_t... indices> JSONIFIER_INLINE string_parsing_type _mm128_movemask_epi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
+	template<simd_int_type simd_int_t01, uint64_t... indices> JSONIFIER_INLINE string_parsing_type _mm128_movemask_epi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
 		string_parsing_type mask{ 0 };
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
@@ -72,7 +67,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, size_t... indices>
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, uint64_t... indices>
 	JSONIFIER_INLINE simd_int_t _mm128_cmpeq_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>&&) {
 		simd_int_t result{};
 		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
@@ -99,21 +94,12 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, size_t... indices>
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, uint64_t... indices>
 	JSONIFIER_INLINE simd_int_t _mm128_shuffle_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>) {
 		simd_int_t result{};
 		uint64_t index{};
 		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
 		return result;
-	}
-
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE string_parsing_type simd_base::opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
-		return static_cast<string_parsing_type>(_mm128_movemask_epi8(
-			_mm128_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{}), std::make_index_sequence<16>{}));
-	}
-
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{});
 	}
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opAndNot(simd_int_t01&& value, simd_int_t02&& other) {

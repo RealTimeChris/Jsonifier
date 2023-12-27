@@ -10,7 +10,7 @@ To use the `jsonifier_core::prettify()` function, call it as follows:
 #include "jsonifier/Index.hpp"
 
 jsonifier::jsonifier_core parser{};
-std::string buffer = "{\"key\": \"value\"}";
+jsonifier::string buffer = "{\"key\": \"value\"}";
 
 // Prettify JSON data.
 buffer = parser.prettify(buffer);
@@ -25,7 +25,7 @@ Simply call `jsonifier_core::serializeJson()` with its first template parameter 
 
 jsonifier::jsonifier_core parser{};
 discord_test discordTest{};
-std::string buffer{};
+jsonifier::string buffer{};
 
 // Serialize and automatically prettify JSON data.
 parser.serializeJson<true>(discordTest, buffer);

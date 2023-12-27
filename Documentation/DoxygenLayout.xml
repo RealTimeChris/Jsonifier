@@ -39,7 +39,7 @@
   </navindex>
 
   <!-- Layout definition for a class page -->
-  <class>
+  <typename>
     <briefdescription visible="yes"/>
     <includes visible="$SHOW_HEADERFILE"/>
     <inheritancegraph visible="$CLASS_GRAPH"/>

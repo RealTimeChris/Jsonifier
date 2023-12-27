@@ -1,6 +1,7 @@
 name: Build-and-Test-GCC-MacOS
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - main
@@ -22,13 +23,12 @@ jobs:
 
     - name: Install the latest g++ compiler.
       run: |
-            brew install gcc
+            brew reinstall gcc
 
     - name: Configure CMake
       working-directory: ./
       run: |
-           
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/local/opt/gcc@13/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/gcc/13.2.0/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build

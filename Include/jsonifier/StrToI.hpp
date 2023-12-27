@@ -34,367 +34,399 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
-		[[maybe_unused]] const char_type* sigEnd{};
-		const char_type *tmp{}, *sigCut{}, *dotPos{}, *hdr{ cur };
-		uint64_t fracZeros{}, numTmp{}, sig{};
-		int64_t exp{}, expSig{}, expLit{};
-		bool sign{ (*hdr == 0x2Du) }, expSign{};
-		auto applySign = [&](auto&& value) -> value_type01 {
-			return sign ? -static_cast<value_type01>(value) : static_cast<value_type01>(value);
-		};
-		if (*cur == 0x30u && numberTable[*(cur + 1)] || *(cur + 1) == 0x78u) {
+	constexpr bool isDigit(const char c) noexcept {
+		return c >= '0' && c <= '9';
+	}
+
+	constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
+		return a <= (std::numeric_limits<uint64_t>::max)() - b;
+	}
+
+	constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
+		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
+		return a <= b;
+	}
+
+	template<jsonifier::concepts::unsigned_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumberInternal(value_type& value, char_type* cur) {
+		static constexpr auto is_volatile = std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
+		const char_type* sig_cut{};
+		[[maybe_unused]] const char_type* sig_end{};
+		const char_type* dot_pos{};
+		uint32_t frac_zeros = 0;
+		uint64_t sig		= uint64_t(*cur - '0');
+		int32_t exp			= 0;
+		bool exp_sign;
+		int32_t exp_sig = 0;
+		int32_t exp_lit = 0;
+		uint64_t num_tmp;
+		const char_type* tmp;
+
+		if (sig > 9) [[unlikely]] {
 			return false;
 		}
-		cur += sign;
-		sig = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
-		if (sig > 9) {
-			if (*cur == 0x6Eu && cur[1] == 0x75u && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
-				value = applySign(0);
-				return true;
-			} else if (( *cur | eBit<char_type> ) == 0x6Eu && ( cur[1] | eBit<char_type> ) == 0x61u && ( cur[2] | eBit<char_type> ) == 0x6Eu) {
-				value = applySign(std::numeric_limits<value_type01>::quiet_NaN());
-				return true;
-			} else {
-				return false;
-			}
-		}
-		static constexpr auto zero = static_cast<uint8_t>(0x30u);
-#define expr_intg(x) \
-	if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[x])]); numTmp <= 9) [[likely]] \
-		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
+		static constexpr auto zero = uint8_t('0');
+#define expr_intg(i) \
+	if ((num_tmp = cur[i] - zero) <= 9) [[likely]] \
+		sig = num_tmp + sig * 10; \
 	else { \
-		goto digi_sepr_##x; \
+		goto digi_sepr_##i; \
 	}
 		repeat_in_1_18(expr_intg);
 #undef expr_intg
+		if (*cur == zero)
+			return false;
 		cur += 19;
-		if (!digiIsDigitOrFp(static_cast<uint8_t>(*cur))) {
-			value = applySign(static_cast<value_type01>(sig));
+		if (!digiIsDigitOrFp(*cur)) {
+			value = static_cast<value_type>(sig);
 			return true;
 		}
 		goto digi_intg_more;
-#define expr_sepr(x) \
-	digi_sepr_##x : if (!digiIsFp(static_cast<uint8_t>(cur[x]))) [[likely]] { \
-		cur += x; \
-		value = applySign(static_cast<value_type01>(sig)); \
+#define expr_sepr(i) \
+	digi_sepr_##i : if ((!digiIsFp(uint8_t(cur[i])))) [[likely]] { \
+		cur += i; \
+		value = sig; \
 		return true; \
 	} \
-	dotPos = cur + x; \
-	if (cur[x] == 0x2Eu) [[likely]] { \
+	dot_pos = cur + i; \
+	if ((cur[i] == '.')) [[likely]] { \
 		if (sig == 0) \
-			while (cur[fracZeros + x + 1] == static_cast<uint64_t>(zero)) \
-				++fracZeros; \
-		goto digi_frac_##x; \
+			while (cur[frac_zeros + i + 1] == zero) \
+				++frac_zeros; \
+		goto digi_frac_##i; \
 	} \
-	cur += x; \
-	sigEnd = cur; \
+	cur += i; \
+	sig_end = cur; \
 	goto digi_exp_more;
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
-#define expr_frac(x) \
-	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[static_cast<uint64_t>(x + 1 + fracZeros)])]); numTmp <= 9) [[likely]] sig = \
-						numTmp + sig * 10; \
+#define expr_frac(i) \
+	digi_frac_##i : if (((num_tmp = uint64_t(cur[i + 1 + frac_zeros] - zero)) <= 9)) [[likely]] sig = num_tmp + sig * 10; \
 	else { \
-		goto digi_stop_##x; \
+		goto digi_stop_##i; \
 	}
 			repeat_in_1_18(expr_frac)
 #undef expr_frac
-				cur += 20ull + fracZeros;
-		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]]
+				cur += 20 + frac_zeros;
+		if (uint8_t(*cur - zero) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
-#define expr_stop(x) \
-	digi_stop_##x : cur += x##ull + 1ull + fracZeros; \
+#define expr_stop(i) \
+	digi_stop_##i : cur += i + 1 + frac_zeros; \
 	goto digi_frac_end;
 		repeat_in_1_18(expr_stop)
 #undef expr_stop
-			digi_intg_more : static constexpr uint64_t uint64_tMax = std::numeric_limits<uint64_t>::max();
-		if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]); numTmp < 10) {
-			if (!digiIsDigitOrFp(static_cast<uint8_t>(cur[1]))) {
-				if ((sig < (uint64_tMax / 10)) || (sig == (uint64_tMax / 10) && numTmp <= (uint64_tMax % 10))) {
-					sig = numTmp + sig * 10;
-					++cur;
-					value = applySign(static_cast<value_type01>(sig));
+			digi_intg_more : static constexpr uint64_t U64_MAX = (std::numeric_limits<uint64_t>::max)();
+		if ((num_tmp = *cur - zero) < 10) {
+			if (!digiIsDigitOrFp(cur[1])) {
+				if ((sig < (U64_MAX / 10)) || (sig == (U64_MAX / 10) && num_tmp <= (U64_MAX % 10))) {
+					sig = num_tmp + sig * 10;
+					cur++;
+					value = static_cast<value_type>(sig);
 					return true;
 				}
 			}
 		}
-		if ((eBit<char_type> | *cur) == 0x65u) {
-			dotPos = cur;
+		if ((eBit | *cur) == 'e') {
+			dot_pos = cur;
 			goto digi_exp_more;
 		}
-		if (*cur == 0x2Eu) {
-			dotPos = cur++;
-			if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
+		if (*cur == '.') {
+			dot_pos = cur++;
+			if (uint8_t(*cur - zero) > 9) [[unlikely]] {
 				return false;
 			}
 		}
 	digi_frac_more:
-		sigCut = cur;
-		sig += (*cur >= 0x35);
-		while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
+		sig_cut = cur;
+		sig += (*cur >= '5');
+		while (uint8_t(*++cur - zero) < 10) {
 		}
-		if (!dotPos) {
-			dotPos = cur;
-			if (*cur == 0x2E) {
-				if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*++cur)]; newValue > 9) [[unlikely]] {
+		if (!dot_pos) {
+			dot_pos = cur;
+			if (*cur == '.') {
+				if (uint8_t(*++cur - zero) > 9) [[unlikely]] {
 					return false;
 				}
-				while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
+				while (uint8_t(*++cur - zero) < 10) {
 				}
 			}
 		}
-		expSig = static_cast<int64_t>(dotPos - sigCut);
-		expSig += (dotPos < sigCut);
+		exp_sig = int32_t(dot_pos - sig_cut);
+		exp_sig += (dot_pos < sig_cut);
 		tmp = cur - 1;
-		while (*tmp == 0x30u || *tmp == 0x2Eu)
+		while (*tmp == '0' || *tmp == '.')
 			tmp--;
-		if (tmp < sigCut) {
-			sigCut = nullptr;
+		if (tmp < sig_cut) {
+			sig_cut = nullptr;
+		} else {
+			sig_end = cur;
 		}
-		if ((eBit<char_type> | *cur) == 0x65u)
+		if ((eBit | *cur) == 'e')
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
-		expSig = -int64_t((cur - dotPos) - 1);
-		if ((eBit<char_type> | *cur) != 0x65u) [[likely]] {
-			if (expSig < f64MinDecExp - 19) [[unlikely]] {
-				value = applySign(0);
+		sig_end = cur;
+		exp_sig = -int32_t((cur - dot_pos) - 1);
+		if (exp_sig == 0) [[unlikely]]
+			return false;
+		if ((eBit | *cur) != 'e') [[likely]] {
+			if ((exp_sig < f64MinDecExp - 19)) [[unlikely]] {
+				value = 0;
 				return true;
 			}
-			exp = expSig;
+			exp = exp_sig;
 			goto digi_finish;
 		} else {
 			goto digi_exp_more;
 		}
-	digi_exp_more : {
-		expSign = (*++cur == 0x2Du);
-		cur += (*cur == 0x2Bu || *cur == 0x2Du);
-		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
-			goto digi_finish;
-		}
-		while (*cur == 0x30u)
-			++cur;
-		tmp = cur;
-		uint8_t c{};
-		while (c < 10) {
-			c = static_cast<uint8_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
-			++cur;
-			expLit = c + int64_t(expLit) * 10;
-		}
-		if (cur - tmp >= 6) [[unlikely]] {
-			if (sig == 0 || expSign) {
-				value = applySign(sig);
-				return true;
-			} else {
-				value = applySign(std::numeric_limits<value_type01>::infinity());
-				return true;
-			}
-		}
-		expSig += expSign ? -expLit : expLit;
-	}
-
-	digi_exp_finish:
-		if (sig == 0) {
-			value = applySign(!sign ? -0 : 0);
-			return true;
-		}
-		if (expSig < -20) {
-			value = applySign(0);
-			return true;
-		} else if (expSig > 20) {
-			value = applySign(std::numeric_limits<value_type01>::infinity());
-			return true;
-		}
-		exp = expSig;
-	digi_finish:
-
-		value = applySign(sig);
-		if (exp >= 0 && exp < 20) {
-			value *= applySign(powersOfTenInt[exp]);
-		} else if (exp > -20 && exp < 0) {
-			value /= applySign(powersOfTenInt[-exp]);
-		}
-		return true;
-	}
-
-	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
-		[[maybe_unused]] const char_type* sigEnd{};
-		const char_type *tmp{}, *sigCut{}, *dotPos{};
-		uint64_t fracZeros{}, numTmp{}, sig{};
-		int64_t exp{}, expSig{}, expLit{};
-		sig = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
-		if (*cur == 0x30u && numberTable[*(cur + 1)] || *(cur + 1) == 0x78u) {
+	digi_exp_more:
+		exp_sign = (*++cur == '-');
+		cur += (*cur == '+' || *cur == '-');
+		if (uint8_t(*cur - zero) > 9) {
 			return false;
 		}
-		if (sig > 9) {
-			if (*cur == 0x6Eu && cur[1] == 0x75u && cur[2] == 0x6Cu && cur[3] == 0x6Cu) {
-				value = static_cast<value_type01>(0);
-				return true;
-			} else if (( *cur | eBit<char_type> ) == 0x6Eu && ( cur[1] | eBit<char_type> ) == 0x61u && ( cur[2] | eBit<char_type> ) == 0x6Eu) {
-				value = static_cast<value_type01>(std::numeric_limits<value_type01>::quiet_NaN());
-				return true;
-			} else {
-				return false;
-			}
-		}
-		static constexpr auto zero = static_cast<uint8_t>(0x30u);
-#define expr_intg(x) \
-	if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[x])]); numTmp <= 9) [[likely]] \
-		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
-	else { \
-		goto digi_sepr_##x; \
-	}
-		repeat_in_1_18(expr_intg);
-#undef expr_intg
-		cur += 19;
-		if (!digiIsDigitOrFp(static_cast<uint8_t>(*cur))) {
-			value = static_cast<value_type01>(static_cast<value_type01>(sig));
-			return true;
-		}
-		goto digi_intg_more;
-#define expr_sepr(x) \
-	digi_sepr_##x : if (!digiIsFp(static_cast<uint8_t>(cur[x]))) [[likely]] { \
-		cur += x; \
-		value = static_cast<value_type01>(static_cast<value_type01>(sig)); \
-		return true; \
-	} \
-	dotPos = cur + x; \
-	if (cur[x] == 0x2Eu) [[likely]] { \
-		if (sig == 0) \
-			while (cur[fracZeros + x + 1] == static_cast<uint64_t>(zero)) \
-				++fracZeros; \
-		goto digi_frac_##x; \
-	} \
-	cur += x; \
-	sigEnd = cur; \
-	goto digi_exp_more;
-		repeat_in_1_18(expr_sepr)
-#undef expr_sepr
-#define expr_frac(x) \
-	digi_frac_##x : if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[static_cast<uint64_t>(x + 1 + fracZeros)])]); numTmp <= 9) [[likely]] sig = \
-						numTmp + sig * 10; \
-	else { \
-		goto digi_stop_##x; \
-	}
-			repeat_in_1_18(expr_frac)
-#undef expr_frac
-				cur += 20ull + fracZeros;
-		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]]
-			goto digi_frac_end;
-		goto digi_frac_more;
-#define expr_stop(x) \
-	digi_stop_##x : cur += x##ull + 1ull + fracZeros; \
-	goto digi_frac_end;
-		repeat_in_1_18(expr_stop)
-#undef expr_stop
-			digi_intg_more : static constexpr uint64_t uint64_tMax = std::numeric_limits<uint64_t>::max();
-		if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]); numTmp < 10) {
-			if (!digiIsDigitOrFp(static_cast<uint8_t>(cur[1]))) {
-				if ((sig < (uint64_tMax / 10)) || (sig == (uint64_tMax / 10) && numTmp <= (uint64_tMax % 10))) {
-					sig = numTmp + sig * 10;
-					++cur;
-					value = static_cast<value_type01>(static_cast<value_type01>(sig));
-					return true;
-				}
-			}
-		}
-		if ((eBit<char_type> | *cur) == 0x65u) {
-			dotPos = cur;
-			goto digi_exp_more;
-		}
-		if (*cur == 0x2Eu) {
-			dotPos = cur++;
-			if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
-				return false;
-			}
-		}
-	digi_frac_more:
-		sigCut = cur;
-		sig += (*cur >= 0x35);
-		while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
-		}
-		if (!dotPos) {
-			dotPos = cur;
-			if (*cur == 0x2E) {
-				if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*++cur)]; newValue > 9) [[unlikely]] {
-					return false;
-				}
-				while (asciiToValueTable[static_cast<uint64_t>(*++cur)] < 10) {
-				}
-			}
-		}
-		expSig = static_cast<int64_t>(dotPos - sigCut);
-		expSig += (dotPos < sigCut);
-		tmp = cur - 1;
-		while (*tmp == 0x30u || *tmp == 0x2Eu)
-			tmp--;
-		if (tmp < sigCut) {
-			sigCut = nullptr;
-		}
-		if ((eBit<char_type> | *cur) == 0x65u)
-			goto digi_exp_more;
-		goto digi_exp_finish;
-	digi_frac_end:
-		expSig = -int64_t((cur - dotPos) - 1);
-		if ((eBit<char_type> | *cur) != 0x65u) [[likely]] {
-			if (expSig < f64MinDecExp - 19) [[unlikely]] {
-				value = static_cast<value_type01>(0);
-				return true;
-			}
-			exp = expSig;
-			goto digi_finish;
-		} else {
-			goto digi_exp_more;
-		}
-	digi_exp_more : {
-		cur += (*cur == 0x2Bu || *cur == 0x2Du);
-		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
-			goto digi_finish;
-		}
-		while (*cur == 0x30u)
+		while (*cur == '0')
 			++cur;
 		tmp = cur;
-		uint8_t c{};
-		while (c < 10) {
-			c = static_cast<uint8_t>(asciiToValueTable[static_cast<uint64_t>(*cur)]);
+		uint8_t c;
+		while (uint8_t(c = *cur - zero) < 10) {
 			++cur;
-			expLit = c + int64_t(expLit) * 10;
+			exp_lit = c + uint32_t(exp_lit) * 10;
 		}
-		if (cur - tmp >= 6) [[unlikely]] {
-			if (sig == 0) {
-				value = static_cast<value_type01>(sig);
+		if ((cur - tmp >= 6)) [[unlikely]] {
+			if (sig == 0 || exp_sign) {
+				value = 0;
 				return true;
 			} else {
-				value = static_cast<value_type01>(std::numeric_limits<value_type01>::infinity());
-				return true;
+				return false;
 			}
 		}
-		expSig += expLit;
-	}
-
+		exp_sig += exp_sign ? -exp_lit : exp_lit;
 	digi_exp_finish:
 		if (sig == 0) {
 			value = 0;
 			return true;
 		}
-		if (expSig < -20) {
-			value = static_cast<value_type01>(0);
-			return true;
-		} else if (expSig > 20) {
-			value = static_cast<value_type01>(std::numeric_limits<value_type01>::infinity());
-			return true;
+		if (exp_sig == 19) {
+			if constexpr (is_volatile) {
+				value = value * value_type(powersOfTenInt[exp_sig - 1]);
+				if (isSafeMultiplication10(value)) [[likely]] {
+					value = value * 10;
+					return value;
+				} else [[unlikely]] {
+					return false;
+				}
+			} else {
+				value *= value_type(powersOfTenInt[exp_sig - 1]);
+				if (isSafeMultiplication10(value)) [[likely]] {
+					return value *= 10;
+				} else [[unlikely]] {
+					return false;
+				}
+			}
+		} else if (exp_sig >= 20) [[unlikely]] {
+			return false;
 		}
-		exp = expSig;
+		exp = exp_sig;
 	digi_finish:
 
-		value = static_cast<value_type01>(sig);
-		if (exp >= 0 && exp < 20) {
-			value *= static_cast<value_type01>(powersOfTenInt[exp]);
-		} else if (exp > -20 && exp < 0) {
-			value /= static_cast<value_type01>(powersOfTenInt[-exp]);
+		if (exp <= -20) [[unlikely]] {
+			value = value_type(0);
+			return true;
+		}
+
+		value = static_cast<value_type>(sig);
+		if constexpr (is_volatile) {
+			if (exp >= 0) {
+				value = value * value_type(powersOfTenInt[exp]);
+			} else {
+				value = value / value_type(powersOfTenInt[-exp]);
+			}
+		} else {
+			if (exp >= 0) {
+				value *= value_type(powersOfTenInt[exp]);
+			} else {
+				value /= value_type(powersOfTenInt[-exp]);
+			}
 		}
 		return true;
+	}
+
+	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& value, char_type* curNew) {
+		static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
+		if constexpr (std::is_unsigned_v<value_type>) {
+			if constexpr (std::same_as<value_type, uint64_t>) {
+				if (*curNew == '-') [[unlikely]] {
+					return false;
+				}
+				static_assert(sizeof(*curNew) == sizeof(char));
+				const char_type* cur = reinterpret_cast<const char_type*>(&*curNew);
+				if constexpr (std::is_volatile_v<decltype(value)>) {
+					uint64_t i{};
+					auto s = parseNumberInternal<uint64_t, char_type>(i, cur);
+					if (!s) [[unlikely]] {
+						return false;
+					}
+					value = i;
+				} else {
+					auto s = parseNumberInternal<jsonifier::concepts::decay_keep_volatile_t<decltype(value)>, char_type>(value, cur);
+					if (!s) [[unlikely]] {
+						return false;
+					}
+				}
+			} else {
+				uint64_t i{};
+				if (*curNew == '-') [[unlikely]] {
+					return false;
+				}
+
+				static_assert(sizeof(*curNew) == sizeof(char));
+				const char_type* cur = reinterpret_cast<const char_type*>(&*curNew);
+				auto s				 = parseNumberInternal<std::decay_t<decltype(i)>, char_type>(i, cur);
+				if (!s) [[unlikely]] {
+					return false;
+				}
+
+				if (i > maximum) [[unlikely]] {
+					return false;
+				}
+				value = value_type(i);
+			}
+		} else {
+			uint64_t i{};
+			int sign = 1;
+			if (*curNew == '-') {
+				sign = -1;
+				++curNew;
+			}
+
+			static_assert(sizeof(*curNew) == sizeof(char));
+			const char_type* cur = reinterpret_cast<const char_type*>(&*curNew);
+			auto s				 = parseNumberInternal<jsonifier::concepts::decay_keep_volatile_t<decltype(i)>, char_type>(i, cur);
+			if (!s) [[unlikely]] {
+				return false;
+			}
+
+			if (sign == -1) {
+				static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
+				if (i > min_abs) [[unlikely]] {
+					return false;
+				}
+				value = value_type(sign * i);
+			} else {
+				if (i > maximum) [[unlikely]] {
+					return false;
+				}
+				value = value_type(i);
+			}
+		}
+		return true;
+	}
+
+	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
+		if (!isDigit(*c)) [[unlikely]] {
+			return false;
+		}
+
+		constexpr std::array<uint32_t, 4> max_digits_from_size = { 4, 6, 11, 20 };
+		constexpr auto N									   = max_digits_from_size[std::bit_width(sizeof(value_type)) - 1];
+
+		std::array<uint8_t, N> digits{ 0 };
+		auto next_digit	   = digits.begin();
+		auto consume_digit = [&c, &next_digit, &digits]() {
+			if (next_digit < digits.cend()) [[likely]] {
+				*next_digit = (*c - '0');
+				++next_digit;
+			}
+			++c;
+		};
+
+		if (*c == '0') {
+			++c;
+			++next_digit;
+
+			if (*c == '0') [[unlikely]] {
+				return false;
+			}
+		}
+
+		while (isDigit(*c)) {
+			consume_digit();
+		}
+		auto n = std::distance(digits.begin(), next_digit);
+
+		if (*c == '.') {
+			++c;
+			while (isDigit(*c)) {
+				consume_digit();
+			}
+		}
+
+		if (*c == 'e' || *c == 'E') {
+			++c;
+
+			bool negative = false;
+			if (*c == '+' || *c == '-') {
+				negative = (*c == '-');
+				++c;
+			}
+			uint8_t exp = 0;
+			while (isDigit(*c) && exp < 128) {
+				exp = 10 * exp + (*c - '0');
+				++c;
+			}
+			n += negative ? -exp : exp;
+		}
+
+		res = 0;
+		if (n < 0) [[unlikely]] {
+			return true;
+		}
+
+		if constexpr (std::same_as<value_type, uint64_t>) {
+			if (n > 20) [[unlikely]] {
+				return false;
+			}
+
+			if (n == 20) [[unlikely]] {
+				for (auto k = 0; k < 19; ++k) {
+					res = 10 * res + digits[k];
+				}
+
+				if (isSafeMultiplication10(res)) [[likely]] {
+					res *= 10;
+				} else [[unlikely]] {
+					return false;
+				}
+				if (isSafeAddition(res, digits.back())) [[likely]] {
+					res += digits.back();
+				} else [[unlikely]] {
+					return false;
+				}
+			} else [[likely]] {
+				for (auto k = 0; k < n; ++k) {
+					res = 10 * res + digits[k];
+				}
+			}
+		} else {
+			if (n >= N) [[unlikely]] {
+				return false;
+			} else [[likely]] {
+				for (auto k = 0; k < n; ++k) {
+					res = 10 * res + digits[k];
+				}
+			}
+		}
+
+		return true;
+	}
+
+	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, char_type* curNew) noexcept {
+		static_assert(sizeof(*curNew) == sizeof(char));
+		const char_type* cur = reinterpret_cast<const char_type*>(&*curNew);
+		if (stoui64(res, cur)) {
+			return true;
+		}
+		return false;
 	}
 }

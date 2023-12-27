@@ -29,6 +29,7 @@
 #include <source_location>
 #include <unordered_map>
 #include <exception>
+#include <algorithm>
 #include <string>
 
 namespace jsonifier_internal {
@@ -40,43 +41,45 @@ namespace jsonifier_internal {
 		Damaged_Input				   = 3,
 		Serialize_Error				   = 4,
 		No_Input					   = 5,
-		Requires_Array_Or_Object	   = 6,
-		Missing_Colon				   = 7,
-		Missing_Comma_Or_Closing_Brace = 8,
-		Invalid_Escape_Characters	   = 9,
-		Invalid_String_Characters	   = 10,
-		Invalid_Null_Value			   = 11,
-		Invalid_Bool_Value			   = 12,
-		Invalid_Number_Value		   = 13,
-		Broken_Array_Start			   = 14,
-		Broken_Object_Start			   = 15,
-		Prettify_Error				   = 16,
-		Minify_Error				   = 17,
-		Validate_Error				   = 18
+		Invalid_Input				   = 6,
+		Requires_Array_Or_Object	   = 7,
+		Missing_Colon				   = 8,
+		Missing_Comma_Or_Closing_Brace = 9,
+		Invalid_Escape_Characters	   = 10,
+		Invalid_String_Characters	   = 11,
+		Invalid_Null_Value			   = 12,
+		Invalid_Bool_Value			   = 13,
+		Invalid_Number_Value		   = 14,
+		Broken_Array_Start			   = 15,
+		Broken_Object_Start			   = 16,
+		Prettify_Error				   = 17,
+		Minify_Error				   = 18,
+		Validate_Error				   = 19,
+		UnQuoted_String				   = 20
 	};
 
-	inline std::unordered_map<error_code, jsonifier::string_view> errorMap{ { error_code::Success, "Success" }, { error_code::Incorrect_Type, "Incorrect Type" },
+	std::unordered_map<error_code, jsonifier::string_view> errorMap{ { error_code::Success, "Success" }, { error_code::Incorrect_Type, "Incorrect Type" },
 		{ error_code::Setup_Error, "Setup Error." }, { error_code::Damaged_Input, "Damaged Input" }, { error_code::Serialize_Error, "Serialize Error" },
-		{ error_code::No_Input, "No Input" }, { error_code::Requires_Array_Or_Object, "Requires Array Or Object" }, { error_code::Missing_Colon, "Missing Colon" },
-		{ error_code::Missing_Comma_Or_Closing_Brace, "Missing Comma Or Closing Brace" }, { error_code::Invalid_Escape_Characters, "Invalid Escape Characters" },
-		{ error_code::Invalid_String_Characters, "Invalid String Characters" }, { error_code::Invalid_Null_Value, "Invalid Null Value" },
-		{ error_code::Invalid_Bool_Value, "Invalid Bool Value" }, { error_code::Invalid_Number_Value, "Invalid Number Value" },
-		{ error_code::Broken_Array_Start, "Broken Array Start" }, { error_code::Broken_Object_Start, "Broken Object Start" }, { error_code::Prettify_Error, "Prettify Error" },
-		{ error_code::Minify_Error, "Minify Error" }, { error_code::Validate_Error, "Validate Error" } };
+		{ error_code::Invalid_Input, "Invalid Input" }, { error_code::No_Input, "No Input" }, { error_code::Requires_Array_Or_Object, "Requires Array Or Object" },
+		{ error_code::Missing_Colon, "Missing Colon" }, { error_code::Missing_Comma_Or_Closing_Brace, "Missing Comma Or Closing Brace" },
+		{ error_code::Invalid_Escape_Characters, "Invalid Escape Characters" }, { error_code::Invalid_String_Characters, "Invalid String Characters" },
+		{ error_code::Invalid_Null_Value, "Invalid Null Value" }, { error_code::Invalid_Bool_Value, "Invalid Bool Value" },
+		{ error_code::Invalid_Number_Value, "Invalid Number Value" }, { error_code::Broken_Array_Start, "Broken Array Start" },
+		{ error_code::Broken_Object_Start, "Broken Object Start" }, { error_code::Prettify_Error, "Prettify Error" }, { error_code::Minify_Error, "Minify Error" },
+		{ error_code::Validate_Error, "Validate Error" }, { error_code::UnQuoted_String, "UnQuoted String" } };
 
-
-	enum json_structural_type : uint8_t {
-		Jsonifier_Unset		   = 0x00u,
-		Jsonifier_Object_Start = 0x7Bu,
-		Jsonifier_Object_End   = 0x7Du,
-		Jsonifier_Array_Start  = 0x5Bu,
-		Jsonifier_Array_End	   = 0x5Du,
-		Jsonifier_String	   = 0x22u,
-		Jsonifier_Bool		   = 0x74u,
-		Jsonifier_Number	   = 0x2Du,
-		Jsonifier_Colon		   = 0x3Au,
-		Jsonifier_Comma		   = 0x2Cu,
-		Jsonifier_Null		   = 0x6Eu
+	enum json_structural_type : int8_t {
+		Unset		 = -1,
+		String		 = 0x22u,
+		Comma		 = 0x2Cu,
+		Number		 = 0x2Du,
+		Colon		 = 0x3Au,
+		Array_Start	 = 0x5Bu,
+		Array_End	 = 0x5Du,
+		Null		 = 0x6Eu,
+		Bool		 = 0x74u,
+		Object_Start = 0x7Bu,
+		Object_End	 = 0x7Du
 	};
 
 	JSONIFIER_INLINE bool isTypeType(uint8_t c) {
@@ -98,7 +101,7 @@ namespace jsonifier_internal {
 		static constexpr jsonifier::string_view unset{ "Unset" };
 		if (isDigitType(charToCheck)) [[likely]] {
 			return number;
-		} else if (charToCheck == 0x74u || charToCheck == 0x66u) [[likely]] {
+		} else if (boolTable[charToCheck]) [[likely]] {
 			return boolean;
 		} else if (charToCheck == 0x7B) [[unlikely]] {
 			return object;
@@ -133,12 +136,12 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
 			}
 			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 			errorType = collectMisReadType(static_cast<uint8_t>(typeNew), errorValue);
 		}
@@ -154,7 +157,7 @@ namespace jsonifier_internal {
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 		}
 
@@ -163,13 +166,13 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
 			}
 			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 		}
 
@@ -229,25 +232,32 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE jsonifier::string reportError() const {
 			switch (errorType) {
 				case error_code::Incorrect_Type: {
-					jsonifier::string returnValue{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) +
-						", the found value was actually: " + getValueType(errorValue) + ", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() +
-						", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					jsonifier::string returnValue{ "It seems you mismatched a value for a value of type: " + getValueType(intendedValue) + ", the found value was actually: " +
+						getValueType(errorValue) + jsonifier::string{ errorIndex == std::numeric_limits<uint64_t>::max() ? "" : ", at index: " + jsonifier::toString(errorIndex) } +
+						", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) +
+						", in function: " + location.function_name() + "()." };
 					if (stringView) {
 						returnValue += "\nHere's some of the string's values:\n" + getStringData(stringView);
 					}
 					return returnValue;
 				}
 				case error_code::Damaged_Input: {
-					jsonifier::string returnValue{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found a '" + static_cast<char>(errorValue) + "'" +
-						", at index: " + jsonifier::toString(errorIndex) + ", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" +
-						jsonifier::toString(location.column()) + ", in function: " + location.function_name() + "()." };
+					jsonifier::string returnValue{ "Failed to collect a '" + jsonifier::string{ intendedValue } + "', instead found " +
+						(static_cast<char>(errorValue) == 0 ? "the string's end" : "a '" + jsonifier::string{ static_cast<char>(errorValue) } + "'") +
+						jsonifier::string{ errorIndex == std::numeric_limits<uint64_t>::max() ? "" : ", at index: " + jsonifier::toString(errorIndex) } +
+						", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) +
+						", in function: " + location.function_name() + "()." };
 					if (stringView) {
-						returnValue += "\nHere's some of the string's values:\n" + getStringData(stringView);
+						returnValue += "\nHere's some of the string's values:\n";
+						returnValue += getStringData(stringView);
 					}
 					return returnValue;
 				}
 				case error_code::No_Input: {
 					return "There was no string being input.";
+				}
+				case error_code::Invalid_Input: {
+					return "There was invalid string input.";
 				}
 				case error_code::Success: {
 					[[fallthrough]];
@@ -269,6 +279,7 @@ namespace jsonifier_internal {
 				case error_code::Requires_Array_Or_Object:
 				case error_code::Prettify_Error:
 				case error_code::Validate_Error:
+				case error_code::UnQuoted_String:
 				case error_code::Minify_Error:
 				default: {
 					jsonifier::string returnValue{ "Error of Type: " + errorMap[errorType] + ", at index: " + jsonifier::toString(errorIndex) +
