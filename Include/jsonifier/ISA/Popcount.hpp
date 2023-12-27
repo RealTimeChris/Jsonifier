@@ -25,15 +25,27 @@
 
 #include <jsonifier/ISA/ISADetectionBase.hpp>
 
-namespace jsonifier_internal {
+namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	#define popcnt(value) _mm_popcnt_u64(value)
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		return static_cast<uint32_t>(_mm_popcnt_u32(value));
+	}
+
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		return static_cast<uint64_t>(_mm_popcnt_u64(value));
+	}
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		return vaddv_u8(vcnt_u8(vcreate_u8(value)));
+	}
 
 #else
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
 		value_type count{};
 
 		while (value > 0) {

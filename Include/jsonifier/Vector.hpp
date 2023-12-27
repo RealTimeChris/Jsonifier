@@ -29,8 +29,7 @@
 
 namespace jsonifier {
 
-	template<typename value_type_new, bool doWeUseInitialBuffer = false> class vector : protected std::equal_to<value_type_new>,
-																						protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -38,7 +37,7 @@ namespace jsonifier {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using iterator				 = jsonifier_internal::iterator<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
@@ -46,9 +45,6 @@ namespace jsonifier {
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
 		JSONIFIER_INLINE vector() {
-			if constexpr (doWeUseInitialBuffer) {
-				resize(static_cast<uint64_t>(static_cast<double>(1024 * 1024 * 4) * 0.85f));
-			}
 		}
 
 		JSONIFIER_INLINE vector& operator=(vector&& other) noexcept {
@@ -138,6 +134,18 @@ namespace jsonifier {
 			*this = other;
 		}
 
+		template<typename... arg_types> JSONIFIER_INLINE void assign(size_type count, arg_types&&... newValue) {
+			size_type newSize = sizeVal + count;
+
+			if (newSize > capacityVal) {
+				reserve(newSize);
+			}
+
+			pointer insertPos = dataVal + sizeVal;
+			std::uninitialized_fill(insertPos, insertPos + count, newValue...);
+			sizeVal = newSize;
+		}
+
 		template<typename InputIterator> JSONIFIER_INLINE void insert(iterator where, InputIterator first, InputIterator last) {
 			size_type insertCount = std::distance(first, last);
 
@@ -154,8 +162,8 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (InputIterator it = first; it != last; ++it) {
-				allocator::construct(insertPos++, *it);
+			for (InputIterator iter = first; iter != last; ++iter) {
+				allocator::construct(insertPos++, *iter);
 			}
 
 			sizeVal = newSize;
@@ -264,11 +272,15 @@ namespace jsonifier {
 			return dataVal;
 		}
 
+		JSONIFIER_INLINE bool empty() const {
+			return sizeVal == 0;
+		}
+
 		JSONIFIER_INLINE pointer data() {
 			return dataVal;
 		}
 
-		JSONIFIER_INLINE explicit operator std::vector<value_type>() const {
+		JSONIFIER_INLINE operator std::vector<value_type>() const {
 			std::vector<value_type> returnValue{};
 			for (auto& value: *this) {
 				returnValue.emplace_back(value);
@@ -316,9 +328,9 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void erase(iterator iter) {
-			if (iter < begin() || iter >= end()) {
-				return;
+		JSONIFIER_INLINE iterator erase(iterator iter) {
+			if (iter < begin() || iter > end()) {
+				return end();
 			}
 
 			size_type eraseIndex = static_cast<size_type>(iter - begin());
@@ -329,9 +341,10 @@ namespace jsonifier {
 			std::uninitialized_move(dataVal + eraseIndex + 1, dataVal + sizeVal, dataVal + eraseIndex);
 
 			sizeVal = newSize;
+			return iterator{ dataVal + eraseIndex };
 		}
 
-		JSONIFIER_INLINE void shrinkToFit() {
+		JSONIFIER_INLINE void shrink_to_fit() {
 			if (sizeVal == capacityVal) {
 				return;
 			}
@@ -418,7 +431,7 @@ namespace jsonifier {
 				}
 				return true;
 			} else {
-				return jsonifier_internal::jsonifier_core_internal::compare(rhs.data(), data(), size());
+				return jsonifier_internal::compare(rhs.data(), data(), size());
 			}
 		}
 

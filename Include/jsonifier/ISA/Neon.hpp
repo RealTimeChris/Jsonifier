@@ -1,0 +1,71 @@
+/*
+	MIT License
+
+	Copyright (c) 2023 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+/// Feb 3, 2023
+#pragma once
+
+#include <jsonifier/ISA/ISADetectionBase.hpp>
+
+namespace simd_internal {
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
+		return vbicq_u8(std::forward<simd_int_t02>(value), std::forward<simd_int_t01>(other));
+	}
+
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
+		return vandq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
+		return veorq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
+		return vorrq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
+		int64x2_t mask = { 0x01ll, 0x00ll };
+		return valueNew ? opOr(value, vreinterpretq_u8_u64(mask)) : opAndNot(value, vreinterpretq_u8_u64(mask));
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value) {
+		return vmvnq_u8(std::forward<simd_int_t01>(value));
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
+		return (vgetq_lane_u8(value, 15) & 0x80) != 0;
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
+		return vmaxvq_u8(value) != 0;
+	}
+
+	JSONIFIER_INLINE static simd_int_t reset() {
+		return {};
+	}
+
+#endif
+
+}

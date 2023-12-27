@@ -25,9 +25,9 @@
 
 #include <jsonifier/ISA/ISADetectionBase.hpp>
 
-namespace jsonifier_internal {
+namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 	#include <immintrin.h>
 
@@ -39,16 +39,8 @@ namespace jsonifier_internal {
 		return _blsr_u64(value);
 	}
 
-	template<jsonifier::concepts::uint8_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
-	#if defined(__linux__)
-		return static_cast<uint8_t>(__tzcnt_u16(static_cast<uint8_t>(value)));
-	#else
-		return static_cast<uint8_t>(_tzcnt_u16(static_cast<uint8_t>(value)));
-	#endif
-	}
-
 	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
-	#if defined(__linux__)
+	#if defined(JSONIFIER_LINUX)
 		return __tzcnt_u16(value);
 	#else
 		return _tzcnt_u16(static_cast<uint16_t>(value));
@@ -63,9 +55,23 @@ namespace jsonifier_internal {
 		return _tzcnt_u64(value);
 	}
 
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+		return value & (value - 1);
+	}
+
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	#if JSONIFIER_REGULAR_VISUAL_STUDIO
+		return _tzcnt_u64(value);
+	#else
+		return __builtin_ctzll(value);
+	#endif
+	}
+
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
 		if (value == 0) {
 			return 0;
 		}
@@ -73,7 +79,7 @@ namespace jsonifier_internal {
 		return value & (value - 1);
 	}
 
-	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

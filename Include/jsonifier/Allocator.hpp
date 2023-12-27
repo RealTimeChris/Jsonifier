@@ -28,19 +28,19 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type, value_type multiple> JSONIFIER_INLINE value_type roundUpToMultiple(value_type val) {
-		value_type remainder = val % multiple;
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type val) {
+		auto remainder = val % multiple;
 		return remainder == 0 ? val : val + (multiple - remainder);
 	}
 
-	template<int64_t multiple> JSONIFIER_INLINE uint64_t roundDownToMultiple(int64_t value) {
-		return static_cast<uint64_t>(value >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple);
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type val) {
+		return static_cast<int64_t>(val) >= 0 ? (val / multiple) * multiple : ((val - multiple + 1) / multiple) * multiple;
 	}
 
 #if defined(_MSC_VER)
 
 	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<uint64_t, BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
+		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
 	}
 
 	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 #else
 
 	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<uint64_t, BytesPerStep>(size * sizeof(value_type))));
+		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(size * sizeof(value_type))));
 	}
 
 	JSONIFIER_INLINE void jsonifierFree(void* ptr) {

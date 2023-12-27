@@ -29,11 +29,7 @@
 
 namespace jsonifier_internal {
 
-	struct prettify {
-		template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type,
-			jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept;
-	};
+	template<typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
 	  public:
@@ -42,27 +38,22 @@ namespace jsonifier_internal {
 
 		template<bool newLinesInArray = true, bool tabs = false, uint64_t indentSize = 4, uint64_t maxDepth = 100, jsonifier ::concepts::string_t string_type>
 		JSONIFIER_INLINE auto prettify(string_type&& in) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size() * 10) [[unlikely]] {
-				derivedRef.stringBuffer.resize(in.size() * 10);
+			if (derivedRef.stringBuffer.size() < in.size() * 6) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() * 6);
 			}
+			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			uint64_t index{ prettify::impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer) };
-			if constexpr (jsonifier::concepts::has_resize<string_type>) {
-				jsonifier::concepts::unwrap_t<string_type> newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
-				}
-				return newString;
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			if (!iter) {
+				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+				return jsonifier::string_view{};
+			}
+			derivedRef.index = impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer);
+			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
+				return jsonifier::string_view{ derivedRef.stringBuffer.data(), derivedRef.index };
 			} else {
-				jsonifier::string newString{};
-				if (index != std::numeric_limits<uint64_t>::max()) {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
-				}
-				return newString;
+				return jsonifier::string_view{};
 			}
 		}
 
@@ -73,6 +64,12 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
+		}
+
+		template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type,
+			jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
+			return prettify_impl<derived_type>::template impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, out);
 		}
 
 		JSONIFIER_INLINE ~prettifier() noexcept = default;

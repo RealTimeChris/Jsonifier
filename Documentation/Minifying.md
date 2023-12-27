@@ -31,7 +31,7 @@ json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
 Use the `minify` method of the `jsonifier_core` instance to minify the JSON data:
 
 ```cpp
-std::string minifiedJson = parser.minify(jsonData.theData);
+jsonifier::string minifiedJson = parser.minify(jsonData.theData);
 ```
 
 #### 3. Save Minified JSON Data

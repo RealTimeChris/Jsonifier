@@ -25,22 +25,18 @@
 
 #include <jsonifier/ISA/ISADetectionBase.hpp>
 
-namespace jsonifier_internal {
+namespace simd_internal {
 
-#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
+	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	using avx_list = jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>>;
-
-	using avx_integer_list =
-		jsonifier::concepts::type_list<jsonifier::concepts::type_holder<16, simd_int_128, uint16_t, 16>, jsonifier::concepts::type_holder<8, uint64_t, uint64_t, 8>>;
-
-	template<simd_int_type simd_int_t01, size_t... indices> JSONIFIER_INLINE string_parsing_type _mm128_movemask_epi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
+	template<typename simd_int_t01, size_t... indices> JSONIFIER_INLINE string_parsing_type _mm128_movemask_epi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
 		string_parsing_type mask{ 0 };
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_or_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_or_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
 		simd_int_t value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] |= valTwo.m128x_uint64[0];
@@ -48,7 +44,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_and_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_and_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
 		simd_int_t value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] &= valTwo.m128x_uint64[0];
@@ -56,7 +52,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_andnot_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_andnot_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
 		simd_int_t value{};
 		memcpy(value.m128x_uint64, valTwo.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] &= ~valOne.m128x_uint64[0];
@@ -64,7 +60,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_xor_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_xor_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
 		simd_int_t value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] ^= valTwo.m128x_uint64[0];
@@ -72,7 +68,7 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, size_t... indices>
+	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
 	JSONIFIER_INLINE simd_int_t _mm128_cmpeq_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>&&) {
 		simd_int_t result{};
 		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
@@ -99,58 +95,49 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02, size_t... indices>
+	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
 	JSONIFIER_INLINE simd_int_t _mm128_shuffle_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>) {
 		simd_int_t result{};
-		uint64_t index{};
+		size_t index{};
 		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
 		return result;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE string_parsing_type simd_base::opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
-		return static_cast<string_parsing_type>(_mm128_movemask_epi8(
-			_mm128_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{}), std::make_index_sequence<16>{}));
-	}
-
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{});
-	}
-
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm128_andnot_si128(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opAnd(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm128_and_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opXor(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm128_xor_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t simd_base::opOr(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm128_or_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t simd_base::opSetLSB(simd_int_t01&& value, bool valueNew) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
 		jsonifier::concepts::unwrap_t<simd_int_t> mask = _mm128_set_epi64x(0x00ll, 0x01ll);
 		return valueNew ? _mm128_or_si128(value, mask) : _mm128_andnot_si128(mask, value);
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t simd_base::opNot(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value) {
 		return _mm128_xor_si128(std::forward<simd_int_t01>(value), _mm128_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool simd_base::opGetMSB(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
 		simd_int_t result = _mm128_and_si128(std::forward<simd_int_t01>(value), _mm128_set_epi64x(0x8000000000000000ll, 0x00ll));
 		return !_mm128_testz_si128(result, result);
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool simd_base::opBool(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
 		return !_mm128_testz_si128(value, value);
 	}
 
-	JSONIFIER_INLINE simd_int_t simd_base::reset() {
+	JSONIFIER_INLINE static simd_int_t reset() {
 		return simd_int_t{};
 	}
 

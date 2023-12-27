@@ -54,16 +54,13 @@ set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 
-if(NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
-	include("JsonifierDetectArchitecture")
-endif()
+include("JsonifierDetectArchitecture")
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
-	PUBLIC_HEADER "${HEADERS}"
 )
 
 target_include_directories(
@@ -82,9 +79,6 @@ target_compile_definitions(
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
 	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
 )
-
-set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE INTERNAL "For the CPU architecture selection.")
-set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE 
