@@ -31,7 +31,7 @@
 namespace jsonifier_internal {
 
 	struct validate {
-		template<jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iterBegin, uint64_t& depth);
+		template<jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, uint64_t& depth);
 	};
 
 	template<typename derived_type> class validator {
@@ -43,11 +43,11 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE bool validate(string_type&& in) noexcept {
 			derivedRef.errors.clear();
-			depth = 0;
+			derivedRef.index = 0;
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iterBegin{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			auto result = validate::impl(iterBegin, depth);
-			if (depth > 0 || iterBegin.operator bool() || derivedRef.errors.size() > 0) {
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
+			auto result = validate::impl(iter, derivedRef.index);
+			if (derivedRef.index > 0 || iter.operator bool() || derivedRef.errors.size() > 0) {
 				result = false;
 			}
 			return result;
@@ -55,7 +55,6 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		uint64_t depth{};
 
 		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 

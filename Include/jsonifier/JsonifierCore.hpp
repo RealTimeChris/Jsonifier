@@ -87,6 +87,7 @@ namespace jsonifier {
 		jsonifier_internal::simd_string_reader<doWeUseInitialBuffer> section{};
 		string_base<uint8_t, doWeUseInitialBuffer> stringBuffer{};
 		vector<jsonifier_internal::error> errors{};
+		uint64_t index{};
 	};
 
 }

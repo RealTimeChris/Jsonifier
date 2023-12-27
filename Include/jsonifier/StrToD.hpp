@@ -60,16 +60,16 @@ namespace jsonifier_internal {
 	#define mulhi64 __umulh
 #else
 	JSONIFIER_INLINE uint64_t mulhi64(uint64_t a, uint64_t b) noexcept {
-		uint64_t a_lo	   = ( uint64_t )a;
-		uint64_t a_hi	   = a >> 32;
-		uint64_t b_lo	   = ( uint64_t )b;
-		uint64_t b_hi	   = b >> 32;
-		uint64_t a_x_b_hi  = a_hi * b_hi;
-		uint64_t a_x_b_mid = a_hi * b_lo;
-		uint64_t b_x_a_mid = b_hi * a_lo;
-		uint64_t a_x_b_lo  = a_lo * b_lo;
-		uint64_t carry_bit = (( uint64_t )( uint64_t )a_x_b_mid + ( uint64_t )( uint64_t )b_x_a_mid + (a_x_b_lo >> 32)) >> 32;
-		uint64_t multhi	   = a_x_b_hi + (a_x_b_mid >> 32) + (b_x_a_mid >> 32) + carry_bit;
+		uint64_t aLo	   = ( uint64_t )a;
+		uint64_t aHi	   = a >> 32;
+		uint64_t bLo	   = ( uint64_t )b;
+		uint64_t bHi	   = b >> 32;
+		uint64_t axbHi  = aHi * bHi;
+		uint64_t axbMid = aHi * bLo;
+		uint64_t bxaMid = bHi * aLo;
+		uint64_t axbLo  = aLo * bLo;
+		uint64_t carryBit = (( uint64_t )( uint64_t )axbMid + ( uint64_t )( uint64_t )bxaMid + (axbLo >> 32)) >> 32;
+		uint64_t multhi	   = axbHi + (axbMid >> 32) + (bxaMid >> 32) + carryBit;
 		return multhi;
 	}
 #endif
@@ -121,12 +121,12 @@ namespace jsonifier_internal {
 		std::vector<uint64_t> data = {};
 
 		big_int_t(uint64_t num) noexcept {
-			uint64_t lower_word = uint64_t(num);
-			uint64_t upper_word = uint64_t(num >> 32);
-			if (upper_word > 0) {
-				data = { lower_word, upper_word };
+			uint64_t lowerWord = uint64_t(num);
+			uint64_t upperWord = uint64_t(num >> 32);
+			if (upperWord > 0) {
+				data = { lowerWord, upperWord };
 			} else {
-				data = { lower_word };
+				data = { lowerWord };
 			}
 		}
 
@@ -134,10 +134,10 @@ namespace jsonifier_internal {
 			uint64_t carry = 0;
 			for (uint64_t i = 0; i < data.size(); i++) {
 				uint64_t res		= uint64_t(data[i]) * uint64_t(num) + uint64_t(carry);
-				uint64_t lower_word = uint64_t(res);
-				uint64_t upper_word = uint64_t(res >> 32);
-				data[i]				= lower_word;
-				carry				= upper_word;
+				uint64_t lowerWord = uint64_t(res);
+				uint64_t upperWord = uint64_t(res >> 32);
+				data[i]				= lowerWord;
+				carry				= upperWord;
 			}
 			if (carry != 0) {
 				data.emplace_back(carry);

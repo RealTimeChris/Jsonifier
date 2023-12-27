@@ -45,22 +45,23 @@ namespace jsonifier_internal {
 			if (derivedRef.stringBuffer.size() < in.size() * 10) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 10);
 			}
+			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			uint64_t index{ prettify::impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer) };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.index = prettify::impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer);
 			if constexpr (jsonifier::concepts::has_resize<string_type>) {
 				jsonifier::concepts::unwrap_t<string_type> newString{};
-				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
+				if (derivedRef.index < std::numeric_limits<uint64_t>::max()) [[likely]] {
+					newString.resize(derivedRef.index);
+					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 				}
 				return newString;
 			} else {
 				jsonifier::string newString{};
-				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
+				if (derivedRef.index < std::numeric_limits<uint64_t>::max()) [[likely]] {
+					newString.resize(derivedRef.index);
+					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 				}
 				return newString;
 			}

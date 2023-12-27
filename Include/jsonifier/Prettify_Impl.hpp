@@ -27,79 +27,74 @@
 
 namespace jsonifier_internal {
 
+	template<typename iterator_type> void appendNewLine(iterator_type& outPtr, bool tabs, int64_t indent, uint64_t indentSize) {
+		*outPtr = 0x0Au;
+		++outPtr;
+		std::fill(outPtr, outPtr + (tabs ? indent : (indent * indentSize)),
+			static_cast<std::remove_pointer_t<jsonifier::concepts::unwrap_t<decltype(outPtr)>>>(tabs ? 0x09u : 0x20u));
+		outPtr += tabs ? indent : (indent * indentSize);
+	};
+
+	template<typename iterator_type01, typename iterator_type02> void updatePointers(iterator_type01& iter, iterator_type02& previousVal, iterator_type02& nextVal, iterator_type02& currentVal) {
+		previousVal = currentVal;
+		currentVal	= nextVal;
+		++iter;
+		nextVal = iter.operator->();
+	};
+
+	template<typename iterator_type01, typename iterator_type02> void appendValues(int64_t currentDistance, iterator_type01& outPtr, iterator_type02& currentVal) {
+		if (currentDistance > 0) [[likely]] {
+			std::memcpy(outPtr, currentVal, static_cast<uint64_t>(currentDistance));
+			outPtr += currentDistance;
+		}
+	};
+
 	template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 	JSONIFIER_INLINE uint64_t prettify::impl(iterator_type&& iter, string_type& out) noexcept {
 		ascii_classes previousStructural[maxDepth]{ ascii_classes::lcurb };
 		int64_t currentDistance{};
 		auto outPtr = out.data();
-		int64_t indent{};
+		int64_t indent{};		
 
-		auto appendNewLine = [&]() {
-			*outPtr = 0x0Au;
-			++outPtr;
-			std::fill(outPtr, outPtr + (tabs ? indent : (indent * indentSize)), static_cast<typename string_type::value_type>(tabs ? 0x09u : 0x20u));
-			outPtr += tabs ? indent : (indent * indentSize);
-		};
-
-		auto appendCharacter = [&](auto character) {
-			*outPtr = static_cast<typename string_type::value_type>(character);
-			++outPtr;
-		};
-
-		appendCharacter(*iter);
-
+		appendCharacter(*iter, outPtr);
 		++indent;
 		previousStructural[indent] = asciiClassesMap[*iter];
 		if (previousStructural[indent] != ascii_classes::lsqrb && previousStructural[indent] != ascii_classes::lcurb) {
 			iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
 			return std::numeric_limits<uint64_t>::max();
 		}
-		appendNewLine();
+		appendNewLine(outPtr, tabs, indent, indentSize);
 		auto previousVal = iter.operator->();
 		++iter;
 		auto currentVal = iter.operator->();
 		++iter;
 		auto nextVal = iter.operator->();
 
-		auto updatePointers = [&]() {
-			previousVal = currentVal;
-			currentVal	= nextVal;
-			++iter;
-			nextVal = iter.operator->();
-		};
-
-		auto appendValues = [&]() {
-			if (currentDistance > 0) [[likely]] {
-				std::memcpy(outPtr, currentVal, static_cast<uint64_t>(currentDistance));
-				outPtr += currentDistance;
-			}
-		};
-
 		while (iter && currentVal && previousVal && nextVal) {
 			currentDistance = nextVal - currentVal;
 			switch (asciiClassesMap[*currentVal]) {
 				[[likely]] case ascii_classes::quote : {
-					appendValues();
+					appendValues(currentDistance, outPtr, currentVal);
 					break;
 				}
 				[[unlikely]] case ascii_classes::colon : {
-					appendCharacter(*currentVal);
-					appendCharacter(0x20u);
+					appendCharacter(*currentVal, outPtr);
+					appendCharacter(0x20u, outPtr);
 					break;
 				}
 				[[unlikely]] case ascii_classes::comma : {
-					appendCharacter(*currentVal);
+					appendCharacter(*currentVal, outPtr);
 					if constexpr (!newLinesInArray) {
 						if (previousStructural[indent] != ascii_classes::lsqrb) {
-							appendNewLine();
+							appendNewLine(outPtr, tabs, indent, indentSize);
 						}
 					} else {
-						appendNewLine();
+						appendNewLine(outPtr, tabs, indent, indentSize);
 					}
 					break;
 				}
 				[[unlikely]] case ascii_classes::lsqrb : {
-					appendCharacter(*currentVal);
+					appendCharacter(*currentVal, outPtr);
 					++indent;
 					if (indent >= maxDepth) {
 						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
@@ -109,7 +104,7 @@ namespace jsonifier_internal {
 						previousStructural[indent] = ascii_classes::lsqrb;
 					}
 					if (*nextVal != 0x5Du) {
-						appendNewLine();
+						appendNewLine(outPtr, tabs, indent, indentSize);
 					}
 					break;
 				}
@@ -120,9 +115,9 @@ namespace jsonifier_internal {
 						return std::numeric_limits<uint64_t>::max();
 					}
 					if (*previousVal != 0x5Bu) {
-						appendNewLine();
+						appendNewLine(outPtr, tabs, indent, indentSize);
 					}
-					appendCharacter(*currentVal);
+					appendCharacter(*currentVal, outPtr);
 					break;
 				}
 				[[unlikely]] case ascii_classes::false_val : {
@@ -141,7 +136,7 @@ namespace jsonifier_internal {
 					break;
 				}
 				[[unlikely]] case ascii_classes::lcurb : {
-					appendCharacter(*currentVal);
+					appendCharacter(*currentVal, outPtr);
 					++indent;
 					if (indent >= maxDepth) {
 						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
@@ -151,7 +146,7 @@ namespace jsonifier_internal {
 						previousStructural[indent] = ascii_classes::lcurb;
 					}
 					if (*nextVal != 0x7Du) {
-						appendNewLine();
+						appendNewLine(outPtr, tabs, indent, indentSize);
 					}
 					break;
 				}
@@ -162,13 +157,13 @@ namespace jsonifier_internal {
 						return std::numeric_limits<uint64_t>::max();
 					}
 					if (*previousVal != 0x7Bu) {
-						appendNewLine();
+						appendNewLine(outPtr, tabs, indent, indentSize);
 					}
-					appendCharacter(*currentVal);
+					appendCharacter(*currentVal, outPtr);
 					break;
 				}
 				[[unlikely]] case ascii_classes::num_val : {
-					appendValues();
+					appendValues(currentDistance, outPtr, currentVal);
 					break;
 				}
 				[[unlikely]] case ascii_classes::class_count:
@@ -180,12 +175,12 @@ namespace jsonifier_internal {
 						return std::numeric_limits<uint64_t>::max();
 					}
 			}
-			updatePointers();
+			updatePointers(iter, previousVal, nextVal, currentVal);
 		}
 		if (currentVal && previousVal) [[likely]] {
 			--indent;
-			appendNewLine();
-			appendCharacter(*currentVal);
+			appendNewLine(outPtr, tabs, indent, indentSize);
+			appendCharacter(*currentVal, outPtr);
 		}
 		return static_cast<uint64_t>(outPtr - out.data());
 	}

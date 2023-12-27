@@ -130,11 +130,15 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE auto end() {
-			return structuralIndices.data() + (tapeIndex - 1);
+			return structuralIndices.data() + (tapeIndex - 01);
+		}
+
+		JSONIFIER_INLINE auto getStringView() {
+			return currentParseBuffer.data();
 		}
 
 		JSONIFIER_INLINE auto begin() {
-			structuralIndices[tapeIndex] = nullptr;
+			structuralIndices[tapeIndex] = std::numeric_limits<uint32_t>::max();
 			return structuralIndices.data();
 		}
 
@@ -173,9 +177,7 @@ namespace jsonifier_internal {
 
 		template<size_type index, size_t... indices> JSONIFIER_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits, std::index_sequence<indices...>) {
 			static constexpr uint64_t bitTotal{ index * 64ull };
-			((structuralIndices[indices + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt(newBits) + bitTotal + stringIndex),
-				 newBits												  = blsr(newBits)),
-				...);
+			((structuralIndices[indices + (currentIndex * 8) + tapeIndex] = static_cast<uint32_t>(tzcnt(newBits) + bitTotal + stringIndex), newBits = blsr(newBits)), ...);
 			return newBits;
 		}
 

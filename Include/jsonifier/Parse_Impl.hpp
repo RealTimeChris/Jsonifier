@@ -32,31 +32,31 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::bool_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::bool_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			if (parseBool(value, iter.operator->())) {
 				++iter;
 			} else {
 				iter.template createError<json_structural_type::Jsonifier_Bool>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 			}
 		}
 	};
 
-	template<jsonifier::concepts::num_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::num_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			if (parseNumber(value, iter.operator->())) [[unlikely]] {
 				++iter;
 			} else {
 				iter.template createError<json_structural_type::Jsonifier_Number>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 			}
 		}
 	};
 
-	template<jsonifier::concepts::enum_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::enum_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::enum_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			uint64_t newValue{};
@@ -67,29 +67,29 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::always_null_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::always_null_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::null_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static void impl(value_type&&, iterator_type&& iter) {
 			if (!parseNull(iter.operator->())) [[unlikely]] {
 				iter.template createError<json_structural_type::Jsonifier_Null>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 			} else {
 				++iter;
 			}
 		}
 	};
 
-	template<jsonifier::concepts::unique_ptr_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::unique_ptr_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			parse::impl(*value, iter);
 		}
 	};
 
-	template<jsonifier::concepts::raw_json_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::raw_json_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			auto newPtr = iter.operator->();
-			derailleur::skipValue(iter);
+			skipToNextValue(iter);
 			int64_t newSize = iter.operator->() - newPtr;
 			if (newSize > 0) [[likely]] {
 				jsonifier::string newString{};
@@ -101,7 +101,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::string_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::string_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::string_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			auto newPtr = iter.operator->();
@@ -109,7 +109,7 @@ namespace jsonifier_internal {
 				++iter;
 			} else {
 				iter.template createError<json_structural_type::Jsonifier_String>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 				return;
 			}
 			auto newSize = iter.operator->() - newPtr;
@@ -123,13 +123,13 @@ namespace jsonifier_internal {
 				std::memcpy(value.data(), iter.getCurrentString().data(), static_cast<uint64_t>(newSize));
 			} else {
 				iter.template createError<json_structural_type::Jsonifier_String>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 				return;
 			}
 		}
 	};
 
-	template<jsonifier::concepts::char_type value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::char_type value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::char_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			value = static_cast<value_type_new>(*iter.operator->() + 1);
@@ -137,14 +137,14 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::raw_array_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::raw_array_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			if (*iter == 0x5Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
 				iter.template createError<json_structural_type::Jsonifier_Array_Start>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 				return;
 			}
 			if (*iter == 0x5Du) [[unlikely]] {
@@ -162,21 +162,21 @@ namespace jsonifier_internal {
 					return;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_Array_End>();
-					derailleur::skipValue(iter);
+					skipToNextValue(iter);
 					return;
 				}
 			}
 		}
 	};
 
-	template<jsonifier::concepts::vector_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::vector_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			if (*iter == 0x5Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
 				iter.template createError<json_structural_type::Jsonifier_Array_Start>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 				return;
 			}
 			if (*iter == 0x5Du) [[unlikely]] {
@@ -195,12 +195,12 @@ namespace jsonifier_internal {
 					return;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_Array_End>();
-					derailleur::skipValue(iter);
+					skipToEndOfArray(iter);
 					return;
 				}
 			}
 			if constexpr (jsonifier::concepts::has_resize<value_type_new>) {
-				auto newSize = value.size() + derailleur::countValueElements(iter);
+				auto newSize = value.size() + countValueElements(iter);
 				value.resize(newSize);
 				newPtr = value.data() + static_cast<int64_t>(oldSize);
 				endPtr = value.data() + newSize;
@@ -213,7 +213,7 @@ namespace jsonifier_internal {
 						return;
 					} else [[unlikely]] {
 						iter.template createError<json_structural_type::Jsonifier_Array_End>();
-						derailleur::skipValue(iter);
+						skipToEndOfArray(iter);
 						return;
 					}
 				}
@@ -221,14 +221,14 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::map_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::map_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			if (*iter == 0x7Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
 				iter.template createError<json_structural_type::Jsonifier_Object_Start>();
-				derailleur::skipValue(iter);
+				skipToNextValue(iter);
 				return;
 			}
 			bool first{ true };
@@ -242,7 +242,7 @@ namespace jsonifier_internal {
 					first = false;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_Array_End>();
-					derailleur::skipValue(iter);
+					skipToNextValue(iter);
 					return;
 				}
 
@@ -257,7 +257,7 @@ namespace jsonifier_internal {
 					++iter;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_Colon>();
-					derailleur::skipToEndOfObject(iter);
+					skipToEndOfObject(iter);
 					return;
 				}
 				parse::impl(value[keyNew], iter);
@@ -265,7 +265,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::variant_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::variant_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::variant_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			std::visit(
@@ -276,7 +276,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
@@ -286,14 +286,14 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::jsonifier_value_t value_type_new> struct parse_impl<value_type_new> {
+	template<jsonifier::concepts::jsonifier_value_t value_type_new> struct parse_impl<value_type_new> : public derailleur {
 		template<jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type, jsonifier::concepts::has_find... key_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, key_type&... excludedKeys) {
 			if (*iter == 0x7Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
 				iter.template createError<json_structural_type::Jsonifier_Object_Start>();
-				derailleur::skipValue(iter);
+				skipToEndOfObject(iter);
 				return;
 			}
 			bool first{ true };
@@ -307,7 +307,7 @@ namespace jsonifier_internal {
 					first = false;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_Array_End>();
-					derailleur::skipValue(iter);
+					skipToEndOfObject(iter);
 					return;
 				}
 
@@ -316,22 +316,23 @@ namespace jsonifier_internal {
 					++iter;
 				} else [[unlikely]] {
 					iter.template createError<json_structural_type::Jsonifier_String>();
-					derailleur::skipToNextValue(iter);
+					skipToEndOfObject(iter);
 					continue;
 				}
 
 				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
 				if constexpr ((( !std::is_void_v<key_type> ) || ...)) {
 					if (((excludedKeys.find(static_cast<jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) & ...)) [[unlikely]] {
-						derailleur::skipToNextValue(iter);
+						++iter;
+						skipToNextValue(iter);
 						continue;
 					}
 				}
 				if (*iter == 0x3Au) [[likely]] {
 					++iter;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Jsonifier_String>();
-					derailleur::skipToNextValue(iter);
+					iter.template createError<json_structural_type::Jsonifier_Colon>();
+					skipToEndOfObject(iter);
 					continue;
 				}
 				static constexpr auto frozenMap = makeMap<value_type_new>();
@@ -349,7 +350,7 @@ namespace jsonifier_internal {
 							std::move(memberIt->second));
 					}
 				} else [[unlikely]] {
-					derailleur::skipValue(iter);
+					skipToNextValue(iter);
 				}
 			}
 		}

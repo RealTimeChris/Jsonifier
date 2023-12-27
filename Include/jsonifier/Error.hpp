@@ -135,9 +135,9 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				//stringView = iter.getRootPtr();
 			}
-			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
+			//stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			if (iter) {
 				errorValue = *iter;
@@ -150,9 +150,9 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
+				//stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
 			}
-			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
+			//stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {
@@ -165,9 +165,9 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				//stringView = iter.getRootPtr();
 			}
-			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
+			//stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {

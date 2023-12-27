@@ -77,18 +77,18 @@ namespace jsonifier_internal {
 				codePoint = subCodePoint;
 			} else {
 				uint32_t codePoint02 = hexToU32NoCheck(srcData + 2);
-				uint32_t lowBit		 = codePoint02 - 0xdc00;
-				if (lowBit >> 10) {
+				codePoint02			 = codePoint02 - 0xdc00;
+				if (codePoint02 >> 10) {
 					codePoint = subCodePoint;
 				} else {
-					codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
+					codePoint = (((codePoint - 0xd800) << 10) | codePoint02) + 0x10000;
 					*srcPtr += 6;
 				}
 			}
 		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
 			codePoint = subCodePoint;
 		}
-		int64_t offset = codePointToUtf8(codePoint, *dstPtr);
+		uint32_t offset = codePointToUtf8(codePoint, *dstPtr);
 		*dstPtr += offset;
 		return offset > 0;
 	}

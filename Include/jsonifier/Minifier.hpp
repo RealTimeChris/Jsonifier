@@ -70,6 +70,11 @@ namespace jsonifier_internal {
 	static constexpr jsonifier::string_view trueString{ "true" };
 	static constexpr jsonifier::string_view nullString{ "null" };
 
+	template<typename iterator_type> void appendCharacter(auto character, iterator_type& outPtr) {
+		*outPtr = static_cast<std::remove_pointer_t<jsonifier::concepts::unwrap_t<iterator_type>>>(character);
+		++outPtr;
+	}
+
 	struct minify {
 		template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept;
@@ -84,22 +89,23 @@ namespace jsonifier_internal {
 			if (derivedRef.stringBuffer.size() < in.size() * 2) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 2);
 			}
+			derivedRef.index = 0; 
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			uint64_t index{ minify::impl(iter, derivedRef.stringBuffer) };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.index = minify::impl(iter, derivedRef.stringBuffer);
 			if constexpr (jsonifier::concepts::has_resize<string_type>) {
 				jsonifier::concepts::unwrap_t<string_type> newString{};
-				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
+				if (derivedRef.index < std::numeric_limits<uint64_t>::max()) [[likely]] {
+					newString.resize(derivedRef.index);
+					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 				}
 				return newString;
 			} else {
 				jsonifier::string newString{};
-				if (index < std::numeric_limits<uint64_t>::max()) [[likely]] {
-					newString.resize(index);
-					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
+				if (derivedRef.index < std::numeric_limits<uint64_t>::max()) [[likely]] {
+					newString.resize(derivedRef.index);
+					std::memcpy(newString.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 				}
 				return newString;
 			}

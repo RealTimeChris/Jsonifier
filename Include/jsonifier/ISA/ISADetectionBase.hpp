@@ -211,7 +211,7 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void printBits(uint64_t values, const std::string& valuesTitle);
 
 	using string_view_ptr	= const uint8_t*;
-	using structural_index	= string_view_ptr;
+	using structural_index	= uint32_t;
 	using string_buffer_ptr = uint8_t*;
 
 	template<typename value_type>

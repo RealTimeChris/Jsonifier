@@ -32,7 +32,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> struct parse_impl;
+	template<typename value_type> struct parse_impl : public derailleur {};
 
 	struct parse {
 		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
@@ -56,7 +56,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& stringNew) {
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) [[unlikely]] {
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;

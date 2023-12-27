@@ -54,12 +54,12 @@ namespace jsonifier_internal {
 		template<bool prettify = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE void serializeJson(value_type&& data, buffer_type&& iter) {
 			derivedRef.errors.clear();
-			index = 0;
-			serialize::impl(std::forward<value_type>(data), derivedRef.stringBuffer, index);
-			if (iter.size() != index) {
-				iter.resize(index);
+			derivedRef.index = 0;
+			serialize::impl(std::forward<value_type>(data), derivedRef.stringBuffer, derivedRef.index);
+			if (iter.size() != derivedRef.index) {
+				iter.resize(derivedRef.index);
 			}
-			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), index);
+			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 			if constexpr (prettify) {
 				iter = derivedRef.prettify(iter);
 			}
@@ -67,7 +67,6 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		uint64_t index{};
 
 		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 

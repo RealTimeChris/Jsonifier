@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/Derailleur.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
@@ -33,11 +34,6 @@ namespace jsonifier_internal {
 		auto previousPtr = iter.operator->();
 		int64_t currentDistance{};
 		auto outPtr = out.data();
-
-		auto appendCharacter = [&](auto character) {
-			*outPtr = character;
-			++outPtr;
-		};
 
 		if (!iter || !previousPtr || (asciiClassesMap[*previousPtr] != ascii_classes::lsqrb && asciiClassesMap[*previousPtr] != ascii_classes::lcurb)) {
 			iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
@@ -72,7 +68,7 @@ namespace jsonifier_internal {
 				[[unlikely]] case ascii_classes::rcurb:
 					[[fallthrough]];
 				[[unlikely]] case ascii_classes::rsqrb : {
-					appendCharacter(*previousPtr);
+					appendCharacter(*previousPtr, outPtr);
 					break;
 				}
 				[[unlikely]] case ascii_classes::false_val : {

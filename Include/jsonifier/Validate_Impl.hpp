@@ -27,34 +27,18 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::is_fwd_iterator iterator_type> inline void skipWs(iterator_type& iter) noexcept {
-		while (true) {
-			switch (*iter) {
-				case 0x09u:
-				case 0x0Au:
-				case 0x0Du:
-				case 0x20u:
-					++iter;
-					break;
-				default: {
-					return;
-				}
-			}
-		}
-	}
-
 	template<jsonifier::concepts::is_fwd_iterator iterator_type01, typename errors_vector_type> bool validateNumber(iterator_type01&& start, errors_vector_type& errors) {
 		auto newPtr = start.operator->();
 		++start;
 		auto end = start.operator->();
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 		auto newSize = end - newPtr;
 		if (newSize > 1 && *newPtr == 0x30u && numberTable[*(newPtr + 1)]) {
 			errors.emplace_back(createError<error_code::Invalid_Number_Value>(start));
 			return false;
 		}
 
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 
 		auto consumeChar = [&](char expected) {
 			if (*newPtr == expected) {
@@ -102,7 +86,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 		if (newPtr != end) {
 			errors.emplace_back(createError<error_code::Invalid_Number_Value>(start));
 			return false;
@@ -116,7 +100,7 @@ namespace jsonifier_internal {
 		++start;
 		static constexpr char falseStr[]{ "false" };
 		static constexpr char trueStr[]{ "true" };
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 		if (std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
 			newPtr += std::size(trueStr) - 1;
 		} else if (std::memcmp(newPtr, falseStr, std::strlen(falseStr)) == 0) {
@@ -132,7 +116,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::is_fwd_iterator iterator_type01, typename errors_vector_type> bool validateNull(iterator_type01&& start, errors_vector_type& errors) {
 		auto newPtr = start.operator->();
 		++start;
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 		static constexpr char nullStr[]{ "null" };
 
 		if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {
@@ -149,7 +133,7 @@ namespace jsonifier_internal {
 		auto newPtr = start.operator->();
 		++start;
 		auto endPtr = start.operator->();
-		skipWs(newPtr);
+		derailleur::skipWs(newPtr);
 		if (newPtr == endPtr || *newPtr != 0x22u) {
 			errors.emplace_back(createError<error_code::Invalid_String_Characters>(start));
 			return false;
@@ -287,19 +271,19 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE bool validate::impl(iterator_type&& iterBegin, uint64_t& depth) {
-		if (*iterBegin == 0x7Bu) {
-			return validateObject(iterBegin, iterBegin.getErrors(), depth);
-		} else if (*iterBegin == 0x5Bu) {
-			return validateArray(iterBegin, iterBegin.getErrors(), depth);
-		} else if (*iterBegin == 0x22u) {
-			return validateString(iterBegin, iterBegin.getErrors());
-		} else if (digitTable[*iterBegin]) {
-			return validateNumber(iterBegin, iterBegin.getErrors());
-		} else if (*iterBegin == 0x74u || *iterBegin == 0x66u) {
-			return validateBool(iterBegin, iterBegin.getErrors());
-		} else if (*iterBegin == 0x6Eu) {
-			return validateNull(iterBegin, iterBegin.getErrors());
+	template<jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE bool validate::impl(iterator_type&& iter, uint64_t& depth) {
+		if (*iter == 0x7Bu) {
+			return validateObject(iter, iter.getErrors(), depth);
+		} else if (*iter == 0x5Bu) {
+			return validateArray(iter, iter.getErrors(), depth);
+		} else if (*iter == 0x22u) {
+			return validateString(iter, iter.getErrors());
+		} else if (digitTable[*iter]) {
+			return validateNumber(iter, iter.getErrors());
+		} else if (*iter == 0x74u || *iter == 0x66u) {
+			return validateBool(iter, iter.getErrors());
+		} else if (*iter == 0x6Eu) {
+			return validateNull(iter, iter.getErrors());
 		} else {
 			return false;
 		}

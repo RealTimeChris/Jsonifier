@@ -63,7 +63,6 @@ set_target_properties(
 	OUTPUT_NAME "jsonifier"
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
-	PUBLIC_HEADER "${HEADERS}"
 )
 
 target_include_directories(

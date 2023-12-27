@@ -43,31 +43,42 @@ namespace jsonifier_internal {
 
 	class derailleur {
 	  public:
-		using size_type = uint64_t;
 
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter) {
-			++iter;
-			return;
-		}
-
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter, iterator&& end) {
-			++iter;
-			while (iter != end) {
+		template<jsonifier::concepts::is_fwd_iterator iterator_type> inline static void skipWs(iterator_type& iter) noexcept {
+			while (true) {
 				switch (*iter) {
-					[[unlikely]] case 0x22u : {
+					case 0x09u:
+					case 0x0Au:
+					case 0x0Du:
+					case 0x20u:
 						++iter;
+						break;
+					default: {
 						return;
 					}
-						[[likely]] default : {
-							++iter;
-							break;
-						}
 				}
 			}
 		}
 
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipKey(iterator&& iter, iterator&& newIter02, iterator&& end) {
+			while (newIter02 < end) {
+				if (*newIter02 == '"' && *(iter - 1) != '\\') {
+					++newIter02;
+					break;
+				}
+				++newIter02;
+			}
+			iter = newIter02 + 1;
+			while (iter < end) {
+				if (*iter == '"' && *(iter - 1) != '\\') {
+					break;
+				}
+				++iter;
+			}
+		}
+
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToEndOfArray(iterator&& iter) {
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x5B : {
@@ -89,7 +100,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToEndOfObject(iterator&& iter) {
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x7B : {
@@ -110,85 +121,13 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter) {
-			while (iter && *iter != 0x2Cu) {
-				switch (*iter) {
-					[[unlikely]] case 0x7B : {
-						skipObject(iter);
-						break;
-					}
-					[[unlikely]] case 0x5B : {
-						skipArray(iter);
-						break;
-					}
-					[[unlikely]] case 0x00ll : { return; }
-						[[likely]] default : {
-							++iter;
-						}
-				}
-			}
-		}
-
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter, iterator&& end) {
-			while (iter != end && *iter != 0x2Cu) {
-				switch (*iter) {
-					[[unlikely]] case 0x7B : {
-						skipObject(iter, end);
-						break;
-					}
-					[[unlikely]] case 0x5B : {
-						skipArray(iter, end);
-						break;
-					}
-					[[unlikely]] case 0x00ll : { return; }
-						[[likely]] default : {
-							++iter;
-						}
-				}
-			}
-		}
-
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipValue(iterator&& iter) {
-			switch (*iter) {
-				[[unlikely]] case 0x7B : {
-					skipObject(iter);
-					break;
-				}
-				[[unlikely]] case 0x5B : {
-					skipArray(iter);
-					break;
-				}
-				[[unlikely]] case 0x00ll : { return; }
-					[[likely]] default : {
-						++iter;
-					}
-			}
-		}
-
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipValue(iterator&& iter, iterator&& end) {
-			switch (*iter) {
-				[[unlikely]] case 0x7B : {
-					skipObject(iter, end);
-					break;
-				}
-				[[unlikely]] case 0x5B : {
-					skipArray(iter, end);
-					break;
-				}
-				[[unlikely]] case 0x00ll : { return; }
-					[[likely]] default : {
-						++iter;
-					}
-			}
-		}
-
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter) {
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static uint64_t countValueElements(iterator iter) {
 			auto newValue = *iter;
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			if (newValue == 0x5Du || newValue == 0x7Du) [[unlikely]] {
 				return 0;
 			}
-			size_type currentCount{ 1 };
+			uint64_t currentCount{ 1 };
 			while (iter && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x5B : {
@@ -228,13 +167,13 @@ namespace jsonifier_internal {
 			return currentCount;
 		}
 
-		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static size_type countValueElements(iterator iter, iterator end) {
-			size_type currentDepth{ 1 };
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static uint64_t countValueElements(iterator iter, iterator end) {
+			uint64_t currentDepth{ 1 };
 			++iter;
 			if (*iter == 0x5Du || *iter == 0x7Du) [[unlikely]] {
 				return 0;
 			}
-			size_type currentCount{ 1 };
+			uint64_t currentCount{ 1 };
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x5B : {
@@ -273,10 +212,9 @@ namespace jsonifier_internal {
 			return currentCount;
 		}
 
-	  protected:
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipObject(iterator&& iter) {
 			++iter;
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x7B : {
@@ -299,7 +237,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipObject(iterator&& iter, iterator&& end) {
 			++iter;
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x7B : {
@@ -322,7 +260,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipArray(iterator&& iter) {
 			++iter;
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x5B : {
@@ -345,7 +283,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipArray(iterator&& iter, iterator&& end) {
 			++iter;
-			size_type currentDepth{ 1 };
+			uint64_t currentDepth{ 1 };
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
 					[[unlikely]] case 0x5B : {
@@ -365,6 +303,114 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-	};
 
+		template<jsonifier::concepts::is_fwd_iterator iterator> static void collectCharacter(uint8_t character, iterator& iter, iterator end) {
+			while (iter < end) {
+				if (*iter == character) {
+					++iter;
+					break;
+				}
+				++iter;
+			}
+		};
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipString(iterator&& iter, iterator&& end) {
+			++iter;
+			while (iter != end) {
+				switch (*iter) {
+					[[unlikely]] case 0x22u : {
+						if (*(iter - 1) != '\\') {
+							++iter;
+							return;
+						}
+						++iter;
+						break;
+					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
+				}
+			}
+		}
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter) {
+			switch (*iter) {
+				[[unlikely]] case 0x7B : {
+					skipObject(iter);
+					break;
+				}
+				[[unlikely]] case 0x5B : {
+					skipArray(iter);
+					break;
+				}
+				[[unlikely]] case 0x00ll : { return; }
+					[[likely]] default : {
+						++iter;
+					}
+			}
+		}
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> JSONIFIER_INLINE static void skipToNextValue(iterator&& iter, iterator&& end) {
+			switch (*iter) {
+				[[unlikely]] case 0x7B : {
+					skipObject(iter, end);
+					break;
+				}
+				[[unlikely]] case 0x5B : {
+					skipArray(iter, end);
+					break;
+				}
+				[[unlikely]] case 0x22 : {
+					skipString(iter, end);
+					break;
+				}
+				[[unlikely]] case 0x00ll : { return; }
+					[[likely]] default : {
+						uint64_t currentDepth{ 1 };
+						while (iter != end && *iter != 0x2Cu && currentDepth > 0) {
+							switch (*iter) {
+								[[unlikely]] case 0x5B : {
+									++currentDepth;
+									++iter;
+									break;
+								}
+								[[unlikely]] case 0x5D : {
+									--currentDepth;
+									++iter;
+									break;
+								}
+									[[likely]] default : {
+										++iter;
+										break;
+									}
+							}
+						};
+					}
+			}
+		}
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> static auto collectKey(iterator& iter, iterator end) {
+			auto newIter02 = iter;
+			skipKey(iter, newIter02, end);
+			jsonifier::string newString{};
+			auto newSize = iter - newIter02;
+			newString.resize(static_cast<uint64_t>(newSize));
+			std::memcpy(newString.data(), newIter02.operator->(), static_cast<uint64_t>(newSize));
+			iter = newIter02;
+			return newString;
+		};
+
+		template<jsonifier::concepts::is_fwd_iterator iterator> static auto collectValue(iterator& iter, iterator end) {
+			auto newIter02 = iter;
+			skipToNextValue(newIter02, end);
+			jsonifier::string newString{};
+			auto newSize = newIter02 - iter;
+			newString.resize(static_cast<uint64_t>(newSize));
+			std::memcpy(newString.data(), iter.operator->(), static_cast<uint64_t>(newSize));
+			iter = newIter02;
+			return newString;
+		};
+	};
+	
 }
