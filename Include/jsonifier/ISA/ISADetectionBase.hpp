@@ -24,6 +24,12 @@
 #pragma once
 
 #if !defined(__GNUC__)
+	#pragma warning(disable : 4710)
+	#pragma warning(disable : 4711)
+	#pragma warning(disable : 4371)
+	#pragma warning(disable : 4514)
+	#pragma warning(disable : 4625)
+	#pragma warning(disable : 4706)
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 5045)
 	#pragma warning(disable : 5246)
@@ -176,7 +182,7 @@ namespace jsonifier_internal {
 #if defined(_WIN32)
 		constexpr uint64_t valueSize{ sizeof(char) };
 		char newArray[16]{};
-		std::fill(newArray, newArray + 16, value);
+		std::fill(newArray, newArray + 16, static_cast<char>(value));
 #else
 		constexpr uint64_t valueSize{ sizeof(uint64_t) };
 		int64_t newArray[16 / sizeof(int64_t)]{};
@@ -188,7 +194,7 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<typename return_type> constexpr return_type simdFromTable(const uint8_t (&valuesNew01)[16]) {
+	template<typename return_type> constexpr return_type simdFromTable(const char (&valuesNew01)[16]) {
 #if defined(_WIN32)
 		constexpr uint64_t valueSize{ sizeof(char) };
 		char newArray[16]{};
@@ -211,7 +217,7 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void printBits(uint64_t values, const std::string& valuesTitle);
 
 	using string_view_ptr	= const uint8_t*;
-	using structural_index	= string_view_ptr;
+	using structural_index	= uint64_t;
 	using string_buffer_ptr = uint8_t*;
 
 	template<typename value_type>
@@ -307,10 +313,10 @@ namespace jsonifier_internal {
 
 #endif
 
-	static constexpr uint8_t escapeableArray00[]{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x00u, 0x00u, 0x00u, 0x0Cu, 0x0Du, 0x00u, 0x00u };
-	static constexpr uint8_t escapeableArray01[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x00u, 0x00u, 0x00u };
-	static constexpr uint8_t whitespaceArray[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u };
-	static constexpr uint8_t opArray[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
+	static constexpr char escapeableArray00[]{ 0x00u, 0x00u, 0x22u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x08u, 0x00u, 0x00u, 0x00u, 0x0Cu, 0x0Du, 0x00u, 0x00u };
+	static constexpr char escapeableArray01[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x09u, 0x0Au, 0x00u, 0x5Cu, 0x00u, 0x00u, 0x00u };
+	static constexpr char whitespaceArray[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, 0x09u, 0x0Au, 0x70u, 0x64u, 0x0Du, 0x64u, 0x64u };
+	static constexpr char opArray[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x3Au, 0x7Bu, 0x2Cu, 0x7Du, 0x00u, 0x00u };
 	template<typename simd_type> static constexpr simd_type escapeableTable00{ simdFromTable<simd_type>(escapeableArray00) };
 	template<typename simd_type> static constexpr simd_type escapeableTable01{ simdFromTable<simd_type>(escapeableArray01) };
 	template<typename simd_type> static constexpr simd_type whitespaceTable{ simdFromTable<simd_type>(whitespaceArray) };

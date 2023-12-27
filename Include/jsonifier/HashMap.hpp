@@ -353,7 +353,7 @@ namespace jsonifier_internal {
 		using container_type			  = std::array<std::pair<key_type_new, value_type_new>, n>;
 		using tables_type				  = pmh_tables<storageSize>;
 
-		using value_type	 = typename container_type::value_type;
+		using value_type	 = value_type_new;
 		using key_equal		 = string_compare_helper;
 		using const_iterator = typename container_type::const_iterator;
 

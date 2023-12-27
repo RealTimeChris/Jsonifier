@@ -112,20 +112,20 @@ namespace jsonifier_internal {
 		std::memcpy(hilo, pow10SigTable128 + idx * 2, 16);
 	}
 
-	JSONIFIER_INLINE void f64BinToDec(uint64_t sig_raw, int32_t exp_raw, uint64_t sig_bin, int32_t exp_bin, uint64_t* sig_dec, int32_t* exp_dec) noexcept {
+	JSONIFIER_INLINE void f64BinToDec(uint64_t sigRaw, int32_t expRaw, uint64_t sigBin, int32_t expBin, uint64_t* sigDec, int32_t* expDec) noexcept {
 		uint64_t sp, mid;
 
-		const bool is_even			  = !(sig_bin & 1);
-		const bool lower_bound_closer = (sig_raw == 0 && exp_raw > 1);
+		const bool is_even			  = !(sigBin & 1);
+		const bool lower_bound_closer = (sigRaw == 0 && expRaw > 1);
 
-		const uint64_t cb  = 4 * sig_bin;
+		const uint64_t cb  = 4 * sigBin;
 		const uint64_t cbl = cb - 2 + lower_bound_closer;
 		const uint64_t cbr = cb + 2;
 
-		const int32_t k = (exp_bin * 315653 - (lower_bound_closer ? 131237 : 0)) >> 20;
+		const int32_t k = (expBin * 315653 - (lower_bound_closer ? 131237 : 0)) >> 20;
 
 		const int32_t exp10 = -k;
-		const int32_t h		= exp_bin + ((exp10 * 217707) >> 16) + 1;
+		const int32_t h		= expBin + ((exp10 * 217707) >> 16) + 1;
 
 		uint64_t pow10hilo[2];
 		pow10TableGetSig128(exp10, pow10hilo);
@@ -147,8 +147,8 @@ namespace jsonifier_internal {
 			u_inside = (lower <= 40 * sp);
 			w_inside = (upper >= 40 * sp + 40);
 			if (u_inside != w_inside) {
-				*sig_dec = sp + w_inside;
-				*exp_dec = k + 1;
+				*sigDec = sp + w_inside;
+				*expDec = k + 1;
 				return;
 			}
 		}
@@ -159,8 +159,8 @@ namespace jsonifier_internal {
 		mid					= 4 * s + 2;
 		const bool round_up = (vb > mid) || (vb == mid && (s & 1) != 0);
 
-		*sig_dec = s + ((u_inside != w_inside) ? w_inside : round_up);
-		*exp_dec = k;
+		*sigDec = s + ((u_inside != w_inside) ? w_inside : round_up);
+		*expDec = k;
 	}
 
 	template<typename char_type> JSONIFIER_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
@@ -242,16 +242,16 @@ namespace jsonifier_internal {
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 		using raw_t = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
 
-		raw_t raw;
+		raw_t raw{};
 		std::memcpy(&raw, &val, sizeof(value_type));
 
 		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		constexpr raw_t sig_mask		= raw_t(-1) >> (exponentBits + 1);
+		constexpr raw_t sigMask			= raw_t(-1) >> (exponentBits + 1);
 		bool sign						= (raw >> (sizeof(value_type) * 8 - 1));
-		uint64_t sig_raw				= raw & sig_mask;
-		int32_t exp_raw					= static_cast<int32_t>(raw << 1 >> (sizeof(raw_t) * 8 - exponentBits));
+		uint64_t sigRaw					= raw & sigMask;
+		int32_t expRaw					= static_cast<int32_t>(raw << 1 >> (sizeof(raw_t) * 8 - exponentBits));
 
-		if (exp_raw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
+		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buffer, "null", 4);
 			return buffer + 4;
 		}
@@ -260,68 +260,68 @@ namespace jsonifier_internal {
 			++buffer;
 		}
 		if ((raw << 1) != 0) [[likely]] {
-			uint64_t sig_bin;
-			int32_t exp_bin;
-			if (exp_raw == 0) [[unlikely]] {
-				sig_bin = sig_raw;
-				exp_bin = 1 - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
+			uint64_t sigBin;
+			int32_t expBin;
+			if (expRaw == 0) [[unlikely]] {
+				sigBin = sigRaw;
+				expBin = 1 - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
 			} else {
-				sig_bin = sig_raw | uint64_t(1ull << (std::numeric_limits<value_type>::digits - 1));
-				exp_bin = int32_t(exp_raw) - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
+				sigBin = sigRaw | uint64_t(1ull << (std::numeric_limits<value_type>::digits - 1));
+				expBin = int32_t(expRaw) - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
 			}
 
-			uint64_t sig_dec;
-			int32_t exp_dec;
-			f64BinToDec(sig_raw, exp_raw, sig_bin, exp_bin, &sig_dec, &exp_dec);
+			uint64_t sigDec;
+			int32_t expDec;
+			f64BinToDec(sigRaw, expRaw, sigBin, expBin, &sigDec, &expDec);
 			if constexpr (std::same_as<value_type, float>) {
-				sig_dec *= 100000000;
-				exp_dec -= 8;
+				sigDec *= 100000000;
+				expDec -= 8;
 			}
 
-			int32_t sig_len = 17;
-			sig_len -= (sig_dec < 100000000ull * 100000000ull);
-			sig_len -= (sig_dec < 100000000ull * 10000000ull);
+			int32_t sigLen = 17;
+			sigLen -= (sigDec < 100000000ull * 100000000ull);
+			sigLen -= (sigDec < 100000000ull * 10000000ull);
 
-			int32_t dotPos = sig_len + exp_dec;
+			int32_t dotPos = sigLen + expDec;
 
 			if (-6 < dotPos && dotPos <= 21) {
 				if (dotPos <= 0) {
-					auto num_hdr = buffer + (2 - dotPos);
-					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
-					buffer[0]	 = 0x30u;
-					buffer[1]	 = 0x2Eu;
+					auto numHdr = buffer + (2 - dotPos);
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
+					buffer[0]	= 0x30u;
+					buffer[1]	= 0x2Eu;
 					buffer += 2;
-					std::memset(buffer, 0x30u, static_cast<uint64_t>(num_hdr - buffer));
-					return num_end;
+					std::memset(buffer, 0x30u, static_cast<uint64_t>(numHdr - buffer));
+					return numEnd;
 				} else {
 					std::memset(buffer, 0x30u, 8);
 					std::memset(buffer + 8, 0x30u, 8);
 					std::memset(buffer + 16, 0x30u, 8);
-					auto num_hdr = buffer + 1;
-					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
+					auto numHdr = buffer + 1;
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
 					std::memmove(buffer, buffer + 1, static_cast<uint64_t>(dotPos));
 					buffer[dotPos] = 0x2Eu;
-					return ((num_end - num_hdr) <= dotPos) ? buffer + dotPos : num_end;
+					return ((numEnd - numHdr) <= dotPos) ? buffer + dotPos : numEnd;
 				}
 			} else {
-				auto end = writeU64Len15To17Trim(buffer + 1, sig_dec);
+				auto end = writeU64Len15To17Trim(buffer + 1, sigDec);
 				end -= (end == buffer + 2);
-				exp_dec += sig_len - 1;
+				expDec += sigLen - 1;
 				buffer[0] = buffer[1];
 				buffer[1] = 0x2Eu;
 				end[0]	  = 0x45u;
 				buffer	  = end + 1;
 				buffer[0] = 0x2Du;
-				buffer += exp_dec < 0;
-				exp_dec = std::abs(exp_dec);
-				if (exp_dec < 100) {
-					uint32_t lz = exp_dec < 10;
-					std::memcpy(buffer, charTable + (exp_dec * 2 + lz), 2);
+				buffer += expDec < 0;
+				expDec = std::abs(expDec);
+				if (expDec < 100) {
+					uint32_t lz = expDec < 10;
+					std::memcpy(buffer, charTable + (expDec * 2 + lz), 2);
 					return buffer + 2 - lz;
 				} else {
-					const uint32_t hi = (uint32_t(exp_dec) * 656) >> 16;
-					const uint32_t lo = uint32_t(exp_dec) - hi * 100;
-					buffer[0]		  = uint8_t(hi) + 0x30;
+					const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
+					const uint32_t lo = uint32_t(expDec) - hi * 100;
+					buffer[0]		  = static_cast<char_type>(uint8_t(hi) + 0x30);
 					std::memcpy(&buffer[1], charTable + (lo * 2), 2);
 					return buffer + 3;
 				}

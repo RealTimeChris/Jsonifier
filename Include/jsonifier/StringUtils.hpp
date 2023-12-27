@@ -77,18 +77,18 @@ namespace jsonifier_internal {
 				codePoint = subCodePoint;
 			} else {
 				uint32_t codePoint02 = hexToU32NoCheck(srcData + 2);
-				uint32_t lowBit		 = codePoint02 - 0xdc00;
-				if (lowBit >> 10) {
+				codePoint02			 = codePoint02 - 0xdc00;
+				if (codePoint02 >> 10) {
 					codePoint = subCodePoint;
 				} else {
-					codePoint = (((codePoint - 0xd800) << 10) | lowBit) + 0x10000;
+					codePoint = (((codePoint - 0xd800) << 10) | codePoint02) + 0x10000;
 					*srcPtr += 6;
 				}
 			}
 		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
 			codePoint = subCodePoint;
 		}
-		int64_t offset = codePointToUtf8(codePoint, *dstPtr);
+		uint32_t offset = codePointToUtf8(codePoint, *dstPtr);
 		*dstPtr += offset;
 		return offset > 0;
 	}
@@ -147,7 +147,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::bytesProcessed;
 		static constexpr integer_type mask		 = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::mask;
 		simd_type collectionValue{};
-		while (lengthNew >= bytesProcessed) {
+		while (static_cast<int64_t>(lengthNew) >= bytesProcessed) {
 			integer_type nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, collectionValue);
 			if (nextBackslashOrQuote != mask) {
 				auto escapeChar = string1[nextBackslashOrQuote];
@@ -266,7 +266,7 @@ namespace jsonifier_internal {
 		static constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::bytesProcessed;
 		static constexpr integer_type mask		 = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::mask;
 		simd_type collectionValue{};
-		while (lengthNew >= bytesProcessed) {
+		while (static_cast<int64_t>(lengthNew) >= bytesProcessed) {
 			integer_type nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, collectionValue);
 			if (nextEscapeable != mask) {
 				auto escapeResult = escapeTable[static_cast<uint64_t>(string1[nextEscapeable])];

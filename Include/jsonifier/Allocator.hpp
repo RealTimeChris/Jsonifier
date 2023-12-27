@@ -90,6 +90,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE void destroy(pointer ptr) {
 			ptr->~value_type();
 		}
+		uint8_t padding[8]{};
 	};
 
 }// namespace jsonifier_internal

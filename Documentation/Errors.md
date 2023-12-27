@@ -55,10 +55,10 @@ In the provided error message:
 
  #### Failed to collect __**a**__:
  ----
- Indicates that a comma was expected at a particular point in the JSON data.
+ Indicates that a Comma was expected at a particular point in the JSON data.
  #### At __**index**__: 
  ----
- 486 instead found a 'i': Specifies the index in the JSON data where the error occurred and the actual character found instead of the expected comma.
+ 486 instead found a 'i': Specifies the index in the JSON data where the error occurred and the actual character found instead of the expected Comma.
  #### In __**file**__: 
  ----
  Gives the file path where the parsing error was encountered.

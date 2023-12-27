@@ -413,8 +413,14 @@ void runTest(test_type&& test, const std::string& testName, std::string& dataToP
 	auto result = parser.parseJson(test, dataToParse);
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
 	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
 	} else {
 		std::cout << "Test: " << testName << " = Failed" << std::endl;
 		for (auto& value: parser.getErrors()) {

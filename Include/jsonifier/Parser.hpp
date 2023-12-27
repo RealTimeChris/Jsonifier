@@ -32,22 +32,11 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> struct parse_impl;
-
-	struct parse {
-		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter), data.jsonifierExcludedKeys);
-			} else {
-				parse_impl<jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
-			}
-		}
-	};
+	template<typename value_type, typename derived_type> struct parse_impl : public derailleur {};
 
 	template<typename derived_type> class parser {
 	  public:
-		template<typename value_type> friend struct parse_impl;
+		template<typename value_type, typename derived_type_new> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
@@ -56,14 +45,18 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& stringNew) {
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
-			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
+			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) [[unlikely]] {
+				if (*iter != 0x7Bu && *iter != 0x5Bu) [[unlikely]] {
+					derivedRef.errors.emplace_back(createError(error_code::Invalid_Input));
+					return false;
+				}
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;
 			}
-			parse::impl(std::forward<value_type>(data), iter);
-			if (iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+			impl(std::forward<value_type>(data), iter);
+			if (iter) [[unlikely]] {
+				derivedRef.errors.emplace_back(createError(error_code::Invalid_Input));
 				return false;
 			}
 			return true;
@@ -71,11 +64,22 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		uint8_t padding[24]{};
 
 		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
+		}
+
+		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
+			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+				parse_impl<jsonifier::concepts::unwrap_t<value_type>, derived_type>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter),
+					data.jsonifierExcludedKeys);
+			} else {
+				parse_impl<jsonifier::concepts::unwrap_t<value_type>, derived_type>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
+			}
 		}
 
 		JSONIFIER_INLINE ~parser() noexcept = default;
