@@ -1,6 +1,7 @@
-name: Build-and-Test-GCC-MacOS
+name: Build-and-Test-GCC-Ubuntu
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - main
@@ -8,7 +9,7 @@ on:
 
 jobs:
   Build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     
     strategy:
       fail-fast: false
@@ -19,16 +20,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Install the latest g++ compiler.
-      run: |
-            brew install gcc
+  
+    - name: Install the latest gcc compiler.
+      working-directory: Tests
+      run:  |
+            sudo apt-get install build-essential
+            sudo apt-get install g++-13
 
     - name: Configure CMake
       working-directory: ./
       run: |
-           
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/local/opt/gcc@13/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build
@@ -40,4 +42,3 @@ jobs:
       run: |
            ./Json-Performance
       continue-on-error: true
-      

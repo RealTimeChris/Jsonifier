@@ -52,20 +52,16 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
-		template<bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
+		template<bool minified = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& stringNew) {
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<refreshString>(stringNew.data(), stringNew.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.template reset<refreshString, !minified>(stringNew.data(), stringNew.size());
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.getStringView(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;
 			}
 			parse::impl(std::forward<value_type>(data), iter);
-			if (iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
-				return false;
-			}
 			return true;
 		}
 

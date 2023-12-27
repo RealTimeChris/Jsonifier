@@ -39,14 +39,6 @@ namespace jsonifier_internal {
 		return _blsr_u64(value);
 	}
 
-	template<jsonifier::concepts::uint8_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
-	#if defined(__linux__)
-		return static_cast<uint8_t>(__tzcnt_u16(static_cast<uint8_t>(value)));
-	#else
-		return static_cast<uint8_t>(_tzcnt_u16(static_cast<uint8_t>(value)));
-	#endif
-	}
-
 	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 	#if defined(__linux__)
 		return __tzcnt_u16(value);

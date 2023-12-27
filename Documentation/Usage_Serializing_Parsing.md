@@ -12,21 +12,21 @@ namespace TestNS {
 	};
 
 	struct fixed_name_object_t {
-		std::string name0{};
-		std::string name1{};
-		std::string name2{};
-		std::string name3{};
-		std::string name4{};
+		jsonifier::string name0{};
+		jsonifier::string name1{};
+		jsonifier::string name2{};
+		jsonifier::string name3{};
+		jsonifier::string name4{};
 	};
 
 	struct nested_object_t {
 		std::vector<std::array<double, 3>> v3s{};
-		std::string id{};
+		jsonifier::string id{};
 	};
 
 	struct another_object_t {
-		std::string string{};
-		std::string another_string{};
+		jsonifier::string string{};
+		jsonifier::string another_string{};
 		bool boolean{};
 		nested_object_t nested_object{};
 	};
@@ -35,8 +35,8 @@ namespace TestNS {
 		fixed_object_t fixed_object{};
 		fixed_name_object_t fixed_name_object{};
 		another_object_t another_object{};
-		std::vector<std::string> string_array{};
-		std::string string{};
+		std::vector<jsonifier::string> string_array{};
+		jsonifier::string string{};
 		double Number{};
 		bool boolean{};
 		bool another_bool{};
@@ -78,10 +78,10 @@ namespace jsonifier {
 
 ### Usage - Parsing
 ----
-- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `std::string` or equivalent, to be parsed from, as follows...
+- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `jsonifier::string` or equivalent, to be parsed from, as follows...
 - Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
 ```cpp
-std::string buffer{ json0 };
+jsonifier::string buffer{ json0 };
 
 obj_t obj{};
 
@@ -91,10 +91,10 @@ parser.parseJson(obj, buffer);
 
 ### Usage - Serialization
 ----
-- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `std::string` or equivalent, to be serialized into, as follows...
+- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `jsonifier::string` or equivalent, to be serialized into, as follows...
 - Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
 ```cpp
-std::string buffer{};
+jsonifier::string buffer{};
 
 obj_t obj{};
 

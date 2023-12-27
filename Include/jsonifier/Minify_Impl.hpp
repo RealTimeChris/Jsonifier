@@ -24,103 +24,103 @@
 #pragma once
 
 #include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/Derailleur.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-	JSONIFIER_INLINE uint64_t minify::impl(iterator_type&& iter, string_type& out) noexcept {
-		auto previousPtr = iter.operator->();
-		int64_t currentDistance{};
-		auto outPtr = out.data();
+	template<typename derived_type> struct minify_impl {
+		template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
+			auto previousPtr = iter.operator->();
+			int64_t currentDistance{};
+			auto outPtr = out.data();
 
-		auto appendCharacter = [&](auto character) {
-			*outPtr = character;
-			++outPtr;
-		};
-
-		if (!iter || !previousPtr || (asciiClassesMap[*previousPtr] != ascii_classes::lsqrb && asciiClassesMap[*previousPtr] != ascii_classes::lcurb)) {
-			iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
-			return std::numeric_limits<uint64_t>::max();
-		}
-
-		++iter;
-
-		while (iter && previousPtr) {
-			switch (asciiClassesMap[*previousPtr]) {
-				[[likely]] case ascii_classes::quote : {
-					currentDistance = iter.operator->() - previousPtr;
-					while (whiteSpaceTable[previousPtr[--currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
-					}
-					if (currentDistance > 0) {
-						std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance + 1));
-						outPtr += currentDistance + 1;
-					} else {
-						iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					break;
-				}
-				[[unlikely]] case ascii_classes::colon:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::comma:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::lsqrb:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::lcurb:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::rcurb:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::rsqrb : {
-					appendCharacter(*previousPtr);
-					break;
-				}
-				[[unlikely]] case ascii_classes::false_val : {
-					std::memcpy(outPtr, falseString.data(), falseString.size());
-					outPtr += falseString.size();
-					break;
-				}
-				[[unlikely]] case ascii_classes::true_val : {
-					std::memcpy(outPtr, trueString.data(), trueString.size());
-					outPtr += trueString.size();
-					break;
-				}
-				[[unlikely]] case ascii_classes::null_val : {
-					std::memcpy(outPtr, nullString.data(), nullString.size());
-					outPtr += nullString.size();
-					break;
-				}
-				[[likely]] case ascii_classes::num_val : {
-					currentDistance = 0;
-					while (!whiteSpaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
-					}
-					if (currentDistance > 0) {
-						std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance));
-						outPtr += currentDistance;
-					} else {
-						iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					break;
-				}
-				[[unlikely]] case ascii_classes::class_count:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::errorVal:
-					[[fallthrough]];
-					[[unlikely]] default : {
-						iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-			}
-			previousPtr = iter.operator->();
 			++iter;
-		}
-		if (previousPtr) [[likely]] {
+
+			if (!iter || !previousPtr ||
+				(asciiClassesMap[*previousPtr] != json_structural_type::Array_Start && asciiClassesMap[*previousPtr] != json_structural_type::Object_Start)) {
+				iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
+				return std::numeric_limits<uint32_t>::max();
+			}
+
+			while (iter) {
+				switch (asciiClassesMap[*previousPtr]) {
+					[[likely]] case json_structural_type::String: {
+						currentDistance = iter.operator->() - previousPtr;
+						while (whiteSpaceTable[previousPtr[--currentDistance]]) {
+						}
+						if (currentDistance > 0) {
+							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance + 1));
+							outPtr += currentDistance + 1;
+						} else {
+							iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
+							return std::numeric_limits<uint32_t>::max();
+						}
+						break;
+					}
+					[[unlikely]] case json_structural_type::Comma:
+						appendCharacter<0x2Cu>(outPtr);
+						break;
+					[[likely]] case json_structural_type::Number: {
+						currentDistance = 0;
+						while (!whiteSpaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
+						}
+						if (currentDistance > 0) {
+							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance), outPtr);
+							outPtr += currentDistance;
+						} else {
+							iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
+							return std::numeric_limits<uint32_t>::max();
+						}
+						break;
+					}
+					[[unlikely]] case json_structural_type::Colon:
+						appendCharacter<0x3A>(outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Array_Start:
+						appendCharacter<0x5Bu>(outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Array_End:
+						appendCharacter<0x5Du>(outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Null: {
+						std::memcpy(outPtr, nullString.data(), nullString.size());
+						outPtr += nullString.size();
+						break;
+					}
+					[[unlikely]] case json_structural_type::Bool: {
+						if (*previousPtr == 0x74u) {
+							std::memcpy(outPtr, trueString.data(), trueString.size());
+							outPtr += trueString.size();
+							break;
+						} else {
+							std::memcpy(outPtr, falseString.data(), falseString.size());
+							outPtr += falseString.size();
+							break;
+						}
+					}
+					[[unlikely]] case json_structural_type::Object_Start:
+						appendCharacter<0x7Bu>(outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Object_End:
+						appendCharacter<0x7Du>(outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Unset:
+						[[fallthrough]];
+					[[unlikely]] default: {
+						iter.getErrors().emplace_back(createError<error_code::Minify_Error>(iter));
+						return std::numeric_limits<uint32_t>::max();
+					}
+				}
+				previousPtr = iter.operator->();
+				++iter;
+			}
 			std::memcpy(outPtr, previousPtr, 1);
 			++outPtr;
+			return static_cast<uint64_t>(outPtr - out.data());
 		}
-		return static_cast<uint64_t>(outPtr - out.data());
-	}
+	};
 
 
 }// namespace jsonifier_internal

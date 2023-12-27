@@ -25,169 +25,153 @@
 
 #include <jsonifier/Prettifier.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier_internal { 
 
-	template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-	JSONIFIER_INLINE uint64_t prettify::impl(iterator_type&& iter, string_type& out) noexcept {
-		ascii_classes previousStructural[maxDepth]{ ascii_classes::lcurb };
-		int64_t currentDistance{};
-		auto outPtr = out.data();
-		int64_t indent{};
-
-		auto appendNewLine = [&]() {
-			*outPtr = 0x0Au;
-			++outPtr;
-			std::fill(outPtr, outPtr + (tabs ? indent : (indent * indentSize)), static_cast<typename string_type::value_type>(tabs ? 0x09u : 0x20u));
-			outPtr += tabs ? indent : (indent * indentSize);
-		};
-
-		auto appendCharacter = [&](auto character) {
-			*outPtr = static_cast<typename string_type::value_type>(character);
-			++outPtr;
-		};
-
-		appendCharacter(*iter);
-
-		++indent;
-		previousStructural[indent] = asciiClassesMap[*iter];
-		if (previousStructural[indent] != ascii_classes::lsqrb && previousStructural[indent] != ascii_classes::lcurb) {
-			iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-			return std::numeric_limits<uint64_t>::max();
+	template<bool tabs, uint64_t indentSize, typename iterator_type> void appendNewLine(iterator_type& outPtr, int64_t indent) {
+		appendCharacter<0x0Au>(outPtr);
+		if constexpr (tabs) {
+			std::memset(outPtr, 0x09, indent);
+			outPtr += indent;
+		} else {
+			std::memset(outPtr, 0x20u, indent * indentSize);
+			outPtr += indent * indentSize;
 		}
-		appendNewLine();
-		auto previousVal = iter.operator->();
-		++iter;
-		auto currentVal = iter.operator->();
-		++iter;
-		auto nextVal = iter.operator->();
+	};
 
-		auto updatePointers = [&]() {
-			previousVal = currentVal;
-			currentVal	= nextVal;
-			++iter;
-			nextVal = iter.operator->();
-		};
-
-		auto appendValues = [&]() {
-			if (currentDistance > 0) [[likely]] {
-				std::memcpy(outPtr, currentVal, static_cast<uint64_t>(currentDistance));
-				outPtr += currentDistance;
-			}
-		};
-
-		while (iter && currentVal && previousVal && nextVal) {
-			currentDistance = nextVal - currentVal;
-			switch (asciiClassesMap[*currentVal]) {
-				[[likely]] case ascii_classes::quote : {
-					appendValues();
-					break;
-				}
-				[[unlikely]] case ascii_classes::colon : {
-					appendCharacter(*currentVal);
-					appendCharacter(0x20u);
-					break;
-				}
-				[[unlikely]] case ascii_classes::comma : {
-					appendCharacter(*currentVal);
-					if constexpr (!newLinesInArray) {
-						if (previousStructural[indent] != ascii_classes::lsqrb) {
-							appendNewLine();
-						}
-					} else {
-						appendNewLine();
-					}
-					break;
-				}
-				[[unlikely]] case ascii_classes::lsqrb : {
-					appendCharacter(*currentVal);
-					++indent;
-					if (indent >= maxDepth) {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					if constexpr (!newLinesInArray) {
-						previousStructural[indent] = ascii_classes::lsqrb;
-					}
-					if (*nextVal != 0x5Du) {
-						appendNewLine();
-					}
-					break;
-				}
-				[[unlikely]] case ascii_classes::rsqrb : {
-					--indent;
-					if (indent < 0) {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					if (*previousVal != 0x5Bu) {
-						appendNewLine();
-					}
-					appendCharacter(*currentVal);
-					break;
-				}
-				[[unlikely]] case ascii_classes::false_val : {
-					std::memcpy(outPtr, falseString.data(), falseString.size());
-					outPtr += falseString.size();
-					break;
-				}
-				[[unlikely]] case ascii_classes::true_val : {
-					std::memcpy(outPtr, trueString.data(), trueString.size());
-					outPtr += trueString.size();
-					break;
-				}
-				[[unlikely]] case ascii_classes::null_val : {
-					std::memcpy(outPtr, nullString.data(), nullString.size());
-					outPtr += nullString.size();
-					break;
-				}
-				[[unlikely]] case ascii_classes::lcurb : {
-					appendCharacter(*currentVal);
-					++indent;
-					if (indent >= maxDepth) {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					if constexpr (!newLinesInArray) {
-						previousStructural[indent] = ascii_classes::lcurb;
-					}
-					if (*nextVal != 0x7Du) {
-						appendNewLine();
-					}
-					break;
-				}
-				[[unlikely]] case ascii_classes::rcurb : {
-					--indent;
-					if (indent < 0) {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-					if (*previousVal != 0x7Bu) {
-						appendNewLine();
-					}
-					appendCharacter(*currentVal);
-					break;
-				}
-				[[unlikely]] case ascii_classes::num_val : {
-					appendValues();
-					break;
-				}
-				[[unlikely]] case ascii_classes::class_count:
-					[[fallthrough]];
-				[[unlikely]] case ascii_classes::errorVal:
-					[[fallthrough]];
-					[[unlikely]] default : {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint64_t>::max();
-					}
-			}
-			updatePointers();
+	template<typename iterator_type01, typename iterator_type02> void appendValues(int64_t currentDistance, iterator_type01& outPtr, iterator_type02 currentVal) {
+		if (currentDistance > 0) [[likely]] {
+			std::memcpy(outPtr, currentVal, static_cast<uint64_t>(currentDistance));
+			outPtr += currentDistance;
 		}
-		if (currentVal && previousVal) [[likely]] {
-			--indent;
-			appendNewLine();
-			appendCharacter(*currentVal);
-		}
-		return static_cast<uint64_t>(outPtr - out.data());
 	}
+
+	template<typename derived_type> struct prettify_impl {
+		template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type,
+			jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
+			json_structural_type state[maxDepth]{};
+			int64_t indent{};
+			auto outPtr = out.data();
+
+			while (iter) {
+				switch (asciiClassesMap[*iter]) {
+					case json_structural_type::String: {
+						auto valueNew = iter.operator->();
+						++iter;
+						appendValues(iter.operator->() - valueNew, outPtr, valueNew);
+						break;
+					}
+					case json_structural_type::Comma: {
+						appendCharacter<0x2Cu>(outPtr);
+						++iter;
+						if constexpr (newLinesInArray) {
+							appendNewLine<tabs, indentSize>(outPtr, indent);
+						} else {
+							if (state[indent] == json_structural_type::Object_Start) {
+								appendNewLine<tabs, indentSize>(outPtr, indent);
+							} else {
+								appendCharacter<0x20u>(outPtr);
+							}
+						}
+						break;
+					}
+					case json_structural_type::Number: {
+						auto valueNew = iter.operator->();
+						++iter;
+						appendValues(iter.operator->() - valueNew, outPtr, valueNew);
+						break;
+					}
+					case json_structural_type::Colon: {
+						appendCharacter<0x3A>(outPtr);
+						appendCharacter<0x20>(outPtr);
+						++iter;
+						break;
+					}
+					case json_structural_type::Array_Start: {
+						appendCharacter<0x5Bu>(outPtr);
+						++iter;
+						++indent;
+						state[indent] = json_structural_type::Array_Start;
+						if (size_t(indent) >= std::size(state)) [[unlikely]] {
+							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
+							return std::numeric_limits<uint32_t>::max();
+						}
+						if constexpr (newLinesInArray) {
+							if (*iter != 0x5Du) {
+								appendNewLine<tabs, indentSize>(outPtr, indent);
+							}
+						} else {
+							appendCharacter<0x20>(outPtr);
+						}
+						break;
+					}
+					case json_structural_type::Array_End: {
+						--indent;
+						if (indent < 0) {
+							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
+							return std::numeric_limits<uint32_t>::max();
+						}
+						if (*(iter.operator->() - 1) != 0x5Bu) {
+							if constexpr (newLinesInArray) {
+								appendNewLine<tabs, indentSize>(outPtr, indent);
+							}
+							appendCharacter<0x20>(outPtr);
+						}
+						appendCharacter<0x5Du>(outPtr);
+						++iter;
+						break;
+					}
+					case json_structural_type::Null: {
+						appendValues(nullString.size(), outPtr, nullString.data());
+						++iter;
+						break;
+					}
+					case json_structural_type::Bool: {
+						if (*iter == 0x74u) {
+							appendValues(trueString.size(), outPtr, trueString.data());
+						} else {
+							appendValues(falseString.size(), outPtr, falseString.data());
+						}
+						++iter;
+						break;
+					}
+					case json_structural_type::Object_Start: {
+						appendCharacter<0x7Bu>(outPtr);
+						++iter;
+						++indent;
+						state[indent] = json_structural_type::Object_Start;
+						if (size_t(indent) >= std::size(state)) [[unlikely]] {
+							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
+							return std::numeric_limits<uint32_t>::max();
+						}
+						if (*iter != 0x7Du) {
+							appendNewLine<tabs, indentSize>(outPtr, indent);
+						}
+						break;
+					}
+					case json_structural_type::Object_End: {
+						--indent;
+						if (indent < 0) {
+							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
+							return outPtr - out.data();
+						}
+						if (*(iter.operator->() - 1) != 0x7Bu) {
+							appendNewLine<tabs, indentSize>(outPtr, indent);
+						}
+						appendCharacter<0x7Du>(outPtr);
+						++iter;
+						break;
+					}
+					case json_structural_type::Unset:
+						[[fallthrough]];
+					[[unlikely]] default: {
+						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
+						return std::numeric_limits<uint32_t>::max();
+					}
+				}
+			}
+			return outPtr - out.data();
+		}
+	};
 
 }// namespace jsonifier_internal

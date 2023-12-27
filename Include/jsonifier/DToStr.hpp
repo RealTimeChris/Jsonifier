@@ -38,10 +38,6 @@
 
 namespace jsonifier_internal {
 
-	// Source: https://github.com/ibireme/yyjson/blob/master/src/yyjson.c
-
-	/** Multiplies two 64-bit unsigned integers (a * b),
-       returns the 128-bit result as 'hi' and 'lo'. */
 	JSONIFIER_INLINE void u128Mul(uint64_t a, uint64_t b, uint64_t* hi, uint64_t* lo) noexcept {
 #ifdef __SIZEOF_INT128__
 	#if defined(__GNUC__) || defined(__GNUG__)
@@ -94,7 +90,7 @@ namespace jsonifier_internal {
 		*lo = t;
 #endif
 	}
-
+	
 	JSONIFIER_INLINE uint64_t roundToOdd(uint64_t hi, uint64_t lo, uint64_t cp) noexcept {
 		uint64_t x_hi, x_lo, y_hi, y_lo;
 		u128Mul(cp, lo, &x_hi, &x_lo);
@@ -102,16 +98,16 @@ namespace jsonifier_internal {
 		return y_hi | (y_lo > 1);
 	}
 
-	constexpr auto pow10SigTable128MinExp	   = -343;
-	constexpr auto pow10SigTable128MaxExp	   = 324;
+	constexpr auto pow10SigTable128MinExp = -343;
+	constexpr auto pow10SigTable128MaxExp = 324;
 	constexpr auto pow10SigTable128MinExactExp = 0;
 	constexpr auto pow10SigTable128MaxExactExp = 55;
 
-	JSONIFIER_INLINE void pow10TableGetSig128(const int32_t exp10, uint64_t hilo[2]) noexcept {
+	 JSONIFIER_INLINE void pow10TableGetSig128(const int32_t exp10, uint64_t hilo[2]) noexcept {
 		const int32_t idx = exp10 - (pow10SigTable128MinExp);
-		std::memcpy(hilo, pow10SigTable128 + idx * 2, 16);
+		std::memcpy(hilo, pow10SigTable128.data() + idx * 2, 16);
 	}
-
+	
 	JSONIFIER_INLINE void f64BinToDec(uint64_t sig_raw, int32_t exp_raw, uint64_t sig_bin, int32_t exp_bin, uint64_t* sig_dec, int32_t* exp_dec) noexcept {
 		uint64_t sp, mid;
 
@@ -121,7 +117,6 @@ namespace jsonifier_internal {
 		const uint64_t cb  = 4 * sig_bin;
 		const uint64_t cbl = cb - 2 + lower_bound_closer;
 		const uint64_t cbr = cb + 2;
-
 		const int32_t k = (exp_bin * 315653 - (lower_bound_closer ? 131237 : 0)) >> 20;
 
 		const int32_t exp10 = -k;
@@ -175,7 +170,7 @@ namespace jsonifier_internal {
 		uint32_t bb		   = abb - a * 100;
 		uint32_t cc		   = abbcc - abb * 100;
 
-		buf[0] = char_type(a + 0x30u);
+		buf[0] = uint8_t(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
 		std::memcpy(buf, charTable + (bb * 2 + lz), 2);
@@ -235,7 +230,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<jsonifier::concepts::float_t value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buffer, value_type val) noexcept {
+	template<std::floating_point value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buffer, value_type val) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
@@ -245,18 +240,18 @@ namespace jsonifier_internal {
 		raw_t raw;
 		std::memcpy(&raw, &val, sizeof(value_type));
 
-		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		constexpr raw_t sig_mask		= raw_t(-1) >> (exponentBits + 1);
-		bool sign						= (raw >> (sizeof(value_type) * 8 - 1));
-		uint64_t sig_raw				= raw & sig_mask;
-		int32_t exp_raw					= static_cast<int32_t>(raw << 1 >> (sizeof(raw_t) * 8 - exponentBits));
+		constexpr uint32_t exponent_bits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		constexpr raw_t sig_mask		 = raw_t(-1) >> (exponent_bits + 1);
+		bool sign						 = (raw >> (sizeof(value_type) * 8 - 1));
+		uint64_t sig_raw				 = raw & sig_mask;
+		int32_t exp_raw					 = raw << 1 >> (sizeof(raw_t) * 8 - exponent_bits);
 
-		if (exp_raw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
+		if (exp_raw == (uint32_t(1) << exponent_bits) - 1) [[unlikely]] {
 			std::memcpy(buffer, "null", 4);
 			return buffer + 4;
 		}
 		if (sign) {
-			*buffer = 0x2Du;
+			*buffer = '-';
 			++buffer;
 		}
 		if ((raw << 1) != 0) [[likely]] {
@@ -269,7 +264,6 @@ namespace jsonifier_internal {
 				sig_bin = sig_raw | uint64_t(1ull << (std::numeric_limits<value_type>::digits - 1));
 				exp_bin = int32_t(exp_raw) - (std::numeric_limits<value_type>::max_exponent - 1) - (std::numeric_limits<value_type>::digits - 1);
 			}
-
 			uint64_t sig_dec;
 			int32_t exp_dec;
 			f64BinToDec(sig_raw, exp_raw, sig_bin, exp_bin, &sig_dec, &exp_dec);
@@ -282,36 +276,36 @@ namespace jsonifier_internal {
 			sig_len -= (sig_dec < 100000000ull * 100000000ull);
 			sig_len -= (sig_dec < 100000000ull * 10000000ull);
 
-			int32_t dotPos = sig_len + exp_dec;
+			int32_t dot_pos = sig_len + exp_dec;
 
-			if (-6 < dotPos && dotPos <= 21) {
-				if (dotPos <= 0) {
-					auto num_hdr = buffer + (2 - dotPos);
+			if (-6 < dot_pos && dot_pos <= 21) {
+				if (dot_pos <= 0) {
+					auto num_hdr = buffer + (2 - dot_pos);
 					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
-					buffer[0]	 = 0x30u;
-					buffer[1]	 = 0x2Eu;
+					buffer[0]	 = '0';
+					buffer[1]	 = '.';
 					buffer += 2;
-					std::memset(buffer, 0x30u, static_cast<uint64_t>(num_hdr - buffer));
+					std::memset(buffer, '0', num_hdr - buffer);
 					return num_end;
 				} else {
-					std::memset(buffer, 0x30u, 8);
-					std::memset(buffer + 8, 0x30u, 8);
-					std::memset(buffer + 16, 0x30u, 8);
+					std::memset(buffer, '0', 8);
+					std::memset(buffer + 8, '0', 8);
+					std::memset(buffer + 16, '0', 8);
 					auto num_hdr = buffer + 1;
 					auto num_end = writeU64Len15To17Trim(num_hdr, sig_dec);
-					std::memmove(buffer, buffer + 1, static_cast<uint64_t>(dotPos));
-					buffer[dotPos] = 0x2Eu;
-					return ((num_end - num_hdr) <= dotPos) ? buffer + dotPos : num_end;
+					std::memmove(buffer, buffer + 1, dot_pos);
+					buffer[dot_pos] = '.';
+					return ((num_end - num_hdr) <= dot_pos) ? buffer + dot_pos : num_end;
 				}
 			} else {
 				auto end = writeU64Len15To17Trim(buffer + 1, sig_dec);
 				end -= (end == buffer + 2);
 				exp_dec += sig_len - 1;
 				buffer[0] = buffer[1];
-				buffer[1] = 0x2Eu;
-				end[0]	  = 0x45u;
+				buffer[1] = '.';
+				end[0]	  = 'E';
 				buffer	  = end + 1;
-				buffer[0] = 0x2Du;
+				buffer[0] = '-';
 				buffer += exp_dec < 0;
 				exp_dec = std::abs(exp_dec);
 				if (exp_dec < 100) {
@@ -321,13 +315,13 @@ namespace jsonifier_internal {
 				} else {
 					const uint32_t hi = (uint32_t(exp_dec) * 656) >> 16;
 					const uint32_t lo = uint32_t(exp_dec) - hi * 100;
-					buffer[0]		  = uint8_t(hi) + 0x30;
+					buffer[0]		  = uint8_t(hi) + '0';
 					std::memcpy(&buffer[1], charTable + (lo * 2), 2);
 					return buffer + 3;
 				}
 			}
 		} else [[unlikely]] {
-			*buffer = 0x30u;
+			*buffer = '0';
 			return buffer + 1;
 		}
 	}

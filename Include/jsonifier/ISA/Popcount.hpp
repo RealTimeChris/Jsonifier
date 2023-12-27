@@ -29,11 +29,17 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
 
-	#define popcnt(value) _mm_popcnt_u64(value)
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		return _mm_popcnt_u32(value);
+	}
+
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+		return _mm_popcnt_u64(value);
+	}
 
 #else
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
 		value_type count{};
 
 		while (value > 0) {

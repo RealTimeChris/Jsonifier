@@ -9,19 +9,21 @@
 
 ## Compiler Support
 ----
-![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue&branch=dev)
-![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue&branch=dev)
-![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=GCC_13&labelColor=pewter&color=blue&branch=dev)
+![MSVC_20922](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC_2022&labelColor=pewter&color=blue&branch=main)
+![GCC_13](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=GCC_13&labelColor=pewter&color=blue&branch=main)
+![CLANG_18](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=CLANG_18&labelColor=pewter&color=blue&branch=main)
 
 ## Operating System Support
 ----
-![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=dev)
-![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=dev)
-![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=dev)
+![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC_2022-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=main)
+![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC_13-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=main)
+![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG_18-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=main)
 
 # Usage Guide:
 ----
 - ## [Installation](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Installation.md)
+- ## [Reflection](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Reflection.md)
+- ## [Optimizing For Minified Json](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Optimizing_For_Minified_Json.md)
 - ## [Serializing-Parsing](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Usage_Serializing_Parsing.md)
 - ## [Validating](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Validating.md)
 - ## [Prettifying](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Prettifying.md)
@@ -29,3 +31,4 @@
 - ## [Error Handling](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Errors.md)
 - ## [CPU Architecture Selection](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/CPU_Architecture_Selection.md)
 - ## [Excluding Keys at Runtime](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Excluding_Keys.md)
+- ## [Custom JSON Parsing/Serializing Behavior](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Custom_Parsing_And_Serializing.md)
