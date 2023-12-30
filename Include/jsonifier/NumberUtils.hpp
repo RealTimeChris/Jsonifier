@@ -56,7 +56,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE double strToDouble(const jsonifier::string& string) {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::parseNumber(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -72,7 +73,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE int64_t strToInt64(const jsonifier::string& string) {
 		int64_t newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -88,7 +90,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE uint64_t strToUint64(const jsonifier::string& string) {
 		uint64_t newValue{};
 		if (string.size() > 0) [[likely]] {
-			jsonifier_internal::parseNumber(newValue, string.data());
+			auto newPtr = string.data();
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}

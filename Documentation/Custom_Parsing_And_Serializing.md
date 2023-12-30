@@ -2,19 +2,19 @@
 
 ## Overview
 
-The `jsonifier` library provides a flexible approach to customizing JSON parsing and serialization. This is achieved through the `parse_impl` and `serialize_impl` structures, allowing developers to define specific behaviors based on their requirements.
+The `jsonifier` library provides a flexible approach to customizing JSON parsing and serialization. This is achieved through the `simd_parse_impl` and `serialize_impl` structures, allowing developers to define specific behaviors based on their requirements.
 
-## Parsing with `parse_impl`
+## Parsing with `simd_parse_impl`
 
 ### Structure
 
-The `parse_impl` structure is designed to handle the parsing of JSON data with a focus on customization. It utilizes template parameters such as `value_type_new` and `derived_type`.
+The `simd_parse_impl` structure is designed to handle the parsing of JSON data with a focus on customization. It utilizes template parameters such as `value_type_new` and `derived_type`.
 
 ### Example
 
 ```cpp
 template<jsonifier::concepts::bool_t value_type_new, typename derived_type>
-struct parse_impl<value_type_new, derived_type> : public derailleur {
+struct simd_parse_impl<value_type_new, derived_type> : public derailleur {
     template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
     JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
         // Custom parsing logic goes here
@@ -40,11 +40,11 @@ struct serialize_impl<value_type_new, derived_type> {
 };
 ```
 
-Certainly! The idea of creating your own specialization of `parse_impl` and `serialize_impl` is about tailoring the behavior of the JSON parsing and serialization process for specific types or situations that may not be adequately covered by the generic implementations.
+Certainly! The idea of creating your own specialization of `simd_parse_impl` and `serialize_impl` is about tailoring the behavior of the JSON parsing and serialization process for specific types or situations that may not be adequately covered by the generic implementations.
 
 ### Specialization for Time Stamps
 
-In the provided example, there's a concept named `time_stamp_t`, which represents a specific type of data, presumably a timestamp from a Discord API. This concept is then used to create a specialization for the `serialize_impl` and `parse_impl` structures.
+In the provided example, there's a concept named `time_stamp_t`, which represents a specific type of data, presumably a timestamp from a Discord API. This concept is then used to create a specialization for the `serialize_impl` and `simd_parse_impl` structures.
 
 #### Serialization Specialization
 
@@ -65,11 +65,11 @@ Here, the `serialize_impl` specialization is created for the `time_stamp_t` conc
 
 #### Parsing Specialization
 
-Similarly, the `parse_impl` specialization for time stamps is structured as follows:
+Similarly, the `simd_parse_impl` specialization for time stamps is structured as follows:
 
 ```cpp
 template<time_stamp_t value_type_new, typename derived_type>
-struct parse_impl<value_type_new, derived_type> {
+struct simd_parse_impl<value_type_new, derived_type> {
     template<time_stamp_t value_type, jsonifier::concepts::is_fwd_iterator iterator>
     inline static void impl(value_type&& value, iterator&& iter) {
         jsonifier::string newString{};
@@ -79,7 +79,7 @@ struct parse_impl<value_type_new, derived_type> {
 };
 ```
 
-In this case, the `impl` method within the `parse_impl` specialization enables you to define how time stamps should be parsed from the JSON representation. This customization ensures that the library handles time stamp data according to your specific requirements.
+In this case, the `impl` method within the `simd_parse_impl` specialization enables you to define how time stamps should be parsed from the JSON representation. This customization ensures that the library handles time stamp data according to your specific requirements.
 
 ### Practical Use
 

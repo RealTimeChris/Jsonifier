@@ -34,7 +34,20 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
+	JSONIFIER_INLINE constexpr bool isDigit(const char c) noexcept {
+		return c >= '0' && c <= '9';
+	}
+
+	JSONIFIER_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
+		return a <= (std::numeric_limits<uint64_t>::max)() - b;
+	}
+
+	JSONIFIER_INLINE constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
+		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
+		return a <= b;
+	}
+
+	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type*& cur) {
 		[[maybe_unused]] const char_type* sigEnd{};
 		const char_type *tmp{}, *sigCut{}, *dotPos{}, *hdr{ cur };
 		uint64_t fracZeros{}, numTmp{}, sig{};
@@ -59,7 +72,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-		static constexpr auto zero = static_cast<uint8_t>(0x30u);
+		constexpr auto zero = static_cast<uint8_t>(0x30u);
 #define expr_intg(x) \
 	if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[x])]); numTmp <= 9) [[likely]] \
 		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
@@ -168,7 +181,7 @@ namespace jsonifier_internal {
 		} else {
 			goto digi_exp_more;
 		}
-	digi_exp_more : {
+	digi_exp_more: {
 		expSign = (*++cur == 0x2Du);
 		cur += (*cur == 0x2Bu || *cur == 0x2Du);
 		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
@@ -219,7 +232,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
+	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type*& cur) {
 		[[maybe_unused]] const char_type* sigEnd{};
 		const char_type *tmp{}, *sigCut{}, *dotPos{};
 		uint64_t fracZeros{}, numTmp{}, sig{};
@@ -239,7 +252,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-		static constexpr auto zero = static_cast<uint8_t>(0x30u);
+		constexpr auto zero = static_cast<uint8_t>(0x30u);
 #define expr_intg(x) \
 	if (numTmp = static_cast<uint64_t>(asciiToValueTable[static_cast<uint64_t>(cur[x])]); numTmp <= 9) [[likely]] \
 		sig = static_cast<uint64_t>(numTmp) + sig * 10ull; \
@@ -348,7 +361,7 @@ namespace jsonifier_internal {
 		} else {
 			goto digi_exp_more;
 		}
-	digi_exp_more : {
+	digi_exp_more: {
 		cur += (*cur == 0x2Bu || *cur == 0x2Du);
 		if (auto newValue = asciiToValueTable[static_cast<uint64_t>(*cur)]; newValue > 9) [[unlikely]] {
 			goto digi_finish;
@@ -396,5 +409,114 @@ namespace jsonifier_internal {
 			value /= static_cast<value_type01>(powersOfTenInt[-exp]);
 		}
 		return true;
+	}
+
+	template<class value_type> JSONIFIER_INLINE constexpr bool stoui64(value_type& res, const char*& c) noexcept {
+		if (!isDigit(*c)) [[unlikely]] {
+			return false;
+		}
+
+		constexpr std::array<uint32_t, 4> max_digits_from_size = { 4, 6, 11, 20 };
+		constexpr auto N										  = max_digits_from_size[std::bit_width(sizeof(value_type)) - 1];
+
+		std::array<uint8_t, N> digits{ 0 };
+		auto next_digit	   = digits.begin();
+		auto consume_digit = [&c, &next_digit, &digits]() {
+			if (next_digit < digits.cend()) [[likely]] {
+				*next_digit = (*c - '0');
+				++next_digit;
+			}
+			++c;
+		};
+
+		if (*c == '0') {
+			++c;
+			++next_digit;
+
+			if (*c == '0') [[unlikely]] {
+				return false;
+			}
+		}
+
+		while (isDigit(*c)) {
+			consume_digit();
+		}
+		auto n = std::distance(digits.begin(), next_digit);
+
+		if (*c == '.') {
+			++c;
+			while (isDigit(*c)) {
+				consume_digit();
+			}
+		}
+
+		if (*c == 'e' || *c == 'E') {
+			++c;
+
+			bool negative = false;
+			if (*c == '+' || *c == '-') {
+				negative = (*c == '-');
+				++c;
+			}
+			uint8_t exp = 0;
+			while (isDigit(*c) && exp < 128) {
+				exp = 10 * exp + (*c - '0');
+				++c;
+			}
+			n += negative ? -exp : exp;
+		}
+
+		res = 0;
+		if (n < 0) [[unlikely]] {
+			return true;
+		}
+
+		if constexpr (std::same_as<value_type, uint64_t>) {
+			if (n > 20) [[unlikely]] {
+				return false;
+			}
+
+			if (n == 20) [[unlikely]] {
+				for (auto k = 0; k < 19; ++k) {
+					res = 10 * res + digits[k];
+				}
+
+				if (isSafeMultiplication10(res)) [[likely]] {
+					res *= 10;
+				} else [[unlikely]] {
+					return false;
+				}
+				if (isSafeAddition(res, digits.back())) [[likely]] {
+					res += digits.back();
+				} else [[unlikely]] {
+					return false;
+				}
+			} else [[likely]] {
+				for (auto k = 0; k < n; ++k) {
+					res = 10 * res + digits[k];
+				}
+			}
+		} else {
+			if (n >= N) [[unlikely]] {
+				return false;
+			} else [[likely]] {
+				for (auto k = 0; k < n; ++k) {
+					res = 10 * res + digits[k];
+				}
+			}
+		}
+
+		return true;
+	}
+
+	template<class value_type> JSONIFIER_INLINE constexpr bool stoui64(value_type& res, auto& it) noexcept {
+		static_assert(sizeof(*it) == sizeof(char));
+		const char* cur = reinterpret_cast<const char*>(&*it);
+		const char* beg = cur;
+		if (stoui64(res, cur)) {
+			it += (cur - beg);
+			return true;
+		}
+		return false;
 	}
 }

@@ -87,7 +87,11 @@ namespace jsonifier_internal {
 			while (newIndex && *(newIndex) != std::numeric_limits<uint64_t>::max()) {
 				++newIndex;
 			}
-			return &stringView[*newIndex];
+			if (newIndex != nullptr) {
+				return &stringView[*newIndex];
+			} else {
+				return nullptr;
+			}
 		}
 
 		JSONIFIER_INLINE pointer getRootPtr() const {
@@ -111,7 +115,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE operator bool() const {
-			return *currentIndex != std::numeric_limits<uint64_t>::max();
+			return currentIndex && *currentIndex != std::numeric_limits<uint64_t>::max();
 		}
 
 		JSONIFIER_INLINE void swap(simd_structural_iterator& other) {
@@ -128,5 +132,8 @@ namespace jsonifier_internal {
 		string_view_ptr stringView{};
 		string_type* stringBuffer{};
 	};
+
+	template<typename value_type>
+	concept simd_structural_iterator_t = jsonifier::concepts::is_specialization_v<jsonifier::concepts::unwrap_t<value_type>, simd_structural_iterator>;
 
 }

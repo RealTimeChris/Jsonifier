@@ -59,36 +59,9 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Colon:
-						[[fallthrough]];
 					[[unlikely]] case json_structural_type::Comma:
-						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Array_Start:
-						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Object_Start:
-						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Object_End:
-						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Array_End : {
 						appendCharacter(*previousPtr, outPtr);
 						break;
-					}
-					[[unlikely]] case json_structural_type::Bool : {
-						if (*previousPtr == 't') {
-							std::memcpy(outPtr, trueString.data(), trueString.size());
-							outPtr += trueString.size();
-							break;
-						} else {
-							std::memcpy(outPtr, falseString.data(), falseString.size());
-							outPtr += falseString.size();
-							break;
-						}
-					}
-					[[unlikely]] case json_structural_type::Null : {
-						std::memcpy(outPtr, nullString.data(), nullString.size());
-						outPtr += nullString.size();
-						break;
-					}
 					[[likely]] case json_structural_type::Number : {
 						currentDistance = 0;
 						while (!whiteSpaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
@@ -102,6 +75,34 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
+					[[unlikely]] case json_structural_type::Colon:
+						[[fallthrough]];
+					[[unlikely]] case json_structural_type::Array_Start:
+						[[fallthrough]];
+					[[unlikely]] case json_structural_type::Array_End:
+						appendCharacter(*previousPtr, outPtr);
+						break;
+					[[unlikely]] case json_structural_type::Null : {
+						std::memcpy(outPtr, nullString.data(), nullString.size());
+						outPtr += nullString.size();
+						break;
+					}
+					[[unlikely]] case json_structural_type::Bool : {
+						if (*previousPtr == 't') {
+							std::memcpy(outPtr, trueString.data(), trueString.size());
+							outPtr += trueString.size();
+							break;
+						} else {
+							std::memcpy(outPtr, falseString.data(), falseString.size());
+							outPtr += falseString.size();
+							break;
+						}
+					}
+					[[unlikely]] case json_structural_type::Object_Start:
+						[[fallthrough]];
+					[[unlikely]] case json_structural_type::Object_End:
+						appendCharacter(*previousPtr, outPtr);
+						break;
 					[[unlikely]] case json_structural_type::Unset:
 						[[fallthrough]];
 						[[unlikely]] default : {

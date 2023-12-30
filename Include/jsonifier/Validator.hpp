@@ -63,9 +63,9 @@ namespace jsonifier_internal {
 				return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, iter.getErrors(), depth);
 			} else if (*iter == 0x22u) {
 				return validate_impl<json_structural_type::String, derived_type>::impl(iter, iter.getErrors());
-			} else if (digitTable[*iter]) {
+			} else if (numberTable[*iter]) {
 				return validate_impl<json_structural_type::Number, derived_type>::impl(iter, iter.getErrors());
-			} else if (*iter == 0x74u || *iter == 0x66u) {
+			} else if (boolTable[*iter]) {
 				return validate_impl<json_structural_type::Bool, derived_type>::impl(iter, iter.getErrors());
 			} else if (*iter == 0x6Eu) {
 				return validate_impl<json_structural_type::Null, derived_type>::impl(iter, iter.getErrors());

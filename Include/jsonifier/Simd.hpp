@@ -138,8 +138,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE auto begin() {
-			structuralIndices[tapeIndex] = std::numeric_limits<uint64_t>::max();
-			return structuralIndices.data();
+			return structuralIndices.size() > 0 ? structuralIndices[tapeIndex] = std::numeric_limits<uint64_t>::max(), structuralIndices.data() : structuralIndices.data();
 		}
 
 	  protected:

@@ -38,7 +38,7 @@ namespace jsonifier {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using iterator				 = jsonifier_internal::iterator<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
@@ -316,9 +316,9 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void erase(iterator iter) {
-			if (iter < begin() || iter >= end()) {
-				return;
+		JSONIFIER_INLINE iterator erase(iterator iter) {
+			if (iter < begin() || iter > end()) {
+				return end();
 			}
 
 			size_type eraseIndex = static_cast<size_type>(iter - begin());
@@ -329,6 +329,7 @@ namespace jsonifier {
 			std::uninitialized_move(dataVal + eraseIndex + 1, dataVal + sizeVal, dataVal + eraseIndex);
 
 			sizeVal = newSize;
+			return iterator{ dataVal + eraseIndex };
 		}
 
 		JSONIFIER_INLINE void shrinkToFit() {

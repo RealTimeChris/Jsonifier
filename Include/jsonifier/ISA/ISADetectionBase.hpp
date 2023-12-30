@@ -107,9 +107,12 @@
 using simd_int_512	 = __m512i;
 using simd_int_256	 = __m256i;
 using simd_int_128	 = __m128i;
-using simd_float_512 = __m512d;
-using simd_float_256 = __m256d;
-using simd_float_128 = __m128d;
+using simd_float_512 = __m512;
+using simd_float_256 = __m256;
+using simd_float_128 = __m128;
+using simd_double_512 = __m512d;
+using simd_double_256 = __m256d;
+using simd_double_128 = __m128d;
 
 #else
 
@@ -154,6 +157,7 @@ concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap_t<v
 constexpr uint64_t BitsPerStep{ 256 };
 using string_parsing_type = uint32_t;
 using simd_int_t		  = simd_int_256;
+using simd_float_t		  = simd_float_256;
 template<typename value_type>
 concept simd_int_type = std::same_as<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
 
@@ -229,6 +233,15 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept simd_int_512_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_int_512>;
 
+	template<typename value_type>
+	concept simd_float_128_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_float_128>;
+
+	template<typename value_type>
+	concept simd_float_256_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_float_256>;
+
+	template<typename value_type>
+	concept simd_float_512_t = std::same_as<jsonifier::concepts::unwrap_t<value_type>, simd_float_512>;
+
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
 	template<simd_int_128_t simd_int_type_new, typename char_type> JSONIFIER_INLINE simd_int_type_new gatherValues(char_type* str) {
@@ -263,6 +276,18 @@ namespace jsonifier_internal {
 
 	template<simd_int_256_t simd_int_type_new, typename char_type> JSONIFIER_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
 		_mm256_store_si256(reinterpret_cast<__m256i*>(storageLocation), value);
+	}
+
+	template<simd_float_256_t simd_float_type_new, typename char_type> JSONIFIER_INLINE void store(const simd_float_type_new& value, char_type* storageLocation) {
+		JSONIFIER_ALIGN float newArray[sizeof(simd_float_type_new) / sizeof(float)]{};
+		_mm256_store_ps(newArray, value);
+		std::memcpy(storageLocation, newArray, sizeof(simd_float_type_new));
+	}
+
+	template<simd_float_256_t simd_float_type_new, typename char_type> JSONIFIER_INLINE simd_float_type_new gatherValues(char_type* str) {
+		JSONIFIER_ALIGN float newArray[sizeof(simd_float_type_new) / sizeof(float)]{};
+		std::memcpy(newArray, str, sizeof(simd_float_type_new));
+		return _mm256_load_ps(newArray);
 	}
 
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
@@ -373,26 +398,29 @@ namespace jsonifier_internal {
 			return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(value, other)));
 		}
 
-		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectStructuralsAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
+		template<size_t... indices>
+		JSONIFIER_INLINE static simd_int_t collectStructuralsAsSimdBase(const simd_int_t (&values)[sizeof...(indices)], std::index_sequence<indices...>) {
+			JSONIFIER_ALIGN string_parsing_type valuesNew[sizeof...(indices)]{};
 			((valuesNew[indices] = opCmpEq(opShuffle(opTable<simd_int_t>, values[indices]), opOr(chars<simd_int_t>, values[indices]))), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
-		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectWhitespaceAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
+		template<size_t... indices>
+		JSONIFIER_INLINE static simd_int_t collectWhitespaceAsSimdBase(const simd_int_t (&values)[sizeof...(indices)], std::index_sequence<indices...>) {
+			JSONIFIER_ALIGN string_parsing_type valuesNew[sizeof...(indices)]{};
 			((valuesNew[indices] = opCmpEq(opShuffle(whitespaceTable<simd_int_t>, values[indices]), values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
-		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectBackslashesAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
+		template<size_t... indices>
+		JSONIFIER_INLINE static simd_int_t collectBackslashesAsSimdBase(const simd_int_t (&values)[sizeof...(indices)], std::index_sequence<indices...>) {
+			JSONIFIER_ALIGN string_parsing_type valuesNew[sizeof...(indices)]{};
 			((valuesNew[indices] = opCmpEq(backslashes<simd_int_t>, values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}
 
-		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectQuotesAsSimdBase(const simd_int_t (&values)[StridesPerStep], std::index_sequence<indices...>) {
-			JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep]{};
+		template<size_t... indices> JSONIFIER_INLINE static simd_int_t collectQuotesAsSimdBase(const simd_int_t (&values)[sizeof...(indices)], std::index_sequence<indices...>) {
+			JSONIFIER_ALIGN string_parsing_type valuesNew[sizeof...(indices)]{};
 			((valuesNew[indices] = opCmpEq(quotes<simd_int_t>, values[indices])), ...);
 			return gatherValues<simd_int_t>(valuesNew);
 		}

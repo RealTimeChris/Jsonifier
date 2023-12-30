@@ -30,63 +30,15 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
-	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
-		const auto k = index + 1;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
-
-	template<json_structural_type c, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index) noexcept {
-		const auto k = index + 1;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
-	JSONIFIER_INLINE void writeCharacterUnchecked(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, uint64_t size, typename char_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index, const char_type (&str)[size]) noexcept {
-		static constexpr auto sizeNew = size - 1;
-		const auto k				  = index + sizeNew;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-		std::memcpy(buffer.data() + std::forward<index_type>(index), str, sizeNew);
-		index += sizeNew;
-	}
-
-	template<const jsonifier::string_view& str, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index) noexcept {
-		const auto sizeNew = str.size();
-		const auto k	   = index + sizeNew;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-		std::memcpy(buffer.data() + std::forward<index_type>(index), str.data(), sizeNew);
-		index += sizeNew;
-	}
-
 	template<jsonifier::concepts::jsonifier_value_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
 		template<jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type,
 			jsonifier::concepts::has_find... key_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, key_type&&... excludedKeys) {
 			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>>;
 			writeCharacter<Object_Start>(buffer, index);
-			serializeObjects<n, 0, true>(value, buffer, index, excludedKeys...);
+			if constexpr (n > 0) {
+				serializeObjects<n, 0, true>(value, buffer, index, excludedKeys...);
+			}
 			writeCharacter<Object_End>(buffer, index);
 		}
 
@@ -128,7 +80,7 @@ namespace jsonifier_internal {
 				serializer<derived_type>::impl(getMember(value, get<0>(jsonifier::concepts::coreV<value_type_new>)), buffer, index);
 			}
 		}
-	};
+	};  
 
 	template<jsonifier::concepts::map_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
@@ -141,7 +93,8 @@ namespace jsonifier_internal {
 				writeCharacter<Colon>(buffer, index);
 				serializer<derived_type>::impl(iter->second, buffer, index);
 				++iter;
-				for (; iter != value.end(); ++iter) {
+				auto endIter = value.end();
+				for (; iter != endIter; ++iter) {
 					writeCharacter<Comma>(buffer, index);
 					serializer<derived_type>::impl(iter->first, buffer, index);
 					writeCharacter<Colon>(buffer, index);
@@ -164,22 +117,63 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<jsonifier::concepts::optional_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
+		template<jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+			if (value.has_value()) {
+				serializer<derived_type>::impl(value.value(), buffer, index);
+			}
+		}
+	};
+
+	template<jsonifier::concepts::array_tuple_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
+		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+			static constexpr auto size = std::tuple_size_v<jsonifier::concepts::unwrap_t<value_type>>;
+			writeCharacter<Array_Start>(buffer, index);
+			serializeObjects<size, 0>(value, buffer, index);
+			writeCharacter<Array_End>(buffer, index);
+		}
+
+		template<uint64_t n, uint64_t indexNew = 0, bool areWeFirst = true, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type,
+			jsonifier::concepts::uint64_type index_type>
+		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index) {
+			auto& item = std::get<indexNew>(value);
+			
+			if constexpr (indexNew > 0 && !areWeFirst) {
+				writeCharacter<Comma>(buffer, index);
+			}
+
+			serializer<derived_type>::impl(item, buffer, index);
+			if constexpr (indexNew < n - 1) {
+				serializeObjects<n, indexNew + 1, false>(value, buffer, index);
+			}
+		}
+	};
+
 	template<jsonifier::concepts::vector_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
 		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			auto n = value.size();
 			writeCharacter<Array_Start>(buffer, index);
 			if (n > 0) {
-				auto newPtr = value.data();
+				auto newPtr = value.begin();
 				serializer<derived_type>::impl(*newPtr, buffer, index);
 				++newPtr;
-				for (uint64_t x = 1; x < n; ++x) {
+				auto endPtr = value.end();
+				for (; newPtr < endPtr; ++newPtr) {
 					writeCharacter<Comma>(buffer, index);
 					serializer<derived_type>::impl(*newPtr, buffer, index);
-					++newPtr;
 				}
 			}
 			writeCharacter<Array_End>(buffer, index);
+		}
+	};
+
+	template<jsonifier::concepts::pointer_t value_type_new, typename derived_type> struct serialize_impl<value_type_new, derived_type> {
+		template<jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index) {
+			serializer<derived_type>::impl(*value, buffer, index);
 		}
 	};
 
