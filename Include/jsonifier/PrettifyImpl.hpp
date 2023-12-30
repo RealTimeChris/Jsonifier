@@ -66,7 +66,14 @@ namespace jsonifier_internal {
 				return std::numeric_limits<uint64_t>::max();
 			}
 			++indent;
-			appendNewLine<tabs, indentSize>(outPtr, indent);
+			previousStructural[indent] = asciiClassesMap[*iter];
+			if constexpr (newLinesInArray) {
+				if (*iter == json_structural_type::Object_Start) {
+					appendNewLine<tabs, indentSize>(outPtr, indent);
+				}
+			} else {
+				appendCharacter(' ', outPtr);
+			}
 			auto previousVal = iter.operator->();
 			++iter;
 			auto currentVal = iter.operator->();
@@ -78,11 +85,6 @@ namespace jsonifier_internal {
 				switch (asciiClassesMap[*currentVal]) {
 					[[likely]] case json_structural_type::String : {
 						appendValues(currentDistance, outPtr, currentVal);
-						break;
-					}
-					[[unlikely]] case json_structural_type::Colon : {
-						appendCharacter(*currentVal, outPtr);
-						appendCharacter(0x20u, outPtr);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma : {
@@ -98,6 +100,15 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
+					[[unlikely]] case json_structural_type::Number : {
+						appendValues(currentDistance, outPtr, currentVal);
+						break;
+					}
+					[[unlikely]] case json_structural_type::Colon : {
+						appendCharacter(*currentVal, outPtr);
+						appendCharacter(0x20u, outPtr);
+						break;
+					}
 					[[unlikely]] case json_structural_type::Array_Start : {
 						appendCharacter(*currentVal, outPtr);
 						++indent;
@@ -106,8 +117,10 @@ namespace jsonifier_internal {
 							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
 							return std::numeric_limits<uint64_t>::max();
 						}
-						if (*nextVal != 0x5Du) {
+						if (*nextVal != 0x5Du && newLinesInArray) {
 							appendNewLine<tabs, indentSize>(outPtr, indent);
+						} else {
+							appendCharacter(' ', outPtr);
 						}
 						break;
 					}
@@ -117,10 +130,17 @@ namespace jsonifier_internal {
 							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
 							return std::numeric_limits<uint64_t>::max();
 						}
-						if (*previousVal != 0x5Bu) {
+						if (*previousVal != 0x5Bu && newLinesInArray) {
 							appendNewLine<tabs, indentSize>(outPtr, indent);
+						} else {
+							appendCharacter(' ', outPtr);
 						}
 						appendCharacter(*currentVal, outPtr);
+						break;
+					}
+					[[unlikely]] case json_structural_type::Null : {
+						std::memcpy(outPtr, nullString.data(), nullString.size());
+						outPtr += nullString.size();
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool : {
@@ -133,11 +153,6 @@ namespace jsonifier_internal {
 							outPtr += falseString.size();
 							break;
 						}
-					}
-					[[unlikely]] case json_structural_type::Null : {
-						std::memcpy(outPtr, nullString.data(), nullString.size());
-						outPtr += nullString.size();
-						break;
 					}
 					[[unlikely]] case json_structural_type::Object_Start : {
 						appendCharacter(*currentVal, outPtr);
@@ -164,10 +179,6 @@ namespace jsonifier_internal {
 						appendCharacter(*currentVal, outPtr);
 						break;
 					}
-					[[unlikely]] case json_structural_type::Number : {
-						appendValues(currentDistance, outPtr, currentVal);
-						break;
-					}
 					[[unlikely]] case json_structural_type::Unset:
 						[[fallthrough]];
 						[[unlikely]] default : {
@@ -179,7 +190,13 @@ namespace jsonifier_internal {
 			}
 			if (currentVal && previousVal) [[likely]] {
 				--indent;
-				appendNewLine<tabs, indentSize>(outPtr, indent);
+				if constexpr (newLinesInArray) {
+					if (*iter == json_structural_type::Object_End) {
+						appendNewLine<tabs, indentSize>(outPtr, indent);
+					}
+				} else {
+					appendCharacter(' ', outPtr);
+				}
 				appendCharacter(*currentVal, outPtr);
 			}
 			return static_cast<uint64_t>(outPtr - out.data());

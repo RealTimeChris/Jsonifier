@@ -40,8 +40,12 @@ namespace jsonifier_internal {
 		constexpr iterator() noexcept : ptr(nullptr) {
 		}
 
-		constexpr iterator(const pointer ptrNew) noexcept : ptr(ptrNew) {
+		constexpr iterator& operator=(pointer ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
 		}
+
+		constexpr iterator(pointer ptrNew, pointer rootPtrNew, pointer endPtrNew) noexcept : rootPtr{ rootPtrNew }, endPtr{ endPtrNew }, ptr{ ptrNew } {};
 
 		constexpr reference operator*() const noexcept {
 			return *operator->();
@@ -51,8 +55,20 @@ namespace jsonifier_internal {
 			return ptr;
 		}
 
+		constexpr pointer getRootPtr() const noexcept {
+			return reinterpret_cast<pointer>(ptr);
+		}
+
+		constexpr pointer getEndPtr() const noexcept {
+			return reinterpret_cast<pointer>(endPtr);
+		}
+
+		constexpr size_type getCurrentStringIndex() const noexcept {
+			return ptr - rootPtr;
+		}
+
 		constexpr explicit operator bool() const noexcept {
-			return ptr != nullptr;
+			return ptr != endPtr;
 		}
 
 		constexpr iterator& operator++() noexcept {
@@ -111,8 +127,8 @@ namespace jsonifier_internal {
 			return *(*this + offset);
 		}
 
-		constexpr bool operator==(const iterator& right) const noexcept {
-			return ptr == right.ptr;
+		constexpr bool operator==(const iterator&) const noexcept {
+			return ptr == endPtr;
 		}
 
 		constexpr std::strong_ordering operator<=>(const iterator& right) const noexcept {
@@ -120,6 +136,122 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
+		pointer rootPtr{};
+		pointer endPtr{};
+		pointer ptr{};
+	};
+
+	template<typename value_type_new> class const_iterator {
+	  public:
+		using iterator_concept	= std::contiguous_iterator_tag;
+		using iterator_category = std::contiguous_iterator_tag;
+		using value_type		= value_type_new;
+		using difference_type	= std::ptrdiff_t;
+		using pointer			= const value_type*;
+		using reference			= const value_type&;
+		using size_type			= int64_t;
+
+		constexpr const_iterator() noexcept : ptr(nullptr) {
+		}
+
+		constexpr const_iterator& operator=(pointer ptrNew) noexcept {
+			ptr = ptrNew;
+			return *this;
+		}
+
+		constexpr const_iterator(pointer ptrNew, pointer rootPtrNew, pointer endPtrNew) noexcept : rootPtr{ rootPtrNew }, endPtr{ endPtrNew }, ptr{ ptrNew } {};
+
+		constexpr reference operator*() const noexcept {
+			return *operator->();
+		}
+
+		constexpr pointer operator->() const noexcept {
+			return ptr;
+		}
+
+		constexpr pointer getRootPtr() const noexcept {
+			return reinterpret_cast<pointer>(ptr);
+		}
+
+		constexpr pointer getEndPtr() const noexcept {
+			return reinterpret_cast<pointer>(endPtr);
+		}
+
+		constexpr size_type getCurrentStringIndex() const noexcept {
+			return ptr - rootPtr;
+		}
+
+		constexpr explicit operator bool() const noexcept {
+			return ptr != endPtr;
+		}
+
+		constexpr const_iterator& operator++() noexcept {
+			++ptr;
+			return *this;
+		}
+
+		constexpr const_iterator operator++(int32_t) noexcept {
+			const_iterator temp = *this;
+			++*this;
+			return temp;
+		}
+
+		constexpr const_iterator& operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+
+		constexpr const_iterator operator--(int32_t) noexcept {
+			const_iterator temp = *this;
+			--*this;
+			return temp;
+		}
+
+		constexpr const_iterator& operator+=(const difference_type offset) noexcept {
+			ptr += offset;
+			return *this;
+		}
+
+		constexpr const_iterator operator+(const difference_type offset) const noexcept {
+			const_iterator temp = *this;
+			temp += offset;
+			return temp;
+		}
+
+		friend constexpr const_iterator operator+(const difference_type offset, const const_iterator<pointer>& next) noexcept {
+			return next + offset;
+		}
+
+		constexpr const_iterator& operator-=(const difference_type offset) noexcept {
+			ptr -= offset;
+			return *this;
+		}
+
+		constexpr const_iterator operator-(const difference_type offset) const noexcept {
+			const_iterator temp = *this;
+			temp -= offset;
+			return temp;
+		}
+
+		constexpr difference_type operator-(const const_iterator& right) const noexcept {
+			return static_cast<difference_type>(ptr - right.ptr);
+		}
+
+		constexpr reference operator[](const difference_type offset) const noexcept {
+			return *(*this + offset);
+		}
+
+		constexpr bool operator==(const const_iterator&) const noexcept {
+			return ptr == endPtr;
+		}
+
+		constexpr std::strong_ordering operator<=>(const const_iterator& right) const noexcept {
+			return ptr <=> right.ptr;
+		}
+
+	  protected:
+		pointer rootPtr{};
+		pointer endPtr{};
 		pointer ptr{};
 	};
 

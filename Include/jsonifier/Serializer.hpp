@@ -29,6 +29,56 @@
 
 namespace jsonifier_internal {
 
+	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
+	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
+		const auto k = index + 1;
+		if (k >= buffer.size()) [[unlikely]] {
+			buffer.resize(max(buffer.size() * 2, k));
+		}
+
+		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
+		++index;
+	}
+
+	template<json_structural_type c, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index) noexcept {
+		const auto k = index + 1;
+		if (k >= buffer.size()) [[unlikely]] {
+			buffer.resize(max(buffer.size() * 2, k));
+		}
+
+		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
+		++index;
+	}
+
+	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
+	JSONIFIER_INLINE void writeCharacterUnchecked(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
+		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
+		++index;
+	}
+
+	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, uint64_t size, typename char_type>
+	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index, const char_type (&str)[size]) noexcept {
+		static constexpr auto sizeNew = size - 1;
+		const auto k				  = index + sizeNew;
+		if (k >= buffer.size()) [[unlikely]] {
+			buffer.resize(max(buffer.size() * 2, k));
+		}
+		std::memcpy(buffer.data() + std::forward<index_type>(index), str, sizeNew);
+		index += sizeNew;
+	}
+
+	template<const jsonifier::string_view& str, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index) noexcept {
+		const auto sizeNew = str.size();
+		const auto k	   = index + sizeNew;
+		if (k >= buffer.size()) [[unlikely]] {
+			buffer.resize(max(buffer.size() * 2, k));
+		}
+		std::memcpy(buffer.data() + std::forward<index_type>(index), str.data(), sizeNew);
+		index += sizeNew;
+	}
+
 	template<typename value_type, typename derived_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
@@ -41,7 +91,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
-		template<bool prettify = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
+		template<bool prettify = false, bool newLineInPrettyArrays = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE void serializeJson(value_type&& data, buffer_type&& iter) {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
@@ -51,7 +101,7 @@ namespace jsonifier_internal {
 			}
 			std::memcpy(iter.data(), derivedRef.stringBuffer.data(), derivedRef.index);
 			if constexpr (prettify) {
-				iter = derivedRef.prettify(iter);
+				iter = derivedRef.template prettify<newLineInPrettyArrays, false>(iter);
 			}
 		}
 

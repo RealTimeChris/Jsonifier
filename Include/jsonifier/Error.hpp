@@ -68,19 +68,18 @@ namespace jsonifier_internal {
 		{ error_code::Broken_Object_Start, "Broken Object Start" }, { error_code::Prettify_Error, "Prettify Error" }, { error_code::Minify_Error, "Minify Error" },
 		{ error_code::Validate_Error, "Validate Error" }, { error_code::UnQuoted_String, "UnQuoted String" } };
 
-
 	enum json_structural_type : int8_t {
-		Unset		   = -1,
+		Unset		 = -1,
+		String		 = 0x22u,
+		Comma		 = 0x2Cu,
+		Number		 = 0x2Du,
+		Colon		 = 0x3Au,
+		Array_Start	 = 0x5Bu,
+		Array_End	 = 0x5Du,
+		Null		 = 0x6Eu,
+		Bool		 = 0x74u,
 		Object_Start = 0x7Bu,
-		Object_End   = 0x7Du,
-		Array_Start  = 0x5Bu,
-		Array_End	   = 0x5Du,
-		String	   = 0x22u,
-		Bool		   = 0x74u,
-		Number	   = 0x2Du,
-		Colon		   = 0x3Au,
-		Comma		   = 0x2Cu,
-		Null		   = 0x6Eu
+		Object_End	 = 0x7Du
 	};
 
 	JSONIFIER_INLINE bool isTypeType(uint8_t c) {
@@ -102,7 +101,7 @@ namespace jsonifier_internal {
 		static constexpr jsonifier::string_view unset{ "Unset" };
 		if (isDigitType(charToCheck)) [[likely]] {
 			return number;
-		} else if (charToCheck == 0x74u || charToCheck == 0x66u) [[likely]] {
+		} else if (boolTable[charToCheck]) [[likely]] {
 			return boolean;
 		} else if (charToCheck == 0x7B) [[unlikely]] {
 			return object;
@@ -137,12 +136,12 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
 			}
 			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 			errorType = collectMisReadType(static_cast<uint8_t>(typeNew), errorValue);
 		}
@@ -158,7 +157,7 @@ namespace jsonifier_internal {
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 		}
 
@@ -167,13 +166,13 @@ namespace jsonifier_internal {
 			errorIndex	   = static_cast<uint64_t>(iter.getCurrentStringIndex());
 			errorIndexReal = roundDownToMultiple<BitsPerStep>(static_cast<int64_t>(iter.getCurrentStringIndex()));
 			if (errorIndexReal < jsonifier::string{}.maxSize()) {
-				stringView = iter.getRootPtr();
+				stringView = reinterpret_cast<string_view_ptr>(iter.getRootPtr());
 			}
 			stringLength = static_cast<uint64_t>(iter.getEndPtr() - iter.getRootPtr());
 			location	 = locationNew;
 			errorType	 = typeNew;
 			if (iter) {
-				errorValue = *iter;
+				errorValue = static_cast<uint8_t>(*iter);
 			}
 		}
 
@@ -249,7 +248,8 @@ namespace jsonifier_internal {
 						", in file: " + location.file_name() + ", at: " + jsonifier::toString(location.line()) + ":" + jsonifier::toString(location.column()) +
 						", in function: " + location.function_name() + "()." };
 					if (stringView) {
-						returnValue += "\nHere's some of the string's values:\n" + getStringData(stringView);
+						returnValue += "\nHere's some of the string's values:\n";
+						returnValue += getStringData(stringView);
 					}
 					return returnValue;
 				}
@@ -279,6 +279,7 @@ namespace jsonifier_internal {
 				case error_code::Requires_Array_Or_Object:
 				case error_code::Prettify_Error:
 				case error_code::Validate_Error:
+				case error_code::UnQuoted_String:
 				case error_code::Minify_Error:
 				default: {
 					jsonifier::string returnValue{ "Error of Type: " + errorMap[errorType] + ", at index: " + jsonifier::toString(errorIndex) +

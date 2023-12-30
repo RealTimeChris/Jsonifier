@@ -47,16 +47,16 @@ namespace jsonifier {
 		value_type parseValue;
 	};
 
-	template<typename value_type> struct scalar_value {
+	template<typename value_type> struct scalarue {
 		value_type parseValue;
 	};
 
 	namespace concepts {
 		// from
 		// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
-		template<class, template<class...> class> constexpr bool is_specialization_v = false;
+		template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
 
-		template<template<class...> class value_type, class... Args> constexpr bool is_specialization_v<value_type<Args...>, value_type> = true;
+		template<template<typename...> class value_type, typename... Args> constexpr bool is_specialization_v<value_type<Args...>, value_type> = true;
 
 		template<uint64_t index> using tag = std::integral_constant<uint64_t, index>;
 
@@ -98,7 +98,7 @@ namespace jsonifier {
 			{ value.size() } -> std::same_as<typename unwrap_t<value_type>::size_type>;
 		};
 
-		template<class value_type>
+		template<typename value_type>
 		concept variant_t = is_specialization_v<unwrap_t<value_type>, std::variant>;
 
 		template<typename value_type>
@@ -129,9 +129,14 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept bool_t = std::same_as<unwrap_t<value_type>, bool>;
+				
+		template<typename value_type>
+		concept always_null_t =
+			std::same_as<unwrap_t<value_type>, std::nullptr_t> || std::same_as<unwrap_t<value_type>, std::monostate> || std::same_as<unwrap_t<value_type>, std::nullopt_t>;
 
 		template<typename value_type>
-		concept pointer_t = (std::is_pointer_v<unwrap_t<value_type>> || std::is_null_pointer_v<unwrap_t<value_type>>);
+		concept pointer_t =
+			( std::is_pointer_v<unwrap_t<value_type>> || std::is_null_pointer_v<unwrap_t<value_type>> && !std::is_array_v<unwrap_t<value_type>> )&&!always_null_t<value_type>;
 
 		template<typename value_type>
 		concept signed_t = std::signed_integral<unwrap_t<value_type>> && !bool_t<value_type>;
@@ -187,6 +192,12 @@ namespace jsonifier {
 		} && range<value_type> && map_subscriptable<value_type>;
 
 		template<typename value_type>
+		concept pair_t = requires(value_type value) {
+			typename unwrap_t<value_type>::first_type;
+			typename unwrap_t<value_type>::second_type;
+		};
+
+		template<typename value_type>
 		concept has_emplace_back = requires(value_type value) {
 			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::value_type&>;
 		};
@@ -221,17 +232,13 @@ namespace jsonifier {
 			{ value.jsonifierExcludedKeys };
 		};
 
-		template<class value_type>
-		concept always_null_t =
-			std::same_as<unwrap_t<value_type>, std::nullptr_t> || std::same_as<unwrap_t<value_type>, std::monostate> || std::same_as<unwrap_t<value_type>, std::nullopt_t>;
-
-		template<class value_type>
+		template<typename value_type>
 		concept nullable_t = !string_t<value_type> && requires(value_type value) {
 			bool(value);
 			{ *value };
 		};
 
-		template<class value_type>
+		template<typename value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
 
 		template<typename value_type>
@@ -240,7 +247,7 @@ namespace jsonifier {
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<unwrap_t<value_type>>::parseValue; };
 
-		struct empty_val {
+		struct empty {
 			static constexpr std::tuple<> parseValue{};
 		};
 
@@ -248,7 +255,7 @@ namespace jsonifier {
 			if constexpr (jsonifier_t<value_type>) {
 				return jsonifier::core<unwrap_t<value_type>>::parseValue;
 			} else {
-				return empty_val::parseValue;
+				return empty::parseValue;
 			}
 		}();
 
@@ -263,10 +270,13 @@ namespace jsonifier {
 		template<typename value_type> using core_wrapper_t = unwrap_t<decltype(coreWrapperV<value_type>)>;
 
 		template<typename value_type>
-		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
+		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, scalarue>;
 
 		template<typename value_type>
 		concept jsonifier_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, value>;
+
+		template<typename value_type>
+		concept optional_t = is_specialization_v<unwrap_t<value_type>, std::optional>;
 
 		template<typename value_type>
 		concept enum_t = std::is_enum_v<unwrap_t<value_type>>;
@@ -275,7 +285,7 @@ namespace jsonifier {
 		concept vector_t = ( !map_t<value_type> && vector_subscriptable<value_type> && has_data<value_type> )&&!jsonifier_value_t<value_type> && !has_substr<value_type>;
 
 		template<typename value_type>
-		concept raw_array_t = std::is_array_v<unwrap_t<value_type>> || std::is_pointer_v<unwrap_t<value_type>>;
+		concept raw_array_t = std::is_array_v<unwrap_t<value_type>> && !std::is_pointer_v<unwrap_t<value_type>>;
 
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
@@ -327,7 +337,7 @@ namespace jsonifier {
 
 namespace std {
 
-	template<> struct variant_size<jsonifier::concepts::empty_val> : integral_constant<uint64_t, 0> {};
+	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 
-	template<> struct tuple_size<jsonifier::concepts::empty_val> : integral_constant<uint64_t, 0> {};
+	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 }

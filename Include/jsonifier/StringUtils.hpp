@@ -110,21 +110,32 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE integer_type copyAndFindParse(char_type01* string1, char_type02* string2, simd_type& simdValue) {
+	JSONIFIER_INLINE integer_type copyAndFindParse(char_type01*& string1, char_type02* string2, simd_type& simdValue) {
 		simdValue = gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return tzcnt(static_cast<integer_type>(simd_base::opCmpEq(simdValue, backslashes<simd_type>) | simd_base::opCmpEq(simdValue, quotes<simd_type>)));
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE integer_type copyAndFindParse(char_type01* string1, char_type02* string2, simd_type& simdValue) {
+	JSONIFIER_INLINE integer_type copyAndFindParse(char_type01*& string1, char_type02* string2, simd_type& simdValue) {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return static_cast<integer_type>(tzcnt(static_cast<integer_type>(hasQuote(simdValue) | hasEscape(simdValue))) >> 3u);
 	}
 
+	template<typename simd_type, typename integer_type, typename char_type01> JSONIFIER_INLINE integer_type findParse(char_type01*& string1, simd_type& simdValue) {
+		simdValue = gatherValuesU<simd_type>(string1);
+		return tzcnt(static_cast<integer_type>(simd_base::opCmpEq(simdValue, backslashes<simd_type>) | simd_base::opCmpEq(simdValue, quotes<simd_type>)));
+	}
+
+	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type, typename char_type01>
+	JSONIFIER_INLINE integer_type findParse(char_type01*& string1, simd_type& simdValue) {
+		std::memcpy(&simdValue, string1, sizeof(simd_type));
+		return static_cast<integer_type>(tzcnt(static_cast<integer_type>(hasQuote(simdValue) | hasEscape(simdValue))) >> 3u);
+	}
+
 	template<typename simd_type, typename integer_type, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE integer_type copyAndFindSerialize(char_type01* string1, char_type02* string2, simd_type& simdValue) {
+	JSONIFIER_INLINE integer_type copyAndFindSerialize(char_type01*& string1, char_type02* string2, simd_type& simdValue) {
 		simdValue = gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return tzcnt(static_cast<integer_type>(simd_base::opCmpEq(simd_base::opShuffle(escapeableTable00<simd_type>, simdValue), simdValue) |
@@ -132,16 +143,98 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE integer_type copyAndFindSerialize(char_type01* string1, char_type02* string2, simd_type& simdValue) {
+	JSONIFIER_INLINE integer_type copyAndFindSerialize(char_type01*& string1, char_type02* string2, simd_type& simdValue) {
 		std::memcpy(&simdValue, string1, sizeof(integer_type));
 		std::memcpy(string2, string1, sizeof(integer_type));
 		return static_cast<integer_type>(tzcnt(static_cast<integer_type>(hasQuote(simdValue) | hasEscape(simdValue) | isLess16(simdValue))) >> 3u);
 	}
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseString(const char_type01* string1, char_type02* string2, uint64_t lengthNew);
+	template<typename char_type01> JSONIFIER_INLINE char_type01* skipStringInternal(char_type01*& string1, uint64_t& lengthNew);
+
+	template<uint64_t index = 0, typename char_type01> JSONIFIER_INLINE char_type01* skipStringImpl(char_type01*& string1, uint64_t& lengthNew) {
+		using integer_type						 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::integer_type;
+		using simd_type							 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::type;
+		static constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::bytesProcessed;
+		static constexpr integer_type mask		 = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::mask;
+		simd_type collectionValue{};
+		while (static_cast<int64_t>(lengthNew) >= bytesProcessed) {
+			integer_type nextBackslashOrQuote = findParse<simd_type, integer_type>(string1, collectionValue);
+			if (nextBackslashOrQuote != mask) {
+				auto escapeChar = string1[nextBackslashOrQuote];
+				if (escapeChar == 0x22u) {
+					string1 += nextBackslashOrQuote + 1;
+					return string1;
+				} else {
+					lengthNew -= nextBackslashOrQuote + 2ull;
+					string1 += nextBackslashOrQuote + 2ull;
+				}
+			} else {
+				lengthNew -= bytesProcessed;
+				string1 += bytesProcessed;
+			}
+		}
+		if (static_cast<int64_t>(lengthNew) > 0) {
+			return skipStringInternal(string1, lengthNew);
+		}
+		return string1;
+	}
+
+	template<typename char_type01> JSONIFIER_INLINE char_type01* skipShortStringImpl(char_type01*& string1, uint64_t& lengthNew) {
+		while (static_cast<int64_t>(lengthNew) > 0) {
+			if (*string1 == 0x22u || *string1 == 0x5Cu) {
+				auto escapeChar = *string1;
+				if (escapeChar == 0x22u) {
+					return string1;
+				} else {
+					string1 += 2;
+					lengthNew -= 2;
+				}
+			} else {
+				++string1;
+				--lengthNew;
+			}
+		}
+		return string1;
+	}
+
+	template<typename char_type01> JSONIFIER_INLINE char_type01* skipStringInternal(char_type01*& string1, uint64_t& lengthNew) {
+		if constexpr (avx_integer_list::size >= 4) {
+			if (static_cast<int64_t>(lengthNew) >= 64) {
+				return skipStringImpl<0>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 32) {
+				return skipStringImpl<1>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 16) {
+				return skipStringImpl<2>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 8) {
+				return skipStringImpl<3>(string1, lengthNew);
+			} else {
+				return skipShortStringImpl(string1, lengthNew);
+			}
+		} else if constexpr (avx_integer_list::size >= 3) {
+			if (static_cast<int64_t>(lengthNew) >= 32) {
+				return skipStringImpl<0>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 16) {
+				return skipStringImpl<1>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 8) {
+				return skipStringImpl<2>(string1, lengthNew);
+			} else {
+				return skipShortStringImpl(string1, lengthNew);
+			}
+		} else {
+			if (static_cast<int64_t>(lengthNew) >= 16) {
+				return skipStringImpl<0>(string1, lengthNew);
+			} else if (static_cast<int64_t>(lengthNew) >= 8) {
+				return skipStringImpl<1>(string1, lengthNew);
+			} else {
+				return skipShortStringImpl(string1, lengthNew);
+			}
+		}
+	}
+
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseString(char_type01*& string1, char_type02* string2, uint64_t& lengthNew);
 
 	template<uint64_t index = 0, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE char_type02* parseStringImpl(const char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+	JSONIFIER_INLINE char_type02* parseStringImpl(char_type01*& string1, char_type02* string2, uint64_t& lengthNew) {
 		using integer_type						 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::integer_type;
 		using simd_type							 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::type;
 		static constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::bytesProcessed;
@@ -152,6 +245,7 @@ namespace jsonifier_internal {
 			if (nextBackslashOrQuote != mask) {
 				auto escapeChar = string1[nextBackslashOrQuote];
 				if (escapeChar == 0x22u) {
+					string1 += nextBackslashOrQuote;
 					return string2 + nextBackslashOrQuote;
 				} else if (escapeChar == 0x5Cu) {
 					escapeChar = string1[nextBackslashOrQuote + 1];
@@ -164,11 +258,11 @@ namespace jsonifier_internal {
 						}
 						continue;
 					}
-					escapeChar = escapeMap[escapeChar];
+					escapeChar = escapeMap<char_type01>[escapeChar];
 					if (escapeChar == 0u) {
 						return static_cast<char_type02*>(nullptr);
 					}
-					string2[nextBackslashOrQuote] = escapeChar;
+					string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
 					lengthNew -= nextBackslashOrQuote + 2ull;
 					string2 += nextBackslashOrQuote + 1ull;
 					string1 += nextBackslashOrQuote + 2ull;
@@ -189,9 +283,9 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseShortStringImpl(const char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseShortStringImpl(char_type01*& string1, char_type02* string2, uint64_t& lengthNew) {
 		while (static_cast<int64_t>(lengthNew) > 0) {
-			*string2 = *string1;
+			*string2 = static_cast<char_type02>(*string1);
 			if (*string1 == 0x22u || *string1 == 0x5Cu) {
 				auto escapeChar = *string1;
 				if (escapeChar == 0x22u) {
@@ -204,11 +298,11 @@ namespace jsonifier_internal {
 						}
 						continue;
 					}
-					escapeChar = escapeMap[escapeChar];
+					escapeChar = escapeMap<char_type01>[escapeChar];
 					if (escapeChar == 0) {
 						return nullptr;
 					}
-					string2[0] = escapeChar;
+					string2[0] = static_cast<char_type02>(escapeChar);
 					string2 += 1;
 					string1 += 2;
 					lengthNew -= 2;
@@ -222,7 +316,7 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseString(const char_type01* string1, char_type02* string2, uint64_t lengthNew) {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseString(char_type01*& string1, char_type02* string2, uint64_t& lengthNew) {
 		if constexpr (avx_integer_list::size >= 4) {
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				return parseStringImpl<0>(string1, string2, lengthNew);
@@ -256,11 +350,10 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename char_type01, typename char_type02>
-	JSONIFIER_INLINE void serializeString(const char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew);
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE void serializeString(char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew);
 
 	template<uint64_t index = 0, typename char_type01, typename char_type02>
-	JSONIFIER_INLINE void serializeStringImpl(const char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
+	JSONIFIER_INLINE void serializeStringImpl(char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
 		using integer_type						 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::integer_type;
 		using simd_type							 = typename jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::type;
 		static constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<avx_integer_list, index>::type::bytesProcessed;
@@ -297,7 +390,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename char_type01, typename char_type02>
-	JSONIFIER_INLINE void serializeShortStringImpl(const char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
+	JSONIFIER_INLINE void serializeShortStringImpl(char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
 		const auto* const e = string1 + lengthNew;
 		for (; string1 < e; ++string1) {
 			if (const auto escaped = escapeTable[uint8_t(*string1)]; escaped) [[likely]] {
@@ -312,8 +405,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename char_type01, typename char_type02>
-	JSONIFIER_INLINE void serializeString(const char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE void serializeString(char_type01* string1, char_type02* string2, uint64_t lengthNew, uint64_t& indexNew) {
 		if constexpr (avx_integer_list::size >= 4) {
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				return serializeStringImpl<0>(string1, string2, lengthNew, indexNew);
@@ -347,26 +439,26 @@ namespace jsonifier_internal {
 		}
 	}
 
-	JSONIFIER_INLINE bool parseBool(bool& value, string_view_ptr json) {
+	template<typename char_type> JSONIFIER_INLINE uint64_t parseBool(bool& value, char_type* json) {
 		uint8_t valueNew00[5]{ "true" };
 		uint8_t valueNew01[6]{ "false" };
 		if (compareShort(valueNew00, json, 4)) {
 			value = true;
-			return true;
+			return 4;
 		} else if (compareShort(valueNew01, json, 5)) {
 			value = false;
-			return true;
+			return 5;
 		} else {
-			return false;
+			return 0;
 		}
 	}
 
-	JSONIFIER_INLINE bool parseNull(string_view_ptr json) {
+	template<typename char_type> JSONIFIER_INLINE uint64_t parseNull(char_type* json) {
 		uint8_t valueNew00[5]{ "null" };
 		if (compareShort(valueNew00, json, 4)) {
-			return true;
+			return 4;
 		} else {
-			return false;
+			return 0;
 		}
 	}
 }// namespace jsonifier_internal

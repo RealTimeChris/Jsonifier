@@ -45,9 +45,9 @@ target_compile_options(
 target_link_options(
 	"Json-Performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
+	#"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
+	#"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+	#"$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
 )
 
 if (WIN32)

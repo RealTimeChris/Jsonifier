@@ -751,7 +751,7 @@
                     "avatar_decoration_data": null,
                     "avatar": "c9e1c0a7da6142ed49d140fe78567fdd"
                 },
-                "roles": [],
+                "roles": [  ],
                 "premium_since": null,
                 "pending": false,
                 "nick": null,
@@ -1278,7 +1278,7 @@
                     "avatar_decoration_data": null,
                     "avatar": "157e517cdbf371a47aaead44675714a3"
                 },
-                "roles": [],
+                "roles": [  ],
                 "premium_since": null,
                 "pending": false,
                 "nick": null,
@@ -1380,7 +1380,7 @@
                     "avatar_decoration_data": null,
                     "avatar": "e56c6b0bb6b74490c6afbc44a67e0aca"
                 },
-                "roles": [],
+                "roles": [  ],
                 "premium_since": null,
                 "pending": false,
                 "nick": null,
@@ -2320,11 +2320,11 @@
         "explicit_content_filter": 2,
         "discovery_splash": null,
         "hub_type": null,
-        "guild_scheduled_events": [],
+        "guild_scheduled_events": [  ],
         "mfa_level": 0,
         "id": "1162943351935467552",
         "unavailable": false,
-        "voice_states": [],
+        "voice_states": [  ],
         "nsfw": false,
         "verification_level": 1,
         "name": "Crazy Rooster",
@@ -2343,7 +2343,7 @@
                     "web": "dnd"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2354,7 +2354,7 @@
                     "web": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2365,7 +2365,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2400,7 +2400,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2411,7 +2411,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2459,7 +2459,7 @@
                     "desktop": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2470,7 +2470,7 @@
                     "web": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2481,7 +2481,7 @@
                     "mobile": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2492,7 +2492,7 @@
                     "desktop": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2577,7 +2577,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2588,7 +2588,7 @@
                     "desktop": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2599,7 +2599,7 @@
                     "web": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2647,7 +2647,7 @@
                     "desktop": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2658,7 +2658,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2744,7 +2744,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2755,7 +2755,7 @@
                     "desktop": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2766,7 +2766,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2777,7 +2777,7 @@
                     "web": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2788,7 +2788,7 @@
                     "desktop": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2890,7 +2890,7 @@
                     "mobile": "idle"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2901,7 +2901,7 @@
                     "web": "online"
                 },
                 "broadcast": null,
-                "activities": []
+                "activities": [  ]
             },
             {
                 "user": {
@@ -2941,7 +2941,7 @@
                 ]
             }
         ],
-        "threads": [],
+        "threads": [  ],
         "max_stage_video_channel_users": 50,
         "premium_progress_bar_enabled": false,
         "afk_timeout": 300,
@@ -3838,7 +3838,7 @@
                 "version": 1699458673671,
                 "type": 4,
                 "position": 0,
-                "permission_overwrites": [],
+                "permission_overwrites": [  ],
                 "name": "Discussions",
                 "id": "1162943352602382357",
                 "flags": 0
@@ -4289,7 +4289,7 @@
                 "version": 1700102834318,
                 "type": 4,
                 "position": 1,
-                "permission_overwrites": [],
+                "permission_overwrites": [  ],
                 "name": "AI",
                 "id": "1171997178487636008",
                 "flags": 0
@@ -4486,7 +4486,7 @@
         ],
         "system_channel_id": "1169455653148966952",
         "member_count": 88,
-        "embedded_activities": [],
+        "embedded_activities": [  ],
         "afk_channel_id": null,
         "home_header": null,
         "premium_tier": 0,
@@ -4495,7 +4495,7 @@
             "2": 6,
             "1": 371
         },
-        "stage_instances": [],
+        "stage_instances": [  ],
         "version": 1701742135723,
         "banner": null,
         "owner_id": "1119845619771650049",
@@ -4503,7 +4503,7 @@
         "emojis": [
             {
                 "version": 1698896133800,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "1181wahhhhh",
                 "managed": false,
@@ -4513,7 +4513,7 @@
             },
             {
                 "version": 1698896134186,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "1498pensivebetrayal",
                 "managed": false,
@@ -4523,7 +4523,7 @@
             },
             {
                 "version": 1698896134414,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "1536dynlove",
                 "managed": false,
@@ -4533,7 +4533,7 @@
             },
             {
                 "version": 1698896134727,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "2682shush",
                 "managed": false,
@@ -4543,7 +4543,7 @@
             },
             {
                 "version": 1698896135975,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "2979originalmadman",
                 "managed": false,
@@ -4553,7 +4553,7 @@
             },
             {
                 "version": 1698896136279,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "3140murder",
                 "managed": false,
@@ -4563,7 +4563,7 @@
             },
             {
                 "version": 1698896136601,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "3938_xok_cursed",
                 "managed": false,
@@ -4573,7 +4573,7 @@
             },
             {
                 "version": 1698896137134,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "4049watermelonman",
                 "managed": false,
@@ -4583,7 +4583,7 @@
             },
             {
                 "version": 1698896137389,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "4287middlefingercat",
                 "managed": false,
@@ -4593,7 +4593,7 @@
             },
             {
                 "version": 1698896137873,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "4464batcursedemoji",
                 "managed": false,
@@ -4603,7 +4603,7 @@
             },
             {
                 "version": 1698896138224,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "4768kirbykill",
                 "managed": false,
@@ -4613,7 +4613,7 @@
             },
             {
                 "version": 1698896148112,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "4962ayo",
                 "managed": false,
@@ -4623,7 +4623,7 @@
             },
             {
                 "version": 1698896153063,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5091reverse",
                 "managed": false,
@@ -4633,7 +4633,7 @@
             },
             {
                 "version": 1698896153475,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5163coolangry",
                 "managed": false,
@@ -4643,7 +4643,7 @@
             },
             {
                 "version": 1698896153741,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5172shy",
                 "managed": false,
@@ -4653,7 +4653,7 @@
             },
             {
                 "version": 1698896153957,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5471caughtin4k",
                 "managed": false,
@@ -4663,7 +4663,7 @@
             },
             {
                 "version": 1698896154288,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5776flush",
                 "managed": false,
@@ -4673,7 +4673,7 @@
             },
             {
                 "version": 1698896154659,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5816dayruined",
                 "managed": false,
@@ -4683,7 +4683,7 @@
             },
             {
                 "version": 1698896154838,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7088ohgod",
                 "managed": false,
@@ -4693,7 +4693,7 @@
             },
             {
                 "version": 1698896155050,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7148ohgod",
                 "managed": false,
@@ -4703,7 +4703,7 @@
             },
             {
                 "version": 1698896156037,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7909therockshocked",
                 "managed": false,
@@ -4713,7 +4713,7 @@
             },
             {
                 "version": 1698896175805,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7150duolingowithgun",
                 "managed": false,
@@ -4723,7 +4723,7 @@
             },
             {
                 "version": 1698896176222,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7237sadlemonmnm",
                 "managed": false,
@@ -4733,7 +4733,7 @@
             },
             {
                 "version": 1698896176563,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "7816takemylove",
                 "managed": false,
@@ -4743,7 +4743,7 @@
             },
             {
                 "version": 1698896178329,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "8136yessir",
                 "managed": false,
@@ -4753,7 +4753,7 @@
             },
             {
                 "version": 1698896178679,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9001coolbruh",
                 "managed": false,
@@ -4763,7 +4763,7 @@
             },
             {
                 "version": 1698896178898,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9152whyucrying",
                 "managed": false,
@@ -4773,7 +4773,7 @@
             },
             {
                 "version": 1698896179346,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9180surebuddyfrickyou",
                 "managed": false,
@@ -4783,7 +4783,7 @@
             },
             {
                 "version": 1698896179712,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9313typing",
                 "managed": false,
@@ -4793,7 +4793,7 @@
             },
             {
                 "version": 1698896179993,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9343deadmf",
                 "managed": false,
@@ -4803,7 +4803,7 @@
             },
             {
                 "version": 1698896180223,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9409grabright",
                 "managed": false,
@@ -4813,7 +4813,7 @@
             },
             {
                 "version": 1698896180440,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "9783problemsolved",
                 "managed": false,
@@ -4823,7 +4823,7 @@
             },
             {
                 "version": 1698896436893,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "5981gays",
                 "managed": false,
@@ -4833,7 +4833,7 @@
             },
             {
                 "version": 1698896438247,
-                "roles": [],
+                "roles": [  ],
                 "require_colons": true,
                 "name": "1067verifyicon",
                 "managed": false,

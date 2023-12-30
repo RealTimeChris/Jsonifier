@@ -26,6 +26,7 @@
 #include <jsonifier/Derailleur.hpp>
 #include <jsonifier/HashMap.hpp>
 #include <jsonifier/String.hpp>
+#include <map>
 
 namespace std {
 
@@ -45,7 +46,17 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
+	enum class json_type : uint8_t {
+		Unset  = 0,
+		String = 0x22u,
+		Comma  = 0x2Cu,
+		Number = 0x2Du,
+		Colon  = 0x3Au,
+		Array  = 0x5Bu,
+		Null   = 0x6Eu,
+		Bool   = 0x74u,
+		Object = 0x7Bu,
+	};
 
 	class raw_json_data;
 
@@ -64,7 +75,7 @@ namespace jsonifier {
 	class raw_json_data {
 	  public:
 		template<typename value_type> friend inline value_type constructValueFromRawJsonData(const jsonifier::string& jsonData);
-		using object_type = std::unordered_map<jsonifier::string, raw_json_data>;
+		using object_type = std::map<jsonifier::string, raw_json_data>;
 		using array_type  = jsonifier::vector<raw_json_data>;
 
 		JSONIFIER_INLINE raw_json_data() = default;
@@ -93,18 +104,18 @@ namespace jsonifier {
 					jsonifier::string::const_iterator iter = jsonData.begin();
 					jsonifier::string::const_iterator end  = jsonData.end();
 
-					jsonifier_internal::derailleur::skipWs(iter);
-					jsonifier_internal::derailleur::collectCharacter('{', iter, end);
-					auto newCount = jsonifier_internal::derailleur::countValueElements(iter, end);
+					jsonifier_internal::skipWs(iter);
+					jsonifier_internal::collectCharacter('{', iter, end);
+					auto newCount = jsonifier_internal::countValueElements<'{', '}'>(iter, end);
 					for (uint64_t x = 0; x < newCount && iter < end; ++x) {
-						jsonifier_internal::derailleur::skipWs(iter);
-						auto newKey = jsonifier_internal::derailleur::collectKey(iter, end);
-						jsonifier_internal::derailleur::skipWs(iter);
-						jsonifier_internal::derailleur::collectCharacter(':', iter, end);
-						jsonifier_internal::derailleur::skipWs(iter);
-						results.emplace(newKey, jsonifier_internal::derailleur::collectValue(iter, end));
-						jsonifier_internal::derailleur::skipWs(iter);
-						jsonifier_internal::derailleur::collectCharacter(',', iter, end);
+						jsonifier_internal::skipWs(iter);
+						auto newKey = jsonifier_internal::collectKey(iter, end);
+						jsonifier_internal::skipWs(iter);
+						jsonifier_internal::collectCharacter(':', iter, end);
+						jsonifier_internal::skipWs(iter);
+						results.emplace(newKey, jsonifier_internal::collectValue(iter, end));
+						jsonifier_internal::skipWs(iter);
+						jsonifier_internal::collectCharacter(',', iter, end);
 					}
 				}
 				return results;
@@ -120,14 +131,14 @@ namespace jsonifier {
 					jsonifier::string::const_iterator iter = jsonData.begin();
 					jsonifier::string::const_iterator end  = jsonData.end();
 
-					jsonifier_internal::derailleur::skipWs(iter);
-					jsonifier_internal::derailleur::collectCharacter('[', iter, end);
-					auto newCount = jsonifier_internal::derailleur::countValueElements(iter, end);
+					jsonifier_internal::skipWs(iter);
+					jsonifier_internal::collectCharacter('[', iter, end);
+					auto newCount = jsonifier_internal::countValueElements<'[', ']'>(iter, end);
 					for (uint64_t x = 0; x < newCount && iter < end; ++x) {
-						jsonifier_internal::derailleur::skipWs(iter);
-						results.emplace_back(jsonifier_internal::derailleur::collectValue(iter, end));
-						jsonifier_internal::derailleur::skipWs(iter);
-						jsonifier_internal::derailleur::collectCharacter(',', iter, end);
+						jsonifier_internal::skipWs(iter);
+						results.emplace_back(jsonifier_internal::collectValue(iter, end));
+						jsonifier_internal::skipWs(iter);
+						jsonifier_internal::collectCharacter(',', iter, end);
 					}
 				}
 				return results;

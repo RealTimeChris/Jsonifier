@@ -178,7 +178,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::char_t value_type_newer> JSONIFIER_INLINE string_base& operator=(value_type_newer other) {
-			pushBack(static_cast<value_type>(other));
+			emplace_back(static_cast<value_type>(other));
 			return *this;
 		}
 
@@ -217,11 +217,11 @@ namespace jsonifier {
 		}
 
 		constexpr iterator begin() noexcept {
-			return iterator{ dataVal };
+			return iterator{ dataVal, dataVal, dataVal + sizeVal };
 		}
 
 		constexpr iterator end() noexcept {
-			return iterator{ dataVal + sizeVal };
+			return iterator{ dataVal + sizeVal, dataVal + sizeVal, dataVal + sizeVal };
 		}
 
 		constexpr reverse_iterator rbegin() noexcept {
@@ -233,11 +233,11 @@ namespace jsonifier {
 		}
 
 		constexpr const_iterator begin() const noexcept {
-			return const_iterator{ dataVal };
+			return const_iterator{ dataVal, dataVal, dataVal + sizeVal };
 		}
 
 		constexpr const_iterator end() const noexcept {
-			return const_iterator{ dataVal + sizeVal };
+			return const_iterator{ dataVal + sizeVal, dataVal + sizeVal, dataVal + sizeVal };
 		}
 
 		constexpr const_reverse_iterator rbegin() const noexcept {
@@ -331,7 +331,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE void erase(iterator count) {
-			auto newSize = count - dataVal;
+			auto newSize = count.operator->() - dataVal;
 			if (newSize == 0) [[unlikely]] {
 				return;
 			} else if (newSize > static_cast<int64_t>(sizeVal)) [[unlikely]] {
@@ -342,7 +342,7 @@ namespace jsonifier {
 			allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00u));
 		}
 
-		JSONIFIER_INLINE void pushBack(value_type value) {
+		JSONIFIER_INLINE void emplace_back(value_type value) {
 			if (sizeVal + 1 >= capacityVal) [[unlikely]] {
 				reserve((sizeVal + 2) * 4);
 			}
@@ -486,6 +486,10 @@ namespace jsonifier {
 			return rhs.size() == lhs.size() && jsonifier_internal::jsonifier_core_internal::compare(lhs.data(), rhs.data(), rhs.size());
 		}
 
+		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator<(const string_base& lhs, const value_type_newer& rhs) {
+			return lhs.size() < rhs.size();
+		}
+
 		template<typename string_base_new> JSONIFIER_INLINE void swap(string_base_new&& other) {
 			std::swap(capacityVal, other.capacityVal);
 			std::swap(sizeVal, other.sizeVal);
@@ -518,12 +522,12 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE string_base operator+(const value_type& rhs) {
 			string_base newLhs{ *this };
-			newLhs.pushBack(rhs);
+			newLhs.emplace_back(rhs);
 			return newLhs;
 		}
 
 		JSONIFIER_INLINE string_base& operator+=(const value_type& rhs) {
-			pushBack(rhs);
+			emplace_back(rhs);
 			return *this;
 		}
 

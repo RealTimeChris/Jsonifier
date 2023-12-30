@@ -102,13 +102,13 @@ namespace jsonifier_internal {
 		return y_hi | (y_lo > 1);
 	}
 
-	constexpr auto pow10SigTable128MinExp	   = -343;
-	constexpr auto pow10SigTable128MaxExp	   = 324;
-	constexpr auto pow10SigTable128MinExactExp = 0;
-	constexpr auto pow10SigTable128MaxExactExp = 55;
+	constexpr auto pow10SigTable128Min		= -343;
+	constexpr auto pow10SigTable128Max		= 324;
+	constexpr auto pow10SigTable128MinExact = 0;
+	constexpr auto pow10SigTable128MaxExact = 55;
 
 	JSONIFIER_INLINE void pow10TableGetSig128(const int32_t exp10, uint64_t hilo[2]) noexcept {
-		const int32_t idx = exp10 - (pow10SigTable128MinExp);
+		const int32_t idx = exp10 - (pow10SigTable128Min);
 		std::memcpy(hilo, pow10SigTable128 + idx * 2, 16);
 	}
 
@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 		pow10TableGetSig128(exp10, pow10hilo);
 		const uint64_t& pow10hi = pow10hilo[0];
 		uint64_t& pow10lo		= pow10hilo[1];
-		pow10lo += (exp10 < pow10SigTable128MinExactExp || exp10 > pow10SigTable128MaxExactExp);
+		pow10lo += (exp10 < pow10SigTable128MinExact || exp10 > pow10SigTable128MaxExact);
 		const uint64_t vbl = roundToOdd(pow10hi, pow10lo, cbl << h);
 		const uint64_t vb  = roundToOdd(pow10hi, pow10lo, cb << h);
 		const uint64_t vbr = roundToOdd(pow10hi, pow10lo, cbr << h);

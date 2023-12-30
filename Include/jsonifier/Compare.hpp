@@ -86,9 +86,7 @@ namespace jsonifier_internal {
 #else
 
 	JSONIFIER_INLINE bool compare(const void* string1, const void* string2, uint64_t lengthNew) {
-		std::string_view string01{ static_cast<const char*>(string1), lengthNew };
-		std::string_view string02{ static_cast<const char*>(string2), lengthNew };
-		return string01 == string02;
+		return std::memcmp(string1, string2, lengthNew) == 0;
 	}
 
 #endif

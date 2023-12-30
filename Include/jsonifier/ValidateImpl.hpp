@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 			auto newPtr = start.operator->();
 			++start;
 			auto endPtr = start.operator->();
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 			if (newPtr == endPtr || *newPtr != 0x22u) {
 				errors.emplace_back(createError<error_code::Invalid_String_Characters>(start));
 				return false;
@@ -180,14 +180,14 @@ namespace jsonifier_internal {
 			auto newPtr = start.operator->();
 			++start;
 			auto end = start.operator->();
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 			auto newSize = end - newPtr;
 			if (newSize > 1 && *newPtr == 0x30u && numberTable[*(newPtr + 1)]) {
 				errors.emplace_back(createError<error_code::Invalid_Number_Value>(start));
 				return false;
 			}
 
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 
 			auto consumeChar = [&](char expected) {
 				if (*newPtr == expected) {
@@ -214,11 +214,9 @@ namespace jsonifier_internal {
 				return false;
 			};
 
-			if (consumeSign()) {
-			}
+			consumeSign();
 
-			if (consumeDigits(1)) {
-			}
+			consumeDigits(1);
 
 			if (consumeChar(0x2Eu)) {
 				if (!consumeDigits(1)) {
@@ -235,7 +233,7 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 			if (newPtr != end) {
 				errors.emplace_back(createError<error_code::Invalid_Number_Value>(start));
 				return false;
@@ -251,7 +249,7 @@ namespace jsonifier_internal {
 			++start;
 			static constexpr char falseStr[]{ "false" };
 			static constexpr char trueStr[]{ "true" };
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 			if (std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
 				newPtr += std::size(trueStr) - 1;
 			} else if (std::memcmp(newPtr, falseStr, std::strlen(falseStr)) == 0) {
@@ -269,7 +267,7 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::is_fwd_iterator iterator_type01, typename errors_vector_type> static bool impl(iterator_type01&& start, errors_vector_type& errors) {
 			auto newPtr = start.operator->();
 			++start;
-			derailleur::skipWs(newPtr);
+			skipWs(newPtr);
 			static constexpr char nullStr[]{ "null" };
 
 			if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {

@@ -34,7 +34,7 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
+	template<jsonifier::concepts::signed_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type*& cur) {
 		[[maybe_unused]] const char_type* sigEnd{};
 		const char_type *tmp{}, *sigCut{}, *dotPos{}, *hdr{ cur };
 		uint64_t fracZeros{}, numTmp{}, sig{};
@@ -219,7 +219,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type* cur) {
+	template<jsonifier::concepts::unsigned_t value_type01, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type01& value, char_type*& cur) {
 		[[maybe_unused]] const char_type* sigEnd{};
 		const char_type *tmp{}, *sigCut{}, *dotPos{};
 		uint64_t fracZeros{}, numTmp{}, sig{};
