@@ -112,6 +112,41 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<jsonifier::concepts::array_tuple_t value_type_new, typename derived_type> struct simd_parse_impl<value_type_new, derived_type> {
+		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void simd_impl(value_type&& value, iterator_type&& iter) {
+			if (*iter == '[') [[likely]] {
+				++iter;
+			} else [[unlikely]] {
+				iter.template createError<json_structural_type::Array_Start>();
+				skipToEndOfValue(iter);
+				return;
+			}
+			static constexpr auto n = std::tuple_size_v<value_type_new>;
+			parseObjects<n>(value, iter);
+			if (*iter == ']') [[unlikely]] {
+				++iter;
+				return;
+			}
+		}
+
+		template<uint64_t n, uint64_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter) {
+			auto& item = std::get<indexNew>(value);
+
+			if (!isItFirst) {
+				if (*iter == ',') [[likely]] {
+					++iter;
+				}
+			}
+
+			parser<derived_type>::simd_impl(item, iter);
+			if constexpr (indexNew < n - 1) {
+				parseObjects<n, indexNew + 1, false>(value, iter);
+			}
+		}
+	};
+
 	template<jsonifier::concepts::map_t value_type_new, typename derived_type> struct simd_parse_impl<value_type_new, derived_type> {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void simd_impl(value_type&& value, iterator_type&& iter) {

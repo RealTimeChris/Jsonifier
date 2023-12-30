@@ -86,7 +86,7 @@ struct metadata_data {
 	std::string result_type{};
 };
 
-struct description_data  {
+struct description_data {
 	std::vector<url_data> urls{};
 };
 
@@ -478,9 +478,9 @@ template<> struct jsonifier::core<user_data_twitter> {
 
 template<> struct jsonifier::core<status> {
 	using value_type				 = status;
-	static constexpr auto parseValue = createValue<&value_type::metadata, &value_type::created_at, &value_type::id, &value_type::id_str, &value_type::text,
-		&value_type::source, &value_type::truncated, &value_type::user, &value_type::retweet_count, &value_type::favorite_count, &value_type::entities, &value_type::favorited,
-		&value_type::retweeted, &value_type::lang, &value_type::possibly_sensitive>();
+	static constexpr auto parseValue = createValue<&value_type::metadata, &value_type::created_at, &value_type::id, &value_type::id_str, &value_type::text, &value_type::source,
+		&value_type::truncated, &value_type::user, &value_type::retweet_count, &value_type::favorite_count, &value_type::entities, &value_type::favorited, &value_type::retweeted,
+		&value_type::lang, &value_type::possibly_sensitive>();
 };
 
 template<> struct jsonifier::core<twitter_message> {
@@ -585,9 +585,8 @@ template<> struct glz::meta<twitter_message> {
 namespace glz {
 
 	template<> struct meta<available_tag> {
-		using value_type = available_tag;
-		static constexpr auto value =
-			object("name", &value_type::name, "moderated", &value_type::moderated, "id", &value_type::id);
+		using value_type			= available_tag;
+		static constexpr auto value = object("name", &value_type::name, "moderated", &value_type::moderated, "id", &value_type::id);
 	};
 
 	template<> struct meta<default_reaction_emoji_data> {
@@ -682,7 +681,7 @@ namespace glz {
 	};
 
 	template<> struct meta<sticker> {
-		using value_type = sticker;
+		using value_type			= sticker;
 		static constexpr auto value = object("version", &value_type::version, "type", &value_type::type, "tags", &value_type::tags, "name", &value_type::name, "id",
 			&value_type::id, "guild_id", &value_type::guild_id, "format_type", &value_type::format_type, "available", &value_type::available);
 	};
@@ -735,16 +734,15 @@ template<> struct jsonifier::core<permission_overwrite> {
 
 template<> struct jsonifier::core<channel_data> {
 	using value_type				 = channel_data;
-	static constexpr auto parseValue =
-		createValue<&value_type::version, &value_type::type, &value_type::position, &value_type::permission_overwrites, &value_type::name, &value_type::id,
-			&value_type::flags, &value_type::rate_limit_per_user, &value_type::parent_id, &value_type::icon_emoji, &value_type::user_limit, &value_type::bitrate,  
-			&value_type::last_pin_timestamp, &value_type::channel_template, &value_type::default_reaction_emoji, &value_type::available_tags, &value_type::nsfw>();
+	static constexpr auto parseValue = createValue<&value_type::version, &value_type::type, &value_type::position, &value_type::permission_overwrites, &value_type::name,
+		&value_type::id, &value_type::flags, &value_type::rate_limit_per_user, &value_type::parent_id, &value_type::icon_emoji, &value_type::user_limit, &value_type::bitrate,
+		&value_type::last_pin_timestamp, &value_type::channel_template, &value_type::default_reaction_emoji, &value_type::available_tags, &value_type::nsfw>();
 };
 
 template<> struct jsonifier::core<emoji_element> {
 	using value_type				 = emoji_element;
-	static constexpr auto parseValue = createValue<&value_type::version, &value_type::roles, &value_type::require_colons, &value_type::name, &value_type::managed,
-		&value_type::id, &value_type::available, &value_type::animated>();
+	static constexpr auto parseValue = createValue<&value_type::version, &value_type::roles, &value_type::require_colons, &value_type::name, &value_type::managed, &value_type::id,
+		&value_type::available, &value_type::animated>();
 };
 
 template<> struct jsonifier::core<avatar_decoration_data_data> {
@@ -755,15 +753,15 @@ template<> struct jsonifier::core<avatar_decoration_data_data> {
 // Repeat the above pattern for the remaining structures...
 
 template<> struct jsonifier::core<member_user> {
-	using value_type				 = member_user;
-	static constexpr auto parseValue = createValue<&value_type::username, &value_type::public_flags, &value_type::id, &value_type::discriminator, &value_type::bot,
-		&value_type::avatar_decoration_data>();
+	using value_type = member_user;
+	static constexpr auto parseValue =
+		createValue<&value_type::username, &value_type::public_flags, &value_type::id, &value_type::discriminator, &value_type::bot, &value_type::avatar_decoration_data>();
 };
 
 template<> struct jsonifier::core<guild_member_data> {
 	using value_type				 = guild_member_data;
-	static constexpr auto parseValue = createValue<&value_type::user, &value_type::roles, &value_type::pending, &value_type::mute, &value_type::joined_at,
-		&value_type::flags, &value_type::deaf, &value_type::avatar>();
+	static constexpr auto parseValue = createValue<&value_type::user, &value_type::roles, &value_type::pending, &value_type::mute, &value_type::joined_at, &value_type::flags,
+		&value_type::deaf, &value_type::avatar>();
 };
 
 template<> struct jsonifier::core<activity_emoji> {
@@ -788,7 +786,7 @@ template<> struct jsonifier::core<presence_user> {
 };
 
 template<> struct jsonifier::core<presence> {
-	using value_type = presence;
+	using value_type				 = presence;
 	static constexpr auto parseValue = createValue<&value_type::user, &value_type::client_status, &value_type::activities>();
 };
 
@@ -804,7 +802,7 @@ template<> struct jsonifier::core<role_data> {
 };
 
 template<> struct jsonifier::core<soundboard_sound> {
-	using value_type				 = soundboard_sound;
+	using value_type = soundboard_sound;
 	static constexpr auto parseValue =
 		createValue<&value_type::volume, &value_type::user_id, &value_type::sound_id, &value_type::name, &value_type::guild_id, &value_type::available>();
 };
@@ -823,8 +821,8 @@ template<> struct jsonifier::core<guild_data> {
 		&value_type::nsfw_level, &value_type::latest_onboarding_question_id, &value_type::default_message_notifications, &value_type::presences, &value_type::threads,
 		&value_type::max_stage_video_channel_users, &value_type::premium_progress_bar_enabled, &value_type::afk_timeout, &value_type::region, &value_type::large,
 		&value_type::max_members, &value_type::stickers, &value_type::features, &value_type::public_updates_channel_id, &value_type::rules_channel_id,
-		&value_type::max_video_channel_users, &value_type::roles, &value_type::soundboard_sounds, &value_type::channels, &value_type::system_channel_id,
-		&value_type::member_count, &value_type::embedded_activities, &value_type::premium_tier, &value_type::application_command_counts, &value_type::stage_instances, &value_type::version,
+		&value_type::max_video_channel_users, &value_type::roles, &value_type::soundboard_sounds, &value_type::channels, &value_type::system_channel_id, &value_type::member_count,
+		&value_type::embedded_activities, &value_type::premium_tier, &value_type::application_command_counts, &value_type::stage_instances, &value_type::version,
 		&value_type::owner_id, &value_type::emojis>();
 };
 
@@ -1000,6 +998,50 @@ template<> struct jsonifier::core<TestGenerator<test_struct>> {
 template<> struct jsonifier::core<AbcTest<test_struct>> {
 	using OTy						 = AbcTest<test_struct>;
 	static constexpr auto parseValue = createValue("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e",
+		&OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
+};
+
+template<> struct glz::meta<test_struct> {
+	using OTy = test_struct;
+<<<<<<< Updated upstream
+	static constexpr auto value =
+=======
+	static constexpr auto parseValue =
+>>>>>>> Stashed changes
+		object("testBools", &OTy::testBools, "testInts", &OTy::testInts, "testUints", &OTy::testUints, "testDoubles", &OTy::testDoubles, "testStrings", &OTy::testStrings);
+};
+
+template<> struct glz::meta<Test<test_struct>> {
+	using OTy						 = Test<test_struct>;
+<<<<<<< Updated upstream
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+=======
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+>>>>>>> Stashed changes
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v",
+		&OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+};
+
+
+template<> struct glz::meta<TestGenerator<test_struct>> {
+	using OTy						 = TestGenerator<test_struct>;
+<<<<<<< Updated upstream
+	static constexpr auto value = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+=======
+	static constexpr auto parseValue = object("a", &OTy::a, "b", &OTy::b, "c", &OTy::c, "d", &OTy::d, "e", &OTy::e, "f", &OTy::f, "g", &OTy::g, "h", &OTy::h, "i", &OTy::i,
+>>>>>>> Stashed changes
+		"j", &OTy::j, "k", &OTy::k, "l", &OTy::l, "m", &OTy::m, "n", &OTy::n, "o", &OTy::o, "p", &OTy::p, "q", &OTy::q, "r", &OTy::r, "s", &OTy::s, "t", &OTy::t, "u", &OTy::u, "v",
+		&OTy::v, "w", &OTy::w, "x", &OTy::x, "y", &OTy::y, "z", &OTy::z);
+};
+
+template<> struct glz::meta<AbcTest<test_struct>> {
+	using OTy						 = AbcTest<test_struct>;
+<<<<<<< Updated upstream
+	static constexpr auto value = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+=======
+	static constexpr auto parseValue = object("z", &OTy::z, "y", &OTy::y, "x", &OTy::x, "w", &OTy::w, "v", &OTy::v, "u", &OTy::u, "t", &OTy::t, "s", &OTy::s, "r", &OTy::r,
+>>>>>>> Stashed changes
 		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e",
 		&OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
@@ -1884,7 +1926,7 @@ auto glazePrettifyTest(const jsonifier::string& discordDataNew, bool doWePrint =
 
 	return r;
 }
-
+/*
 	#include "simdjson.h"
 
 using namespace simdjson;
@@ -2082,7 +2124,7 @@ template<> avatar_decoration_data_data getValue<avatar_decoration_data_data>(sim
 	imageSizes.medium = getValue<large_data>(jsonData, "medium");
 	imageSizes.small  = getValue<large_data>(jsonData, "small");
 	imageSizes.thumb  = getValue<large_data>(jsonData, "thumb");
-	imageSizes.large  = getValue<large_data>(jsonData, "large");*/
+	imageSizes.large  = getValue<large_data>(jsonData, "large");
 	return imageSizes;
 }
 
@@ -2528,7 +2570,7 @@ auto simdjsonAbcTest(const jsonifier::string& bufferNew, bool doWePrint = true) 
 	}
 
 	return r;
-}
+}*/
 #endif
 std::string table_header = R"(
 | Library | Read (MB/s) | Write (MB/s) |
@@ -2556,16 +2598,16 @@ test_results multiTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Multi Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonTest(jsonData, false);
+		//simdjsonTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonTest(jsonData));
+	//resultsNew.emplace_back(simdjsonTest(jsonData));
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazeTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazeTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierSerialTest(jsonData, false);
 	}
@@ -2599,16 +2641,16 @@ test_results twitterTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Twitter Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonTwitterTest(jsonData, false);
+		//		simdjsonTwitterTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonTwitterTest(jsonData));
+	//resultsNew.emplace_back(simdjsonTwitterTest(jsonData));
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazeTwitterTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazeTwitterTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierSerialTwitterTest(jsonData, false);
 	}
@@ -2642,16 +2684,16 @@ test_results abcTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Abc Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonAbcTest(jsonData, false);
+		//simdjsonAbcTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonAbcTest(jsonData));
+	//resultsNew.emplace_back(simdjsonAbcTest(jsonData));
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazeAbcTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazeAbcTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierSerialAbcTest(jsonData, false);
 	}
@@ -2685,16 +2727,16 @@ test_results discordTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Discord Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonDiscordTest(jsonData, false);
+		//	simdjsonDiscordTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonDiscordTest(jsonData));
+	//resultsNew.emplace_back(simdjsonDiscordTest(jsonData));
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazeDiscordTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazeDiscordTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierSerialDiscordTest(jsonData, false);
 	}
@@ -2728,16 +2770,16 @@ test_results singleTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Single Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonSingleTest(jsonData, false);
+		//simdjsonSingleTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonSingleTest(jsonData));
+	//resultsNew.emplace_back(simdjsonSingleTest(jsonData));
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazeSingleTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazeSingleTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierSerialSingleTest(jsonData, false);
 	}
@@ -2771,12 +2813,12 @@ test_results minifyTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Minify Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonMinifyTest(jsonData, false);
+		//simdjsonMinifyTest(jsonData, false);
 	}
-	resultsNew.emplace_back(simdjsonMinifyTest(jsonData));
-#endif
+		//resultsNew.emplace_back(simdjsonMinifyTest(jsonData));
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierMinifyTest(jsonData, false);
 	}
@@ -2806,12 +2848,12 @@ test_results prettifyTests(const jsonifier::string& jsonData) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = "Prettify Test";
-#if !defined(ASAN)
+	#if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
 		glazePrettifyTest(jsonData, false);
 	}
 	resultsNew.emplace_back(glazePrettifyTest(jsonData));
-#endif
+	#endif
 	for (uint32_t x = 0; x < 2; ++x) {
 		jsonifierPrettifyTest(jsonData, false);
 	}
@@ -2995,7 +3037,7 @@ alt="ValidateCoreAPI WebSite" width="400"/></p>
 )"
 };
 
-#include "ConformanceTests.hpp"
+	#include "ConformanceTests.hpp"
 
 
 struct transcoding {
@@ -3115,21 +3157,21 @@ template<typename tuple_t, std::size_t... Is> constexpr auto getValuesFromTuple(
 		return jsonifier::string_view{};
 		//jsonifier_internal::getName<newPtr>();
 	};
-	
+
 	return std::array<jsonifier::string_view, sizeof...(Is)>{ getValuesLambda(std::integral_constant<uint64_t, Is>{})... };
 }
-#include <iostream>
-#include <type_traits>
+	#include <iostream>
+	#include <type_traits>
 
 template<typename... value_types> struct collect_types {};
 
 template<typename parent_type, typename member_type, typename... value_types> struct collect_types<member_type parent_type::*, value_types...> {
-	using type = member_type parent_type::*;
+	using type	= member_type parent_type::*;
 	using types = collect_types<value_types...>;
 };
 
 template<typename parent_type, typename member_type> struct collect_types<member_type parent_type::*> {
-	using type	= member_type parent_type::*;
+	using type = member_type parent_type::*;
 };
 
 template<auto memberPtr> constexpr void printMemberName() {
@@ -3152,11 +3194,11 @@ class MyClass {
 	// Add more members as needed
 };
 
-template<auto ptr,typename arg_types> constexpr void testFunction(arg_types&& parents) {
+template<auto ptr, typename arg_types> constexpr void testFunction(arg_types&& parents) {
 	static_assert(std::conjunction_v<std::is_member_pointer<std::decay_t<arg_types>>>, "testFunction only accepts pointers to members");
 	//std::cout << "CURRENT SIGNATURE: " << __FUNCSIG__ << std::endl;
 	constexpr auto parentsTuple = std::tuple<typename collect_types<arg_types>::type>();
-	using new_type = arg_types;
+	using new_type				= arg_types;
 	constexpr new_type newPtr{};
 	testPrint<newPtr>();
 	constexpr auto indices = std::index_sequence_for<arg_types>{};
@@ -3201,31 +3243,30 @@ template<size_t... indices> JSONIFIER_INLINE static uint64_t prefixXor(uint64_t 
 }
 
 int main() {
-
 	//prefixXor(02, std::make_index_sequence<8>{});
 	//pointer_holder<&MyClass::member> newValue{ &MyClass::member };
 	//testFunction02(&MyClass::member);
 
-	try{
+	try {
 		jsonifier::jsonifier_core parser{};
-		//static constexpr auto parseValue = createPtrTuple(&testClass::currentValue, &testClass::currentValue02); 
+		//static constexpr auto parseValue = createPtrTuple(&testClass::currentValue, &testClass::currentValue02);
 		//auto memberNames				 = getMemberNames<std::tuple_size_v<decltype(parseValue)>>(parseValue);
 		//for (auto& value: memberNames) {
-			//std::cout << "CURRENT VALUE: " << value << std::endl;
+		//std::cout << "CURRENT VALUE: " << value << std::endl;
 		//}
-		
+
 		json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
-#if defined(_WIN32)
+	#if defined(_WIN32)
 		FileLoader fileLoader01{ "../../ReadMe.md" };
 		FileLoader fileLoader02{ "../../Json/JsonData.json" };
 		FileLoader fileLoader03{ "../../Json/Results.json" };
 		fileLoader02.saveFile(parser.prettify(jsonData.theData));
-#else
+	#else
 		FileLoader fileLoader01{ "../ReadMe.md" };
 		FileLoader fileLoader02{ "../Json/JsonData.json" };
 		FileLoader fileLoader03{ "../Json/Results.json" };
 		fileLoader02.saveFile(parser.prettify(jsonData.theData));
-#endif
+	#endif
 		jsonifier::string rawData{
 			R"([{"hydratable":"anonymousId","data":"924122-291678-529945-398194"},{"hydratable":"features","data":{"features":["mobi_webauth_oauth_mode",
 						"cd_repost_to_artists","v2_use_onetrust_tcfv2_us_ca","mobi_enable_onetrust_tcfv2","mobi_tracking_send_session_id","mobi_use_onetrust_eu1",

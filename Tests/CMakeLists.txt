@@ -12,14 +12,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glaze)
 
-FetchContent_Declare(
-  simdjson
-  GIT_REPOSITORY https://github.com/RealTimeChris/simdjson.git
-  GIT_TAG master
-  GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(simdjson)
-
 add_executable(
   "Json-Performance" 
   "./main.cpp"
@@ -27,7 +19,7 @@ add_executable(
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-  Jsonifier::Jsonifier glaze::glaze simdjson
+  Jsonifier::Jsonifier glaze::glaze 
 )
 
 target_compile_options(

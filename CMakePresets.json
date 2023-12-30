@@ -9,7 +9,7 @@
         "rhs": "Windows",
         "type": "equals"
       },
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja Multi-Config",
       "hidden": true,
       "name": "Windows-Base"
     },

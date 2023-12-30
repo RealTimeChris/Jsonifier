@@ -33,6 +33,8 @@
 namespace jsonifier_internal {
 
 	template<typename derived_type> class parser;
+
+	template<typename... value_types> class array_tuple : public std::tuple<value_types...> {};
 }
 
 namespace jsonifier {
@@ -69,32 +71,32 @@ namespace jsonifier {
 		template<typename... value_type> using unwrap_t = std::remove_const_t<std::unwrap_ref_decay_t<typename collect_first_type<value_type...>::type>>;
 
 		template<typename value_type>
-		concept range = requires(value_type value) {
+		concept range = requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::value_type;
 			{ value.begin() } -> std::same_as<typename unwrap_t<value_type>::const_iterator>;
 			{ value.end() } -> std::same_as<typename unwrap_t<value_type>::const_iterator>;
-		} || requires(value_type value) {
+		} || requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::value_type;
 			{ value.begin() } -> std::same_as<typename unwrap_t<value_type>::iterator>;
 			{ value.end() } -> std::same_as<typename unwrap_t<value_type>::iterator>;
 		};
 
 		template<typename value_type>
-		concept map_subscriptable = requires(value_type value) {
+		concept map_subscriptable = requires(unwrap_t<value_type> value) {
 			{ value[std::declval<typename unwrap_t<value_type>::key_type>()] } -> std::same_as<const typename unwrap_t<value_type>::mapped_type&>;
-		} || requires(value_type value) {
+		} || requires(unwrap_t<value_type> value) {
 			{ value[std::declval<typename unwrap_t<value_type>::key_type>()] } -> std::same_as<typename unwrap_t<value_type>::mapped_type&>;
 		};
 
 		template<typename value_type>
-		concept vector_subscriptable = requires(value_type value) {
+		concept vector_subscriptable = requires(unwrap_t<value_type> value) {
 			{ value[std::declval<typename unwrap_t<value_type>::size_type>()] } -> std::same_as<typename unwrap_t<value_type>::const_reference>;
-		} || requires(value_type value) {
+		} || requires(unwrap_t<value_type> value) {
 			{ value[std::declval<typename unwrap_t<value_type>::size_type>()] } -> std::same_as<typename unwrap_t<value_type>::reference>;
 		};
 
 		template<typename value_type>
-		concept has_size = requires(value_type value) {
+		concept has_size = requires(unwrap_t<value_type> value) {
 			{ value.size() } -> std::same_as<typename unwrap_t<value_type>::size_type>;
 		};
 
@@ -105,12 +107,12 @@ namespace jsonifier {
 		concept is_fwd_iterator = std::forward_iterator<unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept has_resize = requires(value_type value) { value.resize(std::declval<typename unwrap_t<value_type>::size_type>()); };
+		concept has_resize = requires(unwrap_t<value_type> value) { value.resize(std::declval<typename unwrap_t<value_type>::size_type>()); };
 
 		template<typename value_type>
-		concept has_data = requires(value_type value) {
+		concept has_data = requires(unwrap_t<value_type> value) {
 			{ value.data() } -> std::same_as<typename unwrap_t<value_type>::const_pointer>;
-		} || requires(value_type value) {
+		} || requires(unwrap_t<value_type> value) {
 			{ value.data() } -> std::same_as<typename unwrap_t<value_type>::pointer>;
 		};
 
@@ -121,7 +123,7 @@ namespace jsonifier {
 		concept void_t = std::is_void_v<unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept indexable = stateless<value_type> || requires(value_type value) { value[tag<0>()]; };
+		concept indexable = stateless<value_type> || requires(unwrap_t<value_type> value) { value[tag<0>()]; };
 
 		template<typename value_type_01, typename value_type_02>
 		concept related_ptr = ( std::derived_from<unwrap_t<value_type_01>, unwrap_t<value_type_02>> || std::is_base_of_v<unwrap_t<value_type_01>, unwrap_t<value_type_02>> ||
@@ -129,7 +131,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept bool_t = std::same_as<unwrap_t<value_type>, bool>;
-				
+
 		template<typename value_type>
 		concept always_null_t =
 			std::same_as<unwrap_t<value_type>, std::nullptr_t> || std::same_as<unwrap_t<value_type>, std::monostate> || std::same_as<unwrap_t<value_type>, std::nullopt_t>;
@@ -175,7 +177,7 @@ namespace jsonifier {
 		concept num_t = ( float_t<value_type> || unsigned_t<value_type> || signed_t<value_type> )&&!char_type<value_type>;
 
 		template<typename value_type>
-		concept has_substr = requires(value_type value) {
+		concept has_substr = requires(unwrap_t<value_type> value) {
 			{
 				value.substr(std::declval<typename unwrap_t<value_type>::size_type>(), std::declval<typename unwrap_t<value_type>::size_type>())
 			} -> std::same_as<unwrap_t<value_type>>;
@@ -186,24 +188,24 @@ namespace jsonifier {
 			vector_subscriptable<value_type> && !pointer_t<value_type>;
 
 		template<typename value_type>
-		concept map_t = requires(value_type value) {
+		concept map_t = requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::mapped_type;
 			typename unwrap_t<value_type>::key_type;
 		} && range<value_type> && map_subscriptable<value_type>;
 
 		template<typename value_type>
-		concept pair_t = requires(value_type value) {
+		concept pair_t = requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::first_type;
 			typename unwrap_t<value_type>::second_type;
 		};
 
 		template<typename value_type>
-		concept has_emplace_back = requires(value_type value) {
+		concept has_emplace_back = requires(unwrap_t<value_type> value) {
 			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::value_type&>;
 		};
 
 		template<typename value_type>
-		concept has_release = requires(value_type value) {
+		concept has_release = requires(unwrap_t<value_type> value) {
 			{ value.release() } -> std::same_as<typename unwrap_t<value_type>::pointer>;
 		};
 
@@ -211,31 +213,37 @@ namespace jsonifier {
 		concept copyable = std::copy_constructible<unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept unique_ptr_t = requires(value_type value) {
+		concept unique_ptr_t = requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::element_type;
 			typename unwrap_t<value_type>::deleter_type;
 		} && has_release<value_type>;
 
 		template<typename value_type>
-		concept shared_ptr_t = requires(value_type value) {
+		concept shared_ptr_t = requires(unwrap_t<value_type> value) {
 			typename unwrap_t<value_type>::element_type;
 			typename unwrap_t<value_type>::deleter_type;
 		} && has_release<value_type> && copyable<value_type>;
 
 		template<typename value_type>
-		concept has_find = requires(value_type value) {
+		concept has_find = requires(unwrap_t<value_type> value) {
 			{ value.find(std::declval<const typename unwrap_t<value_type>::key_type&>()) };
 		};
 
 		template<typename value_type>
-		concept has_excluded_keys = requires(value_type value) {
+		concept has_excluded_keys = requires(unwrap_t<value_type> value) {
 			{ value.jsonifierExcludedKeys };
 		};
 
 		template<typename value_type>
-		concept nullable_t = !string_t<value_type> && requires(value_type value) {
+		concept nullable_t = !string_t<value_type> && requires(unwrap_t<value_type> value) {
 			bool(value);
 			{ *value };
+		};
+
+		template<typename value_type>
+		concept array_tuple_t = requires(unwrap_t<value_type> value) {
+			std::tuple_size<unwrap_t<value_type>>::value;
+			std::get<0>(value);
 		};
 
 		template<typename value_type>
@@ -274,6 +282,12 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept jsonifier_value_t = jsonifier_t<value_type> && is_specialization_v<core_wrapper_t<value_type>, value>;
+
+		template<class value_type>
+		concept tuple_t = requires(unwrap_t<value_type> t) {
+			std::tuple_size<unwrap_t<value_type>>::value;
+			std::get<0>(t);
+		};
 
 		template<typename value_type>
 		concept optional_t = is_specialization_v<unwrap_t<value_type>, std::optional>;
@@ -340,4 +354,6 @@ namespace std {
 	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 
 	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
+
+	template<typename... value_types> struct tuple_size<jsonifier_internal::array_tuple<value_types...>> : integral_constant<std::size_t, sizeof...(value_types)> {};
 }

@@ -102,7 +102,7 @@ namespace jsonifier {
 		using const_reference		 = const value_type&;
 		using difference_type		 = std::ptrdiff_t;
 		using iterator				 = jsonifier_internal::iterator<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
@@ -120,7 +120,8 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE string_base& operator=(string_base&& other) noexcept {
 			if (this != &other) [[likely]] {
-				string_base{ other }.swap(*this);
+				string_base newValue{ other };
+				this->swap(newValue);
 			}
 			return *this;
 		}
@@ -131,7 +132,8 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE string_base& operator=(const string_base& other) {
 			if (this != &other) [[likely]] {
-				string_base{ other }.swap(*this);
+				string_base newValue{ other };
+				this->swap(newValue);
 			}
 			return *this;
 		}
@@ -147,7 +149,8 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE string_base& operator=(value_type_newer&& other) {
-			string_base{ other }.swap(*this);
+			string_base newValue{ other };
+			this->swap(newValue);
 			return *this;
 		}
 
@@ -162,7 +165,8 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_INLINE string_base& operator=(value_type_newer other) {
-			string_base{ std::forward<value_type_newer>(other) }.swap(*this);
+			string_base newValue{ std::forward<value_type_newer>(other) };
+			this->swap(newValue);
 			return *this;
 		}
 

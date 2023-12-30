@@ -74,7 +74,7 @@ namespace jsonifier {
 		int64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto newPtr = string.data();
-			jsonifier_internal::parseNumber(newValue, newPtr);
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -91,7 +91,7 @@ namespace jsonifier {
 		uint64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto newPtr = string.data();
-			jsonifier_internal::parseNumber(newValue, newPtr);
+			jsonifier_internal::stoui64(newValue, newPtr);
 		}
 		return newValue;
 	}

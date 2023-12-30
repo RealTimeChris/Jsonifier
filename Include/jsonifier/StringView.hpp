@@ -32,7 +32,7 @@ namespace jsonifier {
 		using value_type			 = value_type_new;
 		using const_pointer			 = const value_type*;
 		using const_reference		 = const value_type&;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;

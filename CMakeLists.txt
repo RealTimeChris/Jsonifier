@@ -24,6 +24,8 @@
 
 cmake_minimum_required(VERSION 3.18)
 
+option(USE_CUDA "Enable CUDA support" OFF)
+
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
 
 include("CollectVersion")
@@ -32,17 +34,36 @@ collect_version("jsonifier")
 set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-project(
-  "${PROJECT_NAME}"
-  VERSION "${PRODUCT_VERSION}"
-  LANGUAGES CXX
-)
+if (USE_CUDA)
+	project(
+	  "${PROJECT_NAME}"
+	  VERSION "${PRODUCT_VERSION}"
+	  LANGUAGES "CXX" "CUDA"
+	)
+else()
+	project(
+	  "${PROJECT_NAME}"
+	  VERSION "${PRODUCT_VERSION}"
+	  LANGUAGES "CXX"
+	)
+endif()
+
+function(modify_string INPUT_STRING ADDED_TEXT OUTPUT_STRING)
+    string(REGEX REPLACE "\"$" "" MODIFIED_STRING "${INPUT_STRING}")
+    set(MODIFIED_STRING "${MODIFIED_STRING}${ADDED_TEXT}")
+    set(${OUTPUT_STRING} "${MODIFIED_STRING}\"" PARENT_SCOPE)
+endfunction()
 
 set(CMAKE_CXX_STANDARD 20)
 
 add_library("${PROJECT_NAME}" INTERFACE)
 
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+
+set_target_properties(
+	"${PROJECT_NAME}" PROPERTIES 
+	CUDA_SEPARABLE_COMPILATION ON
+)
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
 
@@ -75,20 +96,28 @@ target_compile_options (
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 )
 
-target_compile_definitions(
-	"${PROJECT_NAME}" INTERFACE 
-	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
-	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
-	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
-)
+if (USE_CUDA)
+	set(INPUT_STRING "-D_WINDOWS -Xcompiler=\"/W3 /GR /EHsc\"")
+
+	modify_string("${INPUT_STRING}" "${AVX_FLAG}" OUTPUT_STRING)
+
+	set(CMAKE_CUDA_FLAGS "${OUTPUT_STRING}")
+else()
+	target_compile_definitions(
+		"${PROJECT_NAME}" INTERFACE 
+		"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
+		"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
+		"$<$<STREQUAL:${DEV},TRUE>:DEV>"
+	)
+
+	target_compile_options(
+		"${PROJECT_NAME}" INTERFACE 
+		"${AVX_FLAG}"
+	)
+endif()
 
 set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE INTERNAL "For the CPU architecture selection.")
 set(AVX_FLAG "${AVX_FLAG}" CACHE INTERNAL "For the CPU flag selection.")
-
-target_compile_options(
-	"${PROJECT_NAME}" INTERFACE 
-	"${AVX_FLAG}"
-)
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
 set(EXPORTED_TARGETS_NAME "${PROJECT_NAME}Targets")

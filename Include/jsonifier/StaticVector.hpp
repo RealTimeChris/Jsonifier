@@ -37,7 +37,7 @@ namespace jsonifier_internal {
 		using size_type		  = uint64_t;
 		using const_reference = const value_type&;
 		using iterator		  = jsonifier_internal::iterator<value_type>;
-		using const_iterator  = jsonifier_internal::const_iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 
 		template<typename value_type_newer, size_type rowsNew> friend class static_vector;
 
@@ -73,19 +73,19 @@ namespace jsonifier_internal {
 		}
 
 		constexpr iterator begin() noexcept {
-			return iterator{ dataVal, dataVal, dataVal + sizeVal };
+			return iterator{ dataVal };
 		}
 
 		constexpr iterator end() noexcept {
-			return iterator{ dataVal + sizeVal, dataVal + sizeVal, dataVal + sizeVal };
+			return iterator{ dataVal + sizeVal };
 		}
 
 		constexpr const_iterator begin() const noexcept {
-			return const_iterator{ dataVal, dataVal, dataVal + sizeVal };
+			return const_iterator{ dataVal };
 		}
 
 		constexpr const_iterator end() const noexcept {
-			return const_iterator{ dataVal + sizeVal, dataVal + sizeVal, dataVal + sizeVal };
+			return const_iterator{ dataVal + sizeVal };
 		}
 
 		constexpr const_pointer data() const {

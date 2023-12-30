@@ -35,17 +35,13 @@ namespace jsonifier_internal {
 		using difference_type	= std::ptrdiff_t;
 		using pointer			= value_type*;
 		using reference			= value_type&;
-		using size_type			= int64_t;
+		using size_type			= uint64_t;
 
 		constexpr iterator() noexcept : ptr(nullptr) {
 		}
 
-		constexpr iterator& operator=(pointer ptrNew) noexcept {
-			ptr = ptrNew;
-			return *this;
+		constexpr iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
 		}
-
-		constexpr iterator(pointer ptrNew, pointer rootPtrNew, pointer endPtrNew) noexcept : rootPtr{ rootPtrNew }, endPtr{ endPtrNew }, ptr{ ptrNew } {};
 
 		constexpr reference operator*() const noexcept {
 			return *operator->();
@@ -55,20 +51,8 @@ namespace jsonifier_internal {
 			return ptr;
 		}
 
-		constexpr pointer getRootPtr() const noexcept {
-			return reinterpret_cast<pointer>(ptr);
-		}
-
-		constexpr pointer getEndPtr() const noexcept {
-			return reinterpret_cast<pointer>(endPtr);
-		}
-
-		constexpr size_type getCurrentStringIndex() const noexcept {
-			return ptr - rootPtr;
-		}
-
 		constexpr explicit operator bool() const noexcept {
-			return ptr != endPtr;
+			return ptr != nullptr;
 		}
 
 		constexpr iterator& operator++() noexcept {
@@ -91,6 +75,18 @@ namespace jsonifier_internal {
 			iterator temp = *this;
 			--*this;
 			return temp;
+		}
+
+		constexpr pointer getRootPtr() const {
+			return ptr;
+		}
+
+		constexpr pointer getEndPtr() const {
+			return ptr;
+		}
+
+		constexpr size_type getCurrentStringIndex() const {
+			return 0;
 		}
 
 		constexpr iterator& operator+=(const difference_type offset) noexcept {
@@ -127,8 +123,8 @@ namespace jsonifier_internal {
 			return *(*this + offset);
 		}
 
-		constexpr bool operator==(const iterator&) const noexcept {
-			return ptr == endPtr;
+		constexpr bool operator==(const iterator& right) const noexcept {
+			return ptr == right.ptr;
 		}
 
 		constexpr std::strong_ordering operator<=>(const iterator& right) const noexcept {
@@ -136,8 +132,6 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		pointer rootPtr{};
-		pointer endPtr{};
 		pointer ptr{};
 	};
 
@@ -149,17 +143,13 @@ namespace jsonifier_internal {
 		using difference_type	= std::ptrdiff_t;
 		using pointer			= const value_type*;
 		using reference			= const value_type&;
-		using size_type			= int64_t;
+		using size_type			= uint64_t;
 
 		constexpr const_iterator() noexcept : ptr(nullptr) {
 		}
 
-		constexpr const_iterator& operator=(pointer ptrNew) noexcept {
-			ptr = ptrNew;
-			return *this;
+		constexpr const_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
 		}
-
-		constexpr const_iterator(pointer ptrNew, pointer rootPtrNew, pointer endPtrNew) noexcept : rootPtr{ rootPtrNew }, endPtr{ endPtrNew }, ptr{ ptrNew } {};
 
 		constexpr reference operator*() const noexcept {
 			return *operator->();
@@ -169,20 +159,8 @@ namespace jsonifier_internal {
 			return ptr;
 		}
 
-		constexpr pointer getRootPtr() const noexcept {
-			return reinterpret_cast<pointer>(ptr);
-		}
-
-		constexpr pointer getEndPtr() const noexcept {
-			return reinterpret_cast<pointer>(endPtr);
-		}
-
-		constexpr size_type getCurrentStringIndex() const noexcept {
-			return ptr - rootPtr;
-		}
-
 		constexpr explicit operator bool() const noexcept {
-			return ptr != endPtr;
+			return ptr != nullptr;
 		}
 
 		constexpr const_iterator& operator++() noexcept {
@@ -205,6 +183,18 @@ namespace jsonifier_internal {
 			const_iterator temp = *this;
 			--*this;
 			return temp;
+		}
+
+		constexpr pointer getRootPtr() const {
+			return ptr;
+		}
+
+		constexpr pointer getEndPtr() const {
+			return ptr;
+		}
+
+		constexpr size_type getCurrentStringIndex() const {
+			return 0;
 		}
 
 		constexpr const_iterator& operator+=(const difference_type offset) noexcept {
@@ -241,8 +231,8 @@ namespace jsonifier_internal {
 			return *(*this + offset);
 		}
 
-		constexpr bool operator==(const const_iterator&) const noexcept {
-			return ptr == endPtr;
+		constexpr bool operator==(const const_iterator& right) const noexcept {
+			return ptr == right.ptr;
 		}
 
 		constexpr std::strong_ordering operator<=>(const const_iterator& right) const noexcept {
@@ -250,8 +240,6 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		pointer rootPtr{};
-		pointer endPtr{};
 		pointer ptr{};
 	};
 

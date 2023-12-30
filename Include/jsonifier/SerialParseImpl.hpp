@@ -136,6 +136,44 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<jsonifier::concepts::array_tuple_t value_type_new, typename derived_type, typename parser_type> struct serial_parse_impl<value_type_new, derived_type, parser_type> {
+		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void serial_impl(value_type&& value, iterator_type&& iter, iterator_type&& end, parser_type& parserVal) {
+			if (*iter == 0x5Bu) [[likely]] {
+				++iter;
+				skipWs(iter);
+
+			} else [[unlikely]] {
+				parserVal.template createError<json_structural_type::Array_Start>(iter);
+				skipToNextValue(iter, end);
+				return;
+			}
+			static constexpr auto n = std::tuple_size_v<value_type_new>;
+			parseObjects<n>(value, iter, end, parserVal);
+			if (*iter == 0x5Du) [[unlikely]] {
+				++iter;
+				skipWs(iter);
+				return;
+			}
+		}
+
+		template<uint64_t n, uint64_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end, parser_type& parserVal) {
+			auto& item = std::get<indexNew>(value);
+
+			if (!isItFirst) {
+				if (*iter == ',') [[likely]] {
+					++iter;
+					skipWs(iter);
+				}
+			}
+			parser<derived_type>::serial_impl(item, iter, end, parserVal);
+			if constexpr (indexNew < n - 1) {
+				parseObjects<n, indexNew + 1, false>(value, iter, end, parserVal);
+			}
+		}
+	};
+
 	template<jsonifier::concepts::map_t value_type_new, typename derived_type, typename parser_type> struct serial_parse_impl<value_type_new, derived_type, parser_type> {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void serial_impl(value_type&& value, iterator_type&& iter, iterator_type&& end, parser_type& parserVal) {

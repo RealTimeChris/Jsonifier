@@ -77,10 +77,8 @@ namespace jsonifier_internal {
 					return false;
 				}
 			} else {
-				auto iter =
-					const_iterator<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>{ stringNew.data(), stringNew.data(), stringNew.data() + stringNew.size() };
-				auto iterEnd = const_iterator<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>{ stringNew.data() + stringNew.size(),
-					stringNew.data() + stringNew.size(), stringNew.data() + stringNew.size() };
+				auto iter	 = const_iterator<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>{ stringNew.data() };
+				auto iterEnd = const_iterator<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>{ stringNew.data() + stringNew.size() };
 				if (iter) {
 					serial_impl(std::forward<value_type>(data), iter, iterEnd, *this);
 				}
