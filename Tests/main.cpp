@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iostream>
 #include <chrono>
+#include <random>
 
 struct search_metadata_data {
 	std::string next_results{};
@@ -971,9 +972,6 @@ template<typename OTy> struct TestGenerator {
 	}
 };
 
-GLZ_META(test_struct, testBools, testInts, testUints, testDoubles, testStrings);
-GLZ_META(Test<test_struct>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
-GLZ_META(TestGenerator<test_struct>, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
 template<typename OTy> struct AbcTest {
 	std::vector<OTy> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
 };
@@ -1005,8 +1003,6 @@ template<> struct jsonifier::core<AbcTest<test_struct>> {
 		"q", &OTy::q, "p", &OTy::p, "o", &OTy::o, "n", &OTy::n, "m", &OTy::m, "l", &OTy::l, "k", &OTy::k, "j", &OTy::j, "i", &OTy::i, "h", &OTy::h, "g", &OTy::g, "f", &OTy::f, "e",
 		&OTy::e, "d", &OTy::d, "c", &OTy::c, "b", &OTy::b, "a", &OTy::a);
 };
-
-GLZ_META(AbcTest<test_struct>, z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a);
 
 #if defined(NDEBUG)
 constexpr uint64_t iterations = 400;
