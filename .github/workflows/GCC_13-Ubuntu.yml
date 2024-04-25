@@ -1,12 +1,7 @@
-name: Build-and-Test-CLANG-Ubuntu
+name: Build-and-Test-GCC-Ubuntu
 
 on:
   workflow_dispatch:
-    inputs:
-      days:
-        description: 'Number of days.'
-        required: true
-        default: "0"
   push:
     branches:
     - main
@@ -19,24 +14,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [18]
+        gcc: [13]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v3
   
-    - name: Install the latest Clang compiler.
+    - name: Install the latest gcc compiler.
       working-directory: Tests
       run:  |
-            wget https://apt.llvm.org/llvm.sh
-            chmod +x llvm.sh
-            sudo ./llvm.sh 18
+            sudo apt-get install build-essential
+            sudo apt-get install g++-13
 
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build

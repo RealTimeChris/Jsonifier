@@ -254,7 +254,7 @@ namespace jsonifier_internal {
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
 				skipWs(newIter01);
-				collectCharacter(',');
+				collectCharacter(0x2Cu);
 			}
 		}
 		return results;
@@ -300,7 +300,7 @@ namespace jsonifier_internal {
 				bool endValue{ x == newCount - 1 };
 				results.emplace_back(collectValue(endValue));
 				skipWs(newIter01);
-				collectCharacter(',');
+				collectCharacter(0x2Cu);
 			}
 		}
 		return results;

@@ -30,6 +30,7 @@
 #include <concepts>
 #include <cstdint>
 #include <cstring>
+#include <vector>
 #include <array>
 
 #if defined(_M_X64) || defined(_M_ARM64)

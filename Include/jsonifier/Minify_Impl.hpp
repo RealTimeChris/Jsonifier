@@ -60,7 +60,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma:
-						appendCharacter<','>(outPtr);
+						appendCharacter<0x2Cu>(outPtr);
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
-						if (*previousPtr == 't') {
+						if (*previousPtr == 0x74u) {
 							std::memcpy(outPtr, trueString.data(), trueString.size());
 							outPtr += trueString.size();
 							break;

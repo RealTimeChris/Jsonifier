@@ -201,7 +201,7 @@ namespace jsonifier_internal {
 				skipString(iter, end);
 				break;
 			}
-			case 't': {
+			case 0x74u: {
 				iter += 4;
 				break;
 			}
@@ -263,7 +263,7 @@ namespace jsonifier_internal {
 					++iter;
 					break;
 				}
-				[[unlikely]] case 't' : {
+				[[unlikely]] case 0x74u : {
 					iter += 4;
 					break;
 				}
@@ -376,7 +376,7 @@ namespace jsonifier_internal {
 				++iter;
 				break;
 			}
-			[[unlikely]] case 't' : {
+			[[unlikely]] case 0x74u : {
 				iter += 4;
 				break;
 			}

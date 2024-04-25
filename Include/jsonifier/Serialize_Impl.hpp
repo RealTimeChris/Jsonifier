@@ -61,9 +61,9 @@ namespace jsonifier_internal {
 			if constexpr (indexNew > 0 && !areWeFirst) {
 				writeCharacter<Comma>(buffer, index);
 			}
-			writeCharacters(buffer, std::forward<index_type>(index), "\"");
+			writeCharacters(buffer, index, "\"");
 			writeCharacters<key>(buffer, index);
-			writeCharacters(buffer, std::forward<index_type>(index), "\":");
+			writeCharacters(buffer, index, "\":");
 
 			serialize::impl(getMember(value, get<1>(item)), buffer, index);
 			if constexpr (indexNew < n - 1) {
@@ -157,10 +157,10 @@ namespace jsonifier_internal {
 			auto n = value.size();
 			writeCharacter<Array_Start>(buffer, index);
 			if (n > 0) {
-				auto newPtr = value.begin();
+				auto newPtr = value.data();
 				serialize::impl(*newPtr, buffer, index);
 				++newPtr;
-				auto endPtr = value.end();
+				auto endPtr = value.data() + value.size();
 				for (; newPtr < endPtr; ++newPtr) {
 					writeCharacter<Comma>(buffer, index);
 					serialize::impl(*newPtr, buffer, index);
@@ -212,7 +212,7 @@ namespace jsonifier_internal {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
 			writeCharacter<String>(buffer, index);
-			serializeStringImpl(value.data(), buffer.data() + std::forward<index_type>(index), valueSize, index);
+			serializeStringImpl(value.data(), buffer.data() + index, valueSize, index);
 			writeCharacter<String>(buffer, index);
 		}
 	};
@@ -223,35 +223,35 @@ namespace jsonifier_internal {
 			writeCharacter<String>(buffer, index);
 			switch (value) {
 				[[unlikely]] case 0x08u : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\b");
+					writeCharacters(buffer, index, "\\b");
 					break;
 				}
 				[[unlikely]] case 0x09u : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\t");
+					writeCharacters(buffer, index, "\\t");
 					break;
 				}
 				[[unlikely]] case 0x0Au : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\n");
+					writeCharacters(buffer, index, "\\n");
 					break;
 				}
 				[[unlikely]] case 0x0Cu : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\f");
+					writeCharacters(buffer, index, "\\f");
 					break;
 				}
 				[[unlikely]] case 0x0Du : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\r");
+					writeCharacters(buffer, index, "\\r");
 					break;
 				}
 				[[unlikely]] case 0x22u : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\\"");
+					writeCharacters(buffer, index, "\\\"");
 					break;
 				}
 				[[unlikely]] case 0x5CU : {
-					writeCharacters(buffer, std::forward<index_type>(index), "\\\\");
+					writeCharacters(buffer, index, "\\\\");
 					break;
 				}
 					[[likely]] default : {
-						writeCharacter(buffer, std::forward<index_type>(index), value);
+						writeCharacter(buffer, index, value);
 					}
 			}
 			writeCharacter<String>(buffer, index);
@@ -272,7 +272,7 @@ namespace jsonifier_internal {
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
-			auto end = toChars(buffer.data() + std::forward<index_type>(index), value);
+			auto end = toChars(buffer.data() + index, value);
 			index += end - (buffer.data() + index);
 		}
 	};
@@ -284,22 +284,22 @@ namespace jsonifier_internal {
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
-			auto end = toChars(buffer.data() + std::forward<index_type>(index), value);
-			index += end - (buffer.data() + index);
+			auto end = toChars(buffer.data() + index, value);
+			index	 = end - buffer.data();
 		}
 	};
 
 	template<jsonifier::concepts::always_null_t value_type_new> struct serialize_impl<value_type_new> {
 		template<jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&&, buffer_type&& buffer, index_type&& index) {
-			writeCharacters(buffer, std::forward<index_type>(index), "null");
+			writeCharacters(buffer, index, "null");
 		}
 	};
 
 	template<jsonifier::concepts::bool_t value_type_new> struct serialize_impl<value_type_new> {
 		template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			value ? writeCharacters(buffer, std::forward<index_type>(index), "true") : writeCharacters(buffer, std::forward<index_type>(index), "false");
+			value ? writeCharacters(buffer, index, "true") : writeCharacters(buffer, index, "false");
 		}
 	};
 

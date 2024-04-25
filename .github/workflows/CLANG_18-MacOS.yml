@@ -1,4 +1,4 @@
-name: Build-and-Test-GCC-MacOS
+name: Build-and-Test-CLANG-MacOS
 
 on:
   workflow_dispatch:
@@ -14,21 +14,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gcc: [13]
+        clang: [18]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install the latest g++ compiler.
+    - name: Install the latest clang compiler.
       run: |
-            brew reinstall gcc
+            brew install llvm
+            ls /opt/homebrew/opt/llvm/bin
 
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/gcc/13.2.0/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build

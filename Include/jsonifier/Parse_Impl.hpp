@@ -136,7 +136,7 @@ namespace jsonifier_internal {
 			auto& item = std::get<indexNew>(value);
 
 			if (!isItFirst) {
-				if (*iter == ',') [[likely]] {
+				if (*iter == 0x2Cu) [[likely]] {
 					++iter;
 				}
 			}
@@ -236,7 +236,7 @@ namespace jsonifier_internal {
 			auto iterNew = value.begin();
 			for (size_t i = 0; i < n; ++i) {
 				parse::impl(*(iterNew++), iter);
-				if (*iter == ',') [[likely]] {
+				if (*iter == 0x2Cu) [[likely]] {
 					++iter;
 				} else if (*iter == 0x5Du) {
 					++iter;
@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 
 			while (iter) {
 				parse::impl(value.emplace_back(), iter);
-				if (*iter == ',') [[likely]] {
+				if (*iter == 0x2Cu) [[likely]] {
 					++iter;
 				} else if (*iter == 0x5Du) {
 					++iter;

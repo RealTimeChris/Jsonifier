@@ -28,12 +28,12 @@
 namespace jsonifier_internal { 
 
 	template<bool tabs, uint64_t indentSize, typename iterator_type> void appendNewLine(iterator_type& outPtr, int64_t indent) {
-		appendCharacter<'\n'>(outPtr);
+		appendCharacter<0x0Au>(outPtr);
 		if constexpr (tabs) {
 			std::memset(outPtr, 0x09, indent);
 			outPtr += indent;
 		} else {
-			std::memset(outPtr, 0x09, indent * indentSize);
+			std::memset(outPtr, 0x20u, indent * indentSize);
 			outPtr += indent * indentSize;
 		}
 	};
@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case json_structural_type::Comma: {
-						appendCharacter<','>(outPtr);
+						appendCharacter<0x2Cu>(outPtr);
 						++iter;
 						if constexpr (newLinesInArray) {
 							appendNewLine<tabs, indentSize>(outPtr, indent);
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 							if (state[indent] == json_structural_type::Object_Start) {
 								appendNewLine<tabs, indentSize>(outPtr, indent);
 							} else {
-								appendCharacter<0x20>(outPtr);
+								appendCharacter<0x20u>(outPtr);
 							}
 						}
 						break;
@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case json_structural_type::Bool: {
-						if (*iter == 't') {
+						if (*iter == 0x74u) {
 							appendValues(trueString.size(), outPtr, trueString.data());
 						} else {
 							appendValues(falseString.size(), outPtr, falseString.data());
