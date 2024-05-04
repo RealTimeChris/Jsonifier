@@ -309,14 +309,14 @@ namespace jsonifier_internal {
 				return;
 			}
 			static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
-			auto newSize = roundUpToMultiple<BytesPerStep>(static_cast<uint64_t>(static_cast<float>(iter.operator->() - newPtr)));
+			auto newSize = static_cast<uint64_t>(static_cast<float>(iter.operator->() - newPtr));
+			
 			if (static_cast<int64_t>(newSize) > 0) {
 				if (newSize > newString.size()) [[unlikely]] {
 					newString.resize(static_cast<uint64_t>(newSize));
 				}
 				++newPtr;
-				auto remainingStringLength = iter.getRemainingStringLength();
-				auto newestPtr			   = parseStringImpl(newPtr, newString.data(), newSize > remainingStringLength ? remainingStringLength : newSize);
+				auto newestPtr = parseStringImpl(newPtr, newString.data(), newSize);
 				if (newestPtr) [[likely]] {
 					newSize = static_cast<uint64_t>(newestPtr - newString.data());
 					if (value.size() != newSize) {

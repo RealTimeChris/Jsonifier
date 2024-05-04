@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		constexpr derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
 		}
 

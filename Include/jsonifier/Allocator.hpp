@@ -37,7 +37,7 @@ namespace jsonifier_internal {
 		return static_cast<int64_t>(val) >= 0 ? (val / multiple) * multiple : ((val - multiple + 1) / multiple) * multiple;
 	}
 
-#if defined(_MSC_VER)
+#if defined(JSONIFIER_MSVC)
 
 	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
 		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(size * sizeof(value_type)), BytesPerStep));

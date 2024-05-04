@@ -192,15 +192,15 @@ namespace jsonifier_internal {
 		return digiIsType(d, char_type(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint64_type return_type> consteval return_type repeatByte() {
+	template<const auto repeat, jsonifier::concepts::uint64_type return_type> constexpr return_type repeatByte() {
 		return 0x0101010101010101ull * uint8_t(repeat);
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint32_type return_type> consteval return_type repeatByte() {
+	template<const auto repeat, jsonifier::concepts::uint32_type return_type> constexpr return_type repeatByte() {
 		return 0x01010101ul * uint8_t(repeat);
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint16_type return_type> consteval return_type repeatByte() {
+	template<const auto repeat, jsonifier::concepts::uint16_type return_type> constexpr return_type repeatByte() {
 		return 0x0101 * uint8_t(repeat);
 	}
 
@@ -262,7 +262,7 @@ namespace jsonifier_internal {
 		100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
 		10000000000000000000ull };
 
-	consteval uint32_t ceillog2(uint32_t x) {
+	constexpr uint32_t ceillog2(uint32_t x) {
 		return x < 2 ? x : 1 + ceillog2(x >> 1);
 	}
 

@@ -422,8 +422,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	consteval uint32_t numbits(uint32_t x) noexcept {
-		return x < 2 ? x : 1 + numbits(x >> 1);
+	template<uint32_t x> constexpr uint32_t numbits() noexcept {
+		return x < 2 ? x : 1 + numbits<(x >> 1)>();
 	}
 
 	template<std::floating_point value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buffer, value_type val) noexcept {
@@ -436,7 +436,7 @@ namespace jsonifier_internal {
 		raw_t raw;
 		std::memcpy(&raw, &val, sizeof(value_type));
 
-		constexpr uint32_t exponent_bits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		constexpr uint32_t exponent_bits = numbits<std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1>();
 		constexpr raw_t sig_mask		 = raw_t(-1) >> (exponent_bits + 1);
 		bool sign						 = (raw >> (sizeof(value_type) * 8 - 1));
 		uint64_t sig_raw				 = raw & sig_mask;

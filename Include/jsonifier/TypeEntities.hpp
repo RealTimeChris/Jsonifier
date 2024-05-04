@@ -164,6 +164,9 @@ namespace jsonifier {
 		concept uint64_type = unsigned_type<value_type> && sizeof(value_type) == 8;
 
 		template<typename value_type>
+		concept int8_type = signed_type<value_type> && sizeof(value_type) == 1;
+
+		template<typename value_type>
 		concept int16_type = signed_type<value_type> && sizeof(value_type) == 2;
 
 		template<typename value_type>

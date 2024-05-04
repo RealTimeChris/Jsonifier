@@ -1012,6 +1012,7 @@ struct results {
 			auto mbWrittenCount	  = static_cast<double>(*json_write_byte_length) / 1e+6l;
 			auto writeSecondCount = *json_write / 1e+9l;
 			result.resultSpeed	  = mbWrittenCount / writeSecondCount;
+			json_write_speed	  = mbWrittenCount / writeSecondCount;
 			result.resultType	  = "Write";
 			result.color		  = wColor;
 		}
@@ -1022,9 +1023,10 @@ struct results {
 		test_result result{};
 		if (json_read_byte_length && json_read) {
 			result.libraryName	 = name;
-			auto mbWrittenCount	 = static_cast<double>(*json_read_byte_length) / 1e+6l;
+			auto mbReadCount	 = static_cast<double>(*json_read_byte_length) / 1e+6l;
 			auto readSecondCount = *json_read / 1e+9l;
-			result.resultSpeed	 = mbWrittenCount / readSecondCount;
+			result.resultSpeed	 = mbReadCount / readSecondCount;
+			json_read_speed		 = mbReadCount / readSecondCount;
 			result.resultType	 = "Read";
 			result.color		 = rColor;
 		}
@@ -1040,7 +1042,8 @@ struct results {
 			double readSecondCount = *json_read / 1e+9l;
 			std::stringstream stream01{};
 			stream01 << static_cast<double>(mbReadCount / readSecondCount);
-			read = stream01.str();
+			json_read_speed = static_cast<double>(mbReadCount / readSecondCount);
+			read			= stream01.str();
 		} else {
 			read = "N/A";
 		}
@@ -1049,7 +1052,8 @@ struct results {
 			double writeSecondCount = *json_write / 1e+9l;
 			std::stringstream stream01{};
 			stream01 << static_cast<double>(mbWrittenCount / writeSecondCount);
-			write = stream01.str();
+			json_write_speed = mbWrittenCount / writeSecondCount;
+			write			 = stream01.str();
 		} else {
 			write = "N/A";
 		}
@@ -1103,11 +1107,19 @@ template<typename Function> double benchmark(Function function, int64_t iteratio
 	return currentLowestTime.count();
 }
 
-template<typename test_type, uint64_t iterations, bool minified> auto jsonifierTest(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint = true) {
+enum class test_type {
+	parse_and_serialize = 0,
+	minify				= 1,
+	prettify			= 2,
+	validate			= 3,
+};
+
+template<test_type type = test_type::parse_and_serialize, typename test_data_type, uint64_t iterations, bool minified>
+auto jsonifierTest(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 
 	results r{ "jsonifier", testName, "https://github.com/realtimechris/jsonifier", iterations };
-	test_type testData{};
+	test_data_type testData{};
 	jsonifier::jsonifier_core parser{};
 
 	auto result = benchmark(
@@ -1142,8 +1154,8 @@ template<typename test_type, uint64_t iterations, bool minified> auto jsonifierT
 	return r;
 }
 
-auto jsonifierMinifyTest(const jsonifier::string& discordDataNew, bool doWePrint = true) {
-	std::string buffer{ discordDataNew };
+template<> auto jsonifierTest<test_type::minify, std::string, iterationsVal, false>(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint) {
+	std::string buffer{ bufferNew };
 
 	results r{ "jsonifier", "Minify Test", "https://github.com/realtimechris/jsonifier", iterationsVal };
 
@@ -1151,7 +1163,7 @@ auto jsonifierMinifyTest(const jsonifier::string& discordDataNew, bool doWePrint
 
 	auto result = benchmark(
 		[&]() {
-			parser.minify(buffer);
+			buffer = parser.minify(buffer);
 		},
 		iterationsVal);
 
@@ -1167,22 +1179,23 @@ auto jsonifierMinifyTest(const jsonifier::string& discordDataNew, bool doWePrint
 	return r;
 }
 
-auto jsonifierPrettifyTest(const jsonifier::string& discordDataNew, bool doWePrint = true) {
-	std::string buffer{ discordDataNew };
+template<> auto jsonifierTest<test_type::prettify, std::string, iterationsVal, false>(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint) {
+	std::string buffer{ bufferNew };
 
 	results r{ "jsonifier", "Prettify Test", "https://github.com/realtimechris/jsonifier", iterationsVal };
 
 	jsonifier::jsonifier_core parser{};
-
+	uint64_t newBufferSize{};
 	auto result = benchmark(
 		[&]() {
-			parser.prettify(buffer);
+			auto newBuffer = static_cast<std::string>(parser.prettify(buffer));
+			newBufferSize  = newBuffer.size();
 		},
 		iterationsVal);
 
 	r.json_write.emplace(result);
 
-	r.json_write_byte_length.emplace(buffer.size());
+	r.json_write_byte_length.emplace(newBufferSize);
 	r.wColor = "steelblue";
 	r.rColor = "teal";
 	if (doWePrint) {
@@ -1192,7 +1205,7 @@ auto jsonifierPrettifyTest(const jsonifier::string& discordDataNew, bool doWePri
 	return r;
 }
 
-auto jsonifierValidationTest(const jsonifier::string& bufferNew, bool doWePrint = true) {
+template<> auto jsonifierTest<test_type::validate, std::string, iterationsVal, false>(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint) {
 	std::string buffer{ bufferNew };
 
 	results r{ "jsonifier", "Validation Test", "https://github.com/realtimechris/jsonifier", iterationsVal };
@@ -1219,11 +1232,12 @@ auto jsonifierValidationTest(const jsonifier::string& bufferNew, bool doWePrint 
 }
 
 #if !defined(ASAN)
-template<typename test_type, uint64_t iterations, bool minified> auto glazeTest(const jsonifier::string& discordData, const std::string& testName, bool doWePrint = true) {
-	std::string buffer{ discordData };
+template<test_type type = test_type::parse_and_serialize, typename test_data_type, uint64_t iterations, bool minified>
+auto glazeTest(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint = true) {
+	std::string buffer{ bufferNew };
 
 	results r{ "glaze", testName, "https://github.com/stephenberry/glaze", iterations };
-	test_type testData{};
+	test_data_type testData{};
 	auto result = benchmark(
 		[&]() {
 			try {
@@ -1255,20 +1269,21 @@ template<typename test_type, uint64_t iterations, bool minified> auto glazeTest(
 	return r;
 }
 
-auto glazePrettifyTest(const jsonifier::string& discordDataNew, bool doWePrint = true) {
-	std::string buffer{ discordDataNew };
+template<> auto glazeTest<test_type::prettify, std::string, iterationsVal, false>(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint) {
+	std::string buffer{ bufferNew };
 
 	results r{ "glaze", "Prettify Test", "https://github.com/stephenberry/glaze", iterationsVal };
-
+	uint64_t newBufferSize{};
 	auto result = benchmark(
 		[&]() {
-			glz::prettify_json(buffer);
+			auto newBuffer = glz::prettify_json(buffer);
+			newBufferSize  = newBuffer.size();
 		},
 		iterationsVal);
 
 	r.json_write.emplace(result);
 
-	r.json_write_byte_length.emplace(buffer.size());
+	r.json_write_byte_length.emplace(newBufferSize);
 	r.wColor = "skyblue";
 	r.rColor = "dodgerblue";
 	if (doWePrint) {
@@ -1278,14 +1293,16 @@ auto glazePrettifyTest(const jsonifier::string& discordDataNew, bool doWePrint =
 	return r;
 }
 
-auto glazeMinifyTest(const jsonifier::string& discordDataNew, bool doWePrint = true) {
-	std::string buffer{ discordDataNew };
+template<> auto glazeTest<test_type::minify, std::string, iterationsVal, false>(const jsonifier::string& bufferNew, const std::string& testName, bool doWePrint) {
+	std::string buffer{ bufferNew };
 
 	results r{ "glaze", "Minify Test", "https://github.com/stephenberry/glaze", iterationsVal };
 
+	uint64_t newBufferSize{};
 	auto result = benchmark(
 		[&]() {
-			glz::minify_json(buffer);
+			auto newBuffer = glz::minify_json(buffer);
+			newBufferSize  = newBuffer.size();
 		},
 		iterationsVal);
 
@@ -1293,7 +1310,7 @@ auto glazeMinifyTest(const jsonifier::string& discordDataNew, bool doWePrint = t
 
 	r.wColor = "skyblue";
 	r.rColor = "dodgerblue";
-	r.json_write_byte_length.emplace(buffer.size());
+	r.json_write_byte_length.emplace(newBufferSize);
 	if (doWePrint) {
 		r.print();
 	}
@@ -1868,11 +1885,12 @@ template<> AbcTest<test_struct> getValue<AbcTest<test_struct>>(simdjson::ondeman
 	return obj;
 }
 
-template<typename test_type, uint64_t iterations> auto simdjsonTest(const jsonifier::string& bufferNew, const std::string& testname, bool doWePrint = true) {
+template<test_type type = test_type::parse_and_serialize, typename test_data_type, uint64_t iterations>
+auto simdjsonTest(const jsonifier::string& bufferNew, const std::string& testname, bool doWePrint = true) {
 	std::string buffer{ bufferNew };
 
 	results r{ "simdjson", testname, "https://github.com/simdjson/simdjson", iterations };
-	test_type testData{};
+	test_data_type testData{};
 
 	simdjson::ondemand::parser parser{};
 
@@ -1881,7 +1899,7 @@ template<typename test_type, uint64_t iterations> auto simdjsonTest(const jsonif
 		[&]() {
 			try {
 				auto doc = parser.iterate(buffer);
-				testData = getValue<test_type>(doc.value());
+				testData = getValue<test_data_type>(doc.value());
 			} catch (std ::exception& error) {
 				std::cout << "Simdjson Error: " << error.what() << std::endl;
 			}
@@ -1900,16 +1918,16 @@ template<typename test_type, uint64_t iterations> auto simdjsonTest(const jsonif
 	return r;
 }
 
-auto simdjsonMinifyTest(const jsonifier::string& discordData, bool doWePrint = true) {
-	std::string buffer{ discordData };
+template<> auto simdjsonTest<test_type::minify, std::string, iterationsVal>(const jsonifier::string& bufferNew, const std::string& testname, bool doWePrint) {
+	std::string buffer{ bufferNew };
 
 	results r{ "simdjson", "Minify Test", "https://github.com/simdjson/simdjson", iterationsVal };
 	dom::parser parser{};
 	auto result = benchmark(
 		[&]() {
 			try {
-				auto doc	  = parser.parse(buffer);
-				auto newValue = simdjson::minify(doc);
+				auto doc	   = parser.parse(buffer);
+				auto newBuffer = simdjson::minify(doc);
 			} catch (std ::exception& error) {
 				std::cout << "Simdjson Error: " << error.what() << std::endl;
 			}
@@ -1933,24 +1951,25 @@ std::string table_header = R"(
 | Library | Read (MB/s) | Write (MB/s) |
 | ------------------------------------------------- | ---------- | ----------- |)";
 
-template<typename test_type, bool minified, uint64_t iterationsVal> test_results jsonTests(const jsonifier::string& jsonDataNew, const jsonifier::string& testName) {
+template<test_type type, typename test_data_type, bool minified, uint64_t iterationsVal>
+test_results jsonTests(const jsonifier::string& jsonDataNew, const jsonifier::string& testName) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
 	jsonResults.testName = testName;
 #if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonTest<test_type, iterationsVal>(jsonDataNew, jsonResults.testName, false);
+		simdjsonTest<type, test_data_type, iterationsVal>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(simdjsonTest<test_type, iterationsVal>(jsonDataNew, jsonResults.testName));
+	resultsNew.emplace_back(simdjsonTest<type, test_data_type, iterationsVal>(jsonDataNew, jsonResults.testName, true));
 	for (uint32_t x = 0; x < 2; ++x) {
-		glazeTest<test_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, false);
+		glazeTest<type, test_data_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(glazeTest<test_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName));
+	resultsNew.emplace_back(glazeTest<type, test_data_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, true));
 #endif
 	for (uint32_t x = 0; x < 2; ++x) {
-		jsonifierTest<test_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, false);
+		jsonifierTest<type, test_data_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(jsonifierTest<test_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName));
+	resultsNew.emplace_back(jsonifierTest<type, test_data_type, iterationsVal, minified>(jsonDataNew, jsonResults.testName, true));
 
 	std::string table{};
 	const auto n = resultsNew.size();
@@ -1972,108 +1991,108 @@ template<typename test_type, bool minified, uint64_t iterationsVal> test_results
 	return jsonResults;
 }
 
-test_results minifyTests(const jsonifier::string& jsonDataNew) {
+template<> test_results jsonTests<test_type::prettify, std::string, false, iterationsVal>(const jsonifier::string& jsonDataNew, const jsonifier::string& testName) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
-	jsonResults.testName = "Minify Test";
+	jsonResults.testName = testName;
 #if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		simdjsonMinifyTest(jsonDataNew, false);
+		glazeTest<test_type::prettify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(simdjsonMinifyTest(jsonDataNew));
-	for (uint32_t x = 0; x < 2; ++x) {
-		glazeMinifyTest(jsonDataNew, false);
-	}
-	resultsNew.emplace_back(glazeMinifyTest(jsonDataNew));
+	resultsNew.emplace_back(glazeTest<test_type::prettify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, true));
 #endif
 	for (uint32_t x = 0; x < 2; ++x) {
-		jsonifierMinifyTest(jsonDataNew, false);
+		jsonifierTest<test_type::prettify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(jsonifierMinifyTest(jsonDataNew));
+	resultsNew.emplace_back(jsonifierTest<test_type::prettify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, true));
 
 	std::string table{};
 	const auto n = resultsNew.size();
 	table += table_header + "\n";
 	std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results>());
 	for (uint64_t x = 0; x < n; ++x) {
-		table += resultsNew[x].jsonStats();
 		if (resultsNew[x].getReadResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getReadResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getReadResults());
 		}
 		if (resultsNew[x].getWriteResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getWriteResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getWriteResults());
 		}
+		table += resultsNew[x].jsonStats();
 		if (x != n - 1) {
 			table += "\n";
 		}
 	}
 	jsonResults.markdownResults = table;
 	return jsonResults;
-};
+}
 
-test_results prettifyTests(const jsonifier::string& jsonDataNew) {
+template<> test_results jsonTests<test_type::minify, std::string, false, iterationsVal>(const jsonifier::string& jsonDataNew, const jsonifier::string& testName) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
-	jsonResults.testName = "Prettify Test";
+	jsonResults.testName = testName;
 #if !defined(ASAN)
 	for (uint32_t x = 0; x < 2; ++x) {
-		glazePrettifyTest(jsonDataNew, false);
+		simdjsonTest<test_type::minify, std::string, iterationsVal>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(glazePrettifyTest(jsonDataNew));
+	resultsNew.emplace_back(simdjsonTest<test_type::minify, std::string, iterationsVal>(jsonDataNew, jsonResults.testName, true));
+	for (uint32_t x = 0; x < 2; ++x) {
+		glazeTest<test_type::minify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, false);
+	}
+	resultsNew.emplace_back(glazeTest<test_type::minify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, true));
 #endif
 	for (uint32_t x = 0; x < 2; ++x) {
-		jsonifierPrettifyTest(jsonDataNew, false);
+		jsonifierTest<test_type::minify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(jsonifierPrettifyTest(jsonDataNew));
+	resultsNew.emplace_back(jsonifierTest<test_type::minify, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, true));
 
 	std::string table{};
 	const auto n = resultsNew.size();
 	table += table_header + "\n";
 	std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results>());
 	for (uint64_t x = 0; x < n; ++x) {
-		table += resultsNew[x].jsonStats();
 		if (resultsNew[x].getReadResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getReadResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getReadResults());
 		}
 		if (resultsNew[x].getWriteResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getWriteResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getWriteResults());
 		}
+		table += resultsNew[x].jsonStats();
 		if (x != n - 1) {
 			table += "\n";
 		}
 	}
 	jsonResults.markdownResults = table;
 	return jsonResults;
-};
+}
 
-test_results validationTests(const jsonifier::string& jsonDataNew) {
+template<> test_results jsonTests<test_type::validate, std::string, false, iterationsVal>(const jsonifier::string& jsonDataNew, const jsonifier::string& testName) {
 	std::vector<results> resultsNew{};
 	test_results jsonResults{};
-	jsonResults.testName = "Validate Test";
+	jsonResults.testName = testName;
 	for (uint32_t x = 0; x < 2; ++x) {
-		jsonifierValidationTest(jsonDataNew, false);
+		jsonifierTest<test_type::validate, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, false);
 	}
-	resultsNew.emplace_back(jsonifierValidationTest(jsonDataNew));
+	resultsNew.emplace_back(jsonifierTest<test_type::validate, std::string, iterationsVal, false>(jsonDataNew, jsonResults.testName, true));
 
 	std::string table{};
 	const auto n = resultsNew.size();
 	table += table_header + "\n";
 	std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results>());
 	for (uint64_t x = 0; x < n; ++x) {
-		table += resultsNew[x].jsonStats();
 		if (resultsNew[x].getReadResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getReadResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getReadResults());
 		}
 		if (resultsNew[x].getWriteResults().resultSpeed != 9223372036854775808ull && resultsNew[x].getWriteResults().resultSpeed != 0) {
 			jsonResults.results.emplace_back(resultsNew[x].getWriteResults());
 		}
+		table += resultsNew[x].jsonStats();
 		if (x != n - 1) {
 			table += "\n";
 		}
 	}
 	jsonResults.markdownResults = table;
 	return jsonResults;
-};
+}
 
 namespace fs = std::filesystem;
 
@@ -2305,7 +2324,6 @@ struct welcome {
 	std::vector<welcome_element> data{};
 };
 
-
 namespace jsonifier {
 
 	template<> struct core<data_class> {
@@ -2377,9 +2395,9 @@ int32_t main() {
 		FileLoader fileLoader04{ findFileRecursively("../Json/Results.json") };
 #endif
 		FileLoader fileLoader05{ findFileRecursively("../Json/DiscordData-Prettified.json") };
-		jsonifier::string discordData{ fileLoader05.operator jsonifier::string() };
-		discordData = parser.prettify(parser.minify(discordData));
-		fileLoader05.saveFile(discordData);
+		jsonifier::string bufferNew{ fileLoader05.operator jsonifier::string() };
+		bufferNew = parser.prettify(parser.minify(bufferNew));
+		fileLoader05.saveFile(bufferNew);
 		FileLoader fileLoader06{ findFileRecursively("../Json/DiscordData-Minified.json") };
 		jsonifier::string discordMinifiedData{ fileLoader06.operator jsonifier::string() };
 		discordMinifiedData = parser.minify(discordMinifiedData);
@@ -2404,65 +2422,65 @@ int32_t main() {
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ static_cast<std::string>(section00) + newTimeString + static_cast<std::string>(section01) };
-		auto testResults = jsonTests<Test<test_struct>, false, 1>(jsonDataNew, "Single Test (Prettified)");
+		auto testResults = jsonTests<test_type::parse_and_serialize, Test<test_struct>, false, 1>(jsonDataNew, "Single Test (Prettified)");
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<Test<test_struct>, true, 1>(jsonMinifiedData, "Single Test (Minified)");
+		testResults = jsonTests<test_type::parse_and_serialize, Test<test_struct>, true, 1>(jsonMinifiedData, "Single Test (Minified)");
 		newerString += section02;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<Test<test_struct>, false, iterationsVal>(jsonDataNew, "Multi Test (Prettified)");
+		testResults = jsonTests<test_type::parse_and_serialize, Test<test_struct>, false, iterationsVal>(jsonDataNew, "Multi Test (Prettified)");
 		newerString += section03;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<Test<test_struct>, true, iterationsVal>(jsonMinifiedData, "Multi Test (Minified)");
+		testResults = jsonTests<test_type::parse_and_serialize, Test<test_struct>, true, iterationsVal>(jsonMinifiedData, "Multi Test (Minified)");
 		newerString += section04;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<AbcTest<test_struct>, false, iterationsVal>(jsonDataNew, "Abc Test (Prettified)");
+		testResults = jsonTests<test_type::parse_and_serialize, AbcTest<test_struct>, false, iterationsVal>(jsonDataNew, "Abc Test (Prettified)");
 		newerString += section05;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<AbcTest<test_struct>, true, iterationsVal>(jsonMinifiedData, "Abc Test (Minified)");
+		testResults = jsonTests<test_type::parse_and_serialize, AbcTest<test_struct>, true, iterationsVal>(jsonMinifiedData, "Abc Test (Minified)");
 		newerString += section06;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<discord_message, false, iterationsVal>(discordData, "Discord Test (Prettified)");
+		testResults = jsonTests<test_type::parse_and_serialize, discord_message, false, iterationsVal>(bufferNew, "Discord Test (Prettified)");
 		newerString += section07;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<discord_message, true, iterationsVal>(discordMinifiedData, "Discord Test (Minified)");
+		testResults = jsonTests<test_type::parse_and_serialize, discord_message, true, iterationsVal>(discordMinifiedData, "Discord Test (Minified)");
 		newerString += section08;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<twitter_message, false, iterationsVal>(twitterData, "Twitter Test (Prettified)");
+		testResults = jsonTests<test_type::parse_and_serialize, twitter_message, false, iterationsVal>(twitterData, "Twitter Test (Prettified)");
 		newerString += section09;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = jsonTests<twitter_message, true, iterationsVal>(twitterMinifiedData, "Twitter Test (Minified)");
+		testResults = jsonTests<test_type::parse_and_serialize, twitter_message, true, iterationsVal>(twitterMinifiedData, "Twitter Test (Minified)");
 		newerString += section10;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = minifyTests(discordData);
+		testResults = jsonTests<test_type::minify, std::string, false, iterationsVal>(bufferNew, "Minify Test");
 		newerString += section11;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = prettifyTests(discordMinifiedData);
+		testResults = jsonTests<test_type::prettify, std::string, false, iterationsVal>(discordMinifiedData, "Prettify Test");
 		newerString += section12;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = validationTests(discordData);
+		testResults = jsonTests<test_type::validate, std::string, false, iterationsVal>(bufferNew, "Validate Test");
 		newerString += section13;
 		newerString += section001;
 		newerString += testResults.markdownResults;
