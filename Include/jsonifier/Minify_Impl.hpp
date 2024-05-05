@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 						while (whitespaceTable[previousPtr[--currentDistance]]) {
 						}
 						if (currentDistance > 0) {
-							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance + 1));
+							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance + 1), outPtr);
 							outPtr += currentDistance + 1;
 						} else {
 							iter.getErrors().emplace_back(createError<json_structural_type::String>(iter));
@@ -61,7 +61,7 @@ namespace jsonifier_internal {
 						while (!whitespaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
 						}
 						if (currentDistance > 0) {
-							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance), outPtr);
+							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance + 1), outPtr);
 							outPtr += currentDistance;
 						} else {
 							iter.getErrors().emplace_back(createError<json_structural_type::Number>(iter));
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon:
-						appendCharacter<0x3A>(outPtr);
+						appendCharacter<0x3Au>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Array_Start:
 						appendCharacter<0x5Bu>(outPtr);
@@ -79,17 +79,17 @@ namespace jsonifier_internal {
 						appendCharacter<0x5Du>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Null: {
-						std::memcpy(outPtr, nullString.data(), nullString.size());
+						std::copy(nullString.data(), nullString.data() + nullString.size(), outPtr);
 						outPtr += nullString.size();
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (*previousPtr == 0x74u) {
-							std::memcpy(outPtr, trueString.data(), trueString.size());
+							std::copy(trueString.data(), trueString.data() + trueString.size(), outPtr);
 							outPtr += trueString.size();
 							break;
 						} else {
-							std::memcpy(outPtr, falseString.data(), falseString.size());
+							std::copy(falseString.data(), falseString.data() + falseString.size(), outPtr);
 							outPtr += falseString.size();
 							break;
 						}
@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 				previousPtr = iter.operator->();
 				++iter;
 			}
-			std::memcpy(outPtr, previousPtr, 1);
+			*outPtr = *previousPtr;
 			++outPtr;
 			return static_cast<uint64_t>(outPtr - out.data());
 		}

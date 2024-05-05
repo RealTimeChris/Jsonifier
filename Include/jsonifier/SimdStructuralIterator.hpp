@@ -28,35 +28,33 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new> class simd_structural_iterator {
+	template<jsonifier::concepts::string_t string_type> class simd_structural_iterator {
 	  public:
-		friend class derailleur;
-		template<json_structural_type value_type, typename derived_type> friend struct validate_impl;
 
-		using iterator_concept	  = std::forward_iterator_tag;
-		using iterator_category	  = std::forward_iterator_tag;
-		using value_type		  = value_type_new;
-		using value_type_internal = uint8_t;
-		using pointer_internal	  = structural_index*;
-		using pointer			  = value_type*;
-		using string_type		  = jsonifier::string_base<value_type>;
-		using size_type			  = uint64_t;
+		using iterator_concept	= std::forward_iterator_tag;
+		using iterator_category = std::forward_iterator_tag;
+		using value_type		= uint8_t;
+		using pointer_internal	= structural_index*;
+		using pointer			= string_view_ptr;
+		using difference_type	= std::ptrdiff_t;
+		using size_type			= uint64_t;
 
 		JSONIFIER_INLINE simd_structural_iterator() noexcept = default;
 
-		JSONIFIER_INLINE simd_structural_iterator(structural_index* startPtr, structural_index* endPtr, size_type stringLengthNew, string_type& bufferStringNew,
-			jsonifier::vector<error>& errorsNew) noexcept
-			: errors{ &errorsNew }, currentIndex{ startPtr }, rootIndex{ startPtr }, stringBuffer{ &bufferStringNew }, endIndex{ endPtr }, stringLength{ stringLengthNew } {};
+		JSONIFIER_INLINE simd_structural_iterator(structural_index* sectionNew) noexcept : rootIndex{ sectionNew }, currentIndex{} {};
+
+		JSONIFIER_INLINE simd_structural_iterator(structural_index* sectionNew, string_type& bufferStringNew, jsonifier::vector<error>& errorsNew) noexcept
+			: errors{ &errorsNew }, rootIndex{ sectionNew }, stringBuffer{ &bufferStringNew }, currentIndex{} {};
 
 		JSONIFIER_INLINE value_type operator*() const {
-			return *currentIndex ? **currentIndex : defaultValue;
+			return (rootIndex[currentIndex]) ? *rootIndex[currentIndex] : defaultValue;
 		}
 
-		JSONIFIER_INLINE auto operator->() const {
-			return *currentIndex;
+		JSONIFIER_INLINE pointer operator->() const {
+			return rootIndex[currentIndex];
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator<value_type>& operator++() {
+		JSONIFIER_INLINE simd_structural_iterator<string_type>& operator++() {
 			++currentIndex;
 			return *this;
 		}
@@ -69,25 +67,29 @@ namespace jsonifier_internal {
 			errors->emplace_back(jsonifier_internal::createError<typeNew>(*this, location));
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator<value_type> operator+(int32_t valueNew) {
-			simd_structural_iterator<value_type> temp{ *this };
+		JSONIFIER_INLINE simd_structural_iterator<string_type> operator+(int32_t valueNew) {
+			simd_structural_iterator<string_type> temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				++temp;
 			}
 			return temp;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator<value_type> operator++(int32_t) {
-			simd_structural_iterator<value_type> temp{ *this };
+		JSONIFIER_INLINE simd_structural_iterator<string_type> operator++(int32_t) {
+			simd_structural_iterator<string_type> temp{ *this };
 			++(*this);
 			return temp;
 		}
 
-		JSONIFIER_INLINE auto getEndPtr() const {
-			return *endIndex;
+		JSONIFIER_INLINE pointer getEndPtr() const {
+			auto newIndex = rootIndex + currentIndex;
+			while (*(newIndex + 1) != nullptr) {
+				++newIndex;
+			}
+			return *newIndex;
 		}
 
-		JSONIFIER_INLINE auto getRootPtr() const {
+		JSONIFIER_INLINE pointer getRootPtr() const {
 			return *rootIndex;
 		}
 
@@ -99,42 +101,31 @@ namespace jsonifier_internal {
 			return *errors;
 		}
 
-		JSONIFIER_INLINE size_type getRemainingStringLength() const {
-			return stringLength - getCurrentStringIndex();
-		}
-
 		JSONIFIER_INLINE size_type getCurrentStringIndex() const {
-			return *currentIndex - *rootIndex;
+			return static_cast<size_type>(*(rootIndex + currentIndex) - *rootIndex);
 		}
 
 		JSONIFIER_INLINE bool operator==(const simd_structural_iterator&) const {
-			return *currentIndex == nullptr;
+			return !(rootIndex[currentIndex]);
 		}
 
 		JSONIFIER_INLINE operator bool() const {
-			return *currentIndex != nullptr;
+			return *(rootIndex + currentIndex) != nullptr;
 		}
 
 		JSONIFIER_INLINE void swap(simd_structural_iterator& other) {
 			std::swap(stringBuffer, other.stringBuffer);
 			std::swap(currentIndex, other.currentIndex);
-			std::swap(stringLength, other.stringLength);
 			std::swap(rootIndex, other.rootIndex);
-			std::swap(endIndex, other.endIndex);
 			std::swap(errors, other.errors);
 		}
 
 	  protected:
 		static constexpr value_type defaultValue{ 0x00ll };
 		jsonifier::vector<error>* errors{};
-		pointer_internal currentIndex{};
 		pointer_internal rootIndex{};
 		string_type* stringBuffer{};
-		pointer_internal endIndex{};
-		size_type stringLength{};
+		uint64_t currentIndex{};
 	};
-
-	template<typename value_type>
-	concept simd_structural_iterator_t = jsonifier::concepts::is_specialization_v<jsonifier::concepts::unwrap_t<value_type>, simd_structural_iterator>;
 
 }

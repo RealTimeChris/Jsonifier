@@ -34,6 +34,13 @@ namespace simd_internal {
 		return return_type{ newArray[indices % N]... };
 	}
 
+	template<jsonifier::concepts::unsigned_type return_type, typename value_type, size_t N, size_t... indices>
+	constexpr return_type createArray(const value_type (&newArray)[N], std::index_sequence<indices...>) {
+		return_type returnValues{};
+		std::copy(newArray, newArray + 1, &returnValues);
+		return returnValues;
+	}
+
 	template<typename return_type> constexpr return_type simdFromValue(uint8_t value) {
 #if defined(JSONIFIER_LINUX) || (defined(JSONIFIER_WIN) && defined(JSONIFIER_CLANG))
 		constexpr uint64_t valueSize{ sizeof(uint64_t) };

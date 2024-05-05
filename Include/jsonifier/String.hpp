@@ -384,7 +384,7 @@ namespace jsonifier {
 			jsonifier::string_base<value_type_newer> returnValue{};
 			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
-				std::memcpy(returnValue.data(), data(), returnValue.size());
+				std::copy(data(), data() + returnValue.size(), returnValue.data());
 			}
 			return returnValue;
 		}
@@ -393,7 +393,7 @@ namespace jsonifier {
 			std::basic_string<value_type_newer> returnValue{};
 			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
-				std::memcpy(returnValue.data(), data(), returnValue.size());
+				std::copy(data(), data() + returnValue.size(), returnValue.data());
 			}
 			return returnValue;
 		}

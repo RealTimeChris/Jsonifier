@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& in) {
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<refreshString, !minified>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
 				derivedRef.errors.emplace_back(createError(error_code::No_Input));
 				return false;

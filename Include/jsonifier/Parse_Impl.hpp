@@ -313,14 +313,14 @@ namespace jsonifier_internal {
 			
 			if (static_cast<int64_t>(newSize) > 0) {
 				if (newSize > newString.size()) [[unlikely]] {
-					newString.resize(static_cast<uint64_t>(newSize));
+					newString.resize(newSize);
 				}
 				++newPtr;
 				auto newestPtr = parseStringImpl(newPtr, newString.data(), newSize);
 				if (newestPtr) [[likely]] {
 					newSize = static_cast<uint64_t>(newestPtr - newString.data());
 					if (value.size() != newSize) {
-						value.resize(static_cast<uint64_t>(newSize));
+						value.resize(newSize);
 						std::memcpy(value.data(), newString.data(), newSize);
 					}
 				} else {
@@ -349,7 +349,7 @@ namespace jsonifier_internal {
 			if (newSize > 0) [[likely]] {
 				jsonifier::string newString{};
 				newString.resize(static_cast<uint64_t>(newSize));
-				std::copy(newPtr, newPtr + static_cast<uint64_t>(newSize), newString.data());
+				std::memcpy(newString.data(), newPtr, static_cast<uint64_t>(newSize));
 				value = newString;
 			}
 			return;
@@ -386,11 +386,46 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::num_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
-			auto newPtr = iter.operator->();
-			++iter;
-			if (!parseNumber(value, newPtr, iter.operator->() - newPtr)) [[likely]] {
-				iter.template createError<error_code::Invalid_Number_Value>();
-				skipToNextValue(iter);
+			if constexpr (jsonifier::concepts::uint64_type<value_type_new>) {
+				if (parseNumber(value, iter.operator->())) [[likely]] {
+					++iter;
+				} else {
+					iter.template createError<error_code::Invalid_Number_Value>();
+					skipToNextValue(iter);
+				}
+
+			} else if constexpr (jsonifier::concepts::int64_type<value_type_new>) {
+				if (parseNumber(value, iter.operator->())) [[likely]] {
+					++iter;
+				} else {
+					iter.template createError<error_code::Invalid_Number_Value>();
+					skipToNextValue(iter);
+				}
+			} else if constexpr (jsonifier::concepts::unsigned_type<value_type_new>) {
+				uint64_t newValue{};
+				if (parseNumber(newValue, iter.operator->())) [[likely]] {
+					value = static_cast<value_type_new>(newValue);
+					++iter;
+				} else {
+					iter.template createError<error_code::Invalid_Number_Value>();
+					skipToNextValue(iter);
+				}
+			} else if constexpr (jsonifier::concepts::signed_type<value_type_new>) {
+				int64_t newValue{};
+				if (parseNumber(newValue, iter.operator->())) [[likely]] {
+					value = static_cast<value_type_new>(newValue);
+					++iter;
+				} else {
+					iter.template createError<error_code::Invalid_Number_Value>();
+					skipToNextValue(iter);
+				}
+			} else if constexpr (jsonifier::concepts::float_t<value_type_new>) {
+				if (parseNumber(value, iter.operator->())) [[likely]] {
+					++iter;
+				} else {
+					iter.template createError<error_code::Invalid_Number_Value>();
+					skipToNextValue(iter);
+				}
 			}
 		}
 	};

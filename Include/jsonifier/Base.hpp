@@ -25,12 +25,13 @@
 
 #include <jsonifier/TypeEntities.hpp>
 
+#include <iostream>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cfloat>
 #include <cassert>
 #include <cstring>
+#include <cfloat>
 #include <array>
 
 #if !defined(__GNUC__)
@@ -135,8 +136,6 @@
 
 #endif
 
-union __m128x;
-
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 using simd_int_128 = __m128i;
@@ -160,16 +159,23 @@ using string_parsing_type = uint16_t;
 
 	#include <arm_neon.h>
 
+struct __m256x {
+	int64_t dummyValues[4]{};
+};
+struct __m512x {
+	int64_t dummyValues[8]{};
+};
+
 using simd_int_128 = uint8x16_t;
-using simd_int_256 = uint32_t;
-using simd_int_512 = uint64_t;
+using simd_int_256 = __m256x;
+using simd_int_512 = __m512x;
 
 using simd_int_t = uint8x16_t;
 constexpr uint64_t BitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 #else
 union __m128x {
-	#if JSONIFIER_WIN
+	#if JSONIFIER_WIN || JSONIFIER_MAC
 	int8_t m128x_int8[16]{};
 	int16_t m128x_int16[8];
 	int32_t m128x_int32[4];
@@ -189,9 +195,18 @@ union __m128x {
 	uint64_t m128x_uint64[2];
 	#endif
 };
+
+struct __m256x {
+	int64_t dummyValues[4]{};
+};
+
+struct __m512x {
+	int64_t dummyValues[8]{};
+};
+
 using simd_int_128 = __m128x;
-using simd_int_256 = uint32_t;
-using simd_int_512 = uint64_t;
+using simd_int_256 = __m256x;
+using simd_int_512 = __m512x;
 
 using simd_int_t = __m128x;
 constexpr uint64_t BitsPerStep{ 128 };
@@ -214,3 +229,6 @@ template<typename value_type>
 concept simd_int_128_type = std::is_same_v<simd_int_128, jsonifier::concepts::unwrap_t<value_type>>;
 template<typename value_type>
 concept simd_int_type = std::is_same_v<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
+template<typename value_type>
+concept simd_type = std::is_same_v<simd_int_128, jsonifier::concepts::unwrap_t<value_type>> || std::is_same_v<simd_int_256, jsonifier::concepts::unwrap_t<value_type>> ||
+	std::is_same_v<simd_int_512, jsonifier::concepts::unwrap_t<value_type>>;

@@ -32,8 +32,8 @@ namespace jsonifier_internal {
 			static constexpr uint64_t n{ sizeof(uint64_t) };
 			uint64_t v[2];
 			while (count > n) {
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -45,17 +45,16 @@ namespace jsonifier_internal {
 			const auto shift = n - count;
 			lhs -= shift;
 			rhs -= shift;
-
-			std::memcpy(v, lhs, n);
-			std::memcpy(v + 1, rhs, n);
+			std::copy(lhs, lhs + 1, v);
+			std::copy(rhs, rhs + 1, v + 1);
 			return v[0] == v[1];
 		}
 		{
 			static constexpr uint64_t n{ sizeof(uint32_t) };
 			if (count >= n) {
 				uint32_t v[2];
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -68,8 +67,8 @@ namespace jsonifier_internal {
 			static constexpr uint64_t n{ sizeof(uint16_t) };
 			if (count >= n) {
 				uint16_t v[2];
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				std::copy(lhs, lhs + 1, v);
+				std::copy(rhs, rhs + 1, v + 1);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -155,8 +154,8 @@ namespace jsonifier_internal {
 			return compare(lhs, rhs, Count);
 		} else if constexpr (Count == n) {
 			uint64_t v[2];
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			std::copy(lhs, lhs + 1, v);
+			std::copy(rhs, rhs + 1, v + 1);
 			return v[0] == v[1];
 		} else if constexpr (Count > 4) {
 			uint64_t v[2]{};
@@ -170,8 +169,8 @@ namespace jsonifier_internal {
 			return v[0] == v[1];
 		} else if constexpr (Count == 2) {
 			uint16_t v[2];
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			std::copy(lhs, lhs + 1, v);
+			std::copy(rhs, rhs + 1, v + 1);
 			return v[0] == v[1];
 		} else if constexpr (Count == 1) {
 			return *lhs == *rhs;

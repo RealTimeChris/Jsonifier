@@ -37,7 +37,7 @@ namespace simd_internal {
 		uint8x16_t tmp = vpaddq_u8(minput, minput);
 		tmp			   = vpaddq_u8(tmp, tmp);
 		tmp			   = vpaddq_u8(tmp, tmp);
-		return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
+		return static_cast<uint16_t>(vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0));
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {

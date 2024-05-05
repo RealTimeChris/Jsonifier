@@ -67,17 +67,25 @@ namespace simd_internal {
 	template<typename simd_int_t01> JSONIFIER_INLINE static simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
 		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep];
 		store(value, values);
-		values[0] = prefixXor(values[0]) ^ prevInString, prevInString = static_cast<int64_t>(values[0]) >> 63;
-		values[1] = prefixXor(values[1]) ^ prevInString, prevInString = static_cast<int64_t>(values[1]) >> 63;
+		values[0] = prefixXor(values[0]) ^ prevInString;
+		prevInString = static_cast<int64_t>(values[0]) >> 63;
+		values[1]	 = prefixXor(values[1]) ^ prevInString;
+		prevInString = static_cast<int64_t>(values[1]) >> 63;
 		if constexpr (SixtyFourBitsPerStep > 2) {
-			values[2] = prefixXor(values[2]) ^ prevInString, prevInString = static_cast<int64_t>(values[2]) >> 63;
-			values[3] = prefixXor(values[3]) ^ prevInString, prevInString = static_cast<int64_t>(values[3]) >> 63;
+			values[2]	 = prefixXor(values[2]) ^ prevInString;
+			prevInString = static_cast<int64_t>(values[2]) >> 63;
+			values[3]	 = prefixXor(values[3]) ^ prevInString;
+			prevInString = static_cast<int64_t>(values[3]) >> 63;
 		}
 		if constexpr (SixtyFourBitsPerStep > 4) {
-			values[4] = prefixXor(values[4]) ^ prevInString, prevInString = static_cast<int64_t>(values[4]) >> 63;
-			values[5] = prefixXor(values[5]) ^ prevInString, prevInString = static_cast<int64_t>(values[5]) >> 63;
-			values[6] = prefixXor(values[6]) ^ prevInString, prevInString = static_cast<int64_t>(values[6]) >> 63;
-			values[7] = prefixXor(values[7]) ^ prevInString, prevInString = static_cast<int64_t>(values[7]) >> 63;
+			values[4] = prefixXor(values[4]) ^ prevInString;
+			prevInString  = static_cast<int64_t>(values[4]) >> 63;
+			values[5] = prefixXor(values[5]) ^ prevInString;
+			prevInString  = static_cast<int64_t>(values[5]) >> 63;
+			values[6] = prefixXor(values[6]) ^ prevInString;
+			prevInString  = static_cast<int64_t>(values[6]) >> 63;
+			values[7] = prefixXor(values[7]) ^ prevInString;
+			prevInString  = static_cast<int64_t>(values[7]) >> 63;
 		}
 		return gatherValues<simd_int_t>(values);
 	}

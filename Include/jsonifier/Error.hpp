@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 				return {};
 			}
 
-			using value_type	   = std::decay_t<decltype(errorString[0])>;
+			using value_type	   = jsonifier::concepts::unwrap_t<decltype(errorString[0])>;
 			const auto start	   = std::begin(errorString) + static_cast<int64_t>(errorIndex);
 			const auto rstart	   = std::rbegin(errorString) + static_cast<int64_t>(errorString.size() - errorIndex - 1);
 			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<value_type>('\n'));

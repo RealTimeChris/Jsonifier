@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 		if (k >= buffer.size()) [[unlikely]] {
 			buffer.resize(max(buffer.size() * 2, k));
 		}
-		std::copy(str, str + sizeNew, buffer.data() + std::forward<index_type>(index));
+		std::memcpy(buffer.data() + std::forward<index_type>(index), str, sizeNew);
 		index += sizeNew;
 	}
 
@@ -75,7 +75,7 @@ namespace jsonifier_internal {
 		if (k >= buffer.size()) [[unlikely]] {
 			buffer.resize(max(buffer.size() * 2, k));
 		}
-		std::copy(str.data(), str.data() + sizeNew, buffer.data() + std::forward<index_type>(index));
+		std::memcpy(buffer.data() + std::forward<index_type>(index), str.data(), sizeNew);
 		index += sizeNew;
 	}
 

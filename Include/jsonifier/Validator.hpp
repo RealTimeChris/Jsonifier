@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.stringBuffer, derivedRef.errors };
 			auto result = impl(iter, derivedRef.index);
 			if (derivedRef.index > 0 || iter.operator bool() || derivedRef.errors.size() > 0) {
 				result = false;

@@ -118,7 +118,7 @@ namespace jsonifier_internal {
 		str						   = str.substr(0, str.find(pretty_function_tail));
 		return str.substr(str.rfind("::") + 2);
 #else
-		using value_type   = remove_member_pointer<std::decay_t<decltype(p)>>::type;
+		using value_type   = remove_member_pointer<jsonifier::concepts::unwrap_t<decltype(p)>>::type;
 		constexpr auto ptr = p;
 		return getNameMSVC<value_type, &(external<value_type>.*ptr)>();
 #endif

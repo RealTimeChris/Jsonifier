@@ -49,9 +49,9 @@ namespace jsonifier_internal {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-	template<jsonifier::concepts::unsigned_type value_type, typename char_type> JSONIFIER_INLINE bool parseNumberImpl(value_type& value, char_type* cur, uint64_t length) {
-		constexpr std::remove_const_t<char_type> zero{ '0' };
-		constexpr std::remove_const_t<char_type> x{ 'x' };
+	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumberImpl(value_type& value, char_type* cur) {
+		static constexpr std::remove_const_t<char_type> zero{ 0x30u };
+		static constexpr std::remove_const_t<char_type> x{ 'x' };
 		std::remove_const_t<char_type> currentChar{ *cur };
 		uint64_t sig{};
 
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& value, char_type* curNew, uint64_t length) {
+	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& value, char_type* curNew) {
 		static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
 		if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
 			if constexpr (std::same_as<value_type, uint64_t>) {
@@ -77,54 +77,47 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (std::is_volatile_v<decltype(value)>) {
-					uint64_t i{};
-					if (!parseNumberImpl<uint64_t, char_type>(i, curNew)) [[unlikely]] {
+					if (!parseNumberImpl<uint64_t, char_type>(value, curNew)) [[unlikely]] {
 						return false;
 					}
-					value = i;
 				} else {
-					if (!parseNumberImpl<jsonifier::concepts::decay_keep_volatile_t<decltype(value)>, char_type>(value, curNew, length)) [[unlikely]] {
+					if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
 						return false;
 					}
 				}
 			} else {
-				uint64_t i{};
 				if (*curNew == '-') [[unlikely]] {
 					return false;
 				}
-				if (!parseNumberImpl<std::decay_t<decltype(i)>, char_type>(i, curNew, length)) [[unlikely]] {
+				if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
 					return false;
 				}
 
-				if (i > maximum) [[unlikely]] {
+				if (value > maximum) [[unlikely]] {
 					return false;
 				}
-				value = static_cast<value_type>(i);
 			}
 		} else {
-			uint64_t i{};
 			int64_t sign = 1;
 			if (*curNew == '-') {
 				sign = -1;
-				--length;
 				++curNew;
 			}
 
-			if (!parseNumberImpl<jsonifier::concepts::decay_keep_volatile_t<decltype(i)>, char_type>(i, curNew, length)) [[unlikely]] {
+			if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
 				return false;
 			}
 
 			if (sign == -1) {
-				static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-				if (i > min_abs) [[unlikely]] {
+				static constexpr auto minAbs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
+				if (value > minAbs) [[unlikely]] {
 					return false;
 				}
-				value = static_cast<value_type>(sign * i);
+				value *= static_cast<value_type>(sign);
 			} else {
-				if (i > maximum) [[unlikely]] {
+				if (value > maximum) [[unlikely]] {
 					return false;
 				}
-				value = static_cast<value_type>(i);
 			}
 		}
 		return true;
@@ -135,37 +128,37 @@ namespace jsonifier_internal {
 			return false;
 		}
 
-		constexpr std::array<uint32_t, 4> max_digits_from_size = { 4, 6, 11, 20 };
-		constexpr auto N									   = max_digits_from_size[static_cast<uint64_t>(std::bit_width(sizeof(value_type)) - 1)];
+		constexpr std::array<uint32_t, 4> maxDigitsFromSize = { 4, 6, 11, 20 };
+		constexpr auto N									   = maxDigitsFromSize[static_cast<uint64_t>(std::bit_width(sizeof(value_type)) - 1)];
 
 		std::array<uint8_t, N> digits{ 0 };
-		auto next_digit	   = digits.begin();
-		auto consume_digit = [&c, &next_digit, &digits]() {
-			if (next_digit < digits.cend()) [[likely]] {
-				*next_digit = static_cast<uint8_t>(*c - '0');
-				++next_digit;
+		auto nextDigit	   = digits.begin();
+		auto consumeDigit = [&c, &nextDigit, &digits]() {
+			if (nextDigit < digits.cend()) [[likely]] {
+				*nextDigit = static_cast<uint8_t>(*c - 0x30u);
+				++nextDigit;
 			}
 			++c;
 		};
 
-		if (*c == '0') {
+		if (*c == 0x30u) {
 			++c;
-			++next_digit;
+			++nextDigit;
 
-			if (*c == '0') [[unlikely]] {
+			if (*c == 0x30u) [[unlikely]] {
 				return false;
 			}
 		}
 
 		while (digitTable[*c]) {
-			consume_digit();
+			consumeDigit();
 		}
-		auto n = std::distance(digits.begin(), next_digit);
+		auto n = std::distance(digits.begin(), nextDigit);
 
 		if (*c == '.') {
 			++c;
 			while (digitTable[*c]) {
-				consume_digit();
+				consumeDigit();
 			}
 		}
 
@@ -179,7 +172,7 @@ namespace jsonifier_internal {
 			}
 			uint8_t exp = 0;
 			while (digitTable[*c] && exp < 128) {
-				exp = static_cast<uint8_t>(10 * exp + (*c - '0'));
+				exp = static_cast<uint8_t>(10 * exp + (*c - 0x30u));
 				++c;
 			}
 			n += negative ? -exp : exp;
@@ -230,10 +223,6 @@ namespace jsonifier_internal {
 
 	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, char_type* curNew) noexcept {
 		static_assert(sizeof(*curNew) == sizeof(char));
-		const char_type* cur = reinterpret_cast<const char_type*>(&*curNew);
-		if (stoui64(res, cur)) {
-			return true;
-		}
-		return false;
+		return stoui64(res, curNew);
 	}
 }
