@@ -2,7 +2,7 @@
 
 Jsonifier allows you to optimize parsing speed if you know that the data will be minified, here is how:
 
-1. When parsing the JSON, you can set the first template argument of `parseJson` to `true`.
+1. When parsing the JSON, you can set the `minified` member of the `parse_options` structure, which gets passed as the first or second template argument of `parseJson` to true.
 
 ## Example
 
@@ -17,7 +17,7 @@ int32_t main() {
     obj_t obj;
     jsonifier::jsonifier_core jsonifier;
 
-    jsonifier.parseJson<true>(obj, buffer);
+    jsonifier.parseJson<jsonifier::parse_options{ .minified = true }>(obj, buffer);
 
     // Process the parsed data in 'obj' here.
 

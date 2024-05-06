@@ -201,16 +201,16 @@ namespace jsonifier_internal {
 				break;
 			}
 			case '-':
-			case 0x30u:
-			case 0x31u:
-			case 0x32u:
-			case 0x33u:
-			case 0x34u:
-			case 0x35u:
-			case 0x36u:
-			case 0x37u:
-			case 0x38u:
-			case 0x39u: {
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9': {
 				skipNumber(iter, end);
 				break;
 			}
@@ -266,16 +266,16 @@ namespace jsonifier_internal {
 					++iter;
 					break;
 				}
-				[[unlikely]] case 0x30u:
-				[[unlikely]] case 0x31u:
-				[[unlikely]] case 0x32u:
-				[[unlikely]] case 0x33u:
-				[[unlikely]] case 0x34u:
-				[[unlikely]] case 0x35u:
-				[[unlikely]] case 0x36u:
-				[[unlikely]] case 0x37u:
-				[[unlikely]] case 0x38u:
-				[[unlikely]] case 0x39u:
+				[[unlikely]] case '0':
+				[[unlikely]] case '1':
+				[[unlikely]] case '2':
+				[[unlikely]] case '3':
+				[[unlikely]] case '4':
+				[[unlikely]] case '5':
+				[[unlikely]] case '6':
+				[[unlikely]] case '7':
+				[[unlikely]] case '8':
+				[[unlikely]] case '9':
 				[[unlikely]] case '-': {
 					skipNumber(iter, end);
 					break;
@@ -322,7 +322,7 @@ namespace jsonifier_internal {
 			}
 			return false;
 		};
-		if (*iter == 0x30u) {
+		if (*iter == '0') {
 			++iter;
 			if (*iter != '.') {
 				return;
@@ -375,16 +375,16 @@ namespace jsonifier_internal {
 				iter += 4;
 				break;
 			}
-			[[unlikely]] case 0x30u:
-			[[unlikely]] case 0x31u:
-			[[unlikely]] case 0x32u:
-			[[unlikely]] case 0x33u:
-			[[unlikely]] case 0x34u:
-			[[unlikely]] case 0x35u:
-			[[unlikely]] case 0x36u:
-			[[unlikely]] case 0x37u:
-			[[unlikely]] case 0x38u:
-			[[unlikely]] case 0x39u:
+			[[unlikely]] case '0':
+			[[unlikely]] case '1':
+			[[unlikely]] case '2':
+			[[unlikely]] case '3':
+			[[unlikely]] case '4':
+			[[unlikely]] case '5':
+			[[unlikely]] case '6':
+			[[unlikely]] case '7':
+			[[unlikely]] case '8':
+			[[unlikely]] case '9':
 			[[unlikely]] case '-': {
 				skipNumber(iter, end);
 				break;

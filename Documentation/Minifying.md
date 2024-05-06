@@ -1,44 +1,43 @@
 ## Minifying JSON Data with Jsonifier
 
-### Example
+Jsonifier provides a `minifyJson` function for quickly minifying JSON data, which supports two overloads.
 
-Consider the following example code snippet:
-
-```cpp
-json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
-
-FileLoader fileLoader{ "../../../JsonData.json" };
-fileLoader.saveFile(parser.minify(jsonData.theData));
-```
-
-In this example:
-
-- JSON data is generated using `TestGenerator<test_struct>::generateJsonData()` and stored in an object of type `json_data` named `jsonData`.
-- An instance of `FileLoader` is created, and the minified JSON data is saved to a file using `parser.minify(jsonData.theData)`.
-
-### Usage
-
-#### 1. Generate JSON Data
-----
-Generate JSON data using your preferred method and store it in an object. In the example, it uses a test data generator:
+#### Two Overloads
+The `minifyJson` function comes in two overloads to provide flexibility:
 
 ```cpp
-json_data jsonData{ TestGenerator<test_struct>::generateJsonData() };
+template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept;
+
+template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
+JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& out) noexcept;
 ```
 
-#### 2. Minify JSON Data
-----
-Use the `minify` method of the `jsonifier_core` instance to minify the JSON data:
+These overloads allow you to choose between directly minifying a string or outputting the minified JSON data to another string.
 
+#### Examples
+Here are examples demonstrating the usage of the `minifyJson` function:
+
+#### Example 1: Minifying JSON data
 ```cpp
-jsonifier::string minifiedJson = parser.minify(jsonData.theData);
+#include "jsonifier/Index.hpp"
+
+jsonifier::string buffer = "{ \"key\": \"value\" }";
+
+// Minify JSON data.
+auto minifiedBuffer = jsonifier::minifyJson(buffer);
 ```
 
-#### 3. Save Minified JSON Data
-----
-Save the minified JSON data to a file or use it as needed in your application:
-
+#### Example 2: Minifying JSON data and outputting to another string
 ```cpp
-FileLoader fileLoader{ "../../JsonData.json" };
-fileLoader.saveFile(minifiedJsonJson);
+#include "jsonifier/Index.hpp"
+
+jsonifier::string buffer = "{ \"key\": \"value\" }";
+jsonifier::string minifiedBuffer;
+
+// Minify JSON data and output to another string.
+jsonifier::minifyJson(buffer, minifiedBuffer);
 ```
+
+These examples demonstrate how to minifyJson JSON data using the `minifyJson` function, both directly and by outputting to another string.
+
+---

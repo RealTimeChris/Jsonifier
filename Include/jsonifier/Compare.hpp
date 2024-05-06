@@ -27,13 +27,13 @@
 
 namespace jsonifier_internal {
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(const char_type01* lhs, const char_type02* rhs, uint64_t count) noexcept {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(char_type01* lhs, char_type02* rhs, uint64_t count) noexcept {
 		if (count > 7) {
 			static constexpr uint64_t n{ sizeof(uint64_t) };
 			uint64_t v[2];
 			while (count > n) {
-				std::copy(lhs, lhs + 1, v);
-				std::copy(rhs, rhs + 1, v + 1);
+				std::memcpy(v, lhs, n);
+				std::memcpy(v + 1, rhs, n);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -45,16 +45,17 @@ namespace jsonifier_internal {
 			const auto shift = n - count;
 			lhs -= shift;
 			rhs -= shift;
-			std::copy(lhs, lhs + 1, v);
-			std::copy(rhs, rhs + 1, v + 1);
+
+			std::memcpy(v, lhs, n);
+			std::memcpy(v + 1, rhs, n);
 			return v[0] == v[1];
 		}
 		{
 			static constexpr uint64_t n{ sizeof(uint32_t) };
 			if (count >= n) {
 				uint32_t v[2];
-				std::copy(lhs, lhs + 1, v);
-				std::copy(rhs, rhs + 1, v + 1);
+				std::memcpy(v, lhs, n);
+				std::memcpy(v + 1, rhs, n);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -67,8 +68,8 @@ namespace jsonifier_internal {
 			static constexpr uint64_t n{ sizeof(uint16_t) };
 			if (count >= n) {
 				uint16_t v[2];
-				std::copy(lhs, lhs + 1, v);
-				std::copy(rhs, rhs + 1, v + 1);
+				std::memcpy(v, lhs, n);
+				std::memcpy(v + 1, rhs, n);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -95,7 +96,7 @@ namespace jsonifier_internal {
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -115,7 +116,7 @@ namespace jsonifier_internal {
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -136,7 +137,7 @@ namespace jsonifier_internal {
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -148,14 +149,14 @@ namespace jsonifier_internal {
 		return compareShort(string1, string2, lengthNew);
 	}
 
-	template<uint64_t Count, typename char_type01> JSONIFIER_INLINE bool compare(const char_type01* lhs, const char_type01* rhs) noexcept {
+	template<uint64_t Count, typename char_type01> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type01* rhs) noexcept {
 		static constexpr uint64_t n{ 8 };
 		if constexpr (Count > n) {
 			return compare(lhs, rhs, Count);
 		} else if constexpr (Count == n) {
 			uint64_t v[2];
-			std::copy(lhs, lhs + 1, v);
-			std::copy(rhs, rhs + 1, v + 1);
+			std::memcpy(v, lhs, Count);
+			std::memcpy(v + 1, rhs, Count);
 			return v[0] == v[1];
 		} else if constexpr (Count > 4) {
 			uint64_t v[2]{};

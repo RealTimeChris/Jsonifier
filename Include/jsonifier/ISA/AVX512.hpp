@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace simd_internal {
 
@@ -46,7 +46,12 @@ namespace simd_internal {
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
-		jsonifier::concepts::unwrap_t<simd_int_t> mask = _mm512_set_epi64(0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x01ll);
+	#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
+		static constexpr simd_int_t mask{ 0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
+	#else
+		static constexpr simd_int_t mask{ 0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+			0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
+	#endif
 		return valueNew ? _mm512_or_si512(value, mask) : _mm512_andnot_si512(mask, value);
 	}
 

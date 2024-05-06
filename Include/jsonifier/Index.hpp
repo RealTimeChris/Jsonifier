@@ -26,7 +26,7 @@
 #if !defined(NOMINMAX)
 	#define NOMINMAX
 #endif
-
+#include <jsonifier/AssemblyFunctions.hpp>
 #include <jsonifier/SimdStructuralIterator.hpp>
 #include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serialize_Impl.hpp>

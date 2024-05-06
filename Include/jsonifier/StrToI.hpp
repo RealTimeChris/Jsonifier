@@ -42,24 +42,28 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-	constexpr std::array<bool, 256> whitespaceTable{ false, false, false, false, false, false, false, false, false, true, true, false, false, true, true, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+	constexpr std::array<bool, 256> whitespaceTable{ [] {
+		std::array<bool, 256> returnValues{};
+		returnValues['\b']	 = true;
+		returnValues['\t']	 = true;
+		returnValues['\x20'] = true;
+		returnValues['\n']	 = true;
+		returnValues['\f']	 = true;
+		returnValues['\v']	 = true;
+		returnValues['\r']	 = true;
+		return returnValues;
+	}() };
 
 	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumberImpl(value_type& value, char_type* cur) {
-		static constexpr std::remove_const_t<char_type> zero{ 0x30u };
 		static constexpr std::remove_const_t<char_type> x{ 'x' };
 		std::remove_const_t<char_type> currentChar{ *cur };
 		uint64_t sig{};
 
-		if (!digitTable[currentChar] || currentChar == zero && digitTable[*(cur + 1)] || *(cur + 1) == x) [[unlikely]] {
+		if (!digitTableBool[currentChar] || currentChar == zero && digitTableBool[*(cur + 1)] || *(cur + 1) == x) [[unlikely]] {
 			return false;
 		}
 
-		while (digitTable[currentChar]) {
+		while (digitTableBool[currentChar]) {
 			sig = sig * 10 + (currentChar - zero);
 			++cur;
 			currentChar = *cur;
@@ -72,28 +76,15 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& value, char_type* curNew) {
 		static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
 		if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-			if constexpr (std::same_as<value_type, uint64_t>) {
-				if (*curNew == '-') [[unlikely]] {
+			if (*curNew == '-') [[unlikely]] {
+				return false;
+			}
+			if constexpr (std::is_volatile_v<value_type>) {
+				if (!parseNumberImpl<uint64_t, char_type>(value, curNew)) [[unlikely]] {
 					return false;
-				}
-				if constexpr (std::is_volatile_v<decltype(value)>) {
-					if (!parseNumberImpl<uint64_t, char_type>(value, curNew)) [[unlikely]] {
-						return false;
-					}
-				} else {
-					if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
-						return false;
-					}
 				}
 			} else {
-				if (*curNew == '-') [[unlikely]] {
-					return false;
-				}
-				if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
-					return false;
-				}
-
-				if (value > maximum) [[unlikely]] {
+				if (!parseNumberImpl<jsonifier::concepts::unwrap_t<value_type>, char_type>(value, curNew)) [[unlikely]] {
 					return false;
 				}
 			}
@@ -104,7 +95,7 @@ namespace jsonifier_internal {
 				++curNew;
 			}
 
-			if (!parseNumberImpl<jsonifier::concepts::unwrap_t<decltype(value)>, char_type>(value, curNew)) [[unlikely]] {
+			if (!parseNumberImpl<jsonifier::concepts::unwrap_t<value_type>, char_type>(value, curNew)) [[unlikely]] {
 				return false;
 			}
 
@@ -124,15 +115,15 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
-		if (!digitTable[*c]) [[unlikely]] {
+		if (!digitTableBool[static_cast<uint64_t>(*c)]) [[unlikely]] {
 			return false;
 		}
 
 		constexpr std::array<uint32_t, 4> maxDigitsFromSize = { 4, 6, 11, 20 };
-		constexpr auto N									   = maxDigitsFromSize[static_cast<uint64_t>(std::bit_width(sizeof(value_type)) - 1)];
+		constexpr auto N									= maxDigitsFromSize[static_cast<uint64_t>(std::bit_width(sizeof(value_type)) - 1)];
 
 		std::array<uint8_t, N> digits{ 0 };
-		auto nextDigit	   = digits.begin();
+		auto nextDigit	  = digits.begin();
 		auto consumeDigit = [&c, &nextDigit, &digits]() {
 			if (nextDigit < digits.cend()) [[likely]] {
 				*nextDigit = static_cast<uint8_t>(*c - 0x30u);
@@ -150,14 +141,14 @@ namespace jsonifier_internal {
 			}
 		}
 
-		while (digitTable[*c]) {
+		while (digitTableBool[static_cast<uint64_t>(*c)]) {
 			consumeDigit();
 		}
 		auto n = std::distance(digits.begin(), nextDigit);
 
 		if (*c == '.') {
 			++c;
-			while (digitTable[*c]) {
+			while (digitTableBool[static_cast<uint64_t>(*c)]) {
 				consumeDigit();
 			}
 		}
@@ -171,7 +162,7 @@ namespace jsonifier_internal {
 				++c;
 			}
 			uint8_t exp = 0;
-			while (digitTable[*c] && exp < 128) {
+			while (digitTableBool[static_cast<uint64_t>(*c)] && exp < 128) {
 				exp = static_cast<uint8_t>(10 * exp + (*c - 0x30u));
 				++c;
 			}
@@ -183,7 +174,7 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		if constexpr (std::same_as<value_type, uint64_t>) {
+		if constexpr (std::is_same_v<value_type, uint64_t>) {
 			if (n > 20) [[unlikely]] {
 				return false;
 			}
@@ -219,10 +210,5 @@ namespace jsonifier_internal {
 		}
 
 		return true;
-	}
-
-	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, char_type* curNew) noexcept {
-		static_assert(sizeof(*curNew) == sizeof(char));
-		return stoui64(res, curNew);
 	}
 }

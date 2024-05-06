@@ -1,2 +1,2 @@
-cmake -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release
-cmake --build ./Build --config=Release
+"C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release
+"C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" --build ./Build --config=Release

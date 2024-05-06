@@ -19,7 +19,7 @@ jobs:
         std: [20]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       
     - name: Append the directory of 'vcvarsall.bat' to PATH environment variable
       uses: myci-actions/export-env-var-powershell@1
@@ -37,8 +37,13 @@ jobs:
       run: |
            cmake --build . --config=${{matrix.build_type}}
 
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           cmake --install . --config=${{matrix.build_type}}
+
     - name: Run the Test
-      working-directory: ./Build/Tests/${{matrix.build_type}}
+      working-directory: C:/Program Files (x86)/Jsonifier/bin/
       run: |
            ./Json-Performance.exe
       continue-on-error: true

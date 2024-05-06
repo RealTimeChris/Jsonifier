@@ -1,6 +1,6 @@
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/Install/")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/Install/")
 
 include(FetchContent)
 
@@ -61,7 +61,8 @@ endif()
 
 target_compile_definitions(
 	"Json-Performance" PUBLIC 
-	"JSON_PATH=\"${CMAKE_SOURCE_DIR}/Tests/ConformanceTests\""
+	"JSON_TEST_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/ConformanceTests\""
+	"JSON_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/../Json\""
 )
 
 install(

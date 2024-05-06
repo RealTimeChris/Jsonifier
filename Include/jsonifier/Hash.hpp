@@ -35,7 +35,37 @@ namespace jsonifier_internal {
 	static constexpr uint32_t fnv32OffsetBasis{ 0x811c9dc5u };
 	static constexpr uint32_t fnv32Prime{ 0x01000193u };
 
-	template<typename string_t> constexpr uint32_t fnv1aHash(const string_t& value, uint32_t seed) {
+	JSONIFIER_INLINE uint32_t fnv1aHashRt(const void* value, uint64_t size) {
+		uint32_t hash		  = fnv32OffsetBasis * fnv32Prime;
+		const uint8_t* newPtr = static_cast<const uint8_t*>(value);
+		for (uint64_t x = 0; x < size; ++x) {
+			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(newPtr[x]))) * fnv32Prime;
+		}
+		return static_cast<uint32_t>(hash >> 8);
+	}
+
+	JSONIFIER_INLINE uint32_t fnv1aHashRt(const void* value, uint64_t size, uint32_t seed) {
+		uint32_t hash			= (fnv32OffsetBasis ^ seed) * fnv32Prime;
+		const uint8_t* startPtr = static_cast<const uint8_t*>(value);
+		while (size >= 8) {
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			size -= 8;
+		}
+		while (size > 0) {
+			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
+			--size;
+		}
+		return static_cast<uint32_t>(hash >> 8);
+	}
+
+	template<typename string_t> constexpr uint32_t fnv1aHashCt(const string_t& value, uint32_t seed) {
 		uint32_t hash = (fnv32OffsetBasis ^ seed) * fnv32Prime;
 		for (const auto& valueNew: value) {
 			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv32Prime;

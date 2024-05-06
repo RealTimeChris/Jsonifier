@@ -45,72 +45,74 @@ namespace jsonifier_internal {
 						while (whitespaceTable[previousPtr[--currentDistance]]) {
 						}
 						if (currentDistance > 0) {
-							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance + 1), outPtr);
+							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance + 1));
 							outPtr += currentDistance + 1;
 						} else {
-							iter.getErrors().emplace_back(createError<json_structural_type::String>(iter));
+							iter.template createError<error_classes::Minifying>(minify_errors::Invalid_String_Length);
 							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma:
-						appendCharacter<0x2Cu>(outPtr);
+						writeCharacter<0x2Cu>(outPtr);
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
 						while (!whitespaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
 						}
 						if (currentDistance > 0) {
-							std::copy(previousPtr, previousPtr + static_cast<uint64_t>(currentDistance + 1), outPtr);
+							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance));
 							outPtr += currentDistance;
 						} else {
-							iter.getErrors().emplace_back(createError<json_structural_type::Number>(iter));
+							iter.template createError<error_classes::Minifying>(minify_errors::Invalid_Number_Value);
 							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon:
-						appendCharacter<0x3Au>(outPtr);
+						writeCharacter<0x3A>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Array_Start:
-						appendCharacter<0x5Bu>(outPtr);
+						writeCharacter<0x5Bu>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Array_End:
-						appendCharacter<0x5Du>(outPtr);
+						writeCharacter<0x5Du>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Null: {
-						std::copy(nullString.data(), nullString.data() + nullString.size(), outPtr);
+						std::memcpy(outPtr, nullString.data(), nullString.size());
 						outPtr += nullString.size();
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (*previousPtr == 0x74u) {
-							std::copy(trueString.data(), trueString.data() + trueString.size(), outPtr);
+							std::memcpy(outPtr, trueString.data(), trueString.size());
 							outPtr += trueString.size();
 							break;
 						} else {
-							std::copy(falseString.data(), falseString.data() + falseString.size(), outPtr);
+							std::memcpy(outPtr, falseString.data(), falseString.size());
 							outPtr += falseString.size();
 							break;
 						}
 					}
 					[[unlikely]] case json_structural_type::Object_Start:
-						appendCharacter<0x7Bu>(outPtr);
+						writeCharacter<0x7Bu>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Object_End:
-						appendCharacter<0x7Du>(outPtr);
+						writeCharacter<0x7Du>(outPtr);
 						break;
 					[[unlikely]] case json_structural_type::Unset:
+					[[unlikely]] case json_structural_type::Error:
+					[[unlikely]] case json_structural_type::Type_Count:
 						[[fallthrough]];
 					[[unlikely]] default: {
-						iter.getErrors().emplace_back(createError<json_structural_type::Object_End>(iter));
+						iter.template createError<error_classes::Minifying>(minify_errors::Incorrect_Structural_Index);
 						return std::numeric_limits<uint32_t>::max();
 					}
 				}
 				previousPtr = iter.operator->();
 				++iter;
 			}
-			*outPtr = *previousPtr;
+			std::memcpy(outPtr, previousPtr, 1);
 			++outPtr;
 			return static_cast<uint64_t>(outPtr - out.data());
 		}

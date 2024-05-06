@@ -79,21 +79,21 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool refreshString = true, bool doWeCollectWhitespace = true, typename char_type> JSONIFIER_INLINE void reset(char_type* stringViewNew, size_type size) {
+		template<bool refreshString = true, bool minified = false, typename char_type> JSONIFIER_INLINE void reset(char_type* stringViewNew, size_type size) {
 			if constexpr (refreshString) {
 				currentParseBuffer = jsonifier::string_view_base{ reinterpret_cast<string_view_ptr>(stringViewNew), size };
 				auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
 				if (structuralIndices.size() < newSize) [[unlikely]] {
 					structuralIndices.resize(newSize * 2);
 				}
-				resetInternal<doWeCollectWhitespace>();
+				resetInternal<minified>();
 			} else if (!compare(currentParseBuffer.data(), stringViewNew, currentParseBuffer.size())) [[likely]] {
 				currentParseBuffer = jsonifier::string_view_base{ reinterpret_cast<string_view_ptr>(stringViewNew), size };
 				auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
 				if (structuralIndices.size() < newSize) [[unlikely]] {
 					structuralIndices.resize(newSize * 2);
 				}
-				resetInternal<doWeCollectWhitespace>();
+				resetInternal<minified>();
 			}
 		}
 
@@ -135,9 +135,8 @@ namespace jsonifier_internal {
 	  protected:
 		static constexpr simd_int_t oddBitsVal{ simd_internal::simdFromValue<simd_int_t>(0xAA) };
 		simd_internal::simd_int_t_holder rawStructurals{};
-		simd_int_t newPtr[StridesPerStep]{};
+		simd_int_t newPtr[StridesPerStep]{}; 
 		simd_int_t nextIsEscaped{};
-		simd_int_t structurals{};
 		simd_int_t escaped{};
 		JSONIFIER_ALIGN size_type newBits[SixtyFourBitsPerStep]{};
 		jsonifier::string_view_base<uint8_t> currentParseBuffer{};
@@ -149,13 +148,13 @@ namespace jsonifier_internal {
 		size_type tapeIndex{};
 		bool overflow{};
 
-		template<bool doWeCollectWhitespace> JSONIFIER_INLINE void resetInternal() {
+		template<bool minified> JSONIFIER_INLINE void resetInternal() {
 			stringBlockReader.reset(currentParseBuffer.data(), currentParseBuffer.size());
 			overflow	 = false;
 			prevInString = 0;
 			stringIndex	 = 0;
 			tapeIndex	 = 0;
-			generateJsonIndices<doWeCollectWhitespace>();
+			generateJsonIndices<minified>();
 		}
 
 		JSONIFIER_INLINE std::string resetInternalWithErrorPrintOut(size_type errorIndex) {
@@ -165,33 +164,33 @@ namespace jsonifier_internal {
 			return generateJsonIndicesWithErrorPrintOut(errorIndex);
 		}
 
-		template<bool doWeCollectWhitespace> JSONIFIER_INLINE void generateJsonIndices() {
+		template<bool minified> JSONIFIER_INLINE void generateJsonIndices() {
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals<doWeCollectWhitespace, false>(stringBlockReader.fullBlock());
+				generateStructurals<minified, false>(stringBlockReader.fullBlock());
 			}
 			if (stringBlockReader.getRemainder(block) > 0) [[likely]] {
-				generateStructurals<doWeCollectWhitespace, true>(block);
+				generateStructurals<minified, true>(block);
 			}
 		}
 
 		template<size_type index> JSONIFIER_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) {
 			static constexpr uint64_t bitTotal{ index * 64ull };
-			structuralIndices[0 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex),
-													   newBits	  = simd_internal::blsr(newBits);
+			structuralIndices[0 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			newBits												  = simd_internal::blsr(newBits);
 			return newBits;
 		}
 
@@ -217,11 +216,11 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool doWeCollectWhitespace, bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values) {
+		template<bool minified, bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values) {
 			collectStringValues<collectAligned>(values);
-			rawStructurals = simd_internal::collectIndices<doWeCollectWhitespace>(newPtr);
-			collectStructurals<doWeCollectWhitespace>();
-			simd_internal::store(structurals, newBits);
+			rawStructurals = simd_internal::collectIndices<minified>(newPtr);
+			collectStructurals<minified>();
+			simd_internal::store(rawStructurals.op, newBits);
 			addTapeValues();
 			stringIndex += BitsPerStep;
 		}
@@ -261,13 +260,13 @@ namespace jsonifier_internal {
 			return simd_internal::opBool(rawStructurals.backslashes) ? collectNonEmptyEscaped() : collectEmptyEscaped();
 		}
 
-		template<bool doWeCollectWhitespace> JSONIFIER_INLINE void collectStructurals() {
+		template<bool minified> JSONIFIER_INLINE void collectStructurals() {
 			collectEscapedCharacters();
 			rawStructurals.quotes = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			simd_int_t inString	  = simd_internal::opClMul(rawStructurals.quotes, prevInString);
 			simd_int_t stringTail = simd_internal::opXor(inString, rawStructurals.quotes);
 			simd_int_t scalar;
-			if constexpr (doWeCollectWhitespace) {
+			if constexpr (!minified) {
 				scalar = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			} else {
 				scalar = simd_internal::opNot(rawStructurals.op);
@@ -276,7 +275,7 @@ namespace jsonifier_internal {
 			simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
 			simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
 			simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
-			structurals							= simd_internal::opAndNot(porentialStructuralStart, stringTail);
+			rawStructurals.op					= simd_internal::opAndNot(porentialStructuralStart, stringTail);
 		}
 
 		JSONIFIER_INLINE std::string collectEscapedCharactersWithErrorPrintOut(size_type errorIndex) {
@@ -359,7 +358,7 @@ namespace jsonifier_internal {
 			simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
 			simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
 			simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
-			structurals							= simd_internal::opAndNot(porentialStructuralStart, stringTail);
+			rawStructurals.op						= simd_internal::opAndNot(porentialStructuralStart, stringTail);
 			if (stringIndex == errorIndex) {
 				returnValue << returnValueNew;
 				returnValue << "Escaped Bits, for Index: " + std::to_string(stringIndex) + ": ";
@@ -383,7 +382,7 @@ namespace jsonifier_internal {
 				returnValue << "Potential Structural start Bits, for Index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(porentialStructuralStart).data();
 				returnValue << "Final Bits, for Index: " + std::to_string(stringIndex) + ": ";
-				returnValue << printBits(structurals).data();
+				returnValue << printBits(rawStructurals.op).data();
 			}
 			return returnValue.str();
 		}

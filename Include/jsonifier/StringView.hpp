@@ -215,11 +215,11 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) {
 			auto rhsLength = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
-			return rhsLength == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs, rhsLength);
+			return rhsLength == lhs.size() && jsonifier_asm::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) {
-			return rhs.size() == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs.data(), rhs.size());
+			return rhs.size() == lhs.size() && jsonifier_asm::compare(lhs.data(), rhs.data(), rhs.size());
 		}
 
 		template<typename value_type_newer, size_type size>
@@ -302,11 +302,19 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct hash<jsonifier::string_view_base<value_type>> {
 		constexpr uint64_t operator()(const jsonifier::string_view_base<uint8_t>& value, uint32_t seed) const {
-			return fnv1aHash(value, seed);
+			if (std::is_constant_evaluated()) {
+				return fnv1aHashCt(value, seed);
+			} else {
+				return fnv1aHashRt(value.data(), value.size(), seed);
+			}
 		}
 
 		constexpr uint64_t operator()(const jsonifier::string_view_base<char>& value, uint32_t seed) const {
-			return fnv1aHash(value, seed);
+			if (std::is_constant_evaluated()) {
+				return fnv1aHashCt(value, seed);
+			} else {
+				return fnv1aHashRt(value.data(), value.size(), seed);
+			}
 		}
 	};
 }

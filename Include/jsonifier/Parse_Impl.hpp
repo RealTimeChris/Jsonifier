@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 			if (*iter == 0x7Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
-				iter.template createError<json_structural_type::Object_Start>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_Object_Start);
 				skipToEndOfValue(iter);
 				return;
 			}
@@ -56,7 +56,7 @@ namespace jsonifier_internal {
 				} else if (first) {
 					first = false;
 				} else {
-					iter.template createError<json_structural_type::Object_End>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Object_End);
 					skipToEndOfValue(iter);
 					return;
 				}
@@ -65,14 +65,14 @@ namespace jsonifier_internal {
 				if (*iter == 0x22u) [[likely]] {
 					++iter;
 				} else [[unlikely]] {
-					iter.template createError<error_code::UnQuoted_String>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_String_Start);
 					skipToEndOfValue(iter);
 					continue;
 				}
 
 				const jsonifier::string_view_base<uint8_t> key{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
 				if constexpr ((( !std::is_void_v<key_type> ) || ...)) {
-					if (((excludedKeys.find(static_cast<jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) & ...)) [[unlikely]] {
+					if (((excludedKeys.find(static_cast<typename jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) & ...)) [[unlikely]] {
 						++iter;
 						skipToNextValue(iter);
 						continue;
@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 				if (*iter == 0x3Au) [[likely]] {
 					++iter;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Colon>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Colon);
 					skipToEndOfValue(iter);
 					continue;
 				}
@@ -110,9 +110,9 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
-			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
+			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_wrapper_type<value_type_new>> };
 			if constexpr (size > 0) {
-				parser<derived_type>::impl(getMember(value, get<0>(jsonifier::concepts::coreV<value_type_new>)), iter);
+				parser<derived_type>::impl(getMember(value, get<0>(jsonifier::concepts::core_wrapper_value<value_type_new>)), iter);
 			}
 		}
 	};
@@ -123,7 +123,7 @@ namespace jsonifier_internal {
 			if (*iter == 0x5Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
-				iter.template createError<json_structural_type::Array_Start>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_Array_Start);
 				skipToEndOfValue(iter);
 				return;
 			}
@@ -158,7 +158,7 @@ namespace jsonifier_internal {
 			if (*iter == 0x7Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
-				iter.template createError<json_structural_type::Object_Start>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_Object_Start);
 				skipToEndOfValue(iter);
 				return;
 			}
@@ -176,26 +176,33 @@ namespace jsonifier_internal {
 				} else if (first) {
 					first = false;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Object_End>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Object_End);
 					skipToEndOfValue(iter);
 					return;
 				}
 
-				if (*iter == 0x6Eu) [[likely]] {
+				auto start = iter.operator->();
+				if (*iter == 0x22u) [[likely]] {
 					++iter;
+				} else [[unlikely]] {
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_String_Start);
+					skipToEndOfValue(iter);
 					continue;
 				}
 
-				static thread_local typename value_type_new::key_type keyNew{};
-				parser<derived_type>::impl(keyNew, iter);
+				const jsonifier::string_view_base<uint8_t> keyNew{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
 				if (*iter == 0x3Au) [[likely]] {
 					++iter;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Colon>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Colon);
 					skipToEndOfValue(iter);
-					return;
+					continue;
 				}
-				parser<derived_type>::impl(value[keyNew], iter);
+				if (*iter == 0x6Eu) {
+					skipToEndOfValue(iter);
+					continue;
+				} 
+				parser<derived_type>::impl(value[static_cast<typename value_type_new::key_type>(keyNew)], iter);
 			}
 		}
 	};
@@ -224,10 +231,11 @@ namespace jsonifier_internal {
 			if (*iter == 0x5Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
-				iter.template createError<json_structural_type::Array_Start>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_Array_Start);
 				skipToEndOfValue(iter);
 				return;
 			}
+			static thread_local jsonifier::vector<typename value_type_new::value_type, 1000> intermediateVector{};
 			if (*iter == 0x5Du) [[unlikely]] {
 				++iter;
 				return;
@@ -243,21 +251,27 @@ namespace jsonifier_internal {
 					++iter;
 					return;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Array_End>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
 					skipToEndOfValue(iter);
 					return;
 				}
 			}
-
+			intermediateVector.clear();
+			uint64_t currentCount{ n };
 			while (iter) {
-				parser<derived_type>::impl(value.emplace_back(), iter);
+				++currentCount;
+				parser<derived_type>::impl(intermediateVector.emplace_back(), iter);
 				if (*iter == 0x2Cu) [[likely]] {
 					++iter;
 				} else if (*iter == 0x5Du) {
+					if (value.size() != currentCount) {
+						value.resize(currentCount);
+						std::copy(intermediateVector.begin(), intermediateVector.end(), value.begin());
+					}
 					++iter;
 					return;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Array_End>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
 					skipToEndOfValue(iter);
 					return;
 				}
@@ -271,7 +285,7 @@ namespace jsonifier_internal {
 			if (*iter == 0x5Bu) [[likely]] {
 				++iter;
 			} else [[unlikely]] {
-				iter.template createError<json_structural_type::Array_Start>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_Array_Start);
 				skipToEndOfValue(iter);
 				return;
 			}
@@ -289,7 +303,7 @@ namespace jsonifier_internal {
 					++iter;
 					return;
 				} else [[unlikely]] {
-					iter.template createError<json_structural_type::Array_End>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
 					skipToEndOfValue(iter);
 					return;
 				}
@@ -304,13 +318,12 @@ namespace jsonifier_internal {
 			if (*iter == 0x22u) [[likely]] {
 				++iter;
 			} else {
-				iter.template createError<json_structural_type::String>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Missing_String_Start);
 				skipToNextValue(iter);
 				return;
 			}
-			static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
-			auto newSize = static_cast<uint64_t>(static_cast<float>(iter.operator->() - newPtr));
-			
+			static thread_local jsonifier::string_base<uint8_t, 1024 * 1024> newString{};
+			auto newSize = static_cast<uint64_t>(iter.operator->() - newPtr);
 			if (static_cast<int64_t>(newSize) > 0) {
 				if (newSize > newString.size()) [[unlikely]] {
 					newString.resize(newSize);
@@ -324,7 +337,7 @@ namespace jsonifier_internal {
 						std::memcpy(value.data(), newString.data(), newSize);
 					}
 				} else {
-					iter.template createError<error_code::Invalid_String_Characters>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Invalid_String_Characters);
 					skipToNextValue(iter);
 					return;
 				}
@@ -368,7 +381,7 @@ namespace jsonifier_internal {
 			if (parseNull(iter.operator->())) [[likely]] {
 				++iter;
 			} else {
-				iter.template createError<error_code::Invalid_Null_Value>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Null_Value);
 				skipToNextValue(iter);
 			}
 		}
@@ -386,44 +399,29 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::num_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
-			if constexpr (jsonifier::concepts::uint64_type<value_type_new>) {
+			if constexpr (jsonifier::concepts::uint64_type<value_type_new> || jsonifier::concepts::int64_type<value_type_new> || jsonifier::concepts::float_t<value_type_new>) {
 				if (parseNumber(value, iter.operator->())) [[likely]] {
 					++iter;
 				} else {
-					iter.template createError<error_code::Invalid_Number_Value>();
-					skipToNextValue(iter);
-				}
-
-			} else if constexpr (jsonifier::concepts::int64_type<value_type_new>) {
-				if (parseNumber(value, iter.operator->())) [[likely]] {
-					++iter;
-				} else {
-					iter.template createError<error_code::Invalid_Number_Value>();
-					skipToNextValue(iter);
-				}
-			} else if constexpr (jsonifier::concepts::unsigned_type<value_type_new>) {
-				uint64_t newValue{};
-				if (parseNumber(newValue, iter.operator->())) [[likely]] {
-					value = static_cast<value_type_new>(newValue);
-					++iter;
-				} else {
-					iter.template createError<error_code::Invalid_Number_Value>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Number_Value);
 					skipToNextValue(iter);
 				}
 			} else if constexpr (jsonifier::concepts::signed_type<value_type_new>) {
 				int64_t newValue{};
 				if (parseNumber(newValue, iter.operator->())) [[likely]] {
-					value = static_cast<value_type_new>(newValue);
 					++iter;
+					value = static_cast<value_type_new>(newValue);
 				} else {
-					iter.template createError<error_code::Invalid_Number_Value>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Number_Value);
 					skipToNextValue(iter);
 				}
-			} else if constexpr (jsonifier::concepts::float_t<value_type_new>) {
-				if (parseNumber(value, iter.operator->())) [[likely]] {
+			} else if constexpr (jsonifier::concepts::unsigned_type<value_type_new>) {
+				uint64_t newValue{};
+				if (parseNumber(newValue, iter.operator->())) [[likely]] {
 					++iter;
+					value = static_cast<value_type_new>(newValue);
 				} else {
-					iter.template createError<error_code::Invalid_Number_Value>();
+					iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Number_Value);
 					skipToNextValue(iter);
 				}
 			}
@@ -436,7 +434,7 @@ namespace jsonifier_internal {
 			if (parseBool(value, iter.operator->())) [[likely]] {
 				++iter;
 			} else {
-				iter.template createError<error_code::Invalid_Bool_Value>();
+				iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Bool_Value);
 				skipToNextValue(iter);
 			}
 		}

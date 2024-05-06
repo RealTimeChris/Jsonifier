@@ -47,7 +47,7 @@ namespace simd_internal {
 		return vld1q_u8(str);
 	}
 
-	template<simd_int_128_type simd_int_type_new, jsonifier::concepts::int8_type char_type> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(char_type* str) {
+	template<simd_int_128_type simd_int_type_new, jsonifier::concepts::char_type char_type> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(char_type* str) {
 		JSONIFIER_ALIGN unsigned char newArray[16];
 		for (uint64_t x = 0; x < 16; ++x) {
 			newArray[x] = static_cast<unsigned char>(str[x]);
@@ -55,7 +55,7 @@ namespace simd_internal {
 		return vld1q_u8(newArray);
 	}
 
-	template<simd_int_128_type simd_int_type_new, jsonifier::concepts::uint8_type char_type> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(char_type* str) {
+	template<simd_int_128_type simd_int_type_new, jsonifier::concepts::u_char_type char_type> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(char_type* str) {
 		return vld1q_u8(str);
 	}
 

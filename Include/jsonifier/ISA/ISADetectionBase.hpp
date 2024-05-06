@@ -85,7 +85,7 @@ namespace simd_internal {
 			values[6] = prefixXor(values[6]) ^ prevInString;
 			prevInString  = static_cast<int64_t>(values[6]) >> 63;
 			values[7] = prefixXor(values[7]) ^ prevInString;
-			prevInString  = static_cast<int64_t>(values[7]) >> 63;
+			prevInString  = static_cast<int64_t>(values[7]) >> 63; 
 		}
 		return gatherValues<simd_int_t>(values);
 	}

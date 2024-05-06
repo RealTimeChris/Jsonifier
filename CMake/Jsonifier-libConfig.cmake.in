@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+set_and_check(EXPORT_TARGETS_FILE_NEW "@PACKAGE_EXPORTED_TARGETS_FILE_PATH@")	
+
+include("${EXPORT_TARGETS_FILE_NEW}")
+
+check_required_components("@PROJECT_NAME@")

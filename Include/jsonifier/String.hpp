@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> class char_traits : public std::char_traits<jsonifier::concepts::unwrap_t<value_type>> {};
 
-	template<> class char_traits<uint8_t> {
+	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
 	  public:
 		using value_type	= uint8_t;
 		using pointer		= value_type*;
@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 
 				return;
 			}
-			std::memmove(firstNew, first2, count * sizeof(value_type));
+			std::memmove(firstNew, first2, count * sizeof(value_type_new));
 		}
 
 		static constexpr size_type length(const_pointer first) {
@@ -252,23 +252,27 @@ namespace jsonifier {
 			return const_reverse_iterator{ begin() };
 		}
 
+		template<typename... arg_types> JSONIFIER_INLINE size_type rfind(arg_types&&... args) const {
+			return operator std::basic_string_view<value_type>().rfind(std::forward<arg_types>(args)...);
+		}
+
 		template<typename... arg_types> JSONIFIER_INLINE size_type find(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findFirstOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findLastOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findLastOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findFirstNotOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findLastNotOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findLastNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
 		}
 
@@ -384,7 +388,7 @@ namespace jsonifier {
 			jsonifier::string_base<value_type_newer> returnValue{};
 			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
-				std::copy(data(), data() + returnValue.size(), returnValue.data());
+				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
 			return returnValue;
 		}
@@ -393,7 +397,7 @@ namespace jsonifier {
 			std::basic_string<value_type_newer> returnValue{};
 			if (sizeVal > 0) [[likely]] {
 				returnValue.resize(sizeVal);
-				std::copy(data(), data() + returnValue.size(), returnValue.data());
+				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
 			return returnValue;
 		}
@@ -483,13 +487,13 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		JSONIFIER_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) {
 			auto rhsLength = traits_type::length(rhs);
-			return rhsLength == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs, rhsLength);
+			return rhsLength == lhs.size() && jsonifier_asm::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) {
 			if (lhs.size() == rhs.size()) {
 				if (lhs.size() > 0) {
-					return jsonifier_internal::compare(lhs.data(), rhs.data(), rhs.size());
+					return jsonifier_asm::compare(lhs.data(), rhs.data(), rhs.size());
 				}
 				return true;
 			} else {

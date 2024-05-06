@@ -6,6 +6,7 @@ on:
     branches:
     - main
     - dev
+    - assembly
 
 jobs:
   Build:
@@ -19,12 +20,15 @@ jobs:
         std: [20]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install the latest clang compiler.
       run: |
             brew install llvm
-            ls /opt/homebrew/opt/llvm/bin
+
+    - name: Install Nasm.
+      run: |
+            brew install nasm
 
     - name: Configure CMake
       working-directory: ./
@@ -35,6 +39,11 @@ jobs:
       working-directory: ./Build
       run: |
            cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
       working-directory: ./Build/Tests

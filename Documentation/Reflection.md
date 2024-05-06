@@ -15,7 +15,7 @@ Consider the following usage example:
 struct available_tag {
     jsonifier::string name;
     bool moderated;
-    int id;
+    int32_t id;
 };
 
 // Register the structure using reflection
@@ -49,7 +49,7 @@ Define the structure you want to register with Jsonifier, ensuring it contains t
 struct available_tag {
     jsonifier::string name;
     bool moderated;
-    int id;
+    int32_t id;
 };
 ```
 
