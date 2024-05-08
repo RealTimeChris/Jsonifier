@@ -15,13 +15,13 @@ Consider the following usage example:
 struct available_tag {
     jsonifier::string name;
     bool moderated;
-    int id;
+    int32_t id;
 };
 
 // Register the structure using reflection
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    static constexpr auto parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    static constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 
 // Define JSON data and the structure instance
@@ -49,7 +49,7 @@ Define the structure you want to register with Jsonifier, ensuring it contains t
 struct available_tag {
     jsonifier::string name;
     bool moderated;
-    int id;
+    int32_t id;
 };
 ```
 
@@ -60,7 +60,7 @@ Specialize the `jsonifier::core` template for the structure, providing the neces
 ```cpp
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    static constexpr auto parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    static constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 ```
 

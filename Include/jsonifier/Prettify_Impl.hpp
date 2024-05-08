@@ -27,150 +27,139 @@
 
 namespace jsonifier_internal {
 
-	template<bool tabs, uint64_t indentSize, typename iterator_type> void appendNewLine(iterator_type& outPtr, int64_t indent) {
-		appendCharacter<0x0Au>(outPtr);
-		if constexpr (tabs) {
-			std::memset(outPtr, 0x09, indent);
-			outPtr += indent;
-		} else {
-			std::memset(outPtr, 0x20u, indent * indentSize);
-			outPtr += indent * indentSize;
-		}
-	};
-
-	template<typename iterator_type01, typename iterator_type02> void appendValues(int64_t currentDistance, iterator_type01& outPtr, iterator_type02 currentVal) {
-		if (currentDistance > 0) [[likely]] {
-			std::memcpy(outPtr, currentVal, static_cast<uint64_t>(currentDistance));
-			outPtr += currentDistance;
-		}
-	}
-
 	template<typename derived_type> struct prettify_impl {
-		template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type,
-			jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
-			json_structural_type state[maxDepth]{};
-			int64_t indent{};
-			auto outPtr = out.data();
+		template<const prettify_options_internal& options, jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator_type>
+		JSONIFIER_INLINE static void impl(iterator_type& iter, string_type&& out, uint64_t& index, prettifier_type& prettifier) noexcept {
+			jsonifier::vector<json_structural_type> state{};
+			state.resize(64);
 
 			while (iter) {
-				switch (asciiClassesMap[*iter]) {
-					case json_structural_type::String: {
+				switch (asciiClassesMap[static_cast<uint8_t>(*iter)]) {
+					[[likely]] case json_structural_type::String: {
 						auto valueNew = iter.operator->();
 						++iter;
-						appendValues(iter.operator->() - valueNew, outPtr, valueNew);
+						auto newSize = static_cast<uint64_t>(iter.operator->() - valueNew);
+						writeCharactersUnchecked(out, valueNew, newSize, index);
 						break;
 					}
-					case json_structural_type::Comma: {
-						appendCharacter<0x2Cu>(outPtr);
+					[[unlikely]] case json_structural_type::Comma: {
+						writeCharacterUnchecked<','>(out, index);
 						++iter;
-						if constexpr (newLinesInArray) {
-							appendNewLine<tabs, indentSize>(outPtr, indent);
+						if constexpr (options.optionsReal.newLinesInArray) {
+							writeNewLineUnchecked<options>(out, index);
 						} else {
-							if (state[indent] == json_structural_type::Object_Start) {
-								appendNewLine<tabs, indentSize>(outPtr, indent);
+							if (state[options.indent] == json_structural_type::Object_Start) {
+								writeNewLineUnchecked<options>(out, index);
 							} else {
-								appendCharacter<0x20u>(outPtr);
+								writeCharacterUnchecked<options.optionsReal.indentChar>(out, index);
 							}
 						}
 						break;
 					}
-					case json_structural_type::Number: {
+					[[unlikely]] case json_structural_type::Number: {
 						auto valueNew = iter.operator->();
 						++iter;
-						appendValues(iter.operator->() - valueNew, outPtr, valueNew);
+						auto newSize = static_cast<uint64_t>(iter.operator->() - valueNew);
+						writeCharactersUnchecked(out, valueNew, newSize, index);
 						break;
 					}
-					case json_structural_type::Colon: {
-						appendCharacter<0x3A>(outPtr);
-						appendCharacter<0x20>(outPtr);
+					[[unlikely]] case json_structural_type::Colon: {
+						writeCharacterUnchecked<':'>(out, index);
+						writeCharacterUnchecked<options.optionsReal.indentChar>(out, index);
 						++iter;
 						break;
 					}
-					case json_structural_type::Array_Start: {
-						appendCharacter<0x5Bu>(outPtr);
+					[[unlikely]] case json_structural_type::Array_Start: {
+						writeCharacterUnchecked<'['>(out, index);
 						++iter;
-						++indent;
-						state[indent] = json_structural_type::Array_Start;
-						if (size_t(indent) >= std::size(state)) [[unlikely]] {
-							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-							return std::numeric_limits<uint32_t>::max();
+						++options.indent;
+						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Array_Start;
+						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
+							state.resize(state.size() * 2);
 						}
-						if constexpr (newLinesInArray) {
-							if (*iter != 0x5Du) {
-								appendNewLine<tabs, indentSize>(outPtr, indent);
+						if constexpr (options.optionsReal.newLinesInArray) {
+							if (*iter != ']') {
+								writeNewLineUnchecked<options>(out, index);
 							}
-						} else {
-							appendCharacter<0x20>(outPtr);
 						}
 						break;
 					}
-					case json_structural_type::Array_End: {
-						--indent;
-						if (indent < 0) {
-							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-							return std::numeric_limits<uint32_t>::max();
+					[[unlikely]] case json_structural_type::Array_End: {
+						--options.indent;
+						if (options.indent < 0) {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+								iter - prettifier.rootIter, iter.getEndPtr() - prettifier.rootIter, prettifier.rootIter));
+							return;
 						}
-						if (*(iter.operator->() - 1) != 0x5Bu) {
-							if constexpr (newLinesInArray) {
-								appendNewLine<tabs, indentSize>(outPtr, indent);
+						if constexpr (options.optionsReal.newLinesInArray) {
+							if (*(iter.sub(1)) != '[') {
+								writeNewLineUnchecked<options>(out, index);
 							}
-							appendCharacter<0x20>(outPtr);
 						}
-						appendCharacter<0x5Du>(outPtr);
+						writeCharacterUnchecked<']'>(out, index);
 						++iter;
 						break;
 					}
-					case json_structural_type::Null: {
-						appendValues(static_cast<int64_t>(nullString.size()), outPtr, nullString.data());
+					[[unlikely]] case json_structural_type::Null: {
+						writeCharactersUnchecked<"null">(out, index);
 						++iter;
 						break;
 					}
-					case json_structural_type::Bool: {
-						if (*iter == 0x74u) {
-							appendValues(static_cast<int64_t>(trueString.size()), outPtr, trueString.data());
+					[[unlikely]] case json_structural_type::Bool: {
+						if (*iter == 't') {
+							writeCharactersUnchecked<"true">(out, index);
+							++iter;
+							break;
 						} else {
-							appendValues(static_cast<int64_t>(falseString.size()), outPtr, falseString.data());
+							writeCharactersUnchecked<"false">(out, index);
+							++iter;
+							break;
 						}
+					}
+					[[unlikely]] case json_structural_type::Object_Start: {
+						writeCharacterUnchecked<'{'>(out, index);
 						++iter;
+						++options.indent;
+						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Object_Start;
+						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
+							state.resize(state.size() * 2);
+						}
+						if (*iter != '}') {
+							writeNewLineUnchecked<options>(out, index);
+						}
 						break;
 					}
-					case json_structural_type::Object_Start: {
-						appendCharacter<0x7Bu>(outPtr);
-						++iter;
-						++indent;
-						state[indent] = json_structural_type::Object_Start;
-						if (size_t(indent) >= std::size(state)) [[unlikely]] {
-							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-							return std::numeric_limits<uint32_t>::max();
+					[[unlikely]] case json_structural_type::Object_End: {
+						--options.indent;
+						if (options.indent < 0) {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+								iter - prettifier.rootIter, iter.getEndPtr() - prettifier.rootIter, prettifier.rootIter));
+							return;
 						}
-						if (*iter != 0x7Du) {
-							appendNewLine<tabs, indentSize>(outPtr, indent);
+						if (*(iter.sub(1)) != '{') {
+							writeNewLineUnchecked<options>(out, index);
 						}
-						break;
-					}
-					case json_structural_type::Object_End: {
-						--indent;
-						if (indent < 0) {
-							iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-							return static_cast<uint64_t>(outPtr - out.data());
-						}
-						if (*(iter.operator->() - 1) != 0x7Bu) {
-							appendNewLine<tabs, indentSize>(outPtr, indent);
-						}
-						appendCharacter<0x7Du>(outPtr);
+						writeCharacterUnchecked<'}'>(out, index);
 						++iter;
 						break;
 					}
 					case json_structural_type::Unset:
 						[[fallthrough]];
+					case json_structural_type::Error:
+						[[fallthrough]];
+					case json_structural_type::Type_Count:
+						[[fallthrough]];
 					[[unlikely]] default: {
-						iter.getErrors().emplace_back(createError<error_code::Prettify_Error>(iter));
-						return std::numeric_limits<uint32_t>::max();
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+							iter - prettifier.rootIter, iter.getEndPtr() - prettifier.rootIter, prettifier.rootIter));
+						return;
 					}
 				}
 			}
-			return static_cast<uint64_t>(outPtr - out.data());
+			return;
 		}
 	};
 

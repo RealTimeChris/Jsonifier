@@ -23,41 +23,19 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/ISA/SimdCommon.hpp>
 #include <memory_resource>
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type val) {
-		auto remainder = val % multiple;
-		return remainder == 0 ? val : val + (multiple - remainder);
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) {
+		auto remainder = value % multiple;
+		return remainder == 0 ? value : value + (multiple - remainder);
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type val) {
-		return static_cast<int64_t>(val) >= 0 ? (val / multiple) * multiple : ((val - multiple + 1) / multiple) * multiple;
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) {
+		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 	}
-
-#if defined(_MSC_VER)
-
-	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
-	}
-
-	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
-		_aligned_free(ptr);
-	}
-
-#else
-
-	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(size * sizeof(value_type))));
-	}
-
-	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
-		free(ptr);
-	}
-
-#endif
 
 	template<typename value_type_new> class alloc_wrapper {
 	  public:
@@ -70,12 +48,20 @@ namespace jsonifier_internal {
 			if (count == 0) [[unlikely]] {
 				return nullptr;
 			}
-			return jsonifierAlignedAlloc<value_type>(count);
+#if defined(JSONIFIER_MSVC)
+			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<bytesPerStep>(count * sizeof(value_type)), bytesPerStep));
+#else
+			return static_cast<value_type*>(std::aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
+#endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr, size_type) {
+		JSONIFIER_INLINE void deallocate(pointer ptr) {
 			if (ptr) [[likely]] {
-				jsonifierFree(ptr);
+#if defined(JSONIFIER_MSVC)
+				_aligned_free(ptr);
+#else
+				free(ptr);
+#endif
 			}
 		}
 
@@ -84,7 +70,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE size_type maxSize() {
-			return allocator_traits::max_size(*this);
+			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
 		JSONIFIER_INLINE void destroy(pointer ptr) {

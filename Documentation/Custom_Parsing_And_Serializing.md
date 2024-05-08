@@ -16,7 +16,7 @@ The `parser::impl` structure is designed to handle the parsing of JSON data with
 template<jsonifier::concepts::bool_t value_type_new, typename derived_type>
 struct parser::impl<value_type_new, derived_type> : public derailleur {
     template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-    JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter) {
+    JSONIFIER_INLINE void impl(value_type&& value, iterator_type&& iter) {
         // Custom parsing logic goes here
     }
 };
@@ -34,7 +34,7 @@ The `serialize_impl` structure complements parsing by defining how JSON data sho
 template<jsonifier::concepts::bool_t value_type_new, typename derived_type>
 struct serialize_impl<value_type_new, derived_type> {
     template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-    JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+    JSONIFIER_INLINE void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
         // Custom serialization logic goes here
     }
 };
@@ -54,7 +54,7 @@ Let's break down the `serialize_impl` specialization for time stamps:
 template<time_stamp_t value_type_new, typename derived_type>
 struct serialize_impl<value_type_new, derived_type> {
     template<time_stamp_t value_type, jsonifier::concepts::buffer_like iterator_type>
-    JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, uint64_t& index) {
+    JSONIFIER_INLINE void impl(value_type&& value, iterator_type&& iter, uint64_t& index) {
         jsonifier::string newString{ static_cast<jsonifier::string>(value) };
         serializer<derived_type>::impl(newString, iter, index);
     }
@@ -71,7 +71,7 @@ Similarly, the `parser::impl` specialization for time stamps is structured as fo
 template<time_stamp_t value_type_new, typename derived_type>
 struct parser::impl<value_type_new, derived_type> {
     template<time_stamp_t value_type, jsonifier::concepts::is_fwd_iterator iterator>
-    JSONIFIER_INLINE static void impl(value_type&& value, iterator&& iter) {
+    JSONIFIER_INLINE void impl(value_type&& value, iterator&& iter) {
         jsonifier::string newString{};
         parser<derived_type>::impl(newString, iter);
         value = static_cast<jsonifier::string>(newString);

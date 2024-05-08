@@ -23,45 +23,42 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/Config.hpp>
 
 namespace simd_internal {
-
-#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
-	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-
-	template<typename simd_int_t01, size_t... indices> JSONIFIER_INLINE string_parsing_type _mm128_movemask_epi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
+	
+	template<typename simd_int_t01, size_t... indices> JSONIFIER_INLINE string_parsing_type mm128MovemaskEpi8(simd_int_t01&& a, std::index_sequence<indices...>&&) {
 		string_parsing_type mask{ 0 };
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_or_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
-		simd_int_t value{};
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE constexpr __m128x mm128OrSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+		__m128x value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] |= valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] |= valTwo.m128x_uint64[1];
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_and_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
-		simd_int_t value{};
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE constexpr __m128x mm128AndSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+		__m128x value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] &= valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] &= valTwo.m128x_uint64[1];
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_andnot_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
-		simd_int_t value{};
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE constexpr __m128x mm128AndNotSi128N(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+		__m128x value{};
 		memcpy(value.m128x_uint64, valTwo.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] &= ~valOne.m128x_uint64[0];
 		value.m128x_uint64[1] &= ~valOne.m128x_uint64[1];
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE simd_int_t _mm128_xor_si128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
-		simd_int_t value{};
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE constexpr __m128x mm128XorSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) {
+		__m128x value{};
 		memcpy(value.m128x_uint64, valOne.m128x_uint64, sizeof(value));
 		value.m128x_uint64[0] ^= valTwo.m128x_uint64[0];
 		value.m128x_uint64[1] ^= valTwo.m128x_uint64[1];
@@ -69,76 +66,153 @@ namespace simd_internal {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	JSONIFIER_INLINE simd_int_t _mm128_cmpeq_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>&&) {
-		simd_int_t result{};
+	JSONIFIER_INLINE __m128x mm128CmpEqEpi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>&&) {
+		__m128x result{};
 		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
 		return result;
 	}
 
-	JSONIFIER_INLINE bool _mm128_testz_si128(simd_int_t& valOne, simd_int_t& valTwo) {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE bool mm128TestzSi128(simd_int_t01& valOne, simd_int_t02& valTwo) {
 		valOne.m128x_uint64[0] &= valTwo.m128x_uint64[0];
 		valOne.m128x_uint64[1] &= valTwo.m128x_uint64[1];
 		return valOne.m128x_uint64[0] == 0 && valOne.m128x_uint64[1] == 0;
 	}
 
-	JSONIFIER_INLINE simd_int_t _mm128_set_epi64x(uint64_t argOne, uint64_t argTwo) {
-		simd_int_t returnValue{};
+	JSONIFIER_INLINE __m128x mm128SetrEpi64xRt(uint64_t argOne, uint64_t argTwo) {
+		__m128x returnValue{};
 		std::memcpy(&returnValue.m128x_uint64[0], &argTwo, sizeof(uint64_t));
 		std::memcpy(&returnValue.m128x_uint64[1], &argOne, sizeof(uint64_t));
 		return returnValue;
 	}
 
-	JSONIFIER_INLINE simd_int_t _mm128_set1_epi64x(uint64_t argOne) {
-		simd_int_t returnValue{};
+	constexpr __m128x mm128SetrEpi64xCt(uint64_t argOne, uint64_t argTwo) {
+		__m128x returnValue{};
+		returnValue.m128x_uint64[0] = argTwo;
+		returnValue.m128x_uint64[1] = argOne;
+		return returnValue;
+	}
+
+	JSONIFIER_INLINE __m128x mm128Set1Epi64xRt(uint64_t argOne) {
+		__m128x returnValue{};
 		std::memcpy(&returnValue.m128x_uint64[0], &argOne, sizeof(uint64_t));
 		std::memcpy(&returnValue.m128x_uint64[1], &argOne, sizeof(uint64_t));
 		return returnValue;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	JSONIFIER_INLINE simd_int_t _mm128_shuffle_epi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>) {
-		simd_int_t result{};
-		size_t index{};
-		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
+	constexpr __m128x mm128Set1Epi64xCt(uint64_t argOne) {
+		__m128x returnValue{};
+		returnValue.m128x_uint64[0] = argOne;
+		returnValue.m128x_uint64[1] = argOne;
+		return returnValue;
+	}
+
+	constexpr __m128x mm128BlendVEpi8(const __m128x& a, const __m128x& b, const __m128x& mask) {
+		__m128x result;
+		for (int32_t i = 0; i < 2; ++i) {
+			result.m128x_uint64[i] = 0;
+			for (int32_t j = 0; j < 8; ++j) {
+				uint8_t maskByte	= (mask.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
+				uint8_t aByte		= (a.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
+				uint8_t bByte		= (b.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
+				uint8_t blendedByte = (maskByte ? bByte : aByte);
+				result.m128x_uint64[i] |= (static_cast<uint64_t>(blendedByte) << (j * 8));
+			}
+		}
 		return result;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_andnot_si128(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
+	constexpr __m128x mm128AddEpi64(const __m128x& value01, const __m128x& value02) {
+		__m128x returnValue{};
+		returnValue.m128x_uint64[0] = value01.m128x_uint64[0] + value02.m128x_uint64[0];
+		returnValue.m128x_uint64[1] = value01.m128x_uint64[1] + value02.m128x_uint64[1];
+		return returnValue;
+	}	
+
+	constexpr void mm128StoreUSi128(uint8_t* ptr, const __m128x& data) {
+		for (int32_t i = 0; i < 8; ++i) {
+			ptr[i] = static_cast<uint8_t>(data.m128x_uint64[0] >> (i * 8));
+		}
+
+		for (int32_t i = 0; i < 8; ++i) {
+			ptr[i + 8] = static_cast<uint8_t>(data.m128x_uint64[1] >> (i * 8));
+		}
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_and_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	constexpr __m128x mm128SubEpi64(const __m128x& value01, const __m128x& value02) {
+		__m128x returnValue{};
+		returnValue.m128x_uint64[0] = value01.m128x_uint64[0] - value02.m128x_uint64[0];
+		returnValue.m128x_uint64[1] = value01.m128x_uint64[1] - value02.m128x_uint64[1];
+		return returnValue;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_xor_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	constexpr __m128x mm128LoadUSi128(const uint8_t* ptr) {
+		uint64_t low  = 0;
+		uint64_t high = 0;
+
+		for (int32_t i = 0; i < 8; ++i) {
+			low |= static_cast<uint64_t>(ptr[i]) << (i * 8);
+		}
+
+		for (int32_t i = 0; i < 8; ++i) {
+			high |= static_cast<uint64_t>(ptr[i + 8]) << (i * 8);
+		}
+		__m128x returnValues{};
+		returnValues.m128x_uint64[0] = low;
+		returnValues.m128x_uint64[1] = high;
+		return returnValues;
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
-		return _mm128_or_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	constexpr __m128x mm128SetZero() {
+		return __m128x{};
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
-		jsonifier::concepts::unwrap_t<simd_int_t> mask = _mm128_set_epi64x(0x00ll, 0x01ll);
-		return valueNew ? _mm128_or_si128(value, mask) : _mm128_andnot_si128(mask, value);
+	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
+	JSONIFIER_INLINE __m128x mm128ShuffleEpi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>) {
+		__m128x result{};
+		size_t index{};
+		(((index = static_cast<size_t>(b.m128x_uint8[indices] & 0x0F)), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
+		return result;
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value) {
-		return _mm128_xor_si128(std::forward<simd_int_t01>(value), _mm128_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
+	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE __m128x opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
+		return mm128AndNotSi128N(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
-		simd_int_t result = _mm128_and_si128(std::forward<simd_int_t01>(value), _mm128_set_epi64x(0x8000000000000000ll, 0x00ll));
-		return !_mm128_testz_si128(result, result);
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE __m128x opAnd(simd_int_t01&& value, simd_int_t02&& other) {
+		return mm128AndSi128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
-		return !_mm128_testz_si128(value, value);
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE __m128x opXor(simd_int_t01&& value, simd_int_t02&& other) {
+		return mm128XorSi128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	JSONIFIER_INLINE static simd_int_t reset() {
-		return simd_int_t{};
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE __m128x opOr(simd_int_t01&& value, simd_int_t02&& other) {
+		return mm128OrSi128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE __m128x opSetLSB(simd_int_t01&& value, bool valueNew) {
+		jsonifier::concepts::unwrap_t<__m128x> mask = mm128SetrEpi64xRt(0x00ll, 0x01ll);
+		return valueNew ? mm128OrSi128(value, mask) : mm128AndNotSi128N(mask, value);
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE __m128x opNot(simd_int_t01&& value) {
+		return mm128XorSi128(std::forward<simd_int_t01>(value), mm128Set1Epi64xRt(0xFFFFFFFFFFFFFFFFll));
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
+		__m128x result = mm128AndSi128(std::forward<simd_int_t01>(value), mm128SetrEpi64xRt(0x8000000000000000ll, 0x00ll));
+		return !mm128TestzSi128(result, result);
+	}
+
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opBool(simd_int_t01&& value) {
+		return !mm128TestzSi128(value, value);
+	}
+
+	template<simd_int_type simd_int_t91> JSONIFIER_INLINE __m128x reset() {
+		return __m128x{};
 	}
 
 #endif

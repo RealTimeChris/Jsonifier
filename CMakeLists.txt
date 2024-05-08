@@ -68,9 +68,10 @@ target_include_directories(
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
 )
 
-target_compile_options (
+target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"${AVX_FLAG}"
 )
 
 target_compile_definitions(
@@ -78,11 +79,6 @@ target_compile_definitions(
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
 	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
-)
-
-target_compile_options(
-	"${PROJECT_NAME}" INTERFACE 
-	"${AVX_FLAG}"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
@@ -132,6 +128,6 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if (JSONIFIER_TEST)
+if(JSONIFIER_TEST)
 	add_subdirectory("./Tests")
 endif()

@@ -29,9 +29,9 @@
 
 namespace std {
 
-	template<jsonifier::concepts::string_t string_type> struct hash<string_type> {
+	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public jsonifier_internal::key_hasher {
 		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const {
-			return jsonifier_internal::fnv1aHash(string, 0);
+			return jsonifier_internal::key_hasher::hashKeyRt(string.data(), string.size());
 		}
 	};
 
@@ -39,10 +39,9 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
+	enum class json_type : uint8_t { Unset = 0, Object = '{', Array = '[', String = '"', Number = '-', Bool = 't', Null = 'n' };
 
 	class raw_json_data;
-
 }
 
 namespace jsonifier_internal {
@@ -65,9 +64,23 @@ namespace jsonifier_internal {
 
 	template<> JSONIFIER_INLINE bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData);
 
-	inline std::unordered_map<jsonifier::string_view, jsonifier::json_type> typeMap{ { "Unset", jsonifier::json_type::Unset }, { "Object", jsonifier::json_type::Object },
-		{ "Array", jsonifier::json_type::Array }, { "String", jsonifier::json_type::String }, { "Number", jsonifier::json_type::Number }, { "Bool", jsonifier::json_type::Bool },
-		{ "Null", jsonifier::json_type::Null } };
+	JSONIFIER_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) {
+		if (jsonifier_internal::isNumberType(charToCheck)) [[likely]] {
+			return jsonifier::json_type::Number;
+		} else if (jsonifier_internal::boolTable[charToCheck]) [[likely]] {
+			return jsonifier::json_type::Bool;
+		} else if (charToCheck == '{') [[unlikely]] {
+			return jsonifier::json_type::Object;
+		} else if (charToCheck == '[') [[unlikely]] {
+			return jsonifier::json_type::Array;
+		} else if (charToCheck == '"') [[unlikely]] {
+			return jsonifier::json_type::String;
+		} else if (charToCheck == 'n') [[unlikely]] {
+			return jsonifier::json_type::Null;
+		} else {
+			return jsonifier::json_type::Unset;
+		}
+	}
 
 }
 
@@ -100,9 +113,9 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE json_type getType() const {
 			if (jsonData.size() > 0) {
-				return jsonifier_internal::typeMap[jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]))];
+				return jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]));
 			} else {
-				return jsonifier_internal::typeMap[""];
+				return json_type::Unset;
 			}
 		}
 
@@ -243,19 +256,19 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			skipWs(newIter01);
-			auto newCount = countValueElements<0x7Bu, 0x7Du>(newIter02, endIter01);
-			collectCharacter(0x7Bu);
+			newIter01	  = skipWs(newIter01);
+			auto newCount = countValueElements<'{', '}'>(newIter02, endIter01);
+			collectCharacter('{');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				skipWs(newIter01);
+				newIter01	= skipWs(newIter01);
 				auto newKey = collectKey();
-				skipWs(newIter01);
+				newIter01	= skipWs(newIter01);
 				collectCharacter(0x3A);
-				skipWs(newIter01);
+				newIter01 = skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
-				skipWs(newIter01);
-				collectCharacter(0x2Cu);
+				newIter01		= skipWs(newIter01);
+				collectCharacter(',');
 			}
 		}
 		return results;
@@ -294,15 +307,15 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			skipWs(newIter01);
-			auto newCount = countValueElements<0x5Bu, 0x5Du>(newIter02, endIter01);
-			collectCharacter(0x5Bu);
+			newIter01	  = skipWs(newIter01);
+			auto newCount = countValueElements<'[', ']'>(newIter02, endIter01);
+			collectCharacter('[');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				skipWs(newIter01);
+				newIter01 = skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results.emplace_back(collectValue(endValue));
-				skipWs(newIter01);
-				collectCharacter(0x2Cu);
+				newIter01 = skipWs(newIter01);
+				collectCharacter(',');
 			}
 		}
 		return results;

@@ -906,7 +906,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =  . \
+INPUT                  = . \
 				  ./../Include/jsonifier
 
 # This tag can be used to specify the character encoding of the source files
@@ -2161,7 +2161,7 @@ GENERATE_XML           = NO
 
 XML_OUTPUT             = xml
 
-# If the XML_PROGRAMLISTING tag is set to YES, doxygen will dump the program
+# If the XML_PROGRAMLISTING tag is set to YES, doxygen will writeCharacter the program
 # listings (including syntax highlighting and cross-referencing information) to
 # the XML output. Note that enabling this will significantly increase the size
 # of the XML output.

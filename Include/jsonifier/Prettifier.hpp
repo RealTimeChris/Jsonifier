@@ -26,39 +26,101 @@
 #include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/Minifier.hpp>
+#include <jsonifier/Write.hpp>
+
+namespace jsonifier {
+
+	struct prettify_options {
+		bool newLinesInArray{ true };
+		uint64_t indentSize{ 3 };
+		char indentChar{ ' ' };
+	};
+
+}
 
 namespace jsonifier_internal {
+
+	enum class prettify_errors {
+		Success					   = 0,
+		No_Input				   = 1,
+		Exceeded_Max_Depth		   = 2,
+		Incorrect_Structural_Index = 3,
+	};
+
+	struct prettify_options_internal {
+		jsonifier::prettify_options optionsReal{};
+		mutable int64_t indent{};
+	};
 
 	template<typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
 	  public:
+		template<typename derived_type_new> friend struct prettify_impl;
+
 		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
 		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
-		template<bool newLinesInArray = true, bool tabs = false, uint64_t indentSize = 4, uint64_t maxDepth = 100, jsonifier ::concepts::string_t string_type>
-		JSONIFIER_INLINE auto prettify(string_type&& in) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size() * 6) [[unlikely]] {
-				derivedRef.stringBuffer.resize(in.size() * 6);
+		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier ::concepts::string_t string_type>
+		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
+			if (derivedRef.stringBuffer.size() < in.size() * 5) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() * 5);
 			}
+			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.reset(in.data(), in.size());
+			rootIter = in.data();
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
-				return jsonifier::string_view{};
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
+				return jsonifier::concepts::unwrap_t<string_type>{};
 			}
-			derivedRef.index = impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, derivedRef.stringBuffer);
+			jsonifier::concepts::unwrap_t<string_type> newString{};
+			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
-				return jsonifier::string_view{ derivedRef.stringBuffer.data(), derivedRef.index };
+				newString.resize(derivedRef.index);
+				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
+				return newString;
 			} else {
-				return jsonifier::string_view{};
+				return jsonifier::concepts::unwrap_t<string_type>{};
+			}
+		}
+
+		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
+		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+			if (derivedRef.stringBuffer.size() < in.size() * 5) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() * 5);
+			}
+			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
+			derivedRef.index = 0;
+			derivedRef.errors.clear();
+			derivedRef.section.reset(in.data(), in.size());
+			rootIter = in.data();
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			if (!iter) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
+				return false;
+			}
+			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
+			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
+				if (buffer.size() != derivedRef.index) {
+					buffer.resize(derivedRef.index);
+				}
+				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
+				return true;
+			} else {
+				return false;
 			}
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		mutable const char* rootIter{};
 
 		JSONIFIER_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
@@ -66,10 +128,8 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		template<bool newLinesInArray, bool tabs, uint64_t indentSize, uint64_t maxDepth, jsonifier::concepts::string_t string_type,
-			jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
-			return prettify_impl<derived_type>::template impl<newLinesInArray, tabs, indentSize, maxDepth>(iter, out);
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~prettifier() noexcept = default;

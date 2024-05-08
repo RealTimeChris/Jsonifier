@@ -23,76 +23,91 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/JsonStructuralIterator.hpp>
+#include <jsonifier/Write.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
 
+	enum class minify_errors {
+		Success					   = 0,
+		No_Input				   = 1,
+		Invalid_String_Length	   = 2,
+		Invalid_Number_Value	   = 3,
+		Incorrect_Structural_Index = 4,
+	};
+
 	constexpr uint32_t minifyError{ std::numeric_limits<uint32_t>::max() };
-
-	constexpr json_structural_type asciiClassesMap[]{ json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::String, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Comma, json_structural_type::Number, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Number,
-		json_structural_type::Number, json_structural_type::Number, json_structural_type::Number, json_structural_type::Number, json_structural_type::Number,
-		json_structural_type::Number, json_structural_type::Number, json_structural_type::Number, json_structural_type::Number, json_structural_type::Colon,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Array_Start, json_structural_type::Unset, json_structural_type::Array_End,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Bool, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Null,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Bool,
-		json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset, json_structural_type::Unset,
-		json_structural_type::Unset, json_structural_type::Object_Start, json_structural_type::Unset, json_structural_type::Object_End, json_structural_type::Unset,
-		json_structural_type::Unset };
-
-	static constexpr jsonifier::string_view falseString{ "false" };
-	static constexpr jsonifier::string_view trueString{ "true" };
-	static constexpr jsonifier::string_view nullString{ "null" };
-
-	template<auto character, typename iterator_type> void appendCharacter(iterator_type& outPtr) {
-		*outPtr = static_cast<std::remove_pointer_t<jsonifier::concepts::unwrap_t<iterator_type>>>(character);
-		++outPtr;
-	}
 
 	template<typename derived_type> struct minify_impl;
 
+	template<typename derived_type> class minifier;
+
+	template<typename derived_type> struct minify_options_internal {
+		mutable minifier<derived_type>* minifierPtr{};
+	};
+
 	template<typename derived_type> class minifier {
 	  public:
+		template<typename derived_type_new> friend struct minify_impl;
+
 		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
 		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minify(string_type&& in) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size() * 2) [[unlikely]] {
-				derivedRef.stringBuffer.resize(in.size() * 2);
+		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
+			if (derivedRef.stringBuffer.size() < in.size() / 4) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() / 4);
 			}
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.reset(in.data(), in.size());
+			static constexpr minify_options_internal<derived_type> options{};
+			options.minifierPtr = this;
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
-				return jsonifier::string{};
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(static_cast<int64_t>(iter - iter.getRootPtr()),
+					static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
+				return jsonifier::concepts::unwrap_t<string_type>{};
 			}
-			derivedRef.index = impl(iter, derivedRef.stringBuffer);
-			jsonifier::string newString{};
-			if (derivedRef.index != minifyError) [[likely]] {
+			jsonifier::concepts::unwrap_t<string_type> newString{};
+			minify_impl<derived_type>::template impl<options>(iter, derivedRef.stringBuffer, derivedRef.index);
+			if (derivedRef.index == minifyError) {
+				return newString;
+			} else {
 				newString.resize(derivedRef.index);
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
 			}
-			derivedRef.index = 0;
 			return newString;
+		}
+
+		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
+		JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& out) noexcept {
+			if (derivedRef.stringBuffer.size() < in.size() / 4) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() / 4);
+			}
+			derivedRef.index = 0;
+			derivedRef.errors.clear();
+			derivedRef.section.reset(in.data(), in.size());
+			static constexpr minify_options_internal<derived_type> options{};
+			options.minifierPtr = this;
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			if (!iter) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(static_cast<int64_t>(iter - iter.getRootPtr()),
+					static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
+				return false;
+			}
+			minify_impl<derived_type>::template impl<options>(iter, derivedRef.stringBuffer, derivedRef.index);
+			if (derivedRef.index == minifyError) {
+				return false;
+			} else {
+				if (out.size() != derivedRef.index) {
+					out.resize(derivedRef.index);
+				}
+				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, out.data());
+			}
+			return true;
 		}
 
 	  protected:
@@ -100,16 +115,15 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
-			return minify_impl<derived_type>::impl(iter, out);
-		}
-
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
+		}
+
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~minifier() noexcept = default;
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier_interna;

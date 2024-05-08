@@ -25,7 +25,9 @@
 #pragma once
 
 #include <jsonifier/Allocator.hpp>
+#include <jsonifier/Iterator.hpp>
 
+#include <functional>
 #include <concepts>
 #include <cstdint>
 #include <cstring>
@@ -54,16 +56,16 @@ namespace jsonifier_internal {
 	#define mulhi64 __umulh
 #else
 	JSONIFIER_INLINE uint64_t mulhi64(uint64_t a, uint64_t b) noexcept {
-		uint64_t a_lo	   = ( uint32_t )a;
-		uint64_t a_hi	   = a >> 32;
-		uint64_t b_lo	   = ( uint32_t )b;
-		uint64_t b_hi	   = b >> 32;
-		uint64_t a_x_b_hi  = a_hi * b_hi;
-		uint64_t a_x_b_mid = a_hi * b_lo;
-		uint64_t b_x_a_mid = b_hi * a_lo;
-		uint64_t a_x_b_lo  = a_lo * b_lo;
-		uint64_t carry_bit = (( uint64_t )( uint32_t )a_x_b_mid + ( uint64_t )( uint32_t )b_x_a_mid + (a_x_b_lo >> 32)) >> 32;
-		uint64_t multhi	   = a_x_b_hi + (a_x_b_mid >> 32) + (b_x_a_mid >> 32) + carry_bit;
+		uint64_t aLo	  = ( uint32_t )a;
+		uint64_t aHi	  = a >> 32;
+		uint64_t bLo	  = ( uint32_t )b;
+		uint64_t bHi	  = b >> 32;
+		uint64_t axbHi	  = aHi * bHi;
+		uint64_t axbMid	  = aHi * bLo;
+		uint64_t bxaMid	  = bHi * aLo;
+		uint64_t axbLo	  = aLo * bLo;
+		uint64_t carryBit = (( uint64_t )( uint32_t )axbMid + ( uint64_t )( uint32_t )bxaMid + (axbLo >> 32)) >> 32;
+		uint64_t multhi	  = axbHi + (axbMid >> 32) + (bxaMid >> 32) + carryBit;
 		return multhi;
 	}
 #endif
@@ -168,43 +170,37 @@ namespace jsonifier_internal {
 
 	constexpr uint8_t digiTypeZero	  = 1 << 0;
 	constexpr uint8_t digiTypeNonZero = 1 << 1;
-	constexpr uint8_t digiTypePos	  = 1 << 2;
-	constexpr uint8_t digiTypeNeg	  = 1 << 3;
 	constexpr uint8_t digiTypeDot	  = 1 << 4;
 	constexpr uint8_t digiTypeExp	  = 1 << 5;
 
-	template<typename char_type> constexpr std::array<char_type, 256> digiTable{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+	template<typename uint8_t> constexpr std::array<uint8_t, 256> digiTable{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
 		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
-		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x04u, 0x00u, 0x08u, 0x10u, 0x00u, 0x01u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x04u, 0x00u, '\b', 0x10u, 0x00u, 0x01u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x00u, 0x00u, 0x00u, 0x00u,
 		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x20u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
 		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x20u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
 		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
 
-	template<typename char_type> JSONIFIER_INLINE bool digiIsType(char_type d, char_type type) noexcept {
-		return (digiTable<char_type>[static_cast<uint64_t>(d)] & type) != 0;
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsType(uint8_t d, uint8_t type) noexcept {
+		return (digiTable<uint8_t>[static_cast<uint64_t>(d)] & type) != 0;
 	}
 
-	template<typename char_type> JSONIFIER_INLINE bool digiIsFp(char_type d) noexcept {
-		return digiIsType(d, char_type(digiTypeDot | digiTypeExp));
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsFp(uint8_t d) noexcept {
+		return digiIsType(d, uint8_t(digiTypeDot | digiTypeExp));
 	}
 
-	template<typename char_type> JSONIFIER_INLINE bool digiIsDigitOrFp(char_type d) noexcept {
-		return digiIsType(d, char_type(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsDigitOrFp(uint8_t d) noexcept {
+		return digiIsType(d, uint8_t(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint64_type return_type> consteval return_type repeatByte() {
-		return 0x0101010101010101ull * uint8_t(repeat);
+	template<jsonifier::concepts::uint16_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
+		return (((value - 0x0101) & ~value) & 0x8080);
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint32_type return_type> consteval return_type repeatByte() {
-		return 0x01010101ul * uint8_t(repeat);
+	template<jsonifier::concepts::uint32_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
+		return (((value - 0x01010101) & ~value) & 0x80808080);
 	}
 
-	template<const auto repeat, jsonifier::concepts::uint16_type return_type> consteval return_type repeatByte() {
-		return 0x0101 * uint8_t(repeat);
-	}
-
-	template<typename return_type> constexpr return_type hasZero(const return_type value) noexcept {
+	template<jsonifier::concepts::uint64_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
 		return (((value - 0x0101010101010101) & ~value) & 0x8080808080808080);
 	}
 
@@ -213,54 +209,37 @@ namespace jsonifier_internal {
 		return hasZero(value ^ newBytes);
 	}
 
-	constexpr std::array<bool, 256> digitTable{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false };
+	constexpr auto zero = static_cast<uint8_t>('0');
 
-	template<typename char_type> constexpr bool isDigitSWAR(uint64_t c) noexcept {
-		uint8_t characters[8];
-		std::memcpy(characters, &c, 8);
-		return digitTable[characters[0]] && digitTable[characters[1]] && digitTable[characters[2]] && digitTable[characters[3]] && digitTable[characters[4]] &&
-			digitTable[characters[5]] && digitTable[characters[6]] && digitTable[characters[7]];
-	}
+	constexpr std::array<uint64_t, 256> numberSubTable{ []() {
+		std::array<uint64_t, 256> returnValues{};
+		for (uint64_t x = 0; x < 256; ++x) {
+			returnValues[x] = static_cast<uint64_t>(x - zero);
+		}
+		return returnValues;
+	}() };
 
-#define repeat_in_1_18(x) \
-	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
-
-	template<typename function_type> constexpr void repeatIn118(function_type&& func) {
-		func(std::integral_constant<uint64_t, 1>{});
-		func(std::integral_constant<uint64_t, 2>{});
-		func(std::integral_constant<uint64_t, 3>{});
-		func(std::integral_constant<uint64_t, 4>{});
-		func(std::integral_constant<uint64_t, 5>{});
-		func(std::integral_constant<uint64_t, 6>{});
-		func(std::integral_constant<uint64_t, 7>{});
-		func(std::integral_constant<uint64_t, 8>{});
-		func(std::integral_constant<uint64_t, 9>{});
-		func(std::integral_constant<uint64_t, 10>{});
-		func(std::integral_constant<uint64_t, 11>{});
-		func(std::integral_constant<uint64_t, 12>{});
-		func(std::integral_constant<uint64_t, 13>{});
-		func(std::integral_constant<uint64_t, 14>{});
-		func(std::integral_constant<uint64_t, 15>{});
-		func(std::integral_constant<uint64_t, 16>{});
-		func(std::integral_constant<uint64_t, 17>{});
-		func(std::integral_constant<uint64_t, 18>{});
-	}
-
-	constexpr auto eBit			= static_cast<uint8_t>('E' ^ 'e');
-	constexpr auto f64MaxDecExp = 308;
-	constexpr auto f64MinDecExp = (-324);
-
-	constexpr std::array<double, 23> powersOfTenFloat{ 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21,
-		1e22 };
+	constexpr std::array<bool, 256> digitTableBool{ []() {
+		std::array<bool, 256> returnValues{};
+		returnValues[0x30u] = true;
+		returnValues[0x31u] = true;
+		returnValues[0x32u] = true;
+		returnValues[0x33u] = true;
+		returnValues[0x34u] = true;
+		returnValues[0x35u] = true;
+		returnValues[0x36u] = true;
+		returnValues[0x37u] = true;
+		returnValues[0x38u] = true;
+		returnValues[0x39u] = true;
+		return returnValues;
+	}() };
 
 	constexpr std::array<uint64_t, 20> powersOfTenInt{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
 		100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
 		10000000000000000000ull };
+
+	constexpr std::array<double, 23> powersOfTenFloat = { 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21,
+		1e22 };
 
 	consteval uint32_t ceillog2(uint32_t x) {
 		return x < 2 ? x : 1 + ceillog2(x >> 1);
@@ -270,23 +249,23 @@ namespace jsonifier_internal {
 		std::vector<uint32_t> data = {};
 
 		big_int_t(uint64_t num) noexcept {
-			uint32_t lower_word = uint32_t(num);
-			uint32_t upper_word = uint32_t(num >> 32);
-			if (upper_word > 0) {
-				data = { lower_word, upper_word };
+			uint32_t lowerWord = uint32_t(num);
+			uint32_t upperWord = uint32_t(num >> 32);
+			if (upperWord > 0) {
+				data = { lowerWord, upperWord };
 			} else {
-				data = { lower_word };
+				data = { lowerWord };
 			}
 		}
 
 		void mulU32(uint32_t num) noexcept {
 			uint32_t carry = 0;
-			for (std::size_t i = 0; i < data.size(); i++) {
-				uint64_t res		= uint64_t(data[i]) * uint64_t(num) + uint64_t(carry);
-				uint32_t lower_word = uint32_t(res);
-				uint32_t upper_word = uint32_t(res >> 32);
-				data[i]				= lower_word;
-				carry				= upper_word;
+			for (uint64_t i = 0; i < data.size(); i++) {
+				uint64_t res	   = uint64_t(data[i]) * uint64_t(num) + uint64_t(carry);
+				uint32_t lowerWord = uint32_t(res);
+				uint32_t upperWord = uint32_t(res >> 32);
+				data[i]			   = lowerWord;
+				carry			   = upperWord;
 			}
 			if (carry != 0) {
 				data.emplace_back(carry);
@@ -345,236 +324,243 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<std::floating_point value_type, typename char_type>
-		requires(sizeof(value_type) <= 8)
-	JSONIFIER_INLINE bool parseNumber(value_type& val, char_type* cur, uint64_t length) noexcept {
-		static constexpr auto is_volatile		  = std::is_volatile_v<std::remove_reference_t<decltype(val)>>;
-		const char_type* sig_cut				  = nullptr;
-		[[maybe_unused]] const char_type* sig_end = nullptr;
-		const char_type* dot_pos				  = nullptr;
-		uint32_t frac_zeros						  = 0;
-		uint64_t sig							  = 0;
-		int32_t exp								  = 0;
-		bool exp_sign;
-		int32_t exp_sig = 0;
-		int32_t exp_lit = 0;
-		uint64_t num_tmp;
-		const char_type* tmp;
-		const char_type* hdr = cur;
-		bool sign			 = (*hdr == '-');
-		cur += sign;
-		auto apply_sign = [&](auto&& val) -> value_type {
-			return sign ? -static_cast<value_type>(val) : static_cast<value_type>(val);
+	constexpr auto f64MaxDecExp = 308;
+	constexpr auto f64MinDecExp = (-324);
+
+#define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
+	constexpr auto eBit = static_cast<uint8_t>('E' ^ 'e');
+
+	template<jsonifier::concepts::float_type value_type, typename iterator_type> JSONIFIER_INLINE bool parseFloat(value_type& value, iterator_type&& iter) noexcept {
+		constexpr auto isVolatile				= std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
+		string_view_ptr sigCut					= nullptr;
+		[[maybe_unused]] string_view_ptr sigEnd = nullptr;
+		string_view_ptr dotPos					= nullptr;
+		uint32_t fracZeros						= 0;
+		uint64_t sig							= 0;
+		int32_t exp								= 0;
+		bool expSign;
+		int32_t expSig = 0;
+		int32_t expLit = 0;
+		uint64_t numTmp;
+		string_view_ptr tmp;
+		string_view_ptr hdr = iter;
+		bool sign			= (*hdr == '-');
+		iter += sign;
+		auto applySign = [&](auto&& value) -> value_type {
+			return sign ? -static_cast<value_type>(value) : static_cast<value_type>(value);
 		};
 
-		sig = uint64_t(*cur - '0');
+		sig = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		if (sig > 9) {
 			if constexpr (std::integral<value_type>) {
 				return false;
-			} else if (*cur == 'n' && cur[1] == 'u' && cur[2] == 'l' && cur[3] == 'l') {
-				cur += 4;
-				val = std::numeric_limits<value_type>::quiet_NaN();
+			} else if (*iter == 'n' && iter[1] == 'u' && iter[2] == 'l' && iter[3] == 'l') {
+				iter += 4;
+				value = std::numeric_limits<value_type>::quiet_NaN();
 				return true;
-			} else if ((*cur | eBit) == 'n' && (cur[1] | eBit) == 'a' && (cur[2] | eBit) == 'n') {
-				cur += 3;
-				val = sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN();
+			} else if ((*iter | eBit) == 'n' && (iter[1] | eBit) == 'a' && (iter[2] | eBit) == 'n') {
+				iter += 3;
+				value = sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN();
 				return true;
 			} else {
 				return false;
 			}
 		}
-		static constexpr auto zero = static_cast<uint8_t>('0');
 #define expr_intg(i) \
-	if ((num_tmp = static_cast<uint64_t>(cur[i] - zero)) <= 9) [[likely]] \
-		sig = num_tmp + sig * 10; \
+	if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[i])]) <= 9) [[likely]] \
+		sig = numTmp + sig * 10; \
 	else { \
+		if constexpr (i > 1) { \
+			if (*iter == zero) \
+				return false; \
+		} \
 		goto digi_sepr_##i; \
 	}
 		repeat_in_1_18(expr_intg);
 #undef expr_intg
-		if (*cur == zero) [[unlikely]] {
+		if (*iter == zero) [[unlikely]] {
 			return false;
 		}
-		cur += 19;
-		if (!digiIsDigitOrFp(*cur)) {
-			val = static_cast<value_type>(sig);
+		iter += 19;
+		if (!digiIsDigitOrFp(*iter)) {
+			value = static_cast<value_type>(sig);
 			if constexpr (!std::is_unsigned_v<value_type>) {
-				if constexpr (is_volatile) {
-					val = val * (sign ? -1 : 1);
+				if constexpr (isVolatile) {
+					value = value * (sign ? -1 : 1);
 				} else {
-					val *= sign ? -1 : 1;
+					value *= sign ? -1 : 1;
 				}
 			}
 			return true;
 		}
 		goto digi_intg_more;
 #define expr_sepr(i) \
-	digi_sepr_##i : if ((!digiIsFp(cur[i]))) [[likely]] { \
-		cur += i; \
-		val = apply_sign(sig); \
+	digi_sepr_##i : if ((!digiIsFp(iter[i]))) [[likely]] { \
+		iter += i; \
+		value = applySign(sig); \
 		return true; \
 	} \
-	dot_pos = cur + i; \
-	if ((cur[i] == '.')) [[likely]] { \
+	dotPos = iter + i; \
+	if ((iter[i] == '.')) [[likely]] { \
 		if (sig == 0) \
-			while (cur[frac_zeros + i + 1] == zero) \
-				++frac_zeros; \
+			while (iter[fracZeros + i + 1] == zero) \
+				++fracZeros; \
 		goto digi_frac_##i; \
 	} \
-	cur += i; \
-	sig_end = cur; \
+	iter += i; \
+	sigEnd = iter; \
 	goto digi_exp_more;
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(i) \
-	digi_frac_##i : if (((num_tmp = static_cast<uint64_t>(cur[i + 1 + frac_zeros] - zero)) <= 9)) [[likely]] sig = num_tmp + sig * 10; \
+	digi_frac_##i : if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[i + 1 + fracZeros])]) <= 9) [[likely]] sig = numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##i; \
 	}
 			repeat_in_1_18(expr_frac)
 #undef expr_frac
-				cur += 20 + frac_zeros;
-		if (uint8_t(*cur - zero) > 9)
+				iter += 20 + fracZeros;
+		if (uint8_t(numberSubTable[static_cast<uint8_t>(*iter)]) > 9)
 			goto digi_frac_end;
 		goto digi_frac_more;
 #define expr_stop(i) \
-	digi_stop_##i : cur += i + 1 + frac_zeros; \
+	digi_stop_##i : iter += i + 1 + fracZeros; \
 	goto digi_frac_end;
 		repeat_in_1_18(expr_stop)
 #undef expr_stop
 			digi_intg_more : static constexpr uint64_t U64_MAX = (std::numeric_limits<uint64_t>::max)();
-		if ((num_tmp = static_cast<uint64_t>(*cur - zero)) < 10) {
-			if (!digiIsDigitOrFp(cur[1])) {
-				if ((sig < (U64_MAX / 10)) || (sig == (U64_MAX / 10) && num_tmp <= (U64_MAX % 10))) {
-					sig = num_tmp + sig * 10;
-					cur++;
-					val = static_cast<value_type>(sig);
+		if ((numTmp = numberSubTable[static_cast<uint8_t>(*iter)]) < 10) {
+			if (!digiIsDigitOrFp(iter[1])) {
+				if ((sig < (U64_MAX / 10)) || (sig == (U64_MAX / 10) && numTmp <= (U64_MAX % 10))) {
+					sig = numTmp + sig * 10;
+					++iter;
+					value = static_cast<value_type>(sig);
 					if constexpr (!std::is_unsigned_v<value_type>) {
-						if constexpr (is_volatile) {
-							val = val * (sign ? -1 : 1);
+						if constexpr (isVolatile) {
+							value = value * (sign ? -1 : 1);
 						} else {
-							val *= sign ? -1 : 1;
+							value *= sign ? -1 : 1;
 						}
 					}
 					return true;
 				}
 			}
 		}
-		if ((eBit | *cur) == 'e') {
-			dot_pos = cur;
+		if ((eBit | *iter) == 'e') {
+			dotPos = iter;
 			goto digi_exp_more;
 		}
-		if (*cur == '.') {
-			dot_pos = cur++;
-			if (uint8_t(*cur - zero) > 9) {
+		if (*iter == '.') {
+			dotPos = iter++;
+			if (uint8_t(numberSubTable[static_cast<uint8_t>(*iter)]) > 9) {
 				return false;
 			}
 		}
 	digi_frac_more:
-		sig_cut = cur;
-		sig += (*cur >= '5');
-		while (uint8_t(*++cur - zero) < 10) {
+		sigCut = iter;
+		sig += (*iter >= '5');
+		while (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) < 10) {
 		}
-		if (!dot_pos) {
-			dot_pos = cur;
-			if (*cur == '.') {
-				if (uint8_t(*++cur - zero) > 9) {
+		if (!dotPos) {
+			dotPos = iter;
+			if (*iter == '.') {
+				if (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) > 9) {
 					return false;
 				}
-				while (uint8_t(*++cur - zero) < 10) {
+				while (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) < 10) {
 				}
 			}
 		}
-		exp_sig = static_cast<int32_t>(dot_pos - sig_cut);
-		exp_sig += (dot_pos < sig_cut);
-		tmp = cur - 1;
+		expSig = static_cast<int32_t>(dotPos - sigCut);
+		expSig += (dotPos < sigCut);
+		tmp = iter - 1;
 		while (*tmp == '0' || *tmp == '.') {
 			--tmp;
 		}
-		if (tmp < sig_cut) {
-			sig_cut = nullptr;
+		if (tmp < sigCut) {
+			sigCut = nullptr;
 		} else {
-			sig_end = cur;
+			sigEnd = iter;
 		}
-		if ((eBit | *cur) == 'e')
+		if ((eBit | *iter) == 'e')
 			goto digi_exp_more;
 		goto digi_exp_finish;
 	digi_frac_end:
-		sig_end = cur;
-		exp_sig = -int32_t((cur - dot_pos) - 1);
-		if (exp_sig == 0)
+		sigEnd = iter;
+		expSig = -int32_t((iter - dotPos) - 1);
+		if (expSig == 0)
 			return false;
-		if ((eBit | *cur) != 'e') [[likely]] {
-			if ((exp_sig < f64MinDecExp - 19)) [[unlikely]] {
-				val = apply_sign(0);
+		if ((eBit | *iter) != 'e') [[likely]] {
+			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
+				value = applySign(0);
 				return true;
 			}
-			exp = exp_sig;
+			exp = expSig;
 			goto digi_finish;
 		} else {
 			goto digi_exp_more;
 		}
 	digi_exp_more:
-		exp_sign = (*++cur == '-');
-		cur += (*cur == '+' || *cur == '-');
-		if (uint8_t(*cur - zero) > 9) [[unlikely]] {
+		expSign = (*++iter == '-');
+		iter += (*iter == '+' || *iter == '-');
+		if (uint8_t(numberSubTable[static_cast<uint8_t>(*iter)]) > 9) [[unlikely]] {
 			return false;
 		}
-		while (*cur == '0') {
-			++cur;
+		while (*iter == '0') {
+			++iter;
 		}
-		tmp = cur;
+		tmp = iter;
 		uint8_t c;
-		while (uint8_t(c = static_cast<uint8_t>(*cur - zero)) < 10) {
-			++cur;
-			exp_lit = static_cast<int32_t>(c + uint32_t(exp_lit) * 10);
+		while (uint8_t{ c = static_cast<uint8_t>(numberSubTable[static_cast<uint8_t>(*iter)]) } < 10) {
+			++iter;
+			expLit = static_cast<int32_t>(c + uint32_t(expLit) * 10);
 		}
-		if ((cur - tmp >= 6)) [[unlikely]] {
-			if (sig == 0 || exp_sign) {
-				val = apply_sign(0);
-				val = static_cast<value_type>(sig);
+		if ((iter - tmp >= 6)) [[unlikely]] {
+			if (sig == 0 || expSign) {
+				value = applySign(0);
+				value = static_cast<value_type>(sig);
 				return true;
 			} else {
-				val = apply_sign(std::numeric_limits<value_type>::infinity());
+				value = applySign(std::numeric_limits<value_type>::infinity());
 				return true;
 			}
 		}
-		exp_sig += exp_sign ? -exp_lit : exp_lit;
+		expSig += expSign ? -expLit : expLit;
 	digi_exp_finish:
 		if (sig == 0) {
-			val = (sign ? -value_type{ 0 } : value_type{ 0 });
+			value = (sign ? -value_type{ 0 } : value_type{ 0 });
 			return true;
 		}
-		if ((exp_sig < f64MinDecExp - 19)) [[unlikely]] {
-			val = (sign ? -value_type{ 0 } : value_type{ 0 });
+		if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
+			value = (sign ? -value_type{ 0 } : value_type{ 0 });
 			return true;
-		} else if ((exp_sig > f64MaxDecExp)) [[unlikely]] {
-			val = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
+		} else if ((expSig > f64MaxDecExp)) [[unlikely]] {
+			value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
 			return true;
 		}
-		exp = exp_sig;
+		exp = expSig;
 	digi_finish:
 
 		if constexpr (std::is_same_v<double, value_type>) {
 			if (sig < (uint64_t(1) << 53) && std::abs(exp) <= 22) {
-				val = static_cast<value_type>(sig);
-				if constexpr (is_volatile) {
+				value = static_cast<value_type>(sig);
+				if constexpr (isVolatile) {
 					if constexpr (!std::is_unsigned_v<value_type>) {
-						val = val * (sign ? -1 : 1);
+						value = value * (sign ? -1 : 1);
 					}
 					if (exp >= 0) {
-						val = val * powersOfTenFloat[exp];
+						value = value * powersOfTenFloat[exp];
 					} else {
-						val = val / powersOfTenFloat[-exp];
+						value = value / powersOfTenFloat[-exp];
 					}
 				} else {
 					if constexpr (!std::is_unsigned_v<value_type>) {
-						val *= sign ? -1 : 1;
+						value *= sign ? -1 : 1;
 					}
 					if (exp >= 0) {
-						val *= powersOfTenFloat[static_cast<uint64_t>(exp)];
+						value *= powersOfTenFloat[static_cast<uint64_t>(exp)];
 					} else {
-						val /= powersOfTenFloat[static_cast<uint64_t>(-exp)];
+						value /= powersOfTenFloat[static_cast<uint64_t>(-exp)];
 					}
 				}
 
@@ -582,87 +568,88 @@ namespace jsonifier_internal {
 			}
 		} else {
 			if (sig < (uint64_t(1) << 24) && std::abs(exp) <= 8) {
-				val = static_cast<value_type>(sig);
+				value = static_cast<value_type>(sig);
 				if constexpr (!std::is_unsigned_v<value_type>) {
-					val *= sign ? -1 : 1;
+					value *= sign ? -1 : 1;
 				}
 				if (exp >= 0) {
-					val *= static_cast<value_type>(powersOfTenFloat[exp]);
+					value *= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(exp)]);
 				} else {
-					val /= static_cast<value_type>(powersOfTenFloat[-exp]);
+					value /= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(-exp)]);
 				}
 				return true;
 			}
 		}
 
 		if (sig == 0) [[unlikely]] {
-			val = value_type(0);
+			value = value_type(0);
 			return true;
 		}
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::is_same_v<float, std::decay_t<value_type>> || std::is_same_v<double, std::decay_t<value_type>>);
+		static_assert(std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>> || std::is_same_v<double, jsonifier::concepts::unwrap_t<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-		using raw_t							 = std::conditional_t<std::is_same_v<float, std::decay_t<value_type>>, uint32_t, uint64_t>;
-		const auto sig_leading_zeros		 = std::countl_zero(sig);
-		const auto sig_norm					 = sig << sig_leading_zeros;
-		const auto sig2_norm				 = sig2FromExp10(exp);
-		const auto sig_product				 = mulhi64(sig_norm, sig2_norm) + 1;
-		const auto sig_product_starts_with_1 = sig_product >> 63;
-		auto mantisa						 = sig_product << (2 - sig_product_starts_with_1);
-		constexpr uint64_t round_mask		 = uint64_t(1) << 63 >> (std::numeric_limits<value_type>::digits - 1);
-		constexpr uint32_t exponent_bits	 = ceillog2(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		constexpr uint32_t mantisa_shift	 = exponent_bits + 1 + 64 - 8 * sizeof(raw_t);
-		int32_t exp2						 = static_cast<int32_t>(exp2FromExp10(exp) + static_cast<uint32_t>(-sig_leading_zeros + sig_product_starts_with_1));
+		using Raw						= std::conditional_t<std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>>, uint32_t, uint64_t>;
+		auto sigLeadingZeros			= simd_internal::lzcnt(sig);
+		auto sigNorm					= sig << sigLeadingZeros;
+		auto sig2Norm					= sig2FromExp10(exp);
+		auto sigProduct					= mulhi64(sigNorm, sig2Norm) + 1;
+		auto sigProductStartsWith1		= sigProduct >> 63;
+		auto mantisa					= sigProduct << (2 - sigProductStartsWith1);
+		constexpr uint64_t roundMask	= uint64_t(1) << 63 >> (std::numeric_limits<value_type>::digits - 1);
+		constexpr uint32_t exponentBits = ceillog2(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		constexpr uint32_t mantisaShift = exponentBits + 1 + 64 - 8 * sizeof(Raw);
+		int32_t exp2					= static_cast<int32_t>(exp2FromExp10(exp) + static_cast<uint32_t>(-static_cast<int64_t>(sigLeadingZeros) + sigProductStartsWith1));
 
 		if (exp2 < std::numeric_limits<value_type>::min_exponent - 1) [[unlikely]] {
-			val = sign ? -value_type(0) : value_type(0);
+			value = sign ? -value_type(0) : value_type(0);
 			return true;
 		} else if (exp2 > std::numeric_limits<value_type>::max_exponent - 1) [[unlikely]] {
-			val = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
+			value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
 			return true;
 		}
 
 		uint64_t round = 0;
-		if (round_mask & mantisa) {
+		if (roundMask & mantisa) {
 			if (mantisa << (std::numeric_limits<value_type>::digits) == 0) {
-				auto sig_upper	   = (mantisa >> (mantisa_shift - 1)) | (uint64_t(1) << 63 >> (mantisa_shift - 2)) | 1;
-				int32_t exp2_upper = exp2 - std::numeric_limits<value_type>::digits;
+				auto sigUpper	  = (mantisa >> (mantisaShift - 1)) | (uint64_t(1) << 63 >> (mantisaShift - 2)) | 1;
+				int32_t exp2Upper = exp2 - std::numeric_limits<value_type>::digits;
 
-				big_int_t big_comp{ sig_upper };
-				big_int_t big_full{ sig };
+				big_int_t bigComp{ sigUpper };
+				big_int_t bigFull{ sig };
 				if (exp >= 0) {
-					big_full.mulPow10(static_cast<uint32_t>(exp));
+					bigFull.mulPow10(static_cast<uint32_t>(exp));
 				} else {
-					big_comp.mulPow10(static_cast<uint32_t>(-exp));
+					bigComp.mulPow10(static_cast<uint32_t>(-exp));
 				}
-				if (exp2_upper >= 0) {
-					big_comp.mulPow2(static_cast<uint32_t>(exp2_upper));
+				if (exp2Upper >= 0) {
+					bigComp.mulPow2(static_cast<uint32_t>(exp2Upper));
 				} else {
-					big_full.mulPow2(static_cast<uint32_t>(-exp2_upper));
+					bigFull.mulPow2(static_cast<uint32_t>(-exp2Upper));
 				}
-				auto cmp = big_full <=> big_comp;
+				auto cmp = bigFull <=> bigComp;
 				if (cmp != 0) [[likely]] {
 					round = (cmp > 0);
 				} else {
-					round = (mantisa & (round_mask << 1)) != 0;
+					round = (mantisa & (roundMask << 1)) != 0;
 				}
-			} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (round_mask << 1)) ||
-				(static_cast<size_t>(std::countr_zero(sig_norm) + std::countr_zero(sig2_norm)) < 128 - std::numeric_limits<value_type>::digits - (2 - sig_product_starts_with_1))) {
+			} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (roundMask << 1)) ||
+				(static_cast<size_t>(simd_internal::tzcnt(sigNorm) + simd_internal::tzcnt(sig2Norm)) <
+					128 - std::numeric_limits<value_type>::digits - (2 - sigProductStartsWith1))) {
 				round = 1;
 			}
 		}
 
-		auto num = raw_t(sign) << (sizeof(raw_t) * 8 - 1) | raw_t(mantisa >> mantisa_shift) |
-			(raw_t(exp2 + std::numeric_limits<value_type>::max_exponent - 1) << (std::numeric_limits<value_type>::digits - 1));
-		if constexpr (is_volatile) {
-			num = num + raw_t(round);
-			val = std::bit_cast<value_type>(num);
+		auto num = Raw(sign) << (sizeof(Raw) * 8 - 1) | Raw(mantisa >> mantisaShift) |
+			(Raw(exp2 + std::numeric_limits<value_type>::max_exponent - 1) << (std::numeric_limits<value_type>::digits - 1));
+		if constexpr (isVolatile) {
+			num	  = num + Raw(round);
+			value = std::bit_cast<value_type>(num);
 		} else {
-			num += raw_t(round);
-			std::memcpy(&val, &num, sizeof(value_type));
+			num += Raw(round);
+			std::memcpy(&value, &num, sizeof(value_type));
 		}
 		return true;
 	}
