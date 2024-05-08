@@ -56,7 +56,7 @@ namespace jsonifier {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto newPtr = string.data();
-			jsonifier_internal::parseNumber(newValue, newPtr, string.size());
+			jsonifier_internal::parseNumber(newValue, newPtr);
 		}
 		return newValue;
 	}

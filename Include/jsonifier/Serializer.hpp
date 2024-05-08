@@ -25,84 +25,72 @@
 
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
+#include <jsonifier/Prettifier.hpp>
 #include <jsonifier/Error.hpp>
+#include <jsonifier/Write.hpp>
+
+namespace jsonifier {
+
+	struct serialize_options {
+		prettify_options prettifyOptions{};
+		bool prettify{ false };
+	};
+}
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
-	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
-		const auto k = index + 1;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
+	enum class serialize_errors { Success = 0 };
 
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
+	template<uint64_t maxDepth> struct prettify_arguments {
+		json_structural_type state[maxDepth]{};
+		int64_t indent{};
+	};
 
-	template<json_structural_type c, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-	JSONIFIER_INLINE void writeCharacter(buffer_type&& buffer, index_type&& index) noexcept {
-		const auto k = index + 1;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, typename char_type>
-	JSONIFIER_INLINE void writeCharacterUnchecked(buffer_type&& buffer, index_type&& index, const char_type c) noexcept {
-		buffer[index] = static_cast<typename jsonifier::concepts::unwrap_t<buffer_type>::value_type>(c);
-		++index;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, uint64_t size, typename char_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index, const char_type (&str)[size]) noexcept {
-		static constexpr auto sizeNew = size - 1;
-		const auto k				  = index + sizeNew;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-		std::copy(str, str + sizeNew, buffer.data() + std::forward<index_type>(index));
-		index += sizeNew;
-	}
-
-	template<const jsonifier::string_view& str, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type&& buffer, index_type&& index) noexcept {
-		const auto sizeNew = str.size();
-		const auto k	   = index + sizeNew;
-		if (k >= buffer.size()) [[unlikely]] {
-			buffer.resize(max(buffer.size() * 2, k));
-		}
-		std::copy(str.data(), str.data() + sizeNew, buffer.data() + std::forward<index_type>(index));
-		index += sizeNew;
-	}
-
-	template<typename derived_type, typename value_type> struct serialize_impl;
+	template<jsonifier::serialize_options options, typename derived_type, typename value_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<typename derived_type_new, typename value_type> friend struct serialize_impl;
-		template<uint64_t n, uint64_t indexNew, bool areWeFirst, typename derived_type_new, jsonifier::concepts::jsonifier_value_t value_type,
-			jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type, jsonifier::concepts::has_find... key_type>
-		friend void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index, key_type&&... excludedKeys);
+		template<jsonifier::serialize_options options, typename derived_type_new, typename value_type> friend struct serialize_impl;
 
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
-		template<bool prettify = false, bool newLineInPrettyArrays = false, jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& data, buffer_type&& iter) {
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
+		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& out) {
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
-			impl(std::forward<value_type>(data), iter, derivedRef.index);
-			if (iter.size() != derivedRef.index) {
-				iter.resize(derivedRef.index);
+			if constexpr (options.prettify) {
+				prettify_arguments<options.prettifyOptions.maxDepth> prettifyArgs{};
+				impl<options>(std::forward<value_type>(object), out, derivedRef.index, &prettifyArgs);
+			} else {
+				impl<options>(std::forward<value_type>(object), out, derivedRef.index, nullptr);
 			}
-			if constexpr (prettify) {
-				iter = static_cast<jsonifier::concepts::unwrap_t<buffer_type>>(derivedRef.template prettify<newLineInPrettyArrays, false>(iter));
+			if (out.size() != derivedRef.index) {
+				out.resize(derivedRef.index);
 			}
 			return true;
+		}
+
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+		JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+				"No specialization of core exists for the type named above - please specialize it!");
+			derivedRef.index = 0;
+			derivedRef.errors.clear();
+			jsonifier::string newString{};
+			if constexpr (options.prettify) {
+				prettify_arguments<options.prettifyOptions.maxDepth> prettifyArgs{};
+				impl<options>(std::forward<value_type>(object), newString, derivedRef.index, &prettifyArgs);
+			} else {
+				impl<options>(std::forward<value_type>(object), newString, derivedRef.index, nullptr);
+			}
+			if (derivedRef.index != minifyError) [[likely]] {
+				newString.resize(derivedRef.index);
+			}
+			derivedRef.index = 0;
+			return newString;
 		}
 
 	  protected:
@@ -114,14 +102,15 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		template<jsonifier::serialize_options options, typename value_type, jsonifier::concepts::buffer_like buffer_type,
+			jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				serialize_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
-					std::forward<index_type>(index), value.jsonifierExcludedKeys);
+				serialize_impl<options, derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+					std::forward<index_type>(index), prettifyArgs, value.jsonifierExcludedKeys);
 			} else {
-				serialize_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
-					std::forward<index_type>(index));
+				serialize_impl<options, derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+					std::forward<index_type>(index), prettifyArgs);
 			}
 		}
 

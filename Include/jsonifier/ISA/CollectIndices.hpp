@@ -23,8 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
 #include <jsonifier/ISA/CompareValues.hpp>
+#include <jsonifier/ISA/GatherValues.hpp>
 #include <jsonifier/ISA/ShuffleValues.hpp>
 
 namespace simd_internal {
@@ -32,6 +32,13 @@ namespace simd_internal {
 	template<typename return_type, typename value_type, size_t N, size_t... indices>
 	constexpr return_type createArray(const value_type (&newArray)[N], std::index_sequence<indices...>) {
 		return return_type{ newArray[indices % N]... };
+	}
+
+	template<jsonifier::concepts::unsigned_type return_type, typename value_type, size_t N, size_t... indices>
+	constexpr return_type createArray(const value_type (&newArray)[N], std::index_sequence<indices...>) {
+		return_type returnValues{};
+		std::copy(newArray, newArray + 1, &returnValues);
+		return returnValues;
 	}
 
 	template<typename return_type> constexpr return_type simdFromValue(uint8_t value) {
@@ -145,11 +152,11 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	template<bool doWeCollectWhitespace> JSONIFIER_INLINE simd_int_t_holder collectIndices(const simd_int_t* values) {
+	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const simd_int_t* values) {
 		simd_int_t_holder returnValues;
 		returnValues.op		= collectStructuralsAsSimdBase(values);
 		returnValues.quotes = collectQuotesAsSimdBase(values);
-		if constexpr (doWeCollectWhitespace) {
+		if constexpr (!minified) {
 			returnValues.whitespace = collectWhitespaceAsSimdBase(values);
 		}
 		returnValues.backslashes = collectBackslashesAsSimdBase(values);

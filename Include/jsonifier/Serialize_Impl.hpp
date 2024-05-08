@@ -30,201 +30,492 @@
 
 namespace jsonifier_internal {
 
-	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type,
 			jsonifier::concepts::has_find... key_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, key_type&&... excludedKeys) {
-			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>>;
-			writeCharacter<Object_Start>(buffer, index);
-			if constexpr (n > 0) {
-				serializeObjects<n, 0, true>(value, buffer, index, excludedKeys...);
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs,
+			key_type&&... excludedKeys) {
+			static constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_wrapper_type<value_type_new>>;
+			writeCharacter<json_structural_type::Object_Start>(buffer, index);
+			if constexpr (options.prettify) {
+				++prettifyArgs->indent;
+				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Object_Start;
+				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
+					return;
+				}
+				if constexpr (n != 0) {
+					writeCharacter<0x0Au>(buffer, index);
+					if constexpr (options.prettifyOptions.tabs) {
+						writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+					} else {
+						writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+					}
+				}
 			}
-			writeCharacter<Object_End>(buffer, index);
+			if constexpr (n > 0) {
+				serializeObjects<n, 0, true>(value, buffer, index, prettifyArgs, excludedKeys...);
+			}
+			if constexpr (options.prettify) {
+				--prettifyArgs->indent;
+				if (prettifyArgs->indent < 0) {
+					return;
+				}
+				if (*(buffer.data() + (index - 1)) != 0x7Bu) {
+					writeCharacter<0x0Au>(buffer, index);
+					if constexpr (options.prettifyOptions.tabs) {
+						writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+					} else {
+						writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+					}
+				}
+			}
+			writeCharacter<json_structural_type::Object_End>(buffer, index);
 		}
 
 		template<uint64_t n, uint64_t indexNew = 0, bool areWeFirst = true, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type, jsonifier::concepts::has_find... key_type>
-		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index, key_type&&... excludedKeys) {
-			static constexpr auto& item = get<indexNew>(jsonifier::concepts::coreV<jsonifier::concepts::unwrap_t<value_type>>);
+		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs,
+			key_type&&... excludedKeys) {
+			static constexpr auto& item = get<indexNew>(jsonifier::concepts::core_wrapper_value<jsonifier::concepts::unwrap_t<value_type>>);
 
 			static constexpr jsonifier::string_view key = get<0>(item);
 			if constexpr ((( !std::is_void_v<key_type> ) || ...)) {
-				if (((excludedKeys.find(static_cast<jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) && ...)) [[unlikely]] {
+				if (((excludedKeys.find(static_cast<typename jsonifier::concepts::unwrap_t<key_type...>::key_type>(key)) != excludedKeys.end()) && ...)) [[unlikely]] {
 					if constexpr (indexNew < n - 1 && areWeFirst) {
-						serializeObjects<n, indexNew + 1, true>(value, buffer, index, excludedKeys...);
+						serializeObjects<n, indexNew + 1, true>(value, buffer, index, prettifyArgs, excludedKeys...);
 					} else if constexpr (indexNew < n - 1) {
-						serializeObjects<n, indexNew + 1, false>(value, buffer, index, excludedKeys...);
+						serializeObjects<n, indexNew + 1, false>(value, buffer, index, prettifyArgs, excludedKeys...);
 					}
 					return;
 				}
 			}
 			if constexpr (indexNew > 0 && !areWeFirst) {
-				writeCharacter<Comma>(buffer, index);
+				writeCharacter<json_structural_type::Comma>(buffer, index);
+				if constexpr (options.prettify) {
+					if constexpr (options.prettifyOptions.newLinesInArray) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					} else {
+						if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
+							writeCharacter<0x0Au>(buffer, index);
+							if constexpr (options.prettifyOptions.tabs) {
+								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+							} else {
+								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+							}
+						} else {
+							writeCharacter<0x20u>(buffer, index);
+						}
+					}
+				}
 			}
 			writeCharacters(buffer, index, "\"");
 			writeCharacters<key>(buffer, index);
 			writeCharacters(buffer, index, "\":");
+			if constexpr (options.prettify) {
+				writeCharacter<0x20u>(buffer, index);
+			}
 
-			serializer<derived_type>::impl(getMember(value, get<1>(item)), buffer, index);
+			serializer<derived_type>::template impl<options>(getMember(value, get<1>(item)), buffer, index, prettifyArgs);
 			if constexpr (indexNew < n - 1) {
-				serializeObjects<n, indexNew + 1, false>(value, buffer, index, excludedKeys...);
+				serializeObjects<n, indexNew + 1, false>(value, buffer, index, prettifyArgs, excludedKeys...);
 			}
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
+			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_wrapper_type<value_type_new>> };
 			if constexpr (size > 0) {
-				serializer<derived_type>::impl(getMember(value, get<0>(jsonifier::concepts::coreV<value_type_new>)), buffer, index);
+				serializer<derived_type>::template impl<options>(getMember(value, get<0>(jsonifier::concepts::core_wrapper_value<value_type_new>)), buffer, index, prettifyArgs);
 			}
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::map_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::map_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			writeCharacter<Object_Start>(buffer, index);
-
-			if (value.size() > 0) [[likely]] {
-				auto iter = value.begin();
-				serializer<derived_type>::impl(iter->first, buffer, index);
-				writeCharacter<Colon>(buffer, index);
-				serializer<derived_type>::impl(iter->second, buffer, index);
-				++iter;
-				auto endIter = value.end();
-				for (; iter != endIter; ++iter) {
-					writeCharacter<Comma>(buffer, index);
-					serializer<derived_type>::impl(iter->first, buffer, index);
-					writeCharacter<Colon>(buffer, index);
-					serializer<derived_type>::impl(iter->second, buffer, index);
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
+			writeCharacter<json_structural_type::Object_Start>(buffer, index);
+			if constexpr (options.prettify) {
+				++prettifyArgs->indent;
+				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Object_Start;
+				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
+					return;
+				}
+				if (value.size() != 0) {
+					writeCharacter<0x0Au>(buffer, index);
+					if constexpr (options.prettifyOptions.tabs) {
+						writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+					} else {
+						writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+					}
 				}
 			}
 
-			writeCharacter<Object_End>(buffer, index);
+			if (value.size() > 0) [[likely]] {
+				auto iter = value.begin();
+				serializer<derived_type>::template impl<options>(iter->first, buffer, index, prettifyArgs);
+				writeCharacter<json_structural_type::Colon>(buffer, index);
+				if constexpr (options.prettify) {
+					writeCharacter<0x20>(buffer, index);
+				}
+				serializer<derived_type>::template impl<options>(iter->second, buffer, index, prettifyArgs);
+				++iter;
+				auto endIter = value.end();
+				for (; iter != endIter; ++iter) {
+					writeCharacter<json_structural_type::Comma>(buffer, index);
+					if constexpr (options.prettify) {
+						if constexpr (options.prettifyOptions.newLinesInArray) {
+							writeCharacter<0x0Au>(buffer, index);
+							if constexpr (options.prettifyOptions.tabs) {
+								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+							} else {
+								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+							}
+						} else {
+							if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
+								writeCharacter<0x0Au>(buffer, index);
+								if constexpr (options.prettifyOptions.tabs) {
+									writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+								} else {
+									writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+								}
+							} else {
+								writeCharacter<0x20u>(buffer, index);
+							}
+						}
+					}
+					serializer<derived_type>::template impl<options>(iter->first, buffer, index, prettifyArgs);
+					writeCharacter<json_structural_type::Colon>(buffer, index);
+					if constexpr (options.prettify) {
+						writeCharacter<0x20>(buffer, index);
+					}
+					serializer<derived_type>::template impl<options>(iter->second, buffer, index, prettifyArgs);
+				}
+			}
+			if constexpr (options.prettify) {
+				--prettifyArgs->indent;
+				if (prettifyArgs->indent < 0) {
+					return;
+				}
+				if (*(buffer.data() + (index - 1)) != 0x7Bu) {
+					writeCharacter<0x0Au>(buffer, index);
+					if constexpr (options.prettifyOptions.tabs) {
+						writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+					} else {
+						writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+					}
+				}
+			}
+			writeCharacter<json_structural_type::Object_End>(buffer, index);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::variant_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::variant_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::variant_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			std::visit(
 				[&](auto&& valueNew) {
-					serializer<derived_type>::impl(valueNew, buffer, index);
+					serializer<derived_type>::template impl<options>(valueNew, buffer, index, prettifyArgs);
 				},
 				value);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::optional_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::optional_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			if (value.has_value()) {
-				serializer<derived_type>::impl(value.value(), buffer, index);
+				serializer<derived_type>::template impl<options>(value.value(), buffer, index, prettifyArgs);
 			} else {
-				serializer<derived_type>::impl(nullptr, buffer, index);
+				serializer<derived_type>::template impl<options>(nullptr, buffer, index, prettifyArgs);
 			}
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::array_tuple_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::array_tuple_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			static constexpr auto size = std::tuple_size_v<jsonifier::concepts::unwrap_t<value_type>>;
-			writeCharacter<Array_Start>(buffer, index);
-			serializeObjects<size, 0>(value, buffer, index);
-			writeCharacter<Array_End>(buffer, index);
+			writeCharacter<json_structural_type::Array_Start>(buffer, index);
+			if constexpr (options.prettify) {
+				++prettifyArgs->indent;
+				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Array_Start;
+				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
+					return;
+				}
+				if constexpr (options.prettifyOptions.newLinesInArray) {
+					if (value.size() != 0) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+				} else {
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
+			serializeObjects<size, 0>(value, buffer, index, prettifyArgs);
+			if constexpr (options.prettify) {
+				--prettifyArgs->indent;
+				if (prettifyArgs->indent < 0) {
+					return;
+				}
+				if (*(buffer.data() + (index - 1)) != 0x5Bu) {
+					if constexpr (options.prettifyOptions.newLinesInArray) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
+			writeCharacter<json_structural_type::Array_End>(buffer, index);
 		}
 
 		template<uint64_t n, uint64_t indexNew = 0, bool areWeFirst = true, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
-		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			auto& item = std::get<indexNew>(value);
 
 			if constexpr (indexNew > 0 && !areWeFirst) {
-				writeCharacter<Comma>(buffer, index);
+				writeCharacter<json_structural_type::Comma>(buffer, index);
+				if constexpr (options.prettify) {
+					if constexpr (options.prettifyOptions.newLinesInArray) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					} else {
+						if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
+							writeCharacter<0x0Au>(buffer, index);
+							if constexpr (options.prettifyOptions.tabs) {
+								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+							} else {
+								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+							}
+						} else {
+							writeCharacter<0x20u>(buffer, index);
+						}
+					}
+				}
 			}
 
-			serializer<derived_type>::impl(item, buffer, index);
+			serializer<derived_type>::template impl<options>(item, buffer, index, prettifyArgs);
 			if constexpr (indexNew < n - 1) {
-				serializeObjects<n, indexNew + 1, false>(value, buffer, index);
+				serializeObjects<n, indexNew + 1, false>(value, buffer, index, prettifyArgs);
 			}
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::vector_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::vector_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			auto n = value.size();
-			writeCharacter<Array_Start>(buffer, index);
+			writeCharacter<json_structural_type::Array_Start>(buffer, index);
+			if constexpr (options.prettify) {
+				++prettifyArgs->indent;
+				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Array_Start;
+				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
+					return;
+				}
+				if constexpr (options.prettifyOptions.newLinesInArray) {
+					if (value.size() != 0) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+				} else {
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
 			if (n > 0) {
 				auto newPtr = value.data();
-				serializer<derived_type>::impl(*newPtr, buffer, index);
+				serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
 				++newPtr;
 				auto endPtr = value.data() + value.size();
 				for (; newPtr < endPtr; ++newPtr) {
-					writeCharacter<Comma>(buffer, index);
-					serializer<derived_type>::impl(*newPtr, buffer, index);
+					writeCharacter<json_structural_type::Comma>(buffer, index);
+					if constexpr (options.prettify) {
+						if constexpr (options.prettifyOptions.newLinesInArray) {
+							writeCharacter<0x0Au>(buffer, index);
+							if constexpr (options.prettifyOptions.tabs) {
+								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+							} else {
+								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+							}
+						} else {
+							if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
+								writeCharacter<0x0Au>(buffer, index);
+								if constexpr (options.prettifyOptions.tabs) {
+									writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+								} else {
+									writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+								}
+							} else {
+								writeCharacter<0x20u>(buffer, index);
+							}
+						}
+					}
+					serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
 				}
 			}
-			writeCharacter<Array_End>(buffer, index);
+			if constexpr (options.prettify) {
+				--prettifyArgs->indent;
+				if (prettifyArgs->indent < 0) {
+					return;
+				}
+				if (*(buffer.data() + (index - 1)) != 0x5Bu) {
+					if constexpr (options.prettifyOptions.newLinesInArray) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
+			writeCharacter<json_structural_type::Array_End>(buffer, index);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::pointer_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::pointer_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index) {
-			serializer<derived_type>::impl(*value, buffer, index);
+		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
+			serializer<derived_type>::template impl<options>(*value, buffer, index, prettifyArgs);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::raw_array_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::raw_array_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
 			static constexpr auto n = std::size(value);
-			writeCharacter<Array_Start>(buffer, index);
+			writeCharacter<json_structural_type::Array_Start>(buffer, index);
+			if constexpr (options.prettify) {
+				++prettifyArgs->indent;
+				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Array_Start;
+				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
+					return;
+				}
+				if constexpr (options.prettifyOptions.newLinesInArray) {
+					if (value.size() != 0) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+				} else {
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
 			if constexpr (n > 0) {
 				auto newPtr = value.data();
-				serializer<derived_type>::impl(*newPtr, buffer, index);
+				serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
 				++newPtr;
 				for (uint64_t x = 1; x < n; ++x) {
-					writeCharacter<Comma>(buffer, index);
-					serializer<derived_type>::impl(*newPtr, buffer, index);
+					writeCharacter<json_structural_type::Comma>(buffer, index);
+					if constexpr (options.prettify) {
+						if constexpr (options.prettifyOptions.newLinesInArray) {
+							writeCharacter<0x0Au>(buffer, index);
+							if constexpr (options.prettifyOptions.tabs) {
+								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+							} else {
+								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+							}
+						} else {
+							if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
+								writeCharacter<0x0Au>(buffer, index);
+								if constexpr (options.prettifyOptions.tabs) {
+									writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+								} else {
+									writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+								}
+							} else {
+								writeCharacter<0x20u>(buffer, index);
+							}
+						}
+					}
+					serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
 					++newPtr;
 				}
 			}
-			writeCharacter<Array_End>(buffer, index);
+			if constexpr (options.prettify) {
+				--prettifyArgs->indent;
+				if (prettifyArgs->indent < 0) {
+					return;
+				}
+				if (*(buffer.data() + (index - 1)) != 0x5Bu) {
+					if constexpr (options.prettifyOptions.newLinesInArray) {
+						writeCharacter<0x0Au>(buffer, index);
+						if constexpr (options.prettifyOptions.tabs) {
+							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
+						} else {
+							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
+						}
+					}
+					writeCharacter<0x20>(buffer, index);
+				}
+			}
+			writeCharacter<json_structural_type::Array_End>(buffer, index);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::raw_json_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::raw_json_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			serializer<derived_type>::impl(static_cast<const jsonifier::string>(value), buffer, index);
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
+			serializer<derived_type>::template impl<options>(static_cast<const jsonifier::string>(value), buffer, index, prettifyArgs);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::string_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::string_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
 			const auto valueSize = value.size();
 			const auto k		 = index + 10 + (valueSize * 2);
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
-			writeCharacter<String>(buffer, index);
+			writeCharacter<json_structural_type::String>(buffer, index);
 			auto newPtr = buffer.data() + index;
 			serializeStringImpl(value.data(), newPtr, valueSize);
 			index += newPtr - (buffer.data() + index);
-			writeCharacter<String>(buffer, index);
+			writeCharacter<json_structural_type::String>(buffer, index);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::char_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::char_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			writeCharacter<String>(buffer, index);
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
+			writeCharacter<json_structural_type::String>(buffer, index);
 			switch (value) {
 				[[unlikely]] case 0x08u: {
 					writeCharacters(buffer, index, "\\b");
@@ -258,20 +549,21 @@ namespace jsonifier_internal {
 						writeCharacter(buffer, index, value);
 					}
 			}
-			writeCharacter<String>(buffer, index);
+			writeCharacter<json_structural_type::String>(buffer, index);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::unique_ptr_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::unique_ptr_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			serializer<derived_type>::impl(*value, buffer, index);
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
+			serializer<derived_type>::template impl<options>(*value, buffer, index, prettifyArgs);
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::enum_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::enum_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
 			const auto k = index + 32;
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
@@ -282,9 +574,9 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::num_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::num_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
 			const auto k = index + 32;
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
@@ -299,16 +591,17 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::always_null_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::always_null_t value_type_new>
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&&, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&&, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
 			writeCharacters(buffer, index, "null");
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::bool_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::bool_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>*) {
 			value ? writeCharacters(buffer, index, "true") : writeCharacters(buffer, index, "false");
 		}
 	};

@@ -42,7 +42,6 @@ namespace jsonifier {
 	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
 
 	class raw_json_data;
-
 }
 
 namespace jsonifier_internal {
@@ -65,9 +64,23 @@ namespace jsonifier_internal {
 
 	template<> JSONIFIER_INLINE bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData);
 
-	inline std::unordered_map<jsonifier::string_view, jsonifier::json_type> typeMap{ { "Unset", jsonifier::json_type::Unset }, { "Object", jsonifier::json_type::Object },
-		{ "Array", jsonifier::json_type::Array }, { "String", jsonifier::json_type::String }, { "Number", jsonifier::json_type::Number }, { "Bool", jsonifier::json_type::Bool },
-		{ "Null", jsonifier::json_type::Null } };
+	JSONIFIER_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) {
+		if (jsonifier_internal::isNumberType(charToCheck)) [[likely]] {
+			return jsonifier::json_type::Number;
+		} else if (jsonifier_internal::boolTable[charToCheck]) [[likely]] {
+			return jsonifier::json_type::Bool;
+		} else if (charToCheck == 0x7B) [[unlikely]] {
+			return jsonifier::json_type::Object;
+		} else if (charToCheck == 0x5B) [[unlikely]] {
+			return jsonifier::json_type::Array;
+		} else if (charToCheck == 0x22u) [[unlikely]] {
+			return jsonifier::json_type::String;
+		} else if (charToCheck == 0x6Eu) [[unlikely]] {
+			return jsonifier::json_type::Null;
+		} else {
+			return jsonifier::json_type::Unset;
+		}
+	}
 
 }
 
@@ -100,9 +113,9 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE json_type getType() const {
 			if (jsonData.size() > 0) {
-				return jsonifier_internal::typeMap[jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]))];
+				return jsonifier_internal::getValueType(static_cast<uint8_t>(jsonData[0]));
 			} else {
-				return jsonifier_internal::typeMap[""];
+				return json_type::Unset;
 			}
 		}
 

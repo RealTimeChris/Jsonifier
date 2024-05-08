@@ -7,7 +7,7 @@ struct failTest01 {
 };
 
 template<> struct jsonifier::core<failTest01> {
-	using value_type = failTest01;
+	using value_type				 = failTest01;
 	static constexpr auto parseValue = createValue(&value_type::failTestString);
 };
 
@@ -16,7 +16,7 @@ struct failTest02 {
 };
 
 template<> struct jsonifier::core<failTest02> {
-	using value_type = failTest02;
+	using value_type				 = failTest02;
 	static constexpr auto parseValue = createValue(&value_type::testVal);
 };
 
@@ -25,7 +25,7 @@ struct failTest03 {
 };
 
 template<> struct jsonifier::core<failTest03> {
-	using value_type = failTest03;
+	using value_type				 = failTest03;
 	static constexpr auto parseValue = createValue("unquoted_key", &value_type::failTestVal);
 };
 
@@ -34,7 +34,7 @@ struct failTest04 {
 };
 
 template<> struct jsonifier::core<failTest04> {
-	using value_type = failTest04;
+	using value_type				 = failTest04;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -43,7 +43,7 @@ struct failTest05 {
 };
 
 template<> struct jsonifier::core<failTest05> {
-	using value_type = failTest05;
+	using value_type				 = failTest05;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -52,7 +52,7 @@ struct failTest06 {
 };
 
 template<> struct jsonifier::core<failTest06> {
-	using value_type = failTest06;
+	using value_type				 = failTest06;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -61,7 +61,7 @@ struct failTest07 {
 };
 
 template<> struct jsonifier::core<failTest07> {
-	using value_type = failTest07;
+	using value_type				 = failTest07;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -70,7 +70,7 @@ struct failTest08 {
 };
 
 template<> struct jsonifier::core<failTest08> {
-	using value_type = failTest08;
+	using value_type				 = failTest08;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -79,7 +79,7 @@ struct failTest09 {
 };
 
 template<> struct jsonifier::core<failTest09> {
-	using value_type = failTest09;
+	using value_type				 = failTest09;
 	static constexpr auto parseValue = createValue("extra comma", &value_type::failTestVal);
 };
 
@@ -88,7 +88,7 @@ struct failTest10 {
 };
 
 template<> struct jsonifier::core<failTest10> {
-	using value_type = failTest10;
+	using value_type				 = failTest10;
 	static constexpr auto parseValue = createValue("Extra value after close", &value_type::failTestVal);
 };
 
@@ -97,7 +97,7 @@ struct failTest11 {
 };
 
 template<> struct jsonifier::core<failTest11> {
-	using value_type = failTest11;
+	using value_type				 = failTest11;
 	static constexpr auto parseValue = createValue("Illegal expression", &value_type::failTestVal);
 };
 
@@ -106,7 +106,7 @@ struct failTest12 {
 };
 
 template<> struct jsonifier::core<failTest12> {
-	using value_type = failTest12;
+	using value_type				 = failTest12;
 	static constexpr auto parseValue = createValue("Illegal invocation", &value_type::failTestVal);
 };
 
@@ -115,7 +115,7 @@ struct failTest13 {
 };
 
 template<> struct jsonifier::core<failTest13> {
-	using value_type = failTest13;
+	using value_type				 = failTest13;
 	static constexpr auto parseValue = createValue("Numbers cannot have leading zeroes", &value_type::failTestVal);
 };
 
@@ -124,7 +124,7 @@ struct failTest14 {
 };
 
 template<> struct jsonifier::core<failTest14> {
-	using value_type = failTest14;
+	using value_type				 = failTest14;
 	static constexpr auto parseValue = createValue("Numbers cannot be hex", &value_type::failTestVal);
 };
 
@@ -133,7 +133,7 @@ struct failTest15 {
 };
 
 template<> struct jsonifier::core<failTest15> {
-	using value_type = failTest15;
+	using value_type				 = failTest15;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -142,7 +142,7 @@ struct failTest16 {
 };
 
 template<> struct jsonifier::core<failTest16> {
-	using value_type = failTest16;
+	using value_type				 = failTest16;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -151,7 +151,7 @@ struct failTest17 {
 };
 
 template<> struct jsonifier::core<failTest17> {
-	using value_type = failTest17;
+	using value_type				 = failTest17;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -160,7 +160,7 @@ struct failTest18 {
 };
 
 template<> struct jsonifier::core<failTest18> {
-	using value_type = failTest18;
+	using value_type				 = failTest18;
 	static constexpr auto parseValue = createValue("Missing colon", &value_type::failTestVal);
 };
 
@@ -169,7 +169,7 @@ struct failTest19 {
 };
 
 template<> struct jsonifier::core<failTest19> {
-	using value_type = failTest19;
+	using value_type				 = failTest19;
 	static constexpr auto parseValue = createValue("Double colon", &value_type::failTestVal);
 };
 
@@ -178,7 +178,7 @@ struct failTest20 {
 };
 
 template<> struct jsonifier::core<failTest20> {
-	using value_type = failTest20;
+	using value_type				 = failTest20;
 	static constexpr auto parseValue = createValue("Comma instead of colon", &value_type::failTestVal);
 };
 
@@ -187,7 +187,7 @@ struct failTest21 {
 };
 
 template<> struct jsonifier::core<failTest21> {
-	using value_type = failTest21;
+	using value_type				 = failTest21;
 	static constexpr auto parseValue = createValue("Colon instead of comma", &value_type::failTestVal);
 };
 
@@ -196,7 +196,7 @@ struct failTest22 {
 };
 
 template<> struct jsonifier::core<failTest22> {
-	using value_type = failTest22;
+	using value_type				 = failTest22;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -205,7 +205,7 @@ struct failTest23 {
 };
 
 template<> struct jsonifier::core<failTest23> {
-	using value_type = failTest23;
+	using value_type				 = failTest23;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -214,7 +214,7 @@ struct failTest24 {
 };
 
 template<> struct jsonifier::core<failTest24> {
-	using value_type = failTest24;
+	using value_type				 = failTest24;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -223,7 +223,7 @@ struct failTest25 {
 };
 
 template<> struct jsonifier::core<failTest25> {
-	using value_type = failTest25;
+	using value_type				 = failTest25;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -232,7 +232,7 @@ struct failTest26 {
 };
 
 template<> struct jsonifier::core<failTest26> {
-	using value_type = failTest26;
+	using value_type				 = failTest26;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -241,7 +241,7 @@ struct failTest27 {
 };
 
 template<> struct jsonifier::core<failTest27> {
-	using value_type = failTest27;
+	using value_type				 = failTest27;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -250,7 +250,7 @@ struct failTest28 {
 };
 
 template<> struct jsonifier::core<failTest28> {
-	using value_type = failTest28;
+	using value_type				 = failTest28;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -259,7 +259,7 @@ struct failTest29 {
 };
 
 template<> struct jsonifier::core<failTest29> {
-	using value_type = failTest29;
+	using value_type				 = failTest29;
 	static constexpr auto parseValue = createValue("Comma instead if closing brace", &value_type::failTestVal);
 };
 
@@ -268,7 +268,7 @@ struct failTest30 {
 };
 
 template<> struct jsonifier::core<failTest30> {
-	using value_type = failTest30;
+	using value_type				 = failTest30;
 	static constexpr auto parseValue = createValue(&value_type::failTestVal);
 };
 
@@ -281,7 +281,7 @@ struct ObjectWith1Member {
 };
 
 template<> struct jsonifier::core<ObjectWith1Member> {
-	using value_type				 = ObjectWith1Member ;
+	using value_type				 = ObjectWith1Member;
 	static constexpr auto parseValue = createValue("object with 1 member", &value_type::value);
 };
 
@@ -317,19 +317,19 @@ struct message_class {
 	int64_t zero{};
 	double real{};
 	int64_t one{};
-    double E{};
+	double E{};
 	double e{};
 };
 
 using message_element = std::variant<jsonifier::string, ObjectWith1Member, object, array, int64_t, bool, std::nullptr_t, message_class, double>;
 
 template<> struct jsonifier::core<object> {
-	using value_type = object;
+	using value_type				 = object;
 	static constexpr auto parseValue = createValue();
 };
 
 template<> struct jsonifier::core<message_class> {
-	using value_type = message_class;
+	using value_type				 = message_class;
 	static constexpr auto parseValue = createValue("integer", &value_type::integer, "real", &value_type::real, "E", &value_type::E, "e", &value_type::e, "", &value_type::empty,
 		"zero", &value_type::zero, "one", &value_type::one, "space", &value_type::space, "quote", &value_type::quote, "backslash", &value_type::backslash, "controls",
 		&value_type::controls, "slash", &value_type::slash, "alpha", &value_type::alpha, "ALPHA", &value_type::alpha, "digit", &value_type::digit, "0123456789",
@@ -346,7 +346,7 @@ struct passTest01 {
 };
 
 template<> struct jsonifier::core<passTest01> {
-	using value_type = passTest01;
+	using value_type				 = passTest01;
 	static constexpr auto parseValue = createValue(&value_type::valueNew);
 };
 
@@ -356,7 +356,7 @@ struct json_test_pattern_pass2 {
 };
 
 template<> struct jsonifier::core<json_test_pattern_pass2> {
-	using value_type = json_test_pattern_pass2;
+	using value_type				 = json_test_pattern_pass2;
 	static constexpr auto parseValue = createValue("In this test", &value_type::inThisTest, "The outermost value", &value_type::theOutermostValue);
 };
 
@@ -365,7 +365,7 @@ struct passTest02 {
 };
 
 template<> struct jsonifier::core<passTest02> {
-	using value_type = passTest02;
+	using value_type				 = passTest02;
 	static constexpr auto parseValue = createValue("JSON Test Pattern pass2", &value_type::jsonTestPatternPass3);
 };
 
@@ -382,7 +382,7 @@ class conformance_test {
 
 bool processFilesInFolder(std::unordered_map<jsonifier::string, conformance_test>& resultFileContents) {
 	try {
-		for (const auto& entry: std::filesystem::directory_iterator(JSON_PATH)) {
+		for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH)) {
 			if (entry.is_regular_file()) {
 				const jsonifier::string fileName = entry.path().filename().string();
 
@@ -390,7 +390,7 @@ bool processFilesInFolder(std::unordered_map<jsonifier::string, conformance_test
 					std::ifstream file(entry.path());
 					if (file.is_open()) {
 						std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-						bool returnValue = (fileName.find("fail") != jsonifier::string::npos);
+						bool returnValue					= (fileName.find("fail") != jsonifier::string::npos);
 						resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
 						file.close();
 					} else {
@@ -408,8 +408,7 @@ bool processFilesInFolder(std::unordered_map<jsonifier::string, conformance_test
 	return true;
 }
 
-template<typename test_type>
-void runTest(const jsonifier::string& testName, jsonifier::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
+template<typename test_type> void runTest(const jsonifier::string& testName, jsonifier::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
 	auto result = parser.parseJson(test_type{}, dataToParse);
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
@@ -461,8 +460,8 @@ bool conformanceTests() {
 	runTest<failTest25>("fail25.json", jsonTests["fail25.json"].fileContents, parser);
 	runTest<failTest26>("fail26.json", jsonTests["fail26.json"].fileContents, parser);
 	runTest<failTest27>("fail27.json", jsonTests["fail27.json"].fileContents, parser);
-	//runTest<failTest28>("fail28.json", jsonTests["fail28.json"].fileContents, parser);
-	//runTest<failTest29>("fail29.json", jsonTests["fail29.json"].fileContents, parser);
+	runTest<failTest28>("fail28.json", jsonTests["fail28.json"].fileContents, parser);
+	runTest<failTest29>("fail29.json", jsonTests["fail29.json"].fileContents, parser);
 	runTest<failTest30>("fail30.json", jsonTests["fail30.json"].fileContents, parser);
 	runTest<passTest01>("pass1.json", jsonTests["pass1.json"].fileContents, parser, false);
 	runTest<passTest02>("pass2.json", jsonTests["pass2.json"].fileContents, parser, false);

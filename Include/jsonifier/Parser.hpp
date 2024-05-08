@@ -30,7 +30,32 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
 
+namespace jsonifier {
+
+	struct parse_options {
+		bool refreshString{ true };
+		bool minified{ false };
+	};
+
+}
+
 namespace jsonifier_internal {
+
+	enum class parse_errors {
+		Success						= 0,
+		Missing_Object_Start		= 1,
+		Missing_Object_End			= 2,
+		Missing_Array_Start			= 3,
+		Missing_String_Start		= 4,
+		Missing_Colon				= 5,
+		Missing_Comma_Or_Object_End = 6,
+		Missing_Comma_Or_Array_End	= 7,
+		Invalid_Number_Value		= 8,
+		Invalid_Null_Value			= 9,
+		Invalid_Bool_Value			= 10,
+		Invalid_String_Characters	= 11,
+		No_Input					= 12,
+	};
 
 	template<typename derived_type, typename value_type> struct parse_impl;
 
@@ -41,23 +66,47 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
-		template<bool minified = false, bool refreshString = true, jsonifier::concepts::core_type value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& data, buffer_type&& in) {
+		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
+		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) {
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<refreshString, !minified>(in.data(), in.size());
+			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
 			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
-				derivedRef.errors.emplace_back(createError(error_code::No_Input));
+				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
 				return false;
 			}
-			impl(std::forward<value_type>(data), iter);
-			if constexpr (!minified) {
+			impl(std::forward<value_type>(object), iter);
+			if constexpr (!options.minified) {
 				if (iter) {
-					derivedRef.errors.emplace_back(createError(error_code::No_Input));
+					iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
 					return false;
 				}
 			}
 			return true;
+		}
+
+		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
+		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) {
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+				"No specialization of core exists for the type named above - please specialize it!");
+			derivedRef.errors.clear();
+			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
+				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
+				return value_type{};
+			}
+			value_type object{};
+			impl(std::forward<value_type>(object), iter);
+			if constexpr (!options.minified) {
+				if (iter) {
+					iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
+					return {};
+				}
+			}
+			return object;
 		}
 
 	  protected:
@@ -69,13 +118,13 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		template<jsonifier::concepts::core_type value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void impl(value_type&& data, iterator_type&& iter) {
+		template<typename value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
+		JSONIFIER_INLINE static void impl(value_type&& object, iterator_type&& iter) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter),
-					data.jsonifierExcludedKeys);
+				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(object), std::forward<iterator_type>(iter),
+					object.jsonifierExcludedKeys);
 			} else {
-				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(data), std::forward<iterator_type>(iter));
+				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(object), std::forward<iterator_type>(iter));
 			}
 		}
 

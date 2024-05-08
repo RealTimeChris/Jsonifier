@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(const char_type01* lhs, const char_type02* rhs, uint64_t count) noexcept {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compareShort(char_type01* lhs, char_type02* rhs, uint64_t count) noexcept {
 		if (count > 7) {
 			static constexpr uint64_t n{ sizeof(uint64_t) };
 			uint64_t v[2];
@@ -87,16 +87,16 @@ namespace jsonifier_internal {
 	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 2>::type::integer_type;
-			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 2>::type::type;
-			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 2>::type::bytesProcessed;
-			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 2>::type::mask;
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::mask;
 			simd_type value01{};
 			simd_type value02{};
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -107,16 +107,16 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 1>::type::integer_type;
-			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 1>::type::type;
-			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 1>::type::bytesProcessed;
-			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 1>::type::mask;
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::mask;
 			simd_type value01{};
 			simd_type value02{};
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -126,18 +126,18 @@ namespace jsonifier_internal {
 		}
 
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using integer_type						= typename jsonifier::concepts::get_type_at_index<avx_list, 0>::type::integer_type;
-			using simd_type							= typename jsonifier::concepts::get_type_at_index<avx_list, 0>::type::type;
-			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<avx_list, 0>::type::bytesProcessed;
-			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<avx_list, 0>::type::mask;
+			using integer_type						= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
+			using simd_type							= typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::type;
+			static constexpr uint64_t vectorSize	= jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+			static constexpr integer_type maskValue = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::mask;
 			simd_type value01{};
 			simd_type value02{};
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(string1);
 				value02 = simd_internal::gatherValuesU<simd_type>(string2);
-				if (simd_internal::opCmpEq(value01, value02) != maskValue) {
+				if (simd_internal::opCmpEq(value01, value02) < maskValue) {
 					return false;
 				}
 				lengthNew -= vectorSize;
@@ -149,7 +149,7 @@ namespace jsonifier_internal {
 		return compareShort(string1, string2, lengthNew);
 	}
 
-	template<uint64_t Count, typename char_type01> JSONIFIER_INLINE bool compare(const char_type01* lhs, const char_type01* rhs) noexcept {
+	template<uint64_t Count, typename char_type01> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type01* rhs) noexcept {
 		static constexpr uint64_t n{ 8 };
 		if constexpr (Count > n) {
 			return compare(lhs, rhs, Count);
@@ -169,9 +169,9 @@ namespace jsonifier_internal {
 			std::memcpy(v + 1, rhs, Count);
 			return v[0] == v[1];
 		} else if constexpr (Count == 2) {
-			uint32_t v[2];
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			uint16_t v[2];
+			std::copy(lhs, lhs + 1, v);
+			std::copy(rhs, rhs + 1, v + 1);
 			return v[0] == v[1];
 		} else if constexpr (Count == 1) {
 			return *lhs == *rhs;

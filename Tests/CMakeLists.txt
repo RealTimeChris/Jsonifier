@@ -61,7 +61,8 @@ endif()
 
 target_compile_definitions(
 	"Json-Performance" PUBLIC 
-	"JSON_PATH=\"${CMAKE_SOURCE_DIR}/Tests/ConformanceTests\""
+	"JSON_TEST_PATH=\"${CMAKE_SOURCE_DIR}/Tests/ConformanceTests\""
+	"JSON_PATH=\"${CMAKE_SOURCE_DIR}/Json\""
 )
 
 install(

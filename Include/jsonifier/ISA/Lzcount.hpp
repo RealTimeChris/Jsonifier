@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace simd_internal {
 
@@ -39,7 +39,20 @@ namespace simd_internal {
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
+		unsigned long leading_zero = 0;
+		if (_BitScanReverse32(&leading_zero, value)) {
+			return 32 - leading_zero;
+		} else {
+			return 32;
+		}
+	#else
+		return __builtin_clz(value);
+	#endif
+	}
+
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
 		unsigned long leading_zero = 0;
 		if (_BitScanReverse64(&leading_zero, value)) {

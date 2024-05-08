@@ -46,7 +46,11 @@ namespace simd_internal {
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
-		jsonifier::concepts::unwrap_t<simd_int_t> mask = _mm256_set_epi64x(0x00ll, 0x00ll, 0x00ll, 0x01ll);
+	#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
+		static constexpr simd_int_t mask{ 0x01u, 0x00u, 0x00u, 0x00u };
+	#else
+		static constexpr simd_int_t mask{ 0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
+	#endif
 		return valueNew ? _mm256_or_si256(value, mask) : _mm256_andnot_si256(mask, value);
 	}
 
