@@ -1,9 +1,9 @@
 # Jsonifier
 ![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=plastic)
-![Lines of Code](https://tokei.rs/b1/github/RealTimeChris/Jsonifier?color=light-blue&label=Lines%20Of%20Code%20&style=plastic)
+![Lines of Code](https://tokei.rs/b1/github/RealTimeChris/Jsonifier-Code-Only?color=light-blue&label=Lines%20Of%20Code%20&style=plastic)
 
 ## A few classes for validating, serializing, parsing, prettifying, and minifying objects into/from JSON strings - very rapidly.
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/ISA/ISADetectionBase.hpp#L328-L454) as well as compile-time hash-maps for the keys of the data being parsed.***
+### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time hash-maps for the keys of the data being parsed.***
 ## [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ----
 

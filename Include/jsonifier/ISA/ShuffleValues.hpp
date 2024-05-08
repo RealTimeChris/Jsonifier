@@ -25,14 +25,14 @@
 
 #include <jsonifier/ISA/Fallback.hpp>
 #include <jsonifier/ISA/Neon.hpp>
-#include <jsonifier/Base.hpp>
 
 namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
-		return vqtbl1q_u8(std::forward<simd_int_t01>(value), vandq_u8(std::forward<simd_int_t02>(other), vdupq_n_u8(0x0F)));
+		static constexpr uint8x16_t mask{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F };
+		return vqtbl1q_u8(std::forward<simd_int_t01>(value), vandq_u8(std::forward<simd_int_t02>(other), mask));
 	}
 
 #elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)

@@ -57,9 +57,10 @@ namespace jsonifier_internal {
 			*this = values;
 		}
 
-		template<typename value_type_newer> constexpr void emplace_back(value_type_newer&& newValue) {
-			dataVal[sizeVal] = static_cast<value_type>(std::forward<value_type_newer>(newValue));
+		template<typename... value_type_newer> constexpr reference emplace_back(value_type_newer&&... newValue) {
+			std::construct_at(&dataVal[sizeVal], std::forward<value_type_newer>(newValue)...);
 			++sizeVal;
+			return dataVal[sizeVal - 1];
 		}
 
 		constexpr iterator erase(iterator pos) {

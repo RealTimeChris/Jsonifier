@@ -78,26 +78,126 @@ namespace jsonifier {
 
 ### Usage - Parsing
 ----
-- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `parseJson()` a reference to the intended parsing target, along with a reference to a `jsonifier::string` or equivalent, to be parsed from, as follows...
-- Note: You can save parsing time by reusing a previously-allocated object, that has been used for previous parses.
+Jsonifier provides flexible JSON parsing capabilities through the `parseJson` function, which now supports two overloads.
+
+#### Two Overloads
+The `parseJson` function now comes in two flavors:
+
 ```cpp
-jsonifier::string buffer{ json0 };
+template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
+JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in);
+
+template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
+JSONIFIER_INLINE value_type parseJson(buffer_type&& in);
+```
+
+These overloads provide flexibility in parsing JSON data, allowing you to choose between parsing directly into an existing object or creating a new object and returning it.
+
+#### Example - Parsing into an Existing Object
+Here's an example demonstrating how to use `parseJson` to parse JSON data directly into an existing object:
+
+```cpp
+#include "jsonifier/Index.hpp"
+
+jsonifier::string buffer{ json_data };
 
 obj_t obj{};
 
+// Create an instance of the jsonifier_core class.
 jsonifier::jsonifier_core<> parser{};
+
+// Parse JSON data into obj.
 parser.parseJson(obj, buffer);
 ```
 
+#### Example - Parsing into a New Object
+Here's an example demonstrating how to use `parseJson` to parse JSON data into a new object:
+
+```cpp
+#include "jsonifier/Index.hpp"
+
+jsonifier::string buffer{ json_data };
+
+// Parse JSON data and obtain the parsed object directly.
+jsonifier::parse_options options;
+options.minified = true; // Set parse options if needed.
+obj_t parsedObject = jsonifier::parseJson<obj_t, options>(buffer);
+```
+
+#### Parse Options
+The `parse_options` struct allows customization of parsing behavior. Here's the structure of the `parse_options`:
+
+```cpp
+struct parse_options {
+    bool refreshString{ true };
+    bool minified{ false };
+};
+```
+
+- `refreshString`: Indicates whether to refresh the parsing string before parsing (default: `true`).
+- `minified`: Indicates whether the input JSON string is minified (default: `false`).
+
+You can customize parsing behavior by setting these options in `parse_options` when calling the `parseJson` function.
+
 ### Usage - Serialization
 ----
-- Create an instance of the `jsonifier::jsonifier_core` class, and pass to its function `serializeJson()` a reference to the intended serialization target, along with a reference to a `jsonifier::string` or equivalent, to be serialized into, as follows...
-- Note: You can save serialization time by reusing a previously-allocated buffer, that has been used for previous serializations.
+Jsonifier offers flexibility in serializing JSON data through the `serializeJson` function, which now supports two overloads.
+
+#### Two Overloads
+The `serializeJson` function now comes in two flavors:
+
 ```cpp
-jsonifier::string buffer{};
+template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
+JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& out);
+
+template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object);
+```
+
+These overloads provide flexibility in how you handle serialization output, allowing you to choose between directly serializing into a buffer or obtaining the serialized JSON string as a return value.
+
+#### Example - Serializing into a Buffer
+Here's an example demonstrating how to use `serializeJson` to serialize data directly into a buffer:
+
+```cpp
+#include "jsonifier/Index.hpp"
 
 obj_t obj{};
 
+// Create an instance of the jsonifier_core class.
 jsonifier::jsonifier_core<> serializer{};
+
+// Serialize obj into a buffer.
+jsonifier::string buffer{};
 serializer.serializeJson(obj, buffer);
 ```
+
+#### Example - Obtaining Serialized JSON String
+Here's an example demonstrating how to use `serializeJson` to obtain the serialized JSON string:
+
+```cpp
+#include "jsonifier/Index.hpp"
+
+obj_t obj{};
+
+// Serialize and obtain the serialized JSON string directly.
+jsonifier::serialize_options options;
+options.prettify = true; // Enable prettifying
+options.prettifyOptions.indentSize = 2; // Set custom prettifyJson options if needed.
+jsonifier::string serializedString = jsonifier::serializeJson<options>(obj);
+```
+
+#### Serialize Options
+The `serialize_options` struct allows customization of serialization behavior. Here's the structure of the `serialize_options`:
+
+```cpp
+struct serialize_options {
+    prettify_options prettifyOptions{};
+    bool prettify{ false };
+};
+```
+
+- `prettifyOptions`: Specifies prettifyJson options such as `indentSize`, `maxDepth`, etc.
+- `prettifyJson`: Indicates whether to prettifyJson the JSON output (default: `false`).
+
+You can enable prettifying by setting `options.prettifyJson` to `true` and customize prettifyJson options as needed in `options.prettifyOptions`.

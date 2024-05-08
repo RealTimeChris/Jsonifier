@@ -29,7 +29,7 @@
 
 namespace jsonifier {
 
-	template<typename value_type_new> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, uint64_t sizeValNewer> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -45,6 +45,9 @@ namespace jsonifier {
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
 		JSONIFIER_INLINE vector() {
+			if constexpr (sizeValNewer > 0) {
+				reserve(sizeValNewer);
+			}
 		}
 
 		JSONIFIER_INLINE vector& operator=(vector&& other) noexcept {
@@ -125,12 +128,12 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(value_type other) {
+		JSONIFIER_INLINE vector& operator=(const value_type& other) {
 			emplace_back(other);
 			return *this;
 		}
 
-		JSONIFIER_INLINE vector(value_type other) : capacityVal{}, sizeVal{}, dataVal{} {
+		JSONIFIER_INLINE vector(const value_type& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 

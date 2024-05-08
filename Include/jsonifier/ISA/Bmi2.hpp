@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace simd_internal {
 

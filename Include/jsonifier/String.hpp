@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> class char_traits : public std::char_traits<jsonifier::concepts::unwrap_t<value_type>> {};
 
-	template<> class char_traits<uint8_t> {
+	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
 	  public:
 		using value_type	= uint8_t;
 		using pointer		= value_type*;
@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 
 				return;
 			}
-			std::memmove(firstNew, first2, count * sizeof(value_type));
+			std::memmove(firstNew, first2, count * sizeof(value_type_new));
 		}
 
 		static constexpr size_type length(const_pointer first) {
@@ -252,23 +252,27 @@ namespace jsonifier {
 			return const_reverse_iterator{ begin() };
 		}
 
+		template<typename... arg_types> JSONIFIER_INLINE size_type rfind(arg_types&&... args) const {
+			return operator std::basic_string_view<value_type>().rfind(std::forward<arg_types>(args)...);
+		}
+
 		template<typename... arg_types> JSONIFIER_INLINE size_type find(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findFirstOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findLastOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findLastOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findFirstNotOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findFirstNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> constexpr size_type findLastNotOf(arg_types&&... args) const {
+		template<typename... arg_types> JSONIFIER_INLINE size_type findLastNotOf(arg_types&&... args) const {
 			return operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
 		}
 

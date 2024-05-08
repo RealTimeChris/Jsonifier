@@ -386,18 +386,18 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type, size_t... indices> constexpr auto makeMapImpl(std::index_sequence<indices...>) {
-		using value_t	 = value_tuple_variant_t<jsonifier::concepts::core_t<value_type>>;
-		constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+		using value_t	 = value_tuple_variant_t<jsonifier::concepts::core_wrapper_type<value_type>>;
+		constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_wrapper_type<value_type>>;
 		if constexpr (n == 0) {
 			return unordered_map<jsonifier::string_view, jsonifier::concepts::empty, 0>{};
 		} else {
 			static_assert(sizeof...(indices) == n);
 			return unordered_map<jsonifier::string_view, value_t, n>({ std::pair<jsonifier::string_view, value_t>(
-				jsonifier::string_view(get<0>(get<indices>(jsonifier::concepts::coreV<value_type>))), get<1>(get<indices>(jsonifier::concepts::coreV<value_type>)))... });
+				jsonifier::string_view(get<0>(get<indices>(jsonifier::concepts::core_wrapper_value<value_type>))), get<1>(get<indices>(jsonifier::concepts::core_wrapper_value<value_type>)))... });
 		}
 	}
 
 	template<typename value_type> constexpr auto makeMap() {
-		return makeMapImpl<jsonifier::concepts::unwrap_t<value_type>>(std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_t<value_type>>>{});
+		return makeMapImpl<jsonifier::concepts::unwrap_t<value_type>>(std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_wrapper_type<value_type>>>{});
 	}
 }

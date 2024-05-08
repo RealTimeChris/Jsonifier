@@ -23,14 +23,14 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
-		return vbicq_u8(std::forward<simd_int_t02>(value), std::forward<simd_int_t01>(other));
+		return vbicq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
@@ -46,8 +46,8 @@ namespace simd_internal {
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
-		int64x2_t mask = { 0x01ll, 0x00ll };
-		return valueNew ? opOr(value, vreinterpretq_u8_u64(mask)) : opAndNot(value, vreinterpretq_u8_u64(mask));
+		static constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+		return valueNew ? vorrq_u8(std::forward<simd_int_t01>(value), mask) : vbicq_u8(std::forward<simd_int_t01>(value), mask);
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value) {
