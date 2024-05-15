@@ -164,7 +164,7 @@ namespace jsonifier_internal {
 				serializer<derived_type>::template impl<options>(iter->first, buffer, index, prettifyArgs);
 				writeCharacter<json_structural_type::Colon>(buffer, index);
 				if constexpr (options.prettify) {
-					writeCharacter<0x20>(buffer, index);
+					writeCharacter<0x20u>(buffer, index);
 				}
 				serializer<derived_type>::template impl<options>(iter->second, buffer, index, prettifyArgs);
 				++iter;
@@ -195,7 +195,7 @@ namespace jsonifier_internal {
 					serializer<derived_type>::template impl<options>(iter->first, buffer, index, prettifyArgs);
 					writeCharacter<json_structural_type::Colon>(buffer, index);
 					if constexpr (options.prettify) {
-						writeCharacter<0x20>(buffer, index);
+						writeCharacter<0x20u>(buffer, index);
 					}
 					serializer<derived_type>::template impl<options>(iter->second, buffer, index, prettifyArgs);
 				}
@@ -264,7 +264,7 @@ namespace jsonifier_internal {
 						}
 					}
 				} else {
-					writeCharacter<0x20>(buffer, index);
+					writeCharacter<0x20u>(buffer, index);
 				}
 			}
 			serializeObjects<size, 0>(value, buffer, index, prettifyArgs);
@@ -281,8 +281,9 @@ namespace jsonifier_internal {
 						} else {
 							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
 						}
+					} else {
+						writeCharacter<0x20u>(buffer, index);
 					}
-					writeCharacter<0x20>(buffer, index);
 				}
 			}
 			writeCharacter<json_structural_type::Array_End>(buffer, index);
@@ -347,14 +348,14 @@ namespace jsonifier_internal {
 						}
 					}
 				} else {
-					writeCharacter<0x20>(buffer, index);
+					writeCharacter<0x20u>(buffer, index);
 				}
 			}
 			if (n > 0) {
-				auto newPtr = value.data();
+				auto newPtr = value.begin();
 				serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
 				++newPtr;
-				auto endPtr = value.data() + value.size();
+				auto endPtr = value.begin() + value.size();
 				for (; newPtr < endPtr; ++newPtr) {
 					writeCharacter<json_structural_type::Comma>(buffer, index);
 					if constexpr (options.prettify) {
@@ -394,8 +395,9 @@ namespace jsonifier_internal {
 						} else {
 							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
 						}
+					} else {
+						writeCharacter<0x20u>(buffer, index);
 					}
-					writeCharacter<0x20>(buffer, index);
 				}
 			}
 			writeCharacter<json_structural_type::Array_End>(buffer, index);
@@ -432,7 +434,7 @@ namespace jsonifier_internal {
 						}
 					}
 				} else {
-					writeCharacter<0x20>(buffer, index);
+					writeCharacter<0x20u>(buffer, index);
 				}
 			}
 			if constexpr (n > 0) {
@@ -479,8 +481,9 @@ namespace jsonifier_internal {
 						} else {
 							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
 						}
+					} else {
+						writeCharacter<0x20u>(buffer, index);
 					}
-					writeCharacter<0x20>(buffer, index);
 				}
 			}
 			writeCharacter<json_structural_type::Array_End>(buffer, index);
@@ -569,8 +572,7 @@ namespace jsonifier_internal {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
 			int64_t valueNew{ static_cast<int64_t>(value) };
-			auto end = toChars(buffer.data() + index, valueNew);
-			index	 = end - buffer.data();
+			index = toChars(buffer.data() + index, valueNew) - buffer.data();
 		}
 	};
 

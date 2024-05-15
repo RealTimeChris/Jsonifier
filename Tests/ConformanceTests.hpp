@@ -3,7 +3,7 @@
 #include <fstream>
 
 struct failTest01 {
-	jsonifier::string failTestString{};
+	std::string failTestString{};
 };
 
 template<> struct jsonifier::core<failTest01> {
@@ -12,7 +12,7 @@ template<> struct jsonifier::core<failTest01> {
 };
 
 struct failTest02 {
-	std::vector<jsonifier::string> testVal{};
+	std::vector<std::string> testVal{};
 };
 
 template<> struct jsonifier::core<failTest02> {
@@ -21,7 +21,7 @@ template<> struct jsonifier::core<failTest02> {
 };
 
 struct failTest03 {
-	jsonifier::string failTestVal{};
+	std::string failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest03> {
@@ -30,7 +30,7 @@ template<> struct jsonifier::core<failTest03> {
 };
 
 struct failTest04 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest04> {
@@ -39,7 +39,7 @@ template<> struct jsonifier::core<failTest04> {
 };
 
 struct failTest05 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest05> {
@@ -48,7 +48,7 @@ template<> struct jsonifier::core<failTest05> {
 };
 
 struct failTest06 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest06> {
@@ -57,7 +57,7 @@ template<> struct jsonifier::core<failTest06> {
 };
 
 struct failTest07 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest07> {
@@ -66,7 +66,7 @@ template<> struct jsonifier::core<failTest07> {
 };
 
 struct failTest08 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest08> {
@@ -129,7 +129,7 @@ template<> struct jsonifier::core<failTest14> {
 };
 
 struct failTest15 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest15> {
@@ -147,7 +147,7 @@ template<> struct jsonifier::core<failTest16> {
 };
 
 struct failTest17 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest17> {
@@ -156,7 +156,7 @@ template<> struct jsonifier::core<failTest17> {
 };
 
 struct failTest18 {
-	jsonifier::string failTestVal{};
+	std::string failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest18> {
@@ -165,7 +165,7 @@ template<> struct jsonifier::core<failTest18> {
 };
 
 struct failTest19 {
-	jsonifier::string failTestVal{};
+	std::string failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest19> {
@@ -174,7 +174,7 @@ template<> struct jsonifier::core<failTest19> {
 };
 
 struct failTest20 {
-	jsonifier::string failTestVal{};
+	std::string failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest20> {
@@ -183,7 +183,7 @@ template<> struct jsonifier::core<failTest20> {
 };
 
 struct failTest21 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest21> {
@@ -192,7 +192,7 @@ template<> struct jsonifier::core<failTest21> {
 };
 
 struct failTest22 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest22> {
@@ -201,7 +201,7 @@ template<> struct jsonifier::core<failTest22> {
 };
 
 struct failTest23 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest23> {
@@ -210,7 +210,7 @@ template<> struct jsonifier::core<failTest23> {
 };
 
 struct failTest24 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest24> {
@@ -219,7 +219,7 @@ template<> struct jsonifier::core<failTest24> {
 };
 
 struct failTest25 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest25> {
@@ -264,7 +264,7 @@ template<> struct jsonifier::core<failTest29> {
 };
 
 struct failTest30 {
-	std::vector<jsonifier::string> failTestVal{};
+	std::vector<std::string> failTestVal{};
 };
 
 template<> struct jsonifier::core<failTest30> {
@@ -274,10 +274,10 @@ template<> struct jsonifier::core<failTest30> {
 
 struct object {};
 
-using array = std::vector<jsonifier::string>;
+using array = std::vector<std::string>;
 
 struct ObjectWith1Member {
-	std::vector<jsonifier::string> value{};
+	std::vector<std::string> value{};
 };
 
 template<> struct jsonifier::core<ObjectWith1Member> {
@@ -287,31 +287,31 @@ template<> struct jsonifier::core<ObjectWith1Member> {
 
 struct message_class {
 	message_class() noexcept = default;
-	jsonifier::string uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_{};
-	std::vector<jsonifier::string> array{};
+	std::string uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_{};
+	std::vector<std::string> array{};
 	std::vector<int64_t> compact{};
 	std::vector<int64_t> sPACED{};
-	jsonifier::string the0123456789{};
-	jsonifier::string backslash{};
-	jsonifier::string controls{};
-	jsonifier::string jsontext{};
+	std::string the0123456789{};
+	std::string backslash{};
+	std::string controls{};
+	std::string jsontext{};
 	std::nullptr_t null{};
-	jsonifier::string special{};
-	jsonifier::string address{};
-	jsonifier::string comment{};
-	jsonifier::string message{};
-	jsonifier::string quotes{};
-	jsonifier::string space{};
-	jsonifier::string quote{};
-	jsonifier::string slash{};
-	jsonifier::string alpha{};
-	jsonifier::string ALPHA{};
-	jsonifier::string digit{};
+	std::string special{};
+	std::string address{};
+	std::string comment{};
+	std::string message{};
+	std::string quotes{};
+	std::string space{};
+	std::string quote{};
+	std::string slash{};
+	std::string alpha{};
+	std::string ALPHA{};
+	std::string digit{};
 	bool messageFalse{};
 	bool messageTrue{};
 	object objectVal{};
-	jsonifier::string hex{};
-	jsonifier::string url{};
+	std::string hex{};
+	std::string url{};
 	int64_t integer{};
 	double empty{};
 	int64_t zero{};
@@ -321,7 +321,7 @@ struct message_class {
 	double e{};
 };
 
-using message_element = std::variant<jsonifier::string, ObjectWith1Member, object, array, int64_t, bool, std::nullptr_t, message_class, double>;
+using message_element = std::variant<std::string, ObjectWith1Member, object, array, int64_t, bool, std::nullptr_t, message_class, double>;
 
 template<> struct jsonifier::core<object> {
 	using value_type				 = object;
@@ -351,8 +351,8 @@ template<> struct jsonifier::core<passTest01> {
 };
 
 struct json_test_pattern_pass2 {
-	jsonifier::string theOutermostValue;
-	jsonifier::string inThisTest;
+	std::string theOutermostValue;
+	std::string inThisTest;
 };
 
 template<> struct jsonifier::core<json_test_pattern_pass2> {
@@ -373,24 +373,24 @@ class conformance_test {
   public:
 	conformance_test() noexcept = default;
 
-	conformance_test(const jsonifier::string& stringNew, const jsonifier::string& fileContentsNew, bool areWeAFailingTestNew)
+	conformance_test(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
 		: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-	jsonifier::string testName{};
-	jsonifier::string fileContents{};
+	std::string testName{};
+	std::string fileContents{};
 	bool areWeAFailingTest{};
 };
 
-bool processFilesInFolder(std::unordered_map<jsonifier::string, conformance_test>& resultFileContents) {
+bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) {
 	try {
 		for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH)) {
 			if (entry.is_regular_file()) {
-				const jsonifier::string fileName = entry.path().filename().string();
+				const std::string fileName = entry.path().filename().string();
 
 				if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == ".json") {
 					std::ifstream file(entry.path());
 					if (file.is_open()) {
 						std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-						bool returnValue					= (fileName.find("fail") != jsonifier::string::npos);
+						bool returnValue					= (fileName.find("fail") != std::string::npos);
 						resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
 						file.close();
 					} else {
@@ -408,7 +408,8 @@ bool processFilesInFolder(std::unordered_map<jsonifier::string, conformance_test
 	return true;
 }
 
-template<typename test_type> void runTest(const jsonifier::string& testName, jsonifier::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
+template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
+	std::cout << "Running Test: " << testName << std::endl;
 	auto result = parser.parseJson(test_type{}, dataToParse);
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
@@ -430,7 +431,7 @@ template<typename test_type> void runTest(const jsonifier::string& testName, jso
 
 bool conformanceTests() {
 	jsonifier::jsonifier_core parser{};
-	std::unordered_map<jsonifier::string, conformance_test> jsonTests{};
+	std::unordered_map<std::string, conformance_test> jsonTests{};
 	processFilesInFolder(jsonTests);
 	std::cout << "Conformance Tests: " << std::endl;
 	runTest<failTest01>("fail1.json", jsonTests["fail1.json"].fileContents, parser);

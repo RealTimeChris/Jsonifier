@@ -39,52 +39,40 @@ namespace jsonifier_internal {
 
 	JSONIFIER_INLINE void u128Mul(uint64_t a, uint64_t b, uint64_t* hi, uint64_t* lo) noexcept {
 #if defined(__SIZEOF_INT128__)
-	#if JSONIFIER_GNUCXX
-		#pragma GCC diagnostic push
-		#pragma GCC diagnostic ignored "-Wpedantic"
-	#endif
 		unsigned __int128 m = static_cast<unsigned __int128>(a) * b;
-	#if JSONIFIER_GNUCXX
-		#pragma GCC diagnostic pop
-	#endif
-		*hi = uint64_t(m >> 64);
-		*lo = uint64_t(m);
+		*hi					= uint64_t(m >> 64);
+		*lo					= uint64_t(m);
 #elif defined(_M_X64)
 		*lo = _umul128(a, b, hi);
 #elif defined(_M_ARM64)
 		*hi = __umulh(a, b);
 		*lo = a * b;
 #else
-		uint32_t a0 = ( uint32_t )(a), a1 = ( uint32_t )(a >> 32);
-		uint32_t b0 = ( uint32_t )(b), b1 = ( uint32_t )(b >> 32);
-		uint64_t p00 = ( uint64_t )a0 * b0, p01 = ( uint64_t )a0 * b1;
-		uint64_t p10 = ( uint64_t )a1 * b0, p11 = ( uint64_t )a1 * b1;
+		uint32_t a0 = static_cast<uint32_t>(a), a1 = static_cast<uint32_t>(a >> 32);
+		uint32_t b0 = static_cast<uint32_t>(b), b1 = static_cast<uint32_t>(b >> 32);
+		uint64_t p00 = static_cast<uint64_t>(a0) * b0;
+		uint64_t p01 = static_cast<uint64_t>(a0) * b1;
+		uint64_t p10 = static_cast<uint64_t>(a1) * b0;
+		uint64_t p11 = static_cast<uint64_t>(a1) * b1;
 		uint64_t m0	 = p01 + (p00 >> 32);
-		uint32_t m00 = ( uint32_t )(m0), m01 = ( uint32_t )(m0 >> 32);
+		uint32_t m00 = static_cast<uint32_t>(m0), m01 = static_cast<uint32_t>(m0 >> 32);
 		uint64_t m1	 = p10 + m00;
-		uint32_t m10 = ( uint32_t )(m1), m11 = ( uint32_t )(m1 >> 32);
+		uint32_t m10 = static_cast<uint32_t>(m1), m11 = static_cast<uint32_t>(m1 >> 32);
 		*hi = p11 + m01 + m11;
-		*lo = (( uint64_t )m10 << 32) | ( uint32_t )p00;
+		*lo = (static_cast<uint64_t>(m10) << 32) | static_cast<uint32_t>(p00);
 #endif
 	}
 
 	JSONIFIER_INLINE void u128MulAdd(uint64_t a, uint64_t b, uint64_t c, uint64_t* hi, uint64_t* lo) noexcept {
 #if defined(__SIZEOF_INT128__)
-	#if JSONIFIER_GNUCXX
-		#pragma GCC diagnostic push
-		#pragma GCC diagnostic ignored "-Wpedantic"
-	#endif
 		unsigned __int128 m = static_cast<unsigned __int128>(a) * b + c;
-	#if JSONIFIER_GNUCXX
-		#pragma GCC diagnostic pop
-	#endif
-		*hi = uint64_t(m >> 64);
-		*lo = uint64_t(m);
+		*hi					= uint64_t(m >> 64);
+		*lo					= uint64_t(m);
 #else
 		uint64_t h, l, t;
 		u128Mul(a, b, &h, &l);
 		t = l + c;
-		h += ((t < l) | (t < c));
+		h += (t < l);
 		*hi = h;
 		*lo = t;
 #endif
@@ -301,8 +289,6 @@ namespace jsonifier_internal {
 	}
 
 	JSONIFIER_INLINE void f64BinToDec(uint64_t sigRaw, int32_t expRaw, uint64_t sigBin, int32_t expBin, uint64_t* sigDec, int32_t* expDec) noexcept {
-		uint64_t sp, mid;
-
 		const bool isEven			= !(sigBin & 1);
 		const bool lowerBoundCloser = (sigRaw == 0 && expRaw > 1);
 
@@ -316,9 +302,10 @@ namespace jsonifier_internal {
 
 		uint64_t pow10hilo[2];
 		pow10TableGetSig128(exp10, pow10hilo);
-		const uint64_t& pow10hi = pow10hilo[0];
-		uint64_t& pow10lo		= pow10hilo[1];
+		uint64_t pow10hi = pow10hilo[0];
+		uint64_t pow10lo = pow10hilo[1];
 		pow10lo += (exp10 < pow10SigTable128MinExactExp || exp10 > pow10SigTable128MaxExactExp);
+
 		const uint64_t vbl = roundToOdd(pow10hi, pow10lo, cbl << h);
 		const uint64_t vb  = roundToOdd(pow10hi, pow10lo, cb << h);
 		const uint64_t vbr = roundToOdd(pow10hi, pow10lo, cbr << h);
@@ -327,12 +314,12 @@ namespace jsonifier_internal {
 		const uint64_t upper = vbr - !isEven;
 
 		bool uInside, wInside;
-
 		const uint64_t s = vb / 4;
+
 		if (s >= 10) {
-			sp		= s / 10;
-			uInside = (lower <= 40 * sp);
-			wInside = (upper >= 40 * sp + 40);
+			uint64_t sp = s / 10;
+			uInside		= (lower <= 40 * sp);
+			wInside		= (upper >= 40 * sp + 40);
 			if (uInside != wInside) {
 				*sigDec = sp + wInside;
 				*expDec = k + 1;
@@ -343,12 +330,13 @@ namespace jsonifier_internal {
 		uInside = (lower <= 4 * s);
 		wInside = (upper >= 4 * s + 4);
 
-		mid				   = 4 * s + 2;
-		const bool roundUp = (vb > mid) || (vb == mid && (s & 1) != 0);
+		uint64_t mid = 4 * s + 2;
+		bool roundUp = (vb > mid) || (vb == mid && (s & 1) != 0);
 
 		*sigDec = s + ((uInside != wInside) ? wInside : roundUp);
 		*expDec = k;
 	}
+
 
 	constexpr std::array<uint8_t, 256> decTrailingZeroTable{ 2u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u,
 		1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u,

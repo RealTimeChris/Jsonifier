@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 					}
 					case json_structural_type::Colon: {
 						writeCharacter<0x3A>(outPtr);
-						writeCharacter<0x20>(outPtr);
+						writeCharacter<0x20u>(outPtr);
 						++iter;
 						break;
 					}
@@ -83,7 +83,7 @@ namespace jsonifier_internal {
 								writeNewLine<options.tabs, options.indentSize>(outPtr, indent);
 							}
 						} else {
-							writeCharacter<0x20>(outPtr);
+							writeCharacter<0x20u>(outPtr);
 						}
 						break;
 					}
@@ -96,8 +96,9 @@ namespace jsonifier_internal {
 						if (*(iter.operator->() - 1) != 0x5Bu) {
 							if constexpr (options.newLinesInArray) {
 								writeNewLine<options.tabs, options.indentSize>(outPtr, indent);
+							} else {
+								writeCharacter<0x20u>(outPtr);
 							}
-							writeCharacter<0x20>(outPtr);
 						}
 						writeCharacter<0x5Du>(outPtr);
 						++iter;

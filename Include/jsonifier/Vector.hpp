@@ -77,12 +77,12 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(std::vector<value_type>&& other) {
+		JSONIFIER_INLINE vector& operator=(std::vector<value_type>&& other) noexcept {
 			vector{ other }.swap(*this);
 			return *this;
 		}
 
-		JSONIFIER_INLINE explicit vector(std::vector<value_type>&& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		JSONIFIER_INLINE explicit vector(std::vector<value_type>&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);

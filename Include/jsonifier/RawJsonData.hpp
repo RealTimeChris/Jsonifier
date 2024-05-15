@@ -31,7 +31,7 @@ namespace std {
 
 	template<jsonifier::concepts::string_t string_type> struct hash<string_type> {
 		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const {
-			return jsonifier_internal::fnv1aHash(string, 0);
+			return jsonifier_internal::fnv1aHashRt(string.data(), string.size());
 		}
 	};
 

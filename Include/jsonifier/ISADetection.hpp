@@ -33,7 +33,7 @@
 #include <jsonifier/ISA/AVX512.hpp>
 #include <jsonifier/ISA/Fallback.hpp>
 #include <jsonifier/ISA/CollectIndices.hpp>
-#include <jsonifier/ISA/ISADetectionBase.hpp>
+#include <jsonifier/ISA/SimdCommon.hpp>
 #include <atomic>
 
 template<jsonifier::concepts::unsigned_type value_type> void simd_internal::printBits(value_type values, const std::string& valuesTitle) {

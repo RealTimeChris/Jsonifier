@@ -32,7 +32,7 @@ namespace jsonifier {
 
 	struct prettify_options {
 		bool newLinesInArray{ true };
-		uint64_t indentSize{ 4 };
+		uint64_t indentSize{ 3 };
 		uint64_t maxDepth{ 100 };
 		bool tabs{ false };
 	};

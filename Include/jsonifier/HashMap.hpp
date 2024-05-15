@@ -1,5 +1,5 @@
-﻿/*
-	MIT License
+﻿/*0
+01	MIT License
 
 	Copyright (c) 2023 RealTimeChris
 
@@ -41,19 +41,19 @@ namespace jsonifier_internal {
 				res |= static_cast<uint64_t>(bytes[x]) << (8 * x);
 			}
 			return res;
-		};
+		}();
 		auto nonConstEval = [&]() {
 			uint64_t res{};
 			std::memcpy(&res, bytes, n);
 			return res;
 		};
-		return std::is_constant_evaluated() ? constEval() : nonConstEval();
+		return std::is_constant_evaluated() ? constEval : nonConstEval();
 	}
 
 	struct string_compare_helper {
 		template<typename string_type01, typename string_type02> constexpr bool operator()(string_type01&& lhs, string_type02&& rhs) const {
 			return std::is_constant_evaluated() ? stringConstCompare(std::forward<string_type01>(lhs), std::forward<string_type02>(rhs))
-				: lhs.size() == rhs.size()		? compare(lhs.data(), rhs.data(), rhs.size())
+				: lhs.size() == rhs.size()		? jsonifier_internal::compare(lhs.data(), rhs.data(), rhs.size())
 												: false;
 		}
 	};
@@ -306,18 +306,18 @@ namespace jsonifier_internal {
 		auto stepOne = makePmhBuckets<m>(items);
 		auto buckets = stepOne.getSortedBuckets();
 
-		std::array<seed_or_index, m> G;
+		std::array<seed_or_index, m> g;
 		using hasher = hash<jsonifier::string_view_base<uint8_t>>;
 
-		constexpr uint64_t UNUSED = std::numeric_limits<uint64_t>::max();
-		std::array<uint64_t, m> H;
-		H.fill(UNUSED);
+		constexpr uint64_t unused = std::numeric_limits<uint64_t>::max();
+		std::array<uint64_t, m> h;
+		h.fill(unused);
 
 		for (const auto& bucket: buckets) {
 			auto const bsize = bucket.size();
 
 			if (bsize == 1) {
-				G[bucket.hash] = { false, bucket[0] };
+				g[bucket.hash] = { false, bucket[0] };
 			} else if (bsize > 1) {
 				seed_or_index d{ true, prg() };
 				static_vector<uint64_t, decltype(stepOne)::bucketMax> bucketSlots;
@@ -325,7 +325,7 @@ namespace jsonifier_internal {
 				while (bucketSlots.size() < bsize) {
 					auto slot = hasher{}(items[bucket[bucketSlots.size()]].first, d.value()) % m;
 
-					if (H[slot] != UNUSED || !allDifferentFrom(bucketSlots, slot)) {
+					if (h[slot] != unused || !allDifferentFrom(bucketSlots, slot)) {
 						bucketSlots.clear();
 						d = { true, prg() };
 						continue;
@@ -334,17 +334,17 @@ namespace jsonifier_internal {
 					bucketSlots.emplace_back(slot);
 				}
 
-				G[bucket.hash] = d;
+				g[bucket.hash] = d;
 				for (uint64_t x = 0; x < bsize; ++x)
-					H[bucketSlots[x]] = bucket[x];
+					h[bucketSlots[x]] = bucket[x];
 			}
 		}
 
 		for (uint64_t x = 0; x < m; ++x)
-			if (H[x] == UNUSED)
-				H[x] = 0;
+			if (h[x] == unused)
+				h[x] = 0;
 
-		return { stepOne.seed, G, H };
+		return { stepOne.seed, g, h };
 	}
 
 	template<typename key_type_new, typename value_type_new, size_t n> class unordered_map : protected std::array<std::pair<key_type_new, value_type_new>, n>,

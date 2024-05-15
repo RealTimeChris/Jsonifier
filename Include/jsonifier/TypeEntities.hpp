@@ -28,6 +28,7 @@
 #include <optional>
 #include <variant>
 #include <string>
+#include <vector>
 #include <chrono>
 #include <tuple>
 
@@ -135,7 +136,8 @@ namespace jsonifier {
 			std::is_same_v<unwrap_t<value_type_01>, unwrap_t<value_type_02>> )&&std::is_pointer_v<unwrap_t<value_type_01>>;
 
 		template<typename value_type>
-		concept bool_t = std::is_same_v<unwrap_t<value_type>, bool>;
+		concept bool_t = std::is_same_v<unwrap_t<value_type>, bool> || std::same_as<unwrap_t<value_type>, std::vector<bool>::reference> ||
+			std::same_as<unwrap_t<value_type>, std::vector<bool>::const_reference>;
 
 		template<typename value_type>
 		concept always_null_t =

@@ -111,11 +111,11 @@ namespace jsonifier_internal {
 			c[0] = uint8_t(codePoint);
 			return 1;
 		}
-		int32_t leadingZeros  = static_cast<int32_t>(simd_internal::lzcnt(codePoint));
-		uint32_t numBytes	  = static_cast<uint32_t>(31 - leadingZeros) / 5ul + 1ul;
-		uint32_t highBitsMask = static_cast<uint32_t>(1 << (6 * numBytes)) - 1ul;
+		uint32_t leadingZeros = simd_internal::lzcnt(codePoint);
+		uint32_t numBytes	  = (31ul - leadingZeros) / 5ul + 1ul;
+		uint32_t highBitsMask = (1ul << (6ul * numBytes)) - 1ul;
 		uint32_t utf8HighBits = simd_internal::pdep(codePoint, highBitsMask);
-		memcpy(c, utf8Table[numBytes - 1], numBytes);
+		std::memcpy(c, utf8Table[numBytes - 1], numBytes);
 		for (uint32_t i = 0; i < numBytes; ++i) {
 			c[i] |= uint8_t(utf8HighBits & 0xFF);
 			utf8HighBits >>= 8;
@@ -723,7 +723,7 @@ namespace jsonifier_internal {
 		return serializeShortStringImpl(string1, string2, lengthNew);
 	}
 
-	template<typename char_type> JSONIFIER_INLINE bool parseBool(bool& value, char_type* json) {
+	template<jsonifier::concepts::bool_t bool_type, typename char_type> JSONIFIER_INLINE bool parseBool(bool_type&& value, char_type* json) {
 		static constexpr uint8_t valueNew00[5]{ "true" };
 		static constexpr uint8_t valueNew01[6]{ "false" };
 		if (compare<4>(valueNew00, json)) {

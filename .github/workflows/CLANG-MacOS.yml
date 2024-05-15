@@ -6,6 +6,7 @@ on:
     branches:
     - main
     - dev
+    - assembly
 
 jobs:
   Build:
@@ -14,17 +15,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [15]
+        clang: [17]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install the latest clang compiler.
+      run: |
+            brew install llvm
+
+    - name: Install Nasm.
+      run: |
+            brew install nasm
+
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build

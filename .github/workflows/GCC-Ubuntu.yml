@@ -1,4 +1,4 @@
-name: Build-and-Test-CLANG-MacOS
+name: Build-and-Test-GCC-Ubuntu
 
 on:
   workflow_dispatch:
@@ -9,27 +9,28 @@ on:
 
 jobs:
   Build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     
     strategy:
       fail-fast: false
       matrix:
-        clang: [17]
+        gcc: [12]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install the latest clang compiler.
-      run: |
-            brew install llvm
-            ls /opt/homebrew/opt/llvm/bin
+  
+    - name: Install the latest gcc compiler.
+      working-directory: Tests
+      run:  |
+            sudo apt-get install build-essential
+            sudo apt-get install g++-12
 
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DDEV="TRUE" -DJSONIFIER_TEST=true
 
     - name: Build the Test
       working-directory: ./Build
@@ -46,4 +47,3 @@ jobs:
       run: |
            ./Json-Performance
       continue-on-error: true
-      

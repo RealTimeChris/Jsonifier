@@ -125,7 +125,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE auto begin() {
-			if (structuralIndices.size() > 0) {
+			if (structuralIndices.size() > tapeIndex) {
 				structuralIndices[tapeIndex]					= nullptr;
 				structuralIndices[structuralIndices.size() - 1] = nullptr;
 			}

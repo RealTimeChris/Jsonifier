@@ -71,6 +71,7 @@ target_include_directories(
 target_compile_options (
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"${AVX_FLAG}"
 )
 
 target_compile_definitions(
@@ -78,11 +79,6 @@ target_compile_definitions(
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
 	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
-)
-
-target_compile_options(
-	"${PROJECT_NAME}" INTERFACE 
-	"${AVX_FLAG}"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
