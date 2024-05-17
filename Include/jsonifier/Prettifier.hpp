@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
 			if (!iter) {
 				iter.template createError<error_classes::Prettifying>(prettify_errors::No_Input);
 				derivedRef.index = 0;
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
 			if (!iter) {
 				iter.template createError<error_classes::Prettifying>(prettify_errors::No_Input);
 				derivedRef.index = 0;

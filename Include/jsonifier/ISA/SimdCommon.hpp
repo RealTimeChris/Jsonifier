@@ -64,7 +64,7 @@ namespace simd_internal {
 		return prevInString;
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE static simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
+	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
 		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep];
 		store(value, values);
 		values[0] = prefixXor(values[0]) ^ prevInString;
@@ -90,7 +90,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(values);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE static simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
+	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
 		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + SixtyFourBitsPerStep);
@@ -118,7 +118,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
 	}
 
-	template<uint64_t amount, typename simd_int_t01> JSONIFIER_INLINE static simd_int_t opShl(simd_int_t01&& value) {
+	template<uint64_t amount, typename simd_int_t01> JSONIFIER_INLINE simd_int_t opShl(simd_int_t01&& value) {
 		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2];
 		store(value, values);
 		static constexpr uint64_t shiftAmount{ 64 - amount };
@@ -137,7 +137,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE static simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
+	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
 		return opSetLSB(opShl<1>(value), oldOverflow);

@@ -77,18 +77,6 @@ namespace jsonifier_internal {
 			return temp;
 		}
 
-		constexpr pointer getRootPtr() const {
-			return ptr;
-		}
-
-		constexpr pointer getEndPtr() const {
-			return ptr;
-		}
-
-		constexpr size_type getCurrentStringIndex() const {
-			return 0;
-		}
-
 		constexpr iterator& operator+=(const difference_type offset) noexcept {
 			ptr += offset;
 			return *this;
@@ -183,19 +171,7 @@ namespace jsonifier_internal {
 			const_iterator temp = *this;
 			--*this;
 			return temp;
-		}
-
-		constexpr pointer getRootPtr() const {
-			return ptr;
-		}
-
-		constexpr pointer getEndPtr() const {
-			return ptr;
-		}
-
-		constexpr size_type getCurrentStringIndex() const {
-			return 0;
-		}
+		} 
 
 		constexpr const_iterator& operator+=(const difference_type offset) noexcept {
 			ptr += offset;

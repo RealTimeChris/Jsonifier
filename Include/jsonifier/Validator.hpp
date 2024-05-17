@@ -61,7 +61,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
 			if (!iter) {
 				iter.template createError<error_classes::Prettifying>(validate_errors::No_Input);
 				return false;
