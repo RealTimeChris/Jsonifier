@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
 				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
 				return false;
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
 			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
 				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
 				return value_type{};
@@ -118,8 +118,7 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		template<typename value_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static void impl(value_type&& object, iterator_type&& iter) {
+		template<typename value_type, jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static void impl(value_type&& object, iterator_type&& iter) {
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(object), std::forward<iterator_type>(iter),
 					object.jsonifierExcludedKeys);

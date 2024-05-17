@@ -113,6 +113,14 @@ namespace jsonifier {
 		concept is_fwd_iterator = std::forward_iterator<unwrap_t<value_type>>;
 
 		template<typename value_type>
+		concept has_reserve = requires(unwrap_t<value_type> value) { value.reserve(std::declval<typename unwrap_t<value_type>::size_type>()); };
+
+		template<typename value_type>
+		concept has_capacity = requires(unwrap_t<value_type> value) {
+			{ value.capacity() };
+		};
+
+		template<typename value_type>
 		concept has_resize = requires(unwrap_t<value_type> value) { value.resize(std::declval<typename unwrap_t<value_type>::size_type>()); };
 
 		template<typename value_type>
@@ -214,7 +222,9 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_emplace_back = requires(unwrap_t<value_type> value) {
-			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::value_type&>;
+			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::reference>;
+		} || requires(unwrap_t<value_type> value) {
+			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::const_reference>;
 		};
 
 		template<typename value_type>

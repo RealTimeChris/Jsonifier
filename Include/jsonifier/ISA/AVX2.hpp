@@ -29,23 +29,23 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm256_andnot_si256(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm256_and_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm256_xor_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE static simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
+	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm256_or_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
 	#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
 		static constexpr simd_int_t mask{ 0x01u, 0x00u, 0x00u, 0x00u };
 	#else
@@ -54,20 +54,20 @@ namespace simd_internal {
 		return valueNew ? _mm256_or_si256(value, mask) : _mm256_andnot_si256(mask, value);
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static simd_int_t opNot(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t opNot(simd_int_t01&& value) {
 		return _mm256_xor_si256(std::forward<simd_int_t01>(value), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
-		simd_int_t result = _mm256_and_si256(std::forward<simd_int_t01>(value), _mm256_set_epi64x(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll));
-		return !_mm256_testz_si256(result, result);
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
+		uint8_t newValue{ static_cast<uint8_t>(_mm256_extract_epi8(value, 31)) };
+		return (newValue & 0b10000000) != 0;
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opBool(simd_int_t01&& value) {
 		return !_mm256_testz_si256(value, value);
 	}
 
-	JSONIFIER_INLINE static simd_int_t reset() {
+	JSONIFIER_INLINE simd_int_t reset() {
 		return _mm256_setzero_si256();
 	}
 

@@ -100,7 +100,7 @@ namespace simd_internal {
 	template<typename simd_type> constexpr simd_type quotes{ simdFromValue<simd_type>(0x22u) };
 	template<typename simd_type> constexpr simd_type chars{ simdFromValue<simd_type>(0x20u) };
 
-	JSONIFIER_INLINE static simd_int_t collectStructuralsAsSimdBase(const simd_int_t* values) {
+	JSONIFIER_INLINE simd_int_t collectStructuralsAsSimdBase(const simd_int_t* values) {
 		JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep];
 		valuesNew[0] = opCmpEq(opShuffle(opTable<simd_int_t>, values[0]), opOr(chars<simd_int_t>, values[0]));
 		valuesNew[1] = opCmpEq(opShuffle(opTable<simd_int_t>, values[1]), opOr(chars<simd_int_t>, values[1]));
@@ -113,7 +113,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE static simd_int_t collectWhitespaceAsSimdBase(const simd_int_t* values) {
+	JSONIFIER_INLINE simd_int_t collectWhitespaceAsSimdBase(const simd_int_t* values) {
 		JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep];
 		valuesNew[0] = opCmpEq(opShuffle(whitespaceTable<simd_int_t>, values[0]), values[0]);
 		valuesNew[1] = opCmpEq(opShuffle(whitespaceTable<simd_int_t>, values[1]), values[1]);
@@ -126,7 +126,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE static simd_int_t collectBackslashesAsSimdBase(const simd_int_t* values) {
+	JSONIFIER_INLINE simd_int_t collectBackslashesAsSimdBase(const simd_int_t* values) {
 		JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep];
 		valuesNew[0] = opCmpEq(backslashes<simd_int_t>, values[0]);
 		valuesNew[1] = opCmpEq(backslashes<simd_int_t>, values[1]);
@@ -139,7 +139,7 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE static simd_int_t collectQuotesAsSimdBase(const simd_int_t* values) {
+	JSONIFIER_INLINE simd_int_t collectQuotesAsSimdBase(const simd_int_t* values) {
 		JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep];
 		valuesNew[0] = opCmpEq(quotes<simd_int_t>, values[0]);
 		valuesNew[1] = opCmpEq(quotes<simd_int_t>, values[1]);

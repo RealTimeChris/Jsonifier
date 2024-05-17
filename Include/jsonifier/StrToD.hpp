@@ -344,23 +344,29 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::float_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& val, const char_type* cur) noexcept {
-		static constexpr auto isVolatile		 = std::is_volatile_v<std::remove_reference_t<decltype(val)>>;
-		const char_type* sigCut					 = nullptr;
-		[[maybe_unused]] const char_type* sigEnd = nullptr;
-		const char_type* dotPos					 = nullptr;
-		uint32_t fracZeros						 = 0;
-		uint64_t sig							 = 0;
-		int32_t exp								 = 0;
-		bool expSign;
-		int32_t expSig = 0;
-		int32_t expLit = 0;
-		uint64_t numTmp;
-		const char_type* tmp;
-		const char_type* hdr = cur;
-		bool sign			 = (*hdr == '-');
-		cur += sign;
+	#define repeat_in_1_18(x) \
+	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
+	template<jsonifier::concepts::float_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& val, const char_type* cur) noexcept {
+		constexpr auto is_volatile				= std::is_volatile_v<std::remove_reference_t<decltype(val)>>;
+		const char_type* sig_cut					= nullptr; /* significant part cutting position for long number */
+		[[maybe_unused]] const char_type* sig_end = nullptr; /* significant part ending position */
+		const char_type* dot_pos					= nullptr; /* decimal point position */
+		uint32_t frac_zeros						= 0;
+		uint64_t sig							= 0; /* significant part of the number */
+		int32_t exp								= 0; /* exponent part of the number */
+		bool exp_sign; /* temporary exponent sign from literal part */
+		int32_t exp_sig = 0; /* temporary exponent number from significant part */
+		int32_t exp_lit = 0; /* temporary exponent number from exponent literal part */
+		uint64_t num_tmp; /* temporary number for reading */
+		const char_type* tmp; /* temporary cursor for reading */
+		const char_type* hdr = cur;
+		bool sign		   = (*hdr == '-');
+		cur += sign;
+		auto apply_sign = [&](auto&& val) -> value_type {
+			return sign ? -static_cast<value_type>(val) : static_cast<value_type>(val);
+		};
+		/* begin with non-zero digit */
 		sig = uint64_t(*cur - '0');
 		if (sig > 9) {
 			if constexpr (std::integral<value_type>) {
@@ -377,107 +383,179 @@ namespace jsonifier_internal {
 				return false;
 			}
 		}
-
+		constexpr auto zero = static_cast<uint8_t>('0');
 		{
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[1])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[1] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (1 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_1;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[2])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[2] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (2 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_2;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[3])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[3] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (3 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_3;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[4])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[4] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (4 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_4;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[5])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[5] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (5 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_5;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[6])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[6] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (6 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_6;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[7])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[7] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (7 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_7;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[8])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[8] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (8 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_8;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[9])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[9] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (9 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_9;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[10])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[10] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (10 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_10;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[11])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[11] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (11 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_11;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[12])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[12] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (12 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_12;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[13])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[13] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (13 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_13;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[14])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[14] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (14 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_14;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[15])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[15] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (15 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_15;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[16])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[16] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (16 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_16;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[17])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[17] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (17 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_17;
 			}
-			if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[18])])) <= 9) [[likely]]
-				sig = numTmp + sig * 10;
+			if ((num_tmp = cur[18] - zero) <= 9) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
+				if constexpr (18 > 1) {
+					if (*cur == zero)
+						return false;
+				}
 				goto digi_sepr_18;
 			}
 		};
 		if (*cur == zero) [[unlikely]] {
 			return false;
 		}
-		cur += 19;
+		cur += 19; /* skip continuous 19 digits */
 		if (!digiIsDigitOrFp(*cur)) {
 			val = static_cast<value_type>(sig);
 			if constexpr (!std::is_unsigned_v<value_type>) {
-				if constexpr (isVolatile) {
+				if constexpr (is_volatile) {
 					val = val * (sign ? -1 : 1);
 				} else {
 					val *= sign ? -1 : 1;
@@ -485,477 +563,479 @@ namespace jsonifier_internal {
 			}
 			return true;
 		}
-		goto digi_intg_more;
+		goto digi_intg_more; /* read more digits in integral part */
+		/* process first non-digit character */
 		{
 		digi_sepr_1:
 			if ((!digiIsFp(cur[1]))) [[likely]] {
 				cur += 1;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 1;
+			dot_pos = cur + 1;
 			if ((cur[1] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 1 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 1 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_1;
 			}
 			cur += 1;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_2:
 			if ((!digiIsFp(cur[2]))) [[likely]] {
 				cur += 2;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 2;
+			dot_pos = cur + 2;
 			if ((cur[2] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 2 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 2 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_2;
 			}
 			cur += 2;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_3:
 			if ((!digiIsFp(cur[3]))) [[likely]] {
 				cur += 3;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 3;
+			dot_pos = cur + 3;
 			if ((cur[3] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 3 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 3 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_3;
 			}
 			cur += 3;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_4:
 			if ((!digiIsFp(cur[4]))) [[likely]] {
 				cur += 4;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 4;
+			dot_pos = cur + 4;
 			if ((cur[4] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 4 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 4 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_4;
 			}
 			cur += 4;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_5:
 			if ((!digiIsFp(cur[5]))) [[likely]] {
 				cur += 5;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 5;
+			dot_pos = cur + 5;
 			if ((cur[5] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 5 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 5 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_5;
 			}
 			cur += 5;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_6:
 			if ((!digiIsFp(cur[6]))) [[likely]] {
 				cur += 6;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 6;
+			dot_pos = cur + 6;
 			if ((cur[6] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 6 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 6 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_6;
 			}
 			cur += 6;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_7:
 			if ((!digiIsFp(cur[7]))) [[likely]] {
 				cur += 7;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 7;
+			dot_pos = cur + 7;
 			if ((cur[7] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 7 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 7 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_7;
 			}
 			cur += 7;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_8:
 			if ((!digiIsFp(cur[8]))) [[likely]] {
 				cur += 8;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 8;
+			dot_pos = cur + 8;
 			if ((cur[8] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 8 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 8 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_8;
 			}
 			cur += 8;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_9:
 			if ((!digiIsFp(cur[9]))) [[likely]] {
 				cur += 9;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 9;
+			dot_pos = cur + 9;
 			if ((cur[9] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 9 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 9 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_9;
 			}
 			cur += 9;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_10:
 			if ((!digiIsFp(cur[10]))) [[likely]] {
 				cur += 10;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 10;
+			dot_pos = cur + 10;
 			if ((cur[10] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 10 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 10 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_10;
 			}
 			cur += 10;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_11:
 			if ((!digiIsFp(cur[11]))) [[likely]] {
 				cur += 11;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 11;
+			dot_pos = cur + 11;
 			if ((cur[11] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 11 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 11 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_11;
 			}
 			cur += 11;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_12:
 			if ((!digiIsFp(cur[12]))) [[likely]] {
 				cur += 12;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 12;
+			dot_pos = cur + 12;
 			if ((cur[12] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 12 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 12 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_12;
 			}
 			cur += 12;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_13:
 			if ((!digiIsFp(cur[13]))) [[likely]] {
 				cur += 13;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 13;
+			dot_pos = cur + 13;
 			if ((cur[13] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 13 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 13 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_13;
 			}
 			cur += 13;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_14:
 			if ((!digiIsFp(cur[14]))) [[likely]] {
 				cur += 14;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 14;
+			dot_pos = cur + 14;
 			if ((cur[14] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 14 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 14 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_14;
 			}
 			cur += 14;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_15:
 			if ((!digiIsFp(cur[15]))) [[likely]] {
 				cur += 15;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 15;
+			dot_pos = cur + 15;
 			if ((cur[15] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 15 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 15 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_15;
 			}
 			cur += 15;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_16:
 			if ((!digiIsFp(cur[16]))) [[likely]] {
 				cur += 16;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 16;
+			dot_pos = cur + 16;
 			if ((cur[16] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 16 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 16 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_16;
 			}
 			cur += 16;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_17:
 			if ((!digiIsFp(cur[17]))) [[likely]] {
 				cur += 17;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 17;
+			dot_pos = cur + 17;
 			if ((cur[17] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 17 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 17 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_17;
 			}
 			cur += 17;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		digi_sepr_18:
 			if ((!digiIsFp(cur[18]))) [[likely]] {
 				cur += 18;
-				val = sign ? -static_cast<value_type>(sig) : static_cast<value_type>(sig);
+				val = apply_sign(sig);
 				return true;
 			}
-			dotPos = cur + 18;
+			dot_pos = cur + 18;
 			if ((cur[18] == '.')) [[likely]] {
 				if (sig == 0)
-					while (cur[fracZeros + 18 + 1] == zero)
-						++fracZeros;
+					while (cur[frac_zeros + 18 + 1] == zero)
+						++frac_zeros;
 				goto digi_frac_18;
 			}
 			cur += 18;
-			sigEnd = cur;
+			sig_end = cur;
 			goto digi_exp_more;
 		}
 		{
 		digi_frac_1:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[1 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[1 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_1;
 			}
 		digi_frac_2:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[2 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[2 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_2;
 			}
 		digi_frac_3:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[3 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[3 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_3;
 			}
 		digi_frac_4:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[4 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[4 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_4;
 			}
 		digi_frac_5:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[5 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[5 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_5;
 			}
 		digi_frac_6:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[6 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[6 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_6;
 			}
 		digi_frac_7:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[7 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[7 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_7;
 			}
 		digi_frac_8:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[8 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[8 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_8;
 			}
 		digi_frac_9:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[9 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[9 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_9;
 			}
 		digi_frac_10:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[10 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[10 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_10;
 			}
 		digi_frac_11:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[11 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[11 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_11;
 			}
 		digi_frac_12:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[12 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[12 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_12;
 			}
 		digi_frac_13:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[13 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[13 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_13;
 			}
 		digi_frac_14:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[14 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[14 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_14;
 			}
 		digi_frac_15:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[15 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[15 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_15;
 			}
 		digi_frac_16:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[16 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[16 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_16;
 			}
 		digi_frac_17:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[17 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[17 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_17;
 			}
 		digi_frac_18:
-			if (((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(cur[18 + 1 + fracZeros])])) <= 9)) [[likely]]
-				sig = numTmp + sig * 10;
+			if (((num_tmp = static_cast<uint64_t>(cur[18 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_18;
 			}
 		}
-		cur += 20 + fracZeros;
-		if (uint8_t(numberSubTable[static_cast<uint64_t>(*cur)]) > 9)
-			goto digi_frac_end;
-		goto digi_frac_more;
+				cur += 20 + frac_zeros; /* skip 19 digits and 1 decimal point */
+		if (uint8_t(static_cast<uint8_t>(numberSubTable[static_cast<uint64_t>(*cur)])) > 9)
+			goto digi_frac_end; /* fraction part end */
+		goto digi_frac_more; /* read more digits in fraction part */
 		{
 		digi_stop_1:
-			cur += 1 + 1 + fracZeros;
+			cur += 1 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_2:
-			cur += 2 + 1 + fracZeros;
+			cur += 2 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_3:
-			cur += 3 + 1 + fracZeros;
+			cur += 3 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_4:
-			cur += 4 + 1 + fracZeros;
+			cur += 4 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_5:
-			cur += 5 + 1 + fracZeros;
+			cur += 5 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_6:
-			cur += 6 + 1 + fracZeros;
+			cur += 6 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_7:
-			cur += 7 + 1 + fracZeros;
+			cur += 7 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_8:
-			cur += 8 + 1 + fracZeros;
+			cur += 8 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_9:
-			cur += 9 + 1 + fracZeros;
+			cur += 9 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_10:
-			cur += 10 + 1 + fracZeros;
+			cur += 10 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_11:
-			cur += 11 + 1 + fracZeros;
+			cur += 11 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_12:
-			cur += 12 + 1 + fracZeros;
+			cur += 12 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_13:
-			cur += 13 + 1 + fracZeros;
+			cur += 13 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_14:
-			cur += 14 + 1 + fracZeros;
+			cur += 14 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_15:
-			cur += 15 + 1 + fracZeros;
+			cur += 15 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_16:
-			cur += 16 + 1 + fracZeros;
+			cur += 16 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_17:
-			cur += 17 + 1 + fracZeros;
+			cur += 17 + 1 + frac_zeros;
 			goto digi_frac_end;
 		digi_stop_18:
-			cur += 18 + 1 + fracZeros;
+			cur += 18 + 1 + frac_zeros;
 			goto digi_frac_end;
 		}
-	digi_intg_more:
-		static constexpr uint64_t U64_MAX = (std::numeric_limits<uint64_t>::max)();
-		if ((numTmp = static_cast<uint64_t>(numberSubTable[static_cast<uint64_t>(*cur)])) < 10) {
+			/* read more digits in integral part */
+			digi_intg_more : static constexpr uint64_t U64_MAX = (std::numeric_limits<uint64_t>::max)();// todo
+		if ((num_tmp = static_cast<uint8_t>(numberSubTable[static_cast<uint64_t>(*cur)])) < 10) {
 			if (!digiIsDigitOrFp(cur[1])) {
-				if ((sig < (U64_MAX / 10)) || (sig == (U64_MAX / 10) && numTmp <= (U64_MAX % 10))) {
-					sig = numTmp + sig * 10;
-					cur++;
+				/* this number is an integer consisting of 20 digits */
+				if ((sig < (U64_MAX / 10)) || (sig == (U64_MAX / 10) && num_tmp <= (U64_MAX % 10))) {
+					sig = num_tmp + sig * 10;
+					++cur;
 					val = static_cast<value_type>(sig);
 					if constexpr (!std::is_unsigned_v<value_type>) {
-						if constexpr (isVolatile) {
+						if constexpr (is_volatile) {
 							val = val * (sign ? -1 : 1);
 						} else {
 							val *= sign ? -1 : 1;
@@ -966,121 +1046,129 @@ namespace jsonifier_internal {
 			}
 		}
 		if ((eBit | *cur) == 'e') {
-			dotPos = cur;
+			dot_pos = cur;
 			goto digi_exp_more;
 		}
 		if (*cur == '.') {
-			dotPos = cur++;
-			if (uint8_t(numberSubTable[static_cast<uint64_t>(*cur)]) > 9) {
+			dot_pos = cur++;
+			if (uint8_t(static_cast<uint8_t>(numberSubTable[static_cast<uint64_t>(*cur)])) > 9) {
 				return false;
 			}
 		}
+		/* read more digits in fraction part */
 	digi_frac_more:
-		sigCut = cur;
-		sig += (*cur >= '5');
-		while (uint8_t(numberSubTable[static_cast<uint64_t>(*++cur)]) < 10) {
+		sig_cut = cur; /* too large to fit in u64, excess digits need to be cut */
+		sig += (*cur >= '5'); /* round */
+		while (uint8_t(*++cur - zero) < 10) {
 		}
-		if (!dotPos) {
-			dotPos = cur;
+		if (!dot_pos) {
+			dot_pos = cur;
 			if (*cur == '.') {
-				if (uint8_t(numberSubTable[static_cast<uint64_t>(*++cur)]) > 9) {
+				if (uint8_t(*++cur - zero) > 9) {
 					return false;
 				}
-				while (uint8_t(numberSubTable[static_cast<uint64_t>(*++cur)]) < 10) {
+				while (uint8_t(*++cur - zero) < 10) {
 				}
 			}
 		}
-		expSig = static_cast<int32_t>(dotPos - sigCut);
-		expSig += (dotPos < sigCut);
+		exp_sig = static_cast<int32_t>(dot_pos - sig_cut);
+		exp_sig += (dot_pos < sig_cut);
+		// ignore trailing zeros
 		tmp = cur - 1;
 		while (*tmp == '0' || *tmp == '.') {
 			--tmp;
 		}
-		if (tmp < sigCut) {
-			sigCut = nullptr;
+		if (tmp < sig_cut) {
+			sig_cut = nullptr;
 		} else {
-			sigEnd = cur;
+			sig_end = cur;
 		}
 		if ((eBit | *cur) == 'e')
 			goto digi_exp_more;
 		goto digi_exp_finish;
+		// fraction part end
 	digi_frac_end:
-		sigEnd = cur;
-		expSig = -int32_t((cur - dotPos) - 1);
-		if (expSig == 0)
+		sig_end = cur;
+		exp_sig = -int32_t((cur - dot_pos) - 1);
+		if (exp_sig == 0)
 			return false;
 		if ((eBit | *cur) != 'e') [[likely]] {
-			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
-				val = sign ? -static_cast<value_type>(0) : static_cast<value_type>(0);
+			if ((exp_sig < f64MinDecExp - 19)) [[unlikely]] {
+				val = apply_sign(0);
 				return true;
 			}
-			exp = expSig;
+			exp = exp_sig;
 			goto digi_finish;
 		} else {
 			goto digi_exp_more;
 		}
+		// read exponent part
 	digi_exp_more:
-		expSign = (*++cur == '-');
+		exp_sign = (*++cur == '-');
 		cur += (*cur == '+' || *cur == '-');
-		if (uint8_t(numberSubTable[static_cast<uint64_t>(*cur)]) > 9) [[unlikely]] {
+		if (uint8_t(static_cast<uint8_t>(numberSubTable[static_cast<uint64_t>(*cur)])) > 9) [[unlikely]] {
 			return false;
 		}
 		while (*cur == '0') {
 			++cur;
 		}
+		// read exponent literal
 		tmp = cur;
 		uint8_t c;
 		while (uint8_t(c = static_cast<uint8_t>(numberSubTable[static_cast<uint64_t>(*cur)])) < 10) {
 			++cur;
-			expLit = static_cast<int32_t>(c + uint32_t(expLit) * 10);
+			exp_lit = c + uint32_t(exp_lit) * 10;
 		}
+		// large exponent case
 		if ((cur - tmp >= 6)) [[unlikely]] {
-			if (sig == 0 || expSign) {
-				val = sign ? -static_cast<value_type>(0) : static_cast<value_type>(0);
+			if (sig == 0 || exp_sign) {
+				val = apply_sign(0);
 				val = static_cast<value_type>(sig);
 				return true;
 			} else {
-				val = sign ? -static_cast<value_type>(std::numeric_limits<value_type>::infinity()) : static_cast<value_type>(std::numeric_limits<value_type>::infinity());
+				val = apply_sign(std::numeric_limits<value_type>::infinity());
 				return true;
 			}
 		}
-		expSig += expSign ? -expLit : expLit;
+		exp_sig += exp_sign ? -exp_lit : exp_lit;
+		// validate exponent value
 	digi_exp_finish:
-
-
 		if (sig == 0) {
 			val = (sign ? -value_type{ 0 } : value_type{ 0 });
 			return true;
 		}
-		if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
+		if ((exp_sig < f64MinDecExp - 19)) [[unlikely]] {
 			val = (sign ? -value_type{ 0 } : value_type{ 0 });
 			return true;
-		} else if ((expSig > f64MaxDecExp)) [[unlikely]] {
+		} else if ((exp_sig > f64MaxDecExp)) [[unlikely]] {
 			val = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
 			return true;
 		}
-		exp = expSig;
+		exp = exp_sig;
+		// all digit read finished
 	digi_finish:
+
 		if constexpr (std::is_same_v<double, value_type>) {
+			// numbers must be exactly representable in this fast path
 			if (sig < (uint64_t(1) << 53) && std::abs(exp) <= 22) {
 				val = static_cast<value_type>(sig);
-				if constexpr (isVolatile) {
+				if constexpr (is_volatile) {
 					if constexpr (!std::is_unsigned_v<value_type>) {
 						val = val * (sign ? -1 : 1);
 					}
 					if (exp >= 0) {
-						val = val * static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(exp)]);
+						val = val * powersOfTenFloat[exp];
 					} else {
-						val = val / static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(-exp)]);
+						val = val / powersOfTenFloat[-exp];
 					}
 				} else {
 					if constexpr (!std::is_unsigned_v<value_type>) {
 						val *= sign ? -1 : 1;
 					}
 					if (exp >= 0) {
-						val *= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(exp)]);
+						val *= powersOfTenFloat[exp];
 					} else {
-						val /= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(-exp)]);
+						val /= powersOfTenFloat[-exp];
 					}
 				}
 
@@ -1090,40 +1178,42 @@ namespace jsonifier_internal {
 			if (sig < (uint64_t(1) << 24) && std::abs(exp) <= 8) {
 				val = static_cast<value_type>(sig);
 				if constexpr (!std::is_unsigned_v<value_type>) {
-					val *= static_cast<value_type>(sign ? -1 : 1);
+					val *= sign ? -1 : 1;
 				}
 				if (exp >= 0) {
-					val *= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(exp)]);
+					val *= static_cast<value_type>(powersOfTenFloat[exp]);
 				} else {
-					val /= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(-exp)]);
+					val /= static_cast<value_type>(powersOfTenFloat[-exp]);
 				}
 				return true;
 			}
 		}
 
-		if (sig == 0) [[unlikely]] {
+		if (sig == 0) [[unlikely]]// fast path is more likely for zeros (0.00000000000000000000000 is uncommon)
+		{
 			val = value_type(0);
 			return true;
 		}
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>> || std::is_same_v<double, jsonifier::concepts::unwrap_t<value_type>>);
+		static_assert(std::is_same_v<float, std::decay_t<value_type>> || std::is_same_v<double, std::decay_t<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-		using raw_t						 = std::conditional_t<std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>>, uint32_t, uint64_t>;
-		const auto sigLeadingZeros		 = simd_internal::lzcnt(sig);
-		const auto sigNorm				 = sig << sigLeadingZeros;
-		const auto sig2Norm				 = sig2FromExp10(exp);
-		const auto sigProduct			 = mulhi64(sigNorm, sig2Norm) + 1;
-		const auto sigProductStartsWith1 = sigProduct >> 63;
-		auto mantisa					 = sigProduct << (2 - sigProductStartsWith1);
-		constexpr uint64_t roundMask	 = uint64_t(1) << 63 >> (std::numeric_limits<value_type>::digits - 1);
-		constexpr uint32_t exponentBits	 = ceillog2(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		constexpr uint32_t mantisaShift	 = exponentBits + 1 + 64 - 8 * sizeof(raw_t);
-		int32_t exp2					 = static_cast<int32_t>(exp2FromExp10(exp)) + -static_cast<int32_t>(sigLeadingZeros) + static_cast<int32_t>(sigProductStartsWith1);
+		using raw_t							 = std::conditional_t<std::is_same_v<float, std::decay_t<value_type>>, uint32_t, uint64_t>;
+		const auto sig_leading_zeros		 = simd_internal::lzcnt(sig);
+		const auto sig_norm					 = sig << sig_leading_zeros;
+		const auto sig2_norm				 = sig2FromExp10(exp);
+		const auto sig_product				 = mulhi64(sig_norm, sig2_norm) + 1;
+		const auto sig_product_starts_with_1 = sig_product >> 63;
+		auto mantisa						 = sig_product << (2 - sig_product_starts_with_1);
+		constexpr uint64_t round_mask		 = uint64_t(1) << 63 >> (std::numeric_limits<value_type>::digits - 1);
+		constexpr uint32_t exponent_bits	 = ceillog2(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		constexpr uint32_t mantisa_shift	 = exponent_bits + 1 + 64 - 8 * sizeof(raw_t);
+		int32_t exp2						 = exp2FromExp10(exp) + static_cast<uint32_t>(-sig_leading_zeros + sig_product_starts_with_1);
 
 		if (exp2 < std::numeric_limits<value_type>::min_exponent - 1) [[unlikely]] {
+			// TODO handle subnormal numbers
 			val = sign ? -value_type(0) : value_type(0);
 			return true;
 		} else if (exp2 > std::numeric_limits<value_type>::max_exponent - 1) [[unlikely]] {
@@ -1132,39 +1222,48 @@ namespace jsonifier_internal {
 		}
 
 		uint64_t round = 0;
-		if (roundMask & mantisa) {
+		if (round_mask & mantisa) {
 			if (mantisa << (std::numeric_limits<value_type>::digits) == 0) {
-				auto sigUpper	  = (mantisa >> (mantisaShift - 1)) | (uint64_t(1) << 63 >> (mantisaShift - 2)) | 1;
-				int32_t exp2Upper = exp2 - std::numeric_limits<value_type>::digits;
+				// We added one to the product so this is the case were the trailing bits were 1.
+				// This is a problem since the product could underestimate by a bit and uness there is a zero bit to fall
+				// into we cant be sure if we need to round or not
+				auto sig_upper	   = (mantisa >> (mantisa_shift - 1)) | (uint64_t(1) << 63 >> (mantisa_shift - 2)) | 1;
+				int32_t exp2_upper = exp2 - std::numeric_limits<value_type>::digits;
 
-				big_int_t bigComp{ sigUpper };
-				big_int_t bigFull{ sig };
+				big_int_t big_comp{ sig_upper };
+				big_int_t big_full{ sig };// Not dealing will ulp from sig_cut since we only care about roundtriping
+					// machine doubles and only a human would use so many sigfigs
 				if (exp >= 0) {
-					bigFull.mulPow10(static_cast<uint32_t>(exp));
+					big_full.mulPow10(exp);
 				} else {
-					bigComp.mulPow10(static_cast<uint32_t>(-exp));
+					big_comp.mulPow10(-exp);
 				}
-				if (exp2Upper >= 0) {
-					bigComp.mulPow2(static_cast<uint32_t>(exp2Upper));
+				if (exp2_upper >= 0) {
+					big_comp.mulPow2(exp2_upper);
 				} else {
-					bigFull.mulPow2(static_cast<uint32_t>(-exp2Upper));
+					big_full.mulPow2(-exp2_upper);
 				}
-				auto cmp = bigFull <=> bigComp;
+				auto cmp = big_full <=> big_comp;
 				if (cmp != 0) [[likely]] {
+					// round down or round up
 					round = (cmp > 0);
 				} else {
-					round = (mantisa & (roundMask << 1)) != 0;
+					// falls midway, round to even
+					round = (mantisa & (round_mask << 1)) != 0;
 				}
-			} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (roundMask << 1)) ||
-				(static_cast<size_t>(simd_internal::tzcnt(sigNorm) + simd_internal::tzcnt(sig2Norm)) <
-					128 - std::numeric_limits<value_type>::digits - (2 - sigProductStartsWith1))) {
+			} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact)// If there are ones after 64 bits in sig2 then there will be
+				// ones after the rounding bit in the product
+				|| (mantisa & (round_mask << 1))// Odd nums need to round up regardless of if the rest is nonzero or not
+				|| (static_cast<size_t>(simd_internal::tzcnt(sig_norm) + simd_internal::tzcnt(sig2_norm)) <
+					   128 - std::numeric_limits<value_type>::digits - (2 - sig_product_starts_with_1))// Check where the least significant one is
+			) {
 				round = 1;
 			}
 		}
 
-		auto num = raw_t(sign) << (sizeof(raw_t) * 8 - 1) | raw_t(mantisa >> mantisaShift) |
+		auto num = raw_t(sign) << (sizeof(raw_t) * 8 - 1) | raw_t(mantisa >> mantisa_shift) |
 			(raw_t(exp2 + std::numeric_limits<value_type>::max_exponent - 1) << (std::numeric_limits<value_type>::digits - 1));
-		if constexpr (isVolatile) {
+		if constexpr (is_volatile) {
 			num = num + raw_t(round);
 			val = std::bit_cast<value_type>(num);
 		} else {

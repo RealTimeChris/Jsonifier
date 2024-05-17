@@ -242,12 +242,14 @@ namespace jsonifier_internal {
 			}
 
 			const auto n = value.size();
-			auto iterNew = value.begin();
+
+			auto value_it = value.begin();
+
 			for (size_t i = 0; i < n; ++i) {
-				parser<derived_type>::impl(*(iterNew++), iter);
-				if (*iter == 0x2Cu) [[likely]] {
+				parser<derived_type>::impl(*(value_it++), iter);
+				if (*iter == ',') [[likely]] {
 					++iter;
-				} else if (*iter == 0x5Du) {
+				} else if (*iter == ']') {
 					++iter;
 					return;
 				} else [[unlikely]] {
@@ -256,24 +258,91 @@ namespace jsonifier_internal {
 					return;
 				}
 			}
-			intermediateVector.clear();
-			uint64_t currentCount{ n };
-			while (iter) {
-				++currentCount;
-				parser<derived_type>::impl(intermediateVector.emplace_back(), iter);
-				if (*iter == 0x2Cu) [[likely]] {
-					++iter;
-				} else if (*iter == 0x5Du) {
-					if (value.size() != currentCount) {
-						value.resize(currentCount);
-						std::copy(intermediateVector.begin(), intermediateVector.end(), value.begin());
+
+			if constexpr (jsonifier::concepts::has_emplace_back<value_type_new>) {
+				if constexpr (jsonifier::concepts::has_reserve<value_type_new> && jsonifier::concepts::has_capacity<value_type_new> &&
+					requires { requires(sizeof(typename value_type_new::value_type) > 4096); }) {
+					if (value.capacity() == 0) {
+						value.reserve(1);
 					}
-					++iter;
-					return;
-				} else [[unlikely]] {
-					iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
-					skipToEndOfValue(iter);
-					return;
+					const auto capacity = value.capacity();
+					for (size_t i = value.size(); i < capacity; ++i) {
+						parser<derived_type>::impl(value.emplace_back(), iter);
+						if (*iter == ',') [[likely]] {
+							++iter;
+						} else if (*iter == ']') {
+							++iter;
+							return;
+						} else [[unlikely]] {
+							iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
+							skipToEndOfValue(iter);
+							return;
+						}
+					}
+
+					using value_type = typename value_type_new::value_type;
+
+					std::vector<std::vector<value_type>> intermediate;
+					intermediate.reserve(48);
+					auto* active = &intermediate.emplace_back();
+					active->reserve(2);
+					while (iter) {
+						if (active->size() == active->capacity()) {
+							const auto former_capacity = active->capacity();
+							active					   = &intermediate.emplace_back();
+							active->reserve(2 * former_capacity);
+						}
+						parser<derived_type>::impl(active->emplace_back(), iter);
+						if (*iter == ',') [[likely]] {
+							++iter;
+						} else if (*iter == ']') {
+							++iter;
+							break;
+						} else [[unlikely]] {
+							iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
+							skipToEndOfValue(iter);
+							return;
+						}
+					}
+
+					const auto intermediate_size = intermediate.size();
+					size_t reserve_size			 = value.size();
+					for (size_t i = 0; i < intermediate_size; ++i) {
+						reserve_size += intermediate[i].size();
+					}
+
+					if constexpr (std::is_trivially_copyable_v<value_type> && !std::same_as<value_type_new, std::vector<bool>>) {
+						const auto original_size = value.size();
+						value.resize(reserve_size);
+						auto* dest = value.data() + original_size;
+						for (const auto& vector: intermediate) {
+							const auto vector_size = vector.size();
+							std::memcpy(dest, vector.data(), vector_size * sizeof(value_type));
+							dest += vector_size;
+						}
+					} else {
+						value.reserve(reserve_size);
+						for (const auto& vector: intermediate) {
+							const auto inter_end = vector.end();
+							for (auto inter = vector.begin(); inter < inter_end; ++inter) {
+								value.emplace_back(std::move(*inter));
+							}
+						}
+					}
+				} else {
+					while (iter) {
+						parser<derived_type>::impl(value.emplace_back(), iter);
+						if (*iter == ',') [[likely]] {
+							++iter;
+						} else if (*iter == ']') {
+							++iter;
+							return;
+						} else [[unlikely]] {
+							iter.template createError<error_classes::Parsing>(parse_errors::Missing_Comma_Or_Array_End);
+							skipToEndOfValue(iter);
+							return;
+						}
+					}
 				}
 			}
 		}
