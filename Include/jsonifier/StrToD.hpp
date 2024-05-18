@@ -367,7 +367,7 @@ namespace jsonifier_internal {
 			return sign ? -static_cast<value_type>(val) : static_cast<value_type>(val);
 		};
 		/* begin with non-zero digit */
-		sig = uint64_t(*cur - '0');
+		sig = numberSubTable[*cur];
 		if (sig > 9) {
 			if constexpr (std::integral<value_type>) {
 				return false;
@@ -385,7 +385,7 @@ namespace jsonifier_internal {
 		}
 		constexpr auto zero = static_cast<uint8_t>('0');
 		{
-			if ((num_tmp = cur[1] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[1]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (1 > 1) {
@@ -394,7 +394,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_1;
 			}
-			if ((num_tmp = cur[2] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[2]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (2 > 1) {
@@ -403,7 +403,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_2;
 			}
-			if ((num_tmp = cur[3] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[3]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (3 > 1) {
@@ -412,7 +412,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_3;
 			}
-			if ((num_tmp = cur[4] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[4]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (4 > 1) {
@@ -421,7 +421,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_4;
 			}
-			if ((num_tmp = cur[5] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[5]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (5 > 1) {
@@ -430,7 +430,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_5;
 			}
-			if ((num_tmp = cur[6] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[6]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (6 > 1) {
@@ -439,7 +439,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_6;
 			}
-			if ((num_tmp = cur[7] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[7]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (7 > 1) {
@@ -448,7 +448,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_7;
 			}
-			if ((num_tmp = cur[8] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[8]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (8 > 1) {
@@ -457,7 +457,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_8;
 			}
-			if ((num_tmp = cur[9] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[9]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (9 > 1) {
@@ -466,7 +466,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_9;
 			}
-			if ((num_tmp = cur[10] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[10]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (10 > 1) {
@@ -475,7 +475,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_10;
 			}
-			if ((num_tmp = cur[11] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[11]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (11 > 1) {
@@ -484,7 +484,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_11;
 			}
-			if ((num_tmp = cur[12] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[12]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (12 > 1) {
@@ -493,7 +493,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_12;
 			}
-			if ((num_tmp = cur[13] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[13]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (13 > 1) {
@@ -502,7 +502,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_13;
 			}
-			if ((num_tmp = cur[14] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[14]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (14 > 1) {
@@ -511,7 +511,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_14;
 			}
-			if ((num_tmp = cur[15] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[15]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (15 > 1) {
@@ -520,7 +520,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_15;
 			}
-			if ((num_tmp = cur[16] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[16]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (16 > 1) {
@@ -529,7 +529,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_16;
 			}
-			if ((num_tmp = cur[17] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[17]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (17 > 1) {
@@ -538,7 +538,7 @@ namespace jsonifier_internal {
 				}
 				goto digi_sepr_17;
 			}
-			if ((num_tmp = cur[18] - zero) <= 9) [[likely]]
+			if ((num_tmp = numberSubTable[cur[18]]) <= 9) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				if constexpr (18 > 1) {
@@ -857,109 +857,109 @@ namespace jsonifier_internal {
 		}
 		{
 		digi_frac_1:
-			if (((num_tmp = static_cast<uint64_t>(cur[1 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[1 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_1;
 			}
 		digi_frac_2:
-			if (((num_tmp = static_cast<uint64_t>(cur[2 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[2 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_2;
 			}
 		digi_frac_3:
-			if (((num_tmp = static_cast<uint64_t>(cur[3 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[3 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_3;
 			}
 		digi_frac_4:
-			if (((num_tmp = static_cast<uint64_t>(cur[4 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[4 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_4;
 			}
 		digi_frac_5:
-			if (((num_tmp = static_cast<uint64_t>(cur[5 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[5 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_5;
 			}
 		digi_frac_6:
-			if (((num_tmp = static_cast<uint64_t>(cur[6 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[6 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_6;
 			}
 		digi_frac_7:
-			if (((num_tmp = static_cast<uint64_t>(cur[7 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[7 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_7;
 			}
 		digi_frac_8:
-			if (((num_tmp = static_cast<uint64_t>(cur[8 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[8 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_8;
 			}
 		digi_frac_9:
-			if (((num_tmp = static_cast<uint64_t>(cur[9 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[9 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_9;
 			}
 		digi_frac_10:
-			if (((num_tmp = static_cast<uint64_t>(cur[10 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[10 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_10;
 			}
 		digi_frac_11:
-			if (((num_tmp = static_cast<uint64_t>(cur[11 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[11 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_11;
 			}
 		digi_frac_12:
-			if (((num_tmp = static_cast<uint64_t>(cur[12 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[12 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_12;
 			}
 		digi_frac_13:
-			if (((num_tmp = static_cast<uint64_t>(cur[13 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[13 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_13;
 			}
 		digi_frac_14:
-			if (((num_tmp = static_cast<uint64_t>(cur[14 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[14 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_14;
 			}
 		digi_frac_15:
-			if (((num_tmp = static_cast<uint64_t>(cur[15 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[15 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_15;
 			}
 		digi_frac_16:
-			if (((num_tmp = static_cast<uint64_t>(cur[16 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[16 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_16;
 			}
 		digi_frac_17:
-			if (((num_tmp = static_cast<uint64_t>(cur[17 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[17 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_17;
 			}
 		digi_frac_18:
-			if (((num_tmp = static_cast<uint64_t>(cur[18 + 1 + frac_zeros] - zero)) <= 9)) [[likely]]
+			if (((num_tmp = static_cast<uint64_t>(numberSubTable[cur[18 + 1 + frac_zeros]])) <= 9)) [[likely]]
 				sig = num_tmp + sig * 10;
 			else {
 				goto digi_stop_18;
@@ -1059,15 +1059,15 @@ namespace jsonifier_internal {
 	digi_frac_more:
 		sig_cut = cur; /* too large to fit in u64, excess digits need to be cut */
 		sig += (*cur >= '5'); /* round */
-		while (uint8_t(*++cur - zero) < 10) {
+		while (uint8_t(numberSubTable[*++cur]) < 10) {
 		}
 		if (!dot_pos) {
 			dot_pos = cur;
 			if (*cur == '.') {
-				if (uint8_t(*++cur - zero) > 9) {
+				if (uint8_t(numberSubTable[*++cur]) > 9) {
 					return false;
 				}
-				while (uint8_t(*++cur - zero) < 10) {
+				while (uint8_t(numberSubTable[*++cur]) < 10) {
 				}
 			}
 		}

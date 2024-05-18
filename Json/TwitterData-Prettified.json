@@ -20,6 +20,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -45,8 +47,6 @@
          },
          "created_at": "Sun Aug 31 00:29:15 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874924095815681",
          "user": {
@@ -112,6 +112,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -120,7 +122,7 @@
                      3,
                      12
                   ],
-                  "screen_name": "KATANA77",
+                  "screen_name": "aym0566x",
                   "id_str": "77915997",
                   "name": "(有)刀",
                   "id": 77915997
@@ -137,8 +139,6 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 82,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874922023837696",
          "user": {
@@ -216,6 +216,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -241,8 +243,6 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874920140591104",
          "user": {
@@ -280,7 +280,7 @@
                         ],
                         "expanded_url": "http://ap.furtherplatonix.net/index.html",
                         "display_url": "ap.furtherplatonix.net/index.html",
-                        "url": "http://t.co/5EclbQiRX4"
+                        "url": "http://t.co/Yg9e1Fl8wd"
                      }
                   ]
                },
@@ -320,6 +320,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -329,7 +331,7 @@
                      11
                   ],
                   "screen_name": "omo_kko",
-                  "id_str": "309565423",
+                  "id_str": "114188950",
                   "name": "おもっこ",
                   "id": 309565423
                }
@@ -345,8 +347,6 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874919020699648",
          "user": {
@@ -384,7 +384,7 @@
                         ],
                         "expanded_url": "http://www.pixiv.net/member.php?id=1778417",
                         "display_url": "pixiv.net/member.php?id=…",
-                        "url": "http://t.co/JTFjV89eaN"
+                        "url": "http://t.co/Yg9e1Fl8wd"
                      }
                   ]
                },
@@ -397,7 +397,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/chibu4267",
                         "display_url": "twpf.jp/chibu4267",
-                        "url": "http://t.co/ANSFlYXERJ"
+                        "url": "http://t.co/Yg9e1Fl8wd"
                      }
                   ]
                }
@@ -434,6 +434,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -467,8 +469,6 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 3291,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874918198624256",
          "user": {
@@ -534,6 +534,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -548,8 +550,6 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twittbot.net/\" rel=\"nofollow\">twittbot.net</a>",
          "id_str": "505874918039228416",
          "user": {
@@ -615,6 +615,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -629,8 +631,6 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://tweetli.st/\" rel=\"nofollow\">TweetList!</a>",
          "id_str": "505874915338104833",
          "user": {
@@ -696,6 +696,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -721,8 +723,6 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874914897690624",
          "user": {
@@ -788,6 +788,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -823,8 +825,6 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 1,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874914591514626",
          "user": {
@@ -890,6 +890,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -904,8 +906,6 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twittbot.net/\" rel=\"nofollow\">twittbot.net</a>",
          "id_str": "505874905712189440",
          "user": {
@@ -971,6 +971,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -980,7 +982,7 @@
                      19
                   ],
                   "screen_name": "shiawaseomamori",
-                  "id_str": "2745121514",
+                  "id_str": "1680668713",
                   "name": "幸せの☆お守り",
                   "id": 2745121514
                }
@@ -996,8 +998,6 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/mote_danshi1\" rel=\"nofollow\">モテモテ大作戦★男子編</a>",
          "id_str": "505874903094939648",
          "user": {
@@ -1063,6 +1063,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1072,7 +1074,7 @@
                      19
                   ],
                   "screen_name": "shiawaseomamori",
-                  "id_str": "2745121514",
+                  "id_str": "1680668713",
                   "name": "幸せの☆お守り",
                   "id": 2745121514
                }
@@ -1088,8 +1090,6 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/kokoro_meigen11\" rel=\"nofollow\">心に響くアツい名言集</a>",
          "id_str": "505874902390276096",
          "user": {
@@ -1155,6 +1155,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1163,7 +1165,7 @@
                      3,
                      19
                   ],
-                  "screen_name": "POTENZA_SUPERGT",
+                  "screen_name": "shiawaseomamori",
                   "id_str": "359324738",
                   "name": "POTENZA_SUPERGT",
                   "id": 359324738
@@ -1200,8 +1202,6 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 7,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi</a>",
          "id_str": "505874902247677954",
          "user": {
@@ -1267,6 +1267,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1292,8 +1294,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/danshi_honne1\" rel=\"nofollow\">ここだけの本音★男子編</a>",
          "id_str": "505874901689851904",
          "user": {
@@ -1359,6 +1359,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1368,7 +1370,7 @@
                      12
                   ],
                   "screen_name": "UARROW_Y",
-                  "id_str": "1261662588",
+                  "id_str": "2745121514",
                   "name": "ゆう矢",
                   "id": 1261662588
                }
@@ -1383,7 +1385,7 @@
                   ],
                   "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo/1",
                   "display_url": "pic.twitter.com/SXoYWH98as",
-                  "url": "http://t.co/SXoYWH98as"
+                  "url": "http://t.co/Yg9e1Fl8wd"
                }
             ]
          },
@@ -1394,8 +1396,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 29,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874900939046912",
          "user": {
@@ -1461,6 +1461,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -1475,8 +1477,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874900561580032",
          "user": {
@@ -1542,6 +1542,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1567,8 +1569,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/kyoukan_aru\" rel=\"nofollow\">共感★絶対あるあるww</a>",
          "id_str": "505874899324248064",
          "user": {
@@ -1634,6 +1634,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1643,7 +1645,7 @@
                      15
                   ],
                   "screen_name": "assam_house",
-                  "id_str": "1104771276",
+                  "id_str": "2745121514",
                   "name": "アッサム山中（殺処分ゼロに一票）",
                   "id": 1104771276
                }
@@ -1658,7 +1660,7 @@
                   ],
                   "expanded_url": "http://www.pref.niigata.lg.jp/kouhou/info.html",
                   "display_url": "pref.niigata.lg.jp/kouhou/info.ht…",
-                  "url": "http://t.co/9oH5cgpy1q"
+                  "url": "http://t.co/Yg9e1Fl8wd"
                }
             ]
          },
@@ -1669,8 +1671,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 2,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://jigtwi.jp/?p=1001\" rel=\"nofollow\">jigtwi for Android</a>",
          "id_str": "505874898493796352",
          "user": {
@@ -1736,6 +1736,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1761,8 +1763,6 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/osyare_pea\" rel=\"nofollow\">おしゃれ★ペアルック</a>",
          "id_str": "505874898468630528",
          "user": {
@@ -1828,6 +1828,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1853,8 +1855,6 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/love_live55\" rel=\"nofollow\">LOVE ♥ ラブライブ</a>",
          "id_str": "505874897633951745",
          "user": {
@@ -1920,6 +1920,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -1945,8 +1947,6 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/koisurudoress\" rel=\"nofollow\">恋する♡ドレスシリーズ</a>",
          "id_str": "505874896795086848",
          "user": {
@@ -2012,6 +2012,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2037,8 +2039,6 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/doubutuzukan\" rel=\"nofollow\">胸キュン♥動物図鑑</a>",
          "id_str": "505874895964626944",
          "user": {
@@ -2104,6 +2104,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2129,8 +2131,6 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/disney_para\" rel=\"nofollow\">ディズニー★パラダイス</a>",
          "id_str": "505874895079608320",
          "user": {
@@ -2196,6 +2196,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2221,8 +2223,6 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/nama_fuushi\" rel=\"nofollow\">生々しい風刺画</a>",
          "id_str": "505874894135898112",
          "user": {
@@ -2288,6 +2288,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2313,8 +2315,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/arashi_suki1\" rel=\"nofollow\">嵐★大好きっ娘</a>",
          "id_str": "505874893347377152",
          "user": {
@@ -2380,6 +2380,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2405,8 +2407,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 221,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca</a>",
          "id_str": "505874893154426881",
          "user": {
@@ -2444,7 +2444,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/oshin_koko",
                         "display_url": "twpf.jp/oshin_koko",
-                        "url": "http://t.co/mM1dG54NiO"
+                        "url": "http://t.co/Yg9e1Fl8wd"
                      }
                   ]
                },
@@ -2484,6 +2484,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2509,8 +2511,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/shimo_hentai\" rel=\"nofollow\">下ネタ＆笑変態雑学</a>",
          "id_str": "505874892567244801",
          "user": {
@@ -2576,6 +2576,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2601,8 +2603,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/kantaneigo1\" rel=\"nofollow\">超簡単★初心者英語</a>",
          "id_str": "505874891778703360",
          "user": {
@@ -2668,6 +2668,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2693,8 +2695,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/ima_handsign\" rel=\"nofollow\">現代のハンドサイン</a>",
          "id_str": "505874891032121344",
          "user": {
@@ -2760,6 +2760,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2785,8 +2787,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/anata_iionna\" rel=\"nofollow\">今日からアナタもイイ女♪</a>",
          "id_str": "505874890247782401",
          "user": {
@@ -2852,6 +2852,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2861,7 +2863,7 @@
                      10
                   ],
                   "screen_name": "kohecyan3",
-                  "id_str": "2591363659",
+                  "id_str": "2745121514",
                   "name": "上野滉平",
                   "id": 2591363659
                }
@@ -2885,8 +2887,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874890218434560",
          "user": {
@@ -2952,6 +2952,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -2977,8 +2979,6 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/iq_tameshi\" rel=\"nofollow\">IQ★力だめし</a>",
          "id_str": "505874889392156672",
          "user": {
@@ -3044,6 +3044,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -3058,8 +3060,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://m.blogs.yahoo.co.jp/misa_1273\" rel=\"nofollow\">如月克己</a>",
          "id_str": "505874888817532928",
          "user": {
@@ -3125,6 +3125,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3150,8 +3152,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/tokuda_ouen1\" rel=\"nofollow\">徳田有希★応援隊</a>",
          "id_str": "505874888616181760",
          "user": {
@@ -3217,6 +3217,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3242,8 +3244,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/fujyoshinoheya\" rel=\"nofollow\">腐女子の☆部屋</a>",
          "id_str": "505874887802511361",
          "user": {
@@ -3309,6 +3309,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3334,8 +3336,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/moe_rate\" rel=\"nofollow\">萌え芸術★ラテアート</a>",
          "id_str": "505874887009767424",
          "user": {
@@ -3401,6 +3401,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3426,8 +3428,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/zenbu_johnnys\" rel=\"nofollow\">全部★ジャニーズ図鑑</a>",
          "id_str": "505874886225448960",
          "user": {
@@ -3493,6 +3493,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3526,8 +3528,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 23,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874885810200576",
          "user": {
@@ -3593,6 +3593,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3618,8 +3620,6 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/line_aru1\" rel=\"nofollow\">爆笑★LINE あるある</a>",
          "id_str": "505874885474656256",
          "user": {
@@ -3685,6 +3685,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3710,8 +3712,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/misawahatugen\" rel=\"nofollow\">全力★ミサワ的w発言</a>",
          "id_str": "505874884627410944",
          "user": {
@@ -3777,6 +3777,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -3802,8 +3804,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/otakara_sotuaru\" rel=\"nofollow\">お宝ww有名人卒アル特集</a>",
          "id_str": "505874883809521664",
          "user": {
@@ -3869,6 +3869,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -3883,8 +3885,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874883322970112",
          "user": {
@@ -3950,6 +3950,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -3971,7 +3973,7 @@
                   ],
                   "expanded_url": "http://atq.ck.valuecommerce.com/servlet/atq/referral?sid=2219441&pid=877510753&vcptn=auct/p/RJH492.PLqoLQQx1Jy8U9LE-&vc_url=http://page8.auctions.yahoo.co.jp/jp/auction/h192024356",
                   "display_url": "atq.ck.valuecommerce.com/servlet/atq/re…",
-                  "url": "http://t.co/4WK1f6V2n6"
+                  "url": "http://t.co/Yg9e1Fl8wd"
                }
             ]
          },
@@ -3982,8 +3984,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://github.com/AKB428/YahooAuctionBot\" rel=\"nofollow\">YahooAuction Degicame</a>",
          "id_str": "505874883067129857",
          "user": {
@@ -4061,6 +4061,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4086,8 +4088,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/yabai_giness\" rel=\"nofollow\">ヤバすぎる!!ギネス世界記録</a>",
          "id_str": "505874882995826689",
          "user": {
@@ -4153,6 +4153,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -4167,8 +4169,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874882870009856",
          "user": {
@@ -4234,6 +4234,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4243,7 +4245,7 @@
                      13
                   ],
                   "screen_name": "oen_yakyu",
-                  "id_str": "2761692762",
+                  "id_str": "2745121514",
                   "name": "三浦学苑軟式野球部応援団！",
                   "id": 2761692762
                }
@@ -4259,8 +4261,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 7,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca</a>",
          "id_str": "505874882228281345",
          "user": {
@@ -4311,7 +4311,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/natit_yso",
                         "display_url": "twpf.jp/natit_yso",
-                        "url": "http://t.co/ezuHyjF4Qy"
+                        "url": "http://t.co/ll2yu78DGR"
                      }
                   ]
                }
@@ -4348,6 +4348,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4373,8 +4375,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/sumahoanime\" rel=\"nofollow\">スマホに密封★アニメ画像</a>",
          "id_str": "505874882110824448",
          "user": {
@@ -4440,6 +4440,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4465,8 +4467,6 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/mijika_kiken\" rel=\"nofollow\">アナタのそばの身近な危険</a>",
          "id_str": "505874881297133568",
          "user": {
@@ -4532,6 +4532,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4557,8 +4559,6 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/ninkimono_daosy\" rel=\"nofollow\">人気者♥デイジー大好き</a>",
          "id_str": "505874880294682624",
          "user": {
@@ -4624,6 +4624,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4649,8 +4651,6 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/shiawasehanashi\" rel=\"nofollow\">幸せ話でフル充電しよう</a>",
          "id_str": "505874879392919552",
          "user": {
@@ -4716,6 +4716,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4725,7 +4727,7 @@
                      15
                   ],
                   "screen_name": "Ang_Angel73",
-                  "id_str": "1600750194",
+                  "id_str": "2745121514",
                   "name": "臙脂",
                   "id": 1600750194
                }
@@ -4741,8 +4743,6 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 2,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874879103520768",
          "user": {
@@ -4808,6 +4808,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4833,8 +4835,6 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/honne_jyoshi1\" rel=\"nofollow\">秘密の本音♥女子編</a>",
          "id_str": "505874877933314048",
          "user": {
@@ -4900,6 +4900,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -4925,8 +4927,6 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/bi_iroenpitu\" rel=\"nofollow\">美し過ぎる★色鉛筆アート</a>",
          "id_str": "505874877148958721",
          "user": {
@@ -4992,6 +4992,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -5006,8 +5008,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twittbot.net/\" rel=\"nofollow\">twittbot.net</a>",
          "id_str": "505874876465295361",
          "user": {
@@ -5073,6 +5073,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5098,8 +5100,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/kgoehassou\" rel=\"nofollow\">K点越えの発想力!!</a>",
          "id_str": "505874876318511104",
          "user": {
@@ -5165,6 +5165,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5190,8 +5192,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/ketueki_sinjitu\" rel=\"nofollow\">血液型の真実２</a>",
          "id_str": "505874875521581056",
          "user": {
@@ -5257,6 +5257,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5282,8 +5284,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/yahari_kamiga\" rel=\"nofollow\">やっぱり神が？？を作る時</a>",
          "id_str": "505874874712072192",
          "user": {
@@ -5349,6 +5349,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5359,7 +5361,7 @@
                   ],
                   "screen_name": "takuramix",
                   "id_str": "29599253",
-                  "name": "タクラミックス",
+                  "name": "幸せの☆お守り",
                   "id": 29599253
                },
                {
@@ -5368,7 +5370,7 @@
                      83
                   ],
                   "screen_name": "Lightworker19",
-                  "id_str": "238157843",
+                  "id_str": "333344408",
                   "name": "Lightworker",
                   "id": 238157843
                }
@@ -5383,7 +5385,7 @@
                   ],
                   "expanded_url": "http://www.tepco.co.jp/nu/fukushima-np/review/images/review1_01.gif",
                   "display_url": "tepco.co.jp/nu/fukushima-n…",
-                  "url": "http://t.co/ZkU4TZCGPG"
+                  "url": "http://t.co/ll2yu78DGR"
                },
                {
                   "indices": [
@@ -5403,8 +5405,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 1,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.softama.com/\" rel=\"nofollow\">ツイタマ</a>",
          "id_str": "505874874275864576",
          "user": {
@@ -5480,6 +5480,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5505,8 +5507,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/anayuki_suki\" rel=\"nofollow\">やっぱりアナ雪が好き♥</a>",
          "id_str": "505874873961308160",
          "user": {
@@ -5572,6 +5572,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -5596,8 +5598,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitterfeed.com\" rel=\"nofollow\">twitterfeed</a>",
          "id_str": "505874873759977473",
          "user": {
@@ -5663,6 +5663,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5688,8 +5690,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874873248268288",
          "user": {
@@ -5725,9 +5725,9 @@
                            0,
                            22
                         ],
-                        "expanded_url": "http://s.ameblo.jp/hikarihikarimay",
-                        "display_url": "s.ameblo.jp/hikarihikarimay",
-                        "url": "http://t.co/SQLZnvjVxB"
+                        "expanded_url": "http://news24h.allnews24h.com/FX54",
+                        "display_url": "news24h.allnews24h.com/FX54",
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                },
@@ -5767,6 +5767,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5792,8 +5794,6 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/imadokijoshiko\" rel=\"nofollow\">今どき女子高生の謎w</a>",
          "id_str": "505874873223110656",
          "user": {
@@ -5859,6 +5859,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5884,8 +5886,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/risou_dansei\" rel=\"nofollow\">私の理想の男性像</a>",
          "id_str": "505874872463925248",
          "user": {
@@ -5951,6 +5951,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -5976,8 +5978,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/gekiatu_6byou\" rel=\"nofollow\">激アツ★6秒動画</a>",
          "id_str": "505874871713157120",
          "user": {
@@ -6043,6 +6043,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -6056,7 +6058,7 @@
                   ],
                   "expanded_url": "http://bit.ly/1qBa1nl",
                   "display_url": "bit.ly/1qBa1nl",
-                  "url": "http://t.co/jRWJt8IrSB"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -6067,8 +6069,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/waraeru_kan\" rel=\"nofollow\">笑える博物館</a>",
          "id_str": "505874871616671744",
          "user": {
@@ -6134,6 +6134,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6143,7 +6145,7 @@
                      11
                   ],
                   "screen_name": "nasan_arai",
-                  "id_str": "1717603286",
+                  "id_str": "2745121514",
                   "name": "なーさん",
                   "id": 1717603286
                }
@@ -6167,8 +6169,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874871268540416",
          "user": {
@@ -6206,7 +6206,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/Ymaaya_gem",
                         "display_url": "twpf.jp/Ymaaya_gem",
-                        "url": "http://t.co/wR0Qb76TbB"
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                },
@@ -6246,6 +6246,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -6260,8 +6262,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twittbot.net/\" rel=\"nofollow\">twittbot.net</a>",
          "id_str": "505874871218225152",
          "user": {
@@ -6299,7 +6299,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/BDFF_LOVE",
                         "display_url": "twpf.jp/BDFF_LOVE",
-                        "url": "http://t.co/5R4dzpbWX2"
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                },
@@ -6339,6 +6339,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -6353,8 +6355,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twittbot.net/\" rel=\"nofollow\">twittbot.net</a>",
          "id_str": "505874871130136576",
          "user": {
@@ -6420,6 +6420,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6445,8 +6447,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/suitestengoku\" rel=\"nofollow\">絶品!!スイーツ天国</a>",
          "id_str": "505874870933016576",
          "user": {
@@ -6512,6 +6512,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6537,8 +6539,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/dengeki_omoro\" rel=\"nofollow\">電車厳禁!!おもしろ話</a>",
          "id_str": "505874870148669440",
          "user": {
@@ -6604,6 +6604,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6629,8 +6631,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/ketueki_face\" rel=\"nofollow\">笑えるwwランキング2</a>",
          "id_str": "505874869339189249",
          "user": {
@@ -6696,6 +6696,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6721,8 +6723,6 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/sunikar_daisuki\" rel=\"nofollow\">スニーカー大好き★図鑑</a>",
          "id_str": "505874868533854209",
          "user": {
@@ -6788,6 +6788,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6813,8 +6815,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
          "id_str": "505874867997380608",
          "user": {
@@ -6880,6 +6880,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6905,8 +6907,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/iseiuragao\" rel=\"nofollow\">ザ・異性の裏の顔</a>",
          "id_str": "505874867720183808",
          "user": {
@@ -6972,6 +6972,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -6997,8 +6999,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/bijyoalbum\" rel=\"nofollow\">超w美女☆アルバム</a>",
          "id_str": "505874866910687233",
          "user": {
@@ -7064,6 +7064,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7089,8 +7091,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/jyoshiuraseitai\" rel=\"nofollow\">男に見せない女子の裏生態</a>",
          "id_str": "505874866105376769",
          "user": {
@@ -7156,6 +7156,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7181,8 +7183,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/soubutu_seitai\" rel=\"nofollow\">驚きの動物たちの生態</a>",
          "id_str": "505874865354584064",
          "user": {
@@ -7248,6 +7248,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7273,8 +7275,6 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/mote_woman\" rel=\"nofollow\">モテ女子★ファションの秘密</a>",
          "id_str": "505874864603820032",
          "user": {
@@ -7340,6 +7340,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7365,8 +7367,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/danjyonotigai1\" rel=\"nofollow\">男女の違いを解明する</a>",
          "id_str": "505874863874007040",
          "user": {
@@ -7432,6 +7432,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7457,8 +7459,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/kamihassou\" rel=\"nofollow\">神レベル★極限の発想</a>",
          "id_str": "505874862900924416",
          "user": {
@@ -7524,6 +7524,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7549,8 +7551,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874862397591552",
          "user": {
@@ -7616,6 +7616,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7641,8 +7643,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/renai_sennin\" rel=\"nofollow\">恋愛仙人</a>",
          "id_str": "505874861973991424",
          "user": {
@@ -7708,6 +7708,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7733,8 +7735,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi</a>",
          "id_str": "505874861881700353",
          "user": {
@@ -7800,6 +7800,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7825,8 +7827,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/densetunodorama\" rel=\"nofollow\">あの伝説の名ドラマ＆名場面</a>",
          "id_str": "505874861185437697",
          "user": {
@@ -7892,6 +7892,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -7917,8 +7919,6 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/tabetaicake1\" rel=\"nofollow\">マジで食べたい♥ケーキ特集</a>",
          "id_str": "505874860447260672",
          "user": {
@@ -7984,6 +7984,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8009,8 +8011,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/adi_mania11\" rel=\"nofollow\">アディダス★マニア</a>",
          "id_str": "505874859662925824",
          "user": {
@@ -8076,6 +8076,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8101,8 +8103,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/moe_pet1\" rel=\"nofollow\">萌えペット大好き</a>",
          "id_str": "505874858920513537",
          "user": {
@@ -8168,6 +8168,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8193,8 +8195,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/renaikyoukasyo\" rel=\"nofollow\">恋愛の教科書　</a>",
          "id_str": "505874858115219456",
          "user": {
@@ -8260,6 +8260,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8285,8 +8287,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/omorogakusei\" rel=\"nofollow\">オモロすぎる★学生の日常</a>",
          "id_str": "505874857335074816",
          "user": {
@@ -8352,6 +8352,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8377,8 +8379,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/akogareinteria\" rel=\"nofollow\">憧れの★インテリア図鑑</a>",
          "id_str": "505874856605257728",
          "user": {
@@ -8444,6 +8444,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -8472,7 +8474,7 @@
                   ],
                   "expanded_url": "http://j.mp/1kHBOym",
                   "display_url": "j.mp/1kHBOym",
-                  "url": "http://t.co/fXIgRt4ffH"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -8483,8 +8485,6 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/\" rel=\"nofollow\">waromett</a>",
          "id_str": "505874856089378816",
          "user": {
@@ -8550,6 +8550,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -8563,7 +8565,7 @@
                   ],
                   "expanded_url": "http://bit.ly/1tOdNsI",
                   "display_url": "bit.ly/1tOdNsI",
-                  "url": "http://t.co/RNdqIHmTby"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -8574,8 +8576,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitterfeed.com\" rel=\"nofollow\">twitterfeed</a>",
          "id_str": "505874855770599425",
          "user": {
@@ -8641,6 +8641,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8666,8 +8668,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/LDH_daisuki1\" rel=\"nofollow\">LDH ★大好き応援団</a>",
          "id_str": "505874854877200384",
          "user": {
@@ -8733,6 +8733,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8758,8 +8760,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 58,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"https://twitter.com/anime_toshiden1\" rel=\"nofollow\">マジ!?怖いアニメ都市伝説</a>",
          "id_str": "505874854147407872",
          "user": {
@@ -8825,6 +8825,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -8834,7 +8836,7 @@
                      13
                   ],
                   "screen_name": "vesperia1985",
-                  "id_str": "2286548834",
+                  "id_str": "2745121514",
                   "name": "ユーリ",
                   "id": 2286548834
                }
@@ -8850,8 +8852,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874854134820864",
          "user": {
@@ -8917,6 +8917,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -8928,9 +8930,9 @@
                      116,
                      138
                   ],
-                  "expanded_url": "http://ift.tt/1kT55bk",
-                  "display_url": "ift.tt/1kT55bk",
-                  "url": "http://t.co/4hbyB1rbQ7"
+                  "expanded_url": "http://bit.ly/1tOdNsI",
+                  "display_url": "bit.ly/1tOdNsI",
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -8941,8 +8943,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://ifttt.com\" rel=\"nofollow\">IFTTT</a>",
          "id_str": "505874853778685952",
          "user": {
@@ -8980,7 +8980,7 @@
                         ],
                         "expanded_url": "http://astore.amazon.co.jp/furniturewood-22",
                         "display_url": "astore.amazon.co.jp/furniturewood-…",
-                        "url": "http://t.co/V4oyL0xtZk"
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                },
@@ -9020,6 +9020,8 @@
          "possibly_sensitive": null,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -9029,7 +9031,7 @@
                      19
                   ],
                   "screen_name": "siranuga_hotoke",
-                  "id_str": "2243896200",
+                  "id_str": "2745121514",
                   "name": "知らぬが仏bot",
                   "id": 2243896200
                }
@@ -9045,8 +9047,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 1,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874852754907136",
          "user": {
@@ -9112,6 +9112,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -9121,7 +9123,7 @@
                      12
                   ],
                   "screen_name": "UARROW_Y",
-                  "id_str": "1261662588",
+                  "id_str": "2745121514",
                   "name": "ゆう矢",
                   "id": 1261662588
                }
@@ -9136,7 +9138,7 @@
                   ],
                   "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo/1",
                   "display_url": "pic.twitter.com/SXoYWH98as",
-                  "url": "http://t.co/SXoYWH98as"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -9147,8 +9149,6 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 29,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874852603908096",
          "user": {
@@ -9214,6 +9214,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [
@@ -9238,7 +9240,7 @@
                   ],
                   "expanded_url": "http://is.gd/H3OgTO",
                   "display_url": "is.gd/H3OgTO",
-                  "url": "http://t.co/HLX9mHcQwe"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -9249,8 +9251,6 @@
          },
          "created_at": "Sun Aug 31 00:28:57 +0000 2014",
          "retweet_count": 4,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
          "id_str": "505874848900341760",
          "user": {
@@ -9316,6 +9316,8 @@
          "possibly_sensitive": false,
          "contributors": null,
          "coordinates": null,
+         "place": null,
+         "geo": null,
          "entities": {
             "media": null,
             "user_mentions": [],
@@ -9337,7 +9339,7 @@
                   ],
                   "expanded_url": "http://nico.ms/sm24357625",
                   "display_url": "nico.ms/sm24357625",
-                  "url": "http://t.co/PjL9if8OZC"
+                  "url": "http://t.co/toQgVlXPyH"
                }
             ]
          },
@@ -9348,8 +9350,6 @@
          },
          "created_at": "Sun Aug 31 00:28:56 +0000 2014",
          "retweet_count": 0,
-         "place": null,
-         "geo": null,
          "source": "<a href=\"http://www.nicovideo.jp/\" rel=\"nofollow\">ニコニコ動画</a>",
          "id_str": "505874847260352513",
          "user": {
@@ -9387,7 +9387,7 @@
                         ],
                         "expanded_url": "http://www.nicovideo.jp/mylist/37917495",
                         "display_url": "nicovideo.jp/mylist/37917495",
-                        "url": "http://t.co/ulD2e9mcwb"
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                },
@@ -9400,7 +9400,7 @@
                         ],
                         "expanded_url": "http://ameblo.jp/2no38mae/",
                         "display_url": "ameblo.jp/2no38mae/",
-                        "url": "http://t.co/8E91tqoeKX"
+                        "url": "http://t.co/toQgVlXPyH"
                      }
                   ]
                }

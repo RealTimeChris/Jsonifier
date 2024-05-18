@@ -29,7 +29,13 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	#include <immintrin.h>
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+		return _blsr_u32(value);
+	}
+
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
+		return _blsr_u64(value);
+	}
 
 	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 	#if defined(JSONIFIER_LINUX)
@@ -38,14 +44,6 @@ namespace simd_internal {
 		return _tzcnt_u16(value);
 	#endif
 	}
-
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
-		return _blsr_u32(value);
-	}
-
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type blsr(value_type value) {
-		return _blsr_u64(value);
-	}	
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type tzcnt(value_type value) {
 		return _tzcnt_u32(value);
