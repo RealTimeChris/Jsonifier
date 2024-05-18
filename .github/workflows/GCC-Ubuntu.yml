@@ -1,0 +1,61 @@
+name: Build-and-Test-GCC-Ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+<<<<<<<< HEAD:.github/workflows/GCC_13-Ubuntu.yml
+        gcc: [13]
+========
+        gcc: [12]
+>>>>>>>> dev:.github/workflows/GCC-Ubuntu.yml
+        build_type: [Debug, Release]
+        std: [20]
+
+    steps:
+    - uses: actions/checkout@v4
+  
+    - name: Install the latest gcc compiler.
+      working-directory: Tests
+      run:  |
+            sudo apt-get install build-essential
+<<<<<<<< HEAD:.github/workflows/GCC_13-Ubuntu.yml
+            sudo apt-get install g++-13
+========
+            sudo apt-get install g++-12
+>>>>>>>> dev:.github/workflows/GCC-Ubuntu.yml
+
+    - name: Configure CMake
+      working-directory: ./
+      run: |
+<<<<<<<< HEAD:.github/workflows/GCC_13-Ubuntu.yml
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-13 -DDEV="TRUE" -DJSONIFIER_TEST=true
+========
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DDEV="TRUE" -DJSONIFIER_TEST=true
+>>>>>>>> dev:.github/workflows/GCC-Ubuntu.yml
+
+    - name: Build the Test
+      working-directory: ./Build
+      run: |
+           cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      working-directory: ./Build/Tests
+      run: |
+           ./Json-Performance
+      continue-on-error: true

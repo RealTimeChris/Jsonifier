@@ -188,4 +188,186 @@ namespace jsonifier_internal {
 		}
 	}
 
+	JSONIFIER_INLINE void dump(const char c, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		if (ix == b.size()) [[unlikely]] {
+			b.resize(b.size() == 0 ? 128 : b.size() * 2);
+		}
+
+		b[ix] = c;
+		++ix;
+	}
+
+	template<typename char_type> JSONIFIER_INLINE void dump(const char c, char_type*& b) noexcept {
+		*b = c;
+		++b;
+	}
+
+	template<uint8_t c> JSONIFIER_INLINE void dump(jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		if (ix == b.size()) [[unlikely]] {
+			b.resize(b.size() == 0 ? 128 : b.size() * 2);
+		}
+
+		using V = std::decay_t<decltype(b[0])>;
+		if constexpr (std::same_as<V, char>) {
+			b[ix] = c;
+		} else {
+			b[ix] = static_cast<V>(c);
+		}
+		++ix;
+	}
+
+	template<uint8_t c> JSONIFIER_INLINE void dump(auto* b, auto& ix) noexcept {
+		b[ix] = c;
+		++ix;
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dump(char_type*& b) noexcept {
+		*b = c;
+		++b;
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dump_unchecked(jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		using V = std::decay_t<decltype(b[0])>;
+		if constexpr (std::same_as<V, char>) {
+			b[ix] = c;
+		} else {
+			b[ix] = static_cast<V>(c);
+		}
+		++ix;
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dump_unchecked(auto* b, auto& ix) noexcept {
+		b[ix] = c;
+		++ix;
+	}
+
+	JSONIFIER_INLINE void dump_unchecked(const char c, auto* b, auto& ix) noexcept {
+		b[ix] = c;
+		++ix;
+	}
+
+	JSONIFIER_INLINE void dump_unchecked(const char c, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		b[ix] = c;
+		++ix;
+	}
+
+	JSONIFIER_INLINE void dump_unchecked(const jsonifier::string_view str, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		const auto n = str.size();
+		std::memcpy(b.data() + ix, str.data(), n);
+		ix += n;
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dumpn(size_t n, char_type*& b) noexcept {
+		std::memset(b, c, n);
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dumpn_unchecked(size_t n, char_type*& b) noexcept {
+		std::memset(b, c, n);
+	}
+
+	template<uint8_t c> JSONIFIER_INLINE void dumpn(size_t n, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		if (ix + n > b.size()) [[unlikely]] {
+			b.resize((std::max)(b.size() * 2, ix + n));
+		}
+
+		std::memset(b.data() + ix, c, n);
+		ix += n;
+	}
+
+	template<typename char_type, char_type c> JSONIFIER_INLINE void dumpn_unchecked(size_t n, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		std::memset(b.data() + ix, c, n);
+		ix += n;
+	}
+
+	template<char IndentChar> JSONIFIER_INLINE void dump_newline_indent(size_t n, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		if (const auto k = ix + n + 256; k > b.size()) [[unlikely]] {
+			b.resize((std::max)(b.size() * 2, k));
+		}
+
+		b[ix] = '\n';
+		++ix;
+		std::memset(b.data() + ix, IndentChar, n);
+		ix += n;
+	}
+
+	template<const jsonifier::string_view& str> JSONIFIER_INLINE void dump(jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		static constexpr auto s = str;
+		static constexpr auto n = s.size();
+
+		if (ix + n > b.size()) [[unlikely]] {
+			b.resize((std::max)(b.size() * 2, ix + n));
+		}
+
+		std::memcpy(b.data() + ix, s.data(), n);
+		ix += n;
+	}
+
+	template<const jsonifier::string_view& str> JSONIFIER_INLINE void dump_unchecked(jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		static constexpr auto s = str;
+		static constexpr auto n = s.size();
+
+		std::memcpy(b.data() + ix, s.data(), n);
+		ix += n;
+	}
+
+	template<const jsonifier::string_view& str> JSONIFIER_INLINE void dump(auto* b, auto& ix) noexcept {
+		static constexpr auto s = str;
+		static constexpr auto n = s.size();
+
+		std::memcpy(b + ix, s.data(), n);
+		ix += n;
+	}
+
+	template<const jsonifier::string_view& str> JSONIFIER_INLINE void dump_unchecked(auto* b, auto& ix) noexcept {
+		static constexpr auto s = str;
+		static constexpr auto n = s.size();
+
+		std::memcpy(b + ix, s.data(), n);
+		ix += n;
+	}
+
+	JSONIFIER_INLINE void dump_not_empty(const jsonifier::string_view str, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		const auto n = str.size();
+		if (ix + n > b.size()) [[unlikely]] {
+			b.resize((std::max)(b.size() * 2, ix + n));
+		}
+
+		std::memcpy(b.data() + ix, str.data(), n);
+		ix += n;
+	}
+
+	JSONIFIER_INLINE void dump_not_empty(const jsonifier::string_view str, auto* b, auto& ix) noexcept {
+		const auto n = str.size();
+
+		std::memcpy(b + ix, str.data(), n);
+		ix += n;
+	}
+
+	JSONIFIER_INLINE void dump_maybe_empty(const jsonifier::string_view str, jsonifier::concepts::buffer_like auto& b, auto& ix) noexcept {
+		const auto n = str.size();
+		if (n) {
+			if (ix + n > b.size()) [[unlikely]] {
+				b.resize((std::max)(b.size() * 2, ix + n));
+			}
+
+			std::memcpy(b.data() + ix, str.data(), n);
+			ix += n;
+		}
+	}
+
+	JSONIFIER_INLINE void dump_maybe_empty(const jsonifier::string_view str, auto* b, auto& ix) noexcept {
+		const auto n = str.size();
+		if (n) {
+			std::memcpy(b + ix, str.data(), n);
+			ix += n;
+		}
+	}
+
+	template<typename char_type> JSONIFIER_INLINE void dump(const jsonifier::string_view str, char_type*& b) noexcept {
+		for (auto& c: str) {
+			*b = c;
+			++b;
+		}
+	}
+
 }// namespace jsonifier_internal

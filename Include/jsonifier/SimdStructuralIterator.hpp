@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE simd_structural_iterator operator+(int32_t valueNew) {
 			simd_structural_iterator temp{ *this };
-			for (uint64_t x = 0; x < valueNew; ++x) {
+			for (int32_t x = 0; x < valueNew; ++x) {
 				++temp;
 			}
 			return temp;

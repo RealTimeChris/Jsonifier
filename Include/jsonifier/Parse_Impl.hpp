@@ -201,7 +201,7 @@ namespace jsonifier_internal {
 				if (*iter == 0x6Eu) {
 					skipToEndOfValue(iter);
 					continue;
-				} 
+				}
 				parser<derived_type>::impl(value[static_cast<typename value_type_new::key_type>(keyNew)], iter);
 			}
 		}

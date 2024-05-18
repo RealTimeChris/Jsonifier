@@ -326,81 +326,42 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<jsonifier::serialize_options options>
+	JSONIFIER_INLINE void write_entry_separator(prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs, auto&&... args) noexcept {
+		dump<','>(args...);
+		if constexpr (options.prettify) {
+			dump<'\n'>(args...);
+			dumpn<' '>(prettifyArgs->indent * options.prettifyOptions.indentSize, args...);
+		}
+	}
+
 	template<jsonifier::serialize_options options, typename derived_type, jsonifier::concepts::vector_t value_type_new>
 	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, prettify_arguments<options.prettifyOptions.maxDepth>* prettifyArgs) {
-			auto n = value.size();
-			writeCharacter<json_structural_type::Array_Start>(buffer, index);
+			dump<'['>(buffer, index);
+
 			if constexpr (options.prettify) {
 				++prettifyArgs->indent;
-				prettifyArgs->state[prettifyArgs->indent] = json_structural_type::Array_Start;
-				if (prettifyArgs->indent >= static_cast<int64_t>(options.prettifyOptions.maxDepth)) [[unlikely]] {
-					return;
-				}
-				if constexpr (options.prettifyOptions.newLinesInArray) {
-					if (value.size() != 0) {
-						writeCharacter<0x0Au>(buffer, index);
-						if constexpr (options.prettifyOptions.tabs) {
-							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
-						} else {
-							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
-						}
-					}
-				} else {
-					writeCharacter<0x20u>(buffer, index);
-				}
+				dump<'\n'>(buffer, index);
+				dumpn<' '>(prettifyArgs->indent * options.prettifyOptions.indentSize, buffer, index);
 			}
-			if (n > 0) {
-				auto newPtr = value.begin();
-				serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
-				++newPtr;
-				auto endPtr = value.begin() + value.size();
-				for (; newPtr < endPtr; ++newPtr) {
-					writeCharacter<json_structural_type::Comma>(buffer, index);
-					if constexpr (options.prettify) {
-						if constexpr (options.prettifyOptions.newLinesInArray) {
-							writeCharacter<0x0Au>(buffer, index);
-							if constexpr (options.prettifyOptions.tabs) {
-								writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
-							} else {
-								writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
-							}
-						} else {
-							if (prettifyArgs->state[prettifyArgs->indent] == json_structural_type::Object_Start) {
-								writeCharacter<0x0Au>(buffer, index);
-								if constexpr (options.prettifyOptions.tabs) {
-									writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
-								} else {
-									writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
-								}
-							} else {
-								writeCharacter<0x20u>(buffer, index);
-							}
-						}
-					}
-					serializer<derived_type>::template impl<options>(*newPtr, buffer, index, prettifyArgs);
+			if (value.size() > 0) {
+				auto it = std::begin(value);
+				serializer<derived_type>::template impl<options>(*it, buffer, index, prettifyArgs);
+				++it;
+				for (const auto fin = std::end(value); it != fin; ++it) {
+					write_entry_separator<options>(prettifyArgs, buffer, index);
+					serializer<derived_type>::template impl<options>(*it, buffer, index, prettifyArgs);
 				}
 			}
 			if constexpr (options.prettify) {
 				--prettifyArgs->indent;
-				if (prettifyArgs->indent < 0) {
-					return;
-				}
-				if (*(buffer.data() + (index - 1)) != 0x5Bu) {
-					if constexpr (options.prettifyOptions.newLinesInArray) {
-						writeCharacter<0x0Au>(buffer, index);
-						if constexpr (options.prettifyOptions.tabs) {
-							writeCharacters<'\t'>(buffer, index, prettifyArgs->indent);
-						} else {
-							writeCharacters<' '>(buffer, index, static_cast<int64_t>(prettifyArgs->indent * options.prettifyOptions.indentSize));
-						}
-					} else {
-						writeCharacter<0x20u>(buffer, index);
-					}
-				}
+				dump<'\n'>(buffer, index);
+				dumpn<' '>(prettifyArgs->indent * options.prettifyOptions.indentSize, buffer, index);
 			}
-			writeCharacter<json_structural_type::Array_End>(buffer, index);
+
+			dump<']'>(buffer, index);
 		}
 	};
 

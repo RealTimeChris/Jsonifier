@@ -48,6 +48,8 @@ namespace jsonifier_internal {
 		Incorrect_Structural_Index = 3,
 	};
 
+	constexpr uint32_t prettifyError{ std::numeric_limits<uint32_t>::max() };
+
 	template<typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
@@ -56,7 +58,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier ::concepts::string_t string_type>
-		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
+		JSONIFIER_INLINE jsonifier::string_view prettifyJson(string_type&& in) noexcept {
 			if (derivedRef.stringBuffer.size() < in.size() * 6) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 6);
 			}
@@ -67,25 +69,22 @@ namespace jsonifier_internal {
 			if (!iter) {
 				iter.template createError<error_classes::Prettifying>(prettify_errors::No_Input);
 				derivedRef.index = 0;
-				return jsonifier::concepts::unwrap_t<string_type>{};
+				return {};
 			}
-			jsonifier::concepts::unwrap_t<string_type> newString{};
-			derivedRef.index = impl<options>(iter, derivedRef.stringBuffer);
-			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
-				newString.resize(derivedRef.index);
-				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
+			if (derivedRef.index = impl<options>(iter, derivedRef.stringBuffer); derivedRef.index == prettifyError) {
 				derivedRef.index = 0;
-				return newString;
+				return {};
 			} else {
+				auto newIndex	 = derivedRef.index;
 				derivedRef.index = 0;
-				return jsonifier::concepts::unwrap_t<string_type>{};
+				return { derivedRef.stringBuffer.data(), newIndex };
 			}
 		}
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
 		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& out) noexcept {
-			if (out.size() < in.size() * 6) [[unlikely]] {
-				out.resize(in.size() * 6);
+			if (derivedRef.stringBuffer.size() < in.size() * 6) [[unlikely]] {
+				derivedRef.stringBuffer.resize(in.size() * 6);
 			}
 			derivedRef.index = 0;
 			derivedRef.errors.clear();

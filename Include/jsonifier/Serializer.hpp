@@ -41,6 +41,8 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
+	constexpr uint32_t serializeError{ std::numeric_limits<uint32_t>::max() };
+
 	template<uint64_t maxDepth> struct prettify_arguments {
 		json_structural_type state[maxDepth]{};
 		int64_t indent{};
@@ -54,6 +56,28 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
+
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+		JSONIFIER_INLINE jsonifier::string_view serializeJson(value_type&& object) {
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+				"No specialization of core exists for the type named above - please specialize it!");
+			derivedRef.index = 0;
+			derivedRef.errors.clear();
+			if constexpr (options.prettify) {
+				prettify_arguments<options.prettifyOptions.maxDepth> prettifyArgs{};
+				impl<options>(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index, &prettifyArgs);
+			} else {
+				impl<options>(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index, nullptr);
+			}
+			if (derivedRef.index == serializeError) [[likely]] {
+				derivedRef.index = 0;
+				return {};
+			} else {
+				auto newIndex	 = derivedRef.index;
+				derivedRef.index = 0;
+				return { derivedRef.stringBuffer.data(), newIndex };
+			}
+		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& out) {
@@ -71,26 +95,6 @@ namespace jsonifier_internal {
 				out.resize(derivedRef.index);
 			}
 			return true;
-		}
-
-		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
-				"No specialization of core exists for the type named above - please specialize it!");
-			derivedRef.index = 0;
-			derivedRef.errors.clear();
-			jsonifier::string newString{};
-			if constexpr (options.prettify) {
-				prettify_arguments<options.prettifyOptions.maxDepth> prettifyArgs{};
-				impl<options>(std::forward<value_type>(object), newString, derivedRef.index, &prettifyArgs);
-			} else {
-				impl<options>(std::forward<value_type>(object), newString, derivedRef.index, nullptr);
-			}
-			if (derivedRef.index != minifyError) [[likely]] {
-				newString.resize(derivedRef.index);
-			}
-			derivedRef.index = 0;
-			return newString;
 		}
 
 	  protected:

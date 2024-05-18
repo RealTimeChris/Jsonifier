@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
 		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
+		template<jsonifier ::concepts::string_t string_type> JSONIFIER_INLINE jsonifier::string_view minifyJson(string_type&& in) noexcept {
 			if (derivedRef.stringBuffer.size() < in.size() / 4) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() / 4);
 			}
@@ -57,18 +57,16 @@ namespace jsonifier_internal {
 			if (!iter) {
 				iter.template createError<error_classes::Minifying>(minify_errors::No_Input);
 				derivedRef.index = 0;
-				return jsonifier::concepts::unwrap_t<string_type>{};
+				return {};
 			}
-			jsonifier::concepts::unwrap_t<string_type> newString{};
 			if (derivedRef.index = impl(iter, derivedRef.stringBuffer); derivedRef.index == minifyError) {
 				derivedRef.index = 0;
-				return newString;
+				return {};
 			} else {
-				newString.resize(derivedRef.index);
-				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
+				auto newIndex	 = derivedRef.index;
+				derivedRef.index = 0;
+				return { derivedRef.stringBuffer.data(), newIndex };
 			}
-			derivedRef.index = 0;
-			return newString;
 		}
 
 		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>

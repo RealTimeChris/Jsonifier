@@ -5,7 +5,7 @@
 
 if (UNIX OR APPLE)
     file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMake/BuildFeatureTester.sh" "#!/bin/bash
-\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release
+\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
 \"${CMAKE_COMMAND}\" --build ./Build --config=Release")
     execute_process(
         COMMAND chmod +x "${CMAKE_CURRENT_SOURCE_DIR}/CMake/BuildFeatureTester.sh"
@@ -20,7 +20,7 @@ if (UNIX OR APPLE)
     )
     set(FEATURE_TESTER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Build/feature_detector")
 elseif(WIN32)
-    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMake/BuildFeatureTester.bat" "\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release
+    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMake/BuildFeatureTester.bat" "\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
 \"${CMAKE_COMMAND}\" --build ./Build --config=Release")
     execute_process(
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/CMake/BuildFeatureTester.bat"

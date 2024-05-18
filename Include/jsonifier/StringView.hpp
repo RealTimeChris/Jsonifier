@@ -199,7 +199,7 @@ namespace jsonifier {
 			return returnValue;
 		}
 
-		template<typename value_type_newer = value_type> constexpr explicit operator std::basic_string<value_type_newer>() const {
+		template<typename value_type_newer = value_type> constexpr operator std::basic_string<value_type_newer>() const {
 			std::basic_string<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
 			if (sizeVal > 0) [[likely]] {

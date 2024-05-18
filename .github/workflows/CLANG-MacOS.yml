@@ -1,0 +1,67 @@
+name: Build-and-Test-CLANG-MacOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+    - assembly
+
+jobs:
+  Build:
+    runs-on: macos-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+<<<<<<<< HEAD:.github/workflows/CLANG_15-MacOS.yml
+        clang: [15]
+========
+        clang: [17]
+>>>>>>>> dev:.github/workflows/CLANG-MacOS.yml
+        build_type: [Debug, Release]
+        std: [20]
+
+    steps:
+    - uses: actions/checkout@v4
+<<<<<<<< HEAD:.github/workflows/CLANG_15-MacOS.yml
+  
+    - name: Install Nasm.
+      run: |
+========
+
+    - name: Install the latest clang compiler.
+      run: |
+            brew install llvm
+
+    - name: Install Nasm.
+      run: |
+>>>>>>>> dev:.github/workflows/CLANG-MacOS.yml
+            brew install nasm
+
+    - name: Configure CMake
+      working-directory: ./
+      run: |
+<<<<<<<< HEAD:.github/workflows/CLANG_15-MacOS.yml
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DDEV="TRUE" -DJSONIFIER_TEST=true
+========
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DDEV="TRUE" -DJSONIFIER_TEST=true
+>>>>>>>> dev:.github/workflows/CLANG-MacOS.yml
+
+    - name: Build the Test
+      working-directory: ./Build
+      run: |
+           cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      working-directory: ./Build/Tests
+      run: |
+           ./Json-Performance
+      continue-on-error: true
+      
