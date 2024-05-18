@@ -1030,7 +1030,7 @@ class file_loader {
 	std::string filePath{};
 };
 
-template<typename value_type> struct Test {
+template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
 
@@ -1190,7 +1190,7 @@ template<> struct jsonifier::core<test_elements_final> {
 	static constexpr auto parseValue = createValue("results", &value_type::results, "testName", &value_type::testName);
 };
 
-template<typename value_type> struct AbcTest {
+template<typename value_type> struct abc_test {
 	std::vector<value_type> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
 };
 
@@ -1199,8 +1199,8 @@ template<> struct jsonifier::core<test_struct> {
 	static constexpr auto parseValue = createValue<&value_type::testStrings, &value_type::testUints, &value_type::testDoubles, &value_type::testInts, &value_type::testBools>();
 };
 
-template<> struct jsonifier::core<Test<test_struct>> {
-	using value_type				 = Test<test_struct>;
+template<> struct jsonifier::core<test<test_struct>> {
+	using value_type				 = test<test_struct>;
 	static constexpr auto parseValue = createValue("a", &value_type::a, "b", &value_type::b, "c", &value_type::c, "d", &value_type::d, "e", &value_type::e, "f", &value_type::f,
 		"g", &value_type::g, "h", &value_type::h, "i", &value_type::i, "j", &value_type::j, "k", &value_type::k, "l", &value_type::l, "m", &value_type::m, "n", &value_type::n, "o",
 		&value_type::o, "p", &value_type::p, "q", &value_type::q, "r", &value_type::r, "s", &value_type::s, "t", &value_type::t, "u", &value_type::u, "v", &value_type::v, "w",
@@ -1216,8 +1216,8 @@ template<> struct jsonifier::core<test_generator<test_struct>> {
 		&value_type::w, "x", &value_type::x, "y", &value_type::y, "z", &value_type::z);
 };
 
-template<> struct jsonifier::core<AbcTest<test_struct>> {
-	using value_type				 = AbcTest<test_struct>;
+template<> struct jsonifier::core<abc_test<test_struct>> {
+	using value_type				 = abc_test<test_struct>;
 	static constexpr auto parseValue = createValue("z", &value_type::z, "y", &value_type::y, "x", &value_type::x, "w", &value_type::w, "v", &value_type::v, "u", &value_type::u,
 		"t", &value_type::t, "s", &value_type::s, "r", &value_type::r, "q", &value_type::q, "p", &value_type::p, "o", &value_type::o, "n", &value_type::n, "m", &value_type::m, "l",
 		&value_type::l, "k", &value_type::k, "j", &value_type::j, "i", &value_type::i, "h", &value_type::h, "g", &value_type::g, "f", &value_type::f, "e", &value_type::e, "d",
@@ -1230,8 +1230,8 @@ template<> struct glz::meta<test_struct> {
 		&value_type::testInts, "testBools", &value_type::testBools);
 };
 
-template<> struct glz::meta<Test<test_struct>> {
-	using value_type			= Test<test_struct>;
+template<> struct glz::meta<test<test_struct>> {
+	using value_type			= test<test_struct>;
 	static constexpr auto value = object("a", &value_type::a, "b", &value_type::b, "c", &value_type::c, "d", &value_type::d, "e", &value_type::e, "f", &value_type::f, "g",
 		&value_type::g, "h", &value_type::h, "i", &value_type::i, "j", &value_type::j, "k", &value_type::k, "l", &value_type::l, "m", &value_type::m, "n", &value_type::n, "o",
 		&value_type::o, "p", &value_type::p, "q", &value_type::q, "r", &value_type::r, "s", &value_type::s, "t", &value_type::t, "u", &value_type::u, "v", &value_type::v, "w",
@@ -1247,8 +1247,8 @@ template<> struct glz::meta<test_generator<test_struct>> {
 		&value_type::w, "x", &value_type::x, "y", &value_type::y, "z", &value_type::z);
 };
 
-template<> struct glz::meta<AbcTest<test_struct>> {
-	using value_type			= AbcTest<test_struct>;
+template<> struct glz::meta<abc_test<test_struct>> {
+	using value_type			= abc_test<test_struct>;
 	static constexpr auto value = object("z", &value_type::z, "y", &value_type::y, "x", &value_type::x, "w", &value_type::w, "v", &value_type::v, "u", &value_type::u, "t",
 		&value_type::t, "s", &value_type::s, "r", &value_type::r, "q", &value_type::q, "p", &value_type::p, "o", &value_type::o, "n", &value_type::n, "m", &value_type::m, "l",
 		&value_type::l, "k", &value_type::k, "j", &value_type::j, "i", &value_type::i, "h", &value_type::h, "g", &value_type::g, "f", &value_type::f, "e", &value_type::e, "d",
@@ -2286,7 +2286,7 @@ template<> void getValue(discord_message& returnValue, simdjson::ondemand::value
 		}
 
 
-template<> void getValue<Test<test_struct>>(Test<test_struct>& obj, simdjson::ondemand::value doc) {
+template<> void getValue<test<test_struct>>(test<test_struct>& obj, simdjson::ondemand::value doc) {
 	SIMD_PULL(a);
 	SIMD_PULL(b);
 	SIMD_PULL(c);
@@ -2315,7 +2315,7 @@ template<> void getValue<Test<test_struct>>(Test<test_struct>& obj, simdjson::on
 	SIMD_PULL(z);
 }
 
-template<> void getValue<AbcTest<test_struct>>(AbcTest<test_struct>& obj, simdjson::ondemand::value doc) {
+template<> void getValue<abc_test<test_struct>>(abc_test<test_struct>& obj, simdjson::ondemand::value doc) {
 	SIMD_PULL_ABC(z);
 	SIMD_PULL_ABC(y);
 	SIMD_PULL_ABC(x);
@@ -2758,21 +2758,21 @@ int main() {
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ static_cast<std::string>(section00) + newTimeString + static_cast<std::string>(section01) };
-		auto testResults = json_tests_helper<test_type::parse_and_serialize, Test<test_struct>, false, iterationsVal>::run(jsonDataNew, "Json Test (Prettified)");
+		auto testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, iterationsVal>::run(jsonDataNew, "Json Test (Prettified)");
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, Test<test_struct>, true, iterationsVal>::run(jsonMinifiedData, "Json Test (Minified)");
+		testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, iterationsVal>::run(jsonMinifiedData, "Json Test (Minified)");
 		newerString += section02;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, AbcTest<test_struct>, false, iterationsVal>::run(jsonDataNew, "Abc Test (Prettified)");
+		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, false, iterationsVal>::run(jsonDataNew, "Abc Test (Prettified)");
 		newerString += section03;
 		newerString += section001;
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, AbcTest<test_struct>, true, iterationsVal>::run(jsonMinifiedData, "Abc Test (Minified)");
+		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, iterationsVal>::run(jsonMinifiedData, "Abc Test (Minified)");
 		newerString += section04;
 		newerString += section001;
 		newerString += testResults.markdownResults;

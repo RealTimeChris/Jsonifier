@@ -201,7 +201,7 @@ namespace jsonifier_internal {
 				if (*iter == 0x6Eu) {
 					skipToEndOfValue(iter);
 					continue;
-				} 
+				}
 				parser<derived_type>::impl(value[static_cast<typename value_type_new::key_type>(keyNew)], iter);
 			}
 		}
@@ -280,9 +280,7 @@ namespace jsonifier_internal {
 						}
 					}
 
-					using value_type = typename value_type_new::value_type;
-
-					std::vector<std::vector<value_type>> intermediate;
+					std::vector<std::vector<value_type_new>> intermediate;
 					intermediate.reserve(48);
 					auto* active = &intermediate.emplace_back();
 					active->reserve(2);
@@ -311,13 +309,13 @@ namespace jsonifier_internal {
 						reserve_size += intermediate[i].size();
 					}
 
-					if constexpr (std::is_trivially_copyable_v<value_type> && !std::same_as<value_type_new, std::vector<bool>>) {
+					if constexpr (std::is_trivially_copyable_v<value_type_new> && !std::same_as<value_type_new, std::vector<bool>>) {
 						const auto original_size = value.size();
 						value.resize(reserve_size);
 						auto* dest = value.data() + original_size;
 						for (const auto& vector: intermediate) {
 							const auto vector_size = vector.size();
-							std::memcpy(dest, vector.data(), vector_size * sizeof(value_type));
+							std::memcpy(dest, vector.data(), vector_size * sizeof(value_type_new));
 							dest += vector_size;
 						}
 					} else {
