@@ -390,6 +390,13 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
+	template<uint64_t currentLength> struct parse_string_helper {};
+	template<> struct parse_string_helper<64> {
+		template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseStringImpl(char_type01* string1, char_type02* string2, uint64_t lengthNew);
+	};
+	template<typename char_type01, typename char_type02>
+	JSONIFIER_INLINE char_type02* parseStringImpl(char_type01* string1, char_type02* string2, uint64_t lengthNew);
+
 	template<typename char_type01, typename char_type02> JSONIFIER_INLINE char_type02* parseStringImpl(char_type01* string1, char_type02* string2, uint64_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{

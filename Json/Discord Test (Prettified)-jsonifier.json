@@ -3,7 +3,9 @@
    "d": {
       "communication_disabled_until": null,
       "guild_scheduled_events": [],
-      "application_command_counts": {},
+      "application_command_counts": {
+         
+      },
       "safety_alerts_channel_id": null,
       "embedded_activities": [],
       "stage_instances": [],

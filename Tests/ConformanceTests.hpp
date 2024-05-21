@@ -336,7 +336,7 @@ template<> struct jsonifier::core<message_class> {
 		&value_type::the0123456789, "special", &value_type::special, "hex", &value_type::hex, "true", &value_type::messageTrue, "false", &value_type::messageFalse, "null",
 		&value_type::null, "array", &value_type::array, "object", &value_type::objectVal, "address", &value_type::address, "url", &value_type::url, "comment", &value_type::comment,
 		"# -- --> */", &value_type::message, " s p a c e d ", &value_type::sPACED, "compact", &value_type::compact, "jsontext", &value_type::jsontext, "quotes",
-		&value_type::quotes, "\/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?", &value_type::uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_);
+		&value_type::quotes, "\/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\buffer\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?", &value_type::uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_);
 };
 
 struct passTest01 {

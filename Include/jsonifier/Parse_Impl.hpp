@@ -446,7 +446,7 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::always_null_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<jsonifier::concepts::null_t value_type, jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static void impl(value_type&&, iterator_type&& iter) {
 			if (parseNull(iter.operator->())) [[likely]] {
-				++iter;
+				
 			} else {
 				iter.template createError<error_classes::Parsing>(parse_errors::Invalid_Null_Value);
 				skipToNextValue(iter);

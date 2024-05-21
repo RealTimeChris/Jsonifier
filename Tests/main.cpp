@@ -1439,7 +1439,7 @@ void useCharPointer(char const volatile* const v) {
 
 template<typename return_type> void doNotOptimizeAway(std::function<return_type(void)>& x) {
 	auto result = x();
-	useCharPointer(reinterpret_cast<char const volatile* const>(result));
+	useCharPointer(reinterpret_cast<char const volatile* const>(&result));
 }
 
 void doNotOptimizeAway(std::function<void(void)>& x) {
