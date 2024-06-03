@@ -154,23 +154,23 @@ namespace jsonifier {
 		}
 
 		template<typename... arg_types> constexpr size_type find(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> constexpr size_type findFirstOf(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> constexpr size_type findLastOf(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> constexpr size_type findFirstNotOf(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> constexpr size_type findLastNotOf(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
 		}
 
 		constexpr void swap(string_view_base& other) {
@@ -310,16 +310,3 @@ namespace jsonifier {
 	}
 
 }// namespace jsonifier
-
-namespace jsonifier_internal {
-
-	template<typename value_type> struct hash<jsonifier::string_view_base<value_type>> {
-		constexpr uint64_t operator()(const jsonifier::string_view_base<value_type>& value, uint32_t seed) const {
-			if (std::is_constant_evaluated()) {
-				return fnv1aHashCt(value, seed);
-			} else {
-				return fnv1aHashRt(value.data(), value.size(), seed);
-			}
-		}
-	};
-}

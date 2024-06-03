@@ -32,46 +32,31 @@ namespace jsonifier_internal {
 
 	// https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function
 	// http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-param
-	static constexpr uint32_t fnv32OffsetBasis{ 0x811c9dc5u };
-	static constexpr uint32_t fnv32Prime{ 0x01000193u };
+	static constexpr uint64_t fnv64OffsetBasis{ 0xcbf29ce484222325 };
+	static constexpr uint64_t fnv64Prime{ 0x00000100000001B3 };
 
-	JSONIFIER_INLINE uint32_t fnv1aHashRt(const void* value, uint64_t size) {
-		uint32_t hash	   = fnv32OffsetBasis * fnv32Prime;
-		const char* newPtr = static_cast<const char*>(value);
-		for (uint64_t x = 0; x < size; ++x) {
-			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(newPtr[x]))) * fnv32Prime;
+	struct fnv1a_hash {
+		constexpr uint64_t operator()(string_view_ptr value, int64_t size, uint64_t seed = 0) const {
+			uint64_t hash = fnv64OffsetBasis * fnv64Prime ^ seed;
+			int64_t x{};
+			if (!std::is_constant_evaluated()) {
+				for (; x < size - 8; x += 8) {
+					hash = (hash ^ static_cast<uint64_t>(value[x])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 1])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 2])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 3])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 4])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 5])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 6])) * fnv64Prime;
+					hash = (hash ^ static_cast<uint64_t>(value[x + 7])) * fnv64Prime;
+				}
+			}
+			for (; x < size; ++x) {
+				hash = (hash ^ static_cast<uint64_t>(value[x])) * fnv64Prime;
+			}
+			return hash >> 8;
 		}
-		return static_cast<uint32_t>(hash >> 8);
-	}
-
-	JSONIFIER_INLINE uint32_t fnv1aHashRt(const void* value, uint64_t size, uint32_t seed) {
-		uint32_t hash		 = (fnv32OffsetBasis ^ seed) * fnv32Prime;
-		const char* startPtr = static_cast<const char*>(value);
-		while (size >= 8) {
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			size -= 8;
-		}
-		while (size > 0) {
-			hash = (hash ^ static_cast<uint32_t>(*startPtr++)) * fnv32Prime;
-			--size;
-		}
-		return static_cast<uint32_t>(hash >> 8);
-	}
-
-	template<typename string_t> constexpr uint32_t fnv1aHashCt(const string_t& value, uint32_t seed) {
-		uint32_t hash = (fnv32OffsetBasis ^ seed) * fnv32Prime;
-		for (auto& valueNew: value) {
-			hash = (hash ^ static_cast<uint32_t>(static_cast<std::byte>(valueNew))) * fnv32Prime;
-		}
-		return static_cast<uint32_t>(hash >> 8);
-	}
+	};
 
 	template<typename value_type> struct hash;
 }

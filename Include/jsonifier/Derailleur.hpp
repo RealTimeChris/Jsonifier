@@ -25,12 +25,19 @@
 
 #include <jsonifier/SimdStructuralIterator.hpp>
 #include <jsonifier/Error.hpp>
-#include <jsonifier/ISADetection.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace jsonifier_internal {
 
 	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipNumber(iterator_type& iter, iterator_type& end) noexcept {
 		++iter;
+	}
+
+	template<typename iterator_type> JSONIFIER_INLINE iterator_type skipWs(iterator_type iter) noexcept {
+		while (whitespaceTable[*iter]) {
+			++iter;
+		}
+		return iter;
 	}
 
 	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
@@ -372,9 +379,9 @@ namespace jsonifier_internal {
 	};
 
 	template<key_stats_t stats> [[nodiscard]] JSONIFIER_INLINE jsonifier::string_view parseKeyCx(auto& iter) noexcept {
-		static constexpr auto lengthRange{ stats.lengthRange };
+		static constexpr auto lengthRange = stats.lengthRange;
 
-		auto start{ iter };
+		auto start = iter;
 
 		iter += stats.minLength;
 
@@ -392,21 +399,75 @@ namespace jsonifier_internal {
 				}
 			}
 			return { start, size_t(iter - start) };
+		} else if constexpr (lengthRange == 7) {
+			uint64_t chunk;
+			std::memcpy(&chunk, iter, 8);
+			const uint64_t test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (test_chunk) [[likely]] {
+				iter += (simd_internal::tzcnt(test_chunk) >> 3);
+			}
+			return { start, size_t(iter - start) };
+		} else if constexpr (lengthRange > 15) {
+			uint64_t chunk;
+			std::memcpy(&chunk, iter, 8);
+			uint64_t test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (test_chunk) {
+				goto finish;
+			}
+
+			iter += 8;
+			std::memcpy(&chunk, iter, 8);
+			test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (test_chunk) {
+				goto finish;
+			}
+
+			iter += 8;
+			static constexpr auto rest = lengthRange + 1 - 16;
+			chunk					   = 0;
+			std::memcpy(&chunk, iter, rest);
+			test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (!test_chunk) {
+				test_chunk = 1;
+			}
+
+		finish:
+			iter += (simd_internal::tzcnt(test_chunk) >> 3);
+			return { start, size_t(iter - start) };
+		} else if constexpr (lengthRange > 7) {
+			uint64_t chunk;
+			std::memcpy(&chunk, iter, 8);
+			uint64_t test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (test_chunk) {
+				iter += (simd_internal::tzcnt(test_chunk) >> 3);
+			} else {
+				iter += 8;
+				static constexpr auto rest = lengthRange + 1 - 8;
+				chunk					   = 0;
+				std::memcpy(&chunk, iter, rest);
+				test_chunk = hasValue<'"', uint64_t>(chunk);
+				if (test_chunk) {
+					iter += (simd_internal::tzcnt(test_chunk) >> 3);
+				}
+			}
+			return { start, size_t(iter - start) };
 		} else {
-			memchar<'"'>(iter, stats.maxLength + stats.lengthRange);
-			if (!iter) {
-				iter = start;
+			uint64_t chunk{};
+			std::memcpy(&chunk, iter, lengthRange + 1);
+			const uint64_t test_chunk = hasValue<'"', uint64_t>(chunk);
+			if (test_chunk) [[likely]] {
+				iter += (simd_internal::tzcnt(test_chunk) >> 3);
 			}
 			return { start, size_t(iter - start) };
 		}
 	}
 
-	template<size_t I, class T> static constexpr auto keyName = [] {
-		using V = std::decay_t<T>;
-		return get<0>(get<I>(jsonifier::concepts::core_v<V>));
+	template<size_t I, typename value_type> static constexpr auto keyName = [] {
+		using V = std::decay_t<value_type>;
+		return std::get<0>(std::get<I>(jsonifier::concepts::core_v<V>));
 	}();
 
-	template<std::size_t N, class Func> constexpr void forEach(Func&& f) {
+	template<std::size_t N, typename function_type> constexpr void forEach(function_type&& f) {
 		[&]<std::size_t... I>(std::index_sequence<I...>) constexpr {
 			(f(std::integral_constant<std::size_t, I>{}), ...);
 		}(std::make_index_sequence<N>{});
@@ -438,19 +499,23 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>
-	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>&errors) {
-		if (*iter != '"') [[unlikely]] {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, static_cast<uint64_t>(end - iter),
-				options.rootIter, parse_errors::Missing_String_Start));
-			return {};
-		} else {
+	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
+		if (*iter == '"') [[unlikely]] {
 			++iter;
+		} else {
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter,
+				static_cast<uint64_t>(end - iter), options.rootIter));
+			return {};
 		}
 		constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
 
 		static constexpr auto stats{ keyStats<value_type>() };
-		if constexpr (N > 0) {
+		if constexpr (N == 1) {
+			static constexpr jsonifier::string_view key{ keyName<0, value_type> };
+			iter += key.size() + 1;
+			return key;
+		} else if constexpr (N > 0) {
 			if constexpr (stats.lengthRange < 24) {
 				if ((iter + stats.maxLength) < end) [[likely]] {
 					jsonifier::string_view newKey{ parseKeyCx<stats>(iter) };
@@ -473,16 +538,16 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, simd_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) { 
+	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		auto start{ iter.operator->() };
 
-		if (*iter != '"') [[unlikely]] {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, static_cast<uint64_t>(end - iter),
-				options.rootIter, parse_errors::Missing_String_Start));
-			return {};
-		} else {
+		if (*iter == '"') [[unlikely]] {
 			++iter;
+		} else {
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter,
+				static_cast<uint64_t>(end - iter), options.rootIter));
+			return {};
 		}
 
 		return jsonifier::string_view{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };

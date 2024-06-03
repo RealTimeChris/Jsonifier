@@ -71,7 +71,7 @@ namespace simd_internal {
 		}
 #elif defined(JSONIFIER_MAC)
 		constexpr uint64_t valueSize{ sizeof(char) };
-		unsigned char newArray[16]{};
+		uint8_t newArray[16]{};
 		std::fill(newArray, newArray + 16, static_cast<char>(value));
 #elif defined(JSONIFIER_WIN)
 		constexpr uint64_t valueSize{ sizeof(char) };
@@ -91,7 +91,7 @@ namespace simd_internal {
 		}
 #elif defined(JSONIFIER_MAC)
 		constexpr uint64_t valueSize{ sizeof(char) };
-		unsigned char newArray[16]{};
+		uint8_t newArray[16]{};
 		std::copy(valuesNew01.data(), valuesNew01.data() + std::size(newArray), newArray);
 #elif defined(JSONIFIER_WIN)
 		constexpr uint64_t valueSize{ sizeof(char) };
@@ -145,62 +145,6 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE const char* collectNextNonWhiteSpaceIndex(const char* values, uint64_t lengthNew) {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
-		if (lengthNew >= 64) {
-			using simd_type						 = typename jsonifier::concepts::get_type_at_index<avx_list, 2>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<avx_list, 2>::type::bytesProcessed;
-			simd_type value01;
-			while (true) {
-				value01 = gatherValuesU<simd_type>(values);
-				if (auto result = ~opCmpEq(opShuffle(whitespaceTable<simd_int_t>, value01), value01); result) {
-					return values + tzcnt(result);
-				};
-				lengthNew -= vectorSize;
-				values += vectorSize;
-			}
-		}
-#endif
-
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
-		if (lengthNew >= 32) {
-			using simd_type						 = typename jsonifier::concepts::get_type_at_index<avx_list, 1>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<avx_list, 1>::type::bytesProcessed;
-			simd_type value01;
-			while (true) {
-				value01 = gatherValuesU<simd_type>(values);
-				if (auto result = ~opCmpEq(opShuffle(whitespaceTable<simd_type>, value01), value01); result) {
-					return values + tzcnt(result);
-				};
-				lengthNew -= vectorSize;
-				values += vectorSize;
-			}
-		}
-#endif
-
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-		if (lengthNew >= 16) {
-			using simd_type						 = typename jsonifier::concepts::get_type_at_index<avx_list, 0>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<avx_list, 0>::type::bytesProcessed;
-			simd_type value01;
-			while (true) {
-				value01 = gatherValuesU<simd_type>(values);
-				if (auto result = ~opCmpEq(opShuffle(whitespaceTable<simd_type>, value01), value01); result) {
-					return values + tzcnt(static_cast<uint16_t>(result));
-				};
-				lengthNew -= vectorSize;
-				values += vectorSize;
-			}
-		}
-#endif
-		while (lengthNew > 0 && jsonifier_internal::whitespaceTable[static_cast<uint64_t>(*values)]) {
-			--lengthNew;
-			++values;
-		}
-
-		return values;
-	}
-
 	template<char c> JSONIFIER_INLINE simd_int_t collectValuesAsSimdBase(const simd_int_t* values) {
 		JSONIFIER_ALIGN string_parsing_type valuesNew[StridesPerStep];
 		valuesNew[0] = opCmpEq(simdChars<c, simd_int_t>, values[0]);
@@ -214,17 +158,11 @@ namespace simd_internal {
 		return gatherValues<simd_int_t>(valuesNew);
 	}
 
-	template<char c, bool minified> JSONIFIER_INLINE simd_int_t collectIndicesSingle(const simd_int_t* values) {
-		return collectValuesAsSimdBase<c>(values);
-	}
-
-	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const simd_int_t* values) {
+	JSONIFIER_INLINE simd_int_t_holder collectIndices(const simd_int_t* values) {
 		simd_int_t_holder returnValues;
-		returnValues.op		= collectStructuralsAsSimdBase(values);
-		returnValues.quotes = collectValuesAsSimdBase<'"'>(values);
-		if constexpr (!minified) {
-			returnValues.whitespace = collectWhitespaceAsSimdBase(values);
-		}
+		returnValues.op			 = collectStructuralsAsSimdBase(values);
+		returnValues.quotes		 = collectValuesAsSimdBase<'"'>(values);
+		returnValues.whitespace	 = collectWhitespaceAsSimdBase(values);
 		returnValues.backslashes = collectValuesAsSimdBase<'\\'>(values);
 		return returnValues;
 	}

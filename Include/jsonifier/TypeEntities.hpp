@@ -55,7 +55,7 @@ namespace jsonifier {
 
 	template<typename value_type> struct value {
 		value_type parseValue;
-	};	
+	};
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 

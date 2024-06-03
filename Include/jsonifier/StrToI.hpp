@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		using value_type		  = jsonifier::concepts::unwrap_t<value_type_new>;
 		constexpr auto isVolatile = std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
 		using char_type			  = decltype(iter);
-		uint64_t sig			  = uint64_t(numberSubTable[static_cast<uint64_t>(*iter)]);
+		uint64_t sig			  = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		uint64_t numTmp;
 
 		if (sig > 9) [[unlikely]] {

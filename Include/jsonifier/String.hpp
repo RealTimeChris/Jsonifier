@@ -28,20 +28,12 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type01, typename value_type02> constexpr bool stringConstCompare(const value_type01& string01, const value_type02& string02) {
-		if (string01.size() != string02.size()) [[unlikely]] {
-			return false;
-		}
-		using char_t = typename value_type01::value_type;
-		for (uint64_t x = 0; x < string01.size(); ++x) {
-			if (string01[x] != static_cast<char_t>(string02[x])) [[unlikely]] {
-				return false;
-			}
-		}
-		return true;
-	}
+	template<typename value_type>
+	concept not_uint8_t = !std::same_as<jsonifier::concepts::unwrap_t<value_type>, uint8_t>;
 
-	template<typename value_type> class char_traits : public std::char_traits<jsonifier::concepts::unwrap_t<value_type>> {};
+	template<typename value_type> class char_traits;
+
+	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<jsonifier::concepts::unwrap_t<value_type>> {};
 
 	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
 	  public:
@@ -429,10 +421,10 @@ namespace jsonifier {
 							if (sizeVal > 0) [[likely]] {
 								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							}
-							allocator::deallocate(dataVal, capacityVal + 1);
+							allocator::deallocate(dataVal);
 						}
 					} catch (...) {
-						allocator::deallocate(newPtr, newSize + 1);
+						allocator::deallocate(newPtr);
 						throw;
 					}
 					capacityVal = newSize;
@@ -463,10 +455,10 @@ namespace jsonifier {
 						if (sizeVal > 0) [[likely]] {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
-						allocator::deallocate(dataVal, capacityVal + 1);
+						allocator::deallocate(dataVal);
 					}
 				} catch (...) {
-					allocator::deallocate(newPtr, capacityNew + 1);
+					allocator::deallocate(newPtr);
 					throw;
 				}
 				capacityVal = capacityNew;
@@ -607,7 +599,7 @@ namespace jsonifier {
 					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
-				allocator::deallocate(dataVal, capacityVal + 1);
+				allocator::deallocate(dataVal);
 				dataVal		= nullptr;
 				capacityVal = 0;
 			}

@@ -39,9 +39,10 @@ namespace jsonifier_internal {
 		constexpr const_iterator() noexcept : ptr() {
 		}
 
-		constexpr const_iterator(pointer ptrNew) noexcept : ptr(ptrNew){}
+		constexpr const_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
+		}
 
-		[[nodiscard]] constexpr reference operator*() const noexcept {  
+		[[nodiscard]] constexpr reference operator*() const noexcept {
 			return *ptr;
 		}
 
@@ -77,7 +78,7 @@ namespace jsonifier_internal {
 			const_iterator temp = *this;
 			--*this;
 			return temp;
-		} 
+		}
 
 		constexpr const_iterator& operator+=(const difference_type offSet) noexcept {
 			ptr += offSet;

@@ -63,6 +63,7 @@ target_compile_definitions(
 	"Json-Performance" PUBLIC 
 	"JSON_TEST_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/ConformanceTests\""
 	"JSON_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/../Json\""
+	"README_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.md\""
 )
 
 install(

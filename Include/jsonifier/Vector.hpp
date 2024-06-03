@@ -376,10 +376,10 @@ namespace jsonifier {
 						}
 					}
 					if (dataVal && capacityVal > 0) [[likely]] {
-						allocator::deallocate(dataVal, capacityVal);
+						allocator::deallocate(dataVal);
 					}
 				} catch (...) {
-					allocator::deallocate(newPtr, newSize);
+					allocator::deallocate(newPtr);
 					throw;
 				}
 				capacityVal = newSize;
@@ -401,10 +401,10 @@ namespace jsonifier {
 						if (sizeVal > 0) {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
-						allocator::deallocate(dataVal, capacityVal);
+						allocator::deallocate(dataVal);
 					}
 				} catch (...) {
-					allocator::deallocate(newPtr, capacityNew);
+					allocator::deallocate(newPtr);
 					throw;
 				}
 				capacityVal = capacityNew;
@@ -454,7 +454,7 @@ namespace jsonifier {
 					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
-				allocator::deallocate(dataVal, capacityVal);
+				allocator::deallocate(dataVal);
 				dataVal		= nullptr;
 				capacityVal = 0;
 			}

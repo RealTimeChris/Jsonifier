@@ -410,17 +410,11 @@ bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& res
 
 template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
 	std::cout << "Running Test: " << testName << std::endl;
-	auto result = parser.parseJson(test_type{}, dataToParse);
+	auto result = parser.parseJson<jsonifier::parse_options{ .minified = false }>(test_type{}, parser.minifyJson(dataToParse));
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
-		for (auto& value: parser.getErrors()) {
-			//std::cout << "Jsonifier Error: " << value << std::endl;
-		}
 	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
-		for (auto& value: parser.getErrors()) {
-			//std::cout << "Jsonifier Error: " << value << std::endl;
-		}
 	} else {
 		std::cout << "Test: " << testName << " = Failed" << std::endl;
 		for (auto& value: parser.getErrors()) {

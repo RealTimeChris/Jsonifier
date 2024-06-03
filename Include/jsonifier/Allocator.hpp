@@ -37,28 +37,6 @@ namespace jsonifier_internal {
 		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 	}
 
-#if defined(_MSC_VER)
-
-	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(size * sizeof(value_type)), BytesPerStep));
-	}
-
-	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
-		_aligned_free(ptr);
-	}
-
-#else
-
-	template<typename value_type> JSONIFIER_INLINE value_type* jsonifierAlignedAlloc(uint64_t size) {
-		return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(size * sizeof(value_type))));
-	}
-
-	JSONIFIER_INLINE void jsonifierFree(void* ptr) {
-		free(ptr);
-	}
-
-#endif
-
 	template<typename value_type_new> class alloc_wrapper {
 	  public:
 		using value_type	   = value_type_new;
@@ -70,12 +48,20 @@ namespace jsonifier_internal {
 			if (count == 0) [[unlikely]] {
 				return nullptr;
 			}
-			return jsonifierAlignedAlloc<value_type>(count);
+#if defined(JSONIFIER_MSVC)
+			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(count * sizeof(value_type)), BytesPerStep));
+#else
+			return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(count * sizeof(value_type))));
+#endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr, size_type) {
+		JSONIFIER_INLINE void deallocate(pointer ptr) {
 			if (ptr) [[likely]] {
-				jsonifierFree(ptr);
+#if defined(JSONIFIER_MSVC)
+				_aligned_free(ptr);
+#else
+				free(ptr);
+#endif
 			}
 		}
 
@@ -83,8 +69,8 @@ namespace jsonifier_internal {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_INLINE size_type maxSize() {
-			return allocator_traits::max_size(*this);
+		JSONIFIER_INLINE static size_type maxSize() {
+			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
 		JSONIFIER_INLINE void destroy(pointer ptr) {

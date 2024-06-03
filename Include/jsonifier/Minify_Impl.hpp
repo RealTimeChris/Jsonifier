@@ -30,25 +30,26 @@
 namespace jsonifier_internal {
 
 	template<typename derived_type> struct minify_impl {
-		template<jsonifier::concepts::string_t string_type, typename iterator_type>
-		JSONIFIER_INLINE static void impl(iterator_type& iter, string_type& out, uint64_t& index) noexcept {
+		template<const minify_options_internal<derived_type>& options, jsonifier::concepts::string_t string_type, typename iterator_type>
+		JSONIFIER_INLINE static void impl(iterator_type&& iter, string_type& out, uint64_t& index) noexcept {
 			auto previousPtr = iter.operator->();
 			int64_t currentDistance{};
 
 			++iter;
 
 			while (iter) {
-				switch (asciiClassesMap[*previousPtr]) {
+				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {
 					[[likely]] case json_structural_type::String: {
 						currentDistance = iter.operator->() - previousPtr;
-						while (whitespaceTable[previousPtr[--currentDistance]]) {
+						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
 						auto newSize = static_cast<uint64_t>(currentDistance) + 1;
 						if (currentDistance > 0) [[likely]] {
 							writeCharactersUnchecked(out, previousPtr, newSize, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
-							iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Invalid_String_Length);
+							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
+								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 							return;
 						}
 						break;
@@ -58,13 +59,14 @@ namespace jsonifier_internal {
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
-						while (!whitespaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
+						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < iter.operator->())) {
 						}
 						if (currentDistance > 0) [[likely]] {
 							writeCharactersUnchecked(out, previousPtr, currentDistance, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
-							iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Invalid_Number_Value);
+							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
+								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 							return;
 						}
 						break;
@@ -103,7 +105,8 @@ namespace jsonifier_internal {
 						[[fallthrough]];
 					[[unlikely]] default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Incorrect_Structural_Index);
+						options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
+							static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 						return;
 					}
 				}

@@ -35,19 +35,23 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	using string_view = jsonifier::string_view;
+	using string_view = jsonifier::string_view_base<char>;
 
-	template<uint64_t sizeVal> struct uint_string_literal {
+	template<uint64_t sizeVal> struct string_literal {
 		static constexpr uint64_t length{ sizeVal > 0 ? sizeVal - 1 : 0 };
 
-		constexpr uint_string_literal() noexcept = default;
+		constexpr string_literal() noexcept = default;
 
-		constexpr uint_string_literal(const char (&str)[sizeVal]) {
+		constexpr string_literal(const char (&str)[sizeVal]) {
 			std::copy(str, str + sizeVal, values);
 		}
 
 		constexpr uint64_t size() const {
 			return length;
+		}
+
+		constexpr const char* data() const {
+			return values;
 		}
 
 		constexpr operator jsonifier::string_view() const {
@@ -60,17 +64,6 @@ namespace jsonifier_internal {
 
 		char values[sizeVal]{};
 	};
-
-	/**
-	 * @def JSONIFIER_PRETTY_FUNCTION
-	 * @brief Define JSONIFIER_PRETTY_FUNCTION based on compiler type.
-	 */
-
-#if defined(JSONIFIER_CLANG) || defined(JSONIFIER_GNUCXX)
-	#define JSONIFIER_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#elif defined(_MSC_VER)
-	#define JSONIFIER_PRETTY_FUNCTION __FUNCSIG__
-#endif
 
 	/**
 	 * @brief External template variable declaration.
@@ -100,79 +93,52 @@ namespace jsonifier_internal {
 		static constexpr auto value{ valueNew };
 	};
 
-	/**
-	 * @def pretty_function_tail
-	 * @brief Define pretty_function_tail based on compiler type.
-	 */
-
 #if defined(JSONIFIER_CLANG)
 	constexpr auto pretty_function_tail = "]";
-#else
+#elif defined(JSONIFIER_GNUCXX)
 	constexpr auto pretty_function_tail = ";";
 #endif
 
 	/**
-	 * @brief Get the name of a member pointer in MSVC.
-	 *
-	 * Function to extract the name of a member pointer when using MSVC compiler.
-	 *
-	 * @tparam value_type The type of the member pointer.
-	 * @tparam p The member pointer.
-	 * @return The name of the member pointer.
-	 */
-	template<typename value_type, auto p> constexpr decltype(auto) getNameMSVC() noexcept {
-		constexpr std::string_view str = JSONIFIER_PRETTY_FUNCTION;
-		constexpr auto strNew		   = str.substr(str.find("->") + 2);
-		constexpr auto strNewer		   = strNew.substr(0, strNew.find(">"));
-		std::array<char, strNewer.size()> returnValues{};
-		std::copy(strNewer.data(), strNewer.data() + strNewer.size(), returnValues.data());
-		return returnValues;
-	}
-
-	template<typename value_type, auto p> constexpr decltype(auto) getNameMSVCFinal() noexcept {
-		constexpr auto& stringNew = make_static<getNameMSVC<value_type, p>()>::value;
-		return jsonifier::string_view{ stringNew.data(), stringNew.size() };
-	}
-
-	template<auto p> constexpr decltype(auto) getNameUint() noexcept {
-		constexpr jsonifier::string_view str = JSONIFIER_PRETTY_FUNCTION;
-		constexpr auto str2					 = str.substr(str.find("&") + 1);
-		constexpr auto str3					 = str2.substr(0, str2.find(pretty_function_tail));
-		constexpr auto str4					 = str3.substr(str3.rfind("::") + 2);
-		std::array<char, str4.size()> returnValues{};
-		std::copy(str4.data(), str4.data() + str4.size(), returnValues.data());
-		return returnValues;
-	}
-
-	template<auto p> constexpr decltype(auto) getNameUintFinal() noexcept {
-		constexpr auto& stringNew = make_static<getNameUint<p>()>::value;
-		return jsonifier::string_view{ stringNew.data(), stringNew.size() };
-	}
-
-	/**
 	 * @brief Get the name of a member pointer.
 	 *
-	 * Function to extract the name of a member pointer.
+	 * function_typetion to extract the name of a member pointer.
 	 *
 	 * @tparam p The member pointer.
 	 * @return The name of the member pointer.
 	 */
-	template<auto p>
-	//requires(std::is_member_object_pointer_v<decltype(p)>)
-	constexpr decltype(auto) getName() noexcept {
-#if defined(JSONIFIER_CLANG) || defined(JSONIFIER_GNUCXX)
-		return getNameUintFinal<p>();
+#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+	template<typename value_type, auto p> consteval jsonifier::string_view getNameInternal() {
+		jsonifier::string_view str = std::source_location::current().function_name();
+		str						   = str.substr(str.find("->") + 2);
+		return str.substr(0, str.find(">"));
+	}
 #else
-		using value_type   = remove_member_pointer<jsonifier::concepts::unwrap_t<decltype(p)>>::type;
-		constexpr auto ptr = p;
-		return getNameMSVCFinal<value_type, &(external<value_type>.*ptr)>();
+	template<auto p> consteval jsonifier::string_view getNameInternal() {
+		jsonifier::string_view str = std::source_location::current().function_name();
+		str						   = str.substr(str.find("&") + 1);
+		str						   = str.substr(0, str.find(pretty_function_tail));
+		return str.substr(str.rfind("::") + 2);
+	}
 #endif
+
+	template<auto p>
+		requires(std::is_member_pointer_v<decltype(p)>)
+	constexpr auto getName() {
+#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+		using value_type		 = remove_member_pointer<std::decay_t<decltype(p)>>::type;
+		constexpr auto pNew		 = p;
+		constexpr auto newString = getNameInternal<value_type, &(external<value_type>.*pNew)>();
+#else
+		constexpr auto newString = getNameInternal<p>();
+#endif
+		return newString;
 	}
 
 	/**
 	 * @brief Get the names of multiple member pointers.
 	 *
-	 * Function to extract the names of multiple member pointers.
+	 * function_typetion to extract the names of multiple member pointers.
 	 *
 	 * @tparam args Member pointers.
 	 * @return An array of member pointer names.
@@ -182,9 +148,9 @@ namespace jsonifier_internal {
 	}
 
 	/**
-	 * @brief Helper function to generate an interleaved tuple of member names and values.
+	 * @brief Internal function to generate an interleaved tuple of member names and values.
 	 *
-	 * Helper function to generate an interleaved tuple of member names and values.
+	 * Internal function to generate an interleaved tuple of member names and values.
 	 *
 	 * @tparam tuple_types Types of tuple elements.
 	 * @tparam Indices Indices of tuple elements.
@@ -192,7 +158,7 @@ namespace jsonifier_internal {
 	 * @param views Array of member names.
 	 * @return Interleaved tuple of member names and values.
 	 */
-	template<typename... tuple_types, size_t... Indices> constexpr decltype(auto) generateInterleavedTupleHelper(const std::tuple<tuple_types...>& tuple,
+	template<typename... tuple_types, size_t... Indices> constexpr decltype(auto) generateInterleavedTupleInternal(const std::tuple<tuple_types...>& tuple,
 		const std::array<jsonifier::string_view, sizeof...(Indices)>& views, std::index_sequence<Indices...>) {
 		return std::make_tuple(std::make_tuple(views[Indices], std::get<Indices>(tuple))...);
 	}
@@ -200,7 +166,7 @@ namespace jsonifier_internal {
 	/**
 	 * @brief Generate an interleaved tuple of member names and values.
 	 *
-	 * Function to generate an interleaved tuple of member names and values.
+	 * function_typetion to generate an interleaved tuple of member names and values.
 	 *
 	 * @tparam tuple_types Types of tuple elements.
 	 * @param tuple The input tuple.
@@ -209,7 +175,7 @@ namespace jsonifier_internal {
 	 */
 	template<typename... tuple_types>
 	constexpr decltype(auto) generateInterleavedTuple(const std::tuple<tuple_types...>& tuple, const std::array<jsonifier::string_view, sizeof...(tuple_types)>& views) {
-		return generateInterleavedTupleHelper(tuple, views, std::index_sequence_for<tuple_types...>{});
+		return generateInterleavedTupleInternal(tuple, views, std::index_sequence_for<tuple_types...>{});
 	}
 
 }

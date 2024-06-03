@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/TypeEntities.hpp>
 
 namespace simd_internal {
 
@@ -43,16 +43,16 @@ namespace simd_internal {
 		return vreinterpretq_u8_u64(vld1q_u64(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static simd_int_type_new gatherValues(char_type* str) {
-		return vld1q_x8(reinterpret_cast<const CHAR_TYPE*>(str));
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValues(const void* str) {
+		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(char_type* str) {
-		return vld1q_x8(reinterpret_cast<const CHAR_TYPE*>(str));
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) {
+		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static simd_int_type_new gatherValue(char_type str) {
-		return vdupq_n_x8(str);
+		return vdupq_n_u8(str);
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static void store(const simd_int_type_new& value, char_type* storageLocation) {
@@ -61,7 +61,7 @@ namespace simd_internal {
 
 	template<simd_int_128_type simd_int_type_new, jsonifier::concepts::uint8_type char_type>
 	JSONIFIER_INLINE static void store(const simd_int_type_new& value, char_type* storageLocation) {
-		vst1q_x8(storageLocation, value);
+		vst1q_u8(storageLocation, value);
 	}
 
 #elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)

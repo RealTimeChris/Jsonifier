@@ -52,10 +52,12 @@ namespace jsonifier_internal {
 		mutable int64_t indent{};
 	};
 
-	template<const prettify_options_internal& options, typename derived_type> struct prettify_impl;
+	template<typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
 	  public:
+		template<typename derived_type_new> friend struct prettify_impl;
+
 		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
 		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
@@ -67,23 +69,22 @@ namespace jsonifier_internal {
 			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.reset(in.data(), in.size());
+			rootIter = in.data();
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				iter.template createError<sourceLocation, error_classes::Prettifying>(prettify_errors::No_Input);
-				derivedRef.index = 0;
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
 				return jsonifier::concepts::unwrap_t<string_type>{};
 			}
 			jsonifier::concepts::unwrap_t<string_type> newString{};
-			prettify_impl<optionsFinal, derived_type>::template impl(iter, derivedRef.stringBuffer, derivedRef.index);
+			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
-				derivedRef.index = 0;
 				return newString;
 			} else {
-				derivedRef.index = 0;
 				return jsonifier::concepts::unwrap_t<string_type>{};
 			}
 		}
@@ -96,35 +97,39 @@ namespace jsonifier_internal {
 			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+			derivedRef.section.reset(in.data(), in.size());
+			rootIter = in.data();
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				iter.template createError<sourceLocation, error_classes::Prettifying>(prettify_errors::No_Input);
-				derivedRef.index = 0;
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
 				return false;
 			}
-			prettify_impl<optionsFinal, derived_type>::template impl(iter, derivedRef.stringBuffer, derivedRef.index);
+			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
 				if (buffer.size() != derivedRef.index) {
 					buffer.resize(derivedRef.index);
 				}
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
-				derivedRef.index = 0;
 				return true;
 			} else {
-				derivedRef.index = 0;
 				return false;
 			}
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		mutable const char* rootIter{};
 
 		JSONIFIER_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
+		}
+
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~prettifier() noexcept = default;

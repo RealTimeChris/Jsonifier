@@ -36,24 +36,24 @@ namespace jsonifier_internal {
 		if constexpr (std::tuple_size_v<tuple_type> > 0) {
 			if constexpr (currentIndex < maxIndex - 2) {
 				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
 				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return newerTuple;
 			}
 		} else {
 			if constexpr (currentIndex < maxIndex - 2) {
 				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
 				auto newerTuple = std::make_tuple(newerPair);
 				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
 				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
 				auto newerTuple = std::make_tuple(newerPair);
 				return newerTuple;
 			}

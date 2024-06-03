@@ -74,17 +74,15 @@ namespace jsonifier_internal {
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type> JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
 			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
 				"No specialization of core exists for the type named above - please specialize it!");
-			derivedRef.index = 0;
 			derivedRef.errors.clear();
+			derivedRef.index = 0;
 			jsonifier::string newString{};
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
 			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, derivedRef.index);
 			if (derivedRef.index != minifyError) [[likely]] {
 				newString.resize(derivedRef.index);
 			}
-			derivedRef.index = 0;
 			return newString;
 		}
 

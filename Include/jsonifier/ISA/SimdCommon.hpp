@@ -30,8 +30,6 @@
 #include <jsonifier/ISA/GatherValues.hpp>
 #include <jsonifier/ISA/Fallback.hpp>
 #include <jsonifier/ISA/AVX.hpp>
-#include <jsonifier/ISA/AVX2.hpp>
-#include <jsonifier/ISA/AVX512.hpp>
 #include <iostream>
 #include <concepts>
 #include <sstream>

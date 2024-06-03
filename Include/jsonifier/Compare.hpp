@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISADetection.hpp>
+#include <jsonifier/Base.hpp>
 
 namespace jsonifier_internal {
 
@@ -96,15 +96,15 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
 			static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
+			static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
+			uint64_t simdValue, lo7, quote, t0, next;
 			while (lengthNew >= 8) {
-				uint64_t simdValue;
 				std::memcpy(&simdValue, data, sizeof(uint64_t));
 
-				const uint64_t lo7			= simdValue & mask64;
-				const uint64_t quote		= (lo7 ^ value64) + mask64;
-				const uint64_t t0			= ~(quote | simdValue);
-				static constexpr auto hiBit = repeatByte<0b10000000, uint64_t>();
-				uint64_t next				= simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
+				lo7	  = simdValue & mask64;
+				quote = (lo7 ^ value64) + mask64;
+				t0	  = ~(quote | simdValue);
+				next  = simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
 
 				if (next != 8) {
 					data += next;
@@ -118,15 +118,15 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint32_t mask32  = repeatByte<0b01111111, uint32_t>();
 			static constexpr uint32_t value32 = repeatByte<value, uint32_t>();
+			static constexpr uint32_t hiBit	  = repeatByte<0b10000000, uint32_t>();
+			uint32_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 4) {
-				uint32_t simdValue;
 				std::memcpy(&simdValue, data, sizeof(uint32_t));
 
-				const uint32_t lo7			= simdValue & mask32;
-				const uint32_t quote		= (lo7 ^ value32) + mask32;
-				const uint32_t t0			= ~(quote | simdValue);
-				static constexpr auto hiBit = repeatByte<0b10000000, uint32_t>();
-				uint32_t next				= simd_internal::tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
+				lo7	  = simdValue & mask32;
+				quote = (lo7 ^ value32) + mask32;
+				t0	  = ~(quote | simdValue);
+				next  = simd_internal::tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
 
 				if (next != 4) {
 					data += next;
@@ -140,15 +140,15 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint16_t mask16  = repeatByte<0b01111111, uint16_t>();
 			static constexpr uint16_t value16 = repeatByte<value, uint16_t>();
+			static constexpr uint16_t hiBit	  = repeatByte<0b10000000, uint16_t>();
+			uint16_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 2) {
-				uint16_t simdValue;
 				std::memcpy(&simdValue, data, sizeof(uint16_t));
 
-				const uint16_t lo7			= simdValue & mask16;
-				const uint16_t quote		= (lo7 ^ value16) + mask16;
-				const uint16_t t0			= ~(quote | simdValue);
-				static constexpr auto hiBit = repeatByte<0b10000000, uint16_t>();
-				uint16_t next				= simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u;
+				lo7	  = simdValue & mask16;
+				quote = (lo7 ^ value16) + mask16;
+				t0	  = ~(quote | simdValue);
+				next  = simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u;
 
 				if (next != 2) {
 					data += next;
@@ -281,11 +281,10 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t Count, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs) noexcept {
+	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs) noexcept {
 		static constexpr uint64_t n{ 8 };
-		if constexpr (Count > n) {
-			static constexpr uint64_t n{ sizeof(uint64_t) };
-			uint64_t lengthNew{ Count };
+		if constexpr (count > n) {
+			uint64_t lengthNew{ count };
 			uint64_t v[2];
 			while (lengthNew > n) {
 				std::memcpy(v, lhs, n);
@@ -305,27 +304,27 @@ namespace jsonifier_internal {
 			std::memcpy(v, lhs, n);
 			std::memcpy(v + 1, rhs, n);
 			return v[0] == v[1];
-		} else if constexpr (Count == n) {
+		} else if constexpr (count == n) {
 			uint64_t v[2];
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			std::memcpy(v, lhs, count);
+			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
-		} else if constexpr (Count > 4) {
+		} else if constexpr (count > 4) {
 			uint64_t v[2]{};
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			std::memcpy(v, lhs, count);
+			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
-		} else if constexpr (Count > 2) {
+		} else if constexpr (count > 2) {
 			uint32_t v[2]{};
-			std::memcpy(v, lhs, Count);
-			std::memcpy(v + 1, rhs, Count);
+			std::memcpy(v, lhs, count);
+			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
-		} else if constexpr (Count == 2) {
+		} else if constexpr (count == 2) {
 			uint16_t v[2];
 			std::copy(lhs, lhs + 1, v);
 			std::copy(rhs, rhs + 1, v + 1);
 			return v[0] == v[1];
-		} else if constexpr (Count == 1) {
+		} else if constexpr (count == 1) {
 			return *lhs == *rhs;
 		} else {
 			return true;
