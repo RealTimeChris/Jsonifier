@@ -25,6 +25,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/StringView.hpp>
 
 namespace jsonifier {
 
@@ -34,7 +35,31 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	using string_view = jsonifier::string_view_base<char>;
+	using string_view = jsonifier::string_view;
+
+	template<uint64_t sizeVal> struct uint_string_literal {
+		static constexpr uint64_t length{ sizeVal > 0 ? sizeVal - 1 : 0 };
+
+		constexpr uint_string_literal() noexcept = default;
+
+		constexpr uint_string_literal(const char (&str)[sizeVal]) {
+			std::copy(str, str + sizeVal, values);
+		}
+
+		constexpr uint64_t size() const {
+			return length;
+		}
+
+		constexpr operator jsonifier::string_view() const {
+			return { values, length };
+		}
+
+		constexpr jsonifier::string_view sv() const {
+			return { values, length };
+		}
+
+		char values[sizeVal]{};
+	};
 
 	/**
 	 * @def JSONIFIER_PRETTY_FUNCTION
@@ -71,24 +96,9 @@ namespace jsonifier_internal {
 		using type = member_type; /**< The type without member pointers. */
 	};
 
-	/**
-	 * @brief Get the name of a member pointer in MSVC.
-	 *
-	 * Function to extract the name of a member pointer when using MSVC compiler.
-	 *
-	 * @tparam value_type The type of the member pointer.
-	 * @tparam p The member pointer.
-	 * @return The name of the member pointer.
-	 */
-	template<typename value_type, const auto p> constexpr decltype(auto) getNameMSVC() noexcept {
-		jsonifier::string_view str = JSONIFIER_PRETTY_FUNCTION; /**< Pretty function signature. */
-
-		size_t i = str.find("->");
-		str		 = str.substr(i + 2);
-		i		 = str.find(">");
-		str		 = str.substr(0, i);
-		return str;
-	}
+	template<auto valueNew> struct make_static {
+		static constexpr auto value{ valueNew };
+	};
 
 	/**
 	 * @def pretty_function_tail
@@ -102,6 +112,44 @@ namespace jsonifier_internal {
 #endif
 
 	/**
+	 * @brief Get the name of a member pointer in MSVC.
+	 *
+	 * Function to extract the name of a member pointer when using MSVC compiler.
+	 *
+	 * @tparam value_type The type of the member pointer.
+	 * @tparam p The member pointer.
+	 * @return The name of the member pointer.
+	 */
+	template<typename value_type, auto p> constexpr decltype(auto) getNameMSVC() noexcept {
+		constexpr std::string_view str = JSONIFIER_PRETTY_FUNCTION;
+		constexpr auto strNew		   = str.substr(str.find("->") + 2);
+		constexpr auto strNewer		   = strNew.substr(0, strNew.find(">"));
+		std::array<char, strNewer.size()> returnValues{};
+		std::copy(strNewer.data(), strNewer.data() + strNewer.size(), returnValues.data());
+		return returnValues;
+	}
+
+	template<typename value_type, auto p> constexpr decltype(auto) getNameMSVCFinal() noexcept {
+		constexpr auto& stringNew = make_static<getNameMSVC<value_type, p>()>::value;
+		return jsonifier::string_view{ stringNew.data(), stringNew.size() };
+	}
+
+	template<auto p> constexpr decltype(auto) getNameUint() noexcept {
+		constexpr jsonifier::string_view str = JSONIFIER_PRETTY_FUNCTION;
+		constexpr auto str2					 = str.substr(str.find("&") + 1);
+		constexpr auto str3					 = str2.substr(0, str2.find(pretty_function_tail));
+		constexpr auto str4					 = str3.substr(str3.rfind("::") + 2);
+		std::array<char, str4.size()> returnValues{};
+		std::copy(str4.data(), str4.data() + str4.size(), returnValues.data());
+		return returnValues;
+	}
+
+	template<auto p> constexpr decltype(auto) getNameUintFinal() noexcept {
+		constexpr auto& stringNew = make_static<getNameUint<p>()>::value;
+		return jsonifier::string_view{ stringNew.data(), stringNew.size() };
+	}
+
+	/**
 	 * @brief Get the name of a member pointer.
 	 *
 	 * Function to extract the name of a member pointer.
@@ -109,18 +157,15 @@ namespace jsonifier_internal {
 	 * @tparam p The member pointer.
 	 * @return The name of the member pointer.
 	 */
-	template<const auto p>
+	template<auto p>
 	//requires(std::is_member_object_pointer_v<decltype(p)>)
 	constexpr decltype(auto) getName() noexcept {
 #if defined(JSONIFIER_CLANG) || defined(JSONIFIER_GNUCXX)
-		jsonifier::string_view str = JSONIFIER_PRETTY_FUNCTION;
-		str						   = str.substr(str.find("&") + 1);
-		str						   = str.substr(0, str.find(pretty_function_tail));
-		return str.substr(str.rfind("::") + 2);
+		return getNameUintFinal<p>();
 #else
 		using value_type   = remove_member_pointer<jsonifier::concepts::unwrap_t<decltype(p)>>::type;
 		constexpr auto ptr = p;
-		return getNameMSVC<value_type, &(external<value_type>.*ptr)>();
+		return getNameMSVCFinal<value_type, &(external<value_type>.*ptr)>();
 #endif
 	}
 

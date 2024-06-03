@@ -36,30 +36,30 @@
 #include <jsonifier/ISA/SimdCommon.hpp>
 #include <atomic>
 
-template<jsonifier::concepts::unsigned_type value_type> void simd_internal::printBits(value_type values, const std::string& valuesTitle) {
-	std::cout << valuesTitle;
-	std::cout << std::bitset<sizeof(value_type) * 8>{ values };
-	std::cout << std::endl;
-}
-
-template<simd_int_type simd_type> const simd_type& simd_internal::printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
-	JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
-	std::stringstream theStream{};
-	store(value, values);
-	std::cout << valuesTitle;
-	for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
-		for (string_parsing_type y = 0; y < 8; ++y) {
-			std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-		}
-	}
-	std::cout << std::endl;
-	return value;
-}
-
 namespace jsonifier_internal {
 
 	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
-		return static_cast<value_type01>(value1 > value2 ? value1 : value2);
+		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
+	}
+
+	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) {
+		std::cout << valuesTitle;
+		std::cout << std::bitset<sizeof(value_type) * 8>{ values };
+		std::cout << std::endl;
+	}
+
+	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
+		std::stringstream theStream{};
+		store(value, values);
+		std::cout << valuesTitle;
+		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (string_parsing_type y = 0; y < 8; ++y) {
+				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
+			}
+		}
+		std::cout << std::endl;
+		return value;
 	}
 
 	JSONIFIER_INLINE std::string printBits(bool value) noexcept {

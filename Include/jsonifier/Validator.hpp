@@ -61,9 +61,10 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter) {
-				iter.template createError<error_classes::Prettifying>(validate_errors::No_Input);
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				iter.template createError<sourceLocation, error_classes::Prettifying>(validate_errors::No_Input);
 				return false;
 			}
 			auto result = impl(iter, derivedRef.index);
@@ -78,18 +79,18 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, uint64_t& depth) {
-			if (*iter == 0x7Bu) {
+		template<typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type& iter, uint64_t& depth) {
+			if (*iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth);
-			} else if (*iter == 0x5Bu) {
+			} else if (*iter == '[') {
 				return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth);
-			} else if (*iter == 0x22u) {
+			} else if (*iter == '"') {
 				return validate_impl<json_structural_type::String, derived_type>::impl(iter);
 			} else if (numberTable[static_cast<uint64_t>(*iter)]) {
 				return validate_impl<json_structural_type::Number, derived_type>::impl(iter);
 			} else if (boolTable[static_cast<uint64_t>(*iter)]) {
 				return validate_impl<json_structural_type::Bool, derived_type>::impl(iter);
-			} else if (*iter == 0x6Eu) {
+			} else if (*iter == 'n') {
 				return validate_impl<json_structural_type::Null, derived_type>::impl(iter);
 			} else {
 				return false;

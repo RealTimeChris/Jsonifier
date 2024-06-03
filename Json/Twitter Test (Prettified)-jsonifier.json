@@ -47,7 +47,7 @@
          },
          "created_at": "Sun Aug 31 00:29:15 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874924095815681",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -115,14 +115,53 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": "505864943636197376",
+                  "source_status_id": 505864943636197400,
+                  "indices": [
+                     27,
+                     49
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BwUxfC6CIAEr-Ye.jpg",
+                  "expanded_url": "http://twitter.com/KATANA77/status/505864943636197376/photo\/1",
+                  "display_url": "pic.twitter.com/PkCJAcSuYK",
+                  "media_url": "http://pbs.twimg.com/media/BwUxfC6CIAEr-Ye.jpg",
+                  "id_str": "505864942575034369",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 338
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 192
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 765,
+                        "h": 432
+                     }
+                  },
+                  "url": "http://t.co/PkCJAcSuYK",
+                  "id": 505864942575034400
+               }
+            ],
             "user_mentions": [
                {
                   "indices": [
                      3,
                      12
                   ],
-                  "screen_name": "aym0566x",
+                  "screen_name": "KATANA77",
                   "id_str": "77915997",
                   "name": "(有)刀",
                   "id": 77915997
@@ -139,7 +178,7 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 82,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874922023837696",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -243,7 +282,7 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874920140591104",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -280,7 +319,7 @@
                         ],
                         "expanded_url": "http://ap.furtherplatonix.net/index.html",
                         "display_url": "ap.furtherplatonix.net/index.html",
-                        "url": "http://t.co/Yg9e1Fl8wd"
+                        "url": "http://t.co/5EclbQiRX4"
                      }
                   ]
                },
@@ -331,7 +370,7 @@
                      11
                   ],
                   "screen_name": "omo_kko",
-                  "id_str": "114188950",
+                  "id_str": "309565423",
                   "name": "おもっこ",
                   "id": 309565423
                }
@@ -347,7 +386,7 @@
          },
          "created_at": "Sun Aug 31 00:29:14 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874919020699648",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/453106940822814720/PcJIZv43.png",
@@ -384,7 +423,7 @@
                         ],
                         "expanded_url": "http://www.pixiv.net/member.php?id=1778417",
                         "display_url": "pixiv.net/member.php?id=…",
-                        "url": "http://t.co/Yg9e1Fl8wd"
+                        "url": "http://t.co/JTFjV89eaN"
                      }
                   ]
                },
@@ -397,7 +436,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/chibu4267",
                         "display_url": "twpf.jp/chibu4267",
-                        "url": "http://t.co/Yg9e1Fl8wd"
+                        "url": "http://t.co/ANSFlYXERJ"
                      }
                   ]
                }
@@ -437,7 +476,46 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": "439430848190742528",
+                  "source_status_id": 439430848190742500,
+                  "indices": [
+                     58,
+                     80
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BhksBzoCAAAJeDS.jpg",
+                  "expanded_url": "http://twitter.com/thsc782_407/status/439430848190742528/photo/1",
+                  "display_url": "pic.twitter.com/vmrreDMziI",
+                  "media_url": "http://pbs.twimg.com/media/BhksBzoCAAAJeDS.jpg",
+                  "id_str": "439430848194936832",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 450
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 255
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 1024,
+                        "h": 768
+                     }
+                  },
+                  "url": "http://t.co/vmrreDMziI",
+                  "id": 439430848194936800
+               }
+            ],
             "user_mentions": [
                {
                   "indices": [
@@ -631,7 +709,7 @@
          },
          "created_at": "Sun Aug 31 00:29:13 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://tweetli.st/\" rel=\"nofollow\">TweetList!</a>",
+         "source": "<a href=\"http://tweetli.st/\" rel=\"nofollow\">TweetList!<\/a>",
          "id_str": "505874915338104833",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/601682567/put73jtg48ytjylq00if.jpeg",
@@ -982,7 +1060,7 @@
                      19
                   ],
                   "screen_name": "shiawaseomamori",
-                  "id_str": "1680668713",
+                  "id_str": "2745121514",
                   "name": "幸せの☆お守り",
                   "id": 2745121514
                }
@@ -998,7 +1076,7 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/mote_danshi1\" rel=\"nofollow\">モテモテ大作戦★男子編</a>",
+         "source": "<a href=\"https://twitter.com/mote_danshi1\" rel=\"nofollow\">モテモテ大作戦★男子編<\/a>",
          "id_str": "505874903094939648",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1074,7 +1152,7 @@
                      19
                   ],
                   "screen_name": "shiawaseomamori",
-                  "id_str": "1680668713",
+                  "id_str": "2745121514",
                   "name": "幸せの☆お守り",
                   "id": 2745121514
                }
@@ -1090,7 +1168,7 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/kokoro_meigen11\" rel=\"nofollow\">心に響くアツい名言集</a>",
+         "source": "<a href=\"https://twitter.com/kokoro_meigen11\" rel=\"nofollow\">心に響くアツい名言集<\/a>",
          "id_str": "505874902390276096",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1158,14 +1236,53 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": "505868690588303360",
+                  "source_status_id": 505868690588303360,
+                  "indices": [
+                     96,
+                     118
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BwU05MGCUAEY6Wu.jpg",
+                  "expanded_url": "http://twitter.com/8CBR8/status/505868690588303360/photo\/1",
+                  "display_url": "pic.twitter.com/FzTyFnt9xH",
+                  "media_url": "http://pbs.twimg.com/media/BwU05MGCUAEY6Wu.jpg",
+                  "id_str": "505868690252779521",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 399
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 226
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 1024,
+                        "h": 682
+                     }
+                  },
+                  "url": "http://t.co/FzTyFnt9xH",
+                  "id": 505868690252779500
+               }
+            ],
             "user_mentions": [
                {
                   "indices": [
                      3,
                      19
                   ],
-                  "screen_name": "shiawaseomamori",
+                  "screen_name": "POTENZA_SUPERGT",
                   "id_str": "359324738",
                   "name": "POTENZA_SUPERGT",
                   "id": 359324738
@@ -1202,7 +1319,7 @@
          },
          "created_at": "Sun Aug 31 00:29:10 +0000 2014",
          "retweet_count": 7,
-         "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi</a>",
+         "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi<\/a>",
          "id_str": "505874902247677954",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/462180217574789121/1Jf6m_2L.jpeg",
@@ -1294,7 +1411,7 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/danshi_honne1\" rel=\"nofollow\">ここだけの本音★男子編</a>",
+         "source": "<a href=\"https://twitter.com/danshi_honne1\" rel=\"nofollow\">ここだけの本音★男子編<\/a>",
          "id_str": "505874901689851904",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1370,7 +1487,7 @@
                      12
                   ],
                   "screen_name": "UARROW_Y",
-                  "id_str": "2745121514",
+                  "id_str": "1261662588",
                   "name": "ゆう矢",
                   "id": 1261662588
                }
@@ -1383,9 +1500,9 @@
                      29,
                      51
                   ],
-                  "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo/1",
+                  "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo\/1",
                   "display_url": "pic.twitter.com/SXoYWH98as",
-                  "url": "http://t.co/Yg9e1Fl8wd"
+                  "url": "http://t.co/SXoYWH98as"
                }
             ]
          },
@@ -1396,7 +1513,7 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 29,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874900939046912",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1477,7 +1594,7 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874900561580032",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1645,7 +1762,7 @@
                      15
                   ],
                   "screen_name": "assam_house",
-                  "id_str": "2745121514",
+                  "id_str": "1104771276",
                   "name": "アッサム山中（殺処分ゼロに一票）",
                   "id": 1104771276
                }
@@ -1660,7 +1777,7 @@
                   ],
                   "expanded_url": "http://www.pref.niigata.lg.jp/kouhou/info.html",
                   "display_url": "pref.niigata.lg.jp/kouhou/info.ht…",
-                  "url": "http://t.co/Yg9e1Fl8wd"
+                  "url": "http://t.co/9oH5cgpy1q"
                }
             ]
          },
@@ -1671,7 +1788,7 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 2,
-         "source": "<a href=\"http://jigtwi.jp/?p=1001\" rel=\"nofollow\">jigtwi for Android</a>",
+         "source": "<a href=\"http://jigtwi.jp/?p=1001\" rel=\"nofollow\">jigtwi for Android<\/a>",
          "id_str": "505874898493796352",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1763,7 +1880,7 @@
          },
          "created_at": "Sun Aug 31 00:29:09 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/osyare_pea\" rel=\"nofollow\">おしゃれ★ペアルック</a>",
+         "source": "<a href=\"https://twitter.com/osyare_pea\" rel=\"nofollow\">おしゃれ★ペアルック<\/a>",
          "id_str": "505874898468630528",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1855,7 +1972,7 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/love_live55\" rel=\"nofollow\">LOVE ♥ ラブライブ</a>",
+         "source": "<a href=\"https://twitter.com/love_live55\" rel=\"nofollow\">LOVE ♥ ラブライブ<\/a>",
          "id_str": "505874897633951745",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -1947,7 +2064,7 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/koisurudoress\" rel=\"nofollow\">恋する♡ドレスシリーズ</a>",
+         "source": "<a href=\"https://twitter.com/koisurudoress\" rel=\"nofollow\">恋する♡ドレスシリーズ<\/a>",
          "id_str": "505874896795086848",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -2131,7 +2248,7 @@
          },
          "created_at": "Sun Aug 31 00:29:08 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/disney_para\" rel=\"nofollow\">ディズニー★パラダイス</a>",
+         "source": "<a href=\"https://twitter.com/disney_para\" rel=\"nofollow\">ディズニー★パラダイス<\/a>",
          "id_str": "505874895079608320",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -2407,7 +2524,7 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 221,
-         "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca</a>",
+         "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca<\/a>",
          "id_str": "505874893154426881",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/799871497/01583a031f83a45eba881c8acde729ee.jpeg",
@@ -2444,7 +2561,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/oshin_koko",
                         "display_url": "twpf.jp/oshin_koko",
-                        "url": "http://t.co/Yg9e1Fl8wd"
+                        "url": "http://t.co/mM1dG54NiO"
                      }
                   ]
                },
@@ -2863,7 +2980,7 @@
                      10
                   ],
                   "screen_name": "kohecyan3",
-                  "id_str": "2745121514",
+                  "id_str": "2591363659",
                   "name": "上野滉平",
                   "id": 2591363659
                }
@@ -2887,7 +3004,7 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874890218434560",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -2979,7 +3096,7 @@
          },
          "created_at": "Sun Aug 31 00:29:07 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/iq_tameshi\" rel=\"nofollow\">IQ★力だめし</a>",
+         "source": "<a href=\"https://twitter.com/iq_tameshi\" rel=\"nofollow\">IQ★力だめし<\/a>",
          "id_str": "505874889392156672",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3082,7 +3199,7 @@
             "contributors_enabled": false,
             "follow_request_sent": false,
             "favourites_count": 0,
-            "description": "GパングのA型K月克己中尉の非公式botです。 主に七巻と八巻が中心の台詞をつぶやきます。 4/18.台詞追加しました/現在試運転中/現在軽い挨拶だけTL反応。/追加したい台詞や何おかしい所がありましたらDMやリプライで/フォロー返しは手動です/",
+            "description": "GパングのA型K月克己中尉の非公式botです。 主に七巻と八巻が中心の台詞をつぶやきます。 4/18.台詞追加しました/現在試運転中/現在軽い挨拶だけTL反応。/追加したい台詞や何おかしい所がありましたらDMやリプライで/フォロー返しは手動です\/",
             "screen_name": "kisaragi_katumi",
             "followers_count": 65,
             "statuses_count": 27219,
@@ -3152,7 +3269,7 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/tokuda_ouen1\" rel=\"nofollow\">徳田有希★応援隊</a>",
+         "source": "<a href=\"https://twitter.com/tokuda_ouen1\" rel=\"nofollow\">徳田有希★応援隊<\/a>",
          "id_str": "505874888616181760",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3336,7 +3453,7 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/moe_rate\" rel=\"nofollow\">萌え芸術★ラテアート</a>",
+         "source": "<a href=\"https://twitter.com/moe_rate\" rel=\"nofollow\">萌え芸術★ラテアート<\/a>",
          "id_str": "505874887009767424",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3428,7 +3545,7 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/zenbu_johnnys\" rel=\"nofollow\">全部★ジャニーズ図鑑</a>",
+         "source": "<a href=\"https://twitter.com/zenbu_johnnys\" rel=\"nofollow\">全部★ジャニーズ図鑑<\/a>",
          "id_str": "505874886225448960",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3620,7 +3737,7 @@
          },
          "created_at": "Sun Aug 31 00:29:06 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/line_aru1\" rel=\"nofollow\">爆笑★LINE あるある</a>",
+         "source": "<a href=\"https://twitter.com/line_aru1\" rel=\"nofollow\">爆笑★LINE あるある<\/a>",
          "id_str": "505874885474656256",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3804,7 +3921,7 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/otakara_sotuaru\" rel=\"nofollow\">お宝ww有名人卒アル特集</a>",
+         "source": "<a href=\"https://twitter.com/otakara_sotuaru\" rel=\"nofollow\">お宝ww有名人卒アル特集<\/a>",
          "id_str": "505874883809521664",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3885,7 +4002,7 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874883322970112",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -3921,7 +4038,7 @@
             "friends_count": 148,
             "default_profile": true,
             "listed_count": 0,
-            "location": "北の大地.95年組 ☞ 9/28.10/2(5).12/28",
+            "location": "北の大地.95年組 ☞ 9/28.10/2(5).12\/28",
             "user_protected": false,
             "is_translator": false,
             "id_str": "1620730616",
@@ -3953,7 +4070,46 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": null,
+                  "source_status_id": null,
+                  "indices": [
+                     101,
+                     123
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BwU6hpPCEAAxnpq.jpg",
+                  "expanded_url": "http://twitter.com/AuctionCamera/status/505874883067129857/photo\/1",
+                  "display_url": "pic.twitter.com/PcSaXzfHMW",
+                  "media_url": "http://pbs.twimg.com/media/BwU6hpPCEAAxnpq.jpg",
+                  "id_str": "505874882828046336",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 450
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 255
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 450
+                     }
+                  },
+                  "url": "http://t.co/PcSaXzfHMW",
+                  "id": 505874882828046340
+               }
+            ],
             "user_mentions": [],
             "symbols": [],
             "hashtags": [
@@ -3973,7 +4129,7 @@
                   ],
                   "expanded_url": "http://atq.ck.valuecommerce.com/servlet/atq/referral?sid=2219441&pid=877510753&vcptn=auct/p/RJH492.PLqoLQQx1Jy8U9LE-&vc_url=http://page8.auctions.yahoo.co.jp/jp/auction/h192024356",
                   "display_url": "atq.ck.valuecommerce.com/servlet/atq/re…",
-                  "url": "http://t.co/Yg9e1Fl8wd"
+                  "url": "http://t.co/4WK1f6V2n6"
                }
             ]
          },
@@ -4088,7 +4244,7 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/yabai_giness\" rel=\"nofollow\">ヤバすぎる!!ギネス世界記録</a>",
+         "source": "<a href=\"https://twitter.com/yabai_giness\" rel=\"nofollow\">ヤバすぎる!!ギネス世界記録<\/a>",
          "id_str": "505874882995826689",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -4245,7 +4401,7 @@
                      13
                   ],
                   "screen_name": "oen_yakyu",
-                  "id_str": "2745121514",
+                  "id_str": "2761692762",
                   "name": "三浦学苑軟式野球部応援団！",
                   "id": 2761692762
                }
@@ -4261,7 +4417,7 @@
          },
          "created_at": "Sun Aug 31 00:29:05 +0000 2014",
          "retweet_count": 7,
-         "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca</a>",
+         "source": "<a href=\"http://twicca.r246.jp/\" rel=\"nofollow\">twicca<\/a>",
          "id_str": "505874882228281345",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
@@ -4296,7 +4452,7 @@
                            0,
                            22
                         ],
-                        "expanded_url": "http://qma-kyushu.sakura.ne.jp/",
+                        "expanded_url": "http://qma-kyushu.sakura.ne.jp\/",
                         "display_url": "qma-kyushu.sakura.ne.jp",
                         "url": "http://t.co/ll2yu78DGR"
                      }
@@ -4311,7 +4467,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/natit_yso",
                         "display_url": "twpf.jp/natit_yso",
-                        "url": "http://t.co/ll2yu78DGR"
+                        "url": "http://t.co/ezuHyjF4Qy"
                      }
                   ]
                }
@@ -4559,7 +4715,7 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/ninkimono_daosy\" rel=\"nofollow\">人気者♥デイジー大好き</a>",
+         "source": "<a href=\"https://twitter.com/ninkimono_daosy\" rel=\"nofollow\">人気者♥デイジー大好き<\/a>",
          "id_str": "505874880294682624",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -4651,7 +4807,7 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/shiawasehanashi\" rel=\"nofollow\">幸せ話でフル充電しよう</a>",
+         "source": "<a href=\"https://twitter.com/shiawasehanashi\" rel=\"nofollow\">幸せ話でフル充電しよう<\/a>",
          "id_str": "505874879392919552",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -4727,7 +4883,7 @@
                      15
                   ],
                   "screen_name": "Ang_Angel73",
-                  "id_str": "2745121514",
+                  "id_str": "1600750194",
                   "name": "臙脂",
                   "id": 1600750194
                }
@@ -4743,7 +4899,7 @@
          },
          "created_at": "Sun Aug 31 00:29:04 +0000 2014",
          "retweet_count": 2,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874879103520768",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -5100,7 +5256,7 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/kgoehassou\" rel=\"nofollow\">K点越えの発想力!!</a>",
+         "source": "<a href=\"https://twitter.com/kgoehassou\" rel=\"nofollow\">K点越えの発想力!!<\/a>",
          "id_str": "505874876318511104",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -5361,7 +5517,7 @@
                   ],
                   "screen_name": "takuramix",
                   "id_str": "29599253",
-                  "name": "幸せの☆お守り",
+                  "name": "タクラミックス",
                   "id": 29599253
                },
                {
@@ -5370,7 +5526,7 @@
                      83
                   ],
                   "screen_name": "Lightworker19",
-                  "id_str": "333344408",
+                  "id_str": "238157843",
                   "name": "Lightworker",
                   "id": 238157843
                }
@@ -5385,7 +5541,7 @@
                   ],
                   "expanded_url": "http://www.tepco.co.jp/nu/fukushima-np/review/images/review1_01.gif",
                   "display_url": "tepco.co.jp/nu/fukushima-n…",
-                  "url": "http://t.co/ll2yu78DGR"
+                  "url": "http://t.co/ZkU4TZCGPG"
                },
                {
                   "indices": [
@@ -5507,7 +5663,7 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/anayuki_suki\" rel=\"nofollow\">やっぱりアナ雪が好き♥</a>",
+         "source": "<a href=\"https://twitter.com/anayuki_suki\" rel=\"nofollow\">やっぱりアナ雪が好き♥<\/a>",
          "id_str": "505874873961308160",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -5690,7 +5846,7 @@
          },
          "created_at": "Sun Aug 31 00:29:03 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874873248268288",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
@@ -5725,9 +5881,9 @@
                            0,
                            22
                         ],
-                        "expanded_url": "http://news24h.allnews24h.com/FX54",
-                        "display_url": "news24h.allnews24h.com/FX54",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "expanded_url": "http://s.ameblo.jp/hikarihikarimay",
+                        "display_url": "s.ameblo.jp/hikarihikarimay",
+                        "url": "http://t.co/SQLZnvjVxB"
                      }
                   ]
                },
@@ -5886,7 +6042,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/risou_dansei\" rel=\"nofollow\">私の理想の男性像</a>",
+         "source": "<a href=\"https://twitter.com/risou_dansei\" rel=\"nofollow\">私の理想の男性像<\/a>",
          "id_str": "505874872463925248",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -5978,7 +6134,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/gekiatu_6byou\" rel=\"nofollow\">激アツ★6秒動画</a>",
+         "source": "<a href=\"https://twitter.com/gekiatu_6byou\" rel=\"nofollow\">激アツ★6秒動画<\/a>",
          "id_str": "505874871713157120",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6046,7 +6202,46 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": null,
+                  "source_status_id": null,
+                  "indices": [
+                     98,
+                     120
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BwU6g-dCcAALxAW.png",
+                  "expanded_url": "http://twitter.com/waraeru_kan/status/505874871616671744/photo/1",
+                  "display_url": "pic.twitter.com/okrAoxSbt0",
+                  "media_url": "http://pbs.twimg.com/media/BwU6g-dCcAALxAW.png",
+                  "id_str": "505874871344066560",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 750
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 425
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 750
+                     }
+                  },
+                  "url": "http://t.co/okrAoxSbt0",
+                  "id": 505874871344066560
+               }
+            ],
             "user_mentions": [],
             "symbols": [],
             "hashtags": [],
@@ -6058,7 +6253,7 @@
                   ],
                   "expanded_url": "http://bit.ly/1qBa1nl",
                   "display_url": "bit.ly/1qBa1nl",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/jRWJt8IrSB"
                }
             ]
          },
@@ -6069,7 +6264,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"https://twitter.com/waraeru_kan\" rel=\"nofollow\">笑える博物館</a>",
+         "source": "<a href=\"https://twitter.com/waraeru_kan\" rel=\"nofollow\">笑える博物館<\/a>",
          "id_str": "505874871616671744",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6145,7 +6340,7 @@
                      11
                   ],
                   "screen_name": "nasan_arai",
-                  "id_str": "2745121514",
+                  "id_str": "1717603286",
                   "name": "なーさん",
                   "id": 1717603286
                }
@@ -6169,7 +6364,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874871268540416",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6206,7 +6401,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/Ymaaya_gem",
                         "display_url": "twpf.jp/Ymaaya_gem",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "url": "http://t.co/wR0Qb76TbB"
                      }
                   ]
                },
@@ -6299,7 +6494,7 @@
                         ],
                         "expanded_url": "http://twpf.jp/BDFF_LOVE",
                         "display_url": "twpf.jp/BDFF_LOVE",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "url": "http://t.co/5R4dzpbWX2"
                      }
                   ]
                },
@@ -6447,7 +6642,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/suitestengoku\" rel=\"nofollow\">絶品!!スイーツ天国</a>",
+         "source": "<a href=\"https://twitter.com/suitestengoku\" rel=\"nofollow\">絶品!!スイーツ天国<\/a>",
          "id_str": "505874870933016576",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6723,7 +6918,7 @@
          },
          "created_at": "Sun Aug 31 00:29:02 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/sunikar_daisuki\" rel=\"nofollow\">スニーカー大好き★図鑑</a>",
+         "source": "<a href=\"https://twitter.com/sunikar_daisuki\" rel=\"nofollow\">スニーカー大好き★図鑑<\/a>",
          "id_str": "505874868533854209",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6907,7 +7102,7 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/iseiuragao\" rel=\"nofollow\">ザ・異性の裏の顔</a>",
+         "source": "<a href=\"https://twitter.com/iseiuragao\" rel=\"nofollow\">ザ・異性の裏の顔<\/a>",
          "id_str": "505874867720183808",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -6999,7 +7194,7 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/bijyoalbum\" rel=\"nofollow\">超w美女☆アルバム</a>",
+         "source": "<a href=\"https://twitter.com/bijyoalbum\" rel=\"nofollow\">超w美女☆アルバム<\/a>",
          "id_str": "505874866910687233",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7183,7 +7378,7 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/soubutu_seitai\" rel=\"nofollow\">驚きの動物たちの生態</a>",
+         "source": "<a href=\"https://twitter.com/soubutu_seitai\" rel=\"nofollow\">驚きの動物たちの生態<\/a>",
          "id_str": "505874865354584064",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7275,7 +7470,7 @@
          },
          "created_at": "Sun Aug 31 00:29:01 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/mote_woman\" rel=\"nofollow\">モテ女子★ファションの秘密</a>",
+         "source": "<a href=\"https://twitter.com/mote_woman\" rel=\"nofollow\">モテ女子★ファションの秘密<\/a>",
          "id_str": "505874864603820032",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7367,7 +7562,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/danjyonotigai1\" rel=\"nofollow\">男女の違いを解明する</a>",
+         "source": "<a href=\"https://twitter.com/danjyonotigai1\" rel=\"nofollow\">男女の違いを解明する<\/a>",
          "id_str": "505874863874007040",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7459,7 +7654,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/kamihassou\" rel=\"nofollow\">神レベル★極限の発想</a>",
+         "source": "<a href=\"https://twitter.com/kamihassou\" rel=\"nofollow\">神レベル★極限の発想<\/a>",
          "id_str": "505874862900924416",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7551,7 +7746,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874862397591552",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7735,7 +7930,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi</a>",
+         "source": "<a href=\"http://jigtwi.jp/?p=1\" rel=\"nofollow\">jigtwi<\/a>",
          "id_str": "505874861881700353",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7827,7 +8022,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/densetunodorama\" rel=\"nofollow\">あの伝説の名ドラマ＆名場面</a>",
+         "source": "<a href=\"https://twitter.com/densetunodorama\" rel=\"nofollow\">あの伝説の名ドラマ＆名場面<\/a>",
          "id_str": "505874861185437697",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -7919,7 +8114,7 @@
          },
          "created_at": "Sun Aug 31 00:29:00 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/tabetaicake1\" rel=\"nofollow\">マジで食べたい♥ケーキ特集</a>",
+         "source": "<a href=\"https://twitter.com/tabetaicake1\" rel=\"nofollow\">マジで食べたい♥ケーキ特集<\/a>",
          "id_str": "505874860447260672",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -8103,7 +8298,7 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/moe_pet1\" rel=\"nofollow\">萌えペット大好き</a>",
+         "source": "<a href=\"https://twitter.com/moe_pet1\" rel=\"nofollow\">萌えペット大好き<\/a>",
          "id_str": "505874858920513537",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -8379,7 +8574,7 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/akogareinteria\" rel=\"nofollow\">憧れの★インテリア図鑑</a>",
+         "source": "<a href=\"https://twitter.com/akogareinteria\" rel=\"nofollow\">憧れの★インテリア図鑑<\/a>",
          "id_str": "505874856605257728",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -8474,7 +8669,7 @@
                   ],
                   "expanded_url": "http://j.mp/1kHBOym",
                   "display_url": "j.mp/1kHBOym",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/fXIgRt4ffH"
                }
             ]
          },
@@ -8485,7 +8680,7 @@
          },
          "created_at": "Sun Aug 31 00:28:59 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/\" rel=\"nofollow\">waromett</a>",
+         "source": "<a href=\"http://twitter.com/\" rel=\"nofollow\">waromett<\/a>",
          "id_str": "505874856089378816",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme5/bg.gif",
@@ -8565,7 +8760,7 @@
                   ],
                   "expanded_url": "http://bit.ly/1tOdNsI",
                   "display_url": "bit.ly/1tOdNsI",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/RNdqIHmTby"
                }
             ]
          },
@@ -8668,7 +8863,7 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 58,
-         "source": "<a href=\"https://twitter.com/LDH_daisuki1\" rel=\"nofollow\">LDH ★大好き応援団</a>",
+         "source": "<a href=\"https://twitter.com/LDH_daisuki1\" rel=\"nofollow\">LDH ★大好き応援団<\/a>",
          "id_str": "505874854877200384",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -8836,7 +9031,7 @@
                      13
                   ],
                   "screen_name": "vesperia1985",
-                  "id_str": "2745121514",
+                  "id_str": "2286548834",
                   "name": "ユーリ",
                   "id": 2286548834
                }
@@ -8852,7 +9047,7 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874854134820864",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -8930,9 +9125,9 @@
                      116,
                      138
                   ],
-                  "expanded_url": "http://bit.ly/1tOdNsI",
-                  "display_url": "bit.ly/1tOdNsI",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "expanded_url": "http://ift.tt/1kT55bk",
+                  "display_url": "ift.tt/1kT55bk",
+                  "url": "http://t.co/4hbyB1rbQ7"
                }
             ]
          },
@@ -8980,7 +9175,7 @@
                         ],
                         "expanded_url": "http://astore.amazon.co.jp/furniturewood-22",
                         "display_url": "astore.amazon.co.jp/furniturewood-…",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "url": "http://t.co/V4oyL0xtZk"
                      }
                   ]
                },
@@ -9031,7 +9226,7 @@
                      19
                   ],
                   "screen_name": "siranuga_hotoke",
-                  "id_str": "2745121514",
+                  "id_str": "2243896200",
                   "name": "知らぬが仏bot",
                   "id": 2243896200
                }
@@ -9047,7 +9242,7 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 1,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874852754907136",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/378800000115928444/9bf5fa13385cc80bfeb097e51af9862a.jpeg",
@@ -9123,7 +9318,7 @@
                      12
                   ],
                   "screen_name": "UARROW_Y",
-                  "id_str": "2745121514",
+                  "id_str": "1261662588",
                   "name": "ゆう矢",
                   "id": 1261662588
                }
@@ -9136,9 +9331,9 @@
                      29,
                      51
                   ],
-                  "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo/1",
+                  "expanded_url": "http://twitter.com/UARROW_Y/status/505871779949051904/photo\/1",
                   "display_url": "pic.twitter.com/SXoYWH98as",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/SXoYWH98as"
                }
             ]
          },
@@ -9149,7 +9344,7 @@
          },
          "created_at": "Sun Aug 31 00:28:58 +0000 2014",
          "retweet_count": 29,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874852603908096",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -9217,7 +9412,46 @@
          "place": null,
          "geo": null,
          "entities": {
-            "media": null,
+            "media": [
+               {
+                  "source_status_id_str": "505866670356070401",
+                  "source_status_id": 505866670356070400,
+                  "indices": [
+                     101,
+                     123
+                  ],
+                  "media_url_https": "https://pbs.twimg.com/media/BwUzDgbIIAEgvhD.jpg",
+                  "expanded_url": "http://twitter.com/fightcensorship/status/505866670356070401/photo\/1",
+                  "display_url": "pic.twitter.com/fVVOSML5s8",
+                  "media_url": "http://pbs.twimg.com/media/BwUzDgbIIAEgvhD.jpg",
+                  "id_str": "505866668485386241",
+                  "type": "photo",
+                  "sizes": {
+                     "medium": {
+                        "resize": "fit",
+                        "w": 600,
+                        "h": 519
+                     },
+                     "small": {
+                        "resize": "fit",
+                        "w": 340,
+                        "h": 294
+                     },
+                     "thumb": {
+                        "resize": "crop",
+                        "w": 150,
+                        "h": 150
+                     },
+                     "large": {
+                        "resize": "fit",
+                        "w": 640,
+                        "h": 554
+                     }
+                  },
+                  "url": "http://t.co/fVVOSML5s8",
+                  "id": 505866668485386240
+               }
+            ],
             "user_mentions": [
                {
                   "indices": [
@@ -9240,7 +9474,7 @@
                   ],
                   "expanded_url": "http://is.gd/H3OgTO",
                   "display_url": "is.gd/H3OgTO",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/HLX9mHcQwe"
                }
             ]
          },
@@ -9251,7 +9485,7 @@
          },
          "created_at": "Sun Aug 31 00:28:57 +0000 2014",
          "retweet_count": 4,
-         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+         "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",
          "id_str": "505874848900341760",
          "user": {
             "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
@@ -9287,7 +9521,7 @@
             "friends_count": 46,
             "default_profile": true,
             "listed_count": 0,
-            "location": "km/cn",
+            "location": "km\/cn",
             "user_protected": false,
             "is_translator": false,
             "id_str": "889332218",
@@ -9339,7 +9573,7 @@
                   ],
                   "expanded_url": "http://nico.ms/sm24357625",
                   "display_url": "nico.ms/sm24357625",
-                  "url": "http://t.co/toQgVlXPyH"
+                  "url": "http://t.co/PjL9if8OZC"
                }
             ]
          },
@@ -9350,7 +9584,7 @@
          },
          "created_at": "Sun Aug 31 00:28:56 +0000 2014",
          "retweet_count": 0,
-         "source": "<a href=\"http://www.nicovideo.jp/\" rel=\"nofollow\">ニコニコ動画</a>",
+         "source": "<a href=\"http://www.nicovideo.jp/\" rel=\"nofollow\">ニコニコ動画<\/a>",
          "id_str": "505874847260352513",
          "user": {
             "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/378800000029400927/114b242f5d838ec7cb098ea5db6df413.jpeg",
@@ -9387,7 +9621,7 @@
                         ],
                         "expanded_url": "http://www.nicovideo.jp/mylist/37917495",
                         "display_url": "nicovideo.jp/mylist/37917495",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "url": "http://t.co/ulD2e9mcwb"
                      }
                   ]
                },
@@ -9398,9 +9632,9 @@
                            125,
                            147
                         ],
-                        "expanded_url": "http://ameblo.jp/2no38mae/",
-                        "display_url": "ameblo.jp/2no38mae/",
-                        "url": "http://t.co/toQgVlXPyH"
+                        "expanded_url": "http://ameblo.jp/2no38mae\/",
+                        "display_url": "ameblo.jp/2no38mae\/",
+                        "url": "http://t.co/8E91tqoeKX"
                      }
                   ]
                }

@@ -41,27 +41,33 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	enum class parse_errors {
-		Success						= 0,
-		Missing_Object_Start		= 1,
-		Missing_Object_End			= 2,
-		Missing_Array_Start			= 3,
-		Missing_String_Start		= 4,
-		Missing_Colon				= 5,
-		Missing_Comma_Or_Object_End = 6,
-		Missing_Comma_Or_Array_End	= 7,
-		Invalid_Number_Value		= 8,
-		Invalid_Null_Value			= 9,
-		Invalid_Bool_Value			= 10,
-		Invalid_String_Characters	= 11,
-		No_Input					= 12,
+	template<typename derived_type> class parser;
+
+	template<typename derived_type> struct parse_options_internal {
+		mutable parser<derived_type>* parserPtr{};
+		jsonifier::parse_options optionsReal{};
+		mutable const char* rootIter{};
 	};
+
+	JSONIFIER_INLINE std::pair<const char*, const char*> collectIterPair(const char* startPtr, const char* endPtr) {
+		while (whitespaceTable[static_cast<uint64_t>(*startPtr)]) {
+			++startPtr;
+		}
+		auto startPtrNew = startPtr;
+
+		while (whitespaceTable[static_cast<uint64_t>(*endPtr)]) {
+			--endPtr;
+		}
+		auto endPtrNew = endPtr;
+
+		return std::make_pair(startPtrNew, endPtrNew);
+	}
 
 	template<typename derived_type, typename value_type> struct parse_impl;
 
 	template<typename derived_type> class parser {
 	  public:
-		template<typename derived_type_new, typename value_type> friend struct parse_impl;
+		template<typename derived_type_new, typename value_type> friend struct parse_impl; 
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
@@ -71,17 +77,44 @@ namespace jsonifier_internal {
 			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
 				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
-			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
-				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
-				return false;
-			}
-			impl(std::forward<value_type>(object), iter);
+			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
+			optionsReal.parserPtr = this;
+			optionsReal.rootIter  = reinterpret_cast<const char*>(in.data());
 			if constexpr (!options.minified) {
-				if (iter) {
-					iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
+				derivedRef.section.template reset<true>(in.data(), in.size());
+				simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+				simd_structural_iterator end{ derivedRef.section.end(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+				if (!iter || (*iter != '{' && *iter != '[')) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					getErrors().emplace_back(
+						createError<sourceLocation, error_classes::Parsing>(iter - optionsReal.rootIter, end - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
 					return false;
+				}
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), iter, end);
+				if constexpr (!options.minified) {
+					if (readIters.first != readIters.second) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter,
+							readIters.second - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
+						return false;
+					}
+				}
+			} else {
+				auto readIters = collectIterPair(reinterpret_cast<const char*>(in.data()), reinterpret_cast<const char*>(in.data() + in.size()));
+				if (!readIters.first || (*readIters.first != '{' && *readIters.first != '[')) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter, readIters.second - optionsReal.rootIter,
+						optionsReal.rootIter, parse_errors::No_Input));
+					return false;
+				}
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIters.first, readIters.second);
+				if constexpr (!options.minified) {
+					if (readIters.first != readIters.second) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter,
+							readIters.second - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
+						return false;
+					}
 				}
 			}
 			return true;
@@ -92,18 +125,46 @@ namespace jsonifier_internal {
 			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
 				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
-			derivedRef.section.template reset<options.refreshString, options.minified>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
-			if (!iter || (*iter != 0x7Bu && *iter != 0x5Bu)) {
-				iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
-				return value_type{};
-			}
-			value_type object{};
-			impl(std::forward<value_type>(object), iter);
+			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
+			optionsReal.parserPtr = this;
+			optionsReal.rootIter  = reinterpret_cast<const char*>(in.data());
+			jsonifier::concepts::unwrap_t<value_type> object{};
 			if constexpr (!options.minified) {
-				if (iter) {
-					iter.template createError<error_classes::Parsing>(parse_errors::No_Input);
-					return {};
+				derivedRef.section.template reset<true>(in.data(), in.size());
+				simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+				simd_structural_iterator end{ derivedRef.section.end(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
+				if (!iter || (*iter != '{' && *iter != '[')) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					getErrors().emplace_back(
+						createError<sourceLocation, error_classes::Parsing>(iter - optionsReal.rootIter, end - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
+					return object;
+				}
+				
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), iter, end);
+				if constexpr (!options.minified) {
+					if (readIters.first != readIters.second) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter,
+							readIters.second - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
+						return object;
+					}
+				}
+			} else {
+				auto readIters = collectIterPair(reinterpret_cast<const char*>(in.data()), reinterpret_cast<const char*>(in.data() + in.size()));
+				if (!readIters.first || (*readIters.first != '{' && *readIters.first != '[')) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter, readIters.second - optionsReal.rootIter,
+						optionsReal.rootIter, parse_errors::No_Input));
+					return object;
+				}
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIters.first, readIters.second);
+				if constexpr (!options.minified) {
+					if (readIters.first != readIters.second) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						getErrors().emplace_back(createError<sourceLocation, error_classes::Parsing>(readIters.first - optionsReal.rootIter,
+							readIters.second - optionsReal.rootIter, optionsReal.rootIter, parse_errors::No_Input));
+						return object;
+					}
 				}
 			}
 			return object;
@@ -111,6 +172,7 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		std::pair<const char*, const char*> readIters{};
 
 		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
 
@@ -118,13 +180,8 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		template<typename value_type, jsonifier::concepts::is_fwd_iterator iterator_type> JSONIFIER_INLINE static void impl(value_type&& object, iterator_type&& iter) {
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(object), std::forward<iterator_type>(iter),
-					object.jsonifierExcludedKeys);
-			} else {
-				parse_impl<derived_type, jsonifier::concepts::unwrap_t<value_type>>::impl(std::forward<value_type>(object), std::forward<iterator_type>(iter));
-			}
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~parser() noexcept = default;

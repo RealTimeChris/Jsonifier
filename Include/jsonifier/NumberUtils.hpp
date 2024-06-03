@@ -31,8 +31,11 @@
 #include <jsonifier/DToStr.hpp>
 #include <jsonifier/StrToD.hpp>
 #include <jsonifier/StrToI.hpp>
+#include <jsonifier/Parser.hpp>
 
 namespace jsonifier {
+
+	template<bool> class jsonifier_core;
 
 	template<typename value_type = char, jsonifier::concepts::num_t value_type01> JSONIFIER_INLINE jsonifier::string_base<value_type> toString(const value_type01& value) {
 		string_base<value_type> returnstring{};
@@ -55,8 +58,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_INLINE double strToDouble(const jsonifier::string& string) {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
-			auto newPtr = string.data();
-			jsonifier_internal::parseNumber(newValue, newPtr);
+			auto currentIter = reinterpret_cast<const char*>(string.data());
+			jsonifier_internal::parseFloat(newValue, currentIter);
 		}
 		return newValue;
 	}
@@ -102,4 +105,221 @@ namespace jsonifier {
 		}
 		return newValue;
 	}
+}
+
+namespace jsonifier_internal {
+	
+	template<const auto& options, typename value_type, jsonifier_internal::simd_structural_iterator_t iterator_type>
+	JSONIFIER_INLINE void parseNumber(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
+		using V = std::decay_t<value_type>;
+		if constexpr (jsonifier::concepts::integer_t<V>) {
+			static constexpr auto maximum = uint64_t((std::numeric_limits<V>::max)());
+			if constexpr (std::is_unsigned_v<V>) {
+				if constexpr (std::same_as<V, uint64_t>) {
+					if (*iter == '-') [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					static_assert(sizeof(*iter) == sizeof(char));
+					auto s = parseInt<decltype(value)>(value, iter.operator const char*&());
+					++iter;
+					if (!s) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+				} else {
+					uint64_t i{};
+					if (*iter == '-') [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					static_assert(sizeof(*iter) == sizeof(char));
+					auto s = parseInt<uint64_t>(i, iter.operator const char*&());
+					++iter;
+					if (!s) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					if (i > maximum) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(i);
+				}
+			} else {
+				uint64_t i{};
+				int32_t sign = 1;
+				auto newPtr	 = iter.operator const char*&();
+				if (*newPtr == '-') {
+					sign = -1;
+					++newPtr;
+				}
+
+				static_assert(sizeof(*iter) == sizeof(char));
+				auto s = parseInt<uint64_t>(i, newPtr);
+				++iter;
+				if (!s) [[unlikely]] {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					errors.emplace_back(
+						createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter, options.rootIter, parse_errors::Invalid_Number_Value));
+					skipToNextValue(iter, end);
+					return;
+				}
+
+				if (sign == -1) {
+					static constexpr auto min_abs = uint64_t((std::numeric_limits<V>::max)()) + 1;
+					if (i > min_abs) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(sign * i);
+				} else {
+					if (i > maximum) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(i);
+				}
+			}
+		} else {
+			auto s = parseFloat(value, iter.operator const char*&());
+			++iter;
+			if (!s) [[unlikely]] {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				errors.emplace_back(
+					createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter, options.rootIter, parse_errors::Invalid_Number_Value));
+				skipToNextValue(iter, end);
+				return;
+			}
+		}
+	}
+
+	template<const auto& options, typename value_type, typename iterator_type>
+	JSONIFIER_INLINE void parseNumber(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
+		using V = std::decay_t<value_type>;
+		if constexpr (jsonifier::concepts::integer_t<V>) {
+			static constexpr auto maximum = uint64_t((std::numeric_limits<V>::max)());
+			if constexpr (std::is_unsigned_v<V>) {
+				if constexpr (std::same_as<V, uint64_t>) {
+					if (*iter == '-') [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					static_assert(sizeof(*iter) == sizeof(char));
+					auto s = parseInt<decltype(value)>(value, iter);
+					if (!s) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+				} else {
+					uint64_t i{};
+					if (*iter == '-') [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					static_assert(sizeof(*iter) == sizeof(char));
+					auto s = parseInt<std::decay_t<decltype(i)>>(i, iter);
+					if (!s) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					if (i > maximum) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(i);
+				}
+			} else {
+				uint64_t i{};
+				int32_t sign = 1;
+				if (*iter == '-') {
+					sign = -1;
+					++iter;
+				}
+
+				static_assert(sizeof(*iter) == sizeof(char));
+				auto s = parseInt(i, iter);
+				if (!s) [[unlikely]] {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					errors.emplace_back(
+						createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter, options.rootIter, parse_errors::Invalid_Number_Value));
+					skipToNextValue(iter, end);
+					return;
+				}
+
+				if (sign == -1) {
+					static constexpr auto min_abs = uint64_t((std::numeric_limits<V>::max)()) + 1;
+					if (i > min_abs) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(sign * i);
+				} else {
+					if (i > maximum) [[unlikely]] {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						errors.emplace_back(createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter,
+							options.rootIter, parse_errors::Invalid_Number_Value));
+						skipToNextValue(iter, end);
+						return;
+					}
+					value = V(i);
+				}
+			}
+		} else {
+			auto s = parseFloat(value, iter);
+			if (!s) [[unlikely]] {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				errors.emplace_back(
+					createError<sourceLocation, error_classes::Parsing>(iter - options.rootIter, end - options.rootIter, options.rootIter, parse_errors::Invalid_Number_Value));
+				skipToNextValue(iter, end);
+				return;
+			}
+		}
+	}
+
 }

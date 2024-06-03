@@ -28,93 +28,40 @@
 
 namespace jsonifier_internal {
 
-	template<typename tuple_t> struct group_builder {
-	  public:
-		static constexpr auto impl(tuple_t&& object) {
-			return makeGroupsImpl<starts, sizes_data>(std::forward<tuple_t>(object), std::make_index_sequence<nGroups>{});
-		}
+	template<typename value_type>
+	concept convertible_to_string_view = std::convertible_to<jsonifier::concepts::unwrap_t<value_type>, jsonifier::string_view>;
 
-	  protected:
-		template<size_t... indices, typename array_type> static constexpr auto shrinkIndexArray(const array_type& valuesNew01, std::index_sequence<indices...>) {
-			std::array<size_t, sizeof...(indices)> res{};
-			((res[indices] = valuesNew01[indices]), ...);
-			return res;
-		}
-
-		static constexpr auto filter() {
-			constexpr auto n = std::tuple_size_v<tuple_t>;
-			std::array<size_t, n> indices{};
-			size_t x		= 0;
-			auto filterImpl = [&](auto index, auto&& filterImpl) {
-				using value_type = jsonifier::concepts::unwrap_t<std::tuple_element_t<index, tuple_t>>;
-				if constexpr (!std::convertible_to<value_type, jsonifier::string_view>) {
-					indices[x++] = index - 1;
-				}
-				if constexpr (index < n - 1) {
-					filterImpl(std::integral_constant<size_t, index + 1>{}, filterImpl);
-				}
-			};
-			filterImpl(std::integral_constant<size_t, 0>{}, filterImpl);
-			return std::make_pair(indices, x);
-		}
-
-		template<size_t... indicesNew, typename array_type01, typename array_type02>
-		static constexpr void groupSizesImpl(array_type01& diffs, array_type02& indices, std::index_sequence<indicesNew...>) {
-			((diffs[indicesNew] = indices[indicesNew + 1] - indices[indicesNew]), ...);
-		}
-
-		template<size_t nGroups> static constexpr auto groupSizes(const std::array<size_t, nGroups>& indices, size_t nTotal) {
-			std::array<size_t, nGroups> diffs;
-			groupSizesImpl(diffs, indices, std::make_index_sequence<nGroups - 1>{});
-			diffs[nGroups - 1] = nTotal - indices[nGroups - 1];
-			return diffs;
-		}
-
-		template<size_t value, typename value_type> static constexpr auto getElemImpl(const value_type& t) {
-			if constexpr (value == 0 || std::convertible_to<value_type, jsonifier::string_view>) {
-				return jsonifier::string_view(std::get<value>(t));
+	template<uint64_t currentIndex, uint64_t maxIndex, convertible_to_string_view arg_type01, typename arg_type02, typename tuple_type, typename... arg_types>
+	constexpr auto getInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) {
+		if constexpr (std::tuple_size_v<tuple_type> > 0) {
+			if constexpr (currentIndex < maxIndex - 2) {
+				auto newPtrArg	= arg02;
+				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
+				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
-				return std::get<value>(t);
+				auto newPtrArg	= arg02;
+				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
+				return newerTuple;
 			}
-		}
-
-		template<size_t start, typename value_type> static constexpr auto getElem(const value_type& t) {
-			return getElemImpl<start>(t);
-		}
-
-		template<size_t start, size_t... indices> static constexpr auto makeGroup(const tuple_t& t, std::index_sequence<indices...>) {
-			return std::make_tuple(getElem<start + indices>(t)...);
-		}
-
-		template<auto& GroupStartArr, auto& GroupSizeArr, size_t... GroupNumber> static constexpr auto makeGroupsImpl(tuple_t&& object, std::index_sequence<GroupNumber...>) {
-			auto newTuple{ std::forward<tuple_t>(object) };
-			return std::make_tuple(
-				makeGroup<GroupStartArr[jsonifier::concepts::tag<GroupNumber>()]>(newTuple, std::make_index_sequence<GroupSizeArr[jsonifier::concepts::tag<GroupNumber>()]>{})...);
-		}
-
-		static constexpr auto makeGroupsImpl() {
-			constexpr auto nNew			 = std::tuple_size_v<tuple_t>;
-			constexpr auto filtered		 = filter();
-			constexpr auto startsNew	 = shrinkIndexArray(filtered.first, std::make_index_sequence<filtered.second>{});
-			constexpr auto sizes_dataNew = groupSizes(startsNew, nNew);
-			return std::make_tuple(startsNew, sizes_dataNew);
-		}
-
-		static constexpr auto h			 = makeGroupsImpl();
-		static constexpr auto starts	 = get<0>(h);
-		static constexpr auto sizes_data = get<1>(h);
-		static constexpr auto nGroups	 = starts.size();
-	};
-
-	template<typename value_type> constexpr decltype(auto) convSv(value_type&& value) noexcept {
-		if constexpr (std::is_convertible_v<value_type, jsonifier::string_view>) {
-			return jsonifier::string_view{ value };
 		} else {
-			return std::forward<value_type>(value);
+			if constexpr (currentIndex < maxIndex - 2) {
+				auto newPtrArg	= arg02;
+				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerTuple = std::make_tuple(newerPair);
+				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
+			} else {
+				auto newPtrArg	= arg02;
+				auto newerPair	= std::make_tuple(uint_string_literal{ arg01 }, newPtrArg);
+				auto newerTuple = std::make_tuple(newerPair);
+				return newerTuple;
+			}
 		}
 	}
 
-	template<typename value_type01, typename value_type02> JSONIFIER_INLINE decltype(auto) getMember(value_type01&& value, value_type02& member_ptr) {
+	template<typename value_type, typename member_ptr_type> inline decltype(auto) getMember(value_type&& value, member_ptr_type&& member_ptr) {
+		using value_type02 = std::decay_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
 			return value.*member_ptr;
 		} else if constexpr (std::is_pointer_v<value_type02>) {
@@ -128,13 +75,14 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<typename... value_types> constexpr decltype(auto) createValue(value_types&&... args) {
-		if constexpr (sizeof...(value_types) > 0 && sizeof...(value_types) % 2 == 0) {
-			auto newTuple	 = std::make_tuple(jsonifier_internal::convSv(std::forward<value_types>(args))...);
-			using tuple_type = concepts::unwrap_t<decltype(newTuple)>;
-			return value{ jsonifier_internal::group_builder<tuple_type>::impl(std::move(newTuple)) };
-		} else if constexpr (sizeof...(value_types) == 1) {
-			return scalar_value{ std::make_tuple(std::forward<value_types>(args)...) };
+	template<typename... arg_types> constexpr auto createValue(arg_types&&... args) {
+		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
+			return value{ jsonifier_internal::getInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), args...) };
+		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
+			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
+		} else if constexpr (sizeof...(arg_types) == 1) {
+			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
+			return scalar_value{ std::make_tuple(std::forward<arg_types>(args)...) };
 		} else {
 			return value{ concepts::empty{} };
 		}
@@ -143,7 +91,7 @@ namespace jsonifier {
 	/*
 	* Function to create a reflected value from member pointers
 	*/
-	template<const auto... values> constexpr decltype(auto) createValue() {
+	template<auto... values> constexpr decltype(auto) createValue() {
 		// Check if there are member pointers specified
 		if constexpr (sizeof...(values) > 0) {
 			// Create a tuple with the specified member pointers

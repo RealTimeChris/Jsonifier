@@ -30,7 +30,7 @@ namespace simd_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
-		return static_cast<uint32_t>(_mm_popcnt_u32(value));
+		return static_cast<uint32_t>(_mm_popcnt_s32(value));
 	}
 
 	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
@@ -40,7 +40,7 @@ namespace simd_internal {
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type popcnt(value_type value) {
-		return vaddv_u8(vcnt_u8(vcreate_u8(value)));
+		return vaddv_s8(vcnt_s8(vcreate_s8(value)));
 	}
 
 #else

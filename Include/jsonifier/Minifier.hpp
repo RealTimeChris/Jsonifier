@@ -53,14 +53,16 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter) {
-				iter.template createError<error_classes::Minifying>(minify_errors::No_Input);
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::No_Input);
 				derivedRef.index = 0;
 				return jsonifier::concepts::unwrap_t<string_type>{};
 			}
 			jsonifier::concepts::unwrap_t<string_type> newString{};
-			if (derivedRef.index = impl(iter, derivedRef.stringBuffer); derivedRef.index == minifyError) {
+			impl(iter, derivedRef.stringBuffer, derivedRef.index);
+			if (derivedRef.index == minifyError) {
 				derivedRef.index = 0;
 				return newString;
 			} else {
@@ -79,17 +81,21 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.template reset<true>(in.data(), in.size());
-			simd_structural_iterator iter{ derivedRef.section.begin(), in.size(), derivedRef.errors };
+			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end(), in.size(), derivedRef.stringBuffer, derivedRef.errors };
 			if (!iter) {
-				iter.template createError<error_classes::Minifying>(minify_errors::No_Input);
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::No_Input);
 				derivedRef.index = 0;
 				return false;
 			}
-			if (derivedRef.index = impl(iter, derivedRef.stringBuffer); derivedRef.index == minifyError) {
+			impl(iter, derivedRef.stringBuffer, derivedRef.index);
+			if (derivedRef.index == minifyError) {
 				derivedRef.index = 0;
 				return false;
 			} else {
-				out.resize(derivedRef.index);
+				if (out.size() != derivedRef.index) {
+					out.resize(derivedRef.index);
+				}
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, out.data());
 			}
 			derivedRef.index = 0;
@@ -101,9 +107,9 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type&& out) noexcept {
-			return minify_impl<derived_type>::impl(std::forward<iterator_type>(iter), std::forward<string_type>(out));
+		template<jsonifier::concepts::string_t string_type, typename iterator_type>
+		JSONIFIER_INLINE static void impl(iterator_type& iter, string_type&& out, uint64_t& index) noexcept {
+			return minify_impl<derived_type>::impl(iter, std::forward<string_type>(out), index);
 		}
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {

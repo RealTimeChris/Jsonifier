@@ -30,36 +30,36 @@ namespace simd_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
-		return vbicq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return vbicq_s8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opAnd(simd_int_t01&& value, simd_int_t02&& other) {
-		return vandq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return vandq_s8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opXor(simd_int_t01&& value, simd_int_t02&& other) {
-		return veorq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return veorq_s8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<simd_int_type simd_int_t01, simd_int_type simd_int_t02> JSONIFIER_INLINE simd_int_t opOr(simd_int_t01&& value, simd_int_t02&& other) {
-		return vorrq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return vorrq_s8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t opSetLSB(simd_int_t01&& value, bool valueNew) {
 		static constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-		return valueNew ? vorrq_u8(std::forward<simd_int_t01>(value), mask) : vbicq_u8(std::forward<simd_int_t01>(value), mask);
+		return valueNew ? vorrq_s8(std::forward<simd_int_t01>(value), mask) : vbicq_s8(std::forward<simd_int_t01>(value), mask);
 	}
 
 	template<simd_int_type simd_int_t01> JSONIFIER_INLINE simd_int_t opNot(simd_int_t01&& value) {
-		return vmvnq_u8(std::forward<simd_int_t01>(value));
+		return vmvnq_s8(std::forward<simd_int_t01>(value));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
-		return (vgetq_lane_u8(value, 15) & 0x80) != 0;
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
+		return (vgetq_lane_s8(value, 15) & 0x80) != 0;
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opBool(simd_int_t01&& value) {
-		return vmaxvq_u8(value) != 0;
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
+		return vmaxvq_s8(value) != 0;
 	}
 
 	JSONIFIER_INLINE simd_int_t reset() {

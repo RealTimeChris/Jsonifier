@@ -28,13 +28,13 @@
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type val) {
-		auto remainder = val % multiple;
-		return remainder == 0 ? val : val + (multiple - remainder);
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) {
+		auto remainder = value % multiple;
+		return remainder == 0 ? value : value + (multiple - remainder);
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type val) {
-		return static_cast<int64_t>(val) >= 0 ? (val / multiple) * multiple : ((val - multiple + 1) / multiple) * multiple;
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) {
+		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 	}
 
 #if defined(_MSC_VER)

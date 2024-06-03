@@ -337,7 +337,6 @@ namespace jsonifier_internal {
 		*expDec = k;
 	}
 
-
 	constexpr std::array<uint8_t, 256> decTrailingZeroTable{ 2u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u,
 		1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u,
 		0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u };
@@ -414,7 +413,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits<(x >> 1)>();
 	}
 
-	template<std::floating_point value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buffer, value_type val) noexcept {
+	template<std::floating_point value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buffer, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
@@ -422,7 +421,7 @@ namespace jsonifier_internal {
 		using raw_t = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
 
 		raw_t raw;
-		std::memcpy(&raw, &val, sizeof(value_type));
+		std::memcpy(&raw, &value, sizeof(value_type));
 
 		constexpr uint32_t exponentBits = numbits<std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1>();
 		constexpr raw_t sigMask			= raw_t(-1) >> (exponentBits + 1);

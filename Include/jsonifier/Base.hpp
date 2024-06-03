@@ -24,13 +24,13 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
-
+#include <functional>
+#include <cassert>
+#include <cstring>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cfloat>
-#include <cassert>
-#include <cstring>
 #include <array>
 
 #if !defined(__GNUC__)
@@ -45,7 +45,11 @@
 	#pragma warning(disable : 5246)
 #endif
 
-#if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__)) || (defined(__APPLE__) && defined(__clang__))
+#if defined(__clang__)
+	#define JSONIFIER_CLANG 1
+#elif defined(__GNUC__) && defined(__llvm__)
+	#define JSONIFIER_CLANG 1
+#elif defined(__APPLE__) && defined(__clang__)
 	#define JSONIFIER_CLANG 1
 #elif defined(_MSC_VER)
 	#define JSONIFIER_MSVC 1
@@ -156,6 +160,27 @@ using string_parsing_type = uint16_t;
 
 	#include <arm_neon.h>
 
+	#if __CHAR_UNSIGNED__
+		#define CHAR_TYPE uint8_t
+		#define vreinterpretq_x8_x16 vreinterpretq_u8_u16
+		#define vdupq_n_x8 vdupq_n_u8
+		#define vld1q_x16 vld1q_u16
+		#define vpaddq_x8 vpaddq_u8
+		#define vld1q_x8 vld1q_u8
+		#define vceqq_x8 vceqq_u8
+		#define vst1q_x8 vst1q_u8
+	#else
+		#define CHAR_TYPE int8_t
+		#define vreinterpretq_x8_x16 vreinterpretq_s8_s16
+		#define vdupq_n_x8 vdupq_n_s8
+		#define vld1q_x16 vld1q_s16
+		#define vpaddq_x8 vpaddq_s8
+		#define vld1q_x8 vld1q_s8
+		#define vceqq_x8 vceqq_s8
+		#define vst1q_x8 vst1q_s8
+	#endif
+
+
 using simd_int_128 = uint8x16_t;
 using simd_int_256 = uint32_t;
 using simd_int_512 = uint64_t;
@@ -176,13 +201,13 @@ union __m128x {
 	uint64_t m128x_uint64[2];
 	#else
 	int64_t m128x_int64[2];
-	int8_t m128x_int8[16]{};
-	int16_t m128x_int16[8];
 	int32_t m128x_int32[4];
-	uint8_t m128x_uint8[16];
-	int16_t m128x_uint16[8];
-	int32_t m128x_uint32[4];
+	int16_t m128x_int16[8];
+	int8_t m128x_int8[16]{};
 	uint64_t m128x_uint64[2];
+	int32_t m128x_uint32[4];
+	int16_t m128x_uint16[8];
+	uint8_t m128x_uint8[16];
 	#endif
 };
 using simd_int_128 = __m128x;
@@ -198,9 +223,9 @@ constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
 constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
 constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
 
-using string_view_ptr	= const uint8_t*;
-using structural_index	= const uint8_t*;
-using string_buffer_ptr = uint8_t*;
+using string_view_ptr	= const char*;
+using structural_index	= const char*;
+using string_buffer_ptr = char*;
 
 template<typename value_type>
 concept simd_int_512_type = std::is_same_v<simd_int_512, jsonifier::concepts::unwrap_t<value_type>>;

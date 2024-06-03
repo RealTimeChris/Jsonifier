@@ -24,25 +24,58 @@
 #pragma once
 
 #include <jsonifier/ISADetection.hpp>
+#include <jsonifier/Reflection.hpp>
+#include <jsonifier/StringUtils.hpp>
+#include <jsonifier/HashMap.hpp>
+#include <jsonifier/StrToI.hpp>
 #include <jsonifier/Error.hpp>
 
 namespace jsonifier_internal {
 
+	constexpr std::array<parse_errors, 256> errorMapNew{ [] {
+		std::array<parse_errors, 256> returnValues{};
+		returnValues['{'] = parse_errors::Missing_Object_Start;
+		returnValues['}'] = parse_errors::Missing_Comma_Or_Object_End;
+		returnValues['['] = parse_errors::Missing_Array_Start;
+		returnValues[']'] = parse_errors::Missing_Comma_Or_Array_End;
+		returnValues['"'] = parse_errors::Missing_String_Start;
+		returnValues[','] = parse_errors::Missing_Comma;
+		returnValues[':'] = parse_errors::Missing_Colon;
+		returnValues['f'] = parse_errors::Invalid_Bool_Value;
+		returnValues['t'] = parse_errors::Invalid_Bool_Value;
+		returnValues['n'] = parse_errors::Invalid_Null_Value;
+		returnValues['-'] = parse_errors::Invalid_Number_Value;
+		returnValues['0'] = parse_errors::Invalid_Number_Value;
+		returnValues['1'] = parse_errors::Invalid_Number_Value;
+		returnValues['2'] = parse_errors::Invalid_Number_Value;
+		returnValues['3'] = parse_errors::Invalid_Number_Value;
+		returnValues['4'] = parse_errors::Invalid_Number_Value;
+		returnValues['5'] = parse_errors::Invalid_Number_Value;
+		returnValues['6'] = parse_errors::Invalid_Number_Value;
+		returnValues['7'] = parse_errors::Invalid_Number_Value;
+		returnValues['8'] = parse_errors::Invalid_Number_Value;
+		returnValues['9'] = parse_errors::Invalid_Number_Value;
+		return returnValues;
+	}() };
+
 	class simd_structural_iterator {
 	  public:
+		friend class derailleur;
+		template<json_structural_type value_type, typename derived_type> friend struct validate_impl;
 
-		using iterator_concept	  = std::forward_iterator_tag;
-		using iterator_category	  = std::forward_iterator_tag;
-		using value_type		  = uint8_t;
-		using value_type_internal = uint8_t;
+		using iterator_concept	  = std::bidirectional_iterator_tag;
+		using iterator_category	  = std::bidirectional_iterator_tag;
+		using value_type		  = char;
+		using value_type_internal = char;
 		using pointer_internal	  = structural_index*;
 		using pointer			  = value_type*;
 		using size_type			  = uint64_t;
 
 		JSONIFIER_INLINE simd_structural_iterator() noexcept = default;
 
-		JSONIFIER_INLINE simd_structural_iterator(structural_index* startPtr, size_type stringLengthNew, jsonifier::vector<error>& errorsNew) noexcept
-			: errors{ &errorsNew }, currentIndex{ startPtr }, rootIndex{ startPtr }, stringLength{ stringLengthNew } {};
+		JSONIFIER_INLINE simd_structural_iterator(structural_index* startPtr, structural_index* endPtr, size_type stringLengthNew, jsonifier::string& bufferStringNew,
+			jsonifier::vector<error>& errorsNew) noexcept
+			: errors{ &errorsNew }, currentIndex{ startPtr }, rootIndex{ startPtr }, stringBuffer{ &bufferStringNew }, endIndex{ endPtr }, stringLength{ stringLengthNew } {};
 
 		JSONIFIER_INLINE value_type operator*() const {
 			return *currentIndex ? **currentIndex : defaultValue;
@@ -57,12 +90,16 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		template<error_classes errorClassNew, typename error_type>
-		JSONIFIER_INLINE void createError(error_type error, std::source_location location = std::source_location::current()) {
-			errors->emplace_back(jsonifier_internal::createError(errorClassNew, getCurrentStringIndex(), stringLength, *rootIndex, error, location));
+		JSONIFIER_INLINE simd_structural_iterator& operator--() {
+			--currentIndex;
+			return *this;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator operator+(int32_t valueNew) {
+		template<const std::source_location& sourceLocation, error_classes errorClassNew, typename error_type> JSONIFIER_INLINE void createError(error_type error) {
+			errors->emplace_back(jsonifier_internal::createError<sourceLocation, errorClassNew>(getCurrentStringIndex(), stringLength, rootIndex, error));
+		}
+
+		JSONIFIER_INLINE simd_structural_iterator operator+(uint64_t valueNew) {
 			simd_structural_iterator temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				++temp;
@@ -70,17 +107,53 @@ namespace jsonifier_internal {
 			return temp;
 		}
 
+		JSONIFIER_INLINE operator const char*&() const {
+			return *currentIndex;
+		}
+
+		JSONIFIER_INLINE simd_structural_iterator sub(uint64_t valueNew) {
+			simd_structural_iterator temp{ *this };
+			for (uint64_t x = 0; x < valueNew; ++x) {
+				--temp;
+			}
+			return temp;
+		}
+
+		JSONIFIER_INLINE int64_t operator-(const char* valueNew) {
+			return *currentIndex - valueNew;
+		}
+
 		JSONIFIER_INLINE simd_structural_iterator operator++(int32_t) {
 			simd_structural_iterator temp{ *this };
 			++(*this);
 			return temp;
-		} 
+		}
+
+		JSONIFIER_INLINE auto getEndPtr() const {
+			return *endIndex;
+		}
+
+		JSONIFIER_INLINE auto getRootPtr() const {
+			return *rootIndex;
+		}
+
+		JSONIFIER_INLINE jsonifier::string& getStringBuffer() {
+			return *stringBuffer;
+		}
+
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return *errors;
+		}
+
+		JSONIFIER_INLINE size_type getRemainingStringLength() const {
+			return stringLength - getCurrentStringIndex();
+		}
 
 		JSONIFIER_INLINE size_type getCurrentStringIndex() const {
 			return static_cast<size_type>(*currentIndex - *rootIndex);
 		}
 
-		JSONIFIER_INLINE bool operator==(const simd_structural_iterator&) const {
+		JSONIFIER_INLINE bool operator==(const simd_structural_iterator& other) const {
 			return *currentIndex == nullptr;
 		}
 
@@ -89,17 +162,21 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void swap(simd_structural_iterator& other) {
+			std::swap(stringBuffer, other.stringBuffer);
 			std::swap(currentIndex, other.currentIndex);
 			std::swap(stringLength, other.stringLength);
 			std::swap(rootIndex, other.rootIndex);
+			std::swap(endIndex, other.endIndex);
 			std::swap(errors, other.errors);
 		}
 
 	  protected:
 		static constexpr value_type defaultValue{ 0x00ll };
 		jsonifier::vector<error>* errors{};
+		jsonifier::string* stringBuffer{};
 		pointer_internal currentIndex{};
 		pointer_internal rootIndex{};
+		pointer_internal endIndex{};
 		size_type stringLength{};
 	};
 

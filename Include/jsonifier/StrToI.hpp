@@ -42,76 +42,51 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-	constexpr std::array<bool, 256> whitespaceTable{ [] {
-		std::array<bool, 256> returnValues{};
-		returnValues['\b']	 = true;
-		returnValues['\t']	 = true;
-		returnValues['\x20'] = true;
-		returnValues['\n']	 = true;
-		returnValues['\f']	 = true;
-		returnValues['\v']	 = true;
-		returnValues['\r']	 = true;
-		return returnValues;
-	}() };
+	template<jsonifier::concepts::integer_t value_type_new> JSONIFIER_INLINE bool parseInt(value_type_new& value, auto& iter) {
+		using value_type		  = jsonifier::concepts::unwrap_t<value_type_new>;
+		constexpr auto isVolatile = std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
+		using char_type			  = decltype(iter);
+		uint64_t sig			  = uint64_t(numberSubTable[static_cast<uint64_t>(*iter)]);
+		uint64_t numTmp;
 
-	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumberImpl(value_type& value, char_type* cur) {
-		static constexpr std::remove_const_t<char_type> x{ 'x' };
-		std::remove_const_t<char_type> currentChar{ *cur };
-		uint64_t sig{};
-
-		if (!digitTableBool[currentChar] || currentChar == zero && digitTableBool[*(cur + 1)] || *(cur + 1) == x) [[unlikely]] {
+		if (sig > 9) [[unlikely]] {
 			return false;
 		}
 
-		while (digitTableBool[currentChar]) {
-			sig = sig * 10 + (currentChar - zero);
-			++cur;
-			currentChar = *cur;
-		}
-
-		value = static_cast<value_type>(sig);
-		return true;
+		constexpr auto zero = uint8_t('0');
+#define expr_intg(i) \
+	if (numTmp = numberSubTable[iter[i]]; numTmp <= 9) [[likely]] \
+		sig = numTmp + sig * 10; \
+	else { \
+		if constexpr (i > 1) { \
+			if (*iter == zero) \
+				return false; \
+		} \
+		goto digi_sepr_##i; \
 	}
+		repeat_in_1_18(expr_intg);
+#undef expr_intg
 
-	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_INLINE bool parseNumber(value_type& value, char_type* curNew) {
-		static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-		if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-			if (*curNew == '-') [[unlikely]] {
-				return false;
-			}
-			if constexpr (std::is_volatile_v<value_type>) {
-				if (!parseNumberImpl<uint64_t, char_type>(value, curNew)) [[unlikely]] {
-					return false;
-				}
-			} else {
-				if (!parseNumberImpl<jsonifier::concepts::unwrap_t<value_type>, char_type>(value, curNew)) [[unlikely]] {
-					return false;
-				}
-			}
-		} else {
-			int64_t sign = 1;
-			if (*curNew == '-') {
-				sign = -1;
-				++curNew;
-			}
+		if (*iter == zero)
+			return false;
 
-			if (!parseNumberImpl<jsonifier::concepts::unwrap_t<value_type>, char_type>(value, curNew)) [[unlikely]] {
-				return false;
-			}
-
-			if (sign == -1) {
-				static constexpr auto minAbs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-				if (value > minAbs) [[unlikely]] {
-					return false;
-				}
-				value *= static_cast<value_type>(sign);
-			} else {
-				if (value > maximum) [[unlikely]] {
-					return false;
-				}
-			}
+		iter += 19;
+		if (!digiIsDigitOrFp(*iter)) {
+			value = static_cast<value_type>(sig);
+			return true;
 		}
-		return true;
+
+#define expr_sepr(i) \
+	digi_sepr_##i : if (!digiIsFp(uint8_t(iter[i]))) [[likely]] { \
+		iter += i; \
+		value = sig; \
+		return true; \
+	} \
+	iter += i; \
+	return false;
+		repeat_in_1_18(expr_sepr)
+#undef expr_sepr
+			return false;
 	}
 
 	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, const char_type* c) noexcept {

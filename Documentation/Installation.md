@@ -39,8 +39,8 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE jsonifier::Jsonifier)
 - Steps:   
 	1. Clone this repo into a folder.
 	2. Set the installation directory if you wish, using the `CMAKE_INSTALL_PREFIX` variable in CMakeLists.txt.
-	3. Enter the directory in a terminal, and enter `cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Release_OR_Debug`.
-	4. Enter within the same terminal, `cmake --build ./Build --config=Release_OR_Debug`.
-	5. Enter within the same terminal, `cmake --install ./Build/`.
+	3. Enter the directory in a terminal, and enter `cmake -S . --preset=Windows_OR_Linux-Release_OR_Debug`.
+	4. Enter within the same terminal, `cmake --build --preset=Windows_OR_Linux-Release_OR_Debug`.
+	5. Enter within the same terminal, `cmake --install ./Build/Release_OR_Debug`.
 	6. Now within the CMakeLists.txt of the project you wish to use the library in, set Jsonifier_DIR to wherever you set the `CMAKE_INSTALL_PREFIX` to, and then use `find_package(Jsonifier CONFIG REQUIRED)` and then `target_link_libraries("${PROJECT_NAME}" PUBLIC/PRIVATE jsonifier::Jsonifier)`.
 

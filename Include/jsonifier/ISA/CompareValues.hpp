@@ -34,14 +34,14 @@ namespace simd_internal {
 	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE static uint16_t toBitMask(simd_int_t01&& value) {
 		static constexpr uint8x16_t bit_mask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 		auto minput	   = value & bit_mask;
-		uint8x16_t tmp = vpaddq_u8(minput, minput);
-		tmp			   = vpaddq_u8(tmp, tmp);
-		tmp			   = vpaddq_u8(tmp, tmp);
-		return static_cast<uint16_t>(vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0));
+		uint8x16_t tmp = vpaddq_x8(minput, minput);
+		tmp			   = vpaddq_x8(tmp, tmp);
+		tmp			   = vpaddq_x8(tmp, tmp);
+		return static_cast<uint16_t>(vgetq_lane_s16(vreinterpretq_s16_s8(tmp), 0));
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
-		return toBitMask(vceqq_u8(value, other));
+		return toBitMask(vceqq_s8(value, other));
 	}
 
 #elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)

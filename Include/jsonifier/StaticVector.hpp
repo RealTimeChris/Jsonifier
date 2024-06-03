@@ -36,12 +36,26 @@ namespace jsonifier_internal {
 		using const_pointer	  = const value_type*;
 		using size_type		  = uint64_t;
 		using const_reference = const value_type&;
-		using iterator		  = jsonifier_internal::iterator<value_type>;
+		using iterator_type	  = jsonifier_internal::iterator<value_type>;
 		using const_iterator  = jsonifier_internal::const_iterator<value_type>;
 
 		template<typename value_type_newer, size_type rowsNew> friend class static_vector;
 
-		constexpr static_vector(){};
+		constexpr static_vector() {};
+
+		constexpr static_vector& operator=(jsonifier::vector<value_type>&& values) noexcept {
+			if (rows < values.size()) {
+				throw std::out_of_range{ "Sorry, but there is not the correct number of rows in the vector!" };
+			}
+
+			sizeVal = values.size();
+			std::move(values.data(), values.data() + sizeVal, dataVal);
+			return *this;
+		}
+
+		constexpr static_vector(jsonifier::vector<value_type>&& values) noexcept {
+			*this = values;
+		}
 
 		constexpr static_vector& operator=(const jsonifier::vector<value_type>& values) {
 			if (rows < values.size()) {
@@ -63,22 +77,22 @@ namespace jsonifier_internal {
 			return dataVal[sizeVal - 1];
 		}
 
-		constexpr iterator erase(iterator pos) {
+		constexpr iterator_type erase(iterator_type pos) {
 			if (pos < begin() || pos >= end()) {
 				throw std::out_of_range{ "Iterator out of range" };
 			}
 			auto position = pos.operator->() - dataVal;
 			std::copy(pos.operator->() + 1, end().operator->(), pos.operator->());
 			--sizeVal;
-			return iterator{ dataVal + position, dataVal + position, dataVal + sizeVal };
+			return iterator_type{ dataVal + position, dataVal + position, dataVal + sizeVal };
 		}
 
-		constexpr iterator begin() noexcept {
-			return iterator{ dataVal };
+		constexpr iterator_type begin() noexcept {
+			return iterator_type{ dataVal };
 		}
 
-		constexpr iterator end() noexcept {
-			return iterator{ dataVal + sizeVal };
+		constexpr iterator_type end() noexcept {
+			return iterator_type{ dataVal + sizeVal };
 		}
 
 		constexpr const_iterator begin() const noexcept {

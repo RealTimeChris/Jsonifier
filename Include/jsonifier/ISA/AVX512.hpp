@@ -59,13 +59,12 @@ namespace simd_internal {
 		return _mm512_xor_si512(std::forward<simd_int_t01>(value), _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
-		__m128i newValue{ static_cast<uint8_t>(_mm512_extracti32x4_epi32(value, 3)) };
-		uint8_t newerValue{ static_cast<uint8_t>(_mm_extract_epi8(newValue, 7)) };
-		return (newerValue & 0b10000000) != 0;
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
+		simd_int_t result = _mm512_and_si512(value, _mm512_set_epi64(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll));
+		return _mm512_test_epi64_mask(result, result);
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opBool(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
 		return _mm512_test_epi64_mask(value, value);
 	}
 

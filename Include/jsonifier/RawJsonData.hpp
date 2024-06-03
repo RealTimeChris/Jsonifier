@@ -39,7 +39,7 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t { Unset = 0, Object = 0x7Bu, Array = 0x5Bu, String = 0x22u, Number = 0x2Du, Bool = 0x74u, Null = 0x6Eu };
+	enum class json_type : uint8_t { Unset = 0, Object = '{', Array = '[', String = '"', Number = '-', Bool = 't', Null = 'n' };
 
 	class raw_json_data;
 }
@@ -69,13 +69,13 @@ namespace jsonifier_internal {
 			return jsonifier::json_type::Number;
 		} else if (jsonifier_internal::boolTable[charToCheck]) [[likely]] {
 			return jsonifier::json_type::Bool;
-		} else if (charToCheck == 0x7B) [[unlikely]] {
+		} else if (charToCheck == '{') [[unlikely]] {
 			return jsonifier::json_type::Object;
-		} else if (charToCheck == 0x5B) [[unlikely]] {
+		} else if (charToCheck == '[') [[unlikely]] {
 			return jsonifier::json_type::Array;
-		} else if (charToCheck == 0x22u) [[unlikely]] {
+		} else if (charToCheck == '"') [[unlikely]] {
 			return jsonifier::json_type::String;
-		} else if (charToCheck == 0x6Eu) [[unlikely]] {
+		} else if (charToCheck == 'n') [[unlikely]] {
 			return jsonifier::json_type::Null;
 		} else {
 			return jsonifier::json_type::Unset;
@@ -256,19 +256,19 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			skipWs(newIter01);
-			auto newCount = countValueElements<0x7Bu, 0x7Du>(newIter02, endIter01);
-			collectCharacter(0x7Bu);
+			newIter01	  = simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
+			auto newCount = countValueElements<'{', '}'>(newIter02, endIter01);
+			collectCharacter('{');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				skipWs(newIter01);
+				newIter01	= simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
 				auto newKey = collectKey();
-				skipWs(newIter01);
+				newIter01	= simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
 				collectCharacter(0x3A);
-				skipWs(newIter01);
+				newIter01 = simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
-				skipWs(newIter01);
-				collectCharacter(0x2Cu);
+				newIter01		= simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
+				collectCharacter(',');
 			}
 		}
 		return results;
@@ -307,15 +307,15 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			skipWs(newIter01);
-			auto newCount = countValueElements<0x5Bu, 0x5Du>(newIter02, endIter01);
-			collectCharacter(0x5Bu);
+			newIter01	  = simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
+			auto newCount = countValueElements<'[', ']'>(newIter02, endIter01);
+			collectCharacter('[');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				skipWs(newIter01);
+				newIter01 = simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
 				bool endValue{ x == newCount - 1 };
 				results.emplace_back(collectValue(endValue));
-				skipWs(newIter01);
-				collectCharacter(0x2Cu);
+				newIter01 = simd_internal::collectNextNonWhiteSpaceIndex(newIter01.operator->(), static_cast<uint64_t>(endIter01 - newIter01));
+				collectCharacter(',');
 			}
 		}
 		return results;

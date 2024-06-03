@@ -58,12 +58,12 @@ namespace simd_internal {
 		return _mm_xor_si128(std::forward<simd_int_t01>(value), _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
-		uint8_t newValue{ static_cast<uint8_t>(_mm_extract_epi8(value, 15)) };
-		return (newValue & 0b10000000) != 0;
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opGetMSB(simd_int_t01&& value) {
+		simd_int_t result = _mm_and_si128(std::forward<simd_int_t01>(value), _mm_set_epi64x(0x8000000000000000ll, 0x00ll));
+		return !_mm_testz_si128(result, result);
 	}
 
-	template<simd_int_type simd_int_t01> JSONIFIER_INLINE bool opBool(simd_int_t01&& value) {
+	template<simd_int_type simd_int_t01> JSONIFIER_INLINE static bool opBool(simd_int_t01&& value) {
 		return !_mm_testz_si128(value, value);
 	}
 

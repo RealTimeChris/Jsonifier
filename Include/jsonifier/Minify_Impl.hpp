@@ -24,17 +24,16 @@
 #pragma once
 
 #include <jsonifier/SimdStructuralIterator.hpp>
-#include <jsonifier/Derailleur.hpp>
+#include <jsonifier/Minifier.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
 
 	template<typename derived_type> struct minify_impl {
-		template<jsonifier::concepts::string_t string_type, jsonifier::concepts::is_fwd_iterator iterator_type>
-		JSONIFIER_INLINE static uint64_t impl(iterator_type&& iter, string_type& out) noexcept {
+		template<jsonifier::concepts::string_t string_type, typename iterator_type>
+		JSONIFIER_INLINE static void impl(iterator_type& iter, string_type& out, uint64_t& index) noexcept {
 			auto previousPtr = iter.operator->();
 			int64_t currentDistance{};
-			auto outPtr = out.data();
 
 			++iter;
 
@@ -44,77 +43,74 @@ namespace jsonifier_internal {
 						currentDistance = iter.operator->() - previousPtr;
 						while (whitespaceTable[previousPtr[--currentDistance]]) {
 						}
-						if (currentDistance > 0) {
-							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance + 1));
-							outPtr += currentDistance + 1;
+						auto newSize = static_cast<uint64_t>(currentDistance) + 1;
+						if (currentDistance > 0) [[likely]] {
+							writeCharactersUnchecked(out, previousPtr, newSize, index);
 						} else {
-							iter.template createError<error_classes::Minifying>(minify_errors::Invalid_String_Length);
-							return std::numeric_limits<uint32_t>::max();
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Invalid_String_Length);
+							return;
 						}
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma:
-						writeCharacter<0x2Cu>(outPtr);
+						writeCharacterUnchecked<','>(out, index);
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
 						while (!whitespaceTable[previousPtr[++currentDistance]] && ((previousPtr + currentDistance) < iter.operator->())) {
 						}
-						if (currentDistance > 0) {
-							std::memcpy(outPtr, previousPtr, static_cast<uint64_t>(currentDistance));
-							outPtr += currentDistance;
+						if (currentDistance > 0) [[likely]] {
+							writeCharactersUnchecked(out, previousPtr, currentDistance, index);
 						} else {
-							iter.template createError<error_classes::Minifying>(minify_errors::Invalid_Number_Value);
-							return std::numeric_limits<uint32_t>::max();
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Invalid_Number_Value);
+							return;
 						}
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon:
-						writeCharacter<0x3A>(outPtr);
+						writeCharacterUnchecked<0x3A>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Array_Start:
-						writeCharacter<0x5Bu>(outPtr);
+						writeCharacterUnchecked<'['>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Array_End:
-						writeCharacter<0x5Du>(outPtr);
+						writeCharacterUnchecked<']'>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Null: {
-						std::memcpy(outPtr, nullString.data(), nullString.size());
-						outPtr += nullString.size();
+						writeCharactersUnchecked(out, nullString.data(), nullString.size(), index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
-						if (*previousPtr == 0x74u) {
-							std::memcpy(outPtr, trueString.data(), trueString.size());
-							outPtr += trueString.size();
+						if (*previousPtr == 't') {
+							writeCharactersUnchecked(out, trueString.data(), trueString.size(), index);
 							break;
 						} else {
-							std::memcpy(outPtr, falseString.data(), falseString.size());
-							outPtr += falseString.size();
+							writeCharactersUnchecked(out, falseString.data(), falseString.size(), index);
 							break;
 						}
 					}
 					[[unlikely]] case json_structural_type::Object_Start:
-						writeCharacter<0x7Bu>(outPtr);
+						writeCharacterUnchecked<'{'>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Object_End:
-						writeCharacter<0x7Du>(outPtr);
+						writeCharacterUnchecked<'}'>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Unset:
 					[[unlikely]] case json_structural_type::Error:
 					[[unlikely]] case json_structural_type::Type_Count:
 						[[fallthrough]];
 					[[unlikely]] default: {
-						iter.template createError<error_classes::Minifying>(minify_errors::Incorrect_Structural_Index);
-						return std::numeric_limits<uint32_t>::max();
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						iter.template createError<sourceLocation, error_classes::Minifying>(minify_errors::Incorrect_Structural_Index);
+						return;
 					}
 				}
 				previousPtr = iter.operator->();
 				++iter;
 			}
-			std::memcpy(outPtr, previousPtr, 1);
-			++outPtr;
-			return static_cast<uint64_t>(outPtr - out.data());
+			writeCharacterUnchecked(*previousPtr, out, index);
 		}
 	};
 
