@@ -35,74 +35,73 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::jsonifier_value_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
-			if (*iter == '{') [[unlikely]] {
+			if (*iter == '{') [[likely]] {
 				++iter;
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Object_Start>(
-					iter - options.rootIter, static_cast<uint64_t>(end - iter), options.rootIter));
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_Start>(
+					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				skipToNextValue(iter, end);
 				return;
 			}
+			return parseObjects<options>(value, iter, end);
+		}
 
+		template<const parse_options_internal<derived_type>& options, bool isItFirst = true, jsonifier::concepts::jsonifier_value_t value_type, typename iterator_type>
+		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
 			if constexpr (memberCount > 0) {
 				static constexpr decltype(auto) frozenMap{ makeMap<value_type>() };
-
-				bool first = true;
-				while (static_cast<const char*>(iter) != static_cast<const char*>(end)) {
-					if (*iter == '}') [[unlikely]] {
+				if (*iter == '}') [[unlikely]] {
+					++iter;
+					return;
+				}
+				if constexpr (!isItFirst) {
+					if (*iter == ',') [[likely]] {
 						++iter;
-						return;
-					} else if (first) [[unlikely]] {
-						first = false;
 					} else {
-						if (*iter == ',') [[likely]] {
-							++iter;
-						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
-								iter - options.rootIter, static_cast<uint64_t>(end - iter), options.rootIter));
-							skipToNextValue(iter, end);
-							return;
-						}
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
+							iter - options.rootIter, end - options.rootIter, options.rootIter));
+						return;
 					}
+				}
 
-					const auto key = parseKey<options, value_type>(iter, end, options.parserPtr->getErrors());
+				const auto key = parseKey<options, value_type>(iter, end, options.parserPtr->getErrors());
 
-					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-						auto& keys = value.jsonifierExcludedKeys;
-						if (keys.find(static_cast<typename jsonifier::concepts::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-							skipToNextValue(iter, end);
-							continue;
-						}
-					}
-
-					if (const auto& memberIt = frozenMap.find(key); memberIt != frozenMap.end()) [[likely]] {
-						if (*iter == ':') [[likely]] {
-							++iter;
-						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-								iter - options.rootIter, static_cast<uint64_t>(end - iter), options.rootIter));
-							skipToNextValue(iter, end);
-							return;
-						}
-
-						std::visit(
-							[&](auto&& memberPtr) {
-								using member_type = jsonifier::concepts::unwrap_t<decltype(getMember(value, memberPtr))>;
-								parse_impl<derived_type, member_type>::template impl<options>(getMember(value, memberPtr), iter, end);
-							},
-							memberIt->second);
-
-					} else [[unlikely]] {
+				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+					auto& keys = value.jsonifierExcludedKeys;
+					if (keys.find(static_cast<typename jsonifier::concepts::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 						skipToNextValue(iter, end);
+						return parseObjects<options, false>(value, iter, end);
 					}
+				}
+
+				if (const auto& memberIt = frozenMap.find(key); memberIt != frozenMap.end()) [[likely]] {
+					if (*iter == ':') [[likely]] {
+						++iter;
+					} else {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
+							iter - options.rootIter, static_cast<uint64_t>(end - iter), options.rootIter));
+						skipToNextValue(iter, end);
+						return;
+					}
+
+					std::visit(
+						[&](auto&& memberPtr) {
+							using member_type = jsonifier::concepts::unwrap_t<decltype(getMember(value, memberPtr))>;
+							parse_impl<derived_type, member_type>::template impl<options>(getMember(value, memberPtr), iter, end);
+						},
+						memberIt->second);
+
+				} else [[unlikely]] {
+					skipToNextValue(iter, end);
 				}
 			} else {
 				skipToEndOfValue(iter, end);
 			}
+			parseObjects<options, false>(value, iter, end);
 		}
 	};
 

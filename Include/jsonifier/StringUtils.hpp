@@ -851,8 +851,8 @@ namespace jsonifier_internal {
 				newSize = static_cast<uint64_t>(newPtr - newString.data());
 				if (value.size() != newSize) {
 					value.resize(newSize);
-					std::memcpy(value.data(), newString.data(), newSize);
 				}
+				std::memcpy(value.data(), newString.data(), newSize);
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
@@ -884,8 +884,8 @@ namespace jsonifier_internal {
 			newSize = static_cast<uint64_t>(newerPtr - newString.data());
 			if (value.size() != newSize) {
 				value.resize(newSize);
-				std::memcpy(value.data(), newString.data(), newSize);
 			}
+			std::memcpy(value.data(), newString.data(), newSize);
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
