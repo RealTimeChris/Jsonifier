@@ -21,7 +21,6 @@
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
-/// Most of the code in this header was sampled from Glaze library - https://github.com/stephenberry/glaze
 #pragma once
 
 #include <jsonifier/Allocator.hpp>
@@ -111,7 +110,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type, jsonifier_internal::simd_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE void parseNumber(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using V		= std::decay_t<value_type>;
+		using V		= jsonifier::concepts::unwrap_t<value_type>;
 		auto newPtr = iter.operator const char*();
 		if constexpr (jsonifier::concepts::integer_t<V>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<V>::max)());
@@ -168,7 +167,6 @@ namespace jsonifier_internal {
 			} else {
 				uint64_t i{};
 				int32_t sign = 1;
-				auto newPtr	 = iter.operator const char*();
 				if (*newPtr == '-') {
 					sign = -1;
 					++newPtr;
@@ -221,7 +219,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type, typename iterator_type>
 	JSONIFIER_INLINE void parseNumber(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using V = std::decay_t<value_type>;
+		using V = jsonifier::concepts::unwrap_t<value_type>;
 		if constexpr (jsonifier::concepts::integer_t<V>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<V>::max)());
 			if constexpr (std::is_unsigned_v<V>) {
@@ -254,7 +252,7 @@ namespace jsonifier_internal {
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<std::decay_t<decltype(i)>>(i, iter);
+					auto s = parseInt<jsonifier::concepts::unwrap_t<decltype(i)>>(i, iter);
 					if (!s) [[unlikely]] {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,

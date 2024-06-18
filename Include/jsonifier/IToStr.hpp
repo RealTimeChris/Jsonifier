@@ -43,9 +43,8 @@ namespace jsonifier_internal {
 		0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u, 0x39u, 0x32u, 0x39u, 0x33u,
 		0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
-	template<typename value_type>
-		requires std::is_same_v<value_type, uint32_t>
-	JSONIFIER_INLINE auto* toChars(auto* buf, value_type value) noexcept {
+	template<jsonifier::concepts::uint32_type value_type, typename char_type>
+	JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type value) noexcept {
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 		uint32_t lz;
 
@@ -108,9 +107,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type>
-		requires std::is_same_v<value_type, int32_t>
-	JSONIFIER_INLINE auto* toChars(auto* buf, value_type x) noexcept {
+	template<jsonifier::concepts::int32_type value_type, typename char_type>
+	JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type x) noexcept {
 		*buf = '-';
 		return toChars(buf + (x < 0), uint32_t(x ^ (x >> 31)) - (x >> 31));
 	}
@@ -210,8 +208,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename char_type>
-		requires std::is_same_v<value_type, uint64_t>
+	template<jsonifier::concepts::uint64_type value_type, typename char_type>
 	JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type value) noexcept {
 		if (value < 100000000) {
 			buf = to_chars_u64_len_1_8(buf, uint32_t(value));
@@ -234,8 +231,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename char_type>
-		requires std::is_same_v<value_type, int64_t>
+	template<jsonifier::concepts::int64_type value_type, typename char_type>
 	JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type x) noexcept {
 		*buf = '-';
 		return toChars(buf + (x < 0), uint64_t(x ^ (x >> 63)) - (x >> 63));

@@ -42,20 +42,17 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-	template<jsonifier::concepts::integer_t value_type_new> JSONIFIER_INLINE bool parseInt(value_type_new& value, auto& iter) {
+	template<jsonifier::concepts::integer_t value_type_new, typename iterator_type> JSONIFIER_INLINE bool parseInt(value_type_new& value, iterator_type&& iter) {
 		using value_type		  = jsonifier::concepts::unwrap_t<value_type_new>;
-		constexpr auto isVolatile = std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
-		using char_type			  = decltype(iter);
-		uint64_t sig			  = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
+		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		uint64_t numTmp;
 
 		if (sig > 9) [[unlikely]] {
 			return false;
 		}
 
-		constexpr auto zero = uint8_t('0');
 #define expr_intg(i) \
-	if (numTmp = numberSubTable[iter[i]]; numTmp <= 9) [[likely]] \
+	if (numTmp = numberSubTable[static_cast<uint8_t>(iter[i])]; numTmp <= 9) [[likely]] \
 		sig = numTmp + sig * 10; \
 	else { \
 		if constexpr (i > 1) { \
@@ -86,7 +83,6 @@ namespace jsonifier_internal {
 	return false;
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
-			return false;
 	}
 
 	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, const char_type* c) noexcept {

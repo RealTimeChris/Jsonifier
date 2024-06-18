@@ -36,7 +36,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class parser;
 
-	class simd_structural_iterator;
+	class json_structural_iterator;
 
 	template<typename... value_types> class array_tuple : public std::tuple<value_types...> {};
 }
@@ -411,6 +411,6 @@ namespace std {
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept simd_structural_iterator_t = std::is_same_v<jsonifier::concepts::unwrap_t<value_type>, simd_structural_iterator>;
+	concept simd_structural_iterator_t = std::is_same_v<jsonifier::concepts::unwrap_t<value_type>, json_structural_iterator>;
 
 }

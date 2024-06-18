@@ -375,9 +375,9 @@ class conformance_test {
 
 	conformance_test(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
 		: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-	std::string testName{};
 	std::string fileContents{};
 	bool areWeAFailingTest{};
+	std::string testName{};
 };
 
 bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) {
@@ -410,7 +410,7 @@ bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& res
 
 template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
 	std::cout << "Running Test: " << testName << std::endl;
-	auto result = parser.parseJson<jsonifier::parse_options{ .minified = false }>(test_type{}, parser.minifyJson(dataToParse));
+	auto result = parser.parseJson<jsonifier::parse_options{ .validateJson = true, .minified = false }>(test_type{}, parser.minifyJson(dataToParse));
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
 	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {

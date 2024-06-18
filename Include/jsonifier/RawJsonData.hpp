@@ -24,14 +24,14 @@
 #pragma once
 
 #include <jsonifier/Derailleur.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashSet.hpp>
 #include <jsonifier/String.hpp>
 
 namespace std {
 
 	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public jsonifier_internal::fnv1a_hash {
 		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const {
-			return jsonifier_internal::fnv1a_hash::operator()(string.data(), string.size());
+			return jsonifier_internal::fnv1a_hash::operator()(string.data(), string.size(), 0);
 		}
 	};
 

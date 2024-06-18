@@ -366,7 +366,7 @@ namespace jsonifier_internal {
 		constexpr auto joined_arr = []() {
 			constexpr size_t len = (Strs.size() + ... + 0);
 			std::array<char, len + 1> arr{};
-			auto append = [i = 0, &arr](auto& s) mutable {
+			auto append = [i = 0ull, &arr](auto& s) mutable {
 				for (char c: s)
 					arr[i++] = c;
 			};

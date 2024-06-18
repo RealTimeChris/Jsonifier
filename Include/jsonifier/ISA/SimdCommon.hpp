@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Config.hpp>
 #include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/ISA/ShuffleValues.hpp>
 #include <jsonifier/ISA/CompareValues.hpp>
@@ -63,19 +63,19 @@ namespace simd_internal {
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
-		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep];
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep];
 		store(value, values);
 		values[0]	 = prefixXor(values[0]) ^ prevInString;
 		prevInString = static_cast<int64_t>(values[0]) >> 63;
 		values[1]	 = prefixXor(values[1]) ^ prevInString;
 		prevInString = static_cast<int64_t>(values[1]) >> 63;
-		if constexpr (SixtyFourBitsPerStep > 2) {
+		if constexpr (sixtyFourBitsPerStep > 2) {
 			values[2]	 = prefixXor(values[2]) ^ prevInString;
 			prevInString = static_cast<int64_t>(values[2]) >> 63;
 			values[3]	 = prefixXor(values[3]) ^ prevInString;
 			prevInString = static_cast<int64_t>(values[3]) >> 63;
 		}
-		if constexpr (SixtyFourBitsPerStep > 4) {
+		if constexpr (sixtyFourBitsPerStep > 4) {
 			values[4]	 = prefixXor(values[4]) ^ prevInString;
 			prevInString = static_cast<int64_t>(values[4]) >> 63;
 			values[5]	 = prefixXor(values[5]) ^ prevInString;
@@ -89,50 +89,50 @@ namespace simd_internal {
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
-		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2];
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
-		store(other, values + SixtyFourBitsPerStep);
+		store(other, values + sixtyFourBitsPerStep);
 		bool carryInNew{};
-		values[SixtyFourBitsPerStep]	 = values[0] - values[SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-		carryInNew						 = values[SixtyFourBitsPerStep] > values[0];
-		values[1 + SixtyFourBitsPerStep] = values[1] - values[1 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-		carryInNew						 = values[1 + SixtyFourBitsPerStep] > values[1];
-		if constexpr (SixtyFourBitsPerStep > 2) {
-			values[2 + SixtyFourBitsPerStep] = values[2] - values[2 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[2 + SixtyFourBitsPerStep] > values[2];
-			values[3 + SixtyFourBitsPerStep] = values[3] - values[3 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[3 + SixtyFourBitsPerStep] > values[3];
+		values[sixtyFourBitsPerStep]	 = values[0] - values[sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+		carryInNew						 = values[sixtyFourBitsPerStep] > values[0];
+		values[1 + sixtyFourBitsPerStep] = values[1] - values[1 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+		carryInNew						 = values[1 + sixtyFourBitsPerStep] > values[1];
+		if constexpr (sixtyFourBitsPerStep > 2) {
+			values[2 + sixtyFourBitsPerStep] = values[2] - values[2 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[2 + sixtyFourBitsPerStep] > values[2];
+			values[3 + sixtyFourBitsPerStep] = values[3] - values[3 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[3 + sixtyFourBitsPerStep] > values[3];
 		}
-		if constexpr (SixtyFourBitsPerStep > 4) {
-			values[4 + SixtyFourBitsPerStep] = values[4] - values[4 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[4 + SixtyFourBitsPerStep] > values[4];
-			values[5 + SixtyFourBitsPerStep] = values[5] - values[5 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[5 + SixtyFourBitsPerStep] > values[5];
-			values[6 + SixtyFourBitsPerStep] = values[6] - values[6 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[6 + SixtyFourBitsPerStep] > values[6];
-			values[7 + SixtyFourBitsPerStep] = values[7] - values[7 + SixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
-			carryInNew						 = values[7 + SixtyFourBitsPerStep] > values[7];
+		if constexpr (sixtyFourBitsPerStep > 4) {
+			values[4 + sixtyFourBitsPerStep] = values[4] - values[4 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[4 + sixtyFourBitsPerStep] > values[4];
+			values[5 + sixtyFourBitsPerStep] = values[5] - values[5 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[5 + sixtyFourBitsPerStep] > values[5];
+			values[6 + sixtyFourBitsPerStep] = values[6] - values[6 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[6 + sixtyFourBitsPerStep] > values[6];
+			values[7 + sixtyFourBitsPerStep] = values[7] - values[7 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
+			carryInNew						 = values[7 + sixtyFourBitsPerStep] > values[7];
 		}
-		return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
+		return gatherValues<simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
 	template<uint64_t amount, typename simd_int_t01> JSONIFIER_INLINE simd_int_t opShl(simd_int_t01&& value) {
-		JSONIFIER_ALIGN uint64_t values[SixtyFourBitsPerStep * 2];
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		static constexpr uint64_t shiftAmount{ 64 - amount };
-		values[SixtyFourBitsPerStep]	 = values[0] << amount;
-		values[1 + SixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount);
-		if constexpr (SixtyFourBitsPerStep > 2) {
-			values[2 + SixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount);
-			values[3 + SixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount);
+		values[sixtyFourBitsPerStep]	 = values[0] << amount;
+		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount);
+		if constexpr (sixtyFourBitsPerStep > 2) {
+			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount);
+			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount);
 		}
-		if constexpr (SixtyFourBitsPerStep > 4) {
-			values[4 + SixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount);
-			values[5 + SixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount);
-			values[6 + SixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
-			values[7 + SixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
+		if constexpr (sixtyFourBitsPerStep > 4) {
+			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount);
+			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount);
+			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
+			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
 		}
-		return gatherValues<simd_int_t>(values + SixtyFourBitsPerStep);
+		return gatherValues<simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {

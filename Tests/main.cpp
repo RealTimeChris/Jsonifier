@@ -819,7 +819,7 @@ class file_loader {
 
 	void saveFile(const std::string& fileToSave) {
 		std::ofstream theStream(filePath.data(), std::ios::binary | std::ios::out | std::ios::trunc);
-		theStream.write(fileToSave.data(), fileToSave.size());
+		theStream.write(fileToSave.data(), static_cast<int64_t>(fileToSave.size()));
 		theStream.close();
 	}
 
@@ -897,9 +897,9 @@ template<typename value_type> struct test_generator {
 
 	test_generator() {
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberNormal(35, 10);
-			auto arraySize02 = randomizeNumberNormal(15, 10);
-			auto arraySize03 = randomizeNumberNormal(5, 1);
+			auto arraySize01 = randomizeNumberNormal(35ull, 10ull);
+			auto arraySize02 = randomizeNumberNormal(15ull, 10ull);
+			auto arraySize03 = randomizeNumberNormal(5ull, 1ull);
 			v.resize(arraySize01);
 			for (uint64_t x = 0; x < arraySize01; ++x) {
 				auto arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
@@ -1159,13 +1159,13 @@ struct results_data {
 				"| ------------------------------------------------------------ "
 				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {
-			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << " MB/s\n";
+			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Runtime (ns): " << std::setprecision(6) << readResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Mape (%): " << std::setprecision(4) << readResult.Mape.value() << std::endl;
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
-			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << " MB/s\n";
+			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Length (Bytes): " << writeResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Runtime (ns): " << std::setprecision(6) << writeResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Mape (%): " << std::setprecision(4) << writeResult.Mape.value() << std::endl;
@@ -1375,24 +1375,12 @@ template<uint64_t iterationCount, typename function_type> inline benchmark_resul
 		warmupLambdas.emplace_back(functionNew);
 	}
 
-	jsonifier::vector<function_type_final> lambdas{};
-	for (uint64_t x = 0; x < iterationCount; ++x) {
-		lambdas.emplace_back(functionNew);
-	}
-
 	int64_t currentIterationCount = 0;
 
-	jsonifier::vector<double> durations{};
-
 	while (currentIterationCount < warmupCount) {
-		auto startTime = std::chrono::high_resolution_clock::now();
 		doNotOptimizeAway(std::move(warmupLambdas[currentIterationCount]));
-		auto endTime = std::chrono::high_resolution_clock::now();
-
-		auto duration = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(endTime - startTime).count();
 		++currentIterationCount;
 	}
-	currentIterationCount = 0;
 	return collectMape(functionNew, iterationCount, minIterationCount);
 }
 
@@ -1671,7 +1659,7 @@ template<typename value_type> void getValue(value_type& returnValue, simdjson::o
 	}
 }
 
-template<> void getValue(std::nullptr_t& returnValue, simdjson::ondemand::value value, const std::string& key) {
+template<> void getValue(std::nullptr_t&, simdjson::ondemand::value, const std::string&) {
 }
 
 template<jsonifier::concepts::vector_t value_type> void getValue(value_type& returnValues, simdjson::ondemand::value value, const std::string& key) {
@@ -2570,7 +2558,7 @@ int32_t main() {
 		std::tm resultTwo{};
 		std::time_t result = std::time(nullptr);
 		resultTwo		   = *localtime(&result);
-		//conformanceTests();
+		conformanceTests();
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + section001 + static_cast<std::string>(section01) };

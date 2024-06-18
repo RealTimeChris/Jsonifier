@@ -23,8 +23,8 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/SimdStructuralIterator.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/JsonStructuralIterator.hpp>
+#include <jsonifier/Config.hpp>
 #include <jsonifier/StringView.hpp>
 #include <sstream>
 #include <cmath>
@@ -34,7 +34,7 @@ namespace jsonifier_internal {
 	class string_block_reader {
 	  public:
 		JSONIFIER_INLINE void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
-			lengthMinusStep = lengthNew < BitsPerStep ? 0 : lengthNew - BitsPerStep;
+			lengthMinusStep = lengthNew < bitsPerStep ? 0 : lengthNew - bitsPerStep;
 			inString		= stringViewNew;
 			length			= lengthNew;
 			index			= 0;
@@ -44,14 +44,14 @@ namespace jsonifier_internal {
 			if (length == index) [[unlikely]] {
 				return 0;
 			}
-			std::memset(dest, 0x20, BitsPerStep);
+			std::memset(dest, 0x20, bitsPerStep);
 			std::memcpy(dest, inString + index, length - index);
 			return length - index;
 		}
 
 		JSONIFIER_INLINE string_view_ptr fullBlock() noexcept {
 			string_view_ptr newPtr = inString + index;
-			index += BitsPerStep;
+			index += bitsPerStep;
 			return newPtr;
 		}
 
@@ -128,10 +128,10 @@ namespace jsonifier_internal {
 
 	  protected:
 		static constexpr simd_int_t oddBitsVal{ simd_internal::simdFromValue<simd_int_t>(0xAA) };
-		JSONIFIER_ALIGN size_type newBits[SixtyFourBitsPerStep]{};
-		JSONIFIER_ALIGN char block[BitsPerStep]{};
+		JSONIFIER_ALIGN size_type newBits[sixtyFourBitsPerStep]{};
+		JSONIFIER_ALIGN char block[bitsPerStep]{};
 		simd_internal::simd_int_t_holder rawStructurals{};
-		simd_int_t newPtr[StridesPerStep]{};
+		simd_int_t newPtr[stridesPerStep]{};
 		simd_int_t nextIsEscaped{};
 		simd_int_t escaped{};
 		jsonifier::string_view currentParseBuffer{};
@@ -205,24 +205,25 @@ namespace jsonifier_internal {
 		}
 
 		template<bool collectAligned> JSONIFIER_INLINE void collectStringValues(string_view_ptr values) {
+			prefetchInternal(values + bytesPerStep);
 			if constexpr (collectAligned) {
-				newPtr[0] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 0));
-				newPtr[1] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 1));
-				newPtr[2] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 2));
-				newPtr[3] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 3));
-				newPtr[4] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 4));
-				newPtr[5] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 5));
-				newPtr[6] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 6));
-				newPtr[7] = simd_internal::gatherValues<simd_int_t>(values + (BytesPerStep * 7));
+				newPtr[0] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 0));
+				newPtr[1] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 1));
+				newPtr[2] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 2));
+				newPtr[3] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 3));
+				newPtr[4] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 4));
+				newPtr[5] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 5));
+				newPtr[6] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 6));
+				newPtr[7] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 7));
 			} else {
-				newPtr[0] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 0));
-				newPtr[1] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 1));
-				newPtr[2] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 2));
-				newPtr[3] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 3));
-				newPtr[4] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 4));
-				newPtr[5] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 5));
-				newPtr[6] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 6));
-				newPtr[7] = simd_internal::gatherValuesU<simd_int_t>(values + (BytesPerStep * 7));
+				newPtr[0] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 0));
+				newPtr[1] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 1));
+				newPtr[2] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 2));
+				newPtr[3] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 3));
+				newPtr[4] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 4));
+				newPtr[5] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 5));
+				newPtr[6] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 6));
+				newPtr[7] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 7));
 			}
 		}
 
@@ -232,11 +233,11 @@ namespace jsonifier_internal {
 			collectStructurals();
 			simd_internal::store(rawStructurals.op, newBits);
 			addTapeValues();
-			stringIndex += BitsPerStep;
+			stringIndex += bitsPerStep;
 		}
 
 		template<uint64_t index = 0> JSONIFIER_INLINE void addTapeValues() {
-			if constexpr (index < SixtyFourBitsPerStep) {
+			if constexpr (index < sixtyFourBitsPerStep) {
 				if (!newBits[index]) [[unlikely]] {
 					return addTapeValues<index + 1>();
 				}
@@ -322,7 +323,7 @@ namespace jsonifier_internal {
 				returnValue << returnValueNew;
 			}
 			addTapeValues();
-			stringIndex += BitsPerStep;
+			stringIndex += bitsPerStep;
 			return returnValue.str();
 		}
 

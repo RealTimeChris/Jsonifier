@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/JsonStructuralIterator.hpp>
 #include <jsonifier/Write.hpp>
 #include <jsonifier/Simd.hpp>
 
@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 			derivedRef.section.reset(in.data(), in.size());
 			static constexpr minify_options_internal<derived_type> options{};
 			options.minifierPtr = this;
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(static_cast<int64_t>(iter - iter.getRootPtr()),
@@ -91,7 +91,7 @@ namespace jsonifier_internal {
 			derivedRef.section.reset(in.data(), in.size());
 			static constexpr minify_options_internal<derived_type> options{};
 			options.minifierPtr = this;
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(static_cast<int64_t>(iter - iter.getRootPtr()),

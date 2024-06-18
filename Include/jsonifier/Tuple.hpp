@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 	DEALINGS IN THE SOFTWARE.
 */
-/// NOTE: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
@@ -35,25 +34,21 @@ namespace jsonifier_internal {
 	constexpr auto getInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) {
 		if constexpr (std::tuple_size_v<tuple_type> > 0) {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
-				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return newerTuple;
 			}
 		} else {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return getInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
-				auto newPtrArg	= arg02;
-				auto newerPair	= std::make_tuple(string_literal{ arg01 }, newPtrArg);
+				auto newerPair	= std::make_tuple(string_literal{ arg01 }, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return newerTuple;
 			}
@@ -61,7 +56,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, typename member_ptr_type> inline decltype(auto) getMember(value_type&& value, member_ptr_type&& member_ptr) {
-		using value_type02 = std::decay_t<decltype(member_ptr)>;
+		using value_type02 = jsonifier::concepts::unwrap_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
 			return value.*member_ptr;
 		} else if constexpr (std::is_pointer_v<value_type02>) {
@@ -99,9 +94,6 @@ namespace jsonifier {
 
 			// Get the names of the specified member pointers
 			constexpr auto memberNames = jsonifier_internal::getNames<values...>();
-
-			// Extract the unwrapped tuple type
-			using tuple_type = jsonifier::concepts::unwrap_t<decltype(newTuple)>;
 
 			// Generate an interleaved tuple of member names and values
 			return value{ jsonifier_internal::generateInterleavedTuple(newTuple, memberNames) };

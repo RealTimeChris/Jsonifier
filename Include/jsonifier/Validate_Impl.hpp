@@ -177,8 +177,8 @@ namespace jsonifier_internal {
 						++newPtr;
 					} else if (*newPtr == 0x75u) {
 						++newPtr;
-						for (int32_t i = 0; i < 4; ++i) {
-							if (!hexDigits[*newPtr]) {
+						for (uint64_t i = 0ull; i < 4ull; ++i) {
+							if (!hexDigits[static_cast<uint64_t>(*newPtr)]) {
 								static constexpr auto sourceLocation{ std::source_location::current() };
 								validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Escape_Characters>(
 									iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
@@ -220,7 +220,7 @@ namespace jsonifier_internal {
 			auto endPtr	 = iter.operator->();
 			newPtr		 = skipWs(iter);
 			auto newSize = endPtr - newPtr;
-			if (newSize > 1 && *newPtr == 0x30u && numberTable[*(newPtr + 1)]) {
+			if (!iter || (newSize > 1 && *newPtr == 0x30u && numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
@@ -259,7 +259,7 @@ namespace jsonifier_internal {
 			consumeDigits(1);
 
 			if (consumeChar(0x2Eu)) {
-				if (!consumeDigits(1)) {
+				if (!iter || !consumeDigits(1)) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
 						iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
@@ -270,7 +270,7 @@ namespace jsonifier_internal {
 				bool didWeFail{ false };
 				consumeSign();
 				didWeFail = !consumeDigits(1);
-				if (didWeFail) {
+				if (!iter || didWeFail) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
 						iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
@@ -293,13 +293,12 @@ namespace jsonifier_internal {
 		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
-			auto endPtr = iter.operator->();
 			static constexpr char falseStr[]{ "false" };
 			static constexpr char trueStr[]{ "true" };
-			newPtr = skipWs(iter);
-			if (std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
+			newPtr = skipWs(newPtr);
+			if (iter && std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
 				newPtr += std::size(trueStr) - 1;
-			} else if (std::memcmp(newPtr, falseStr, std::strlen(falseStr)) == 0) {
+			} else if (iter && std::memcmp(newPtr, falseStr, std::strlen(falseStr)) == 0) {
 				newPtr += std::size(falseStr) - 1;
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
@@ -316,8 +315,7 @@ namespace jsonifier_internal {
 		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
-			auto endPtr = iter.operator->();
-			newPtr		= skipWs(iter);
+			newPtr = skipWs(newPtr);
 			static constexpr char nullStr[]{ "null" };
 
 			if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {

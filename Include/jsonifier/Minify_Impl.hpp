@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/SimdStructuralIterator.hpp>
+#include <jsonifier/JsonStructuralIterator.hpp>
 #include <jsonifier/Minifier.hpp>
 #include <jsonifier/Simd.hpp>
 
@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < iter.operator->())) {
 						}
 						if (currentDistance > 0) [[likely]] {
-							writeCharactersUnchecked(out, previousPtr, currentDistance, index);
+							writeCharactersUnchecked(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(

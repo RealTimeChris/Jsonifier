@@ -71,7 +71,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.section.reset(in.data(), in.size());
 			rootIter = in.data();
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
@@ -99,7 +99,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			derivedRef.section.reset(in.data(), in.size());
 			rootIter = in.data();
-			simd_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(

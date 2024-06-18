@@ -330,7 +330,7 @@ namespace jsonifier_internal {
 #define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 	constexpr auto eBit = static_cast<uint8_t>('E' ^ 'e');
 
-	template<jsonifier::concepts::float_t value_type> inline bool parseFloat(value_type& value, string_view_ptr& iter) noexcept {
+	template<jsonifier::concepts::float_t value_type, typename iterator_type> inline bool parseFloat(value_type& value, iterator_type&& iter) noexcept {
 		constexpr auto isVolatile				= std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
 		string_view_ptr sigCut					= nullptr;
 		[[maybe_unused]] string_view_ptr sigEnd = nullptr;
@@ -367,7 +367,7 @@ namespace jsonifier_internal {
 			}
 		}
 #define expr_intg(i) \
-	if ((numTmp = numberSubTable[static_cast<uint64_t>(iter[i])]) <= 9) [[likely]] \
+	if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[i])]) <= 9) [[likely]] \
 		sig = numTmp + sig * 10; \
 	else { \
 		if constexpr (i > 1) { \
@@ -413,7 +413,7 @@ namespace jsonifier_internal {
 		repeat_in_1_18(expr_sepr)
 #undef expr_sepr
 #define expr_frac(i) \
-	digi_frac_##i : if ((numTmp = numberSubTable[static_cast<uint64_t>(iter[i + 1 + fracZeros])]) <= 9) [[likely]] sig = numTmp + sig * 10; \
+	digi_frac_##i : if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[i + 1 + fracZeros])]) <= 9) [[likely]] sig = numTmp + sig * 10; \
 	else { \
 		goto digi_stop_##i; \
 	}
@@ -459,15 +459,15 @@ namespace jsonifier_internal {
 	digi_frac_more:
 		sigCut = iter;
 		sig += (*iter >= '5');
-		while (uint8_t(numberSubTable[static_cast<uint64_t>(*++iter)]) < 10) {
+		while (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) < 10) {
 		}
 		if (!dotPos) {
 			dotPos = iter;
 			if (*iter == '.') {
-				if (uint8_t(numberSubTable[static_cast<uint64_t>(*++iter)]) > 9) {
+				if (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) > 9) {
 					return false;
 				}
-				while (uint8_t(numberSubTable[static_cast<uint64_t>(*++iter)]) < 10) {
+				while (uint8_t(numberSubTable[static_cast<uint8_t>(*++iter)]) < 10) {
 				}
 			}
 		}
@@ -511,9 +511,9 @@ namespace jsonifier_internal {
 		}
 		tmp = iter;
 		uint8_t c;
-		while (uint8_t(c = numberSubTable[static_cast<uint8_t>(*iter)]) < 10) {
+		while (uint8_t{ c = static_cast<uint8_t>(numberSubTable[static_cast<uint8_t>(*iter)]) } < 10) {
 			++iter;
-			expLit = c + uint32_t(expLit) * 10;
+			expLit = static_cast<int32_t>(c + uint32_t(expLit) * 10);
 		}
 		if ((iter - tmp >= 6)) [[unlikely]] {
 			if (sig == 0 || expSign) {
@@ -558,9 +558,9 @@ namespace jsonifier_internal {
 						value *= sign ? -1 : 1;
 					}
 					if (exp >= 0) {
-						value *= powersOfTenFloat[exp];
+						value *= powersOfTenFloat[static_cast<uint64_t>(exp)];
 					} else {
-						value /= powersOfTenFloat[-exp];
+						value /= powersOfTenFloat[static_cast<uint64_t>(-exp)];
 					}
 				}
 
@@ -573,9 +573,9 @@ namespace jsonifier_internal {
 					value *= sign ? -1 : 1;
 				}
 				if (exp >= 0) {
-					value *= static_cast<value_type>(powersOfTenFloat[exp]);
+					value *= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(exp)]);
 				} else {
-					value /= static_cast<value_type>(powersOfTenFloat[-exp]);
+					value /= static_cast<value_type>(powersOfTenFloat[static_cast<uint64_t>(-exp)]);
 				}
 				return true;
 			}
@@ -588,10 +588,10 @@ namespace jsonifier_internal {
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::is_same_v<float, std::decay_t<value_type>> || std::is_same_v<double, std::decay_t<value_type>>);
+		static_assert(std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>> || std::is_same_v<double, jsonifier::concepts::unwrap_t<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-		using Raw						= std::conditional_t<std::is_same_v<float, std::decay_t<value_type>>, uint32_t, uint64_t>;
+		using Raw						= std::conditional_t<std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>>, uint32_t, uint64_t>;
 		auto sigLeadingZeros			= simd_internal::lzcnt(sig);
 		auto sigNorm					= sig << sigLeadingZeros;
 		auto sig2Norm					= sig2FromExp10(exp);
@@ -601,7 +601,7 @@ namespace jsonifier_internal {
 		constexpr uint64_t roundMask	= uint64_t(1) << 63 >> (std::numeric_limits<value_type>::digits - 1);
 		constexpr uint32_t exponentBits = ceillog2(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
 		constexpr uint32_t mantisaShift = exponentBits + 1 + 64 - 8 * sizeof(Raw);
-		int32_t exp2					= exp2FromExp10(exp) + static_cast<uint32_t>(-sigLeadingZeros + sigProductStartsWith1);
+		int32_t exp2					= static_cast<int32_t>(exp2FromExp10(exp) + static_cast<uint32_t>(-static_cast<int64_t>(sigLeadingZeros) + sigProductStartsWith1));
 
 		if (exp2 < std::numeric_limits<value_type>::min_exponent - 1) [[unlikely]] {
 			value = sign ? -value_type(0) : value_type(0);
@@ -620,14 +620,14 @@ namespace jsonifier_internal {
 				big_int_t bigComp{ sigUpper };
 				big_int_t bigFull{ sig };
 				if (exp >= 0) {
-					bigFull.mulPow10(exp);
+					bigFull.mulPow10(static_cast<uint32_t>(exp));
 				} else {
-					bigComp.mulPow10(-exp);
+					bigComp.mulPow10(static_cast<uint32_t>(-exp));
 				}
 				if (exp2Upper >= 0) {
-					bigComp.mulPow2(exp2Upper);
+					bigComp.mulPow2(static_cast<uint32_t>(exp2Upper));
 				} else {
-					bigFull.mulPow2(-exp2Upper);
+					bigFull.mulPow2(static_cast<uint32_t>(-exp2Upper));
 				}
 				auto cmp = bigFull <=> bigComp;
 				if (cmp != 0) [[likely]] {

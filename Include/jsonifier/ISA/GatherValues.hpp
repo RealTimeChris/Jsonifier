@@ -75,7 +75,7 @@ namespace simd_internal {
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static simd_int_type_new gatherValue(char_type str) {
-		return _mm_set1_epi8(str);
+		return _mm_set1_epi8(static_cast<char>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static void store(const simd_int_type_new& value, char_type* storageLocation) {
@@ -93,7 +93,7 @@ namespace simd_internal {
 	}
 
 	template<simd_int_256_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static simd_int_type_new gatherValue(char_type str) {
-		return _mm256_set1_epi8(str);
+		return _mm256_set1_epi8(static_cast<char>(str));
 	}
 
 	template<simd_int_256_type simd_int_type_new, typename char_type> JSONIFIER_INLINE static void store(const simd_int_type_new& value, char_type* storageLocation) {

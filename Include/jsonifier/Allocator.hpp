@@ -49,9 +49,9 @@ namespace jsonifier_internal {
 				return nullptr;
 			}
 #if defined(JSONIFIER_MSVC)
-			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<BytesPerStep>(count * sizeof(value_type)), BytesPerStep));
+			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<bytesPerStep>(count * sizeof(value_type)), bytesPerStep));
 #else
-			return static_cast<value_type*>(std::aligned_alloc(BytesPerStep, roundUpToMultiple<BytesPerStep>(count * sizeof(value_type))));
+			return static_cast<value_type*>(std::aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
 #endif
 		}
 

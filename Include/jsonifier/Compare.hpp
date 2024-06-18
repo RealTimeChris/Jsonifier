@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Config.hpp>
 
 namespace jsonifier_internal {
 
@@ -44,9 +44,9 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
-			simd_int_t search_value{ simd_internal::gatherValue<simd_int_t>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
-				chunk	  = simd_internal::gatherValuesU<simd_int_t>(data);
+				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
 					data += simd_internal::tzcnt(mask);
@@ -62,9 +62,9 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
-			simd_int_t search_value{ simd_internal::gatherValue<simd_int_t>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
-				chunk	  = simd_internal::gatherValuesU<simd_int_t>(data);
+				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
 					data += simd_internal::tzcnt(mask);
@@ -80,9 +80,9 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-			simd_int_t search_value{ simd_internal::gatherValue<simd_int_t>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
-				chunk	  = simd_internal::gatherValuesU<simd_int_t>(data);
+				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
 					data += simd_internal::tzcnt(mask);
@@ -145,10 +145,10 @@ namespace jsonifier_internal {
 			if (lengthNew >= 2) {
 				std::memcpy(&simdValue, data, sizeof(uint16_t));
 
-				lo7	  = simdValue & mask16;
-				quote = (lo7 ^ value16) + mask16;
-				t0	  = ~(quote | simdValue);
-				next  = simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u;
+				lo7	  = static_cast<uint16_t>(simdValue & mask16);
+				quote = static_cast<uint16_t>((lo7 ^ value16) + mask16);
+				t0	  = static_cast<uint16_t>(~(quote | simdValue));
+				next  = static_cast<uint16_t>(simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u);
 
 				if (next != 2) {
 					data += next;
@@ -172,8 +172,7 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
-			simd_type value01;
-			simd_type value02;
+			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);
 				value02 = simd_internal::gatherValuesU<simd_type>(rhs);
@@ -191,8 +190,7 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
-			simd_type value01;
-			simd_type value02;
+			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);
 				value02 = simd_internal::gatherValuesU<simd_type>(rhs);
@@ -210,8 +208,7 @@ namespace jsonifier_internal {
 		{
 			using simd_type						 = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::type;
 			static constexpr uint64_t vectorSize = jsonifier::concepts::get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-			simd_type value01;
-			simd_type value02;
+			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);
 				value02 = simd_internal::gatherValuesU<simd_type>(rhs);
@@ -281,30 +278,29 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs) noexcept {
-		static constexpr uint64_t n{ 8 };
-		if constexpr (count > n) {
-			uint64_t lengthNew{ count };
+	template<uint64_t count, class char_type> constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
+		if constexpr (count > 8) {
+			uint64_t countNew{ count };
 			uint64_t v[2];
-			while (lengthNew > n) {
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+			while (countNew > 8) {
+				std::memcpy(v, lhs, 8);
+				std::memcpy(v + 1, rhs, 8);
 				if (v[0] != v[1]) {
 					return false;
 				}
-				lengthNew -= n;
-				lhs += n;
-				rhs += n;
+				countNew -= 8;
+				lhs += 8;
+				rhs += 8;
 			}
 
-			auto shift = n - lengthNew;
+			const auto shift = 8 - countNew;
 			lhs -= shift;
 			rhs -= shift;
 
-			std::memcpy(v, lhs, n);
-			std::memcpy(v + 1, rhs, n);
+			std::memcpy(v, lhs, 8);
+			std::memcpy(v + 1, rhs, 8);
 			return v[0] == v[1];
-		} else if constexpr (count == n) {
+		} else if constexpr (count == 8) {
 			uint64_t v[2];
 			std::memcpy(v, lhs, count);
 			std::memcpy(v + 1, rhs, count);
@@ -314,15 +310,20 @@ namespace jsonifier_internal {
 			std::memcpy(v, lhs, count);
 			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
-		} else if constexpr (count > 2) {
+		} else if constexpr (count == 4) {
+			uint32_t v[2];
+			std::memcpy(v, lhs, count);
+			std::memcpy(v + 1, rhs, count);
+			return v[0] == v[1];
+		} else if constexpr (count == 3) {
 			uint32_t v[2]{};
 			std::memcpy(v, lhs, count);
 			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
 		} else if constexpr (count == 2) {
 			uint16_t v[2];
-			std::copy(lhs, lhs + 1, v);
-			std::copy(rhs, rhs + 1, v + 1);
+			std::memcpy(v, lhs, count);
+			std::memcpy(v + 1, rhs, count);
 			return v[0] == v[1];
 		} else if constexpr (count == 1) {
 			return *lhs == *rhs;

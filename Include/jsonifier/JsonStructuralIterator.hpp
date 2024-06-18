@@ -26,7 +26,7 @@
 
 #include <jsonifier/Reflection.hpp>
 #include <jsonifier/StringUtils.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashSet.hpp>
 #include <jsonifier/StrToI.hpp>
 #include <jsonifier/Error.hpp>
 
@@ -58,7 +58,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	class simd_structural_iterator {
+	class json_structural_iterator {
 	  public:
 		friend class derailleur;
 		template<json_structural_type value_type, typename derived_type> friend struct validate_impl;
@@ -71,9 +71,9 @@ namespace jsonifier_internal {
 		using pointer			  = value_type*;
 		using size_type			  = uint64_t;
 
-		JSONIFIER_INLINE simd_structural_iterator() noexcept = default;
+		JSONIFIER_INLINE json_structural_iterator() noexcept = default;
 
-		JSONIFIER_INLINE simd_structural_iterator(structural_index* startPtr, structural_index* endPtr) noexcept
+		JSONIFIER_INLINE json_structural_iterator(structural_index* startPtr, structural_index* endPtr) noexcept
 			: currentIndex{ startPtr }, rootIndex{ startPtr }, endIndex{ endPtr } {};
 
 		JSONIFIER_INLINE value_type operator*() const {
@@ -84,18 +84,18 @@ namespace jsonifier_internal {
 			return *currentIndex;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator& operator++() {
+		JSONIFIER_INLINE json_structural_iterator& operator++() {
 			++currentIndex;
 			return *this;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator& operator--() {
+		JSONIFIER_INLINE json_structural_iterator& operator--() {
 			--currentIndex;
 			return *this;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator operator+(uint64_t valueNew) {
-			simd_structural_iterator temp{ *this };
+		JSONIFIER_INLINE json_structural_iterator operator+(uint64_t valueNew) {
+			json_structural_iterator temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				++temp;
 			}
@@ -106,8 +106,8 @@ namespace jsonifier_internal {
 			return *currentIndex;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator sub(uint64_t valueNew) {
-			simd_structural_iterator temp{ *this };
+		JSONIFIER_INLINE json_structural_iterator sub(uint64_t valueNew) {
+			json_structural_iterator temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				--temp;
 			}
@@ -118,8 +118,8 @@ namespace jsonifier_internal {
 			return *currentIndex - valueNew;
 		}
 
-		JSONIFIER_INLINE simd_structural_iterator operator++(int32_t) {
-			simd_structural_iterator temp{ *this };
+		JSONIFIER_INLINE json_structural_iterator operator++(int32_t) {
+			json_structural_iterator temp{ *this };
 			++(*this);
 			return temp;
 		}
@@ -132,7 +132,7 @@ namespace jsonifier_internal {
 			return *rootIndex;
 		}
 
-		JSONIFIER_INLINE bool operator==(const simd_structural_iterator&) const {
+		JSONIFIER_INLINE bool operator==(const json_structural_iterator&) const {
 			return *currentIndex == nullptr;
 		}
 
@@ -140,7 +140,7 @@ namespace jsonifier_internal {
 			return *currentIndex != nullptr;
 		}
 
-		JSONIFIER_INLINE void swap(simd_structural_iterator& other) {
+		JSONIFIER_INLINE void swap(json_structural_iterator& other) {
 			std::swap(currentIndex, other.currentIndex);
 			std::swap(rootIndex, other.rootIndex);
 			std::swap(endIndex, other.endIndex);

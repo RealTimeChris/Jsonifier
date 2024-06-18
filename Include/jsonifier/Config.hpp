@@ -76,7 +76,7 @@
 #endif
 
 #if !defined JSONIFIER_ALIGN
-	#define JSONIFIER_ALIGN alignas(BytesPerStep)
+	#define JSONIFIER_ALIGN alignas(bytesPerStep)
 #endif
 
 #if !defined(JSONIFIER_CHECK_FOR_INSTRUCTION)
@@ -120,9 +120,9 @@
 	#define JSONIFIER_ANY_AVX (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512)
 #endif
 
-#if defined(_MSC_VER)
+#if defined(JSONIFIER_MSVC)
 	#define JSONIFIER_VISUAL_STUDIO 1
-	#if defined(__clang__)
+	#if defined(JSONIFIER_CLANG)
 		#define JSONIFIER_CLANG_VISUAL_STUDIO 1
 	#else
 		#define JSONIFIER_REGULAR_VISUAL_STUDIO 1
@@ -145,15 +145,15 @@ using simd_int_512 = __m512i;
 
 	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 using simd_int_t = __m512i;
-constexpr uint64_t BitsPerStep{ 512 };
+constexpr uint64_t bitsPerStep{ 512 };
 using string_parsing_type = uint64_t;
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using simd_int_t = __m256i;
-constexpr uint64_t BitsPerStep{ 256 };
+constexpr uint64_t bitsPerStep{ 256 };
 using string_parsing_type = uint32_t;
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using simd_int_t = __m128i;
-constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 	#endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
@@ -165,7 +165,7 @@ using simd_int_256 = uint32_t;
 using simd_int_512 = uint64_t;
 
 using simd_int_t = uint8x16_t;
-constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 #else
 union __m128x {
@@ -194,13 +194,13 @@ using simd_int_256 = uint32_t;
 using simd_int_512 = uint64_t;
 
 using simd_int_t = __m128x;
-constexpr uint64_t BitsPerStep{ 128 };
+constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 #endif
 
-constexpr uint64_t BytesPerStep{ BitsPerStep / 8 };
-constexpr uint64_t SixtyFourBitsPerStep{ BitsPerStep / 64 };
-constexpr uint64_t StridesPerStep{ BitsPerStep / BytesPerStep };
+constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };
+constexpr uint64_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
+constexpr uint64_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
 using string_view_ptr	= const char*;
 using structural_index	= const char*;
@@ -214,6 +214,22 @@ template<typename value_type>
 concept simd_int_128_type = std::is_same_v<simd_int_128, jsonifier::concepts::unwrap_t<value_type>>;
 template<typename value_type>
 concept simd_int_type = std::is_same_v<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
+
+#if defined(__APPLE__) && defined(__arm64__)
+	#define PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
+#elif defined(JSONIFIER_MSVC)
+	#include <intrin.h>
+	#define PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	#include <xmmintrin.h>
+	#define PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+#else
+	#error "Compiler or architecture not supported for prefetching"
+#endif
+
+JSONIFIER_INLINE void prefetchInternal(const void* ptr) {
+	PREFETCH(ptr)
+}
 
 #include <jsonifier/ISA/AVX.hpp>
 #include <jsonifier/ISA/Lzcount.hpp>
@@ -260,7 +276,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
-		for (uint64_t x = 0; x < BytesPerStep; ++x) {
+		for (uint64_t x = 0; x < bytesPerStep; ++x) {
 			for (uint64_t y = 0; y < 8; ++y) {
 				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
 			}

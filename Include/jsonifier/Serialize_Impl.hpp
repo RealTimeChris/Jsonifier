@@ -25,7 +25,7 @@
 
 #include <jsonifier/Serializer.hpp>
 #include <jsonifier/Parser.hpp>
-#include <jsonifier/Base.hpp>
+#include <jsonifier/Config.hpp>
 #include <algorithm>
 
 namespace jsonifier_internal {
@@ -64,16 +64,17 @@ namespace jsonifier_internal {
 			static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
 			writeCharacters<quotedKey>(buffer, index);
 
-			static constexpr auto frozenMap = makeMap<value_type>();
-			static constexpr auto memberIt	= frozenMap.find(key);
-			static_assert(memberIt != frozenMap.end(), "Invalid key passed to partial write");
+			static constexpr auto frozenSet = makeSet<value_type>();
+			static constexpr auto memberIt	= frozenSet.find(key);
+			static_assert(memberIt != frozenSet.end(), "Invalid key passed to partial write");
 			std::visit(
-				[&](auto&& memberPtr) {
+				[&](const auto& memberPtr) -> void {
 					auto& newMember	  = getMember(value, memberPtr);
 					using member_type = jsonifier::concepts::unwrap_t<decltype(newMember)>;
 					serialize_impl<options, derived_type, member_type>::impl(newMember, buffer, index);
+					return;
 				},
-				std::move(memberIt->second));
+				*memberIt);
 
 
 			if constexpr (indexNew != n - 1) {
@@ -360,7 +361,7 @@ namespace jsonifier_internal {
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
-			index = toChars(buffer.data() + index, value) - buffer.data();
+			index = static_cast<uint64_t>(toChars(buffer.data() + index, value) - buffer.data());
 		}
 	};
 

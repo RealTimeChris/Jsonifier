@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 						writeCharacterUnchecked<'['>(out, index);
 						++iter;
 						++options.indent;
-						state[options.indent] = json_structural_type::Array_Start;
+						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Array_Start;
 						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
 							state.resize(state.size() * 2);
 						}
@@ -121,7 +121,7 @@ namespace jsonifier_internal {
 						writeCharacterUnchecked<'{'>(out, index);
 						++iter;
 						++options.indent;
-						state[options.indent] = json_structural_type::Object_Start;
+						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Object_Start;
 						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
 							state.resize(state.size() * 2);
 						}
@@ -144,7 +144,13 @@ namespace jsonifier_internal {
 						writeCharacterUnchecked<'}'>(out, index);
 						++iter;
 						break;
-					}
+					} 
+					case json_structural_type::Unset:
+						[[fallthrough]];
+					case json_structural_type::Error:
+						[[fallthrough]];
+					case json_structural_type::Type_Count:
+						[[fallthrough]];
 					[[unlikely]] default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(

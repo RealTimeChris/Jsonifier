@@ -368,7 +368,7 @@ namespace jsonifier {
 			if (newSize > capacityVal) [[likely]] {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
-					if (sizeVal > 0) {
+					if (sizeVal > 0ull) {
 						if constexpr (std::is_copy_constructible_v<value_type>) {
 							std::uninitialized_copy(dataVal, dataVal + sizeVal, newPtr);
 						} else if constexpr (std::is_move_constructible_v<value_type>) {

@@ -51,7 +51,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
 			if constexpr (memberCount > 0) {
-				static constexpr decltype(auto) frozenMap{ makeMap<value_type>() };
+				static constexpr decltype(auto) frozenSet{ makeSet<value_type>() };
 				if (*iter == '}') [[unlikely]] {
 					++iter;
 					return;
@@ -77,31 +77,32 @@ namespace jsonifier_internal {
 					}
 				}
 
-				if (const auto& memberIt = frozenMap.find(key); memberIt != frozenMap.end()) [[likely]] {
+				if (const auto& memberIt = frozenSet.find(key); memberIt != frozenSet.end()) [[likely]] {
 					if (*iter == ':') [[likely]] {
 						++iter;
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-							iter - options.rootIter, static_cast<uint64_t>(end - iter), options.rootIter));
+						options.parserPtr->getErrors().emplace_back(
+							error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(iter - options.rootIter, end - iter, options.rootIter));
 						skipToNextValue(iter, end);
 						return;
 					}
 
 					std::visit(
-						[&](auto&& memberPtr) {
+						[&](const auto& memberPtr) -> void {
 							using member_type = jsonifier::concepts::unwrap_t<decltype(getMember(value, memberPtr))>;
 							parse_impl<derived_type, member_type>::template impl<options>(getMember(value, memberPtr), iter, end);
+							return;
 						},
-						memberIt->second);
+						*memberIt);
 
 				} else [[unlikely]] {
 					skipToNextValue(iter, end);
 				}
+				parseObjects<options, false>(value, iter, end);
 			} else {
 				skipToEndOfValue(iter, end);
 			}
-			parseObjects<options, false>(value, iter, end);
 		}
 	};
 
@@ -166,7 +167,7 @@ namespace jsonifier_internal {
 
 			parse_impl<derived_type, decltype(item)>::template impl<options>(item, iter, end);
 			if constexpr (indexNew < n - 1) {
-				parseObjects<n, indexNew + 1, false>(value, iter, end);
+				parseObjects<options, n, indexNew + 1, false>(value, iter, end);
 			}
 		}
 	};
