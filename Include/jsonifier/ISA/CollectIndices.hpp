@@ -159,12 +159,8 @@ namespace simd_internal {
 	}
 
 	JSONIFIER_INLINE simd_int_t_holder collectIndices(const simd_int_t* values) {
-		simd_int_t_holder returnValues;
-		returnValues.op			 = collectStructuralsAsSimdBase(values);
-		returnValues.quotes		 = collectValuesAsSimdBase<'"'>(values);
-		returnValues.whitespace	 = collectWhitespaceAsSimdBase(values);
-		returnValues.backslashes = collectValuesAsSimdBase<'\\'>(values);
-		return returnValues;
+		return simd_int_t_holder{ collectValuesAsSimdBase<'\\'>(values), collectWhitespaceAsSimdBase(values), collectValuesAsSimdBase<'"'>(values),
+			collectStructuralsAsSimdBase(values) };
 	}
 
 }

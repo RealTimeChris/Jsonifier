@@ -24,8 +24,8 @@
 #pragma once
 
 #include <jsonifier/JsonStructuralIterator.hpp>
-#include <jsonifier/Config.hpp>
 #include <jsonifier/StringView.hpp>
+#include <jsonifier/Config.hpp>
 #include <sstream>
 #include <cmath>
 
@@ -205,7 +205,6 @@ namespace jsonifier_internal {
 		}
 
 		template<bool collectAligned> JSONIFIER_INLINE void collectStringValues(string_view_ptr values) {
-			prefetchInternal(values + bytesPerStep);
 			if constexpr (collectAligned) {
 				newPtr[0] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 0));
 				newPtr[1] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 1));
@@ -225,6 +224,7 @@ namespace jsonifier_internal {
 				newPtr[6] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 6));
 				newPtr[7] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 7));
 			}
+			prefetchInternal(values + bytesPerStep * 15);
 		}
 
 		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values) {

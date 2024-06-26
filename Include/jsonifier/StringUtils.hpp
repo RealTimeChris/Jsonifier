@@ -640,7 +640,7 @@ namespace jsonifier_internal {
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
 						std::memcpy(string2, &escapeChar, 2);
-						string2 += 2ULL;
+						string2 += 2ull;
 						--lengthNew;
 						++string1;
 					} else {
@@ -672,7 +672,7 @@ namespace jsonifier_internal {
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
 						std::memcpy(string2, &escapeChar, 2);
-						string2 += 2ULL;
+						string2 += 2ull;
 						--lengthNew;
 						++string1;
 					} else {
@@ -704,7 +704,7 @@ namespace jsonifier_internal {
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
 						std::memcpy(string2, &escapeChar, 2);
-						string2 += 2ULL;
+						string2 += 2ull;
 						--lengthNew;
 						++string1;
 					} else {
@@ -735,7 +735,7 @@ namespace jsonifier_internal {
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
 						std::memcpy(string2, &escapeChar, 2);
-						string2 += 2ULL;
+						string2 += 2ull;
 						--lengthNew;
 						++string1;
 					} else {

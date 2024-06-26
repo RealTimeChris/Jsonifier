@@ -865,8 +865,8 @@ template<typename value_type> struct test_generator {
 
 	std::string generateString() {
 		auto length{ randomizeNumberNormal(64.0f, 16.0f) };
-		static constexpr int32_t charsetSize = charset.size();
-		auto unicodeCount					 = randomizeNumberUniform(length / 8);
+		static constexpr uint32_t charsetSize = charset.size();
+		auto unicodeCount					  = randomizeNumberUniform(length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
 			if (x == static_cast<int32_t>(length / unicodeCount)) {

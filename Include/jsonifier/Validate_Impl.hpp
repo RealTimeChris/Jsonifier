@@ -192,7 +192,7 @@ namespace jsonifier_internal {
 							iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					}
-				} else if (*newPtr < 0x20u) {
+				} else if (static_cast<uint8_t>(*newPtr) < 0x20u) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_String_Characters>(
 						iter - validatorRef.rootIter, iter.getEndPtr() - validatorRef.rootIter, validatorRef.rootIter));
