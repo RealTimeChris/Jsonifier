@@ -127,7 +127,6 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		static constexpr simd_int_t oddBitsVal{ simd_internal::simdFromValue<simd_int_t>(0xAA) };
 		JSONIFIER_ALIGN size_type newBits[sixtyFourBitsPerStep]{};
 		JSONIFIER_ALIGN char block[bitsPerStep]{};
 		simd_internal::simd_int_t_holder rawStructurals{};
@@ -252,6 +251,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void collectNonEmptyEscaped() noexcept {
+			simd_int_t oddBitsVal{ simd_internal::gatherValue<simd_int_t>(0xAA) };
 			simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
 			simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);
@@ -329,6 +329,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE std::string collectNonEmptyEscapedWithErrorPrintOut(size_type errorIndex) noexcept {
 			std::stringstream returnValue{};
+			simd_int_t oddBitsVal{ simd_internal::gatherValue<simd_int_t>(0xAA) };
 			simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
 			simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);

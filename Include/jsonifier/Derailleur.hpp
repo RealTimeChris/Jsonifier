@@ -444,7 +444,7 @@ namespace jsonifier_internal {
 
 		iter += stats.minLength;
 
-		 if constexpr (lengthRange == 0) {
+		if constexpr (lengthRange == 0) {
 			return { start, stats.minLength };
 		} else if constexpr (lengthRange == 1) {
 			if (*iter != '"') {
@@ -519,7 +519,7 @@ namespace jsonifier_internal {
 			}
 			return { start, size_t(iter - start) };
 		}
-	}	
+	}
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
 		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::core_v<value_type>));

@@ -47,9 +47,9 @@ namespace simd_internal {
 
 	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
 	#if defined(JSONIFIER_WIN) || JSONIFIER_LINUX
-		static constexpr simd_int_128 mask{ 0x01u, '\0' };
+		simd_int_128 mask{ 0x01u, '\0' };
 	#else
-		static constexpr simd_int_128 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+		simd_int_128 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 	#endif
 		return valueNew ? _mm_or_si128(value, mask) : _mm_andnot_si128(mask, value);
 	}
@@ -91,9 +91,9 @@ namespace simd_internal {
 
 	template<simd_int_256_type simd_int_t01> JSONIFIER_INLINE simd_int_256 opSetLSB(simd_int_t01&& value, bool valueNew) {
 		#if defined(JSONIFIER_WIN) || JSONIFIER_LINUX
-		static constexpr simd_int_256 mask{ 0x01u, '\0', '\0', '\0' };
+		simd_int_256 mask{ 0x01u, '\0', '\0', '\0' };
 		#else
-		static constexpr simd_int_256 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+		simd_int_256 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 		#endif
 		return valueNew ? _mm256_or_si256(value, mask) : _mm256_andnot_si256(mask, value);
 	}
@@ -135,9 +135,9 @@ namespace simd_internal {
 
 	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE simd_int_512 opSetLSB(simd_int_t01&& value, bool valueNew) {
 			#if defined(JSONIFIER_WIN) || JSONIFIER_LINUX
-		static constexpr simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+		simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 			#else
-		static constexpr simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+		simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
 			'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 			#endif
 		return valueNew ? _mm512_or_si512(value, mask) : _mm512_andnot_si512(mask, value);

@@ -96,7 +96,7 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
 			static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
-			static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
+			static constexpr uint64_t hiBit = repeatByte<0b10000000, uint64_t>();
 			uint64_t simdValue, lo7, quote, t0, next;
 			while (lengthNew >= 8) {
 				std::memcpy(&simdValue, data, sizeof(uint64_t));
@@ -118,7 +118,7 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint32_t mask32  = repeatByte<0b01111111, uint32_t>();
 			static constexpr uint32_t value32 = repeatByte<value, uint32_t>();
-			static constexpr uint32_t hiBit	  = repeatByte<0b10000000, uint32_t>();
+			static constexpr uint32_t hiBit = repeatByte<0b10000000, uint32_t>();
 			uint32_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 4) {
 				std::memcpy(&simdValue, data, sizeof(uint32_t));
@@ -140,7 +140,7 @@ namespace jsonifier_internal {
 		{
 			static constexpr uint16_t mask16  = repeatByte<0b01111111, uint16_t>();
 			static constexpr uint16_t value16 = repeatByte<value, uint16_t>();
-			static constexpr uint16_t hiBit	  = repeatByte<0b10000000, uint16_t>();
+			static constexpr uint16_t hiBit = repeatByte<0b10000000, uint16_t>();
 			uint16_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 2) {
 				std::memcpy(&simdValue, data, sizeof(uint16_t));
