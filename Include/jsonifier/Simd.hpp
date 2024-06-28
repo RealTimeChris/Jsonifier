@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE void collectNonEmptyEscaped() noexcept {
+		JSONIFIER_INLINE void collectEscaped() noexcept {
 			simd_int_t oddBitsVal{ simd_internal::gatherValue<simd_int_t>(0xAA) };
 			simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
@@ -268,7 +268,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void collectEscapedCharacters() {
-			return simd_internal::opBool(rawStructurals.backslashes) ? collectNonEmptyEscaped() : collectEmptyEscaped();
+			return simd_internal::opBool(rawStructurals.backslashes) ? collectEscaped() : collectEmptyEscaped();
 		}
 
 		JSONIFIER_INLINE void collectStructurals() {

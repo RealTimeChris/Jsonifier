@@ -433,8 +433,11 @@ namespace jsonifier_internal {
 
 	struct key_stats_t {
 		uint32_t minLength{ (std::numeric_limits<uint32_t>::max)() };
+		uint32_t averageLength{};
+		uint32_t totalLength{};
 		uint32_t lengthRange{};
 		uint32_t maxLength{};
+		uint32_t keyCount{};
 	};
 
 	template<key_stats_t stats, typename iterator_type> [[nodiscard]] JSONIFIER_INLINE jsonifier::string_view parseKeyCx(iterator_type&& iter) noexcept {
@@ -533,7 +536,9 @@ namespace jsonifier_internal {
 
 	template<typename value_type, uint64_t index, uint64_t maxIndex> JSONIFIER_INLINE constexpr auto keyStatsHelper(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
+			++stats.keyCount;
 			constexpr jsonifier::string_view key{ getKey<value_type, index>() };
+			stats.totalLength += static_cast<uint32_t>(key.size());
 			const auto n{ key.size() };
 			if (n < stats.minLength) {
 				stats.minLength = n;
@@ -544,7 +549,8 @@ namespace jsonifier_internal {
 			return keyStatsHelper<value_type, index + 1, maxIndex>(stats);
 		} else {
 			if constexpr (maxIndex > 0) {
-				stats.lengthRange = stats.maxLength - stats.minLength;
+				stats.lengthRange	= stats.maxLength - stats.minLength;
+				stats.averageLength = stats.totalLength / stats.keyCount;
 			}
 			return stats;
 		}

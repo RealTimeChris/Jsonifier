@@ -330,7 +330,7 @@ namespace jsonifier_internal {
 #define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 	constexpr auto eBit = static_cast<uint8_t>('E' ^ 'e');
 
-	template<jsonifier::concepts::float_t value_type, typename iterator_type> JSONIFIER_INLINE bool parseFloat(value_type& value, iterator_type&& iter) noexcept {
+	template<jsonifier::concepts::float_type value_type, typename iterator_type> JSONIFIER_INLINE bool parseFloat(value_type& value, iterator_type&& iter) noexcept {
 		constexpr auto isVolatile				= std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
 		string_view_ptr sigCut					= nullptr;
 		[[maybe_unused]] string_view_ptr sigEnd = nullptr;

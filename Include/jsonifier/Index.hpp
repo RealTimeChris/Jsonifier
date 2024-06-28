@@ -32,7 +32,6 @@
 #include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/JsonifierCore.hpp>
 #include <jsonifier/Prettify_Impl.hpp>
-
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Minify_Impl.hpp>
 #include <jsonifier/Serializer.hpp>

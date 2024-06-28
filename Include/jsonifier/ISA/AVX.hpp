@@ -45,6 +45,22 @@ namespace simd_internal {
 		return _mm_or_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE simd_int_128 opAdd(simd_int_t01&& value, simd_int_t02&& other) {
+		return _mm_add_epi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
+	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSrli(simd_int_t01&& value, int32_t other) {
+		return _mm_srli_epi64(std::forward<simd_int_t01>(value), other);
+	}
+
+	template<int32_t other, simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opShuffle(simd_int_t01&& value) {
+		return _mm_shuffle_epi32(std::forward<simd_int_t01>(value), other);
+	}
+
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE simd_int_128 opMul(simd_int_t01&& value, simd_int_t02&& other) {
+		return _mm_mul_epi32(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	}
+
 	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
 	#if defined(JSONIFIER_WIN) || JSONIFIER_LINUX
 		simd_int_128 mask{ 0x01u, '\0' };

@@ -188,16 +188,19 @@ namespace jsonifier {
 		concept int64_type = std::is_same_v<int64_t, unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept float_t = std::floating_point<unwrap_t<value_type>>;
+		concept double_type = std::is_same_v<double, unwrap_t<value_type>>;
+
+		template<typename value_type>
+		concept float_type = std::floating_point<unwrap_t<value_type>>;
 
 		template<typename value_type>
 		concept char_type = std::is_same_v<unwrap_t<value_type>, char>;
 
 		template<typename value_type>
-		concept u_char_type = std::is_same_v<unwrap_t<value_type>, unsigned char>;
+		concept u_char_type = std::is_same_v<unwrap_t<value_type>, uint8_t>;
 
 		template<typename value_type>
-		concept num_t = (float_t<value_type> || unsigned_type<value_type> || signed_type<value_type>) && !char_type<value_type>;
+		concept num_t = ( float_type<value_type> || unsigned_type<value_type> || signed_type<value_type> )&&!char_type<value_type>;
 
 		template<typename value_type>
 		concept has_substr = requires(unwrap_t<value_type> value) {

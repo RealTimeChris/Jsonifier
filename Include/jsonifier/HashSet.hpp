@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	constexpr double scalingFactorTable[]{ 0.20f, 0.30f, 0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f, 1.0f };
+	constexpr double scalingFactorTable[]{  0.20f, 0.30f, 0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f, 1.0f };
 
 	template<typename value_type01, typename value_type02> constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) {
 		for (size_t x = 0; x < size; ++x) {
@@ -139,17 +139,16 @@ namespace jsonifier_internal {
 
 	constexpr size_t simdHashSetMaxSizes[]{ 16, 32, 64, 128, 256, 512, 1024 };
 
-	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize> struct simd_hash_set : public fnv1a_hash {
+	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize> struct simd_hash_set {
 		static constexpr size_t bucketSize = setSimdWidth<actualCount>();
 		static constexpr size_t numGroups  = storageSize > bucketSize ? storageSize / bucketSize : 1;
-		using hasher					   = fnv1a_hash;
 		using simd_type					   = set_simd_t<bucketSize>;
 		using integer_type				   = set_integer_t<bucketSize>;
+		JSONIFIER_ALIGN std::array<size_t, storageSize> hashes{ { static_cast<uint64_t>(-1) } };
 		JSONIFIER_ALIGN std::array<uint8_t, storageSize> controlBytes{};
 		JSONIFIER_ALIGN std::array<value_type, storageSize> items{};
-		JSONIFIER_ALIGN std::array<size_t, storageSize> hashes{};
 		JSONIFIER_ALIGN double stringScalingFactor{};
-		JSONIFIER_ALIGN size_t seed{};
+		JSONIFIER_ALIGN key_hasher hasher{};
 
 		constexpr simd_hash_set() noexcept = default;
 
@@ -166,18 +165,20 @@ namespace jsonifier_internal {
 		}
 
 		template<typename key_type_new> JSONIFIER_INLINE constexpr decltype(auto) find(key_type_new&& key) const noexcept {
-			JSONIFIER_ALIGN const auto hash		   = hasher::operator()(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor), seed);
-			JSONIFIER_ALIGN const auto resultIndex = ((hash >> 7) % numGroups) * bucketSize;
-			if (std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto adjustedIndex = constMatch(controlBytes.data() + resultIndex, static_cast<uint8_t>(hash)) % bucketSize + resultIndex;
-				return hashes[adjustedIndex] == hash ? items.data() + adjustedIndex : end();
-			} else {
-				prefetchInternal(controlBytes.data() + resultIndex + bucketSize);
-				JSONIFIER_ALIGN const auto adjustedIndex = simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
+			if (!std::is_constant_evaluated()) {
+				JSONIFIER_ALIGN const auto hash		   = hasher.hashKeyRt(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor));
+				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 7) % numGroups) * bucketSize;
+				prefetchInternal(controlBytes.data() + resultIndex);
+				JSONIFIER_ALIGN const auto finalIndex = simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
 															   simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) %
 						bucketSize +
 					resultIndex;
-				return hashes[adjustedIndex] == hash ? items.data() + adjustedIndex : end();
+				return hashes[finalIndex] == hash ? items.data() + finalIndex : end();
+			} else {
+				JSONIFIER_ALIGN const auto hash			 = hasher.hashKeyCt(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor));
+				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 7) % numGroups) * bucketSize;
+				JSONIFIER_ALIGN const auto finalIndex	 = constMatch(controlBytes.data() + resultIndex, static_cast<uint8_t>(hash)) % bucketSize + resultIndex;
+				return hashes[finalIndex] == hash ? items.data() + finalIndex : end();
 			}
 		}
 
@@ -209,25 +210,25 @@ namespace jsonifier_internal {
 			set_type<key_type, value_type, actualCount, startingValue * 64ull>>;
 
 	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
-	constexpr auto constructSimdHashSetFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, size_t seed, size_t stringScalingFactorIndex)
+	constexpr auto constructSimdHashSetFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, uint64_t seed, size_t stringScalingFactorIndex)
 		-> set_variant<16, actualCount, key_type, value_type, simd_hash_set> {
 		constexpr size_t bucketSize = setSimdWidth<actualCount>();
 		constexpr size_t numGroups	= storageSize > bucketSize ? storageSize / bucketSize : 1;
 		simd_hash_set<key_type, value_type, actualCount, storageSize> simdHashSetNew{};
+		simdHashSetNew.hasher			   = seed;
+		simdHashSetNew.stringScalingFactor = scalingFactorTable[stringScalingFactorIndex];
 		std::array<size_t, numGroups> bucketSizes{};
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto hash				  = fnv1a_hash{}.operator()(pairsNew[x].first.data(),
-				  static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]), seed);
-			const auto groupPos			  = (hash >> 7) % numGroups;
-			const auto ctrlByte			  = static_cast<uint8_t>(hash);
-			const auto bucketSizeNew	  = ++bucketSizes[groupPos];
-			const auto slot				  = (groupPos * bucketSize) + bucketSizeNew;
+			const auto hash =
+				simdHashSetNew.hasher.hashKeyCt(pairsNew[x].first.data(), static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * simdHashSetNew.stringScalingFactor));
+			const auto groupPos				  = (hash >> 7) % numGroups;
+			const auto ctrlByte				  = static_cast<uint8_t>(hash);
+			const auto bucketSizeNew		  = ++bucketSizes[groupPos];
+			const auto slot					  = (groupPos * bucketSize) + bucketSizeNew;
 			simdHashSetNew.items[slot]		  = pairsNew[x].second;
 			simdHashSetNew.controlBytes[slot] = ctrlByte;
 			simdHashSetNew.hashes[slot]		  = hash;
 		}
-		simdHashSetNew.stringScalingFactor = scalingFactorTable[stringScalingFactorIndex];
-		simdHashSetNew.seed				   = seed;
 
 		return set_variant<16, actualCount, key_type, value_type, simd_hash_set>{ simd_hash_set<key_type, value_type, actualCount, storageSize>(simdHashSetNew) };
 	}
@@ -243,7 +244,7 @@ namespace jsonifier_internal {
 		&constructSimdHashSetFinal<key_type, value_type, actualCount, 1024ull>
 	};
 
-	template<typename key_type, typename value_type, size_t maxSizeIndex, size_t stringScalingFactorIndex, size_t actualCount>
+	template<size_t maxSizeIndex, size_t stringScalingFactorIndex, typename key_type, typename value_type, size_t actualCount>
 	constexpr auto constructSimdHashSet(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, xoshiro256 prng = xoshiro256{},
 		std::array<std::array<set_construction_values, std::size(scalingFactorTable)>, std::size(simdHashSetMaxSizes)> constructionValues =
 			std::array<std::array<set_construction_values, std::size(scalingFactorTable)>, std::size(simdHashSetMaxSizes)>{})
@@ -255,10 +256,10 @@ namespace jsonifier_internal {
 		std::array<uint8_t, storageSize> controlBytes{};
 		std::array<size_t, numGroups> bucketSizes{};
 		std::array<size_t, storageSize> slots{};
-
+		key_hasher hasherNew{ seed };
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto hash			 = fnv1a_hash{}.operator()(pairsNew[x].first.data(),
-				 static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]), seed);
+			const auto hash			 = hasherNew.hashKeyCt(pairsNew[x].first.data(),
+						 static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]));
 			const auto groupPos		 = (hash >> 7) % numGroups;
 			const auto ctrlByte		 = static_cast<uint8_t>(hash);
 			const auto bucketSizeNew = ++bucketSizes[groupPos];
@@ -268,13 +269,13 @@ namespace jsonifier_internal {
 				contains(controlBytes.data() + groupPos * bucketSize, ctrlByte, bucketSize)) {
 				constructionValues[maxSizeIndex][stringScalingFactorIndex] = set_construction_values{ stringScalingFactorIndex, maxSizeIndex, false, seed };
 				if constexpr (stringScalingFactorIndex < std::size(scalingFactorTable) - 1) {
-					return constructSimdHashSet<key_type, value_type, maxSizeIndex, stringScalingFactorIndex + 1>(pairsNew, prng, constructionValues);
+					return constructSimdHashSet<maxSizeIndex, stringScalingFactorIndex + 1, key_type, value_type>(pairsNew, prng, constructionValues);
 				} else if constexpr (maxSizeIndex < std::size(simdHashSetMaxSizes) - 1) {
-					return constructSimdHashSet<key_type, value_type, maxSizeIndex + 1, 0>(pairsNew, prng, constructionValues);
+					return constructSimdHashSet<maxSizeIndex + 1, 0, key_type, value_type>(pairsNew, prng, constructionValues);
 				} else {
 					auto resultValues = collectOptimalConstructionValues(constructionValues);
-					auto newSet =
-						constructSimdHashSetFinalPtrs<key_type, value_type, actualCount>[resultValues.maxSizeIndex](pairsNew, resultValues.seed, resultValues.stringScalingFactorIndex);
+					auto newSet		  = constructSimdHashSetFinalPtrs<key_type, value_type, actualCount>[resultValues.maxSizeIndex](pairsNew, resultValues.seed,
+						  resultValues.stringScalingFactorIndex);
 					return { newSet };
 				}
 			}
@@ -285,9 +286,9 @@ namespace jsonifier_internal {
 
 		constructionValues[maxSizeIndex][stringScalingFactorIndex] = set_construction_values{ stringScalingFactorIndex, maxSizeIndex, true, seed };
 		if constexpr (stringScalingFactorIndex < std::size(scalingFactorTable) - 1) {
-			return constructSimdHashSet<key_type, value_type, maxSizeIndex, stringScalingFactorIndex + 1>(pairsNew, prng, constructionValues);
+			return constructSimdHashSet<maxSizeIndex, stringScalingFactorIndex + 1, key_type, value_type>(pairsNew, prng, constructionValues);
 		} else if constexpr (maxSizeIndex < std::size(simdHashSetMaxSizes) - 1) {
-			return constructSimdHashSet<key_type, value_type, maxSizeIndex + 1, 0>(pairsNew, prng, constructionValues);
+			return constructSimdHashSet<maxSizeIndex + 1, 0, key_type, value_type>(pairsNew, prng, constructionValues);
 		} else {
 			auto resultValues = collectOptimalConstructionValues(constructionValues);
 			auto newSet =
@@ -296,14 +297,13 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr size_t serialHashSetMaxSizes[]{ 1, 2, 4, 8, 16, 32, 64 };
+	constexpr size_t serialHashSetMaxSizes[]{ 2, 4, 8, 16, 32, 64, 128 };
 
-	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize> struct serial_hash_set : public fnv1a_hash {
-		using hasher = fnv1a_hash;
+	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize> struct serial_hash_set {
+		JSONIFIER_ALIGN std::array<size_t, storageSize> hashes{ { static_cast<uint64_t>(-1) } };
 		JSONIFIER_ALIGN std::array<value_type, storageSize> items{};
-		JSONIFIER_ALIGN std::array<size_t, storageSize> hashes{};
 		JSONIFIER_ALIGN double stringScalingFactor{};
-		JSONIFIER_ALIGN size_t seed{};
+		JSONIFIER_ALIGN key_hasher hasher{};
 
 		constexpr serial_hash_set() noexcept = default;
 
@@ -320,69 +320,75 @@ namespace jsonifier_internal {
 		}
 
 		template<typename key_type_new> JSONIFIER_INLINE constexpr decltype(auto) find(key_type_new&& key) const noexcept {
-			JSONIFIER_ALIGN const auto hash		  = hasher::operator()(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor), seed);
-			JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
-			if (hashes[finalIndex] == hash) {
-				return items.data() + finalIndex;
+			if (!std::is_constant_evaluated()) {
+				JSONIFIER_ALIGN const auto hash		  = hasher.hashKeyRt(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor));
+				JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
+				return hashes[finalIndex] == hash ? items.data() + finalIndex : end();
 			} else {
-				return end();
+				JSONIFIER_ALIGN const auto hash		  = hasher.hashKeyCt(key.data(), static_cast<size_t>(static_cast<double>(key.size()) * stringScalingFactor));
+				JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
+				return hashes[finalIndex] == hash ? items.data() + finalIndex : end();
 			}
 		}
 	};
 
-	template<typename key_type, typename value_type, size_t storageSize, size_t actualCount>
-	constexpr auto constructSerialHashSetFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, size_t seed, size_t stringScalingFactorIndex)
-		-> set_variant<1, actualCount, key_type, value_type, serial_hash_set> {
+	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
+	constexpr auto constructSerialHashSetFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, uint64_t seed, size_t stringScalingFactorIndex)
+		-> set_variant<2, actualCount, key_type, value_type, serial_hash_set> {
 		serial_hash_set<key_type, value_type, actualCount, storageSize> serialHashSetNew{};
+		serialHashSetNew.hasher				 = seed;
+		serialHashSetNew.stringScalingFactor = scalingFactorTable[stringScalingFactorIndex];
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto hash					= fnv1a_hash{}.operator()(pairsNew[x].first.data(),
-				static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]), seed);
-			const auto finalIndex			= hash % storageSize;
+			const auto hash						= serialHashSetNew.hasher.hashKeyCt(pairsNew[x].first.data(),
+									static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * serialHashSetNew.stringScalingFactor));
+			const auto finalIndex				= hash % storageSize;
 			serialHashSetNew.items[finalIndex]	= pairsNew[x].second;
 			serialHashSetNew.hashes[finalIndex] = hash;
 		}
-		serialHashSetNew.stringScalingFactor = scalingFactorTable[stringScalingFactorIndex];
-		serialHashSetNew.seed				 = seed;
 
-		return set_variant<1, actualCount, key_type, value_type, serial_hash_set>{ serial_hash_set<key_type, value_type, actualCount, storageSize>(serialHashSetNew) };
+		return set_variant<2, actualCount, key_type, value_type, serial_hash_set>{ serial_hash_set<key_type, value_type, actualCount, storageSize>(serialHashSetNew) };
 	}
 
 	template<typename key_type, typename value_type, size_t storageSize, size_t actualCount> using construct_serial_hash_set_function_ptr =
-		decltype(&constructSerialHashSetFinal<key_type, value_type, storageSize, actualCount>);
+		decltype(&constructSerialHashSetFinal<key_type, value_type, storageSize, 2ull>);
 
 	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr construct_serial_hash_set_function_ptr<key_type, value_type, 1ull, actualCount> constructSerialHashSetFinalPtrs[7] = {
-		&constructSerialHashSetFinal<key_type, value_type, 1ull, actualCount>, &constructSerialHashSetFinal<key_type, value_type, 2ull, actualCount>,
-		&constructSerialHashSetFinal<key_type, value_type, 4ull, actualCount>, &constructSerialHashSetFinal<key_type, value_type, 8ull, actualCount>,
-		&constructSerialHashSetFinal<key_type, value_type, 16ull, actualCount>, &constructSerialHashSetFinal<key_type, value_type, 32ull, actualCount>,
-		&constructSerialHashSetFinal<key_type, value_type, 64ull, actualCount>
+	constexpr construct_serial_hash_set_function_ptr<key_type, value_type, actualCount, 2ull> constructSerialHashSetFinalPtrs[7] = {
+		&constructSerialHashSetFinal<key_type, value_type, actualCount, 2ull>, &constructSerialHashSetFinal<key_type, value_type, actualCount, 4ull>,
+		&constructSerialHashSetFinal<key_type, value_type, actualCount, 8ull>, &constructSerialHashSetFinal<key_type, value_type, actualCount, 16ull>,
+		&constructSerialHashSetFinal<key_type, value_type, actualCount, 32ull>, &constructSerialHashSetFinal<key_type, value_type, actualCount, 64ull>,
+		&constructSerialHashSetFinal<key_type, value_type, actualCount, 128ull>
 	};
 
-	template<typename key_type, typename value_type, size_t maxSizeIndex, size_t stringScalingFactorIndex, size_t actualCount>
+	template<size_t maxSizeIndex, size_t stringScalingFactorIndex, typename key_type, typename value_type, size_t actualCount>
 	constexpr auto constructSerialHashSet(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, xoshiro256 prng = xoshiro256{},
 		std::array<std::array<set_construction_values, std::size(scalingFactorTable)>, std::size(serialHashSetMaxSizes)> constructionValues =
 			std::array<std::array<set_construction_values, std::size(scalingFactorTable)>, std::size(serialHashSetMaxSizes)>{})
-		-> set_variant<1, actualCount, key_type, value_type, serial_hash_set> {
+		-> set_variant<2, actualCount, key_type, value_type, serial_hash_set> {
 		constexpr size_t storageSize = serialHashSetMaxSizes[maxSizeIndex];
 		auto seed					 = prng();
 		std::array<size_t, storageSize> slots{};
-
+		key_hasher hasherNew{ seed };
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto hash		  = fnv1a_hash{}.operator()(pairsNew[x].first.data(),
-				  static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]), seed);
+			const auto hash		  = hasherNew.hashKeyCt(pairsNew[x].first.data(),
+					  static_cast<size_t>(static_cast<double>(pairsNew[x].first.size()) * scalingFactorTable[stringScalingFactorIndex]));
 			const auto finalIndex = hash % storageSize;
 
 			if (contains(slots.data(), finalIndex, slots.size())) {
 				constructionValues[maxSizeIndex][stringScalingFactorIndex] = set_construction_values{ stringScalingFactorIndex, maxSizeIndex, false, seed };
 				if constexpr (stringScalingFactorIndex < std::size(scalingFactorTable) - 1) {
-					return constructSerialHashSet<key_type, value_type, maxSizeIndex, stringScalingFactorIndex + 1>(pairsNew, prng, constructionValues);
+					return constructSerialHashSet<maxSizeIndex, stringScalingFactorIndex + 1, key_type, value_type>(pairsNew, prng, constructionValues);
 				} else if constexpr (maxSizeIndex < std::size(serialHashSetMaxSizes) - 1) {
-					return constructSerialHashSet<key_type, value_type, maxSizeIndex + 1, 0>(pairsNew, prng, constructionValues);
+					return constructSerialHashSet<maxSizeIndex + 1, 0, key_type, value_type>(pairsNew, prng, constructionValues);
 				} else {
 					auto resultValues = collectOptimalConstructionValues(constructionValues);
-					auto newSet		  = constructSerialHashSetFinalPtrs<key_type, value_type, actualCount>[resultValues.maxSizeIndex](pairsNew, resultValues.seed,
-						  resultValues.stringScalingFactorIndex);
-					return { newSet };
+					if (resultValues.maxSizeIndex < std::size(constructSerialHashSetFinalPtrs<key_type, value_type, actualCount>)) {
+						auto newSet = constructSerialHashSetFinalPtrs<key_type, value_type, actualCount>[resultValues.maxSizeIndex](pairsNew, resultValues.seed,
+							resultValues.stringScalingFactorIndex);
+						return { newSet };
+					} else {
+						return {};
+					}
 				}
 			}
 
@@ -391,9 +397,9 @@ namespace jsonifier_internal {
 
 		constructionValues[maxSizeIndex][stringScalingFactorIndex] = set_construction_values{ stringScalingFactorIndex, maxSizeIndex, true, seed };
 		if constexpr (stringScalingFactorIndex < std::size(scalingFactorTable) - 1) {
-			return constructSerialHashSet<key_type, value_type, maxSizeIndex, stringScalingFactorIndex + 1>(pairsNew, prng, constructionValues);
+			return constructSerialHashSet<maxSizeIndex, stringScalingFactorIndex + 1, key_type, value_type>(pairsNew, prng, constructionValues);
 		} else if constexpr (maxSizeIndex < std::size(serialHashSetMaxSizes) - 1) {
-			return constructSerialHashSet<key_type, value_type, maxSizeIndex + 1, 0>(pairsNew, prng, constructionValues);
+			return constructSerialHashSet<maxSizeIndex + 1, 0, key_type, value_type>(pairsNew, prng, constructionValues);
 		} else {
 			auto resultValues = collectOptimalConstructionValues(constructionValues);
 			auto newSet =
@@ -406,104 +412,73 @@ namespace jsonifier_internal {
 		if (std::is_constant_evaluated()) {
 			return key == S;
 		} else {
+			constexpr auto size = S.size();
 			if constexpr (CheckSize) {
-				return (S.size() == key.size()) && compare<S.size()>(S.data(), key.data());
+				return (size == key.size()) && compare<size>(S.data(), key.data());
 			} else {
-				return compare<S.size()>(S.data(), key.data());
+				return compare<size>(S.data(), key.data());
 			}
 		}
 	}
 
-	template<const jsonifier::string_view& S0> constexpr uint64_t getSeed() {
-		xoshiro256 prng{};
-		for (uint64_t x = 0; x < S0.size(); ++x) {
-			prng();
+	template<const jsonifier::string_view& lhs> inline constexpr bool compareSv(const jsonifier::string_view rhs) noexcept {
+		if (std::is_constant_evaluated()) {
+			return lhs == rhs;
+		} else {
+			constexpr auto N = lhs.size();
+			return (N == rhs.size()) && compare<N>(lhs.data(), rhs.data());
 		}
-		return prng();
 	}
 
-	template<const jsonifier::string_view& S0, uint64_t stringLength, uint64_t seed> constexpr uint64_t getHash() {
-		return fnv1a_hash{}.operator()(S0.data(), stringLength, seed);
-	}
-
-	template<double x> constexpr size_t constexprCeil() {
-		return (x > static_cast<size_t>(x)) ? static_cast<size_t>(x) + 1 : static_cast<size_t>(x);
-	}
-
-	template<typename value_type, const jsonifier::string_view& S0> struct micro_set1 : public fnv1a_hash {
-		static constexpr auto stringLength{ constexprCeil<static_cast<double>(S0.size()) * 0.25>() };
-		static constexpr auto seed{ getSeed<S0>() };
-		static constexpr auto hash0{ getHash<S0, stringLength, seed>() };
-		value_type item{};
-
-		constexpr micro_set1(std::initializer_list<value_type> values) {
-			if (values.size() > 0) {
-				std::copy(values.begin(), values.begin() + 1, &item);
-			}
-		}
+	template<typename value_type, const jsonifier::string_view& S> struct micro_set1 {
+		std::array<value_type, 1> items{};
 
 		JSONIFIER_INLINE constexpr decltype(auto) begin() const noexcept {
-			return &item;
+			return items.begin();
 		}
 
 		JSONIFIER_INLINE constexpr decltype(auto) end() const noexcept {
-			return &item + 1;
+			return items.end();
 		}
 
 		template<typename key_type> JSONIFIER_INLINE constexpr decltype(auto) find(key_type&& key) const noexcept {
-			if constexpr (stringLength == 1) {
-				if (key[0] == S0[0]) {
-					return &item;
-				}
-			} else {
-				auto hashNew = fnv1a_hash::operator()(key.data(), stringLength, seed);
-				if (hashNew == hash0) {
-					return &item;
-				}
+			if (compareSv<S>(key)) [[likely]] {
+				return items.begin();
+			} else [[unlikely]] {
+				return items.end();
 			}
-			return end();
 		}
 	};
 
-	template<typename value_type, const jsonifier::string_view& S0, const jsonifier::string_view& S1> struct micro_set2 : public fnv1a_hash {
-		static constexpr auto stringLength{ constexprCeil<static_cast<double>(std::min(S0.size(), S1.size())) * 0.25>() };
-		static constexpr auto seed{ getSeed<S0>() };
-		static constexpr auto hash0{ getHash<S0, stringLength, seed>() };
-		static constexpr auto hash1{ getHash<S1, stringLength, seed>() };
+	template<typename value_type, const jsonifier::string_view& S0, const jsonifier::string_view& S1> struct micro_set2 {
+		std::array<value_type, 2> items{};
 
-		value_type items[2]{};
-
-		constexpr micro_set2(std::initializer_list<value_type> values) {
-			if (values.size() > 1) {
-				std::copy(values.begin(), values.begin() + 2, items);
-			}
-		}
+		static constexpr bool sameSize	 = S0.size() == S1.size();
+		static constexpr bool checkSize = !sameSize;
 
 		JSONIFIER_INLINE constexpr decltype(auto) begin() const noexcept {
-			return static_cast<const value_type*>(items);
+			return items.begin();
 		}
 
 		JSONIFIER_INLINE constexpr decltype(auto) end() const noexcept {
-			return static_cast<const value_type*>(items) + 2;
+			return items.end();
 		}
 
 		template<typename key_type> JSONIFIER_INLINE constexpr decltype(auto) find(key_type&& key) const noexcept {
-			if constexpr (stringLength == 1) {
-				if (key[0] == S0[0]) {
-					return static_cast<const value_type*>(items);
-				} else if (key[0] == S1[0]) {
-					return static_cast<const value_type*>(items) + 1;
-				}
-			} else {
-				auto hashNew = fnv1a_hash::operator()(key.data(), stringLength, seed);
-				if (hashNew == hash0) {
-					return static_cast<const value_type*>(items);
-				}
-				if (hashNew == hash1) {
-					return static_cast<const value_type*>(items) + 1;
+			if constexpr (sameSize) {
+				constexpr auto n = S0.size();
+				if (key.size() != n) {
+					return items.end();
 				}
 			}
-			return end();
+
+			if (cxStringCmp<S0, checkSize>(key)) {
+				return items.begin();
+			} else if (cxStringCmp<S1, checkSize>(key)) {
+				return items.begin() + 1;
+			} else [[unlikely]] {
+				return items.end();
+			}
 		}
 	};
 
@@ -565,7 +540,6 @@ namespace jsonifier_internal {
 	template<typename value_type, size_t... I> constexpr auto makeSetImpl(std::index_sequence<I...>) {
 		using value_t	 = value_tuple_variant_t<jsonifier::concepts::core_t<value_type>>;
 		constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
-
 		if constexpr (n == 0) {
 			return nullptr;
 		} else if constexpr (n == 1) {
@@ -573,11 +547,11 @@ namespace jsonifier_internal {
 		} else if constexpr (n == 2) {
 			return micro_set2<value_t, core_sv<value_type, I>::value...>{ getValue<value_type, I>()... };
 		} else if constexpr (n < 16) {
-			constexpr auto setNew{ constructSerialHashSet<jsonifier::string_view, value_t, getMaxSizeIndex<n>(simdHashSetMaxSizes), 0, n>({ keyValue<value_type, I>()... }) };
+			constexpr auto setNew{ constructSerialHashSet<getMaxSizeIndex<n>(simdHashSetMaxSizes), 0, jsonifier::string_view, value_t, n>({ keyValue<value_type, I>()... }) };
 			constexpr auto newIndex = setNew.index();
 			return std::get<newIndex>(setNew);
 		} else {
-			constexpr auto setNew{ constructSimdHashSet<jsonifier::string_view, value_t, getMaxSizeIndex<n>(simdHashSetMaxSizes), 0, n>({ keyValue<value_type, I>()... }) };
+			constexpr auto setNew{ constructSimdHashSet<getMaxSizeIndex<n>(simdHashSetMaxSizes), 0, jsonifier::string_view, value_t, n>({ keyValue<value_type, I>()... }) };
 			constexpr auto newIndex = setNew.index();
 			return std::get<newIndex>(setNew);
 		}

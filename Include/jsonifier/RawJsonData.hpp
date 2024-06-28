@@ -29,9 +29,9 @@
 
 namespace std {
 
-	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public jsonifier_internal::fnv1a_hash {
+	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public jsonifier_internal::key_hasher {
 		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const {
-			return jsonifier_internal::fnv1a_hash::operator()(string.data(), string.size(), 0);
+			return jsonifier_internal::key_hasher::hashKeyRt(string.data(), string.size());
 		}
 	};
 
