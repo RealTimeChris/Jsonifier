@@ -125,11 +125,11 @@ namespace jsonifier_internal {
 		0x9eu, 0x2bu, 0x16u, 0xbeu, 0x58u, 0x7du, 0x47u, 0xa1u, 0xfcu, 0x8fu, 0xf8u, 0xb8u, 0xd1u, 0x7au, 0xd0u, 0x31u, 0xceu, 0x45u, 0xcbu, 0x3au, 0x8fu, 0x95u, 0x16u, 0x04u,
 		0x28u, 0xafu, 0xd7u, 0xfbu, 0xcau, 0xbbu, 0x4bu, 0x40u, 0x7eu };
 
-	constexpr uint32_t rotl32Ct(uint32_t x, uint32_t r) {
+	JSONIFIER_INLINE constexpr uint32_t rotl32Ct(uint32_t x, uint32_t r) {
 		return (((x) << (r)) | ((x) >> (32 - (r))));
 	}
 
-	constexpr uint64_t rotl64Ct(uint64_t x, uint32_t r) {
+	JSONIFIER_INLINE constexpr uint64_t rotl64Ct(uint64_t x, uint32_t r) {
 		return (((x) << (r)) | ((x) >> (64 - (r))));
 	}
 
@@ -149,11 +149,11 @@ namespace jsonifier_internal {
 		return rotl64Internal(x, r);
 	}
 
-	constexpr uint32_t swap32Ct(uint32_t x) {
+	JSONIFIER_INLINE constexpr uint32_t swap32Ct(uint32_t x) {
 		return ((x << 24) & 0xff000000) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | ((x >> 24) & 0x000000ff);
 	}
 
-#if defined(JSONIFIER_MSVC) /* Visual Studio */
+#if defined(JSONIFIER_MSVC)
 	#define swap32Internal _byteswap_ulong
 #elif JSONIFIER_GCC_VERSION >= 403
 	#define swap32Internal __builtin_bswap32
@@ -165,12 +165,12 @@ namespace jsonifier_internal {
 		return swap32Internal(x);
 	}
 
-	constexpr uint64_t swap64Ct(uint64_t x) {
+	JSONIFIER_INLINE constexpr uint64_t swap64Ct(uint64_t x) {
 		return ((x << 56) & 0xff00000000000000ULL) | ((x << 40) & 0x00ff000000000000ULL) | ((x << 24) & 0x0000ff0000000000ULL) | ((x << 8) & 0x000000ff00000000ULL) |
 			((x >> 8) & 0x00000000ff000000ULL) | ((x >> 24) & 0x0000000000ff0000ULL) | ((x >> 40) & 0x000000000000ff00ULL) | ((x >> 56) & 0x00000000000000ffULL);
 	}
 
-#if defined(JSONIFIER_MSVC) /* Visual Studio */
+#if defined(JSONIFIER_MSVC)
 	#define swap64Internal _byteswap_uint64
 #elif JSONIFIER_GCC_VERSION >= 403
 	#define swap64Internal __builtin_bswap64
@@ -296,7 +296,8 @@ namespace jsonifier_internal {
 		return product.values[0] ^ product.values[1];
 	}
 
-	constexpr uint64_t fnv64Prime{ 0x00000100000001B3ull };
+	constexpr uint64_t fnvOffsetBasis{ 0xcbf29ce484222325ull };
+	constexpr uint64_t fnvPrime{ 0x00000100000001B3ull };
 
 	struct key_hasher {
 		constexpr key_hasher() noexcept = default;
@@ -307,6 +308,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
+		constexpr void setSeed(uint64_t seedNew) {
+			seed = seedNew;
+			initCustomSecretCt();
+		}
+
 		constexpr key_hasher(uint64_t seedNew) {
 			*this = seedNew;
 		}
@@ -315,61 +321,70 @@ namespace jsonifier_internal {
 			return seed;
 		}
 
-		JSONIFIER_INLINE uint64_t hashKeyRt(string_view_ptr value, uint64_t length) const {
-			if (length > 128) [[unlikely]] {
-				return len129ToAnyRt(value, length);
-			} else if (length > 16) [[unlikely]] {
-				return len17To12864bRt(value, length);
-			} else if (length > 8) [[likely]] {
-				return len9To1664bRt(value, length);
-			} else {
-				uint64_t hashValue{ seed };
-				if (length == 8) [[likely]] {
+		JSONIFIER_INLINE uint64_t hashKeyRt(const char* value, uint64_t length) const {
+			if (length <= 8) {
+				uint64_t hashValue = seed;
+				if (length == 8) {
 					hashValue ^= readBitsRt<uint64_t>(value);
-					hashValue *= fnv64Prime;
+					hashValue *= fnvPrime;
 					value += 8;
-					length -= 8;
 				}
-				if (length >= 4) [[likely]] {
+				if (length >= 4) {
 					hashValue ^= static_cast<uint64_t>(readBitsRt<uint32_t>(value));
-					hashValue *= fnv64Prime;
+					hashValue *= fnvPrime;
 					value += 4;
-					length -= 4;
 				}
-				for (uint64_t x = 0; x < length; ++x) {
-					hashValue ^= static_cast<uint64_t>(value[x]);
-					hashValue *= fnv64Prime;
+				if (length >= 2) {
+					hashValue ^= static_cast<uint64_t>(readBitsRt<uint16_t>(value));
+					hashValue *= fnvPrime;
+					value += 2;
+				}
+				if (length) {
+					hashValue ^= static_cast<uint64_t>(value[0]);
+					hashValue *= fnvPrime;
 				}
 				return hashValue;
+			} else if (length <= 16) {
+				return len9To1664bRt(value, length);
+			} else if (length <= 128) {
+				return len17To12864bRt(value, length);
+			} else {
+				return len129ToAnyRt(value, length);
 			}
 		}
 
-		constexpr uint64_t hashKeyCt(string_view_ptr value, uint64_t length) const {
-			if (length > 128) {
-				return len129ToAnyCt(value, length);
-			} else if (length > 16) {
-				return len17To12864bCt(value, length);
-			} else if (length > 8) {
-				return len9To1664bCt(value, length);
-			} else {
-				uint64_t hashValue{ seed };
+		constexpr uint64_t hashKeyCt(const char* value, uint64_t length) const {
+			if (length <= 8) {
+				uint64_t hashValue = seed;
 				if (length == 8) {
 					hashValue ^= readBitsCt<uint64_t>(value);
-					hashValue *= fnv64Prime;
+					hashValue *= fnvPrime;
 					value += 8;
 					length -= 8;
 				}
 				if (length >= 4) {
 					hashValue ^= static_cast<uint64_t>(readBitsCt<uint32_t>(value));
-					hashValue *= fnv64Prime;
+					hashValue *= fnvPrime;
 					value += 4;
 					length -= 4;
 				}
-				for (uint64_t x = 0; x < length; ++x) {
-					hashValue ^= static_cast<uint64_t>(value[x]);
-					hashValue *= fnv64Prime;
+				if (length >= 2) {
+					hashValue ^= static_cast<uint64_t>(readBitsCt<uint16_t>(value));
+					hashValue *= fnvPrime;
+					value += 2;
+					length -= 2;
+				}
+				if (length) {
+					hashValue ^= static_cast<uint64_t>(value[0]);
+					hashValue *= fnvPrime;
 				}
 				return hashValue;
+			} else if (length <= 16) {
+				return len9To1664bCt(value, length);
+			} else if (length <= 128) {
+				return len17To12864bCt(value, length);
+			} else {
+				return len129ToAnyCt(value, length);
 			}
 		}
 
@@ -466,26 +481,30 @@ namespace jsonifier_internal {
 			acc += mix16BCt(input + 0, secret + 0);
 			acc += mix16BCt(input + length - 16, secret + 16);
 			return avalanche(acc);
-		}		
+		}
 
 		JSONIFIER_INLINE uint64_t len129ToAnyRt(const char* input, size_t length) const {
 			uint64_t acc = length * xxhPrime641;
-			uint64_t nBlocks{ length / 16 };
+			uint64_t nBlocks{ (length - 128) / 16 };
 			for (uint64_t x = 0; x < nBlocks; ++x) {
-				acc += mix16BRt(input + x * 16, secret + x * 16);
-				acc += mix16BRt(input + length - x * 16, secret + x * 16);
+				acc += mix16BRt(input + (x * 16), secret + ((x * 16) % secretDefaultSize));
+				acc += mix16BRt(input + length - (x * 16), secret + ((x * 16) % secretDefaultSize));
+				length -= 16;
+				input += 16;
 			}
-			return avalanche(acc);
-		}		
+			return avalanche(acc) ^ len17To12864bRt(input, length);
+		}
 
 		constexpr uint64_t len129ToAnyCt(const char* input, size_t length) const {
 			uint64_t acc = length * xxhPrime641;
-			uint64_t nBlocks{ length / 16 };
+			uint64_t nBlocks{ (length - 128) / 16 };
 			for (uint64_t x = 0; x < nBlocks; ++x) {
-				acc += mix16BCt(input + x * 16, secret + x * 16);
-				acc += mix16BCt(input + length - x * 16, secret + x * 16);
+				acc += mix16BCt(input + (x * 16), secret + ((x * 16) % secretDefaultSize));
+				acc += mix16BCt(input + length - (x * 16), secret + ((x * 16) % secretDefaultSize));
+				length -= 16;
+				input += 16;
 			}
-			return avalanche(acc);
+			return avalanche(acc) ^ len17To12864bCt(input, length);
 		}
 	};
 }

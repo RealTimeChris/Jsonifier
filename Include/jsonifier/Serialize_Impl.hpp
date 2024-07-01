@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 
 			static constexpr auto frozenSet = makeSet<value_type>();
 			static constexpr auto memberIt	= frozenSet.find(key);
-			static_assert(memberIt != frozenSet.end(), "Invalid key passed to partial write");
+			static_assert(memberIt != frozenSet.end(), "Sorry, invalid key passed!");
 			std::visit(
 				[&](const auto& memberPtr) -> void {
 					auto& newMember	  = getMember(value, memberPtr);

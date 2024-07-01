@@ -67,6 +67,27 @@
 	#define JSONIFIER_WIN 1
 #endif
 
+#if defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	#define LIKELY(x) (__builtin_expect(!!(x), 1))
+	#define UNLIKELY(x) (__builtin_expect(!!(x), 0))
+	#define ASSUME(x) \
+		do { \
+			if (!(x)) \
+				__builtin_unreachable(); \
+		} while (0)
+#elif defined(JSONIFIER_MSVC)
+	#include <intrin.h>
+	#pragma intrinsic(__assume)
+	#define LIKELY(x) (x)
+	#define UNLIKELY(x) (x)
+	#define ASSUME(x) __assume(x)
+#else
+	#define LIKELY(x) (x)
+	#define UNLIKELY(x) (x)
+	#define ASSUME(x) (( void )0)
+#endif
+
+
 #if defined(__clang__) && defined(NDEBUG) && !defined(JSONIFIER_INLINE)
 	#define JSONIFIER_INLINE inline __attribute__((always_inline))
 #elif !defined(JSONIFIER_INLINE)

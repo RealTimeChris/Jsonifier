@@ -68,9 +68,12 @@ target_include_directories(
 	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
 )
 
-target_compile_options (
+target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps 2097152>"
+	"$<$<CXX_COMPILER_ID:GNU>:-fconstexpr-ops-limit=2097152>"
+	"$<$<CXX_COMPILER_ID:CLANG>:/constexpr:steps 2097152>"
 	"${AVX_FLAG}"
 )
 
@@ -128,6 +131,6 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if (JSONIFIER_TEST)
+if(JSONIFIER_TEST)
 	add_subdirectory("./Tests")
 endif()
