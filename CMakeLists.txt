@@ -71,9 +71,6 @@ target_include_directories(
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps 2097152>"
-	"$<$<CXX_COMPILER_ID:GNU>:-fconstexpr-ops-limit=2097152>"
-	"$<$<CXX_COMPILER_ID:CLANG>:/constexpr:steps 2097152>"
 	"${AVX_FLAG}"
 )
 

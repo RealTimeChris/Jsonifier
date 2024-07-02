@@ -144,7 +144,7 @@ namespace jsonifier_internal {
 						writeCharacterUnchecked<'}'>(out, index);
 						++iter;
 						break;
-					} 
+					}
 					case json_structural_type::Unset:
 						[[fallthrough]];
 					case json_structural_type::Error:

@@ -64,9 +64,9 @@ namespace jsonifier_internal {
 			static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
 			writeCharacters<quotedKey>(buffer, index);
 
-			static constexpr auto frozenSet = makeSet<value_type>();
+			static constexpr auto frozenSet = makeMap<value_type>();
 			static constexpr auto memberIt	= frozenSet.find(key);
-			static_assert(memberIt != frozenSet.end(), "Sorry, invalid key passed!");
+			static_assert(memberIt != frozenSet.end());
 			std::visit(
 				[&](const auto& memberPtr) -> void {
 					auto& newMember	  = getMember(value, memberPtr);

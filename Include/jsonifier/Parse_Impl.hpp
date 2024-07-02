@@ -51,7 +51,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
 			if constexpr (memberCount > 0) {
-				static constexpr decltype(auto) frozenSet{ makeSet<value_type>() };
+				static constexpr decltype(auto) frozenSet{ makeMap<value_type>() };
 				if (*iter == '}') [[unlikely]] {
 					++iter;
 					return;
@@ -379,7 +379,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type&&, iterator_type&& iter, iterator_type&& end) {
 			if (!parseNull(iter)) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Bool_Value>(iter - options.rootIter,
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Null_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
 				return;
 			}

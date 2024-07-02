@@ -200,7 +200,7 @@ namespace jsonifier {
 		concept u_char_type = std::is_same_v<unwrap_t<value_type>, uint8_t>;
 
 		template<typename value_type>
-		concept num_t = ( float_type<value_type> || unsigned_type<value_type> || signed_type<value_type> )&&!char_type<value_type>;
+		concept num_t = (float_type<value_type> || unsigned_type<value_type> || signed_type<value_type>) && !char_type<value_type>;
 
 		template<typename value_type>
 		concept has_substr = requires(unwrap_t<value_type> value) {
@@ -228,6 +228,11 @@ namespace jsonifier {
 		template<typename value_type>
 		concept has_emplace_back = requires(unwrap_t<value_type> value) {
 			{ value.emplace_back(std::declval<typename unwrap_t<value_type>::value_type&&>()) } -> std::same_as<typename unwrap_t<value_type>::value_type&>;
+		};
+
+		template<typename value_type>
+		concept has_control_byes = requires(unwrap_t<value_type> value) {
+			{ value.controlBytes };
 		};
 
 		template<typename value_type>

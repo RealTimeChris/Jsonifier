@@ -106,10 +106,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -164,10 +164,10 @@ namespace jsonifier_internal {
 				++iter;
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -298,10 +298,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -357,10 +357,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -422,19 +422,19 @@ namespace jsonifier_internal {
 					skipNumber(iter, end);
 					break;
 				}
-					[[likely]] default : {
-						++iter;
-						break;
-					}
+				[[likely]] default: {
+					++iter;
+					break;
+				}
 			}
 		}
 		return currentCount;
 	}
 
 	struct key_stats_t {
-		uint32_t minLength{ (std::numeric_limits<uint32_t>::max)() };
-		uint32_t lengthRange{};
-		uint32_t maxLength{};
+		uint64_t minLength{ (std::numeric_limits<uint64_t>::max)() };
+		uint64_t lengthRange{};
+		uint64_t maxLength{};
 	};
 
 	template<key_stats_t stats, typename iterator_type> [[nodiscard]] JSONIFIER_INLINE jsonifier::string_view parseKeyCx(iterator_type&& iter) noexcept {

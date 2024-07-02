@@ -125,46 +125,6 @@ namespace jsonifier_internal {
 		0x9eu, 0x2bu, 0x16u, 0xbeu, 0x58u, 0x7du, 0x47u, 0xa1u, 0xfcu, 0x8fu, 0xf8u, 0xb8u, 0xd1u, 0x7au, 0xd0u, 0x31u, 0xceu, 0x45u, 0xcbu, 0x3au, 0x8fu, 0x95u, 0x16u, 0x04u,
 		0x28u, 0xafu, 0xd7u, 0xfbu, 0xcau, 0xbbu, 0x4bu, 0x40u, 0x7eu };
 
-	JSONIFIER_INLINE constexpr uint32_t rotl32Ct(uint32_t x, uint32_t r) {
-		return (((x) << (r)) | ((x) >> (32 - (r))));
-	}
-
-	JSONIFIER_INLINE constexpr uint64_t rotl64Ct(uint64_t x, uint32_t r) {
-		return (((x) << (r)) | ((x) >> (64 - (r))));
-	}
-
-#if defined(JSONIFIER_MSVC)
-	#define rotl32Internal(x, r) _rotl(x, r)
-	#define rotl64Internal(x, r) _rotl64(x, r)
-#else
-	#define rotl32Internal(x, r) rotl32Ct(x, r)
-	#define rotl64Internal(x, r) rotl64Ct(x, r)
-#endif
-
-	JSONIFIER_INLINE uint32_t rotl32Rt(uint32_t x, uint32_t r) {
-		return rotl32Internal(x, r);
-	}
-
-	JSONIFIER_INLINE uint64_t rotl64Rt(uint64_t x, uint32_t r) {
-		return rotl64Internal(x, r);
-	}
-
-	JSONIFIER_INLINE constexpr uint32_t swap32Ct(uint32_t x) {
-		return ((x << 24) & 0xff000000) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | ((x >> 24) & 0x000000ff);
-	}
-
-#if defined(JSONIFIER_MSVC)
-	#define swap32Internal _byteswap_ulong
-#elif JSONIFIER_GCC_VERSION >= 403
-	#define swap32Internal __builtin_bswap32
-#else
-	#define swap32Internal swap32Ct
-#endif
-
-	JSONIFIER_INLINE uint32_t swap32Rt(uint32_t x) {
-		return swap32Internal(x);
-	}
-
 	JSONIFIER_INLINE constexpr uint64_t swap64Ct(uint64_t x) {
 		return ((x << 56) & 0xff00000000000000ULL) | ((x << 40) & 0x00ff000000000000ULL) | ((x << 24) & 0x0000ff0000000000ULL) | ((x << 8) & 0x000000ff00000000ULL) |
 			((x >> 8) & 0x00000000ff000000ULL) | ((x >> 24) & 0x0000000000ff0000ULL) | ((x >> 40) & 0x000000000000ff00ULL) | ((x >> 56) & 0x00000000000000ffULL);
@@ -205,22 +165,6 @@ namespace jsonifier_internal {
 		h64 *= primeMx1;
 		h64 = xorShift64(h64, 32);
 		return h64;
-	}
-
-	JSONIFIER_INLINE uint64_t rrmxmxRt(uint64_t h64, uint64_t length) {
-		h64 ^= rotl64Rt(h64, 49) ^ rotl64Rt(h64, 24);
-		h64 *= primeMx2;
-		h64 ^= (h64 >> 35) + length;
-		h64 *= primeMx2;
-		return xorShift64(h64, 28);
-	}
-
-	constexpr uint64_t rrmxmxCt(uint64_t h64, uint64_t length) {
-		h64 ^= rotl64Ct(h64, 49) ^ rotl64Ct(h64, 24);
-		h64 *= primeMx2;
-		h64 ^= (h64 >> 35) + length;
-		h64 *= primeMx2;
-		return xorShift64(h64, 28);
 	}
 
 	JSONIFIER_INLINE __m128x mult64To128Rt(uint64_t lhs, uint64_t rhs) {
@@ -300,44 +244,53 @@ namespace jsonifier_internal {
 	constexpr uint64_t fnvPrime{ 0x00000100000001B3ull };
 
 	struct key_hasher {
-		constexpr key_hasher() noexcept = default;
-
-		constexpr key_hasher& operator=(uint64_t seedNew) {
-			seed = seedNew;
-			initCustomSecretCt();
-			return *this;
-		}
-
 		constexpr void setSeed(uint64_t seedNew) {
 			seed = seedNew;
 			initCustomSecretCt();
-		}
-
-		constexpr key_hasher(uint64_t seedNew) {
-			*this = seedNew;
 		}
 
 		constexpr operator uint64_t() const {
 			return seed;
 		}
 
+		JSONIFIER_INLINE uint64_t hashKeyRtSingle(const char* value, uint64_t length) const {
+			uint64_t hashValue{ seed };
+			if (length) {
+				hashValue ^= static_cast<uint64_t>(value[0]);
+				hashValue *= fnvPrime;
+			}
+			return hashValue;
+		}
+
+		constexpr uint64_t hashKeyCtSingle(const char* value, uint64_t length) const {
+			uint64_t hashValue{ seed };
+			if (length) {
+				hashValue ^= static_cast<uint64_t>(value[0]);
+				hashValue *= fnvPrime;
+			}
+			return hashValue;
+		}
+
 		JSONIFIER_INLINE uint64_t hashKeyRt(const char* value, uint64_t length) const {
 			if (length <= 8) {
-				uint64_t hashValue = seed;
+				uint64_t hashValue{ seed };
 				if (length == 8) {
 					hashValue ^= readBitsRt<uint64_t>(value);
 					hashValue *= fnvPrime;
 					value += 8;
+					length -= 8;
 				}
 				if (length >= 4) {
 					hashValue ^= static_cast<uint64_t>(readBitsRt<uint32_t>(value));
 					hashValue *= fnvPrime;
 					value += 4;
+					length -= 4;
 				}
 				if (length >= 2) {
 					hashValue ^= static_cast<uint64_t>(readBitsRt<uint16_t>(value));
 					hashValue *= fnvPrime;
 					value += 2;
+					length -= 2;
 				}
 				if (length) {
 					hashValue ^= static_cast<uint64_t>(value[0]);
@@ -355,7 +308,7 @@ namespace jsonifier_internal {
 
 		constexpr uint64_t hashKeyCt(const char* value, uint64_t length) const {
 			if (length <= 8) {
-				uint64_t hashValue = seed;
+				uint64_t hashValue{ seed };
 				if (length == 8) {
 					hashValue ^= readBitsCt<uint64_t>(value);
 					hashValue *= fnvPrime;
@@ -402,7 +355,7 @@ namespace jsonifier_internal {
 
 			const auto negSeedPos = subEpi64(zeros, seedPos);
 			const auto seedNew	  = blendvEpi8(seedPos, negSeedPos, mask);
-			for (int32_t i = 0; i < nbRounds; ++i) {
+			for (uint64_t i = 0; i < nbRounds; ++i) {
 				auto newSource = loaduSi128(xxh3KSecret + (sizeof(__m128x) * i));
 				auto newValue  = addEpi64(newSource, seedNew);
 				storeuSi128(secret + (sizeof(__m128x) * i), newValue);
@@ -433,7 +386,7 @@ namespace jsonifier_internal {
 			{
 				uint64_t const input_lo = readBitsRt<uint64_t>(input);
 				uint64_t const input_hi = readBitsRt<uint64_t>(input + 8);
-				return (input_lo ^ (readBitsRt<uint64_t>(secret) + seed)) ^ (input_hi ^ (readBitsRt<uint64_t>(secret + 8) - seed));
+				return (input_lo ^ (readBitsRt<uint64_t>(secretNew) + seed)) ^ (input_hi ^ (readBitsRt<uint64_t>(secretNew + 8) - seed));
 			}
 		}
 
@@ -441,7 +394,7 @@ namespace jsonifier_internal {
 			{
 				uint64_t const input_lo = readBitsCt<uint64_t>(input);
 				uint64_t const input_hi = readBitsCt<uint64_t>(input + 8);
-				return (input_lo ^ (readBitsCt<uint64_t>(secret) + seed)) ^ (input_hi ^ (readBitsCt<uint64_t>(secret + 8) - seed));
+				return (input_lo ^ (readBitsCt<uint64_t>(secretNew) + seed)) ^ (input_hi ^ (readBitsCt<uint64_t>(secretNew + 8) - seed));
 			}
 		}
 
