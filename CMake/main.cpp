@@ -1,11 +1,9 @@
-/*
-* From: https://github.com/simdjson/simdjson/blob/master/src/internal/isadetection.h
-*/
+// Sampled mostly from Simdjson: https://github.com/simdjson/simdjson
 #include <iostream>
-#include <fstream>
-
+#include <cstring>
 #include <cstdint>
 #include <cstdlib>
+
 #if defined(_MSC_VER)
 	#include <intrin.h>
 #elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
@@ -17,42 +15,60 @@ enum instruction_set {
 	LZCNT	= 0x1,
 	POPCNT	= 0x2,
 	BMI1	= 0x4,
-	BMI2	= 0x8,
-	NEON	= 0x10,
-	AVX		= 0x20,
-	AVX2	= 0x40,
-	AVX512F = 0x80,
+	NEON	= 0x8,
+	AVX		= 0x10,
+	AVX2	= 0x20,
+	AVX512F = 0x40,
 };
 
-#if defined(__PPC64__)
-
-static inline uint32_t detectSupportedArchitectures() {
-	return instruction_set::ALTIVEC;
+namespace {
+	static constexpr uint32_t cpuidAvx2Bit	   = 1ul << 5;
+	static constexpr uint32_t cpuidBmi1Bit	   = 1ul << 3;
+	static constexpr uint32_t cpuidAvx512Bit   = 1ul << 16;
+	static constexpr uint64_t cpuidAvx256Saved = 1ull << 2;
+	static constexpr uint64_t cpuidAvx512Saved = 7ull << 5;
+	static constexpr uint32_t cpuidOsxSave	   = (1ul << 26) | (1ul << 27);
+	static constexpr uint32_t cpuidLzcntBit	   = 1ul << 5;
+	static constexpr uint32_t cpuidPopcntBit   = 1ul << 23;
 }
 
-#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+#if defined(__x86_64__) || defined(_M_AMD64)
+static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx);
+inline static uint64_t xgetbv();
+#endif
 
-static inline uint32_t detectSupportedArchitectures() {
+std::string getCPUInfo() {
+	char brand[49]{};
+#if defined(__x86_64__) || defined(_M_AMD64)
+	uint32_t regs[12];
+	regs[0] = 0x80000000;
+	cpuid(regs, regs + 1, regs + 2, regs + 3);
+	if (regs[0] < 0x80000004) {
+		return {};
+	}
+	regs[0] = 0x80000002;
+	cpuid(regs, regs + 1, regs + 2, regs + 3);
+	regs[4] = 0x80000003;
+	cpuid(regs + 4, regs + 5, regs + 6, regs + 7);
+	regs[8] = 0x80000004;
+	cpuid(regs + 8, regs + 9, regs + 10, regs + 11);
+
+	memcpy(brand, regs, sizeof(regs));
+#endif
+	return brand;
+}
+
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+
+inline static uint32_t detectSupportedArchitectures() {
 	return instruction_set::NEON;
 }
 
 #elif defined(__x86_64__) || defined(_M_AMD64)
 
-namespace {
-	const uint32_t cpuidAvx2Bit		= 1ul << 5;
-	const uint32_t cpuidBmi1Bit		= 1ul << 3;
-	const uint32_t cpuidBmi2Bit		= 1ul << 8;
-	const uint32_t cpuidAvx512Bit	= 1ul << 16;
-	const uint64_t cpuidAvx256Saved = 1ull << 2;
-	const uint64_t cpuidAvx512Saved = 7ull << 5;
-	const uint32_t cpuidOsxSave		= (1ul << 26) | (1ul << 27);
-	const uint32_t cpuidLzcntBit	= 1ul << 5;
-	const uint32_t cpuidPopcntBit	= 1ul << 23;
-}
-
 static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
 	#if defined(_MSC_VER)
-	int cpuInfo[4];
+	int32_t cpuInfo[4];
 	__cpuidex(cpuInfo, *eax, *ecx);
 	*eax = cpuInfo[0];
 	*ebx = cpuInfo[1];
@@ -63,7 +79,7 @@ static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* 
 	__get_cpuid(level, eax, ebx, ecx, edx);
 	#else
 	uint32_t a = *eax, b, c = *ecx, d;
-	asm volatile("cpuid\n\t" : "+a"(a), "=b"(b), "+c"(c), "=d"(d));
+	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(a), "c"(c));
 	*eax = a;
 	*ebx = b;
 	*ecx = c;
@@ -71,17 +87,17 @@ static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* 
 	#endif
 }
 
-static inline uint64_t xgetbv() {
+inline static uint64_t xgetbv() {
 	#if defined(_MSC_VER)
 	return _xgetbv(0);
 	#else
-	std::uint32_t xcr0_lo, xcr0_hi;
-	asm volatile("xgetbv\n\t" : "=a"(xcr0_lo), "=d"(xcr0_hi) : "c"(0));
-	return xcr0_lo | (uint64_t(xcr0_hi) << 32);
+	uint32_t eax, edx;
+	asm volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
+	return (( uint64_t )edx << 32) | eax;
 	#endif
 }
 
-static inline uint32_t detectSupportedArchitectures() {
+inline static uint32_t detectSupportedArchitectures() {
 	std::uint32_t eax	  = 0;
 	std::uint32_t ebx	  = 0;
 	std::uint32_t ecx	  = 0;
@@ -126,10 +142,6 @@ static inline uint32_t detectSupportedArchitectures() {
 		hostIsa |= instruction_set::BMI1;
 	}
 
-	if (ebx & cpuidBmi2Bit) {
-		hostIsa |= instruction_set::BMI2;
-	}
-
 	if (!((xcr0 & cpuidAvx512Saved) == cpuidAvx512Saved)) {
 		return hostIsa;
 	}
@@ -141,25 +153,22 @@ static inline uint32_t detectSupportedArchitectures() {
 	return hostIsa;
 }
 
-#elif defined(__loongarch_sx) && !defined(__loongarch_asx)
+#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
 
-static inline uint32_t detectSupportedArchitectures() {
-	return instruction_set::LSX;
-}
-
-#elif defined(__loongarch_asx)
-
-static inline uint32_t detectSupportedArchitectures() {
-	return instruction_set::LASX;
+inline static uint32_t detectSupportedArchitectures() {
+	return instruction_set::NEON;
 }
 
 #else
 
-static inline uint32_t detectSupportedArchitectures() {
+inline static uint32_t detectSupportedArchitectures() {
 	return instruction_set::DEFAULT;
 }
+
 #endif
 
-int main() {
-	return detectSupportedArchitectures();
+int32_t main() {
+	const auto supportedISA = detectSupportedArchitectures();
+	std::cout << "CPU Brand: " << getCPUInfo() << "\n";
+	return supportedISA;
 }

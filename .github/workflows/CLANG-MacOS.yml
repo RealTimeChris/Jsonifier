@@ -6,7 +6,6 @@ on:
     branches:
     - main
     - dev
-    - newerBranch
 
 jobs:
   Build:
@@ -15,9 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [17]
         build_type: [Debug, Release]
-        std: [20]
 
     steps:
     - uses: actions/checkout@v4
@@ -26,6 +23,10 @@ jobs:
       run: |
             brew install llvm
 
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
     - name: Install Nasm.
       run: |
             brew install nasm
@@ -33,7 +34,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DDEV="TRUE" -DJSONIFIER_TEST=true
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       working-directory: ./Build

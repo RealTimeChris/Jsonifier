@@ -1,6 +1,10 @@
 ## Serialization/Parsing with Jsonifier
 ----
-- Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
+- Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the jsonifier namespace as follows...
+- 
+#### IMPORTANT NOTE:
+In order to maximize performance, try to order the members inside the call to `createValue` as they are ordered in the json-data.
+
 ----
 ```cpp
 namespace TestNS {
@@ -47,28 +51,28 @@ namespace jsonifier {
 
 	template<> struct core<TestNS::fixed_object_t> {
 		using value_type = TestNS::fixed_object_t;
-		static constexpr auto parseValue = createValue("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
+		constexpr auto parseValue = createValue("int_array", &value_type::int_array, "float_array", &value_type::float_array, "double_array", &value_type::double_array);
 	};
 
 	template<> struct core<TestNS::fixed_name_object_t> {
 		using value_type = TestNS::fixed_name_object_t;
-		static constexpr auto parseValue = createValue("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
+		constexpr auto parseValue = createValue("name0", &value_type::name0, "name1", &value_type::name1, "name2", &value_type::name2, "name3", &value_type::name3, "name4", &value_type::name4);
 	};
 
 	template<> struct core<TestNS::nested_object_t> {
 		using value_type = TestNS::nested_object_t;
-		static constexpr auto parseValue = createValue("v3s", &value_type::v3s, "id", &value_type::id);
+		constexpr auto parseValue = createValue("v3s", &value_type::v3s, "id", &value_type::id);
 	};
 
 	template<> struct core<TestNS::another_object_t> {
 		using value_type = TestNS::another_object_t;
-		static constexpr auto parseValue =
+		constexpr auto parseValue =
 			createValue("string", &value_type::string, "another_string", &value_type::another_string, "boolean", &value_type::boolean, "nested_object", &value_type::nested_object);
 	};
 
 	template<> struct core<TestNS::obj_t> {
 		using value_type = TestNS::obj_t;
-		static constexpr auto parseValue =
+		constexpr auto parseValue =
 			createValue("fixed_object", &value_type::fixed_object, "fixed_name_object", &value_type::fixed_name_object, "another_object", &value_type::another_object, "string_array",
 				&value_type::string_array, "string", &value_type::string, "Number", &value_type::Number, "boolean", &value_type::boolean, "another_bool", &value_type::another_bool);
 	};
@@ -85,10 +89,10 @@ The `parseJson` function now comes in two flavors:
 
 ```cpp
 template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
-JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in);
+ bool parseJson(value_type&& object, buffer_type&& in);
 
 template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-JSONIFIER_INLINE value_type parseJson(buffer_type&& in);
+ value_type parseJson(buffer_type&& in);
 ```
 
 These overloads provide flexibility in parsing JSON data, allowing you to choose between parsing directly into an existing object or creating a new object and returning it.
@@ -119,8 +123,7 @@ Here's an example demonstrating how to use `parseJson` to parse JSON data into a
 jsonifier::string buffer{ json_data };
 
 // Parse JSON data and obtain the parsed object directly.
-jsonifier::parse_options options;
-options.minified = true; // Set parse options if needed.
+static constexpr jsonifier::parse_options options{ .minified = true };
 obj_t parsedObject = jsonifier::parseJson<obj_t, options>(buffer);
 ```
 
@@ -129,12 +132,14 @@ The `parse_options` struct allows customization of parsing behavior. Here's the 
 
 ```cpp
 struct parse_options {
-    bool refreshString{ true };
-    bool minified{ false };
+	bool validateJson{ false };
+	bool knownOrder{ false };
+	bool minified{ false };
 };
 ```
 
-- `refreshString`: Indicates whether to refresh the parsing string before parsing (default: `true`).
+- `validateJson`: Indicates whether to call validateJson to validate the Json in compliance with RFC standards before parsing it.
+- `knownOrder`: Indicates whether or not the registration core-tuple had its members set up in the order that the json data will be coming in as, which will significantly improve performance.
 - `minified`: Indicates whether the input JSON string is minified (default: `false`).
 
 You can customize parsing behavior by setting these options in `parse_options` when calling the `parseJson` function.
@@ -148,10 +153,10 @@ The `serializeJson` function now comes in two flavors:
 
 ```cpp
 template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& out);
+ bool serializeJson(value_type&& object, buffer_type&& out);
 
 template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object);
+ jsonifier::string serializeJson(value_type&& object);
 ```
 
 These overloads provide flexibility in how you handle serialization output, allowing you to choose between directly serializing into a buffer or obtaining the serialized JSON string as a return value.
@@ -181,9 +186,7 @@ Here's an example demonstrating how to use `serializeJson` to obtain the seriali
 obj_t obj{};
 
 // Serialize and obtain the serialized JSON string directly.
-jsonifier::serialize_options options;
-options.prettify = true; // Enable prettifying
-options.prettifyOptions.indentSize = 2; // Set custom prettifyJson options if needed.
+static constexpr jsonifier::serialize_options options{ .indentSize = 2, .prettify = true }
 jsonifier::string serializedString = jsonifier::serializeJson<options>(obj);
 ```
 
@@ -192,12 +195,16 @@ The `serialize_options` struct allows customization of serialization behavior. H
 
 ```cpp
 struct serialize_options {
-    prettify_options prettifyOptions{};
-    bool prettify{ false };
+	bool newLinesInArray{ true };
+	size_t indentSize{ 3 };
+	char indentChar{ ' ' };
+	bool prettify{ false };
 };
 ```
 
-- `prettifyOptions`: Specifies prettifyJson options such as `indentSize`, `maxDepth`, etc.
-- `prettifyJson`: Indicates whether to prettifyJson the JSON output (default: `false`).
+- `newLinesInArray`: Specifies whether or not there are newlines appended after each array element.
+- `indentSize`: Specifies the number of indent characters appended for each of the indentations.
+- `indentChar`: Specifies which character to use when indenting prettified json data.
+- `prettify`: Indicates whether to prettify the JSON output (default: `false`).
 
 You can enable prettifying by setting `options.prettifyJson` to `true` and customize prettifyJson options as needed in `options.prettifyOptions`.

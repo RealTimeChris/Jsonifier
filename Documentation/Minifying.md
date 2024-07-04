@@ -6,10 +6,10 @@ Jsonifier provides a `minifyJson` function for quickly minifying JSON data, whic
 The `minifyJson` function comes in two overloads to provide flexibility:
 
 ```cpp
-template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept;
+template<jsonifier::concepts::string_t string_type>  auto minifyJson(string_type&& in) noexcept;
 
 template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& out) noexcept;
+ bool minifyJson(string_type01&& in, string_type02&& out) noexcept;
 ```
 
 These overloads allow you to choose between directly minifying a string or outputting the minified JSON data to another string.

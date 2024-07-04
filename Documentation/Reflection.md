@@ -4,7 +4,7 @@
 
 Reflection is a powerful programming feature that enables a program to examine and modify its own structure and behavior at runtime. In the context of C++, reflection is not a built-in feature, but it can be emulated using techniques such as template metaprogramming.
 
-Jsonifier leverages reflection to dynamically parse JSON data into C++ structures without requiring explicit manual parsing code for each structure. This allows for more flexible and maintainable code, as changes to the structure do not necessitate corresponding changes to the parsing logic.
+Jsonifier leverages reflection to dynamically parse JSON data into C++ structures without requiring excessive explicit manual parsing code for each structure. This allows for more flexible and maintainable code, as changes to the structure do not necessitate corresponding changes to the parsing logic.
 
 ### Example
 
@@ -21,7 +21,7 @@ struct available_tag {
 // Register the structure using reflection
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    static constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 
 // Define JSON data and the structure instance
@@ -60,7 +60,7 @@ Specialize the `jsonifier::core` template for the structure, providing the neces
 ```cpp
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    static constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 ```
 

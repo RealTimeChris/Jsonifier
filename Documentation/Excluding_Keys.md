@@ -1,6 +1,6 @@
 ## Excluding Keys from Serialization at Runtime with Jsonifier
 ----
-To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called jsonifierExcludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `jsonifier::jsonifier_core` class with `true` passed into its first template parameter, to serialize the object to a JSON string, excluding the keys in the `jsonifierExcludedKeys` set.
+To exclude certain keys from being serialized at runtime using the Jsonifier library, you can create a member in your object called jsonifierExcludedKeys and add the keys you want to exclude to this set. You can then call the `serializeJson` member function of the `jsonifier::jsonifier_core` class, to serialize the object to a JSON string, excluding the keys in the `jsonifierExcludedKeys` set.
 
 Here's an example of how you can do this:
 ```c++
@@ -22,7 +22,7 @@ int32_t main() {
   MyObject obj("John", 30);
   jsonifier::jsonifier_core jsonifier{};
   jsonifier::string jsonBuffer{};
-  jsonifier.serializeJson<true>(obj, jsonBuffer); // {"name":"John"}
+  jsonifier.serializeJson(obj, jsonBuffer); // {"name":"John"}
   return 0;
 }
 ```

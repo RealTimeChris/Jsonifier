@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -33,7 +33,7 @@ namespace jsonifier {
 
 	struct serialize_options {
 		bool newLinesInArray{ true };
-		uint64_t indentSize{ 3 };
+		size_t indentSize{ 3 };
 		char indentChar{ ' ' };
 		bool prettify{ false };
 	};
@@ -43,59 +43,69 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	struct serialize_options_internal {
-		jsonifier::serialize_options optionsReal{};
-		mutable uint64_t indent{};
-	};
+	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type> struct serialize_impl;
 
-	template<const serialize_options_internal& options, typename derived_type, typename value_type> struct serialize_impl;
+	template<const auto options> struct serialize {
+		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
+			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+				std::forward<serialize_context_type>(iter));
+		}
+	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<const serialize_options_internal& options, typename derived_type_new, typename value_type> friend struct serialize_impl;
+		template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		friend struct serialize_impl;
 
-		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
+		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
-				"No specialization of core exists for the type named above - please specialize it!");
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
+		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), buffer, derivedRef.index);
-			if (buffer.size() != derivedRef.index) {
-				buffer.resize(derivedRef.index);
+			serializePair.index	 = 0;
+			serializePair.indent = 0;
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
+				buffer.resize(serializePair.index);
+			}
+			if (!comparison<0, unwrap_t<decltype(*buffer.data())>, unwrap_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
+				std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			}
 			return true;
 		}
 
-		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type> JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
-				"No specialization of core exists for the type named above - please specialize it!");
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) noexcept {
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
+			serializePair.index	 = 0;
+			serializePair.indent = 0;
 			jsonifier::string newString{};
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
-			derivedRef.errors.clear();
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, derivedRef.index);
-			if (derivedRef.index != minifyError) [[likely]] {
-				newString.resize(derivedRef.index);
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			if JSONIFIER_UNLIKELY ((newString.size() != serializePair.index)) {
+				newString.resize(serializePair.index);
 			}
+			std::memcpy(newString.data(), stringBuffer.data(), serializePair.index);
 			return newString;
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		struct serialize_pair {
+			size_t indent{};
+			size_t index{};
+		} serializePair{};
 
-		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE ~serializer() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~serializer() noexcept = default;
 	};
 
 }

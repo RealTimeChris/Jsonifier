@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -24,18 +24,20 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
-#include <jsonifier/Derailleur.hpp>
+#include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Vector.hpp>
 #include <jsonifier/Error.hpp>
 
 namespace jsonifier_internal {
 
+	inline static thread_local jsonifier_internal::simd_string_reader<false> section{};
+
 	enum class validate_errors {
 		Success						   = 0,
 		Missing_Object_Start		   = 1,
-		Missing_Object_End			   = 2,
+		Imbalanced_Object_Braces	   = 2,
 		Missing_Array_Start			   = 3,
-		Missing_Array_End			   = 4,
+		Imbalanced_Array_Brackets	   = 4,
 		Missing_String_Start		   = 5,
 		Missing_Colon				   = 6,
 		Missing_Comma				   = 7,
@@ -54,23 +56,24 @@ namespace jsonifier_internal {
 	  public:
 		template<json_structural_type typeNew, typename derived_type_new> friend struct validate_impl;
 
-		JSONIFIER_INLINE validator& operator=(const validator& other) = delete;
-		JSONIFIER_INLINE validator(const validator& other)			  = delete;
+		JSONIFIER_ALWAYS_INLINE validator& operator=(const validator& other) = delete;
+		JSONIFIER_ALWAYS_INLINE validator(const validator& other)			 = delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE bool validateJson(string_type&& in) noexcept {
+		template<jsonifier::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
-			derivedRef.section.reset(in.data(), in.size());
+			section.reset(in.data(), in.size());
 			rootIter = in.data();
-			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
+			endIter	 = in.data() + in.size();
+			const char** iter{ section.begin() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Validating, validate_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
+					error::constructError<sourceLocation, error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
 			auto result = impl(iter, derivedRef.index, *this);
-			if (derivedRef.index > 0 || iter.operator bool() || derivedRef.errors.size() > 0) {
+			if (derivedRef.index > 0 || *iter || derivedRef.errors.size() > 0) {
 				result = false;
 			}
 			return result;
@@ -79,36 +82,47 @@ namespace jsonifier_internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 		mutable const char* rootIter{};
+		mutable const char* endIter{};
 
-		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<typename iterator_type, typename validator_type> JSONIFIER_INLINE static bool impl(iterator_type& iter, uint64_t& depth, validator_type& validator) {
-			if (iter && *iter == '{') {
+		template<typename iterator, typename validator_type> JSONIFIER_ALWAYS_INLINE static bool impl(iterator& iter, uint64_t& depth, validator_type& validator) noexcept {
+			if (*iter && **iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth, validator);
-			} else if (iter && *iter == '[') {
-				return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth, validator);
-			} else if (iter && *iter == '"') {
-				return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
-			} else if (iter && numberTable[static_cast<uint8_t>(*iter)]) {
-				return validate_impl<json_structural_type::Number, derived_type>::impl(iter, validator);
-			} else if (iter && boolTable[static_cast<uint8_t>(*iter)]) {
-				return validate_impl<json_structural_type::Bool, derived_type>::impl(iter, validator);
-			} else if (iter && *iter == 'n') {
-				return validate_impl<json_structural_type::Null, derived_type>::impl(iter, validator);
 			} else {
-				return false;
+				if (*iter && **iter == '[') {
+					return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth, validator);
+				} else {
+					if (*iter && **iter == '"') {
+						return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
+					} else {
+						if (*iter && numberTable[static_cast<uint8_t>(**iter)]) {
+							return validate_impl<json_structural_type::Number, derived_type>::impl(iter, validator);
+						} else {
+							if (*iter && boolTable[static_cast<uint8_t>(**iter)]) {
+								return validate_impl<json_structural_type::Bool, derived_type>::impl(iter, validator);
+							} else {
+								if (*iter && **iter == 'n') {
+									return validate_impl<json_structural_type::Null, derived_type>::impl(iter, validator);
+								} else {
+									return false;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_INLINE ~validator() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~validator() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

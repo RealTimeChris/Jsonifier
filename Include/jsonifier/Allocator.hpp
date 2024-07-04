@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -28,24 +28,32 @@
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) {
-		auto remainder = value % multiple;
-		return remainder == 0 ? value : value + (multiple - remainder);
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
+		if constexpr ((multiple & (multiple - 1)) == 0) {
+			return (value + (multiple - 1)) & ~(multiple - 1);
+		} else {
+			auto remainder = value % multiple;
+			return remainder == 0 ? value : value + (multiple - remainder);
+		}
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) {
-		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
+		if constexpr ((multiple & (multiple - 1)) == 0) {
+			return value & ~(multiple - 1);
+		} else {
+			return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+		}
 	}
 
 	template<typename value_type_new> class alloc_wrapper {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
-		using size_type		   = uint64_t;
+		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_INLINE pointer allocate(size_type count) {
-			if (count == 0) [[unlikely]] {
+		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
+			if JSONIFIER_UNLIKELY ((count == 0)) {
 				return nullptr;
 			}
 #if defined(JSONIFIER_MSVC)
@@ -55,8 +63,8 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr) {
-			if (ptr) [[likely]] {
+		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
+			if JSONIFIER_LIKELY ((ptr)) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
 #else
@@ -65,15 +73,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) {
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_INLINE size_type maxSize() {
+		JSONIFIER_ALWAYS_INLINE static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
-		JSONIFIER_INLINE void destroy(pointer ptr) {
+		JSONIFIER_ALWAYS_INLINE void destroy(pointer ptr) noexcept {
 			ptr->~value_type();
 		}
 	};

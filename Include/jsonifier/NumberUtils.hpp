@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -36,70 +36,74 @@ namespace jsonifier {
 
 	template<bool> class jsonifier_core;
 
-	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01> JSONIFIER_INLINE jsonifier::string_base<value_type_new> toString(const value_type01& value) {
+	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01>
+	JSONIFIER_ALWAYS_INLINE jsonifier::string_base<value_type_new> toString(const value_type01& value) {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
 		if constexpr (jsonifier::concepts::unsigned_type<value_type01> && sizeof(value) < 8) {
 			uint64_t newValue{ static_cast<uint64_t>(value) };
 			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
-		} else if constexpr (jsonifier::concepts::signed_type<value_type01> && sizeof(value) < 8) {
-			int64_t newValue{ static_cast<int64_t>(value) };
-			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
-			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		} else {
-			auto newPtr = jsonifier_internal::toChars(returnstring.data(), value);
-			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			if constexpr (jsonifier::concepts::signed_type<value_type01> && sizeof(value) < 8) {
+				int64_t newValue{ static_cast<int64_t>(value) };
+				auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
+				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			} else {
+				auto newPtr = jsonifier_internal::toChars(returnstring.data(), value);
+				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			}
 		}
 		return returnstring;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_INLINE double strToDouble(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if (string.size() > 0) [[likely]] {
-			auto currentIter = reinterpret_cast<const char*>(string.data());
-			jsonifier_internal::parseFloat(newValue, currentIter);
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
+			auto currentIter = static_cast<const char*>(string.data());
+			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
+			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
 		}
 		return newValue;
 	}
 
-	template<> JSONIFIER_INLINE double strToDouble<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE double strToDouble<16>(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtod(string.data(), nullptr);
 		}
 		return newValue;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_INLINE int64_t strToInt64(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
-			jsonifier_internal::stoui64(newValue, newPtr);
+			jsonifier_internal::integer_parser<int64_t, char>{}.parseInt(newValue, newPtr);
 		}
 		return newValue;
 	}
 
-	template<> JSONIFIER_INLINE int64_t strToInt64<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtoll(string.data(), nullptr, 16);
 		}
 		return newValue;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_INLINE uint64_t strToUint64(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
-			jsonifier_internal::stoui64(newValue, newPtr);
+			jsonifier_internal::integer_parser<uint64_t, char>{}.parseInt(newValue, newPtr);
 		}
 		return newValue;
 	}
 
-	template<> JSONIFIER_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtoull(string.data(), nullptr, 16);
 		}
 		return newValue;
@@ -108,217 +112,41 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<const auto& options, typename value_type_new, jsonifier_internal::simd_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE void parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using value_type = jsonifier::concepts::unwrap_t<value_type_new>;
-		auto newPtr		 = iter.operator const char*();
+	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
+		using value_type = unwrap_t<value_type_new>;
+
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-			if constexpr (std::is_unsigned_v<value_type>) {
-				if constexpr (std::same_as<value_type, uint64_t>) {
-					if (*newPtr == '-') [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(value, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
+			static constexpr integer_parser<value_type, std::remove_reference_t<decltype(*iter)>> integerParser{};
+			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
+				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
+					return integerParser.parseInt(value, iter);
 				} else {
-					uint64_t i{};
-					if (*newPtr == '-') [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(i, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(i);
+					static constexpr integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>> integerParserUint{};
+					uint64_t i;
+					return integerParserUint.parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
-				uint64_t i{};
-				int32_t sign = 1;
-				if (*newPtr == '-') {
-					sign = -1;
-					++newPtr;
-				}
-
-				static_assert(sizeof(*newPtr) == sizeof(char));
-				auto s = parseInt(i, newPtr);
-				++iter;
-				if (!s) [[unlikely]] {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-						end - options.rootIter, options.rootIter));
-					skipToNextValue(iter, end);
-					return;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(sign * i);
+				if constexpr (jsonifier::concepts::int64_type<value_type>) {
+					return integerParser.parseInt(value, iter);
 				} else {
-					if (i > maximum) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(i);
+					static constexpr integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>> integerParserInt{};
+					int64_t i;
+					return integerParserInt.parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
-			auto s = parseFloat(value, newPtr);
-			++iter;
-			if (!s) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-					end - options.rootIter, options.rootIter));
-				skipToNextValue(iter, end);
-				return;
-			}
-		}
-	}
-
-	template<const auto& options, typename value_type_new, typename iterator_type>
-	JSONIFIER_INLINE void parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using value_type = jsonifier::concepts::unwrap_t<value_type_new>;
-		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-			if constexpr (std::is_unsigned_v<value_type>) {
-				if constexpr (std::same_as<value_type, uint64_t>) {
-					if (*iter == '-') [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt(value, iter);
-					if (!s) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-				} else {
-					uint64_t i{};
-					if (*iter == '-') [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<jsonifier::concepts::unwrap_t<decltype(i)>>(i, iter);
-					if (!s) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(i);
-				}
+			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
+				double temp;
+				return parseFloat(iter, end, temp) ? (value = temp, true) : false;
 			} else {
-				uint64_t i{};
-				int32_t sign = 1;
-				if (*iter == '-') {
-					sign = -1;
-					++iter;
-				}
-
-				static_assert(sizeof(*iter) == sizeof(char));
-				auto s = parseInt(i, iter);
-				if (!s) [[unlikely]] {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-						end - options.rootIter, options.rootIter));
-					skipToNextValue(iter, end);
-					return;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(sign * i);
+				if constexpr (jsonifier::concepts::double_type<value_type>) {
+					return parseFloat(iter, end, value);
 				} else {
-					if (i > maximum) [[unlikely]] {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-							end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-					value = static_cast<value_type>(i);
+					double i;
+					return parseFloat(iter, end, i) ? (value = i, true) : false;
 				}
-			}
-		} else {
-			auto s = parseFloat(value, iter);
-			if (!s) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-					end - options.rootIter, options.rootIter));
-				skipToNextValue(iter, end);
-				return;
 			}
 		}
+		return true;
 	}
-
 }

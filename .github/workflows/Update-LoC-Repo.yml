@@ -1,0 +1,43 @@
+name: Update-Loc-Repo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: true
+
+    - name: Clone the repo.
+      run: |
+           sudo git config --global user.email "40668522+RealTimeChris@users.noreply.github.com"
+           sudo git config --global user.name "realtimechris"
+           sudo git clone https://realtimechris:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/realtimechris/Jsonifier-Code-Only --depth=1
+
+    - name: Copy the files over.
+      run: |
+           sudo cp -r ./Include/* ./Jsonifier-Code-Only/
+
+    - name: Commit and push the changes to the repo.
+      working-directory: ./Jsonifier-Code-Only
+      run: |
+           sudo git checkout --orphan newBranch
+           sudo git add . 
+           sudo git commit -m "Updates."
+           sudo git branch -D main
+           sudo git branch -m main
+           sudo git push origin main -f
+
