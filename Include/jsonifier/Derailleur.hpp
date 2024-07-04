@@ -24,12 +24,12 @@
 #pragma once
 
 #include <jsonifier/JsonStructuralIterator.hpp>
-#include <jsonifier/Config.hpp>
+#include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/Error.hpp>
 
 namespace jsonifier_internal {
 
-	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipNumber(iterator_type& iter, iterator_type&) noexcept {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipNumber(iterator_type& iter, iterator_type&) noexcept {
 		++iter;
 	}
 
@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 		return iter;
 	}
 
-	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -113,7 +113,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) {
 		switch (*iter) {
 			[[unlikely]] case '{':
 			[[unlikely]] case '[': {
@@ -522,8 +522,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::core_v<value_type>));
-		using T0			  = jsonifier::concepts::unwrap_t<decltype(first)>;
+		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
+		using T0			  = jsonifier_internal::unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();
 		} else {
@@ -595,7 +595,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<const auto& options, typename value_type, simd_structural_iterator_t iterator_type>
+	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		auto start{ iter.operator->() };
 

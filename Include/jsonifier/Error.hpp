@@ -156,7 +156,7 @@ namespace jsonifier_internal {
 				return;
 			}
 
-			using V = jsonifier::concepts::unwrap_t<decltype(errorString[0])>;
+			using V = jsonifier_internal::unwrap_t<decltype(errorString[0])>;
 
 			const auto start	   = std::begin(errorString) + static_cast<int64_t>(errorIndex);
 			line				   = static_cast<uint64_t>(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1ll);

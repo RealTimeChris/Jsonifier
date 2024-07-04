@@ -23,27 +23,15 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/TypeEntities.hpp>
-#include <functional>
-#include <iostream>
-#include <sstream>
-#include <cassert>
-#include <cstring>
-#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
-#include <cfloat>
-#include <bitset>
-#include <atomic>
-#include <array>
 
 #if !defined(__GNUC__)
-	#pragma warning(disable : 4710)
-	#pragma warning(disable : 4711)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4514)
 	#pragma warning(disable : 4625)
 	#pragma warning(disable : 4706)
+	#pragma warning(disable : 4710)
+	#pragma warning(disable : 4711)
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 5045)
 	#pragma warning(disable : 5246)
@@ -77,7 +65,6 @@
 		} while (0)
 #elif defined(JSONIFIER_MSVC)
 	#include <intrin.h>
-	#pragma intrinsic(__assume)
 	#define LIKELY(x) (x)
 	#define UNLIKELY(x) (x)
 	#define ASSUME(x) __assume(x)
@@ -86,7 +73,6 @@
 	#define UNLIKELY(x) (x)
 	#define ASSUME(x) (( void )0)
 #endif
-
 
 #if defined(__clang__) && defined(NDEBUG) && !defined(JSONIFIER_INLINE)
 	#define JSONIFIER_INLINE inline __attribute__((always_inline))
@@ -158,6 +144,69 @@
 
 #endif
 
+union __m128x {
+	template<typename value_type> constexpr __m128x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06, value_type arg07,
+		value_type arg08, value_type arg09, value_type arg10, value_type arg11, value_type arg12, value_type arg13, value_type arg14, value_type arg15, value_type arg16) noexcept {
+		m128x_uint64[0] = static_cast<uint64_t>(arg01);
+		m128x_uint64[0] |= static_cast<uint64_t>(arg02) << 8;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg03) << 16;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg04) << 24;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg05) << 32;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg06) << 40;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg07) << 48;
+		m128x_uint64[0] |= static_cast<uint64_t>(arg08) << 56;
+		m128x_uint64[1] = static_cast<uint64_t>(arg09);
+		m128x_uint64[1] |= static_cast<uint64_t>(arg10) << 8;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg11) << 16;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg12) << 24;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg13) << 32;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg14) << 40;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg15) << 48;
+		m128x_uint64[1] |= static_cast<uint64_t>(arg16) << 56;
+	}
+
+	constexpr __m128x(uint64_t argOne, uint64_t argTwo) noexcept {
+		m128x_uint64[0] = argOne;
+		m128x_uint64[1] = argTwo;
+	}
+
+	constexpr __m128x() noexcept {
+		m128x_uint64[0] = 0;
+		m128x_uint64[1] = 0;
+	}
+
+	static constexpr __m128x setUint64() {
+		__m128x returnValues{};
+		returnValues.m128x_uint64[0] = 0;
+		returnValues.m128x_uint64[1] = 0;
+		return returnValues;
+	}
+
+#if JSONIFIER_WIN
+	int8_t m128x_int8[16]{};
+	int16_t m128x_int16[8];
+	int32_t m128x_int32[4];
+	int64_t m128x_int64[2];
+	uint8_t m128x_uint8[16];
+	int16_t m128x_uint16[8];
+	int32_t m128x_uint32[4];
+	uint64_t m128x_uint64[2];
+#else
+	int64_t m128x_int64[2];
+	int32_t m128x_int32[4];
+	int16_t m128x_int16[8];
+	int8_t m128x_int8[16]{};
+	uint64_t m128x_uint64[2];
+	int32_t m128x_uint32[4];
+	int16_t m128x_uint16[8];
+	uint8_t m128x_uint8[16];
+#endif
+};
+
+constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
+	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
+}
+
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 using simd_int_128 = __m128i;
@@ -189,27 +238,6 @@ using simd_int_t = uint8x16_t;
 constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 #else
-union __m128x {
-	#if JSONIFIER_WIN
-	int8_t m128x_int8[16]{};
-	int16_t m128x_int16[8];
-	int32_t m128x_int32[4];
-	int64_t m128x_int64[2];
-	uint8_t m128x_uint8[16];
-	int16_t m128x_uint16[8];
-	int32_t m128x_uint32[4];
-	uint64_t m128x_uint64[2];
-	#else
-	int64_t m128x_int64[2];
-	int32_t m128x_int32[4];
-	int16_t m128x_int16[8];
-	int8_t m128x_int8[16]{};
-	uint64_t m128x_uint64[2];
-	int32_t m128x_uint32[4];
-	int16_t m128x_uint16[8];
-	uint8_t m128x_uint8[16];
-	#endif
-};
 using simd_int_128 = __m128x;
 using simd_int_256 = uint32_t;
 using simd_int_512 = uint64_t;
@@ -227,15 +255,6 @@ using string_view_ptr	= const char*;
 using structural_index	= const char*;
 using string_buffer_ptr = char*;
 
-template<typename value_type>
-concept simd_int_512_type = std::is_same_v<simd_int_512, jsonifier::concepts::unwrap_t<value_type>>;
-template<typename value_type>
-concept simd_int_256_type = std::is_same_v<simd_int_256, jsonifier::concepts::unwrap_t<value_type>>;
-template<typename value_type>
-concept simd_int_128_type = std::is_same_v<simd_int_128, jsonifier::concepts::unwrap_t<value_type>>;
-template<typename value_type>
-concept simd_int_type = std::is_same_v<simd_int_t, jsonifier::concepts::unwrap_t<value_type>>;
-
 #if defined(__APPLE__) && defined(__arm64__)
 	#define PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
 #elif defined(JSONIFIER_MSVC)
@@ -250,128 +269,4 @@ concept simd_int_type = std::is_same_v<simd_int_t, jsonifier::concepts::unwrap_t
 
 JSONIFIER_INLINE void prefetchInternal(const void* ptr) {
 	PREFETCH(ptr)
-}
-
-#include <jsonifier/ISA/AVX.hpp>
-#include <jsonifier/ISA/Lzcount.hpp>
-#include <jsonifier/ISA/Popcount.hpp>
-#include <jsonifier/ISA/Bmi2.hpp>
-#include <jsonifier/ISA/Bmi.hpp>
-#include <jsonifier/ISA/CollectIndices.hpp>
-#include <jsonifier/ISA/CompareValues.hpp>
-#include <jsonifier/ISA/Fallback.hpp>
-
-namespace jsonifier_internal {
-
-	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
-		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
-	}
-
-	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) {
-		std::cout << valuesTitle;
-		std::cout << std::bitset<sizeof(value_type) * 8>{ values };
-		std::cout << std::endl;
-	}
-
-	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
-		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
-		std::stringstream theStream{};
-		store(value, values);
-		std::cout << valuesTitle;
-		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
-			for (string_parsing_type y = 0; y < 8; ++y) {
-				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-			}
-		}
-		std::cout << std::endl;
-		return value;
-	}
-
-	JSONIFIER_INLINE std::string printBits(bool value) noexcept {
-		std::stringstream theStream{};
-		theStream << std::boolalpha << value << std::endl;
-		return theStream.str();
-	}
-
-	template<typename simd_type> JSONIFIER_INLINE std::string printBits(const simd_type& value) noexcept {
-		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
-		std::stringstream theStream{};
-		store(value, values);
-		for (uint64_t x = 0; x < bytesPerStep; ++x) {
-			for (uint64_t y = 0; y < 8; ++y) {
-				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-			}
-		}
-		theStream << std::endl;
-		return theStream.str();
-	}
-
-	template<jsonifier::concepts::time_type value_type> class stop_watch {
-	  public:
-		using hr_clock = std::chrono::high_resolution_clock;
-
-		JSONIFIER_INLINE stop_watch(uint64_t newTime) {
-			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
-		}
-
-		JSONIFIER_INLINE stop_watch(value_type newTime) {
-			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
-		}
-
-		JSONIFIER_INLINE stop_watch& operator=(stop_watch&& other) {
-			if (this != &other) [[likely]] {
-				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			}
-			return *this;
-		}
-
-		JSONIFIER_INLINE stop_watch(stop_watch&& other) {
-			*this = std::move(other);
-		}
-
-		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) {
-			if (this != &other) [[likely]] {
-				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			}
-			return *this;
-		}
-
-		JSONIFIER_INLINE stop_watch(const stop_watch& other) {
-			*this = other;
-		}
-
-		JSONIFIER_INLINE bool hasTimeElapsed() {
-			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
-				totalNumberOfTimeUnits.load(std::memory_order_acquire)) [[likely]] {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		JSONIFIER_INLINE void reset(value_type newTimeValue = value_type{}) {
-			if (newTimeValue != value_type{}) [[likely]] {
-				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
-				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
-			} else {
-				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
-			}
-		}
-
-		JSONIFIER_INLINE value_type getTotalWaitTime() const {
-			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
-		}
-
-		JSONIFIER_INLINE value_type totalTimeElapsed() {
-			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
-		}
-
-	  protected:
-		std::atomic<value_type> totalNumberOfTimeUnits{};
-		std::atomic<value_type> startTimeInTimeUnits{};
-	};
-
-	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }

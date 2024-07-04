@@ -125,7 +125,7 @@ namespace jsonifier_internal {
 		requires(std::is_member_pointer_v<decltype(p)>)
 	constexpr auto getName() {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-		using value_type		 = remove_member_pointer<jsonifier::concepts::unwrap_t<decltype(p)>>::type;
+		using value_type		 = remove_member_pointer<jsonifier_internal::unwrap_t<decltype(p)>>::type;
 		constexpr auto pNew		 = p;
 		constexpr auto newString = getNameInternal<value_type, &(external<value_type>.*pNew)>();
 #else
@@ -152,14 +152,14 @@ namespace jsonifier_internal {
 	 * Internal function to generate an interleaved tuple of member names and values.
 	 *
 	 * @tparam tuple_types Types of tuple elements.
-	 * @tparam Indices Indices of tuple elements.
+	 * @tparam indices indices of tuple elements.
 	 * @param tuple The input tuple.
 	 * @param views Array of member names.
 	 * @return Interleaved tuple of member names and values.
 	 */
-	template<typename... tuple_types, size_t... Indices> constexpr decltype(auto) generateInterleavedTupleInternal(const std::tuple<tuple_types...>& tuple,
-		const std::array<jsonifier::string_view, sizeof...(Indices)>& views, std::index_sequence<Indices...>) {
-		return std::make_tuple(std::make_tuple(views[Indices], std::get<Indices>(tuple))...);
+	template<typename... tuple_types, size_t... indices> constexpr decltype(auto) generateInterleavedTupleInternal(const std::tuple<tuple_types...>& tuple,
+		const std::array<jsonifier::string_view, sizeof...(indices)>& views, std::index_sequence<indices...>) {
+		return std::make_tuple(std::make_tuple(views[indices], std::get<indices>(tuple))...);
 	}
 
 	/**

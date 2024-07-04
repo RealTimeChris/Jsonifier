@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::integer_t value_type_new, typename iterator_type> JSONIFIER_INLINE bool parseInt(value_type_new& value, iterator_type&& iter) {
-		using value_type = jsonifier::concepts::unwrap_t<value_type_new>;
+		using value_type = jsonifier_internal::unwrap_t<value_type_new>;
 		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		uint64_t numTmp;
 

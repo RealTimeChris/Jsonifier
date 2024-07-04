@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier_internal::unwrap_t<value_type>>(),
 				"No specialization of core exists for the type named above - please specialize it!");
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type> JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier::concepts::unwrap_t<value_type>>(),
+			static_assert(jsonifier::concepts::printErrorFunction<jsonifier_internal::unwrap_t<value_type>>(),
 				"No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.index = 0;

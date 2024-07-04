@@ -24,6 +24,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/ISA/Fallback.hpp>
 #include <source_location>
 #include <unordered_map>
 #include <exception>
@@ -33,87 +34,102 @@
 
 namespace jsonifier_internal {
 
-	struct __m128x {
-		uint64_t values[2]{};
-	};
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime641{ 0x9E3779B185EBCA87ull };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime642{ 0xC2B2AE3D27D4EB4Full };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime643{ 0x165667B19E3779F9ull };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime644{ 0x85EBCA77C2B2AE63ull };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime645{ 0x27D4EB2F165667C5ull };
 
-	constexpr __m128x set1Epi64(uint64_t value) {
-		__m128x returnValue{};
-		returnValue.values[0] = value;
-		returnValue.values[1] = value;
-		return returnValue;
-	}
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime321{ 0x9E3779B1U };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime322{ 0x85EBCA77U };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime323{ 0xC2B2AE3DU };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime324{ 0x27D4EB2FU };
+	JSONIFIER_ALIGN constexpr uint64_t xxhPrime325{ 0x165667B1U };
 
-	constexpr __m128x setREpi64(uint64_t value01, uint64_t value02) {
-		__m128x returnValue{};
-		returnValue.values[0] = value02;
-		returnValue.values[1] = value01;
-		return returnValue;
-	}
+	JSONIFIER_ALIGN constexpr uint64_t xxhStripeLength{ 64 };
+	JSONIFIER_ALIGN constexpr uint64_t xxhSecretConsumeRate{ 8 };
+	JSONIFIER_ALIGN constexpr uint64_t xxhAccNb{ xxhStripeLength / sizeof(uint64_t) };
+	JSONIFIER_ALIGN constexpr std::array<uint64_t, 8> xxhInitAcc{ xxhPrime323, xxhPrime641, xxhPrime642, xxhPrime643, xxhPrime644, xxhPrime322, xxhPrime645, xxhPrime321 };
 
-	constexpr __m128x setZero() {
-		return {};
-	}
-
-	constexpr __m128x blendvEpi8(const __m128x& a, const __m128x& b, const __m128x& mask) {
-		__m128x result;
-		for (int32_t i = 0; i < 2; ++i) {
-			result.values[i] = 0;
-			for (int32_t j = 0; j < 8; ++j) {
-				uint8_t maskByte	= (mask.values[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t aByte		= (a.values[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t bByte		= (b.values[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t blendedByte = (maskByte ? bByte : aByte);
-				result.values[i] |= (static_cast<uint64_t>(blendedByte) << (j * 8));
+	JSONIFIER_INLINE void accumulateAvxRt(uint64_t* acc, const char* input, const uint8_t* secret, uint64_t secretLength) {
+		{
+			simd_int_128* const xacc		  = ( simd_int_128* )acc;
+			const simd_int_128* const xinput  = ( const simd_int_128* )input;
+			const simd_int_128* const xsecret = ( const simd_int_128* )secret;
+			for (size_t i = 0; i < xxhStripeLength / sizeof(simd_int_128); ++i) {
+				const simd_int_128 data_vec	   = simd_internal::gatherValuesU<simd_int_128>(xinput + i);
+				const simd_int_128 key_vec	   = simd_internal::gatherValuesU<simd_int_128>(xsecret + i);
+				const simd_int_128 data_key	   = simd_internal::opXor(data_vec, key_vec);
+				const simd_int_128 data_key_lo = simd_internal::opSrli<32>(data_key);
+				const simd_int_128 product	   = simd_internal::opMul(data_key, data_key_lo);
+				const simd_int_128 data_swap   = simd_internal::opShuffle(data_vec);
+				simd_int_128 sum			   = simd_internal::opAdd(xacc[i], data_swap);
+				sum							   = simd_internal::opAdd(data_key_lo, sum);
+				xacc[i]						   = sum;
 			}
 		}
-		return result;
 	}
 
-	constexpr __m128x addEpi64(const __m128x& value01, const __m128x& value02) {
-		__m128x returnValue{};
-		returnValue.values[0] = value01.values[0] + value02.values[0];
-		returnValue.values[1] = value01.values[1] + value02.values[1];
-		return returnValue;
-	}
-
-	constexpr __m128x loaduSi128(const uint8_t* ptr) {
-		uint64_t low  = 0;
-		uint64_t high = 0;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low |= static_cast<uint64_t>(ptr[i]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high |= static_cast<uint64_t>(ptr[i + 8]) << (i * 8);
-		}
-
-		return __m128x{ low, high };
-	}
-
-	constexpr void storeuSi128(uint8_t* ptr, const __m128x& data) {
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i] = static_cast<uint8_t>(data.values[0] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 8] = static_cast<uint8_t>(data.values[1] >> (i * 8));
+	constexpr void accumulateAvxCt(uint64_t* acc, const char* input, const uint8_t* secret, uint64_t secretLength) {
+		{
+			for (size_t i = 0; i < xxhStripeLength; i += 16) {
+				const __m128x data_vec		   = simd_internal::mm128LoadUSi128(input + i);
+				const __m128x key_vec		   = simd_internal::mm128LoadUSi128(secret + i);
+				const __m128x data_key		   = simd_internal::mm128XorSi128(data_vec, key_vec);
+				const __m128x data_key_lo	   = simd_internal::mm128SrliEpi64(data_key, 32);
+				const __m128x product		   = simd_internal::mm128MulEpi32(data_key, data_key_lo);
+				const __m128x data_swap		   = simd_internal::mm128ShuffleEpi32(data_vec, mmShuffle(1, 0, 3, 2));
+				const __m128x xacc			   = simd_internal::mm128LoadUSi128(acc + (i / 8));
+				__m128x sum					   = simd_internal::mm128AddEpi64(xacc, data_swap);
+				sum							   = simd_internal::mm128AddEpi64(data_key_lo, sum);
+				simd_internal::mm128StoreUSi128(acc + (i / 8), sum);
+			}
 		}
 	}
 
-	constexpr __m128x subEpi64(const __m128x& value01, const __m128x& value02) {
-		__m128x returnValue{};
-		returnValue.values[0] = value01.values[0] - value02.values[0];
-		returnValue.values[1] = value01.values[1] - value02.values[1];
-		return returnValue;
+	JSONIFIER_INLINE void scrambleAvxRt(uint64_t* acc, const uint8_t* secret) {
+		{
+			simd_int_128* const xacc		  = ( simd_int_128* )acc;
+			const simd_int_128* const xsecret = ( const simd_int_128* )secret;
+			const simd_int_128 prime32		  = simd_internal::gatherValue<simd_int_128>(( int32_t )xxhPrime321);
+
+			for (size_t i = 0; i < xxhStripeLength / sizeof(simd_int_128); ++i) {
+				const simd_int_128 acc_vec	   = xacc[i];
+				const simd_int_128 shifted	   = simd_internal::opSrli<47>(acc_vec);
+				const simd_int_128 data_vec	   = simd_internal::opXor(acc_vec, shifted);
+				const simd_int_128 key_vec	   = simd_internal::gatherValuesU<simd_int_128>(xsecret + i);
+				const simd_int_128 data_key	   = simd_internal::opXor(data_vec, key_vec);
+				const simd_int_128 data_key_hi = simd_internal::opSrli<32>(data_key);
+				const simd_int_128 prod_lo	   = simd_internal::opMul(data_key, prime32);
+				const simd_int_128 prod_hi	   = simd_internal::opMul(data_key_hi, prime32);
+				xacc[i]						   = simd_internal::opAdd(prod_lo, simd_internal::opSlli<32>(prod_hi));
+			}
+		}
 	}
 
-	constexpr uint64_t xxhPrime641{ 0x9E3779B185EBCA87ull };
-	constexpr uint64_t xxhPrime642{ 0xC2B2AE3D27D4EB4FULL };
-	constexpr uint64_t primeMx1{ 0x165667919E3779F9ull };
-	constexpr uint64_t primeMx2{ 0x9FB21C651E98DF25ULL };
-	constexpr uint64_t secretDefaultSize{ 192 };
+	constexpr void scrambleAvxCt(uint64_t* acc, const uint8_t* secret) {
+		{
+			const __m128x prime32		 = simd_internal::mm128Set1Epi32(xxhPrime321);
+
+			for (size_t i = 0; i < xxhStripeLength; i += 16) {
+				const __m128x xacc			   = simd_internal::mm128LoadUSi128(acc + (i / 8));
+				const __m128x acc_vec		   = xacc;
+				const __m128x shifted		   = simd_internal::mm128SrliEpi64(acc_vec, 47);
+				const __m128x data_vec		   = simd_internal::mm128XorSi128(acc_vec, shifted);
+				const __m128x key_vec		   = simd_internal::mm128LoadUSi128(secret + i);
+				const __m128x data_key		   = simd_internal::mm128XorSi128(data_vec, key_vec);
+				const __m128x data_key_hi	   = simd_internal::mm128SrliEpi64(data_key, 32);
+				const __m128x prod_lo		   = simd_internal::mm128MulEpi32(data_key, prime32);
+				__m128x prod_hi				   = simd_internal::mm128MulEpi32(data_key_hi, prime32);
+				prod_hi						   = simd_internal::mm128AddEpi64(prod_lo, simd_internal::mm128SlliEpi64(prod_hi, 32));
+				simd_internal::mm128StoreUSi128(acc + (i / 8), prod_hi);
+			}
+		}
+	}
+
+	JSONIFIER_ALIGN constexpr uint64_t primeMx1{ 0x165667919E3779F9ull };
+	JSONIFIER_ALIGN constexpr uint64_t primeMx2{ 0x9FB21C651E98DF25ULL };
+	JSONIFIER_ALIGN constexpr uint64_t secretDefaultSize{ 192 };
 
 	JSONIFIER_ALIGN constexpr uint8_t xxh3KSecret[secretDefaultSize]{ 0xb8u, 0xfeu, 0x6cu, 0x39u, 0x23u, 0xa4u, 0x4bu, 0xbeu, 0x7cu, 0x01u, 0x81u, 0x2cu, 0xf7u, 0x21u, 0xadu,
 		0x1cu, 0xdeu, 0xd4u, 0x6du, 0xe9u, 0x83u, 0x90u, 0x97u, 0xdbu, 0x72u, 0x40u, 0xa4u, 0xa4u, 0xb7u, 0xb3u, 0x67u, 0x1fu, 0xcbu, 0x79u, 0xe6u, 0x4eu, 0xccu, 0xc0u, 0xe5u,
@@ -156,14 +172,14 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	JSONIFIER_INLINE constexpr uint64_t xorShift64(uint64_t v64, int32_t shift) {
+	template<uint64_t shiftNew> JSONIFIER_INLINE constexpr uint64_t xorShift64(uint64_t v64) {
+		constexpr auto shift{ shiftNew };
 		return v64 ^ (v64 >> shift);
 	}
 
 	JSONIFIER_INLINE constexpr uint64_t avalanche(uint64_t h64) {
-		h64 = xorShift64(h64, 37);
+		h64 = xorShift64<37>(h64);
 		h64 *= primeMx1;
-		h64 = xorShift64(h64, 32);
 		return h64;
 	}
 
@@ -171,8 +187,8 @@ namespace jsonifier_internal {
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(__wasm__) && defined(__SIZEOF_INT128__) || (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
 		__uint128_t const product = ( __uint128_t )lhs * ( __uint128_t )rhs;
 		__m128x r128;
-		r128.values[0] = ( uint64_t )(product);
-		r128.values[1] = ( uint64_t )(product >> 64);
+		r128.m128x_uint64[0] = (product);
+		r128.m128x_uint64[1] = (product >> 64);
 		return r128;
 #elif (defined(_M_X64) || defined(_M_IA64)) && !defined(_M_ARM64EC)
 
@@ -182,8 +198,8 @@ namespace jsonifier_internal {
 		uint64_t productHigh;
 		uint64_t const productLow = _umul128(lhs, rhs, &productHigh);
 		__m128x r128;
-		r128.values[0] = productLow;
-		r128.values[1] = productHigh;
+		r128.m128x_uint64[0] = productLow;
+		r128.m128x_uint64[1] = productHigh;
 		return r128;
 #elif defined(_M_ARM64) || defined(_M_ARM64EC)
 
@@ -191,8 +207,8 @@ namespace jsonifier_internal {
 		#pragma intrinsic(__umulh)
 	#endif
 		__m128x r128;
-		r128.values[0] = lhs * rhs;
-		r128.values[1] = __umulh(lhs, rhs);
+		r128.m128x_uint64[0] = lhs * rhs;
+		r128.m128x_uint64[1] = __umulh(lhs, rhs);
 		return r128;
 
 #else
@@ -205,8 +221,8 @@ namespace jsonifier_internal {
 		uint64_t const lower = (cross << 32) | (loLo & 0xFFFFFFFF);
 
 		__m128x r128;
-		r128.values[0] = lower;
-		r128.values[1] = upper;
+		r128.m128x_uint64[0] = lower;
+		r128.m128x_uint64[1] = upper;
 		return r128;
 #endif
 	}
@@ -225,50 +241,107 @@ namespace jsonifier_internal {
 		uint64_t const lower = (cross << 32) | (loLo & 0xFFFFFFFF);
 
 		__m128x r128;
-		r128.values[0] = lower;
-		r128.values[1] = upper;
+		r128.m128x_uint64[0] = lower;
+		r128.m128x_uint64[1] = upper;
 		return r128;
 	}
 
 	JSONIFIER_INLINE uint64_t mul128Fold64Rt(uint64_t lhs, uint64_t rhs) {
 		__m128x product = mult64To128Rt(lhs, rhs);
-		return product.values[0] ^ product.values[1];
+		return product.m128x_uint64[0] ^ product.m128x_uint64[1];
 	}
 
 	constexpr uint64_t mul128Fold64Ct(uint64_t lhs, uint64_t rhs) {
 		__m128x product = mult64To128Ct(lhs, rhs);
-		return product.values[0] ^ product.values[1];
+		return product.m128x_uint64[0] ^ product.m128x_uint64[1];
 	}
 
 	constexpr uint64_t fnvOffsetBasis{ 0xcbf29ce484222325ull };
 	constexpr uint64_t fnvPrime{ 0x00000100000001B3ull };
 
+	JSONIFIER_INLINE uint64_t mix2AccsRt(const uint64_t* acc, const uint8_t* secret) {
+		return mul128Fold64Rt(acc[0] ^ readBitsRt<uint64_t>(secret), acc[1] ^ readBitsRt<uint64_t>(secret + 8));
+	}
+
+	constexpr uint64_t mix2AccsCt(const uint64_t* acc, const uint8_t* secret) {
+		return mul128Fold64Ct(acc[0] ^ readBitsCt<uint64_t>(secret), acc[1] ^ readBitsCt<uint64_t>(secret + 8));
+	}
+
+	JSONIFIER_INLINE uint64_t mergeAccsRt(const uint64_t* acc, const uint8_t* secret, uint64_t start) {
+		uint64_t result64 = start;
+		size_t i		  = 0;
+
+		for (i = 0; i < 4; i++) {
+			result64 += mix2AccsRt(acc + 2 * i, secret + 16 * i);
+		}
+
+		return avalanche(result64);
+	}
+
+	constexpr uint64_t mergeAccsCt(const uint64_t* acc, const uint8_t* secret, uint64_t start) {
+		uint64_t result64 = start;
+		size_t i		  = 0;
+
+		for (i = 0; i < 4; i++) {
+			result64 += mix2AccsCt(acc + 2 * i, secret + 16 * i);
+		}
+
+		return avalanche(result64);
+	}
+
+	JSONIFIER_INLINE void hashLongInternalLoopRt(uint64_t* acc, const char* input, size_t len, const uint8_t* secret, uint64_t secretSize) {
+		size_t const nbStripesPerBlock = (secretSize - xxhStripeLength) / xxhSecretConsumeRate;
+		size_t const blockLength		   = xxhStripeLength * nbStripesPerBlock;
+		size_t const nbBlocks		   = (len - 1) / blockLength;
+
+		size_t n;
+
+		for (n = 0; n < nbBlocks; n++) {
+			accumulateAvxRt(acc, input + n * blockLength, secret, nbStripesPerBlock);
+			scrambleAvxRt(acc, secret + secretSize - xxhStripeLength);
+		}
+
+		{
+			size_t const nbStripes = ((len - 1) - (blockLength * nbBlocks)) / xxhStripeLength;
+			accumulateAvxRt(acc, input + nbBlocks * blockLength, secret, nbStripes);
+
+			{
+				const char* const p = input + len - xxhStripeLength;
+				accumulateAvxRt(acc, p, secret + secretSize - xxhStripeLength - 7, secretSize);
+			}
+		}
+	}
+
+	constexpr void hashLongInternalLoopCt(uint64_t* acc, const char* input, size_t len, const uint8_t* secret, uint64_t secretSize) {
+		size_t const nbStripesPerBlock = (secretSize - xxhStripeLength) / xxhSecretConsumeRate;
+		size_t const blockLength	   = xxhStripeLength * nbStripesPerBlock;
+		size_t const nbBlocks		   = (len - 1) / blockLength;
+
+		size_t n;
+
+		for (n = 0; n < nbBlocks; n++) {
+			accumulateAvxCt(acc, input + n * blockLength, secret, nbStripesPerBlock);
+			scrambleAvxCt(acc, secret + secretSize - xxhStripeLength);
+		}
+
+		{
+			size_t const nbStripes = ((len - 1) - (blockLength * nbBlocks)) / xxhStripeLength;
+			accumulateAvxCt(acc, input + nbBlocks * blockLength, secret, nbStripes);
+
+			{
+				const char* const p = input + len - xxhStripeLength;
+				accumulateAvxCt(acc, p, secret + secretSize - xxhStripeLength - 7, secretSize);
+			}
+		}
+	}
+
 	struct key_hasher {
 		constexpr void setSeed(uint64_t seedNew) {
-			seed = seedNew;
-			initCustomSecretCt();
+			initCustomSecretCt(seedNew);
 		}
 
 		constexpr operator uint64_t() const {
 			return seed;
-		}
-
-		JSONIFIER_INLINE uint64_t hashKeyRtSingle(const char* value, uint64_t length) const {
-			uint64_t hashValue{ seed };
-			if (length) {
-				hashValue ^= static_cast<uint64_t>(value[0]);
-				hashValue *= fnvPrime;
-			}
-			return hashValue;
-		}
-
-		constexpr uint64_t hashKeyCtSingle(const char* value, uint64_t length) const {
-			uint64_t hashValue{ seed };
-			if (length) {
-				hashValue ^= static_cast<uint64_t>(value[0]);
-				hashValue *= fnvPrime;
-			}
-			return hashValue;
 		}
 
 		JSONIFIER_INLINE uint64_t hashKeyRt(const char* value, uint64_t length) const {
@@ -345,20 +418,21 @@ namespace jsonifier_internal {
 		JSONIFIER_ALIGN uint8_t secret[secretDefaultSize]{};
 		uint64_t seed{};
 
-		constexpr void initCustomSecretCt() {
+		constexpr void initCustomSecretCt(uint64_t seedNew) {
+			seed					= seedNew;
 			constexpr auto nbRounds = secretDefaultSize / sizeof(simd_int_128);
-			const auto seedPos		= set1Epi64(seed);
+			const auto seedPos		= simd_internal::mm128Set1Epi64xCt(seed);
 
-			const auto mask = setREpi64(0ull, std::numeric_limits<uint64_t>::max());
+			const auto mask = simd_internal::mm128SetrEpi64xCt(0ull, std::numeric_limits<uint64_t>::max());
 
-			const auto zeros = setZero();
+			const auto zeros = simd_internal::mm128SetZero();
 
-			const auto negSeedPos = subEpi64(zeros, seedPos);
-			const auto seedNew	  = blendvEpi8(seedPos, negSeedPos, mask);
+			const auto negSeedPos = simd_internal::mm128SubEpi64(zeros, seedPos);
+			const auto seedNewer  = simd_internal::mm128BlendVEpi8(seedPos, negSeedPos, mask);
 			for (uint64_t i = 0; i < nbRounds; ++i) {
-				auto newSource = loaduSi128(xxh3KSecret + (sizeof(__m128x) * i));
-				auto newValue  = addEpi64(newSource, seedNew);
-				storeuSi128(secret + (sizeof(__m128x) * i), newValue);
+				auto newSource = simd_internal::mm128LoadUSi128(xxh3KSecret + (sizeof(__m128x) * i));
+				auto newValue  = simd_internal::mm128AddEpi64(newSource, seedNewer);
+				simd_internal::mm128StoreUSi128(secret + (sizeof(__m128x) * i), newValue);
 			}
 		}
 
@@ -436,28 +510,18 @@ namespace jsonifier_internal {
 			return avalanche(acc);
 		}
 
-		JSONIFIER_INLINE uint64_t len129ToAnyRt(const char* input, size_t length) const {
-			uint64_t acc = length * xxhPrime641;
-			uint64_t nBlocks{ (length - 128) / 16 };
-			for (uint64_t x = 0; x < nBlocks; ++x) {
-				acc += mix16BRt(input + (x * 16), secret + ((x * 16) % secretDefaultSize));
-				acc += mix16BRt(input + length - (x * 16), secret + ((x * 16) % secretDefaultSize));
-				length -= 16;
-				input += 16;
-			}
-			return avalanche(acc) ^ len17To12864bRt(input, length);
+		JSONIFIER_INLINE uint64_t len129ToAnyRt(const char* input, size_t len) const {
+			JSONIFIER_ALIGN std::array<uint64_t, xxhAccNb> acc = xxhInitAcc;
+
+			hashLongInternalLoopRt(acc.data(), input, len, secret, secretDefaultSize);
+			return mergeAccsRt(acc.data(), secret + 11, len * xxhPrime641);
 		}
 
-		constexpr uint64_t len129ToAnyCt(const char* input, size_t length) const {
-			uint64_t acc = length * xxhPrime641;
-			uint64_t nBlocks{ (length - 128) / 16 };
-			for (uint64_t x = 0; x < nBlocks; ++x) {
-				acc += mix16BCt(input + (x * 16), secret + ((x * 16) % secretDefaultSize));
-				acc += mix16BCt(input + length - (x * 16), secret + ((x * 16) % secretDefaultSize));
-				length -= 16;
-				input += 16;
-			}
-			return avalanche(acc) ^ len17To12864bCt(input, length);
+		constexpr uint64_t len129ToAnyCt(const char* input, size_t len) const {
+			JSONIFIER_ALIGN std::array<uint64_t, xxhAccNb> acc = xxhInitAcc;
+
+			hashLongInternalLoopCt(acc.data(), input, len, secret, secretDefaultSize);
+			return mergeAccsCt(acc.data(), secret + 11, len * xxhPrime641);
 		}
 	};
 }

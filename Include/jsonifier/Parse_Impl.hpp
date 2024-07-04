@@ -51,7 +51,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
 			if constexpr (memberCount > 0) {
-				static constexpr decltype(auto) frozenSet{ makeMap<value_type>() };
+				static constexpr decltype(auto) frozenMap{ makeMap<value_type>() };
 				if (*iter == '}') [[unlikely]] {
 					++iter;
 					return;
@@ -71,13 +71,13 @@ namespace jsonifier_internal {
 
 				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 					auto& keys = value.jsonifierExcludedKeys;
-					if (keys.find(static_cast<typename jsonifier::concepts::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+					if (keys.find(static_cast<typename jsonifier_internal::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 						skipToNextValue(iter, end);
 						return parseObjects<options, false>(value, iter, end);
 					}
 				}
 
-				if (const auto& memberIt = frozenSet.find(key); memberIt != frozenSet.end()) [[likely]] {
+				if (const auto& memberIt = frozenMap.find(key); memberIt != frozenMap.end()) [[likely]] {
 					if (*iter == ':') [[likely]] {
 						++iter;
 					} else {
@@ -88,13 +88,13 @@ namespace jsonifier_internal {
 						return;
 					}
 
-					std::visit(
-						[&](const auto& memberPtr) -> void {
-							using member_type = jsonifier::concepts::unwrap_t<decltype(getMember(value, memberPtr))>;
+					visit(
+						[&](auto&& memberPtr) -> void {
+							using member_type = jsonifier_internal::unwrap_t<decltype(getMember(value, memberPtr))>;
 							parse_impl<derived_type, member_type>::template impl<options>(getMember(value, memberPtr), iter, end);
 							return;
 						},
-						*memberIt);
+						std::move(*memberIt));
 
 				} else [[unlikely]] {
 					skipToNextValue(iter, end);
@@ -111,8 +111,8 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
 			if constexpr (size > 0) {
-				parse_impl<derived_type, decltype(getMember(value, std::get<0>(jsonifier::concepts::core_v<value_type_new>)))>::template impl<options>(
-					getMember(value, std::get<0>(jsonifier::concepts::core_v<value_type_new>)), iter, end);
+				parse_impl<derived_type, decltype(getMember(value, std::get<0>(jsonifier::concepts::coreV<value_type_new>)))>::template impl<options>(
+					getMember(value, std::get<0>(jsonifier::concepts::coreV<value_type_new>)), iter, end);
 			}
 		}
 	};
@@ -224,7 +224,7 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::variant_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::variant_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
-			std::visit(
+			visit(
 				[&](auto& valueNew) {
 					return parse_impl<derived_type, decltype(valueNew)>::template impl<options>(valueNew, iter, end);
 				},
@@ -263,7 +263,7 @@ namespace jsonifier_internal {
 			auto n		 = value.size();
 			auto iterNew = value.begin();
 			for (size_t i = 0; i < n; ++i) {
-				parse_impl<derived_type, typename jsonifier::concepts::unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
+				parse_impl<derived_type, typename jsonifier_internal::unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;
@@ -279,7 +279,7 @@ namespace jsonifier_internal {
 				}
 			}
 			while (static_cast<const char*>(iter) != static_cast<const char*>(end)) {
-				parse_impl<derived_type, typename jsonifier::concepts::unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
+				parse_impl<derived_type, typename jsonifier_internal::unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;

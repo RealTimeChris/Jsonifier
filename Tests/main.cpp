@@ -1,6 +1,6 @@
 #if defined(JSONIFIER_CPU_INSTRUCTIONS)
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_POPCNT | JSONIFIER_BMI | JSONIFIER_BMI2 | JSONIFIER_LZCNT)
+//#define JSONIFIER_CPU_INSTRUCTIONS 0
 #endif
 #include "UnicodeEmoji.hpp"
 #include <jsonifier/Index.hpp>
@@ -1254,7 +1254,7 @@ void useCharPointer(char const volatile* const v) {
 	globalForceEscapePointer = reinterpret_cast<void const volatile*>(v);
 }
 
-template<typename value_type> using unwrap_t = jsonifier::concepts::unwrap_t<value_type>;
+template<typename value_type> using unwrap_t = jsonifier_internal::unwrap_t<value_type>;
 
 template<typename function_type, typename... arg_types> struct return_type_helper {
 	using type = std::invoke_result_t<function_type, arg_types...>;
@@ -1282,28 +1282,28 @@ concept invocable_not_void = invocable<value_type, arg_types...> && !std::is_voi
 	#define doNotOptimize(value) asm volatile("" : "+m,r"(value) : : "memory");
 #endif
 
-template<not_invocable value_type> inline void doNotOptimizeAway(value_type&& value) {
+template<not_invocable value_type> JSONIFIER_INLINE void doNotOptimizeAway(value_type&& value) {
 	const auto* valuePtr = &value;
 	doNotOptimize(valuePtr)
 }
 
-template<invocable_void function_type, typename... arg_types> inline void doNotOptimizeAway(function_type&& value, arg_types&&... args) {
+template<invocable_void function_type, typename... arg_types> JSONIFIER_INLINE void doNotOptimizeAway(function_type&& value, arg_types&&... args) {
 	std::forward<function_type>(value)(std::forward<arg_types>(args)...);
 	doNotOptimize(value);
 }
 
-template<invocable_not_void function_type, typename... arg_types> inline void doNotOptimizeAway(function_type&& value, arg_types&&... args) {
+template<invocable_not_void function_type, typename... arg_types> JSONIFIER_INLINE void doNotOptimizeAway(function_type&& value, arg_types&&... args) {
 	auto resultVal = std::forward<function_type>(value)(std::forward<arg_types>(args)...);
 	doNotOptimize(resultVal);
 }
 
-inline bool checkDoubleForValidLt(double valueToCheck, double valueToCheckAgainst) {
+JSONIFIER_INLINE bool checkDoubleForValidLt(double valueToCheck, double valueToCheckAgainst) {
 	return (valueToCheck != std::numeric_limits<double>::infinity() && valueToCheck != std::numeric_limits<double>::quiet_NaN() &&
 			   valueToCheck != -std::numeric_limits<double>::infinity() && valueToCheck != -std::numeric_limits<double>::quiet_NaN()) &&
 		valueToCheck < valueToCheckAgainst;
 }
 
-inline double calcMedian(jsonifier::vector<double>& data) {
+JSONIFIER_INLINE double calcMedian(jsonifier::vector<double>& data) {
 	std::sort(data.begin(), data.end());
 	auto midIdx = data.size() / 2U;
 	if (1U == (data.size() & 1U)) {
@@ -1312,7 +1312,7 @@ inline double calcMedian(jsonifier::vector<double>& data) {
 	return (data[midIdx - 1U] + data[midIdx]) / 2U;
 }
 
-inline double medianAbsolutePercentError(const jsonifier::vector<double>& data) {
+JSONIFIER_INLINE double medianAbsolutePercentError(const jsonifier::vector<double>& data) {
 	jsonifier::vector<double> dataNew{ data };
 	if (dataNew.empty()) {
 		return 0.0;
@@ -1327,7 +1327,7 @@ inline double medianAbsolutePercentError(const jsonifier::vector<double>& data) 
 	return calcMedian(dataNew);
 }
 
-inline benchmark_results collectMape(auto lambda, uint64_t maxIterationCount, uint64_t minIterationCount) {
+JSONIFIER_INLINE benchmark_results collectMape(auto lambda, uint64_t maxIterationCount, uint64_t minIterationCount) {
 	double medianAbsolutePercentageError{};
 	jsonifier::vector<double> durations{};
 	auto newFunction{ lambda };
@@ -1364,10 +1364,10 @@ inline benchmark_results collectMape(auto lambda, uint64_t maxIterationCount, ui
 #endif
 }
 
-template<uint64_t iterationCount, typename function_type> inline benchmark_results benchmark(function_type&& function) {
+template<uint64_t iterationCount, typename function_type> JSONIFIER_INLINE benchmark_results benchmark(function_type&& function) {
 	static constexpr int64_t warmupCount	   = iterationCount;
 	static constexpr int64_t minIterationCount = static_cast<int64_t>(static_cast<float>(iterationCount) * 0.10f);
-	using function_type_final				   = jsonifier::concepts::unwrap_t<function_type>;
+	using function_type_final				   = jsonifier_internal::unwrap_t<function_type>;
 	function_type_final functionNew{ function };
 
 	jsonifier::vector<function_type_final> warmupLambdas{};

@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Config.hpp>
+#include <jsonifier/TypeEntities.hpp>
 
 namespace simd_internal {
 

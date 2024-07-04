@@ -29,11 +29,11 @@
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept not_uint8_t = !std::same_as<jsonifier::concepts::unwrap_t<value_type>, uint8_t>;
+	concept not_uint8_t = !std::same_as<jsonifier_internal::unwrap_t<value_type>, uint8_t>;
 
 	template<typename value_type> class char_traits;
 
-	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<jsonifier::concepts::unwrap_t<value_type>> {};
+	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<jsonifier_internal::unwrap_t<value_type>> {};
 
 	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
 	  public:
@@ -147,7 +147,7 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer&& other) : capacityVal{}, sizeVal{}, dataVal{} {
-			size_type newSize = other.size() * (sizeof(typename jsonifier::concepts::unwrap_t<value_type_newer>::value_type) / sizeof(value_type));
+			size_type newSize = other.size() * (sizeof(typename jsonifier_internal::unwrap_t<value_type_newer>::value_type) / sizeof(value_type));
 			if (newSize > 0 && newSize < maxSize()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;

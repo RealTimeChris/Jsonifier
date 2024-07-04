@@ -246,10 +246,10 @@ namespace jsonifier_internal {
 		constexpr char quotesValue{ static_cast<char>('"') };
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -272,10 +272,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -298,10 +298,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -323,10 +323,10 @@ namespace jsonifier_internal {
 		}
 #endif
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -411,10 +411,10 @@ namespace jsonifier_internal {
 		std::remove_const_t<char_type01> escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -458,10 +458,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -505,10 +505,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -551,10 +551,10 @@ namespace jsonifier_internal {
 		}
 #endif
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -602,7 +602,7 @@ namespace jsonifier_internal {
 		std::array<uint16_t, 256> returnValues{};
 		returnValues['\"'] = 0x225Cu;
 		returnValues['\\'] = 0x5C5Cu;
-		returnValues['\/'] = 0x2F5Cu;
+		returnValues['/'] = 0x2F5Cu;
 		returnValues['\b'] = 0x625Cu;
 		returnValues['\f'] = 0x665Cu;
 		returnValues['\n'] = 0x6E5Cu;
@@ -629,10 +629,10 @@ namespace jsonifier_internal {
 		uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -661,10 +661,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -693,10 +693,10 @@ namespace jsonifier_internal {
 #endif
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -724,10 +724,10 @@ namespace jsonifier_internal {
 		}
 #endif
 		{
-			using integer_type				  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
-			using simd_type					  = typename jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = jsonifier::concepts::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			using integer_type				  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
+			using simd_type					  = typename jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
+			constexpr uint64_t bytesProcessed = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			constexpr integer_type mask		  = jsonifier_internal::get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -794,7 +794,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<simd_structural_iterator_t iterator_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type&& iter) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type, jsonifier::concepts::bool_t bool_type>
+	JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type&& iter) {
 		if (compareStringAsInt<"true">(iter)) {
 			value = true;
 			++iter;
@@ -817,7 +818,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<simd_structural_iterator_t iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type&& iter) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type&& iter) {
 		if (compareStringAsInt<"null">(iter)) {
 			++iter;
 			return true;
@@ -826,7 +827,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<const auto& options, typename value_type, simd_structural_iterator_t iterator_type>
+	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
 		auto newPtr = iter.operator->();
 		if (*newPtr == 0x22u) [[likely]] {

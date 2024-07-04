@@ -588,10 +588,10 @@ namespace jsonifier_internal {
 
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>> || std::is_same_v<double, jsonifier::concepts::unwrap_t<value_type>>);
+		static_assert(std::is_same_v<float, jsonifier_internal::unwrap_t<value_type>> || std::is_same_v<double, jsonifier_internal::unwrap_t<value_type>>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
-		using Raw						= std::conditional_t<std::is_same_v<float, jsonifier::concepts::unwrap_t<value_type>>, uint32_t, uint64_t>;
+		using Raw						= std::conditional_t<std::is_same_v<float, jsonifier_internal::unwrap_t<value_type>>, uint32_t, uint64_t>;
 		auto sigLeadingZeros			= simd_internal::lzcnt(sig);
 		auto sigNorm					= sig << sigLeadingZeros;
 		auto sig2Norm					= sig2FromExp10(exp);
