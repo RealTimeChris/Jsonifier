@@ -144,68 +144,11 @@
 
 #endif
 
-union __m128x {
-	template<typename value_type> constexpr __m128x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06, value_type arg07,
-		value_type arg08, value_type arg09, value_type arg10, value_type arg11, value_type arg12, value_type arg13, value_type arg14, value_type arg15, value_type arg16) noexcept {
-		m128x_uint64[0] = static_cast<uint64_t>(arg01);
-		m128x_uint64[0] |= static_cast<uint64_t>(arg02) << 8;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg03) << 16;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg04) << 24;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg05) << 32;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg06) << 40;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg07) << 48;
-		m128x_uint64[0] |= static_cast<uint64_t>(arg08) << 56;
-		m128x_uint64[1] = static_cast<uint64_t>(arg09);
-		m128x_uint64[1] |= static_cast<uint64_t>(arg10) << 8;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg11) << 16;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg12) << 24;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg13) << 32;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg14) << 40;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg15) << 48;
-		m128x_uint64[1] |= static_cast<uint64_t>(arg16) << 56;
-	}
-
-	constexpr __m128x(uint64_t argOne, uint64_t argTwo) noexcept {
-		m128x_uint64[0] = argOne;
-		m128x_uint64[1] = argTwo;
-	}
-
-	constexpr __m128x() noexcept {
-		m128x_uint64[0] = 0;
-		m128x_uint64[1] = 0;
-	}
-
-	static constexpr __m128x setUint64() {
-		__m128x returnValues{};
-		returnValues.m128x_uint64[0] = 0;
-		returnValues.m128x_uint64[1] = 0;
-		return returnValues;
-	}
-
-#if JSONIFIER_WIN
-	int8_t m128x_int8[16]{};
-	int16_t m128x_int16[8];
-	int32_t m128x_int32[4];
-	int64_t m128x_int64[2];
-	uint8_t m128x_uint8[16];
-	int16_t m128x_uint16[8];
-	int32_t m128x_uint32[4];
-	uint64_t m128x_uint64[2];
-#else
-	int64_t m128x_int64[2];
-	int32_t m128x_int32[4];
-	int16_t m128x_int16[8];
-	int8_t m128x_int8[16]{};
-	uint64_t m128x_uint64[2];
-	int32_t m128x_uint32[4];
-	int16_t m128x_uint16[8];
-	uint8_t m128x_uint8[16];
-#endif
-};
-
 constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
+
+#include <jsonifier/ISA/CTimeSimdTypes.hpp>
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
@@ -217,14 +160,17 @@ using simd_int_512 = __m512i;
 using simd_int_t = __m512i;
 constexpr uint64_t bitsPerStep{ 512 };
 using string_parsing_type = uint64_t;
+using simd_fb_type		  = jsonifier_internal::__m512x;
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using simd_int_t = __m256i;
 constexpr uint64_t bitsPerStep{ 256 };
 using string_parsing_type = uint32_t;
+using simd_fb_type		  = jsonifier_internal::__m256x;
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using simd_int_t = __m128i;
 constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
+using simd_fb_type		  = jsonifier_internal::__m128x;
 	#endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
@@ -237,14 +183,16 @@ using simd_int_512 = uint64_t;
 using simd_int_t = uint8x16_t;
 constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
+using simd_fb_type		  = jsonifier_internal::__m128x;
 #else
-using simd_int_128 = __m128x;
+using simd_int_128 = jsonifier_internal::__m128x;
 using simd_int_256 = uint32_t;
 using simd_int_512 = uint64_t;
 
-using simd_int_t = __m128x;
+using simd_int_t = jsonifier_internal::__m128x;
 constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
+using simd_fb_type		  = jsonifier_internal::__m128x;
 #endif
 
 constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };

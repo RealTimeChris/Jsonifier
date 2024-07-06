@@ -602,7 +602,7 @@ namespace jsonifier_internal {
 		std::array<uint16_t, 256> returnValues{};
 		returnValues['\"'] = 0x225Cu;
 		returnValues['\\'] = 0x5C5Cu;
-		returnValues['/'] = 0x2F5Cu;
+		returnValues['/']  = 0x2F5Cu;
 		returnValues['\b'] = 0x625Cu;
 		returnValues['\f'] = 0x665Cu;
 		returnValues['\n'] = 0x6E5Cu;

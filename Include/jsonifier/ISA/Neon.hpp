@@ -51,8 +51,8 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_INLINE simd_int_128 opAdd(simd_int_t01&& value, simd_int_t02&& other) {
-		uint64x2_t a64 = vreinterpretq_u64_u8(value);
-		uint64x2_t b64 = vreinterpretq_u64_u8(other);
+		uint64x2_t a64		= vreinterpretq_u64_u8(value);
+		uint64x2_t b64		= vreinterpretq_u64_u8(other);
 		uint64x2_t result64 = vaddq_u64(a64, b64);
 		return vreinterpretq_u8_u64(result64);
 	}
@@ -69,15 +69,15 @@ namespace simd_internal {
 	}
 
 	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSrli(simd_int_t01&& value) {
-		uint64x2_t a64 = vreinterpretq_u64_u8(value);
+		uint64x2_t a64		= vreinterpretq_u64_u8(value);
 		uint64x2_t result64 = vshrq_n_u64(a64, other);
 		return vreinterpretq_u8_u64(result64);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_INLINE simd_int_128 opMul(simd_int_t01&& value, simd_int_t02&& other) {
-		uint32x4_t a32_0 = vreinterpretq_u32_u8(value);
-		uint32x4_t b32_0 = vreinterpretq_u32_u8(other);
+		uint32x4_t a32_0	= vreinterpretq_u32_u8(value);
+		uint32x4_t b32_0	= vreinterpretq_u32_u8(other);
 		uint32x4_t result32 = vmulq_u32(a32_0, b32_0);
 		return vreinterpretq_u8_u32(result32);
 	}

@@ -36,49 +36,6 @@
 
 namespace jsonifier_internal {
 
-	struct xoshiro256 {
-		size_t state[4]{};
-
-		constexpr xoshiro256() {
-			auto x = 7185499250578500046ull >> 12ull;
-			x ^= x << 25ull;
-			x ^= x >> 27ull;
-			size_t s = x * 0x2545F4914F6CDD1Dull;
-			for (uint64_t y = 0; y < 4; ++y) {
-				state[y] = splitmix64(s);
-			}
-		}
-
-		constexpr size_t operator()() {
-			const size_t result = rotl(state[1ull] * 5ull, 7ull) * 9ull;
-
-			const size_t t = state[1ull] << 17ull;
-
-			state[2ull] ^= state[0ull];
-			state[3ull] ^= state[1ull];
-			state[1ull] ^= state[2ull];
-			state[0ull] ^= state[3ull];
-
-			state[2ull] ^= t;
-
-			state[3ull] = rotl(state[3ull], 45ull);
-
-			return result;
-		}
-
-	  protected:
-		constexpr size_t rotl(const size_t x, size_t k) const {
-			return (x << k) | (x >> (64ull - k));
-		}
-
-		constexpr size_t splitmix64(size_t& seed) const {
-			size_t result = seed += 0x9E3779B97F4A7C15ull;
-			result		  = (result ^ (result >> 30ull)) * 0xBF58476D1CE4E5B9ull;
-			result		  = (result ^ (result >> 27ull)) * 0x94D049BB133111EBull;
-			return result ^ (result >> 31ull);
-		}
-	};
-
 	template<typename value_type01, typename value_type02> constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) {
 		for (size_t x = 0; x < size; ++x) {
 			if (hashData[x] == byteToCheckFor) {
@@ -102,7 +59,7 @@ namespace jsonifier_internal {
 
 	struct map_construction_values {
 		size_t stringLength{ std::numeric_limits<size_t>::max() };
-		size_t maxSizeIndex{};
+		size_t maxSizeIndex{ std::numeric_limits<size_t>::max() };
 		bool success{};
 		size_t seed{};
 	};
@@ -218,12 +175,12 @@ namespace jsonifier_internal {
 			map_type<key_type, value_type, actualCount, startingValue * 16>>;
 
 	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
-	constexpr auto constructSimdHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, map_construction_values constructionValues)
-		-> map_variant<16, actualCount, key_type, value_type, simd_hash_map> {
+	constexpr auto constructSimdHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew,
+		map_construction_values constructionValues) -> map_variant<16, actualCount, key_type, value_type, simd_hash_map> {
 		constexpr size_t bucketSize = setSimdWidth<storageSize>();
 		constexpr size_t numGroups	= storageSize > bucketSize ? storageSize / bucketSize : 1;
 		simd_hash_map<key_type, value_type, actualCount, storageSize> simdHashMapNew{};
-		simdHashMapNew.setSeed(constructionValues.seed);
+		simdHashMapNew.setSeedCt(constructionValues.seed);
 		simdHashMapNew.stringLength = constructionValues.stringLength;
 		std::array<size_t, numGroups> bucketSizes{};
 		for (size_t x = 0; x < actualCount; ++x) {
@@ -267,7 +224,7 @@ namespace jsonifier_internal {
 
 			for (uint64_t x = 0; x < 2; ++x) {
 				seed = prng();
-				hasherNew.setSeed(seed);
+				hasherNew.setSeedCt(seed);
 				collided = false;
 				std::fill(slots.begin(), slots.end(), std::numeric_limits<uint64_t>::max());
 
@@ -378,11 +335,11 @@ namespace jsonifier_internal {
 	};
 
 	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
-	constexpr auto constructMinimalCharHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, map_construction_values constructionValues)
-		-> map_variant<16ull, actualCount, key_type, value_type, minimal_char_hash_map> {
+	constexpr auto constructMinimalCharHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew,
+		map_construction_values constructionValues) -> map_variant<16ull, actualCount, key_type, value_type, minimal_char_hash_map> {
 		minimal_char_hash_map<key_type, value_type, actualCount, storageSize> minimalCharHashMapNew{};
 		minimalCharHashMapNew.stringLength = constructionValues.stringLength;
-		minimalCharHashMapNew.setSeed(constructionValues.seed);
+		minimalCharHashMapNew.setSeedCt(constructionValues.seed);
 		for (size_t x = 0; x < actualCount; ++x) {
 			const auto keySize				  = pairsNew[x].first.size();
 			const auto stringLengthNew		  = keySize > minimalCharHashMapNew.stringLength ? minimalCharHashMapNew.stringLength : keySize;
@@ -416,7 +373,7 @@ namespace jsonifier_internal {
 			std::fill(slots, slots + storageSize, std::numeric_limits<uint64_t>::max());
 			for (uint64_t x = 0; x < 2; ++x) {
 				seed = prng();
-				hasherNew.setSeed(seed);
+				hasherNew.setSeedCt(seed);
 				for (size_t y = 0; y < actualCount; ++y) {
 					collided				   = false;
 					const auto keySize		   = pairsNew[y].first.size();

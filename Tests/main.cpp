@@ -1,6 +1,6 @@
 #if defined(JSONIFIER_CPU_INSTRUCTIONS)
 //#undef JSONIFIER_CPU_INSTRUCTIONS
-//#define JSONIFIER_CPU_INSTRUCTIONS 0
+//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2 | JSONIFIER_POPCNT)
 #endif
 #include "UnicodeEmoji.hpp"
 #include <jsonifier/Index.hpp>
@@ -1248,6 +1248,123 @@ template<> struct jsonifier::core<test_results> {
 	static constexpr auto parseValue = createValue<&value_type::results, &value_type::testName>();
 };
 
+#if defined(JSONIFIER_MSVC)
+
+	#define NEVER_INLINE __declspec(noinline)
+	#define rdtsc() __rdtsc()
+
+#else
+
+	#define NEVER_INLINE __attribute__((noinline))
+
+	__inline__ uint64_t rdtsc() {
+	#ifdef __x86_64__
+	unsigned int a, d;
+	__asm__ volatile("rdtsc" : "=a"(a), "=d"(d));
+	return ( unsigned long )a | (( unsigned long )d << 32);
+	#elif defined(__i386__)
+	uint64_t x;
+	__asm__ volatile("rdtsc" : "=A"(x));
+	return x;
+	#else
+		#define NO_CYCLE_COUNTER
+	return 0;
+	#endif
+}
+#endif
+
+uint64_t cyclesToTime(uint64_t cycles, uint64_t frequencyMHz) {
+	uint64_t frequencyHz	 = frequencyMHz * 1e6;
+	uint64_t timeNanoseconds = (cycles * 1e9) / frequencyHz;
+
+	return timeNanoseconds;
+}
+
+#if defined(_WIN32)
+	#include <Windows.h>
+	#include <Pdh.h>
+	#pragma comment(lib, "Pdh.lib")
+
+double getCpuFrequency() {
+	LARGE_INTEGER qwWait, qwStart, qwCurrent;
+	QueryPerformanceCounter(&qwStart);
+	QueryPerformanceFrequency(&qwWait);
+	qwWait.QuadPart >>= 5;
+	unsigned __int64 Start = __rdtsc();
+	do {
+		QueryPerformanceCounter(&qwCurrent);
+	} while (qwCurrent.QuadPart - qwStart.QuadPart < qwWait.QuadPart);
+	return ((__rdtsc() - Start) << 5) / 1000000.0;
+}
+
+template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type&& functionNew, double cpuFrequency) {
+	volatile uint64_t startTime{}, endTime{};
+	startTime = rdtsc();
+	functionNew();
+	endTime = rdtsc();
+	return cyclesToTime(endTime - startTime, cpuFrequency);
+}
+
+#elif defined(__linux__)
+	#include <fstream>
+
+double getCpuFrequency() {
+	std::ifstream file("/proc/cpuinfo");
+	if (!file.is_open()) {
+		std::cerr << "Error opening /proc/cpuinfo" << std::endl;
+		return 0.0;
+	}
+
+	std::string line;
+	double frequency = 0.0;
+	while (std::getline(file, line)) {
+		if (line.find("cpu MHz") != std::string::npos) {
+			size_t pos = line.find(":");
+			if (pos != std::string::npos) {
+				frequency = std::stod(line.substr(pos + 1));
+				break;
+			}
+		}
+	}
+	file.close();
+
+	return frequency;
+}
+
+template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type&& functionNew, double cpuFrequency) {
+	volatile uint64_t startTime{}, endTime{};
+	startTime = rdtsc();
+	functionNew();
+	endTime = rdtsc();
+	return cyclesToTime(endTime - startTime, cpuFrequency);
+}
+
+#elif defined(__APPLE__)
+	#include <sys/sysctl.h>
+
+double getCpuFrequency() {
+	return 0;
+}
+
+template<typename function_type> NEVER_INLINE double collectTime(function_type&& functionNew, double cpuFrequency) {
+	auto startTime = std::chrono::high_resolution_clock::now();
+	functionNew();
+	auto endTime = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(endTime - startTime).count();
+}
+
+#else
+
+double collectTime(function_type&& functionNew, double cpuFrequency) {
+	return 0.0;
+}
+
+#endif
+
+#if defined(small)
+	#undef small
+#endif
+
 static void const volatile* volatile globalForceEscapePointer;
 
 void useCharPointer(char const volatile* const v) {
@@ -1297,13 +1414,13 @@ template<invocable_not_void function_type, typename... arg_types> JSONIFIER_INLI
 	doNotOptimize(resultVal);
 }
 
-JSONIFIER_INLINE bool checkDoubleForValidLt(double valueToCheck, double valueToCheckAgainst) {
+bool checkDoubleForValidLt(double valueToCheck, double valueToCheckAgainst) {
 	return (valueToCheck != std::numeric_limits<double>::infinity() && valueToCheck != std::numeric_limits<double>::quiet_NaN() &&
 			   valueToCheck != -std::numeric_limits<double>::infinity() && valueToCheck != -std::numeric_limits<double>::quiet_NaN()) &&
 		valueToCheck < valueToCheckAgainst;
 }
 
-JSONIFIER_INLINE double calcMedian(jsonifier::vector<double>& data) {
+double calcMedian(jsonifier::vector<double>& data) {
 	std::sort(data.begin(), data.end());
 	auto midIdx = data.size() / 2U;
 	if (1U == (data.size() & 1U)) {
@@ -1312,7 +1429,7 @@ JSONIFIER_INLINE double calcMedian(jsonifier::vector<double>& data) {
 	return (data[midIdx - 1U] + data[midIdx]) / 2U;
 }
 
-JSONIFIER_INLINE double medianAbsolutePercentError(const jsonifier::vector<double>& data) {
+double medianAbsolutePercentError(const jsonifier::vector<double>& data) {
 	jsonifier::vector<double> dataNew{ data };
 	if (dataNew.empty()) {
 		return 0.0;
@@ -1327,7 +1444,7 @@ JSONIFIER_INLINE double medianAbsolutePercentError(const jsonifier::vector<doubl
 	return calcMedian(dataNew);
 }
 
-JSONIFIER_INLINE benchmark_results collectMape(auto lambda, uint64_t maxIterationCount, uint64_t minIterationCount) {
+benchmark_results collectMape(auto lambda, uint64_t maxIterationCount, uint64_t minIterationCount) {
 	double medianAbsolutePercentageError{};
 	jsonifier::vector<double> durations{};
 	auto newFunction{ lambda };
@@ -1337,11 +1454,7 @@ JSONIFIER_INLINE benchmark_results collectMape(auto lambda, uint64_t maxIteratio
 	}
 	uint64_t currentIterationCount{};
 	while (currentIterationCount < maxIterationCount) {
-		auto startTime = std::chrono::high_resolution_clock::now();
-		doNotOptimizeAway(lambdasNew[currentIterationCount]);
-		auto endTime = std::chrono::high_resolution_clock::now();
-
-		auto duration = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(endTime - startTime).count();
+		auto duration = collectTime(lambdasNew[currentIterationCount], getCpuFrequency());
 		durations.emplace_back(duration);
 
 		if (currentIterationCount > minIterationCount) {
@@ -1364,7 +1477,7 @@ JSONIFIER_INLINE benchmark_results collectMape(auto lambda, uint64_t maxIteratio
 #endif
 }
 
-template<uint64_t iterationCount, typename function_type> JSONIFIER_INLINE benchmark_results benchmark(function_type&& function) {
+template<uint64_t iterationCount, typename function_type> benchmark_results benchmark(function_type&& function) {
 	static constexpr int64_t warmupCount	   = iterationCount;
 	static constexpr int64_t minIterationCount = static_cast<int64_t>(static_cast<float>(iterationCount) * 0.10f);
 	using function_type_final				   = jsonifier_internal::unwrap_t<function_type>;
@@ -2500,6 +2613,7 @@ alt="" width="400"/></p>
 
 int32_t main() {
 	try {
+		std::cout << "CPU FREQUENCY: " << getCpuFrequency() << std::endl;
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};

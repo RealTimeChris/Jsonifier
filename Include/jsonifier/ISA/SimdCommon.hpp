@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
-#include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/ISA/ShuffleValues.hpp>
 #include <jsonifier/ISA/CompareValues.hpp>
 #include <jsonifier/ISA/GatherValues.hpp>
