@@ -1273,14 +1273,11 @@ template<> struct jsonifier::core<test_results> {
 }
 #endif
 
-uint64_t cyclesToTime(uint64_t cycles, uint64_t frequencyMHz) {
-	uint64_t frequencyHz	 = frequencyMHz * 1e6;
-	uint64_t timeNanoseconds = (cycles * 1e9) / frequencyHz;
-
-	return timeNanoseconds;
+double cyclesToTime(uint64_t cycles, double frequencyMHz) {
+	return (static_cast<double>(cycles) * 1e9) / (frequencyMHz * 1e6);
 }
 
-#if defined(_WIN32)
+#if defined(JSONIFIER_WIN)
 	#include <Windows.h>
 	#include <Pdh.h>
 	#pragma comment(lib, "Pdh.lib")
@@ -1290,14 +1287,14 @@ double getCpuFrequency() {
 	QueryPerformanceCounter(&qwStart);
 	QueryPerformanceFrequency(&qwWait);
 	qwWait.QuadPart >>= 5;
-	unsigned __int64 Start = __rdtsc();
+	uint64_t start = __rdtsc();
 	do {
 		QueryPerformanceCounter(&qwCurrent);
 	} while (qwCurrent.QuadPart - qwStart.QuadPart < qwWait.QuadPart);
-	return ((__rdtsc() - Start) << 5) / 1000000.0;
+	return static_cast<double>((__rdtsc() - start) << 5) / 1000000.0l;
 }
 
-template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type&& functionNew, double cpuFrequency) {
+template<typename function_type> NEVER_INLINE double collectTime(function_type&& functionNew, double cpuFrequency) {
 	volatile uint64_t startTime{}, endTime{};
 	startTime = rdtsc();
 	functionNew();
@@ -1305,7 +1302,7 @@ template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type
 	return cyclesToTime(endTime - startTime, cpuFrequency);
 }
 
-#elif defined(__linux__)
+#elif defined(JSONIFIER_LINUX)
 	#include <fstream>
 
 double getCpuFrequency() {
@@ -1331,7 +1328,7 @@ double getCpuFrequency() {
 	return frequency;
 }
 
-template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type&& functionNew, double cpuFrequency) {
+template<typename function_type> NEVER_INLINE double collectTime(function_type&& functionNew, double cpuFrequency) {
 	volatile uint64_t startTime{}, endTime{};
 	startTime = rdtsc();
 	functionNew();
@@ -1339,7 +1336,7 @@ template<typename function_type> NEVER_INLINE uint64_t collectTime(function_type
 	return cyclesToTime(endTime - startTime, cpuFrequency);
 }
 
-#elif defined(__APPLE__)
+#elif defined(JSONIFIER_MAC)
 	#include <sys/sysctl.h>
 
 double getCpuFrequency() {
@@ -1355,7 +1352,7 @@ template<typename function_type> NEVER_INLINE double collectTime(function_type&&
 
 #else
 
-double collectTime(function_type&& functionNew, double cpuFrequency) {
+uint64_t collectTime(function_type&& functionNew, uint64_t cpuFrequency) {
 	return 0.0;
 }
 

@@ -78,7 +78,6 @@ target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
-	"$<$<STREQUAL:${DEV},TRUE>:DEV>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
@@ -128,6 +127,6 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if(JSONIFIER_TEST)
+if("${JSONIFIER_TEST}" STREQUAL "true")
 	add_subdirectory("./Tests")
 endif()
