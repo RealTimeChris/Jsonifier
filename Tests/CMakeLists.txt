@@ -13,6 +13,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glaze)
 
 FetchContent_Declare(
+  BenchmarkSuite
+  GIT_REPOSITORY https://github.com/RealTimeChris/BenchmarkSuite.git
+  GIT_TAG main
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(BenchmarkSuite)
+
+FetchContent_Declare(
   simdjson
   GIT_REPOSITORY https://github.com/RealTimeChris/simdjson.git
   GIT_TAG master
@@ -27,7 +35,7 @@ add_executable(
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-  Jsonifier::Jsonifier glaze::glaze simdjson
+  Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
 )
 
 target_compile_options(

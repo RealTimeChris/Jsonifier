@@ -74,9 +74,9 @@ namespace jsonifier {
 			*this = stringNew;
 		}
 
-		constexpr string_view_base(const_pointer pointerNew, const size_type countNew) : dataVal(pointerNew), sizeVal(countNew) {};
+		constexpr string_view_base(const_pointer pointerNew, const size_type countNew) : dataVal(pointerNew), sizeVal(countNew){};
 
-		constexpr string_view_base(const_pointer pointerNew) : dataVal(pointerNew), sizeVal(std::char_traits<value_type>::length(pointerNew)) {};
+		constexpr string_view_base(const_pointer pointerNew) : dataVal(pointerNew), sizeVal(std::char_traits<value_type>::length(pointerNew)){};
 
 		constexpr const_iterator begin() noexcept {
 			return const_iterator{ dataVal };
@@ -217,7 +217,7 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::string_t value_type_newer> constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) {
 			if (std::is_constant_evaluated()) {
-				auto compareValues = [=] {
+				auto compareValues = [=]() -> bool {
 					for (uint64_t x = 0; x < rhs.size(); ++x) {
 						if (rhs[x] != lhs[x]) {
 							return false;

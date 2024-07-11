@@ -106,6 +106,29 @@ namespace jsonifier {
 			}
 		}
 
+		JSONIFIER_INLINE vector(iterator_type first, iterator_type last) {
+			size_type insertCount = std::distance(first, last);
+
+			if (insertCount == 0) {
+				return;
+			}
+
+			size_type insertPosIndex = 0;
+			size_type newSize		 = sizeVal + insertCount;
+
+			if (newSize > capacityVal) {
+				reserve(newSize);
+			}
+
+			pointer insertPos = dataVal + insertPosIndex;
+
+			for (iterator_type iter = first; iter != last; ++iter) {
+				allocator::construct(insertPos++, *iter);
+			}
+
+			sizeVal = newSize;
+		}
+
 		JSONIFIER_INLINE vector& operator=(std::initializer_list<value_type> other) {
 			vector{ other }.swap(*this);
 			return *this;
@@ -120,7 +143,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE explicit vector(value_type&& other, size_type newSize) : capacityVal{}, sizeVal{}, dataVal{} {
+		template<typename value_type_newer> JSONIFIER_INLINE explicit vector(value_type_newer&& other, size_type newSize) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = newSize;
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -150,7 +173,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		template<typename InputIterator> JSONIFIER_INLINE void insert(iterator_type where, InputIterator first, InputIterator last) {
+		JSONIFIER_INLINE void insert(iterator_type where, iterator_type first, iterator_type last) {
 			size_type insertCount = std::distance(first, last);
 
 			if (insertCount == 0) {
@@ -166,7 +189,7 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (InputIterator iter = first; iter != last; ++iter) {
+			for (iterator_type iter = first; iter != last; ++iter) {
 				allocator::construct(insertPos++, *iter);
 			}
 

@@ -175,7 +175,7 @@ namespace jsonifier_internal {
 		iter += *iter == '-';
 		auto sig_start_it  = iter;
 		auto frac_start_it = end;
-		auto fracStart	   = [&]() {
+		auto fracStart	   = [&]() -> bool {
 			frac_start_it = iter;
 			iter		  = std::find_if_not(iter, end, isNumberType);
 			if (iter == frac_start_it) {
@@ -188,7 +188,7 @@ namespace jsonifier_internal {
 			return false;
 		};
 
-		auto expStart = [&]() {
+		auto expStart = [&]() -> bool {
 			iter += *iter == '+' || *iter == '-';
 			auto exp_start_it = iter;
 			iter			  = std::find_if_not(iter, end, isNumberType);

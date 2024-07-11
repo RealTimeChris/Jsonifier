@@ -29,10 +29,31 @@ jobs:
       run: |
             brew install nasm
 
+    - name: Configure CMake for Jsonifier
+      working-directory: ./
+      run: |
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_LIBRARY="true"
+
+    - name: Build the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
+
+    - name: Clear the Build folder
+      run: |
+            sudo rm -rf ./Build
+
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="true"
+            cpu_freq_mhz="true"
+            echo "CPU Frequency: ${cpu_freq_mhz} MHz"
+            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="true" -DJSONIFIER_LIBRARY="true" -DCPU_FREQUENCY_MHZ=${cpu_freq_mhz} 
 
     - name: Build the Test
       working-directory: ./Build

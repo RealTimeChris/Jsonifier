@@ -27,10 +27,29 @@ jobs:
             sudo apt-get install build-essential
             sudo apt-get install g++-12
 
+    - name: Configure CMake for Jsonifier
+      working-directory: ./
+      run: |
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_LIBRARY="true"
+
+    - name: Build the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
+
+    - name: Clear the Build folder
+      run: |
+            sudo rm -rf ./Build
+
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DJSONIFIER_TEST="true"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DJSONIFIER_TEST="true" -DJSONIFIER_LIBRARY="true"
 
     - name: Build the Test
       working-directory: ./Build
