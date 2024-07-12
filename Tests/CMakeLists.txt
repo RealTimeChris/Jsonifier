@@ -12,6 +12,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glaze)
 
+set(JSONIFIER_LIBRARY "TRUE" CACHE STRING "To avoid circular dependency issues." FORCE)
 FetchContent_Declare(
   BenchmarkSuite
   GIT_REPOSITORY https://github.com/RealTimeChris/BenchmarkSuite.git
@@ -35,7 +36,7 @@ add_executable(
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-  Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
+	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
 )
 
 target_compile_options(

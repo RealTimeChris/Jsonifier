@@ -1,4 +1,4 @@
-name: Build-and-Test-CLANG-MacOS
+name: Build-and-Test-CLANG-Ubuntu
 
 on:
   workflow_dispatch:
@@ -9,25 +9,25 @@ on:
 
 jobs:
   Build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     
     strategy:
       fail-fast: false
       matrix:
-        clang: [17]
+        gcc: [19]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install the latest clang compiler.
-      run: |
-            brew install llvm
-
-    - name: Install Nasm.
-      run: |
-            brew install nasm
+  
+    - name: Install the latest Clang compiler.
+      working-directory: Tests
+      run:  |
+            sudo apt update && sudo apt upgrade
+            wget https://apt.llvm.org/llvm.sh
+            chmod u+x llvm.sh
+            sudo ./llvm.sh 19
 
     - name: Configure CMake for Jsonifier
       working-directory: ./
@@ -51,7 +51,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-19 -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       working-directory: ./Build
@@ -68,4 +68,3 @@ jobs:
       run: |
            ./Json-Performance
       continue-on-error: true
-      

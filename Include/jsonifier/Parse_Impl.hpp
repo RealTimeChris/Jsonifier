@@ -32,6 +32,31 @@
 
 namespace jsonifier_internal {
 
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type>
+	JSONIFIER_INLINE void invokeParse(value_type& value, iterator_type& iter, iterator_type& end) {
+		static constexpr size_t tuple_size = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
+		if constexpr (index < tuple_size) {
+			static constexpr auto ptr = std::get<1>(std::get<index>(tuple));
+			using member_type		  = jsonifier_internal::unwrap_t<decltype(value.*ptr)>;
+			parse_impl<derived_type, member_type>::template impl<options>(value.*ptr, iter, end);
+		}
+	}
+
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type> using invoke_parse_function_ptr =
+		decltype(&invokeParse<options, tuple, index, derived_type, value_type, iterator_type>);
+
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, size_t... indices>
+	constexpr auto generateArrayOfInvokeParsePtrsInternal(std::index_sequence<indices...>) {
+		return std::array<invoke_parse_function_ptr<options, tuple, 0, derived_type, value_type, iterator_type>, sizeof...(indices)>{
+			{ &invokeParse<options, tuple, indices, derived_type, value_type, iterator_type>... }
+		};
+	}
+
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type> constexpr auto generateArrayOfInvokeParsePtrs() {
+		constexpr auto tupleSize = std::tuple_size_v<jsonifier_internal::unwrap_t<decltype(tuple)>>;
+		return generateArrayOfInvokeParsePtrsInternal<options, tuple, derived_type, value_type, iterator_type>(std::make_index_sequence<tupleSize>{});
+	}
+
 	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::jsonifier_value_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
@@ -44,62 +69,58 @@ namespace jsonifier_internal {
 				skipToNextValue(iter, end);
 				return;
 			}
-			return parseObjects<options>(value, iter, end);
-		}
-
-		template<const parse_options_internal<derived_type>& options, bool isItFirst = true, jsonifier::concepts::jsonifier_value_t value_type, typename iterator_type>
-		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
+			bool isItFirst{ true };
 			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+			static constexpr auto newTuple	  = collectTuple<value_type>();
+			static constexpr decltype(auto) frozenSet{ makeMap<value_type, newTuple>() };
+			static constexpr auto functionPtrArray = generateArrayOfInvokeParsePtrs<options, newTuple, derived_type, value_type, iterator_type>();
 			if constexpr (memberCount > 0) {
-				static constexpr decltype(auto) frozenMap{ makeMap<value_type>() };
-				if (*iter == '}') [[unlikely]] {
-					++iter;
-					return;
-				}
-				if constexpr (!isItFirst) {
-					if (*iter == ',') [[likely]] {
+				while (true) {
+					if (*iter == '}') [[unlikely]] {
 						++iter;
-					} else {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
-							iter - options.rootIter, end - options.rootIter, options.rootIter));
 						return;
 					}
-				}
-
-				const auto key = parseKey<options, value_type>(iter, end, options.parserPtr->getErrors());
-
-				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-					auto& keys = value.jsonifierExcludedKeys;
-					if (keys.find(static_cast<typename jsonifier_internal::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-						skipToNextValue(iter, end);
-						return parseObjects<options, false>(value, iter, end);
-					}
-				}
-
-				if (const auto& memberIt = frozenMap.find(key); memberIt != frozenMap.end()) [[likely]] {
-					if (*iter == ':') [[likely]] {
-						++iter;
-					} else {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.parserPtr->getErrors().emplace_back(
-							error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(iter - options.rootIter, end - iter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
-					}
-
-					visit(
-						[&](auto&& memberPtr) -> void {
-							using member_type = jsonifier_internal::unwrap_t<decltype(getMember(value, memberPtr))>;
-							parse_impl<derived_type, member_type>::template impl<options>(getMember(value, memberPtr), iter, end);
+					if (!isItFirst) {
+						if (*iter == ',') [[likely]] {
+							++iter;
+						} else {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
+								iter - options.rootIter, end - options.rootIter, options.rootIter));
+							skipToNextValue(iter, end);
 							return;
-						},
-						std::move(*memberIt));
+						}
+					} else {
+						isItFirst = false;
+					}
 
-				} else [[unlikely]] {
-					skipToNextValue(iter, end);
+					const auto key = parseKey<options, value_type>(iter, end, options.parserPtr->getErrors());
+
+					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+						auto& keys = value.jsonifierExcludedKeys;
+						if (keys.find(static_cast<typename jsonifier_internal::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+							skipToNextValue(iter, end);
+							return parseObjects<options, false>(value, iter, end);
+						}
+					}
+
+					if (auto memberIt = frozenSet.find(key.data(), key.data() + key.size(), functionPtrArray); memberIt != functionPtrArray.data() + functionPtrArray.size())
+						[[likely]] {
+						if (*iter == ':') [[likely]] {
+							++iter;
+						} else {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(
+								error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(iter - options.rootIter, end - iter, options.rootIter));
+							skipToNextValue(iter, end);
+							return;
+						}
+						(*memberIt)(value, iter, end);
+
+					} else [[unlikely]] {
+						skipToNextValue(iter, end);
+					}
 				}
-				parseObjects<options, false>(value, iter, end);
 			} else {
 				skipToEndOfValue(iter, end);
 			}
@@ -149,7 +170,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<const parse_options_internal<derived_type>& options, uint64_t n, uint64_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::array_tuple_t value_type,
+		template<const parse_options_internal<derived_type>& options, size_t n, size_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::array_tuple_t value_type,
 			typename iterator_type>
 		JSONIFIER_INLINE static void parseObjects(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			auto& item = std::get<indexNew>(value);
@@ -359,8 +380,8 @@ namespace jsonifier_internal {
 			int64_t newSize = iter.operator->() - newPtr;
 			if (newSize > 0) [[likely]] {
 				jsonifier::string newString{};
-				newString.resize(static_cast<uint64_t>(newSize));
-				std::memcpy(newString.data(), newPtr, static_cast<uint64_t>(newSize));
+				newString.resize(static_cast<size_t>(newSize));
+				std::memcpy(newString.data(), newPtr, static_cast<size_t>(newSize));
 				value = newString;
 			}
 			return;
@@ -389,8 +410,8 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::enum_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::enum_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
-			uint64_t newValue{};
-			parse_impl<derived_type, uint64_t>::template impl<options>(newValue, iter, end);
+			size_t newValue{};
+			parse_impl<derived_type, size_t>::template impl<options>(newValue, iter, end);
 			value = static_cast<value_type_new>(newValue);
 		}
 	};

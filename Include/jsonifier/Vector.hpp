@@ -107,8 +107,10 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE vector(iterator_type first, iterator_type last) {
-			size_type insertCount = std::distance(first, last);
-
+			difference_type insertCount = std::distance(first, last);
+			if (!first) {
+				return;
+			}
 			if (insertCount == 0) {
 				return;
 			}
@@ -122,7 +124,7 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (iterator_type iter = first; iter != last; ++iter) {
+			for (iterator_type iter = first; iter < last; ++iter) {
 				allocator::construct(insertPos++, *iter);
 			}
 

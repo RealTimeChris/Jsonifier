@@ -2,8 +2,7 @@
   "version": 3,
   "configurePresets": [
     {
-      "installDir": "${sourceDir}/Install/${presetName}",
-      "binaryDir": "${sourceDir}/Install/${presetName}",   
+      "installDir": "${sourceDir}/out",
       "condition": {
         "lhs": "${hostSystemName}",
         "rhs": "Windows",
@@ -31,7 +30,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Release-Dev"
@@ -52,7 +51,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Debug-Dev"
@@ -65,7 +64,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": "TRUE",
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Release-Asan"
@@ -78,7 +77,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": "TRUE",
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Debug-Asan"
@@ -115,7 +114,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Linux-Base",
       "name": "Jsonifier-Linux-Release-Dev"
@@ -136,7 +135,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Linux-Base",
       "name": "Jsonifier-Linux-Debug-Dev"
@@ -149,7 +148,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": true,
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Linux-Base",
       "name": "Jsonifier-Linux-Release-Asan"
@@ -162,7 +161,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": true,
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TEST": "true"
+        "JSONIFIER_TEST": "TRUE"
       },
       "inherits": "Jsonifier-Linux-Base",
       "name": "Jsonifier-Linux-Debug-Asan"

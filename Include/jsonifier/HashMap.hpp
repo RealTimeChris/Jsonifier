@@ -82,12 +82,43 @@ namespace jsonifier_internal {
 		return lhs.size() == rhs.size() && compare(lhs.data(), rhs.data(), lhs.size());
 	}
 
-	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr key_stats_t getKeyStats(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew) {
-		uint64_t minLength{ std::numeric_limits<uint64_t>::max() };
-		uint64_t maxLength{ std::numeric_limits<uint64_t>::min() };
-		for (uint64_t x = 0; x < actualCount; ++x) {
-			const auto keySize = pairsNew[x].first.size();
+	template<typename value_type, size_t index> constexpr bool compareStringFunctionNonConst(const char* string01) {
+		constexpr auto currentKey = getKey<value_type, index>();
+		return compare<currentKey.size()>(currentKey.data(), string01);
+	}
+
+	template<typename value_type, size_t index> constexpr bool compareStringFunctionConst(const char* string01) {
+		constexpr auto currentKey = getKey<value_type, index>();
+		return currentKey == jsonifier::string_view{ string01, currentKey.size() };
+	}
+
+	template<typename value_type, size_t index> using compare_string_function_non_const_ptr = decltype(&compareStringFunctionNonConst<value_type, index>);
+
+	template<typename value_type, size_t index> using compare_string_function_const_ptr = decltype(&compareStringFunctionConst<value_type, index>);
+
+	template<typename value_type, size_t... indices> constexpr auto generateConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
+		return std::array<compare_string_function_const_ptr<value_type, 0>, sizeof...(indices)>{ { &compareStringFunctionConst<value_type, indices>... } };
+	}
+
+	template<typename value_type> constexpr auto generateConstCompareStringFunctionPtrArray() {
+		constexpr auto tupleSize = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+		return generateConstCompareStringFunctionPtrArrayInternal<value_type>(std::make_index_sequence<tupleSize>{});
+	}
+
+	template<typename value_type, size_t... indices> constexpr auto generateNonConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
+		return std::array<compare_string_function_non_const_ptr<value_type, 0>, sizeof...(indices)>{ { &compareStringFunctionNonConst<value_type, indices>... } };
+	}
+
+	template<typename value_type> constexpr auto generateNonConstCompareStringFunctionPtrArray() {
+		constexpr auto tupleSize = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+		return generateNonConstCompareStringFunctionPtrArrayInternal<value_type>(std::make_index_sequence<tupleSize>{});
+	}
+
+	template<typename key_type, size_t actualCount> constexpr key_stats_t getKeyStats(const std::array<key_type, actualCount>& pairsNew) {
+		size_t minLength{ std::numeric_limits<size_t>::max() };
+		size_t maxLength{ std::numeric_limits<size_t>::min() };
+		for (size_t x = 0; x < actualCount; ++x) {
+			const auto keySize = pairsNew[x].size();
 			if (keySize < minLength) {
 				minLength = keySize;
 			}
@@ -102,49 +133,49 @@ namespace jsonifier_internal {
 		return { minLength, maxLength - minLength, maxLength };
 	}
 
-	template<typename key_type_new, typename value_type_new, size_t actualCount, size_t storageSizeNew> struct simd_hash_map : public key_hasher {
+	template<typename key_type_new, typename value_type_new, size_t actualCount, size_t storageSizeNew, const auto& tuple> struct simd_hash_map : public key_hasher {
 		using simd_type		= map_simd_t<storageSizeNew>;
 		using key_type		= key_type_new;
 		using value_type	= value_type_new;
-		using const_pointer = const value_type*;
-		using size_type		= uint64_t;
+		using const_pointer = const jsonifier_internal::unwrap_t<value_type>*;
+		using size_type		= size_t;
 		using control_type	= uint8_t;
 		static constexpr size_type storageSize{ storageSizeNew };
 		static constexpr size_type bucketSize = setSimdWidth<storageSize>();
-		static constexpr size_type numGroups  = storageSize > bucketSize ? storageSize / bucketSize : 1;
-		JSONIFIER_ALIGN std::pair<key_type, value_type> items[storageSize + 1]{};
+		static constexpr auto nonConstCompareStringFunctions{ generateNonConstCompareStringFunctionPtrArray<value_type>() };
+		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
+		static constexpr size_type numGroups = storageSize > bucketSize ? storageSize / bucketSize : 1;
 		JSONIFIER_ALIGN control_type controlBytes[storageSize]{};
+		JSONIFIER_ALIGN std::array<size_t, storageSize + 1> items{};
 		JSONIFIER_ALIGN size_type stringLength{};
 
-		constexpr simd_hash_map() noexcept = default;
-
-		JSONIFIER_INLINE constexpr const_pointer begin() const noexcept {
-			return &items->second;
+		constexpr simd_hash_map() noexcept {
+			items[storageSize] = std::numeric_limits<size_t>::max();
 		}
 
-		JSONIFIER_INLINE constexpr const_pointer end() const noexcept {
-			return &(items + storageSize)->second;
-		}
-
-		JSONIFIER_INLINE constexpr auto size() const noexcept {
-			return actualCount;
-		}
-
-		template<typename key_type_newer> JSONIFIER_INLINE constexpr const_pointer find(key_type_newer&& key) const noexcept {
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char* end, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto keySize	   = key.size();
-				JSONIFIER_ALIGN const auto hash		   = hashKeyRt(key.data(), keySize > stringLength ? stringLength : keySize);
+				JSONIFIER_ALIGN const auto keySize	   = static_cast<uint64_t>(end - iter);
+				JSONIFIER_ALIGN const auto hash		   = hashKeyRt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 															  simd_internal::gatherValues<simd_type>(controlBytes + resultIndex))) +
 					 resultIndex);
-				return LIKELY(compareSvNonConst(items[finalIndex].first, key)) ? &(items + finalIndex)->second : end();
+				if (nonConstCompareStringFunctions[items[finalIndex]](iter)) {
+					return functionPtrs.data() + items[finalIndex];
+				} else {
+					return functionPtrs.data() + functionPtrs.size();
+				}
 			} else {
-				JSONIFIER_ALIGN const auto keySize	   = key.size();
-				JSONIFIER_ALIGN const auto hash		   = hashKeyCt(key.data(), keySize > stringLength ? stringLength : keySize);
+				JSONIFIER_ALIGN const auto keySize	   = static_cast<uint64_t>(end - iter);
+				JSONIFIER_ALIGN const auto hash		   = hashKeyCt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (constMatch(controlBytes + resultIndex, static_cast<control_type>(hash)) + resultIndex);
-				return LIKELY(compareSvConst(items[finalIndex].first, key)) ? &(items + finalIndex)->second : end();
+				if (constCompareStringFunctions[items[finalIndex]](iter)) {
+					return functionPtrs.data() + items[finalIndex];
+				} else {
+					return functionPtrs.data() + functionPtrs.size();
+				}
 			}
 		}
 
@@ -169,52 +200,51 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t startingValue, size_t actualCount, typename key_type, typename value_type, template<typename, typename, size_t, size_t> typename map_type> using map_variant =
-		std::variant<map_type<key_type, value_type, actualCount, startingValue>, map_type<key_type, value_type, actualCount, startingValue * 2>,
-			map_type<key_type, value_type, actualCount, startingValue * 4>, map_type<key_type, value_type, actualCount, startingValue * 8>,
-			map_type<key_type, value_type, actualCount, startingValue * 16>>;
+	template<size_t startingValue, size_t actualCount, typename key_type, typename value_type, const auto& tuple,
+		template<typename, typename, size_t, size_t, const auto&> typename map_type>
+	using map_variant = std::variant<map_type<key_type, value_type, actualCount, startingValue, tuple>, map_type<key_type, value_type, actualCount, startingValue * 2, tuple>,
+		map_type<key_type, value_type, actualCount, startingValue * 4, tuple>, map_type<key_type, value_type, actualCount, startingValue * 8, tuple>,
+		map_type<key_type, value_type, actualCount, startingValue * 16, tuple>>;
 
-	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
-	constexpr auto constructSimdHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew,
-		map_construction_values constructionValues) -> map_variant<16, actualCount, key_type, value_type, simd_hash_map> {
+	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize, const auto& tuple>
+	constexpr auto constructSimdHashMapFinal(const std::array<key_type, actualCount>& pairsNew, map_construction_values constructionValues)
+		-> map_variant<16, actualCount, key_type, value_type, tuple, simd_hash_map> {
 		constexpr size_t bucketSize = setSimdWidth<storageSize>();
 		constexpr size_t numGroups	= storageSize > bucketSize ? storageSize / bucketSize : 1;
-		simd_hash_map<key_type, value_type, actualCount, storageSize> simdHashMapNew{};
+		simd_hash_map<key_type, value_type, actualCount, storageSize, tuple> simdHashMapNew{};
 		simdHashMapNew.setSeedCt(constructionValues.seed);
 		simdHashMapNew.stringLength = constructionValues.stringLength;
 		std::array<size_t, numGroups> bucketSizes{};
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto keySize				  = pairsNew[x].first.size();
-			const auto stringLengthNew		  = simdHashMapNew.stringLength > keySize ? keySize : simdHashMapNew.stringLength;
-			const auto hash					  = simdHashMapNew.hashKeyCt(pairsNew[x].first.data(), stringLengthNew);
+			const auto stringLengthNew		  = pairsNew[x].size();
+			const auto hash					  = simdHashMapNew.hashKeyCt(pairsNew[x].data(), stringLengthNew);
 			const auto groupPos				  = (hash >> 8) % numGroups;
 			const auto ctrlByte				  = static_cast<uint8_t>(hash);
 			const auto bucketSizeNew		  = ++bucketSizes[groupPos];
 			const auto slot					  = ((groupPos * bucketSize) + bucketSizeNew);
-			simdHashMapNew.items[slot]		  = pairsNew[x];
+			simdHashMapNew.items[slot]		  = x;
 			simdHashMapNew.controlBytes[slot] = ctrlByte;
 		}
-
-		return map_variant<16, actualCount, key_type, value_type, simd_hash_map>{ simd_hash_map<key_type, value_type, actualCount, storageSize>(simdHashMapNew) };
+		return map_variant<16, actualCount, key_type, value_type, tuple, simd_hash_map>{ simd_hash_map<key_type, value_type, actualCount, storageSize, tuple>(simdHashMapNew) };
 	}
 
-	template<typename key_type, typename value_type, size_t actualCount> using construct_simd_hash_map_function_ptr =
-		decltype(&constructSimdHashMapFinal<key_type, value_type, actualCount, 16ull>);
+	template<typename key_type, typename value_type, size_t actualCount, const auto& tuple> using construct_simd_hash_map_function_ptr =
+		decltype(&constructSimdHashMapFinal<key_type, value_type, actualCount, 16ull, tuple>);
 
-	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr construct_simd_hash_map_function_ptr<key_type, value_type, actualCount> constructSimdHashMapFinalPtrs[5] = {
-		&constructSimdHashMapFinal<key_type, value_type, actualCount, 16ull>, &constructSimdHashMapFinal<key_type, value_type, actualCount, 32ull>,
-		&constructSimdHashMapFinal<key_type, value_type, actualCount, 64ull>, &constructSimdHashMapFinal<key_type, value_type, actualCount, 128ull>,
-		&constructSimdHashMapFinal<key_type, value_type, actualCount, 256ull>
+	template<typename key_type, typename value_type, size_t actualCount, const auto& tuple>
+	constexpr construct_simd_hash_map_function_ptr<key_type, value_type, actualCount, tuple> constructSimdHashMapFinalPtrs[5] = {
+		&constructSimdHashMapFinal<key_type, value_type, actualCount, 16ull, tuple>, &constructSimdHashMapFinal<key_type, value_type, actualCount, 32ull, tuple>,
+		&constructSimdHashMapFinal<key_type, value_type, actualCount, 64ull, tuple>, &constructSimdHashMapFinal<key_type, value_type, actualCount, 128ull, tuple>,
+		&constructSimdHashMapFinal<key_type, value_type, actualCount, 256ull, tuple>
 	};
 
-	template<uint64_t maxSizeIndex, typename key_type, typename value_type, size_t actualCount>
-	constexpr auto constructSimdHashMapHelper(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
+	template<size_t maxSizeIndex, typename key_type, typename value_type, size_t actualCount>
+	constexpr auto constructSimdHashMapInternal(const std::array<key_type, actualCount>& pairsNew, jsonifier_internal::xoshiro256 prng, key_stats_t& keyStatsVal) {
 		constexpr size_t bucketSize	 = setSimdWidth<simdHashMapMaxSizes[maxSizeIndex]>();
 		constexpr size_t storageSize = simdHashMapMaxSizes[maxSizeIndex];
 		constexpr size_t numGroups	 = storageSize > bucketSize ? storageSize / bucketSize : 1;
 
-		auto constructForGivenStringLength = [&](uint64_t stringLength) constexpr -> map_construction_values {
+		auto constructForGivenStringLength = [&](size_t stringLength) constexpr -> map_construction_values {
 			std::array<uint8_t, storageSize> controlBytes{};
 			std::array<size_t, numGroups> bucketSizes{};
 			std::array<size_t, storageSize> slots{};
@@ -222,15 +252,15 @@ namespace jsonifier_internal {
 			bool collided{};
 			size_t seed{};
 
-			for (uint64_t x = 0; x < 2; ++x) {
+			for (size_t x = 0; x < 2; ++x) {
 				seed = prng();
 				hasherNew.setSeedCt(seed);
 				collided = false;
-				std::fill(slots.begin(), slots.end(), std::numeric_limits<uint64_t>::max());
+				std::fill(slots.begin(), slots.end(), std::numeric_limits<size_t>::max());
 
 				for (size_t y = 0; y < actualCount; ++y) {
-					const auto keySize		 = pairsNew[y].first.size();
-					const auto hash			 = hasherNew.hashKeyCt(pairsNew[y].first.data(), keySize > stringLength ? stringLength : keySize);
+					const auto keySize		 = pairsNew[y].size();
+					const auto hash			 = hasherNew.hashKeyCt(pairsNew[y].data(), keySize);
 					const auto groupPos		 = (hash >> 8) % numGroups;
 					const auto ctrlByte		 = static_cast<uint8_t>(hash);
 					const auto bucketSizeNew = ++bucketSizes[groupPos];
@@ -265,12 +295,12 @@ namespace jsonifier_internal {
 
 		map_construction_values bestValues{};
 
-		uint64_t failedCount{};
+		size_t failedCount{};
 		for (int64_t x = static_cast<int64_t>(keyStatsVal.maxLength); x >= static_cast<int64_t>(keyStatsVal.minLength) && x > 0; --x) {
-			auto newValues = constructForGivenStringLength(static_cast<uint64_t>(x));
+			auto newValues = constructForGivenStringLength(static_cast<size_t>(x));
 			if (newValues.success && newValues.stringLength <= bestValues.stringLength) {
 				bestValues			  = newValues;
-				keyStatsVal.maxLength = static_cast<uint64_t>(x) - 1;
+				keyStatsVal.maxLength = static_cast<size_t>(x) - 1;
 			} else if (failedCount < 3) {
 				++failedCount;
 			} else {
@@ -279,110 +309,107 @@ namespace jsonifier_internal {
 		}
 
 		if constexpr (maxSizeIndex < std::size(simdHashMapMaxSizes) - 1) {
-			auto newValues = constructSimdHashMapHelper<maxSizeIndex + 1, key_type, value_type, actualCount>(pairsNew, prng, keyStatsVal);
+			auto newValues = constructSimdHashMapInternal<maxSizeIndex + 1, key_type, value_type, actualCount>(pairsNew, prng, keyStatsVal);
 			if (newValues.success && newValues.stringLength <= bestValues.stringLength) {
 				bestValues = newValues;
 			}
 		}
+
 		return bestValues;
 	}
 
-	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr auto constructSimdHashMap(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew) {
-		auto keyStatsVal = getKeyStats(pairsNew);
-		auto constructionValues =
-			constructSimdHashMapHelper<getMaxSizeIndex<actualCount>(simdHashMapMaxSizes), key_type, value_type, actualCount>(pairsNew, xoshiro256{}, keyStatsVal);
-		return constructSimdHashMapFinalPtrs<key_type, value_type, actualCount>[constructionValues.maxSizeIndex](pairsNew, constructionValues);
+	template<typename key_type, typename value_type, size_t actualCount, const auto& tuple> constexpr auto constructSimdHashMap(const std::array<key_type, actualCount>& pairsNew) {
+		key_stats_t keyStatsVal = getKeyStats(pairsNew);
+		auto constructionValues = constructSimdHashMapInternal<getMaxSizeIndex<actualCount>(simdHashMapMaxSizes), key_type, value_type, actualCount>(pairsNew,
+			jsonifier_internal::xoshiro256{}, keyStatsVal);
+		return constructSimdHashMapFinalPtrs<key_type, value_type, actualCount, tuple>[constructionValues.maxSizeIndex](pairsNew, constructionValues);
 	}
 
-	template<typename key_type_new, typename value_type_new, size_t actualCount, size_t storageSize> struct minimal_char_hash_map : public key_hasher {
+	template<typename key_type_new, typename value_type_new, size_t actualCount, size_t storageSizeNew, const auto& tuple> struct minimal_char_hash_map : public key_hasher {
 		using key_type		= key_type_new;
-		using value_type	= value_type_new;
+		using value_type	= jsonifier_internal::unwrap_t<value_type_new>;
 		using const_pointer = const value_type*;
-		using size_type		= uint64_t;
-		JSONIFIER_ALIGN std::pair<key_type, value_type> items[storageSize + 1]{};
-		JSONIFIER_ALIGN uint64_t stringLength{};
+		using size_type		= size_t;
+		static constexpr auto nonConstCompareStringFunctions{ generateNonConstCompareStringFunctionPtrArray<value_type>() };
+		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
+		JSONIFIER_ALIGN std::array<size_t, storageSizeNew> items{};
+		JSONIFIER_ALIGN size_t stringLength{};
 
 		constexpr minimal_char_hash_map() noexcept = default;
 
-		JSONIFIER_INLINE constexpr const_pointer begin() const noexcept {
-			return &items->second;
-		}
-
-		JSONIFIER_INLINE constexpr const_pointer end() const noexcept {
-			return &(items + storageSize)->second;
-		}
-
-		JSONIFIER_INLINE constexpr auto size() const noexcept {
-			return actualCount;
-		}
-
-		template<typename key_type_newer> JSONIFIER_INLINE constexpr const_pointer find(key_type_newer&& key) const noexcept {
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char* end, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto keySize		   = key.size();
+				JSONIFIER_ALIGN const auto keySize		   = static_cast<uint64_t>(end - iter);
 				JSONIFIER_ALIGN const auto stringLengthNew = keySize > stringLength ? stringLength : keySize;
-				JSONIFIER_ALIGN const auto hash			   = (operator uint64_t() ^ key.data()[0]) + key.data()[stringLengthNew - 1];
-				JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSize;
-				return LIKELY(compareSvNonConst(items[finalIndex].first, key)) ? &(items + finalIndex)->second : end();
+				JSONIFIER_ALIGN const auto hash			   = seed * (operator size_t() ^ iter[0]) + iter[stringLengthNew - 1];
+				JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSizeNew;
+				if (nonConstCompareStringFunctions[items[finalIndex]](iter)) {
+					return functionPtrs.data() + items[finalIndex];
+				} else {
+					return functionPtrs.data() + functionPtrs.size();
+				}
 			} else {
-				JSONIFIER_ALIGN const auto keySize		   = key.size();
+				JSONIFIER_ALIGN const auto keySize		   = static_cast<uint64_t>(end - iter);
 				JSONIFIER_ALIGN const auto stringLengthNew = keySize > stringLength ? stringLength : keySize;
-				JSONIFIER_ALIGN const auto hash			   = (operator uint64_t() ^ key.data()[0]) + key.data()[stringLengthNew - 1];
-				JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSize;
-				return LIKELY(compareSvConst(items[finalIndex].first, key)) ? &(items + finalIndex)->second : end();
+				JSONIFIER_ALIGN const auto hash			   = seed * (operator size_t() ^ iter[0]) + iter[stringLengthNew - 1];
+				JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSizeNew;
+				if (constCompareStringFunctions[items[finalIndex]](iter)) {
+					return functionPtrs.data() + items[finalIndex];
+				} else {
+					return functionPtrs.data() + functionPtrs.size();
+				}
 			}
 		}
 	};
 
-	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize>
-	constexpr auto constructMinimalCharHashMapFinal(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew,
-		map_construction_values constructionValues) -> map_variant<16ull, actualCount, key_type, value_type, minimal_char_hash_map> {
-		minimal_char_hash_map<key_type, value_type, actualCount, storageSize> minimalCharHashMapNew{};
+	template<typename key_type, typename value_type, size_t actualCount, size_t storageSize, const auto& tuple>
+	constexpr auto constructMinimalCharHashMapFinal(const std::array<key_type, actualCount>& pairsNew, map_construction_values constructionValues)
+		-> map_variant<16ull, actualCount, key_type, value_type, tuple, minimal_char_hash_map> {
+		minimal_char_hash_map<key_type, value_type, actualCount, storageSize, tuple> minimalCharHashMapNew{};
 		minimalCharHashMapNew.stringLength = constructionValues.stringLength;
 		minimalCharHashMapNew.setSeedCt(constructionValues.seed);
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto keySize				  = pairsNew[x].first.size();
-			const auto stringLengthNew		  = keySize > minimalCharHashMapNew.stringLength ? minimalCharHashMapNew.stringLength : keySize;
-			const auto hash					  = (minimalCharHashMapNew.operator uint64_t() ^ pairsNew[x].first.data()[0]) + pairsNew[x].first.data()[stringLengthNew - 1];
-			const auto slot					  = hash % storageSize;
-			minimalCharHashMapNew.items[slot] = pairsNew[x];
+			const auto keySize		   = pairsNew[x].size();
+			const auto stringLengthNew = keySize > minimalCharHashMapNew.stringLength ? minimalCharHashMapNew.stringLength : keySize;
+			const auto hash			   = constructionValues.seed * (minimalCharHashMapNew.operator size_t() ^ pairsNew[x].data()[0]) + pairsNew[x].data()[stringLengthNew - 1];
+			const auto slot			   = hash % storageSize;
+			minimalCharHashMapNew.items[slot] = x;
 		}
-
-		return map_variant<16ull, actualCount, key_type, value_type, minimal_char_hash_map>{ minimal_char_hash_map<key_type, value_type, actualCount, storageSize>(
-			minimalCharHashMapNew) };
+		return map_variant<16ull, actualCount, key_type, value_type, tuple, minimal_char_hash_map>{ minimal_char_hash_map<key_type, value_type, actualCount, storageSize, tuple>{
+			minimalCharHashMapNew } };
 	}
 
-	template<typename key_type, typename value_type, size_t actualCount> using construct_minimal_char_hash_map_function_ptr =
-		decltype(&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 16ull>);
+	template<typename key_type, typename value_type, size_t actualCount, const auto& tuple> using construct_minimal_char_hash_map_function_ptr =
+		decltype(&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 16ull, tuple>);
 
-	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr construct_minimal_char_hash_map_function_ptr<key_type, value_type, actualCount> constructMinimalCharHashMapFinalPtrs[5] = {
-		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 16ull>, &constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 32ull>,
-		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 64ull>, &constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 128ull>,
-		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 256ull>
+	template<typename key_type, typename value_type, size_t actualCount, const auto& tuple>
+	constexpr construct_minimal_char_hash_map_function_ptr<key_type, value_type, actualCount, tuple> constructMinimalCharHashMapFinalPtrs[5] = {
+		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 16ull, tuple>, &constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 32ull, tuple>,
+		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 64ull, tuple>, &constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 128ull, tuple>,
+		&constructMinimalCharHashMapFinal<key_type, value_type, actualCount, 256ull, tuple>
 	};
 
-	template<uint64_t maxSizeIndex, typename key_type, typename value_type, size_t actualCount>
-	constexpr auto constructMinimalCharHashMapHelper(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
+	template<size_t maxSizeIndex, typename key_type, typename value_type, size_t actualCount>
+	constexpr auto constructMinimalCharHashMapInternal(const std::array<key_type, actualCount>& pairsNew, jsonifier_internal::xoshiro256 prng, key_stats_t& keyStatsVal) {
 		constexpr size_t storageSize	   = minimalCharHashMapMaxSizes[maxSizeIndex];
-		auto constructForGivenStringLength = [&](uint64_t stringLength) mutable -> map_construction_values {
+		auto constructForGivenStringLength = [&](size_t stringLength) mutable -> map_construction_values {
 			size_t slots[storageSize]{};
 			key_hasher hasherNew{};
 			bool collided{};
 			size_t seed{};
-			std::fill(slots, slots + storageSize, std::numeric_limits<uint64_t>::max());
-			for (uint64_t x = 0; x < 2; ++x) {
+			std::fill(slots, slots + storageSize, std::numeric_limits<size_t>::max());
+			for (size_t x = 0; x < 2; ++x) {
 				seed = prng();
 				hasherNew.setSeedCt(seed);
 				for (size_t y = 0; y < actualCount; ++y) {
 					collided				   = false;
-					const auto keySize		   = pairsNew[y].first.size();
+					const auto keySize		   = pairsNew[y].size();
 					const auto stringLengthNew = keySize > stringLength ? stringLength : keySize;
-					const auto hash			   = (hasherNew.operator uint64_t() ^ pairsNew[y].first.data()[0]) + pairsNew[y].first.data()[stringLengthNew - 1];
+					const auto hash			   = seed * (hasherNew.operator size_t() ^ pairsNew[y].data()[0]) + pairsNew[y].data()[stringLengthNew - 1];
 					const auto slot			   = hash % storageSize;
 
 					if (contains(slots, slot, storageSize)) {
-						std::fill(slots, slots + storageSize, std::numeric_limits<uint64_t>::max());
+						std::fill(slots, slots + storageSize, std::numeric_limits<size_t>::max());
 						collided = true;
 						break;
 					}
@@ -406,12 +433,12 @@ namespace jsonifier_internal {
 
 		map_construction_values bestValues{};
 
-		uint64_t failedCount{};
+		size_t failedCount{};
 		for (int64_t x = static_cast<int64_t>(keyStatsVal.maxLength); x >= static_cast<int64_t>(keyStatsVal.minLength) && x > 0; --x) {
-			auto newValues = constructForGivenStringLength(static_cast<uint64_t>(x));
+			auto newValues = constructForGivenStringLength(static_cast<size_t>(x));
 			if (newValues.success && newValues.stringLength <= bestValues.stringLength) {
 				bestValues			  = newValues;
-				keyStatsVal.maxLength = static_cast<uint64_t>(x) - 1;
+				keyStatsVal.maxLength = static_cast<size_t>(x) - 1;
 			} else if (failedCount < 3) {
 				++failedCount;
 			} else {
@@ -420,20 +447,21 @@ namespace jsonifier_internal {
 		}
 
 		if constexpr (maxSizeIndex < std::size(minimalCharHashMapMaxSizes) - 1) {
-			auto newValues = constructMinimalCharHashMapHelper<maxSizeIndex + 1, key_type, value_type, actualCount>(pairsNew, prng, keyStatsVal);
+			auto newValues = constructMinimalCharHashMapInternal<maxSizeIndex + 1, key_type, value_type, actualCount>(pairsNew, prng, keyStatsVal);
 			if (newValues.success && newValues.stringLength <= bestValues.stringLength) {
 				bestValues = newValues;
 			}
 		}
+
 		return bestValues;
 	}
 
-	template<typename key_type, typename value_type, size_t actualCount>
-	constexpr auto constructMinimalCharHashMap(const std::array<std::pair<key_type, value_type>, actualCount>& pairsNew) {
-		auto keyStatsVal = getKeyStats(pairsNew);
-		auto constructionValues =
-			constructMinimalCharHashMapHelper<getMaxSizeIndex<actualCount>(minimalCharHashMapMaxSizes), key_type, value_type, actualCount>(pairsNew, xoshiro256{}, keyStatsVal);
-		return constructMinimalCharHashMapFinalPtrs<key_type, value_type, actualCount>[constructionValues.maxSizeIndex](pairsNew, constructionValues);
+	template<typename key_type, typename value_type, size_t actualCount, const auto& newTuple>
+	constexpr auto constructMinimalCharHashMap(const std::array<key_type, actualCount>& pairsNew) {
+		auto keyStatsVal		= getKeyStats(pairsNew);
+		auto constructionValues = constructMinimalCharHashMapInternal<getMaxSizeIndex<actualCount>(minimalCharHashMapMaxSizes), key_type, value_type, actualCount>(pairsNew,
+			jsonifier_internal::xoshiro256{}, keyStatsVal);
+		return constructMinimalCharHashMapFinalPtrs<key_type, value_type, actualCount, newTuple>[constructionValues.maxSizeIndex](pairsNew, constructionValues);
 	}
 
 	template<const jsonifier::string_view& S, bool CheckSize = true> JSONIFIER_INLINE constexpr bool cxStringCmp(const jsonifier::string_view key) noexcept {
@@ -459,141 +487,87 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, const auto& S> struct micro_map1 {
-		value_type items[1]{};
+		std::array<size_t, 2> indices{ 0, 1 };
+		static constexpr auto nonConstCompareStringFunctions{ generateNonConstCompareStringFunctionPtrArray<value_type>() };
+		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
 
-		JSONIFIER_INLINE constexpr const value_type* begin() const noexcept {
-			return items;
-		}
-
-		JSONIFIER_INLINE constexpr const value_type* end() const noexcept {
-			return items + 1;
-		}
-
-		template<typename key_type> JSONIFIER_INLINE constexpr const value_type* find(key_type&& key) const noexcept {
-			if (compareSv<S>(key)) [[likely]] {
-				return items;
-			} else [[unlikely]] {
-				return items + 1;
-			}
-		}
-	};
-
-	template<typename value_type, const auto& S0, const auto& S1> struct micro_map2 {
-		value_type items[2]{};
-
-		static constexpr bool sameSize	= S0.size() == S1.size();
-		static constexpr bool checkSize = !sameSize;
-
-		JSONIFIER_INLINE constexpr const value_type* begin() const noexcept {
-			return items;
-		}
-
-		JSONIFIER_INLINE constexpr const value_type* end() const noexcept {
-			return items + 2;
-		}
-
-		template<typename key_type> JSONIFIER_INLINE constexpr const value_type* find(key_type&& key) const noexcept {
-			if constexpr (sameSize) {
-				constexpr auto n = S0.size();
-				if (key.size() != n) {
-					return items + 2;
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char*, function_type& functionPtrs) const noexcept {
+			if (!std::is_constant_evaluated()) {
+				if (nonConstCompareStringFunctions[0](iter)) [[likely]] {
+					return functionPtrs.data();
+				} else [[unlikely]] {
+					return functionPtrs.data() + 1;
+				}
+			} else {
+				if (constCompareStringFunctions[0](iter)) [[likely]] {
+					return functionPtrs.data();
+				} else [[unlikely]] {
+					return functionPtrs.data() + 1;
 				}
 			}
-
-			if (cxStringCmp<S0, checkSize>(key)) {
-				return items;
-			} else if (cxStringCmp<S1, checkSize>(key)) {
-				return items + 1;
-			} else [[unlikely]] {
-				return items + 2;
-			}
 		}
 	};
-
-	template<typename value_type, typename... Ts> struct unique {
-		using type = value_type;
-	};
-
-	template<template<typename...> class value_type, typename... Ts, typename U, typename... Us> struct unique<value_type<Ts...>, U, Us...>
-		: std::conditional_t<(std::is_same_v<U, Ts> || ...), unique<value_type<Ts...>, Us...>, unique<value_type<Ts..., U>, Us...>> {};
-
-	template<typename value_type> struct tuple_variant;
-
-	template<typename... Ts> struct tuple_variant<std::tuple<Ts...>> : unique<std::variant<>, Ts...> {};
-
-	template<typename value_type> struct tuple_ptr_variant;
-
-	template<typename... Ts> struct tuple_ptr_variant<std::tuple<Ts...>> : unique<std::variant<>, std::add_pointer_t<Ts>...> {};
-
-	template<typename... Ts> struct tuple_ptr_variant<std::pair<Ts...>> : unique<std::variant<>, std::add_pointer_t<Ts>...> {};
-
-	template<typename tuple_type, typename = std::make_index_sequence<std::tuple_size<tuple_type>::value>> struct value_tuple_variant;
-
-	template<typename tuple_type, size_t I> struct member_type {
-		using T0   = std::tuple_element_t<0, std::tuple_element_t<I, tuple_type>>;
-		using type = std::tuple_element_t<std::is_member_pointer_v<T0> ? 0 : 1, std::tuple_element_t<I, tuple_type>>;
-	};
-
-	template<typename tuple_type, size_t... I> struct value_tuple_variant<tuple_type, std::index_sequence<I...>> {
-		using type = typename tuple_variant<decltype(std::tuple_cat(std::declval<std::tuple<typename member_type<tuple_type, I>::type>>()...))>::type;
-	};
-
-	template<typename tuple_type> using value_tuple_variant_t = typename value_tuple_variant<tuple_type>::type;
 
 	template<typename value_type, size_t I> struct core_sv {
 		static constexpr jsonifier::string_view value = getKey<value_type, I>();
 	};
 
 	template<typename value_type, size_t I> constexpr auto keyValue() noexcept {
-		using value_t		  = value_tuple_variant_t<jsonifier::concepts::core_t<value_type>>;
+		using value_t		  = jsonifier::concepts::core_t<value_type>;
 		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
 		using T0			  = jsonifier_internal::unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
-			return std::pair<jsonifier::string_view, value_t>{ getName<first>(), first };
+			return std::tuple{ getName<first>(), first };
 		} else {
-			return std::pair<jsonifier::string_view, value_t>{ jsonifier::string_view(first), std::get<1>(std::get<I>(jsonifier::concepts::coreV<value_type>)) };
+			return std::tuple{ jsonifier::string_view(first), std::get<1>(std::get<I>(jsonifier::concepts::coreV<value_type>)) };
 		}
 	}
 
 	template<typename value_type, size_t I> constexpr auto getValue() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
+		constexpr auto& first = std::get<1>(std::get<I>(jsonifier::concepts::coreV<value_type>));
 		using T0			  = jsonifier_internal::unwrap_t<decltype(first)>;
-		if constexpr (std::is_member_pointer_v<T0>) {
-			return first;
-		} else {
-			return std::get<1>(std::get<I>(jsonifier::concepts::coreV<value_type>));
-		}
+		return first;
 	}
 
-	template<typename value_type, size_t... I> constexpr auto makeMapImpl(std::index_sequence<I...>) {
-		using value_t	 = value_tuple_variant_t<jsonifier::concepts::core_t<value_type>>;
+	template<typename value_type, size_t... indices> constexpr auto collectTupleInternal(std::index_sequence<indices...>) {
+		return std::make_tuple(keyValue<value_type, indices>()...);
+	}
+
+	template<typename value_type> constexpr auto collectTuple() {
+		constexpr auto indexCount{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
+		return collectTupleInternal<value_type>(std::make_index_sequence<indexCount>{});
+	}
+
+	template<typename value_type, const auto& newTuple, size_t... I> constexpr auto makeMapImpl(std::index_sequence<I...>) {
 		constexpr auto n = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+
 		if constexpr (n == 0) {
 			return nullptr;
 		} else if constexpr (n == 1) {
-			return micro_map1<value_t, core_sv<value_type, I>::value...>{ getValue<value_type, I>()... };
-		} else if constexpr (n == 2) {
-			return micro_map2<value_t, core_sv<value_type, I>::value...>{ getValue<value_type, I>()... };
+			constexpr auto newMap = micro_map1<value_type, core_sv<value_type, I>::value...>{};
+			return newMap;
 		} else if constexpr (n < 16) {
-			constexpr auto mapNew{ constructMinimalCharHashMap<jsonifier::string_view, value_t, n>({ keyValue<value_type, I>()... }) };
+			constexpr auto mapNew	= constructMinimalCharHashMap<jsonifier::string_view, value_type, n, newTuple>({ getKey<value_type, I>()... });
 			constexpr auto newIndex = mapNew.index();
 			constexpr auto newMap	= std::get<newIndex>(mapNew);
-			if constexpr (newMap.stringLength == std::numeric_limits<uint64_t>::max()) {
-				constexpr auto mapNewer{ constructSimdHashMap<jsonifier::string_view, value_t, n>({ keyValue<value_type, I>()... }) };
+			if constexpr (newMap.stringLength == std::numeric_limits<size_t>::max()) {
+				constexpr auto mapNewer	  = constructSimdHashMap<jsonifier::string_view, value_type, n, newTuple>({ getKey<value_type, I>()... });
 				constexpr auto newIndexer = mapNewer.index();
 				return std::get<newIndexer>(mapNewer);
 			} else {
 				return newMap;
 			}
 		} else {
-			constexpr auto mapNew{ constructSimdHashMap<jsonifier::string_view, value_t, n>({ keyValue<value_type, I>()... }) };
+			constexpr auto mapNew	= constructSimdHashMap<jsonifier::string_view, value_type, n, newTuple>({ getKey<value_type, I>()... });
 			constexpr auto newIndex = mapNew.index();
-			return std::get<newIndex>(mapNew);
+			constexpr auto newMap	= std::get<newIndex>(mapNew);
+			return newMap;
 		}
 	}
 
-	template<typename value_type> constexpr auto makeMap() {
+	template<typename value_type, const auto& newTuple> constexpr auto makeMap() {
 		constexpr auto indices = std::make_index_sequence<std::tuple_size_v<jsonifier::concepts::core_t<value_type>>>{};
-		return makeMapImpl<jsonifier::concepts::decay_keep_volatile_t<value_type>>(indices);
+		return makeMapImpl<value_type, newTuple>(indices);
 	}
+
 }

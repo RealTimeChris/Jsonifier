@@ -80,13 +80,19 @@ namespace jsonifier_internal {
 	 *
 	 * @tparam value_type The type from which to remove member pointers.
 	 */
-	template<typename value_type> struct remove_member_pointer {
-		using type = value_type; /**< The type without member pointers. */
+	template<typename member_type> struct remove_member_pointer {
+		using type = member_type;
 	};
 
-	template<typename member_type, typename value_type> struct remove_member_pointer<value_type member_type::*> {
-		using type = member_type; /**< The type without member pointers. */
+	template<typename value_type, typename member_type> struct remove_member_pointer<member_type value_type::*> {
+		using type = value_type;
 	};
+
+	template<typename value_type, typename member_type, typename... Args> struct remove_member_pointer<member_type (value_type::*)(Args...)> {
+		using type = value_type;
+	};
+
+	template<typename value_type> using remove_member_pointer_t = typename remove_member_pointer<value_type>::type;
 
 	template<auto valueNew> struct make_static {
 		static constexpr auto value{ valueNew };

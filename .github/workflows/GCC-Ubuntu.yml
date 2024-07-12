@@ -30,7 +30,7 @@ jobs:
     - name: Configure CMake for Jsonifier
       working-directory: ./
       run: |
-           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_LIBRARY="true"
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
     - name: Build the Test
       working-directory: ./Build
@@ -49,7 +49,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DJSONIFIER_TEST="true" -DJSONIFIER_LIBRARY="true"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       working-directory: ./Build

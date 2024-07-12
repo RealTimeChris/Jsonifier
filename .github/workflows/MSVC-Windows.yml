@@ -29,7 +29,7 @@ jobs:
 
     - name: Configure CMake for Jsonifier
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_LIBRARY="true"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
     - name: Build the Test
       run: |
@@ -45,7 +45,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="true" -DJSONIFIER_LIBRARY="true"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       run: |

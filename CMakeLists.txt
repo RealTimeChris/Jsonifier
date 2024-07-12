@@ -24,9 +24,6 @@
 
 cmake_minimum_required(VERSION 3.18)
 
-if (NOT EXISTS ${JSONIFIER_LIBRARY})
-set(JSONIFIER_LIBRARY "TRUE")
-
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
 
 include("CollectVersion")
@@ -130,7 +127,6 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if("${JSONIFIER_TEST}" STREQUAL "true")
+if("${JSONIFIER_TEST}" STREQUAL "TRUE")
 	add_subdirectory("./Tests")
-endif()
 endif()

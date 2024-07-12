@@ -521,6 +521,11 @@ namespace jsonifier_internal {
 		}
 	}
 
+	template<typename value_type, size_t I> constexpr jsonifier::string_view getKeyCore() noexcept {
+		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
+		return static_cast<jsonifier::string_view>(first);
+	}
+
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
 		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
 		using T0			  = jsonifier_internal::unwrap_t<decltype(first)>;
@@ -531,7 +536,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t index, uint64_t maxIndex> JSONIFIER_INLINE constexpr auto keyStatsHelper(key_stats_t stats) {
+	template<typename value_type, uint64_t index, uint64_t maxIndex> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
 			constexpr jsonifier::string_view key{ getKey<value_type, index>() };
 			constexpr auto n{ key.size() };
@@ -541,7 +546,7 @@ namespace jsonifier_internal {
 			if (n > stats.maxLength) {
 				stats.maxLength = n;
 			}
-			return keyStatsHelper<value_type, index + 1, maxIndex>(stats);
+			return keyStatsInternal<value_type, index + 1, maxIndex>(stats);
 		} else {
 			if constexpr (maxIndex > 0) {
 				stats.lengthRange = stats.maxLength - stats.minLength;
@@ -553,7 +558,7 @@ namespace jsonifier_internal {
 	template<typename value_type> JSONIFIER_INLINE constexpr auto keyStats() {
 		constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
 
-		return keyStatsHelper<value_type, 0, N>(key_stats_t{});
+		return keyStatsInternal<value_type, 0, N>(key_stats_t{});
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>

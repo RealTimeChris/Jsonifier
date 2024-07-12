@@ -126,13 +126,13 @@ namespace jsonifier {
 	template<typename value_type> struct core {};
 
 	template<typename value_type> struct value {
-		value_type parseValue;
+		value_type parseValue{};
 	};
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
 	template<typename value_type> struct scalar_value {
-		value_type parseValue;
+		value_type parseValue{};
 	};
 
 	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
