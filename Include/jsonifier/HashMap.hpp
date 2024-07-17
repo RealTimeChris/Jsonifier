@@ -79,8 +79,8 @@ namespace jsonifier_internal {
 		return lhs.size() == rhs.size() && compare(lhs.data(), rhs.data(), lhs.size());
 	}
 
-	template<typename value_type, size_t index> constexpr bool compareStringFunctionNonConst(const char* string01) {
-		constexpr auto currentKey = getKey<value_type, index>();
+	template<typename value_type, size_t index> JSONIFIER_INLINE bool compareStringFunctionNonConst(const char* string01) {
+		static constexpr auto currentKey = getKey<value_type, index>();
 		return compare<currentKey.size()>(currentKey.data(), string01);
 	}
 
@@ -129,9 +129,9 @@ namespace jsonifier_internal {
 
 		constexpr simd_hash_map() noexcept {};
 
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySizeNew, function_type& functionPtrs) const noexcept {
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_type keyLength, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto keySize	   = keySizeNew > stringLength ? stringLength : keySizeNew;
+				JSONIFIER_ALIGN const auto keySize	   = keyLength > stringLength ? stringLength : keyLength;
 				JSONIFIER_ALIGN const auto hash		   = hashKeyRt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
@@ -143,7 +143,7 @@ namespace jsonifier_internal {
 					return functionPtrs.data() + functionPtrs.size();
 				}
 			} else {
-				JSONIFIER_ALIGN const auto keySize	   = keySizeNew > stringLength ? stringLength : keySizeNew;
+				JSONIFIER_ALIGN const auto keySize	   = keyLength > stringLength ? stringLength : keyLength;
 				JSONIFIER_ALIGN const auto hash		   = hashKeyCt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (constMatch(controlBytes + resultIndex, static_cast<control_type>(hash)) + resultIndex);
@@ -316,10 +316,10 @@ namespace jsonifier_internal {
 
 		constexpr minimal_char_hash_map() noexcept = default;
 
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySizeNew, function_type& functionPtrs) const noexcept {
-			JSONIFIER_ALIGN const auto keySize	  = keySizeNew > stringLength ? stringLength : keySizeNew;
-			JSONIFIER_ALIGN const auto hash		  = seed * (operator size_t() ^ iter[0]) + iter[keySize - 1];
-			JSONIFIER_ALIGN const auto finalIndex = hash % storageSizeNew;
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_type keyLength, function_type& functionPtrs) const noexcept {
+			JSONIFIER_ALIGN const auto stringLengthNew = keyLength > stringLength ? stringLength : keyLength;
+			JSONIFIER_ALIGN const auto hash			   = seed * (operator size_t() ^ iter[0]) + iter[stringLengthNew - 1];
+			JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSizeNew;
 			if (!std::is_constant_evaluated()) {
 				if (nonConstCompareStringFunctions[items[finalIndex]](iter)) {
 					return functionPtrs.data() + items[finalIndex];
@@ -464,28 +464,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, const auto& S> struct micro_map1 {
-		std::array<size_t, 2> indices{ 0, 1 };
-		static constexpr auto nonConstCompareStringFunctions{ generateNonConstCompareStringFunctionPtrArray<value_type>() };
-		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
-
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySize, function_type& functionPtrs) const noexcept {
-			if (!std::is_constant_evaluated()) {
-				if (nonConstCompareStringFunctions[0](iter)) [[likely]] {
-					return functionPtrs.data();
-				} else [[unlikely]] {
-					return functionPtrs.data() + 1;
-				}
-			} else {
-				if (constCompareStringFunctions[0](iter)) [[likely]] {
-					return functionPtrs.data();
-				} else [[unlikely]] {
-					return functionPtrs.data() + 1;
-				}
-			}
-		}
-	};
-
 	template<typename value_type, size_t I> struct core_sv {
 		static constexpr jsonifier::string_view value = getKey<value_type, I>();
 	};
@@ -507,13 +485,8 @@ namespace jsonifier_internal {
 		return first;
 	}
 
-	template<typename value_type, size_t... indices> constexpr auto collectTupleInternal(std::index_sequence<indices...>) {
-		return std::make_tuple(keyValue<value_type, indices>()...);
-	}
-
 	template<typename value_type> constexpr auto collectTuple() {
-		constexpr auto indexCount{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
-		return collectTupleInternal<value_type>(std::make_index_sequence<indexCount>{});
+		return jsonifier::concepts::coreV<value_type>;
 	}
 
 	template<typename value_type, const auto& newTuple, size_t... I> constexpr auto makeMapImpl(std::index_sequence<I...>) {
@@ -521,9 +494,6 @@ namespace jsonifier_internal {
 
 		if constexpr (n == 0) {
 			return nullptr;
-		} else if constexpr (n == 1) {
-			constexpr auto newMap = micro_map1<value_type, core_sv<value_type, I>::value...>{};
-			return newMap;
 		} else if constexpr (n < 16) {
 			constexpr auto mapNew	= constructMinimalCharHashMap<jsonifier::string_view, value_type, n, newTuple>({ getKey<value_type, I>()... });
 			constexpr auto newIndex = mapNew.index();
