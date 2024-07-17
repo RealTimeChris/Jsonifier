@@ -146,12 +146,9 @@ namespace jsonifier_internal {
 		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
 		static constexpr size_type numGroups = storageSize > bucketSize ? storageSize / bucketSize : 1;
 		JSONIFIER_ALIGN control_type controlBytes[storageSize]{};
-		JSONIFIER_ALIGN std::array<size_t, storageSize + 1> items{};
-		JSONIFIER_ALIGN size_type stringLength{};
+		JSONIFIER_ALIGN std::array<size_t, storageSize> items{};
 
-		constexpr simd_hash_map() noexcept {
-			items[storageSize] = std::numeric_limits<size_t>::max();
-		}
+		constexpr simd_hash_map() noexcept {};
 
 		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char* end, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
@@ -213,11 +210,9 @@ namespace jsonifier_internal {
 		constexpr size_t numGroups	= storageSize > bucketSize ? storageSize / bucketSize : 1;
 		simd_hash_map<key_type, value_type, actualCount, storageSize, tuple> simdHashMapNew{};
 		simdHashMapNew.setSeedCt(constructionValues.seed);
-		simdHashMapNew.stringLength = constructionValues.stringLength;
 		std::array<size_t, numGroups> bucketSizes{};
 		for (size_t x = 0; x < actualCount; ++x) {
-			const auto stringLengthNew		  = pairsNew[x].size();
-			const auto hash					  = simdHashMapNew.hashKeyCt(pairsNew[x].data(), stringLengthNew);
+			const auto hash					  = simdHashMapNew.hashKeyCt(pairsNew[x].data(), pairsNew[x].size());
 			const auto groupPos				  = (hash >> 8) % numGroups;
 			const auto ctrlByte				  = static_cast<uint8_t>(hash);
 			const auto bucketSizeNew		  = ++bucketSizes[groupPos];
@@ -398,7 +393,7 @@ namespace jsonifier_internal {
 			bool collided{};
 			size_t seed{};
 			std::fill(slots, slots + storageSize, std::numeric_limits<size_t>::max());
-			for (size_t x = 0; x < 2; ++x) {
+			for (size_t x = 0; x < 3; ++x) {
 				seed = prng();
 				hasherNew.setSeedCt(seed);
 				for (size_t y = 0; y < actualCount; ++y) {
