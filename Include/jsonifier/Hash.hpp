@@ -706,10 +706,10 @@ namespace jsonifier_internal {
 			return r128;
 
 #else
-			size_t const loLo	 = mult32To64(lhs & 0xFFFFFFFF, rhs & 0xFFFFFFFF);
-			size_t const hiLo	 = mult32To64(lhs >> 32, rhs & 0xFFFFFFFF);
-			size_t const loHi	 = mult32To64(lhs & 0xFFFFFFFF, rhs >> 32);
-			size_t const hiHi	 = mult32To64(lhs >> 32, rhs >> 32);
+			size_t const loLo  = mult32To64(lhs & 0xFFFFFFFF, rhs & 0xFFFFFFFF);
+			size_t const hiLo  = mult32To64(lhs >> 32, rhs & 0xFFFFFFFF);
+			size_t const loHi  = mult32To64(lhs & 0xFFFFFFFF, rhs >> 32);
+			size_t const hiHi  = mult32To64(lhs >> 32, rhs >> 32);
 			size_t const cross = (loLo >> 32) + (hiLo & 0xFFFFFFFF) + loHi;
 			size_t const upper = (hiLo >> 32) + (cross >> 32) + hiHi;
 			size_t const lower = (cross << 32) | (loLo & 0xFFFFFFFF);
@@ -727,10 +727,10 @@ namespace jsonifier_internal {
 	}
 
 	constexpr __m128x mult64To128Ct(size_t lhs, size_t rhs) {
-		size_t const loLo	 = mult32To64(lhs & 0xFFFFFFFF, rhs & 0xFFFFFFFF);
-		size_t const hiLo	 = mult32To64(lhs >> 32, rhs & 0xFFFFFFFF);
-		size_t const loHi	 = mult32To64(lhs & 0xFFFFFFFF, rhs >> 32);
-		size_t const hiHi	 = mult32To64(lhs >> 32, rhs >> 32);
+		size_t const loLo  = mult32To64(lhs & 0xFFFFFFFF, rhs & 0xFFFFFFFF);
+		size_t const hiLo  = mult32To64(lhs >> 32, rhs & 0xFFFFFFFF);
+		size_t const loHi  = mult32To64(lhs & 0xFFFFFFFF, rhs >> 32);
+		size_t const hiHi  = mult32To64(lhs >> 32, rhs >> 32);
 		size_t const cross = (loLo >> 32) + (hiLo & 0xFFFFFFFF) + loHi;
 		size_t const upper = (hiLo >> 32) + (cross >> 32) + hiHi;
 		size_t const lower = (cross << 32) | (loLo & 0xFFFFFFFF);
@@ -763,7 +763,7 @@ namespace jsonifier_internal {
 
 	JSONIFIER_INLINE size_t mergeAccsRt(const size_t* acc, const uint8_t* secret, size_t start) {
 		size_t result64 = start;
-		size_t i		  = 0;
+		size_t i		= 0;
 
 		for (i = 0; i < 4; i++) {
 			result64 += mix2AccsRt(acc + 2 * i, secret + 16 * i);
@@ -774,7 +774,7 @@ namespace jsonifier_internal {
 
 	constexpr size_t mergeAccsCt(const size_t* acc, const uint8_t* secret, size_t start) {
 		size_t result64 = start;
-		size_t i		  = 0;
+		size_t i		= 0;
 
 		for (i = 0; i < 4; i++) {
 			result64 += mix2AccsCt(acc + 2 * i, secret + 16 * i);
@@ -980,7 +980,7 @@ namespace jsonifier_internal {
 		 * @brief Default constructor that initializes the seed using a random value.
 		 */
 		constexpr key_hasher() {
-			setSeedCt(jsonifier_internal::xoshiro256{}.operator()());
+			setSeedCt(xoshiro256{}.operator()());
 		}
 
 		/**
@@ -990,7 +990,7 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE void setSeedRt(size_t seedNew) {
 			seed = seedNew;
-			jsonifier_internal::initCustomSecretRt(seedNew, secret);
+			initCustomSecretRt(seedNew, secret);
 		}
 
 		/**
@@ -1000,7 +1000,7 @@ namespace jsonifier_internal {
 		 */
 		constexpr void setSeedCt(size_t seedNew) {
 			seed = seedNew;
-			jsonifier_internal::initCustomSecretCt(seedNew, secret);
+			initCustomSecretCt(seedNew, secret);
 		}
 
 		/**
@@ -1021,7 +1021,7 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE size_t hashKeyRt(const void* value, size_t length) const {
 			if (length <= 2048) {
-				return (jsonifier_internal::arrayOfRtFunctionPtrs[length])(static_cast<const char*>(value), seed);
+				return (arrayOfRtFunctionPtrs[length])(static_cast<const char*>(value), seed);
 			} else {
 				return len241ToAnyRt(static_cast<const char*>(value), length);
 			}
@@ -1036,14 +1036,14 @@ namespace jsonifier_internal {
 		 */
 		constexpr size_t hashKeyCt(const char* value, size_t length) const {
 			if (length <= 2048) {
-				return (jsonifier_internal::arrayOfCtFunctionPtrs[length])(value, seed);
+				return (arrayOfCtFunctionPtrs[length])(value, seed);
 			} else {
 				return len241ToAnyCt(value, length);
 			}
 		}
 
 	  protected:
-		JSONIFIER_ALIGN uint8_t secret[jsonifier_internal::secretDefaultSize]{};///< Secret key used for hashing.
+		JSONIFIER_ALIGN uint8_t secret[secretDefaultSize]{};///< Secret key used for hashing.
 		size_t seed{};///< Seed value for the hashing algorithm.
 
 		/**
@@ -1051,7 +1051,7 @@ namespace jsonifier_internal {
 		 */
 		struct mutable_constexpr_array {
 			/// Array of accumulated values.
-			JSONIFIER_ALIGN mutable std::array<size_t, jsonifier_internal::jsonifierAccNb> acc{ jsonifier_internal::jsonifierInitAcc };
+			JSONIFIER_ALIGN mutable std::array<size_t, jsonifierAccNb> acc{ jsonifierInitAcc };
 		};
 
 		/**
@@ -1063,9 +1063,9 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE size_t len241ToAnyRt(const char* input, size_t len) const {
 			constexpr mutable_constexpr_array acc{};
-			jsonifier_internal::hashLongInternalLoopRt(acc.acc.data(), input, len, secret);
+			hashLongInternalLoopRt(acc.acc.data(), input, len, secret);
 			static constexpr size_t jsonifierSecretMergeAccsStart{ 11 };
-			return jsonifier_internal::mergeAccsRt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifier_internal::jsonifierPrime641);
+			return mergeAccsRt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifierPrime641);
 		}
 
 		/**
@@ -1077,9 +1077,9 @@ namespace jsonifier_internal {
 		 */
 		constexpr size_t len241ToAnyCt(const char* input, size_t len) const {
 			constexpr mutable_constexpr_array acc{};
-			jsonifier_internal::hashLongInternalLoopCt(acc.acc.data(), input, len, secret);
+			hashLongInternalLoopCt(acc.acc.data(), input, len, secret);
 			constexpr size_t jsonifierSecretMergeAccsStart{ 11 };
-			return jsonifier_internal::mergeAccsCt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifier_internal::jsonifierPrime641);
+			return mergeAccsCt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifierPrime641);
 		}
 	};
 

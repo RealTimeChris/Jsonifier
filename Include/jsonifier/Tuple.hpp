@@ -28,7 +28,7 @@
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept convertible_to_string_view = std::convertible_to<jsonifier_internal::unwrap_t<value_type>, jsonifier::string_view>;
+	concept convertible_to_string_view = std::convertible_to<unwrap_t<value_type>, jsonifier::string_view>;
 
 	template<uint64_t currentIndex, uint64_t maxIndex, convertible_to_string_view arg_type01, typename arg_type02, typename tuple_type, typename... arg_types>
 	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) {
@@ -56,16 +56,16 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, typename member_ptr_type> JSONIFIER_INLINE decltype(auto) getMember(value_type&& value, member_ptr_type&& member_ptr) {
-		if constexpr (std::is_member_object_pointer_v<jsonifier_internal::unwrap_t<member_ptr_type>>) {
-			return std::forward<value_type>(value).*std::forward<member_ptr_type>(member_ptr);
-		} else if constexpr (std::is_pointer_v<jsonifier_internal::unwrap_t<member_ptr_type>>) {
-			return *std::forward<member_ptr_type>(member_ptr);
+	template<const auto& member_ptr, typename value_type> JSONIFIER_INLINE constexpr decltype(auto) getMember(value_type&& value) {
+		using value_type02 = unwrap_t<decltype(member_ptr)>;
+		if constexpr (std::is_member_object_pointer_v<value_type02>) {
+			return value.*member_ptr;
+		} else if constexpr (std::is_pointer_v<value_type02>) {
+			return *member_ptr;
 		} else {
-			return std::forward<member_ptr_type>(member_ptr);
+			return member_ptr;
 		}
 	}
-
 }
 
 namespace jsonifier {

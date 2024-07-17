@@ -76,16 +76,16 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
 					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
-				return jsonifier_internal::unwrap_t<string_type>{};
+				return unwrap_t<string_type>{};
 			}
-			jsonifier_internal::unwrap_t<string_type> newString{};
+			unwrap_t<string_type> newString{};
 			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
 				return newString;
 			} else {
-				return jsonifier_internal::unwrap_t<string_type>{};
+				return unwrap_t<string_type>{};
 			}
 		}
 

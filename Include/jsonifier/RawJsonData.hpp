@@ -65,9 +65,9 @@ namespace jsonifier_internal {
 	template<> JSONIFIER_INLINE bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData);
 
 	JSONIFIER_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) {
-		if (jsonifier_internal::isNumberType(charToCheck)) [[likely]] {
+		if (isNumberType(charToCheck)) [[likely]] {
 			return jsonifier::json_type::Number;
-		} else if (jsonifier_internal::boolTable[charToCheck]) [[likely]] {
+		} else if (boolTable[charToCheck]) [[likely]] {
 			return jsonifier::json_type::Bool;
 		} else if (charToCheck == '{') [[unlikely]] {
 			return jsonifier::json_type::Object;

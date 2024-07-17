@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 		requires(std::is_member_pointer_v<decltype(p)>)
 	constexpr auto getName() {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-		using value_type		 = remove_member_pointer<jsonifier_internal::unwrap_t<decltype(p)>>::type;
+		using value_type		 = remove_member_pointer<unwrap_t<decltype(p)>>::type;
 		constexpr auto pNew		 = p;
 		constexpr auto newString = getNameInternal<value_type, &(external<value_type>.*pNew)>();
 #else

@@ -80,8 +80,7 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier_internal::unwrap_t<value_type>>(),
-				"No specialization of core exists for the type named above - please specialize it!");
+			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
 			optionsReal.parserPtr = this;
@@ -133,13 +132,12 @@ namespace jsonifier_internal {
 					return value_type{};
 				}
 			}
-			static_assert(jsonifier::concepts::printErrorFunction<jsonifier_internal::unwrap_t<value_type>>(),
-				"No specialization of core exists for the type named above - please specialize it!");
+			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
 			optionsReal.parserPtr = this;
 			optionsReal.rootIter  = reinterpret_cast<const char*>(in.data());
-			jsonifier_internal::unwrap_t<value_type> object{};
+			unwrap_t<value_type> object{};
 			if constexpr (!options.minified) {
 				derivedRef.section.reset(in.data(), in.size());
 				json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };

@@ -1,8 +1,7 @@
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/Install/")
-
 include(FetchContent)
+include(GetCommitHash.cmake)
 
 FetchContent_Declare(
   glaze
@@ -11,6 +10,7 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(glaze)
+getCommitHash("${glaze_SOURCE_DIR}" GLAZE_COMMIT_HASH)
 
 set(JSONIFIER_LIBRARY "TRUE" CACHE STRING "To avoid circular dependency issues." FORCE)
 FetchContent_Declare(
@@ -28,6 +28,7 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(simdjson)
+getCommitHash("${simdjson_SOURCE_DIR}" SIMDJSON_COMMIT_HASH)
 
 add_executable(
   "Json-Performance" 
@@ -72,6 +73,9 @@ target_compile_definitions(
 	"JSON_TEST_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/ConformanceTests\""
 	"JSON_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/../Json\""
 	"README_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.md\""
+	"JSONIFIER_COMMIT=\"${JSONIFIER_COMMIT_HASH}\""
+	"SIMDJSON_COMMIT=\"${SIMDJSON_COMMIT_HASH}\""
+	"GLAZE_COMMIT=\"${GLAZE_COMMIT_HASH}\""
 )
 
 install(

@@ -42,8 +42,8 @@ namespace jsonifier_internal {
 	template<auto value> JSONIFIER_INLINE void memchar(const char*& data, size_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 2>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
 			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
@@ -60,8 +60,8 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 1>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
 			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
@@ -78,8 +78,8 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 0>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
 			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
@@ -170,8 +170,8 @@ namespace jsonifier_internal {
 	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 2>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
 			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);
@@ -188,8 +188,8 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 1>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
 			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);
@@ -206,8 +206,8 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
-			using simd_type						 = typename jsonifier_internal::get_type_at_index<simd_internal::avx_list, 0>::type::type;
-			static constexpr uint64_t vectorSize = jsonifier_internal::get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
+			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
 			simd_type value01, value02;
 			while (lengthNew >= vectorSize) {
 				value01 = simd_internal::gatherValuesU<simd_type>(lhs);

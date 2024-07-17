@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type_new, jsonifier::concepts::json_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE void parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using value_type = jsonifier_internal::unwrap_t<value_type_new>;
+		using value_type = unwrap_t<value_type_new>;
 		auto newPtr		 = iter.operator const char*();
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
@@ -219,7 +219,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type_new, typename iterator_type>
 	JSONIFIER_INLINE void parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
-		using value_type = jsonifier_internal::unwrap_t<value_type_new>;
+		using value_type = unwrap_t<value_type_new>;
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
 			if constexpr (std::is_unsigned_v<value_type>) {
@@ -252,7 +252,7 @@ namespace jsonifier_internal {
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<jsonifier_internal::unwrap_t<decltype(i)>>(i, iter);
+					auto s = parseInt<unwrap_t<decltype(i)>>(i, iter);
 					if (!s) [[unlikely]] {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,

@@ -94,23 +94,6 @@ namespace jsonifier_internal {
 	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
-
-	template<typename function_type, typename... arg_types> struct return_type_helper {
-		using type = std::invoke_result_t<unwrap_t<function_type>, arg_types...>;
-	};
-
-	template<typename value_type, typename... arg_types> using return_type = typename return_type_helper<value_type, arg_types...>::type;
-
-	template<uint64_t currentIndex = 0, typename function_type, typename variant_type> JSONIFIER_INLINE constexpr void visit(function_type&& function, variant_type&& variant) {
-		if constexpr (currentIndex < std::variant_size_v<jsonifier_internal::unwrap_t<variant_type>>) {
-			variant_type&& variantNew = std::forward<variant_type>(variant);
-			if (variantNew.index() == currentIndex) {
-				std::forward<function_type>(function)(std::get<currentIndex>(variantNew));
-				return;
-			}
-			visit<currentIndex + 1>(std::forward<function_type>(function), variantNew);
-		}
-	}
 }
 
 namespace jsonifier {

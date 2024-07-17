@@ -34,10 +34,10 @@ namespace jsonifier_internal {
 
 	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type>
 	JSONIFIER_INLINE void invokeParse(value_type& value, iterator_type& iter, iterator_type& end) {
-		static constexpr size_t tuple_size = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
+		static constexpr size_t tuple_size = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 		if constexpr (index < tuple_size) {
 			static constexpr auto ptr = std::get<1>(std::get<index>(tuple));
-			using member_type		  = jsonifier_internal::unwrap_t<decltype(value.*ptr)>;
+			using member_type		  = unwrap_t<decltype(value.*ptr)>;
 			parse_impl<derived_type, member_type>::template impl<options>(value.*ptr, iter, end);
 		}
 	}
@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type> constexpr auto generateArrayOfInvokeParsePtrs() {
-		constexpr auto tupleSize = std::tuple_size_v<jsonifier_internal::unwrap_t<decltype(tuple)>>;
+		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 		return generateArrayOfInvokeParsePtrsInternal<options, tuple, derived_type, value_type, iterator_type>(std::make_index_sequence<tupleSize>{});
 	}
 
@@ -98,7 +98,7 @@ namespace jsonifier_internal {
 
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						auto& keys = value.jsonifierExcludedKeys;
-						if (keys.find(static_cast<typename jsonifier_internal::unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 							skipToNextValue(iter, end);
 							return parseObjects<options, false>(value, iter, end);
 						}
@@ -132,8 +132,10 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type&& iter, iterator_type&& end) {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
 			if constexpr (size > 0) {
-				parse_impl<derived_type, decltype(getMember(value, std::get<0>(jsonifier::concepts::coreV<value_type_new>)))>::template impl<options>(
-					getMember(value, std::get<0>(jsonifier::concepts::coreV<value_type_new>)), iter, end);
+				static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
+				auto& newMember				 = getMember<newPtr>(value);
+				using member_type			 = unwrap_t<decltype(newMember)>;
+				parse_impl<derived_type, member_type>::template impl<options>(newMember, iter, end);
 			}
 		}
 	};
@@ -284,7 +286,7 @@ namespace jsonifier_internal {
 			auto n		 = value.size();
 			auto iterNew = value.begin();
 			for (size_t i = 0; i < n; ++i) {
-				parse_impl<derived_type, typename jsonifier_internal::unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
+				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;
@@ -300,7 +302,7 @@ namespace jsonifier_internal {
 				}
 			}
 			while (static_cast<const char*>(iter) != static_cast<const char*>(end)) {
-				parse_impl<derived_type, typename jsonifier_internal::unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
+				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;

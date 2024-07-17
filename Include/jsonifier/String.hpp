@@ -29,11 +29,11 @@
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept not_uint8_t = !std::same_as<jsonifier_internal::unwrap_t<value_type>, uint8_t>;
+	concept not_uint8_t = !std::same_as<unwrap_t<value_type>, uint8_t>;
 
 	template<typename value_type> class char_traits;
 
-	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<jsonifier_internal::unwrap_t<value_type>> {};
+	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<unwrap_t<value_type>> {};
 
 	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
 	  public:

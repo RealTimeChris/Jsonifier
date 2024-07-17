@@ -392,7 +392,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> constexpr __m128x mm128LoadUSi128(const value_type* ptr) {
-		size_t low  = 0;
+		size_t low	= 0;
 		size_t high = 0;
 
 		for (int32_t i = 0; i < 8; ++i) {
@@ -558,8 +558,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> constexpr __m256x mm256LoadUSi256(const value_type* ptr) {
-		size_t low01	= 0;
-		size_t low02	= 0;
+		size_t low01  = 0;
+		size_t low02  = 0;
 		size_t high01 = 0;
 		size_t high02 = 0;
 
@@ -616,10 +616,10 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> constexpr __m512x mm512LoadUSi512(const value_type* ptr) {
-		size_t low00	= 0;
-		size_t low01	= 0;
-		size_t low02	= 0;
-		size_t low03	= 0;
+		size_t low00  = 0;
+		size_t low01  = 0;
+		size_t low02  = 0;
+		size_t low03  = 0;
 		size_t high00 = 0;
 		size_t high01 = 0;
 		size_t high02 = 0;

@@ -68,9 +68,9 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(static_cast<int64_t>(iter - iter.getRootPtr()),
 					static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
-				return jsonifier_internal::unwrap_t<string_type>{};
+				return unwrap_t<string_type>{};
 			}
-			jsonifier_internal::unwrap_t<string_type> newString{};
+			unwrap_t<string_type> newString{};
 			minify_impl<derived_type>::template impl<options>(iter, derivedRef.stringBuffer, derivedRef.index);
 			if (derivedRef.index == minifyError) {
 				return newString;

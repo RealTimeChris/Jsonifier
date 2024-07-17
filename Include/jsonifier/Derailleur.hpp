@@ -437,98 +437,9 @@ namespace jsonifier_internal {
 		uint64_t maxLength{};
 	};
 
-	template<key_stats_t stats, typename iterator_type> [[nodiscard]] JSONIFIER_INLINE jsonifier::string_view parseKeyCx(iterator_type&& iter) noexcept {
-		static constexpr auto lengthRange = stats.lengthRange;
-
-		auto start = iter;
-
-		iter += stats.minLength;
-
-		if constexpr (lengthRange == 0) {
-			return { start, stats.minLength };
-		} else if constexpr (lengthRange == 1) {
-			if (*iter != '"') {
-				++iter;
-			}
-			return { start, size_t(iter - start) };
-		} else if constexpr (lengthRange < 4) {
-			for (const auto e = iter + stats.lengthRange + 1; iter < e; ++iter) {
-				if (*iter == '"') {
-					break;
-				}
-			}
-			return { start, size_t(iter - start) };
-		} else if constexpr (lengthRange == 7) {
-			uint64_t chunk;
-			std::memcpy(&chunk, iter, 8);
-			const uint64_t testChunk = hasValue<'"', uint64_t>(chunk);
-			if (testChunk) [[likely]] {
-				iter += (simd_internal::tzcnt(testChunk) >> 3);
-			}
-			return { start, size_t(iter - start) };
-		} else if constexpr (lengthRange > 15) {
-			uint64_t chunk;
-			std::memcpy(&chunk, iter, 8);
-			uint64_t testChunk = hasValue<'"', uint64_t>(chunk);
-			if (testChunk) {
-				goto finish;
-			}
-
-			iter += 8;
-			std::memcpy(&chunk, iter, 8);
-			testChunk = hasValue<'"', uint64_t>(chunk);
-			if (testChunk) {
-				goto finish;
-			}
-
-			iter += 8;
-			static constexpr auto rest = lengthRange + 1 - 16;
-			chunk					   = 0;
-			std::memcpy(&chunk, iter, rest);
-			testChunk = hasValue<'"', uint64_t>(chunk);
-			if (!testChunk) {
-				testChunk = 1;
-			}
-
-		finish:
-			iter += (simd_internal::tzcnt(testChunk) >> 3);
-			return { start, size_t(iter - start) };
-		} else if constexpr (lengthRange > 7) {
-			uint64_t chunk;
-			std::memcpy(&chunk, iter, 8);
-			uint64_t testChunk = hasValue<'"', uint64_t>(chunk);
-			if (testChunk) {
-				iter += (simd_internal::tzcnt(testChunk) >> 3);
-			} else {
-				iter += 8;
-				static constexpr auto rest = lengthRange + 1 - 8;
-				chunk					   = 0;
-				std::memcpy(&chunk, iter, rest);
-				testChunk = hasValue<'"', uint64_t>(chunk);
-				if (testChunk) {
-					iter += (simd_internal::tzcnt(testChunk) >> 3);
-				}
-			}
-			return { start, size_t(iter - start) };
-		} else {
-			uint64_t chunk{};
-			std::memcpy(&chunk, iter, lengthRange + 1);
-			const uint64_t testChunk = hasValue<'"', uint64_t>(chunk);
-			if (testChunk) [[likely]] {
-				iter += (simd_internal::tzcnt(testChunk) >> 3);
-			}
-			return { start, size_t(iter - start) };
-		}
-	}
-
-	template<typename value_type, size_t I> constexpr jsonifier::string_view getKeyCore() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
-		return static_cast<jsonifier::string_view>(first);
-	}
-
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
 		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
-		using T0			  = jsonifier_internal::unwrap_t<decltype(first)>;
+		using T0			  = unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();
 		} else {
@@ -536,7 +447,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t index, uint64_t maxIndex> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
+	template<typename value_type, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
 			constexpr jsonifier::string_view key{ getKey<value_type, index>() };
 			constexpr auto n{ key.size() };
@@ -546,7 +457,7 @@ namespace jsonifier_internal {
 			if (n > stats.maxLength) {
 				stats.maxLength = n;
 			}
-			return keyStatsInternal<value_type, index + 1, maxIndex>(stats);
+			return keyStatsInternal<value_type, maxIndex, index + 1>(stats);
 		} else {
 			if constexpr (maxIndex > 0) {
 				stats.lengthRange = stats.maxLength - stats.minLength;
@@ -558,12 +469,12 @@ namespace jsonifier_internal {
 	template<typename value_type> JSONIFIER_INLINE constexpr auto keyStats() {
 		constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
 
-		return keyStatsInternal<value_type, 0, N>(key_stats_t{});
+		return keyStatsInternal<value_type, N, 0>(key_stats_t{});
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>
 	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
-		if (*iter == '"') [[unlikely]] {
+		if (*iter == '"') [[likely]] {
 			++iter;
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
@@ -578,21 +489,9 @@ namespace jsonifier_internal {
 			static constexpr jsonifier::string_view key{ getKey<value_type, 0>() };
 			iter += key.size() + 1;
 			return key;
-		} else if constexpr (N > 0) {
-			if constexpr (stats.lengthRange < 24) {
-				if ((iter + stats.maxLength) < end) [[likely]] {
-					jsonifier::string_view newKey{ parseKeyCx<stats>(iter) };
-					++iter;
-					return newKey;
-				}
-			}
-			auto start = iter;
-			memchar<'"'>(iter, static_cast<uint64_t>(end - iter));
-			jsonifier::string_view newKey{ start, size_t(iter - start) };
-			++iter;
-			return newKey;
 		} else {
 			auto start = iter;
+			iter += stats.minLength;
 			memchar<'"'>(iter, static_cast<uint64_t>(end - iter));
 			jsonifier::string_view newKey{ start, size_t(iter - start) };
 			++iter;
