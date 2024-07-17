@@ -129,9 +129,9 @@ namespace jsonifier_internal {
 
 		constexpr simd_hash_map() noexcept {};
 
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char* end, function_type& functionPtrs) const noexcept {
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySizeNew, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto keySize	   = static_cast<uint64_t>(end - iter) > stringLength ? stringLength : static_cast<uint64_t>(end - iter);
+				JSONIFIER_ALIGN const auto keySize	   = keySizeNew > stringLength ? stringLength : keySizeNew;
 				JSONIFIER_ALIGN const auto hash		   = hashKeyRt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
@@ -143,7 +143,7 @@ namespace jsonifier_internal {
 					return functionPtrs.data() + functionPtrs.size();
 				}
 			} else {
-				JSONIFIER_ALIGN const auto keySize	   = static_cast<uint64_t>(end - iter) > stringLength ? stringLength : static_cast<uint64_t>(end - iter);
+				JSONIFIER_ALIGN const auto keySize	   = keySizeNew > stringLength ? stringLength : keySizeNew;
 				JSONIFIER_ALIGN const auto hash		   = hashKeyCt(iter, keySize);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % numGroups) * bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (constMatch(controlBytes + resultIndex, static_cast<control_type>(hash)) + resultIndex);
@@ -316,11 +316,10 @@ namespace jsonifier_internal {
 
 		constexpr minimal_char_hash_map() noexcept = default;
 
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char* end, function_type& functionPtrs) const noexcept {
-			JSONIFIER_ALIGN const auto keySize		   = static_cast<uint64_t>(end - iter);
-			JSONIFIER_ALIGN const auto stringLengthNew = keySize > stringLength ? stringLength : keySize;
-			JSONIFIER_ALIGN const auto hash			   = seed * (operator size_t() ^ iter[0]) + iter[stringLengthNew - 1];
-			JSONIFIER_ALIGN const auto finalIndex	   = hash % storageSizeNew;
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySizeNew, function_type& functionPtrs) const noexcept {
+			JSONIFIER_ALIGN const auto keySize	  = keySizeNew > stringLength ? stringLength : keySizeNew;
+			JSONIFIER_ALIGN const auto hash		  = seed * (operator size_t() ^ iter[0]) + iter[keySize - 1];
+			JSONIFIER_ALIGN const auto finalIndex = hash % storageSizeNew;
 			if (!std::is_constant_evaluated()) {
 				if (nonConstCompareStringFunctions[items[finalIndex]](iter)) {
 					return functionPtrs.data() + items[finalIndex];
@@ -470,7 +469,7 @@ namespace jsonifier_internal {
 		static constexpr auto nonConstCompareStringFunctions{ generateNonConstCompareStringFunctionPtrArray<value_type>() };
 		static constexpr auto constCompareStringFunctions{ generateConstCompareStringFunctionPtrArray<value_type>() };
 
-		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, const char*, function_type& functionPtrs) const noexcept {
+		template<typename function_type> JSONIFIER_INLINE constexpr auto find(const char* iter, size_t keySize, function_type& functionPtrs) const noexcept {
 			if (!std::is_constant_evaluated()) {
 				if (nonConstCompareStringFunctions[0](iter)) [[likely]] {
 					return functionPtrs.data();

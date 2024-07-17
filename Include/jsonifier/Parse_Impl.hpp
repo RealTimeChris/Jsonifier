@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 			static constexpr auto ptr = std::get<1>(std::get<index>(tuple));
 			using member_type		  = unwrap_t<decltype(value.*ptr)>;
 			parse_impl<derived_type, member_type>::template impl<options>(value.*ptr, iter, end);
-		}
+		} 
 	}
 
 	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type> using invoke_parse_function_ptr =
@@ -94,9 +94,10 @@ namespace jsonifier_internal {
 						isItFirst = false;
 					}
 
-					const auto key = parseKey<options, value_type>(iter, end, options.parserPtr->getErrors());
+					const auto keySize = getKeyLength<options, value_type>(iter, end, options.parserPtr->getErrors());
 
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+						jsonifier::string_view key{ static_cast<const char*>(iter), keySize };
 						auto& keys = value.jsonifierExcludedKeys;
 						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 							skipToNextValue(iter, end);
@@ -104,7 +105,7 @@ namespace jsonifier_internal {
 						}
 					}
 
-					if (auto memberIt = frozenSet.find(key.data(), key.data() + key.size(), functionPtrArray); memberIt != functionPtrArray.data() + functionPtrArray.size())
+					if (auto memberIt = frozenSet.find(static_cast<const char*>(iter), keySize, functionPtrArray); memberIt != functionPtrArray.data() + functionPtrArray.size())
 						[[likely]] {
 						if (*iter == ':') [[likely]] {
 							++iter;
@@ -133,9 +134,9 @@ namespace jsonifier_internal {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
 			if constexpr (size > 0) {
 				static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
-				auto& newMember				 = getMember<newPtr>(value);
-				using member_type			 = unwrap_t<decltype(newMember)>;
-				parse_impl<derived_type, member_type>::template impl<options>(newMember, iter, end);
+				auto& member				 = getMember<newPtr>(value);
+				using member_type			 = unwrap_t<decltype(member)>;
+				parse_impl<derived_type, member_type>::template impl<options>(member, iter, end);
 			}
 		}
 	};

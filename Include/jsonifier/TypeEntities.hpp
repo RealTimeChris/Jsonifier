@@ -217,31 +217,31 @@ namespace jsonifier {
 		concept signed_type = std::signed_integral<jsonifier_internal::unwrap_t<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
-		concept unsigned_type = std::unsigned_integral<jsonifier_internal::unwrap_t<value_type>> && !bool_t<value_type>;
+		concept unsigned_type = std::unsigned_integral<jsonifier_internal::unwrap_t<value_type>> && !bool_t<value_type>; 
 
 		template<typename value_type>
-		concept uint8_type = std::is_same_v<uint8_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept uint8_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 1 && unsigned_type<value_type>;
 
 		template<typename value_type>
-		concept uint16_type = std::is_same_v<uint16_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept uint16_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 2 && unsigned_type<value_type>;
 
 		template<typename value_type>
-		concept uint32_type = std::is_same_v<uint32_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept uint32_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 4 && unsigned_type<value_type>;
 
 		template<typename value_type>
-		concept uint64_type = std::is_same_v<uint64_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept uint64_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 8 && unsigned_type<value_type>;
 
 		template<typename value_type>
-		concept int8_type = std::is_same_v<int8_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept int8_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 1 && signed_type<value_type>;
 
 		template<typename value_type>
-		concept int16_type = std::is_same_v<int16_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept int16_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 2 && signed_type<value_type>;
 
 		template<typename value_type>
-		concept int32_type = std::is_same_v<int32_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept int32_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 4 && signed_type<value_type>;
 
 		template<typename value_type>
-		concept int64_type = std::is_same_v<int64_t, jsonifier_internal::unwrap_t<value_type>>;
+		concept int64_type = sizeof(jsonifier_internal::unwrap_t<value_type>) == 8 && signed_type<value_type>; 
 
 		template<typename value_type>
 		concept double_type = std::is_same_v<double, jsonifier_internal::unwrap_t<value_type>>;

@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
-		uint64_t currentDepth{ 1 };
+		size_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
@@ -224,12 +224,12 @@ namespace jsonifier_internal {
 
 	template<typename iterator_type> JSONIFIER_INLINE void skipString(iterator_type& iter, iterator_type& end) {
 		++iter;
-		auto newLength = static_cast<uint64_t>(end - iter);
+		auto newLength = static_cast<size_t>(end - iter);
 		skipStringImpl(iter, newLength);
 	}
 
 	template<typename iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
-		uint64_t currentDepth{ 1 };
+		size_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
@@ -364,12 +364,12 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<char startChar, char endChar, typename iterator_type> JSONIFIER_INLINE uint64_t countValueElements(iterator_type iter, iterator_type end) {
+	template<char startChar, char endChar, typename iterator_type> JSONIFIER_INLINE size_t countValueElements(iterator_type iter, iterator_type end) {
 		auto newValue = *iter;
 		if (newValue == ']' || newValue == '}') [[unlikely]] {
 			return 0;
 		}
-		uint64_t currentCount{ 1 };
+		size_t currentCount{ 1 };
 		while (iter != end) {
 			switch (*iter) {
 				[[unlikely]] case ',': {
@@ -432,9 +432,9 @@ namespace jsonifier_internal {
 	}
 
 	struct key_stats_t {
-		uint64_t minLength{ (std::numeric_limits<uint64_t>::max)() };
-		uint64_t lengthRange{};
-		uint64_t maxLength{};
+		size_t minLength{ (std::numeric_limits<size_t>::max)() };
+		size_t lengthRange{};
+		size_t maxLength{};
 	};
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
@@ -447,7 +447,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
+	template<typename value_type, size_t maxIndex, size_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
 			constexpr jsonifier::string_view key{ getKey<value_type, index>() };
 			constexpr auto n{ key.size() };
@@ -473,7 +473,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>
-	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_INLINE size_t getKeyLength(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		if (*iter == '"') [[likely]] {
 			++iter;
 		} else {
@@ -488,19 +488,18 @@ namespace jsonifier_internal {
 		if constexpr (N == 1) {
 			static constexpr jsonifier::string_view key{ getKey<value_type, 0>() };
 			iter += key.size() + 1;
-			return key;
+			return key.size();
 		} else {
 			auto start = iter;
 			iter += stats.minLength;
-			memchar<'"'>(iter, static_cast<uint64_t>(end - iter));
-			jsonifier::string_view newKey{ start, size_t(iter - start) };
+			memchar<'"'>(iter, static_cast<size_t>(end - iter));
 			++iter;
-			return newKey;
+			return size_t(iter - start);
 		}
 	}
 
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE jsonifier::string_view parseKey(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_INLINE size_t getKeyLength(iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		auto start{ iter.operator->() };
 
 		if (*iter == '"') [[unlikely]] {
@@ -512,7 +511,7 @@ namespace jsonifier_internal {
 			return {};
 		}
 
-		return jsonifier::string_view{ start + 1, static_cast<uint64_t>(iter.operator->() - (start + 2)) };
+		return static_cast<size_t>(iter.operator->() - (start + 2));
 	}
 
 }

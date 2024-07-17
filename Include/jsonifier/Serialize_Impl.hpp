@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 			static constexpr auto newTuple					 = collectTuple<value_type>();
 			static constexpr auto frozenMap					 = makeMap<value_type, newTuple>();
 			static constexpr auto arrayOfInvokeSerializePtrs = generateArrayOfInvokeSerializePtrs<options, newTuple, derived_type, value_type, buffer_type, index_type>();
-			static constexpr auto iterNew					 = frozenMap.find(key.data(), key.data() + key.size(), arrayOfInvokeSerializePtrs);
+			static constexpr auto iterNew					 = frozenMap.find(key.data(), key.size(), arrayOfInvokeSerializePtrs);
 			if constexpr (iterNew != arrayOfInvokeSerializePtrs.data() + arrayOfInvokeSerializePtrs.size()) {
 				(*iterNew)(value, buffer, index);
 			}

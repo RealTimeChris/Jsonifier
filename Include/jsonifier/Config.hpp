@@ -161,17 +161,17 @@ using simd_int_t = __m512i;
 constexpr uint64_t bitsPerStep{ 512 };
 using string_parsing_type = uint64_t;
 using simd_fb_type		  = jsonifier_internal::__m512x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using simd_int_t = __m256i;
 constexpr uint64_t bitsPerStep{ 256 };
 using string_parsing_type = uint32_t;
 using simd_fb_type		  = jsonifier_internal::__m256x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using simd_int_t = __m128i;
 constexpr uint64_t bitsPerStep{ 128 };
 using string_parsing_type = uint16_t;
 using simd_fb_type		  = jsonifier_internal::__m128x;
-	#endif
+	   #endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	#include <arm_neon.h>
