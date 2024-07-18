@@ -320,22 +320,22 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr void mm128StoreUSi128(size_t* ptr, const __m128x& data) {
+	template<typename value_type> constexpr void mm128StoreUSi128(value_type* ptr, const __m128x& data) {
 		for (int32_t i = 0; i < 2; ++i) {
 			ptr[i] = static_cast<size_t>(data.m128x_uint64[i]);
 		}
 	}
 
-	constexpr uint32_t get32(const size_t* data, int index) {
+	template<typename value_type> constexpr uint32_t get32(const value_type* data, int index) {
 		return (data[index / 2] >> (32 * (index % 2))) & 0xFFFFFFFF;
 	}
 
-	constexpr void set32(size_t* data, int index, uint32_t value) {
+	template<typename value_type> constexpr void set32(value_type* data, int index, uint32_t value) {
 		data[index / 2] &= ~(0xFFFFFFFFull << (32 * (index % 2)));
 		data[index / 2] |= (static_cast<size_t>(value) << (32 * (index % 2)));
 	}
 
-	constexpr void set64(size_t* data, int index, size_t value) {
+	template<typename value_type> constexpr void set64(value_type* data, int index, size_t value) {
 		data[index] = value;
 	}
 
@@ -408,7 +408,9 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	constexpr __m128x mm128LoadUSi128(const size_t* ptr) {
+	template<typename value_type>
+		requires(sizeof(value_type) == 8)
+	constexpr __m128x mm128LoadUSi128(const value_type* ptr) {
 		__m128x returnValues{};
 		returnValues.m128x_uint64[0] = ptr[0];
 		returnValues.m128x_uint64[1] = ptr[1];
@@ -489,7 +491,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr void mm256StoreUSi256(size_t* ptr, const __m256x& data) {
+	template<typename value_type> 
+	constexpr void mm256StoreUSi256(value_type* ptr, const __m256x& data) {
 		for (int32_t i = 0; i < 4; ++i) {
 			ptr[i] = static_cast<size_t>(data.m256x_uint64[i]);
 		}
@@ -586,7 +589,9 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	constexpr __m256x mm256LoadUSi256(const size_t* ptr) {
+	template<typename value_type>
+		requires(sizeof(value_type) == 8)
+	constexpr __m256x mm256LoadUSi256(const value_type* ptr) {
 		__m256x returnValues{};
 		returnValues.m256x_uint64[0] = ptr[0];
 		returnValues.m256x_uint64[1] = ptr[1];
@@ -615,7 +620,9 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	template<typename value_type> constexpr __m512x mm512LoadUSi512(const value_type* ptr) {
+	template<typename value_type>
+		requires(sizeof(value_type) == 1)
+	constexpr __m512x mm512LoadUSi512(const value_type* ptr) {
 		size_t low00  = 0;
 		size_t low01  = 0;
 		size_t low02  = 0;
@@ -751,7 +758,9 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	constexpr __m512x mm512LoadUSi512(const size_t* ptr) {
+	template<typename value_type>
+		requires(sizeof(value_type) == 8)
+	constexpr __m512x mm512LoadUSi512(const value_type* ptr) {
 		__m512x returnValues{};
 		returnValues.m512x_uint64[0] = ptr[0];
 		returnValues.m512x_uint64[1] = ptr[1];
@@ -798,7 +807,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr void mm512StoreUSi512(size_t* ptr, const __m512x& data) {
+	template<typename value_type> 
+	constexpr void mm512StoreUSi512(value_type* ptr, const __m512x& data) {
 		for (int32_t i = 0; i < 8; ++i) {
 			ptr[i] = static_cast<size_t>(data.m512x_uint64[i]);
 		}

@@ -94,6 +94,10 @@ namespace jsonifier_internal {
 	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
+
+	template<template<uint64_t> typename hash_wrapper, std::size_t... indices> constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+		return std::array<decltype(&hash_wrapper<0>::op), sizeof...(indices)>{ &hash_wrapper<indices>::op... };
+	}
 }
 
 namespace jsonifier {

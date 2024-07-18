@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 		return iter;
 	}
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> inline void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -228,7 +228,7 @@ namespace jsonifier_internal {
 		skipStringImpl(iter, newLength);
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<typename iterator_type> inline void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -441,7 +441,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
+		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<unwrap_t<value_type>>));
 		using T0			  = unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();
