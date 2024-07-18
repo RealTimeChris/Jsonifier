@@ -441,7 +441,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<value_type>));
+		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<unwrap_t<value_type>>));
 		using T0			  = unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();

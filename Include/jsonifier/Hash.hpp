@@ -27,6 +27,7 @@
 #include <source_location>
 #include <unordered_map>
 #include <exception>
+#include <cstring>
 #include <string>
 #include <array>
 #include <bit>
@@ -55,68 +56,68 @@ namespace jsonifier_internal {
 	JSONIFIER_ALIGN constexpr size_t primeMx2{ 0x9FB21C651E98DF25ULL };
 	JSONIFIER_ALIGN constexpr size_t secretDefaultSize{ 192 };
 
-	JSONIFIER_ALIGN constexpr uint8_t jsonifier3KSecret[secretDefaultSize]{ 0xb8u, 0xfeu, 0x6cu, 0x39u, 0x23u, 0xa4u, 0x4bu, 0xbeu, 0x7cu, 0x01u, 0x81u, 0x2cu, 0xf7u, 0x21u, 0xadu,
-		0x1cu, 0xdeu, 0xd4u, 0x6du, 0xe9u, 0x83u, 0x90u, 0x97u, 0xdbu, 0x72u, 0x40u, 0xa4u, 0xa4u, 0xb7u, 0xb3u, 0x67u, 0x1fu, 0xcbu, 0x79u, 0xe6u, 0x4eu, 0xccu, 0xc0u, 0xe5u,
-		0x78u, 0x82u, 0x5au, 0xd0u, 0x7du, 0xccu, 0xffu, 0x72u, 0x21u, 0xb8u, 0x08u, 0x46u, 0x74u, 0xf7u, 0x43u, 0x24u, 0x8eu, 0xe0u, 0x35u, 0x90u, 0xe6u, 0x81u, 0x3au, 0x26u,
-		0x4cu, 0x3cu, 0x28u, 0x52u, 0xbbu, 0x91u, 0xc3u, 0x00u, 0xcbu, 0x88u, 0xd0u, 0x65u, 0x8bu, 0x1bu, 0x53u, 0x2eu, 0xa3u, 0x71u, 0x64u, 0x48u, 0x97u, 0xa2u, 0x0du, 0xf9u,
-		0x4eu, 0x38u, 0x19u, 0xefu, 0x46u, 0xa9u, 0xdeu, 0xacu, 0xd8u, 0xa8u, 0xfau, 0x76u, 0x3fu, 0xe3u, 0x9cu, 0x34u, 0x3fu, 0xf9u, 0xdcu, 0xbbu, 0xc7u, 0xc7u, 0x0bu, 0x4fu,
-		0x1du, 0x8au, 0x51u, 0xe0u, 0x4bu, 0xcdu, 0xb4u, 0x59u, 0x31u, 0xc8u, 0x9fu, 0x7eu, 0xc9u, 0xd9u, 0x78u, 0x73u, 0x64u, 0xeau, 0xc5u, 0xacu, 0x83u, 0x34u, 0xd3u, 0xebu,
-		0xc3u, 0xc5u, 0x81u, 0xa0u, 0xffu, 0xfau, 0x13u, 0x63u, 0xebu, 0x17u, 0x0du, 0xddu, 0x51u, 0xb7u, 0xf0u, 0xdau, 0x49u, 0xd3u, 0x16u, 0x55u, 0x26u, 0x29u, 0xd4u, 0x68u,
-		0x9eu, 0x2bu, 0x16u, 0xbeu, 0x58u, 0x7du, 0x47u, 0xa1u, 0xfcu, 0x8fu, 0xf8u, 0xb8u, 0xd1u, 0x7au, 0xd0u, 0x31u, 0xceu, 0x45u, 0xcbu, 0x3au, 0x8fu, 0x95u, 0x16u, 0x04u,
-		0x28u, 0xafu, 0xd7u, 0xfbu, 0xcau, 0xbbu, 0x4bu, 0x40u, 0x7eu };
+	JSONIFIER_ALIGN constexpr uint8_t jsonifier3KSecret[secretDefaultSize]{ 0xb8u, 0xfeu, 0x6cu, 0x39u, 0x23u, 0xa4u, 0x4bu, 0xbeu, 0x7cu, 0x01u, 0x81u, 0x2cu, 0xf7u, 0x21u,
+		0xadu, 0x1cu, 0xdeu, 0xd4u, 0x6du, 0xe9u, 0x83u, 0x90u, 0x97u, 0xdbu, 0x72u, 0x40u, 0xa4u, 0xa4u, 0xb7u, 0xb3u, 0x67u, 0x1fu, 0xcbu, 0x79u, 0xe6u, 0x4eu, 0xccu, 0xc0u,
+		0xe5u, 0x78u, 0x82u, 0x5au, 0xd0u, 0x7du, 0xccu, 0xffu, 0x72u, 0x21u, 0xb8u, 0x08u, 0x46u, 0x74u, 0xf7u, 0x43u, 0x24u, 0x8eu, 0xe0u, 0x35u, 0x90u, 0xe6u, 0x81u, 0x3au,
+		0x26u, 0x4cu, 0x3cu, 0x28u, 0x52u, 0xbbu, 0x91u, 0xc3u, 0x00u, 0xcbu, 0x88u, 0xd0u, 0x65u, 0x8bu, 0x1bu, 0x53u, 0x2eu, 0xa3u, 0x71u, 0x64u, 0x48u, 0x97u, 0xa2u, 0x0du,
+		0xf9u, 0x4eu, 0x38u, 0x19u, 0xefu, 0x46u, 0xa9u, 0xdeu, 0xacu, 0xd8u, 0xa8u, 0xfau, 0x76u, 0x3fu, 0xe3u, 0x9cu, 0x34u, 0x3fu, 0xf9u, 0xdcu, 0xbbu, 0xc7u, 0xc7u, 0x0bu,
+		0x4fu, 0x1du, 0x8au, 0x51u, 0xe0u, 0x4bu, 0xcdu, 0xb4u, 0x59u, 0x31u, 0xc8u, 0x9fu, 0x7eu, 0xc9u, 0xd9u, 0x78u, 0x73u, 0x64u, 0xeau, 0xc5u, 0xacu, 0x83u, 0x34u, 0xd3u,
+		0xebu, 0xc3u, 0xc5u, 0x81u, 0xa0u, 0xffu, 0xfau, 0x13u, 0x63u, 0xebu, 0x17u, 0x0du, 0xddu, 0x51u, 0xb7u, 0xf0u, 0xdau, 0x49u, 0xd3u, 0x16u, 0x55u, 0x26u, 0x29u, 0xd4u,
+		0x68u, 0x9eu, 0x2bu, 0x16u, 0xbeu, 0x58u, 0x7du, 0x47u, 0xa1u, 0xfcu, 0x8fu, 0xf8u, 0xb8u, 0xd1u, 0x7au, 0xd0u, 0x31u, 0xceu, 0x45u, 0xcbu, 0x3au, 0x8fu, 0x95u, 0x16u,
+		0x04u, 0x28u, 0xafu, 0xd7u, 0xfbu, 0xcau, 0xbbu, 0x4bu, 0x40u, 0x7eu };
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	JSONIFIER_INLINE void accumulateSimdRt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
-			const simd_int_512 dataVec	 = _mm512_loadu_si512(input);
-			const simd_int_512 keyVec	 = _mm512_loadu_si512(secret);
-			const simd_int_512 dataKey	 = _mm512_xor_si512(dataVec, keyVec);
+			const simd_int_512 dataVec	= _mm512_loadu_si512(input);
+			const simd_int_512 keyVec	= _mm512_loadu_si512(secret);
+			const simd_int_512 dataKey	= _mm512_xor_si512(dataVec, keyVec);
 			const simd_int_512 dataKeyLo = _mm512_srli_epi64(dataKey, 32);
-			const simd_int_512 product	 = _mm512_mul_epu32(dataKey, dataKeyLo);
-			const simd_int_512 dataSwap	 = _mm512_shuffle_epi32(dataVec, ( _MM_PERM_ENUM )_MM_SHUFFLE(1, 0, 3, 2));
-			const simd_int_512 sum		 = _mm512_add_epi64(_mm512_loadu_si512(acc), dataSwap);
+			const simd_int_512 product	= _mm512_mul_epu32(dataKey, dataKeyLo);
+			const simd_int_512 dataSwap	= _mm512_shuffle_epi32(dataVec, ( _MM_PERM_ENUM )_MM_SHUFFLE(1, 0, 3, 2));
+			const simd_int_512 sum		= _mm512_add_epi64(_mm512_loadu_si512(acc), dataSwap);
 			_mm512_store_si512(acc, _mm512_add_epi64(product, sum));
 		}
 	}
 
 	constexpr void accumulateSimdCt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
-			const simd_fb_type dataVec	 = mm512LoadUSi512(input);
-			const simd_fb_type keyVec	 = mm512LoadUSi512(secret);
-			const simd_fb_type dataKey	 = mm512XorSi512(dataVec, keyVec);
+			const simd_fb_type dataVec	= mm512LoadUSi512(input);
+			const simd_fb_type keyVec	= mm512LoadUSi512(secret);
+			const simd_fb_type dataKey	= mm512XorSi512(dataVec, keyVec);
 			const simd_fb_type dataKeyLo = mm512SrliEpi64(dataKey, 32);
-			const simd_fb_type product	 = mm512MulEpi32(dataKey, dataKeyLo);
-			const simd_fb_type dataSwap	 = mm512ShuffleEpi32(dataVec, ( _MM_PERM_ENUM )_MM_SHUFFLE(1, 0, 3, 2));
-			const simd_fb_type sum		 = mm512AddEpi64(mm512LoadUSi512(acc), dataSwap);
+			const simd_fb_type product	= mm512MulEpi32(dataKey, dataKeyLo);
+			const simd_fb_type dataSwap	= mm512ShuffleEpi32(dataVec, ( _MM_PERM_ENUM )_MM_SHUFFLE(1, 0, 3, 2));
+			const simd_fb_type sum		= mm512AddEpi64(mm512LoadUSi512(acc), dataSwap);
 			mm512StoreUSi512(acc, mm512AddEpi64(product, sum));
 		}
 	}
 
 	JSONIFIER_INLINE void scrambleSimdRt(size_t* acc, const uint8_t* secret) {
 		{
-			const simd_int_512 accVec	 = _mm512_loadu_si512(acc);
-			const simd_int_512 prime32	 = _mm512_set1_epi32(( int32_t )jsonifierPrime321);
-			const simd_int_512 shifted	 = _mm512_srli_epi64(accVec, 47);
-			const simd_int_512 keyVec	 = _mm512_loadu_si512(secret);
-			const simd_int_512 dataKey	 = _mm512_ternarylogic_epi32(keyVec, accVec, shifted, 0x96);
+			const simd_int_512 accVec	= _mm512_loadu_si512(acc);
+			const simd_int_512 prime32	= _mm512_set1_epi32(( int32_t )jsonifierPrime321);
+			const simd_int_512 shifted	= _mm512_srli_epi64(accVec, 47);
+			const simd_int_512 keyVec	= _mm512_loadu_si512(secret);
+			const simd_int_512 dataKey	= _mm512_ternarylogic_epi32(keyVec, accVec, shifted, 0x96);
 			const simd_int_512 dataKeyHi = _mm512_srli_epi64(dataKey, 32);
-			const simd_int_512 prodLo	 = _mm512_mul_epu32(dataKey, prime32);
-			const simd_int_512 prodHi	 = _mm512_mul_epu32(dataKeyHi, prime32);
+			const simd_int_512 prodLo	= _mm512_mul_epu32(dataKey, prime32);
+			const simd_int_512 prodHi	= _mm512_mul_epu32(dataKeyHi, prime32);
 			_mm512_store_si512(acc, _mm512_add_epi64(prodLo, _mm512_slli_epi64(prodHi, 32)));
 		}
 	}
 
 	constexpr void scrambleSimdCt(size_t* acc, const uint8_t* secret) {
 		{
-			const simd_fb_type prime32	 = mm512Set1Epi32(( int32_t )jsonifierPrime321);
-			const simd_fb_type accVec	 = mm512LoadUSi512(acc);
-			const simd_fb_type shifted	 = mm512SrliEpi64(accVec, 47);
-			const simd_fb_type keyVec	 = mm512LoadUSi512(secret);
-			const simd_fb_type dataKey	 = mm512TernarylogicEpi32(keyVec, accVec, shifted, 0x96);
+			const simd_fb_type prime32	= mm512Set1Epi32(( int32_t )jsonifierPrime321);
+			const simd_fb_type accVec	= mm512LoadUSi512(acc);
+			const simd_fb_type shifted	= mm512SrliEpi64(accVec, 47);
+			const simd_fb_type keyVec	= mm512LoadUSi512(secret);
+			const simd_fb_type dataKey	= mm512TernarylogicEpi32(keyVec, accVec, shifted, 0x96);
 			const simd_fb_type dataKeyHi = mm512SrliEpi64(dataKey, 32);
-			const simd_fb_type prodLo	 = mm512MulEpi32(dataKey, prime32);
-			const simd_fb_type prodHi	 = mm512MulEpi32(dataKeyHi, prime32);
+			const simd_fb_type prodLo	= mm512MulEpi32(dataKey, prime32);
+			const simd_fb_type prodHi	= mm512MulEpi32(dataKeyHi, prime32);
 			mm512StoreUSi512(acc, mm512AddEpi64(prodLo, mm512SlliEpi64(prodHi, 32)));
 		}
 	}
@@ -124,20 +125,21 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void initCustomSecretRt(size_t seedNew, uint8_t* secret) {
 		prefetchInternal(secret);
 		{
-			int32_t const nbRounds	   = secretDefaultSize / sizeof(simd_int_512);
+			int32_t const nbRounds				  = secretDefaultSize / sizeof(simd_int_512);
 			const simd_int_512 seedPos = _mm512_set1_epi64(seedNew);
-			const simd_int_512 seed	   = _mm512_mask_sub_epi64(seedPos, 0xAA, _mm512_set1_epi8(0), seedPos);
+			const simd_int_512 seed	  = _mm512_mask_sub_epi64(seedPos, 0xAA, _mm512_set1_epi8(0), seedPos);
 			for (int32_t i = 0; i < nbRounds; ++i) {
-				_mm512_store_si512(secret + i * sizeof(simd_int_512), _mm512_add_epi64(_mm512_loadu_si512(jsonifier3KSecret + i * sizeof(simd_int_512)), seed));
+				_mm512_store_si512(secret + i * sizeof(simd_int_512),
+					_mm512_add_epi64(_mm512_loadu_si512(jsonifier3KSecret + i * sizeof(simd_int_512)), seed));
 			}
 		}
 	}
 
 	constexpr void initCustomSecretCt(size_t seedNew, uint8_t* secret) {
 		{
-			int32_t const nbRounds	   = secretDefaultSize / sizeof(simd_fb_type);
+			int32_t const nbRounds				  = secretDefaultSize / sizeof(simd_fb_type);
 			const simd_fb_type seedPos = mm512Set1Epi64(seedNew);
-			const simd_fb_type seed	   = mm512MaskSubEpi64(seedPos, 0xAA, mm512Set1Epi8(0), seedPos);
+			const simd_fb_type seed	  = mm512MaskSubEpi64(seedPos, 0xAA, mm512Set1Epi8(0), seedPos);
 			for (int32_t i = 0; i < nbRounds; ++i) {
 				mm512StoreUSi512(secret + i * sizeof(simd_fb_type), mm512AddEpi64(mm512LoadUSi512(jsonifier3KSecret + i * sizeof(simd_fb_type)), seed));
 			}
@@ -149,13 +151,13 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void accumulateSimdRt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_256); ++i) {
-				const simd_int_256 dataVec	 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(input));
-				const simd_int_256 keyVec	 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(secret));
-				const simd_int_256 dataKey	 = _mm256_xor_si256(dataVec, keyVec);
+				const simd_int_256 dataVec	= _mm256_loadu_si256(reinterpret_cast<const __m256i*>(input));
+				const simd_int_256 keyVec	= _mm256_loadu_si256(reinterpret_cast<const __m256i*>(secret));
+				const simd_int_256 dataKey	= _mm256_xor_si256(dataVec, keyVec);
 				const simd_int_256 dataKeyLo = _mm256_srli_epi64(dataKey, 32);
-				const simd_int_256 product	 = _mm256_mul_epi32(dataKey, dataKeyLo);
-				const simd_int_256 dataSwap	 = _mm256_shuffle_epi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				const simd_int_256 sum		 = _mm256_add_epi64(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(acc)), dataSwap);
+				const simd_int_256 product	= _mm256_mul_epi32(dataKey, dataKeyLo);
+				const simd_int_256 dataSwap	= _mm256_shuffle_epi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				const simd_int_256 sum		= _mm256_add_epi64(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(acc)), dataSwap);
 				_mm256_store_si256(reinterpret_cast<__m256i*>(acc), _mm256_add_epi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_256) / sizeof(size_t);
 				secret += sizeof(simd_int_256);
@@ -167,13 +169,13 @@ namespace jsonifier_internal {
 	constexpr void accumulateSimdCt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_256); ++i) {
-				const simd_fb_type dataVec	 = mm256LoadUSi256(input);
-				const simd_fb_type keyVec	 = mm256LoadUSi256(secret);
-				const simd_fb_type dataKey	 = mm256XorSi256(dataVec, keyVec);
+				const simd_fb_type dataVec	= mm256LoadUSi256(input);
+				const simd_fb_type keyVec	= mm256LoadUSi256(secret);
+				const simd_fb_type dataKey	= mm256XorSi256(dataVec, keyVec);
 				const simd_fb_type dataKeyLo = mm256SrliEpi64(dataKey, 32);
-				const simd_fb_type product	 = mm256MulEpi32(dataKey, dataKeyLo);
-				const simd_fb_type dataSwap	 = mm256ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				const simd_fb_type sum		 = mm256AddEpi64(mm256LoadUSi256(acc), dataSwap);
+				const simd_fb_type product	= mm256MulEpi32(dataKey, dataKeyLo);
+				const simd_fb_type dataSwap	= mm256ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				const simd_fb_type sum		= mm256AddEpi64(mm256LoadUSi256(acc), dataSwap);
 				mm256StoreUSi256(acc, mm256AddEpi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_256) / sizeof(size_t);
 				secret += sizeof(simd_int_256);
@@ -186,14 +188,14 @@ namespace jsonifier_internal {
 		{
 			const simd_int_256 prime32 = _mm256_set1_epi32(( int32_t )jsonifierPrime321);
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_256); i++) {
-				const simd_int_256 accVec	 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(acc));
-				const simd_int_256 shifted	 = _mm256_srli_epi64(accVec, 47);
-				const simd_int_256 dataVec	 = _mm256_xor_si256(accVec, shifted);
-				const simd_int_256 keyVec	 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(secret));
-				const simd_int_256 dataKey	 = _mm256_xor_si256(dataVec, keyVec);
+				const simd_int_256 accVec	= _mm256_loadu_si256(reinterpret_cast<const __m256i*>(acc));
+				const simd_int_256 shifted	= _mm256_srli_epi64(accVec, 47);
+				const simd_int_256 dataVec	= _mm256_xor_si256(accVec, shifted);
+				const simd_int_256 keyVec	= _mm256_loadu_si256(reinterpret_cast<const __m256i*>(secret));
+				const simd_int_256 dataKey	= _mm256_xor_si256(dataVec, keyVec);
 				const simd_int_256 dataKeyHi = _mm256_srli_epi64(dataKey, 32);
-				const simd_int_256 prodLo	 = _mm256_mul_epu32(dataKey, prime32);
-				const simd_int_256 prodHi	 = _mm256_mul_epu32(dataKeyHi, prime32);
+				const simd_int_256 prodLo	= _mm256_mul_epu32(dataKey, prime32);
+				const simd_int_256 prodHi	= _mm256_mul_epu32(dataKeyHi, prime32);
 				_mm256_store_si256(reinterpret_cast<__m256i*>(acc), _mm256_add_epi64(prodLo, _mm256_slli_epi64(prodHi, 32)));
 				acc += sizeof(simd_int_256) / sizeof(size_t);
 				secret += sizeof(simd_int_256);
@@ -205,14 +207,14 @@ namespace jsonifier_internal {
 		{
 			const simd_fb_type prime32 = mm256Set1Epi32(jsonifierPrime321);
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_256); i++) {
-				const simd_fb_type accVec	 = mm256LoadUSi256(acc);
-				const simd_fb_type shifted	 = mm256SrliEpi64(accVec, 47);
-				const simd_fb_type dataVec	 = mm256XorSi256(accVec, shifted);
-				const simd_fb_type keyVec	 = mm256LoadUSi256(secret);
-				const simd_fb_type dataKey	 = mm256XorSi256(dataVec, keyVec);
+				const simd_fb_type accVec	= mm256LoadUSi256(acc);
+				const simd_fb_type shifted	= mm256SrliEpi64(accVec, 47);
+				const simd_fb_type dataVec	= mm256XorSi256(accVec, shifted);
+				const simd_fb_type keyVec	= mm256LoadUSi256(secret);
+				const simd_fb_type dataKey	= mm256XorSi256(dataVec, keyVec);
 				const simd_fb_type dataKeyHi = mm256SrliEpi64(dataKey, 32);
-				const simd_fb_type prodLo	 = mm256MulEpi32(dataKey, prime32);
-				const simd_fb_type prodHi	 = mm256MulEpi32(dataKeyHi, prime32);
+				const simd_fb_type prodLo	= mm256MulEpi32(dataKey, prime32);
+				const simd_fb_type prodHi	= mm256MulEpi32(dataKeyHi, prime32);
 				mm256StoreUSi256(acc, mm256AddEpi64(prodLo, mm256SlliEpi64(prodHi, 32)));
 				acc += sizeof(simd_int_256) / sizeof(size_t);
 				secret += sizeof(simd_int_256);
@@ -251,13 +253,13 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void accumulateSimdRt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_int_128 dataVec	 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(input));
-				const simd_int_128 keyVec	 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(secret));
-				const simd_int_128 dataKey	 = _mm_xor_si128(dataVec, keyVec);
+				const simd_int_128 dataVec	= _mm_loadu_si128(reinterpret_cast<const __m128i*>(input));
+				const simd_int_128 keyVec	= _mm_loadu_si128(reinterpret_cast<const __m128i*>(secret));
+				const simd_int_128 dataKey	= _mm_xor_si128(dataVec, keyVec);
 				const simd_int_128 dataKeyLo = _mm_srli_epi64(dataKey, 32);
-				const simd_int_128 product	 = _mm_mul_epi32(dataKey, dataKeyLo);
-				const simd_int_128 dataSwap	 = _mm_shuffle_epi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				const simd_int_128 sum		 = _mm_add_epi64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(acc)), dataSwap);
+				const simd_int_128 product	= _mm_mul_epi32(dataKey, dataKeyLo);
+				const simd_int_128 dataSwap	= _mm_shuffle_epi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				const simd_int_128 sum		= _mm_add_epi64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(acc)), dataSwap);
 				_mm_store_si128(reinterpret_cast<__m128i*>(acc), _mm_add_epi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -269,13 +271,13 @@ namespace jsonifier_internal {
 	constexpr void accumulateSimdCt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_fb_type dataVec	 = mm128LoadUSi128(input);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type dataVec	= mm128LoadUSi128(input);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyLo = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type product	 = mm128MulEpi32(dataKey, dataKeyLo);
-				const simd_fb_type dataSwap	 = mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				simd_fb_type sum			 = mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
+				const simd_fb_type product	= mm128MulEpi32(dataKey, dataKeyLo);
+				const simd_fb_type dataSwap	= mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				simd_fb_type sum				= mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
 				mm128StoreUSi128(acc + (i / 8), mm128AddEpi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -288,14 +290,14 @@ namespace jsonifier_internal {
 		{
 			const simd_int_128 prime32 = _mm_set1_epi32(( int32_t )jsonifierPrime321);
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_int_128 accVec	 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(acc));
-				const simd_int_128 shifted	 = _mm_srli_epi64(accVec, 47);
-				const simd_int_128 dataVec	 = _mm_xor_si128(accVec, shifted);
-				const simd_int_128 keyVec	 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(secret));
-				const simd_int_128 dataKey	 = _mm_xor_si128(dataVec, keyVec);
+				const simd_int_128 accVec	= _mm_loadu_si128(reinterpret_cast<const __m128i*>(acc));
+				const simd_int_128 shifted	= _mm_srli_epi64(accVec, 47);
+				const simd_int_128 dataVec	= _mm_xor_si128(accVec, shifted);
+				const simd_int_128 keyVec	= _mm_loadu_si128(reinterpret_cast<const __m128i*>(secret));
+				const simd_int_128 dataKey	= _mm_xor_si128(dataVec, keyVec);
 				const simd_int_128 dataKeyHi = _mm_srli_epi64(dataKey, 32);
-				const simd_int_128 prodLo	 = _mm_mul_epi32(dataKey, prime32);
-				const simd_int_128 prodHi	 = _mm_mul_epi32(dataKeyHi, prime32);
+				const simd_int_128 prodLo	= _mm_mul_epi32(dataKey, prime32);
+				const simd_int_128 prodHi	= _mm_mul_epi32(dataKeyHi, prime32);
 				_mm_store_si128(reinterpret_cast<__m128i*>(acc), _mm_add_epi64(prodLo, _mm_slli_epi64(prodHi, 32)));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -308,14 +310,14 @@ namespace jsonifier_internal {
 			const simd_fb_type prime32 = mm128Set1Epi32(jsonifierPrime321);
 
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_fb_type accVec	 = mm128LoadUSi128(acc);
-				const simd_fb_type shifted	 = mm128SrliEpi64(accVec, 47);
-				const simd_fb_type dataVec	 = mm128XorSi128(accVec, shifted);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type accVec	= mm128LoadUSi128(acc);
+				const simd_fb_type shifted	= mm128SrliEpi64(accVec, 47);
+				const simd_fb_type dataVec	= mm128XorSi128(accVec, shifted);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyHi = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type prodLo	 = mm128MulEpi32(dataKey, prime32);
-				simd_fb_type prodHi			 = mm128MulEpi32(dataKeyHi, prime32);
+				const simd_fb_type prodLo	= mm128MulEpi32(dataKey, prime32);
+				simd_fb_type prodHi			= mm128MulEpi32(dataKeyHi, prime32);
 				mm128StoreUSi128(acc, mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32)));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -335,9 +337,9 @@ namespace jsonifier_internal {
 	}
 
 	constexpr void initCustomSecretCt(size_t seedNew, uint8_t* secret) {
-		constexpr int32_t nbRounds = secretDefaultSize / sizeof(__m128x);
-		simd_fb_type const seed	   = mm128SetrEpi64x((0U - seedNew), seedNew);
-		const uint8_t* src16	   = jsonifier3KSecret;
+		constexpr int32_t nbRounds		   = secretDefaultSize / sizeof(__m128x);
+		simd_fb_type const seed = mm128SetrEpi64x((0U - seedNew), seedNew);
+		const uint8_t* src16			   = jsonifier3KSecret;
 		for (uint32_t i = 0; i < nbRounds; ++i) {
 			mm128StoreUSi128(secret, mm128AddEpi64(mm128LoadUSi128(src16), seed));
 			secret += sizeof(simd_int_128);
@@ -368,15 +370,15 @@ namespace jsonifier_internal {
 	constexpr void accumulateSimdCt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (uint64_t i = 0; i < jsonifierStripeLength / sizeof(uint64x2_t); ++i) {
-				const simd_fb_type dataVec	 = mm128LoadUSi128(input);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type dataVec	= mm128LoadUSi128(input);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyLo = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type product	 = mm128MulEpi32(dataKey, dataKeyLo);
-				const simd_fb_type dataSwap	 = mm128ShuffleEpi32(dataVec, mmShuffle(1, 0, 3, 2));
-				const simd_fb_type xacc		 = mm128LoadUSi128(acc);
-				simd_fb_type sum			 = mm128AddEpi64(xacc, dataSwap);
-				sum							 = mm128AddEpi64(dataKeyLo, sum);
+				const simd_fb_type product	= mm128MulEpi32(dataKey, dataKeyLo);
+				const simd_fb_type dataSwap	= mm128ShuffleEpi32(dataVec, mmShuffle(1, 0, 3, 2));
+				const simd_fb_type xacc		= mm128LoadUSi128(acc);
+				simd_fb_type sum				= mm128AddEpi64(xacc, dataSwap);
+				sum										= mm128AddEpi64(dataKeyLo, sum);
 				mm128StoreUSi128(acc, sum);
 				acc += sizeof(uint64x2_t) / sizeof(uint64_t);
 				secret += sizeof(uint64x2_t);
@@ -410,14 +412,14 @@ namespace jsonifier_internal {
 			const simd_fb_type prime32 = mm128Set1Epi32(jsonifierPrime321);
 
 			for (uint64_t i = 0; i < jsonifierStripeLength / sizeof(uint64x2_t); ++i) {
-				const simd_fb_type accVec	 = mm128LoadUSi128(acc);
-				const simd_fb_type shifted	 = mm128SrliEpi64(accVec, 47);
-				const simd_fb_type dataVec	 = mm128XorSi128(accVec, shifted);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type accVec	= mm128LoadUSi128(acc);
+				const simd_fb_type shifted	= mm128SrliEpi64(accVec, 47);
+				const simd_fb_type dataVec	= mm128XorSi128(accVec, shifted);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyHi = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type prodLo	 = mm128MulEpi32(dataKey, prime32);
-				simd_fb_type prodHi			 = mm128MulEpi32(dataKeyHi, prime32);
+				const simd_fb_type prodLo	= mm128MulEpi32(dataKey, prime32);
+				simd_fb_type prodHi			= mm128MulEpi32(dataKeyHi, prime32);
 				mm128StoreUSi128(acc, mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32)));
 				acc += sizeof(uint64x2_t) / sizeof(uint64_t);
 				secret += sizeof(uint64x2_t);
@@ -477,13 +479,13 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE void accumulateSimdRt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_fb_type dataVec	 = mm128LoadUSi128(input);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type dataVec	= mm128LoadUSi128(input);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyLo = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type product	 = mm128MulEpi32(dataKey, dataKeyLo);
-				const simd_fb_type dataSwap	 = mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				const simd_fb_type sum		 = mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
+				const simd_fb_type product	= mm128MulEpi32(dataKey, dataKeyLo);
+				const simd_fb_type dataSwap	= mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				const simd_fb_type sum		= mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
 				mm128StoreUSi128(acc + (i / 8), mm128AddEpi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -495,13 +497,13 @@ namespace jsonifier_internal {
 	constexpr void accumulateSimdCt(size_t* acc, const char* input, const uint8_t* secret) {
 		{
 			for (size_t i = 0; i < jsonifierStripeLength / sizeof(simd_int_128); ++i) {
-				const simd_fb_type dataVec	 = mm128LoadUSi128(input);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type dataVec	= mm128LoadUSi128(input);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyLo = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type product	 = mm128MulEpi32(dataKey, dataKeyLo);
-				const simd_fb_type dataSwap	 = mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
-				simd_fb_type sum			 = mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
+				const simd_fb_type product	= mm128MulEpi32(dataKey, dataKeyLo);
+				const simd_fb_type dataSwap	= mm128ShuffleEpi32(dataVec, _MM_SHUFFLE(1, 0, 3, 2));
+				simd_fb_type sum				= mm128AddEpi64(mm128LoadUSi128(acc), dataSwap);
 				mm128StoreUSi128(acc + (i / 8), mm128AddEpi64(dataKeyLo, sum));
 				acc += sizeof(simd_int_128) / sizeof(size_t);
 				secret += sizeof(simd_int_128);
@@ -515,16 +517,16 @@ namespace jsonifier_internal {
 			const simd_fb_type prime32 = mm128Set1Epi32(jsonifierPrime321);
 
 			for (size_t i = 0; i < jsonifierStripeLength; i += 16) {
-				const simd_fb_type xacc		 = mm128LoadUSi128(acc + (i / 8));
-				const simd_fb_type accVec	 = xacc;
-				const simd_fb_type shifted	 = mm128SrliEpi64(accVec, 47);
-				const simd_fb_type dataVec	 = mm128XorSi128(accVec, shifted);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret + i);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type xacc		= mm128LoadUSi128(acc + (i / 8));
+				const simd_fb_type accVec	= xacc;
+				const simd_fb_type shifted	= mm128SrliEpi64(accVec, 47);
+				const simd_fb_type dataVec	= mm128XorSi128(accVec, shifted);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret + i);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyHi = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type prodLo	 = mm128MulEpi32(dataKey, prime32);
-				simd_fb_type prodHi			 = mm128MulEpi32(dataKeyHi, prime32);
-				prodHi						 = mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32));
+				const simd_fb_type prodLo	= mm128MulEpi32(dataKey, prime32);
+				simd_fb_type prodHi			= mm128MulEpi32(dataKeyHi, prime32);
+				prodHi									= mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32));
 				mm128StoreUSi128(acc + (i / 8), prodHi);
 			}
 		}
@@ -535,25 +537,25 @@ namespace jsonifier_internal {
 			const simd_fb_type prime32 = mm128Set1Epi32(jsonifierPrime321);
 
 			for (size_t i = 0; i < jsonifierStripeLength; i += 16) {
-				const simd_fb_type xacc		 = mm128LoadUSi128(acc + (i / 8));
-				const simd_fb_type accVec	 = xacc;
-				const simd_fb_type shifted	 = mm128SrliEpi64(accVec, 47);
-				const simd_fb_type dataVec	 = mm128XorSi128(accVec, shifted);
-				const simd_fb_type keyVec	 = mm128LoadUSi128(secret + i);
-				const simd_fb_type dataKey	 = mm128XorSi128(dataVec, keyVec);
+				const simd_fb_type xacc		= mm128LoadUSi128(acc + (i / 8));
+				const simd_fb_type accVec	= xacc;
+				const simd_fb_type shifted	= mm128SrliEpi64(accVec, 47);
+				const simd_fb_type dataVec	= mm128XorSi128(accVec, shifted);
+				const simd_fb_type keyVec	= mm128LoadUSi128(secret + i);
+				const simd_fb_type dataKey	= mm128XorSi128(dataVec, keyVec);
 				const simd_fb_type dataKeyHi = mm128SrliEpi64(dataKey, 32);
-				const simd_fb_type prodLo	 = mm128MulEpi32(dataKey, prime32);
-				simd_fb_type prodHi			 = mm128MulEpi32(dataKeyHi, prime32);
-				prodHi						 = mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32));
+				const simd_fb_type prodLo	= mm128MulEpi32(dataKey, prime32);
+				simd_fb_type prodHi			= mm128MulEpi32(dataKeyHi, prime32);
+				prodHi									= mm128AddEpi64(prodLo, mm128SlliEpi64(prodHi, 32));
 				mm128StoreUSi128(acc + (i / 8), prodHi);
 			}
 		}
 	}
 
 	JSONIFIER_INLINE void initCustomSecretRt(size_t seedNew, uint8_t* secret) {
-		constexpr int32_t nbRounds = secretDefaultSize / sizeof(__m128x);
-		simd_fb_type const seed	   = mm128SetrEpi64x((0U - seedNew), seedNew);
-		const uint8_t* src16	   = jsonifier3KSecret;
+		constexpr int32_t nbRounds		   = secretDefaultSize / sizeof(__m128x);
+		simd_fb_type const seed = mm128SetrEpi64x((0U - seedNew), seedNew);
+		const uint8_t* src16			   = jsonifier3KSecret;
 		for (int32_t i = 0; i < nbRounds; ++i) {
 			mm128StoreUSi128(secret, mm128AddEpi64(mm128LoadUSi128(src16), seed));
 			secret += sizeof(simd_int_128);
@@ -562,9 +564,9 @@ namespace jsonifier_internal {
 	}
 
 	constexpr void initCustomSecretCt(size_t seedNew, uint8_t* secret) {
-		constexpr int32_t nbRounds = secretDefaultSize / sizeof(__m128x);
-		simd_fb_type const seed	   = mm128SetrEpi64x((0U - seedNew), seedNew);
-		const uint8_t* src16	   = jsonifier3KSecret;
+		constexpr int32_t nbRounds		   = secretDefaultSize / sizeof(__m128x);
+		simd_fb_type const seed = mm128SetrEpi64x((0U - seedNew), seedNew);
+		const uint8_t* src16			   = jsonifier3KSecret;
 		for (int32_t i = 0; i < nbRounds; ++i) {
 			mm128StoreUSi128(secret, mm128AddEpi64(mm128LoadUSi128(src16), seed));
 			secret += sizeof(simd_int_128);
@@ -980,7 +982,7 @@ namespace jsonifier_internal {
 		 * @brief Default constructor that initializes the seed using a random value.
 		 */
 		constexpr key_hasher() {
-			setSeedCt(xoshiro256{}.operator()());
+			setSeedCt(jsonifier_internal::xoshiro256{}.operator()());
 		}
 
 		/**
@@ -990,7 +992,7 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE void setSeedRt(size_t seedNew) {
 			seed = seedNew;
-			initCustomSecretRt(seedNew, secret);
+			jsonifier_internal::initCustomSecretRt(seedNew, secret);
 		}
 
 		/**
@@ -1000,7 +1002,7 @@ namespace jsonifier_internal {
 		 */
 		constexpr void setSeedCt(size_t seedNew) {
 			seed = seedNew;
-			initCustomSecretCt(seedNew, secret);
+			jsonifier_internal::initCustomSecretCt(seedNew, secret);
 		}
 
 		/**
@@ -1021,7 +1023,7 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE size_t hashKeyRt(const void* value, size_t length) const {
 			if (length <= 2048) {
-				return (arrayOfRtFunctionPtrs[length])(static_cast<const char*>(value), seed);
+				return (jsonifier_internal::arrayOfRtFunctionPtrs[length])(static_cast<const char*>(value), seed);
 			} else {
 				return len241ToAnyRt(static_cast<const char*>(value), length);
 			}
@@ -1036,14 +1038,14 @@ namespace jsonifier_internal {
 		 */
 		constexpr size_t hashKeyCt(const char* value, size_t length) const {
 			if (length <= 2048) {
-				return (arrayOfCtFunctionPtrs[length])(value, seed);
+				return (jsonifier_internal::arrayOfCtFunctionPtrs[length])(value, seed);
 			} else {
 				return len241ToAnyCt(value, length);
 			}
 		}
 
 	  protected:
-		JSONIFIER_ALIGN uint8_t secret[secretDefaultSize]{};///< Secret key used for hashing.
+		JSONIFIER_ALIGN uint8_t secret[jsonifier_internal::secretDefaultSize]{};///< Secret key used for hashing.
 		size_t seed{};///< Seed value for the hashing algorithm.
 
 		/**
@@ -1051,7 +1053,7 @@ namespace jsonifier_internal {
 		 */
 		struct mutable_constexpr_array {
 			/// Array of accumulated values.
-			JSONIFIER_ALIGN mutable std::array<size_t, jsonifierAccNb> acc{ jsonifierInitAcc };
+			JSONIFIER_ALIGN mutable std::array<size_t, jsonifier_internal::jsonifierAccNb> acc{ jsonifier_internal::jsonifierInitAcc };
 		};
 
 		/**
@@ -1063,9 +1065,9 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE size_t len241ToAnyRt(const char* input, size_t len) const {
 			constexpr mutable_constexpr_array acc{};
-			hashLongInternalLoopRt(acc.acc.data(), input, len, secret);
+			jsonifier_internal::hashLongInternalLoopRt(acc.acc.data(), input, len, secret);
 			static constexpr size_t jsonifierSecretMergeAccsStart{ 11 };
-			return mergeAccsRt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifierPrime641);
+			return jsonifier_internal::mergeAccsRt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifier_internal::jsonifierPrime641);
 		}
 
 		/**
@@ -1077,9 +1079,9 @@ namespace jsonifier_internal {
 		 */
 		constexpr size_t len241ToAnyCt(const char* input, size_t len) const {
 			constexpr mutable_constexpr_array acc{};
-			hashLongInternalLoopCt(acc.acc.data(), input, len, secret);
+			jsonifier_internal::hashLongInternalLoopCt(acc.acc.data(), input, len, secret);
 			constexpr size_t jsonifierSecretMergeAccsStart{ 11 };
-			return mergeAccsCt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifierPrime641);
+			return jsonifier_internal::mergeAccsCt(acc.acc.data(), secret + jsonifierSecretMergeAccsStart, len * jsonifier_internal::jsonifierPrime641);
 		}
 	};
 

@@ -15,9 +15,9 @@
 #include <thread>
 #include <chrono>
 
-constexpr bnch_swt::string_literal jsonifierLibraryName{ bnch_swt::joinLiterals<"jsonifier - ", JSONIFIER_COMMIT>() };
-constexpr bnch_swt::string_literal simdjsonLibraryName{ bnch_swt::joinLiterals<"simdjson - ", SIMDJSON_COMMIT>() };
-constexpr bnch_swt::string_literal glazeLibraryName{ bnch_swt::joinLiterals<"glaze - ", GLAZE_COMMIT>() };
+constexpr bnch_swt::string_literal jsonifierLibraryName{ "jsonifier" };
+constexpr bnch_swt::string_literal simdjsonLibraryName{ "simdjson" };
+constexpr bnch_swt::string_literal glazeLibraryName{ "glaze" };
 constexpr bnch_swt::string_literal jsonifierCommitUrl{ bnch_swt::joinLiterals<"https://github.com/RealTimeChris/Jsonifier/commit/", JSONIFIER_COMMIT>() };
 constexpr bnch_swt::string_literal simdjsonCommitUrl{ bnch_swt::joinLiterals<"https://github.com/simdjson/simdjson/commit/", SIMDJSON_COMMIT>() };
 constexpr bnch_swt::string_literal glazeCommitUrl{ bnch_swt::joinLiterals<"https://github.com/stephenberry/glaze/commit/", GLAZE_COMMIT>() };
@@ -1273,7 +1273,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ jsonifierLibraryName.operator std::string(), static_cast<std::string>(testName), jsonifierCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
 		test_data_type testData{};
 		auto readResult =
@@ -1315,7 +1315,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ jsonifierLibraryName, static_cast<std::string>(testName), jsonifierCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
 		std::string newerBuffer{};
 		auto writeResult =
@@ -1343,7 +1343,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 		std::string newerBuffer{};
-		results_data r{ jsonifierLibraryName, static_cast<std::string>(testName), jsonifierCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
@@ -1370,7 +1370,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ jsonifierLibraryName, static_cast<std::string>(testName), jsonifierCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
 
 		auto readResult =
@@ -1400,7 +1400,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ glazeLibraryName, static_cast<std::string>(testName), glazeCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		test_data_type testData{};
 		auto readResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
@@ -1436,7 +1436,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ glazeLibraryName, static_cast<std::string>(testName), glazeCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
@@ -1459,7 +1459,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ glazeLibraryName, static_cast<std::string>(testName), glazeCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
@@ -1482,7 +1482,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		const std::string buffer{ newBuffer };
 
-		results_data r{ glazeLibraryName, static_cast<std::string>(testName), glazeCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
 				auto result = glz::validate_json(buffer);
@@ -2061,7 +2061,7 @@ struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, 
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ simdjsonLibraryName, static_cast<std::string>(testName), simdjsonCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(simdjsonLibraryName), static_cast<std::string>(testName), static_cast<std::string>(simdjsonCommitUrl), iterations };
 
 		simdjson::ondemand::parser parser{};
 		auto readSize = buffer.size();
@@ -2092,7 +2092,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ simdjsonLibraryName, static_cast<std::string>(testName), simdjsonCommitUrl, iterations };
+		results_data r{ static_cast<std::string>(simdjsonLibraryName), static_cast<std::string>(testName), static_cast<std::string>(simdjsonCommitUrl), iterations };
 
 		simdjson::dom::parser parser{};
 		std::string newerBuffer{};
@@ -2245,15 +2245,26 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 static const std::string section001{ R"(
  > At least )" +
 	jsonifier::toString(static_cast<uint64_t>(static_cast<float>(iterationsVal) * 0.10f)) +
-	R"( iterations on a 6 core (Intel i7 8700k), until Median Absolute Percentage Error (medianAbsolutePercentageError) reduced below 5.0%.
+	R"( iterations on a 6 core (Intel i7 8700k), until Median Absolute Percentage Error (MAPE) reduced below 5.0%.
 )" };
 
-static constexpr std::string_view section00{ R"(# Json-Performance
+static constexpr auto newString02{ bnch_swt::joinLiterals<R"(#### Using the following commits:
+----
+| Jsonifier: [)",
+	JSONIFIER_COMMIT, R"(](https://github.com/RealTimeChris/Jsonifier/commit/df00b7f)  
+| Glaze: [)",
+	GLAZE_COMMIT, R"(](https://github.com/stephenberry/glaze/commit/eb7eb40)  
+| Simdjson: [)",
+	SIMDJSON_COMMIT, R"(](https://github.com/simdjson/simdjson/commit/417e760))", "\n\n">() };
+
+static constexpr jsonifier::string_view section002{ newString02 };
+
+static constexpr jsonifier::string_view section00{ R"(# Json-Performance
 Performance profiling of JSON libraries (Compiled and run on Ubuntu-22.04 using the Clang++18 compiler)
 
 Latest Results: ()" };
 
-static constexpr std::string_view section01{
+static constexpr jsonifier::string_view section01{
 	R"(
 
 ### Json Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2265,7 +2276,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr std::string_view section02{
+static constexpr jsonifier::string_view section02{
 	R"(
 
 ### Json Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
@@ -2277,7 +2288,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static const std::string_view section03{
+static const jsonifier::string_view section03{
 	R"(
 
 ### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2294,7 +2305,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 )"
 };
 
-static constexpr std::string_view section04{ R"(
+static constexpr jsonifier::string_view section04{ R"(
 
 ### ABC Test (Out of Sequence Performance - Minified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
 
@@ -2304,7 +2315,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section05{ R"(
+static constexpr jsonifier::string_view section05{ R"(
 
 ### Discord Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -2314,7 +2325,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section06{ R"(
+static constexpr jsonifier::string_view section06{ R"(
 
 ### Discord Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
 
@@ -2324,7 +2335,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section07{ R"(
+static constexpr jsonifier::string_view section07{ R"(
 
 ### Canada Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Prettified.json):
 
@@ -2334,7 +2345,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section08{ R"(
+static constexpr jsonifier::string_view section08{ R"(
 
 ### Canada Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Minified.json):
 
@@ -2344,7 +2355,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section09{ R"(
+static constexpr jsonifier::string_view section09{ R"(
 
 ### Twitter Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Prettified.json):
 
@@ -2354,7 +2365,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section10{ R"(
+static constexpr jsonifier::string_view section10{ R"(
 
 ### Twitter Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Minified.json):
 
@@ -2364,7 +2375,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr std::string_view section11{
+static constexpr jsonifier::string_view section11{
 	R"(
 
 ### Minify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -2376,7 +2387,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr std::string_view section12{
+static constexpr jsonifier::string_view section12{
 	R"(
 
 ### Prettify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
@@ -2388,7 +2399,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr std::string_view section13{
+static constexpr jsonifier::string_view section13{
 	R"(
 
 ### Validation Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -2465,56 +2476,56 @@ int32_t main() {
 		conformanceTests();
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
-		std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + section001 + static_cast<std::string>(section01) };
+		std::string newerString{ section00 + newTimeString + ")\n" + section002 + section001 + section01 };
 		auto testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, iterationsVal, "Json Test (Prettified)">::run(jsonDataNew);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, iterationsVal, "Json Test (Minified)">::run(jsonMinifiedData);
-		newerString += section02;
+		newerString += static_cast<std::string>(section02);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, false, iterationsVal, "Abc Test (Prettified)">::run(jsonDataNew);
-		newerString += section03;
+		newerString += static_cast<std::string>(section03);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, iterationsVal, "Abc Test (Minified)">::run(jsonMinifiedData);
-		newerString += section04;
+		newerString += static_cast<std::string>(section04);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, false, iterationsVal, "Discord Test (Prettified)">::run(discordData);
-		newerString += section05;
+		newerString += static_cast<std::string>(section05);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, true, iterationsVal, "Discord Test (Minified)">::run(discordMinifiedData);
-		newerString += section06;
+		newerString += static_cast<std::string>(section06);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, false, iterationsVal, "Canada Test (Prettified)">::run(canadaData);
-		newerString += section07;
+		newerString += static_cast<std::string>(section07);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, iterationsVal, "Canada Test (Minified)">::run(canadaMinifiedData);
-		newerString += section08;
+		newerString += static_cast<std::string>(section08);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, iterationsVal, "Twitter Test (Prettified)">::run(twitterData);
-		newerString += section09;
+		newerString += static_cast<std::string>(section09);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, iterationsVal, "Twitter Test (Minified)">::run(twitterMinifiedData);
-		newerString += section10;
+		newerString += static_cast<std::string>(section10);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::minify, std::string, false, iterationsVal, "Minify Test">::run(discordData);
-		newerString += section11;
+		newerString += static_cast<std::string>(section11);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::prettify, std::string, false, iterationsVal, "Prettify Test">::run(jsonMinifiedData);
-		newerString += section12;
+		newerString += static_cast<std::string>(section12);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::validate, std::string, false, iterationsVal, "Validate Test">::run(discordData);
-		newerString += section13;
+		newerString += static_cast<std::string>(section13);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		std::string resultsStringJson{};
