@@ -45,12 +45,6 @@
 	#define JSONIFIER_GNUCXX 1
 #endif
 
-#if defined(__has_builtin)
-	#define JSONIFIER_HAS_BUILTIN(x) __has_builtin(x)
-#else
-	#define JSONIFIER_HAS_BUILTIN(x) 0
-#endif
-
 #define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 
 #if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
@@ -80,18 +74,10 @@
 	#define ASSUME(x) (( void )0)
 #endif
 
-#if defined(JSONIFIER_MSVC)
-	#define JSONIFIER_ALWAYS_INLINE __forceinline
-	#define JSONIFIER_NO_INLINE __declspec(noinline)
+#if defined(__clang__) && defined(NDEBUG) && !defined(JSONIFIER_INLINE)
+	#define JSONIFIER_INLINE inline __attribute__((always_inline))
+#elif !defined(JSONIFIER_INLINE)
 	#define JSONIFIER_INLINE inline
-#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
-	#define JSONIFIER_ALWAYS_INLINE __attribute__((__always_inline__)) inline
-	#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
-	#define JSONIFIER_INLINE inline
-#else
-	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_INLINE inline
-	#define JSONIFIER_NO_INLINE
 #endif
 
 #if !defined(JSONIFIER_CPU_INSTRUCTIONS)
