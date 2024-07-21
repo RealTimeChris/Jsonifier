@@ -1271,7 +1271,7 @@ template<json_library lib, test_type type, typename test_data_type, bool minifie
 template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
 struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
@@ -1313,7 +1313,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
@@ -1341,7 +1341,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 		std::string newerBuffer{};
 		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
@@ -1368,7 +1368,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
 		jsonifier::jsonifier_core parser{};
@@ -1398,7 +1398,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
 struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		test_data_type testData{};
@@ -1434,7 +1434,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		std::string newerBuffer{};
@@ -1457,13 +1457,13 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				glz::minify_json(buffer, newerBuffer);
+				newerBuffer = glz::minify_json(buffer);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 			});
 
@@ -1480,7 +1480,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName> {
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		const std::string buffer{ newBuffer };
+		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
 		auto writeResult =

@@ -455,17 +455,6 @@ namespace jsonifier_internal {
 
 		if constexpr (n == 0) {
 			return nullptr;
-		} else if constexpr (n < 16) {
-			constexpr auto mapNew	= constructMinimalCharHashMap<jsonifier::string_view, value_type, n>({ getKey<value_type, I>()... });
-			constexpr auto newIndex = mapNew.index();
-			constexpr auto newMap	= std::get<newIndex>(mapNew);
-			if constexpr (newMap.stringLength == std::numeric_limits<size_t>::max()) {
-				constexpr auto mapNewer	  = constructSimdHashMap<jsonifier::string_view, value_type, n>({ getKey<value_type, I>()... });
-				constexpr auto newIndexer = mapNewer.index();
-				return std::get<newIndexer>(mapNewer);
-			} else {
-				return newMap;
-			}
 		} else {
 			constexpr auto mapNew	= constructSimdHashMap<jsonifier::string_view, value_type, n>({ getKey<value_type, I>()... });
 			constexpr auto newIndex = mapNew.index();
