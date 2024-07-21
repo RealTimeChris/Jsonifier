@@ -25,7 +25,7 @@
 
 #include <jsonifier/JsonStructuralIterator.hpp>
 #include <jsonifier/Validator.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashTuple.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>

@@ -28,28 +28,30 @@
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept convertible_to_string_view = std::convertible_to<unwrap_t<value_type>, jsonifier::string_view>;
+	concept convertible_to_string_view = std::convertible_to<std::remove_cvref_t<value_type>, std::string_view>;
 
-	template<uint64_t currentIndex, uint64_t maxIndex, convertible_to_string_view arg_type01, typename arg_type02, typename tuple_type, typename... arg_types>
+	template<uint64_t currentIndex, uint64_t maxIndex, typename tuple_type, typename arg_type01, typename arg_type02, typename... arg_types>
 	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) {
-		jsonifier::string_view stringLiteral{ arg01 };
 		if constexpr (std::tuple_size_v<tuple_type> > 0) {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= std::make_tuple(stringLiteral, arg02);
+				auto newerPair = makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= std::make_tuple(stringLiteral, arg02);
+			}
+			else {
+				auto newerPair = makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return newerTuple;
 			}
-		} else {
+		}
+		else {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= std::make_tuple(stringLiteral, arg02);
+				auto newerPair = makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= std::make_tuple(stringLiteral, arg02);
+			}
+			else {
+				auto newerPair = makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return newerTuple;
 			}

@@ -127,13 +127,13 @@ namespace jsonifier {
 	namespace concepts {
 
 		template<typename value_type>
-		concept simd_int_512_type = std::is_same_v<simd_int_512, std::remove_cvref_t<value_type>>;
+		concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, std::remove_cvref_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_256_type = std::is_same_v<simd_int_256, std::remove_cvref_t<value_type>>;
+		concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, std::remove_cvref_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_128_type = std::is_same_v<simd_int_128, std::remove_cvref_t<value_type>>;
+		concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_type = std::is_same_v<simd_int_t, std::remove_cvref_t<value_type>>;
+		concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
 		concept range = requires(jsonifier_internal::unwrap_t<value_type> value) {
@@ -470,8 +470,8 @@ namespace jsonifier_internal {
 		std::stringstream theStream{};
 		store(value, values);
 		std::cout << valuesTitle;
-		for (string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
-			for (string_parsing_type y = 0; y < 8; ++y) {
+		for (jsonifier_string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
+			for (jsonifier_string_parsing_type y = 0; y < 8; ++y) {
 				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
 			}
 		}

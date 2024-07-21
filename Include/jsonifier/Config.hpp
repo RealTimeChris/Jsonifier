@@ -166,47 +166,47 @@ constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-using simd_int_128 = __m128i;
-using simd_int_256 = __m256i;
-using simd_int_512 = __m512i;
+using jsonifier_simd_int_128 = __m128i;
+using jsonifier_simd_int_256 = __m256i;
+using jsonifier_simd_int_512 = __m512i;
 
 	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-using simd_int_t = __m512i;
+using jsonifier_simd_int_t = __m512i;
 constexpr uint64_t bitsPerStep{ 512 };
-using string_parsing_type = uint64_t;
-using simd_fb_type		  = jsonifier_internal::__m512x;
+using jsonifier_string_parsing_type = uint64_t;
+using jsonifier_simd_fb_type		  = jsonifier_internal::__m512x;
 	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-using simd_int_t = __m256i;
+using jsonifier_simd_int_t = __m256i;
 constexpr uint64_t bitsPerStep{ 256 };
-using string_parsing_type = uint32_t;
-using simd_fb_type		  = jsonifier_internal::__m256x;
+using jsonifier_string_parsing_type = uint32_t;
+using jsonifier_simd_fb_type		  = jsonifier_internal::__m256x;
 	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-using simd_int_t = __m128i;
+using jsonifier_simd_int_t = __m128i;
 constexpr uint64_t bitsPerStep{ 128 };
-using string_parsing_type = uint16_t;
-using simd_fb_type		  = jsonifier_internal::__m128x;
+using jsonifier_string_parsing_type = uint16_t;
+using jsonifier_simd_fb_type		  = jsonifier_internal::__m128x;
 	   #endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	#include <arm_neon.h>
 
-using simd_int_128 = uint8x16_t;
-using simd_int_256 = uint32_t;
-using simd_int_512 = uint64_t;
+using jsonifier_simd_int_128 = uint8x16_t;
+using jsonifier_simd_int_256 = uint32_t;
+using jsonifier_simd_int_512 = uint64_t;
 
-using simd_int_t = uint8x16_t;
+using jsonifier_simd_int_t = uint8x16_t;
 constexpr uint64_t bitsPerStep{ 128 };
-using string_parsing_type = uint16_t;
-using simd_fb_type		  = jsonifier_internal::__m128x;
+using jsonifier_string_parsing_type = uint16_t;
+using jsonifier_simd_fb_type		  = jsonifier_internal::__m128x;
 #else
-using simd_int_128 = jsonifier_internal::__m128x;
-using simd_int_256 = uint32_t;
-using simd_int_512 = uint64_t;
+using jsonifier_simd_int_128 = jsonifier_internal::__m128x;
+using jsonifier_simd_int_256 = uint32_t;
+using jsonifier_simd_int_512 = uint64_t;
 
-using simd_int_t = jsonifier_internal::__m128x;
+using jsonifier_simd_int_t = jsonifier_internal::__m128x;
 constexpr uint64_t bitsPerStep{ 128 };
-using string_parsing_type = uint16_t;
-using simd_fb_type		  = jsonifier_internal::__m128x;
+using jsonifier_string_parsing_type = uint16_t;
+using jsonifier_simd_fb_type		  = jsonifier_internal::__m128x;
 #endif
 
 constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };
@@ -229,6 +229,6 @@ using string_buffer_ptr = char*;
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 
-JSONIFIER_INLINE void prefetchInternal(const void* ptr) {
+JSONIFIER_INLINE void jsonifierPrefetchInternal(const void* ptr) {
 	PREFETCH(ptr)
 }

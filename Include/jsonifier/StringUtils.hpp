@@ -780,7 +780,7 @@ namespace jsonifier_internal {
 		return newString == newString02;
 	}
 
-	template<typename iterator_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type&& iter) {
+	template<typename iterator_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type& iter) {
 		if (compareStringAsInt<"true">(iter)) {
 			value = true;
 			iter += 4;
@@ -795,7 +795,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::json_structural_iterator_t iterator_type, jsonifier::concepts::bool_t bool_type>
-	JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type&& iter) {
+	JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type& iter) {
 		if (compareStringAsInt<"true">(iter)) {
 			value = true;
 			++iter;
@@ -809,7 +809,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type&& iter) {
+	template<typename iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type& iter) {
 		if (compareStringAsInt<"null">(iter)) {
 			iter += 4;
 			return true;
@@ -818,7 +818,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type&& iter) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type& iter) {
 		if (compareStringAsInt<"null">(iter)) {
 			++iter;
 			return true;
@@ -828,7 +828,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		auto newPtr = iter.operator->();
 		if (*newPtr == 0x22u) [[likely]] {
 			++iter;
@@ -864,7 +864,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>
-	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type&& iter, iterator_type&& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
 		if (*iter == '"') [[unlikely]] {
 			++iter;
 		} else {

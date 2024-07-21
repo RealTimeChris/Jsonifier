@@ -2414,6 +2414,7 @@ alt="" width="400"/></p>
 #include "ConformanceTests.hpp"
 
 int32_t main() {
+	/*
 	try {
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
@@ -2426,6 +2427,8 @@ int32_t main() {
 		std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 		fileLoader03.saveFile(jsonMinifiedData);
 		file_loader fileLoader04{ basePath + "/Results.json" };
+		*/
+		jsonifier::jsonifier_core parser{};
 		file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
 		std::string discordData{ fileLoader05.operator std::string() };
 		discord_message discordMessage{};
@@ -2433,12 +2436,13 @@ int32_t main() {
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(discordMessage, discordData);
+		parser.serializeJson < jsonifier::serialize_options{ .prettify = false } > (discordMessage, discordData);
 		fileLoader05.saveFile(discordData);
 		file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
 		std::string discordMinifiedData{ fileLoader06.operator std::string() };
 		discordMinifiedData = parser.minifyJson(discordData);
 		fileLoader06.saveFile(discordMinifiedData);
+		/*
 		file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
 		std::string canadaData{ fileLoader07.operator std::string() };
 		canada_message canadaMessage{};
@@ -2561,6 +2565,6 @@ int32_t main() {
 		std::cout << e.what() << std::endl;
 	} catch (std::out_of_range& e) {
 		std::cout << e.what() << std::endl;
-	}
+	}*/
 	return 0;
 }

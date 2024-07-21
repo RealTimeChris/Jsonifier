@@ -31,7 +31,7 @@ namespace simd_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE static simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE static jsonifier_simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
 		static constexpr uint8x16_t mask{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F };
 		return vqtbl1q_u8(std::forward<simd_int_t01>(value), vandq_u8(std::forward<simd_int_t02>(other), mask));
 	}
@@ -39,21 +39,21 @@ namespace simd_internal {
 #elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE static simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE static jsonifier_simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	JSONIFIER_INLINE static simd_int_256 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE static jsonifier_simd_int_256 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm256_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	JSONIFIER_INLINE static simd_int_512 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE static jsonifier_simd_int_512 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
 		return _mm512_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
@@ -64,7 +64,7 @@ namespace simd_internal {
 #else
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE static simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE static jsonifier_simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) {
 		return mm128ShuffleEpi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{});
 	}
 

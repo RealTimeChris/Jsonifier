@@ -130,9 +130,9 @@ namespace jsonifier_internal {
 		JSONIFIER_ALIGN size_type newBits[sixtyFourBitsPerStep]{};
 		JSONIFIER_ALIGN char block[bitsPerStep]{};
 		simd_internal::simd_int_t_holder rawStructurals{};
-		simd_int_t newPtr[stridesPerStep]{};
-		simd_int_t nextIsEscaped{};
-		simd_int_t escaped{};
+		jsonifier_simd_int_t newPtr[stridesPerStep]{};
+		jsonifier_simd_int_t nextIsEscaped{};
+		jsonifier_simd_int_t escaped{};
 		jsonifier::string_view currentParseBuffer{};
 		string_block_reader stringBlockReader{};
 		structural_index* structuralIndices{};
@@ -205,25 +205,25 @@ namespace jsonifier_internal {
 
 		template<bool collectAligned> JSONIFIER_INLINE void collectStringValues(string_view_ptr values) {
 			if constexpr (collectAligned) {
-				newPtr[0] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 0));
-				newPtr[1] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 1));
-				newPtr[2] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 2));
-				newPtr[3] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 3));
-				newPtr[4] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 4));
-				newPtr[5] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 5));
-				newPtr[6] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 6));
-				newPtr[7] = simd_internal::gatherValues<simd_int_t>(values + (bytesPerStep * 7));
+				newPtr[0] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 0));
+				newPtr[1] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 1));
+				newPtr[2] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 2));
+				newPtr[3] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 3));
+				newPtr[4] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 4));
+				newPtr[5] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 5));
+				newPtr[6] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 6));
+				newPtr[7] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 7));
 			} else {
-				newPtr[0] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 0));
-				newPtr[1] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 1));
-				newPtr[2] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 2));
-				newPtr[3] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 3));
-				newPtr[4] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 4));
-				newPtr[5] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 5));
-				newPtr[6] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 6));
-				newPtr[7] = simd_internal::gatherValuesU<simd_int_t>(values + (bytesPerStep * 7));
+				newPtr[0] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 0));
+				newPtr[1] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 1));
+				newPtr[2] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 2));
+				newPtr[3] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 3));
+				newPtr[4] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 4));
+				newPtr[5] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 5));
+				newPtr[6] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 6));
+				newPtr[7] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 7));
 			}
-			prefetchInternal(values + bytesPerStep * 15);
+			jsonifierPrefetchInternal(values + bytesPerStep * 15);
 		}
 
 		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values) {
@@ -251,19 +251,19 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void collectEscaped() noexcept {
-			simd_int_t oddBitsVal{ simd_internal::gatherValue<simd_int_t>(0xAA) };
-			simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
-			simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
-			simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);
-			simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
-			simd_int_t escapeAndTerminalCode	 = simd_internal::opXor(evenSeriesCodesAndOddBits, oddBitsVal);
+			jsonifier_simd_int_t oddBitsVal{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
+			jsonifier_simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
+			jsonifier_simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
+			jsonifier_simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);
+			jsonifier_simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
+			jsonifier_simd_int_t escapeAndTerminalCode	 = simd_internal::opXor(evenSeriesCodesAndOddBits, oddBitsVal);
 			escaped								 = simd_internal::opXor(escapeAndTerminalCode, simd_internal::opOr(rawStructurals.backslashes, nextIsEscaped));
 			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
 		}
 
 		JSONIFIER_INLINE void collectEmptyEscaped() {
 			auto escapedNew = nextIsEscaped;
-			nextIsEscaped	= simd_internal::reset<simd_int_t>();
+			nextIsEscaped	= simd_internal::reset<jsonifier_simd_int_t>();
 			escaped			= escapedNew;
 		}
 
@@ -274,13 +274,13 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE void collectStructurals() {
 			collectEscapedCharacters();
 			rawStructurals.quotes				= simd_internal::opAndNot(rawStructurals.quotes, escaped);
-			simd_int_t inString					= simd_internal::opClMul(rawStructurals.quotes, prevInString);
-			simd_int_t stringTail				= simd_internal::opXor(inString, rawStructurals.quotes);
-			simd_int_t scalar					= simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
-			simd_int_t nonQuoteScalar			= simd_internal::opAndNot(scalar, rawStructurals.quotes);
-			simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
-			simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
-			simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
+			jsonifier_simd_int_t inString					= simd_internal::opClMul(rawStructurals.quotes, prevInString);
+			jsonifier_simd_int_t stringTail				= simd_internal::opXor(inString, rawStructurals.quotes);
+			jsonifier_simd_int_t scalar					= simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+			jsonifier_simd_int_t nonQuoteScalar			= simd_internal::opAndNot(scalar, rawStructurals.quotes);
+			jsonifier_simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
+			jsonifier_simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
+			jsonifier_simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
 			rawStructurals.op					= simd_internal::opAndNot(porentialStructuralStart, stringTail);
 		}
 
@@ -329,12 +329,12 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE std::string collectNonEmptyEscapedWithErrorPrintOut(size_type errorIndex) noexcept {
 			std::stringstream returnValue{};
-			simd_int_t oddBitsVal{ simd_internal::gatherValue<simd_int_t>(0xAA) };
-			simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
-			simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
-			simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);
-			simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
-			simd_int_t escapeAndTerminalCode	 = simd_internal::opXor(evenSeriesCodesAndOddBits, oddBitsVal);
+			jsonifier_simd_int_t oddBitsVal{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
+			jsonifier_simd_int_t potentialEscape			 = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
+			jsonifier_simd_int_t maybeEscaped				 = simd_internal::opShl<1>(potentialEscape);
+			jsonifier_simd_int_t maybeEscapedAndOddBits	 = simd_internal::opOr(maybeEscaped, oddBitsVal);
+			jsonifier_simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
+			jsonifier_simd_int_t escapeAndTerminalCode	 = simd_internal::opXor(evenSeriesCodesAndOddBits, oddBitsVal);
 			escaped								 = simd_internal::opXor(escapeAndTerminalCode, simd_internal::opOr(rawStructurals.backslashes, nextIsEscaped));
 			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
 			if (stringIndex == errorIndex) {
@@ -358,13 +358,13 @@ namespace jsonifier_internal {
 			std::stringstream returnValue{};
 			std::string returnValueNew			= collectEscapedCharactersWithErrorPrintOut(errorIndex);
 			rawStructurals.quotes				= simd_internal::opAndNot(rawStructurals.quotes, escaped);
-			simd_int_t inString					= simd_internal::opClMul(rawStructurals.quotes, prevInString);
-			simd_int_t stringTail				= simd_internal::opXor(inString, rawStructurals.quotes);
-			simd_int_t scalar					= simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
-			simd_int_t nonQuoteScalar			= simd_internal::opAndNot(scalar, rawStructurals.quotes);
-			simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
-			simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
-			simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
+			jsonifier_simd_int_t inString					= simd_internal::opClMul(rawStructurals.quotes, prevInString);
+			jsonifier_simd_int_t stringTail				= simd_internal::opXor(inString, rawStructurals.quotes);
+			jsonifier_simd_int_t scalar					= simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+			jsonifier_simd_int_t nonQuoteScalar			= simd_internal::opAndNot(scalar, rawStructurals.quotes);
+			jsonifier_simd_int_t followsNonQuoteScalar	= simd_internal::opFollows(nonQuoteScalar, overflow);
+			jsonifier_simd_int_t potentialScalarStart		= simd_internal::opAndNot(scalar, followsNonQuoteScalar);
+			jsonifier_simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
 			rawStructurals.op					= simd_internal::opAndNot(porentialStructuralStart, stringTail);
 			if (stringIndex == errorIndex) {
 				returnValue << returnValueNew;

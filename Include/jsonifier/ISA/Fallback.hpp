@@ -46,24 +46,24 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE simd_int_128 opAdd(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE jsonifier_simd_int_128 opAdd(simd_int_t01&& value, simd_int_t02&& other) {
 		return jsonifier_internal::mm128AddEpi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
-	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSlli(simd_int_t01&& value) {
+	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_128 opSlli(simd_int_t01&& value) {
 		return jsonifier_internal::mm128SlliEpi64(std::forward<simd_int_t01>(value), other);
 	}
 
-	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opSrli(simd_int_t01&& value) {
+	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_128 opSrli(simd_int_t01&& value) {
 		return jsonifier_internal::mm128SrliEpi64(std::forward<simd_int_t01>(value), other);
 	}
 
-	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE simd_int_128 opShuffle(simd_int_t01&& value) {
+	template<int32_t other, jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_128 opShuffle(simd_int_t01&& value) {
 		return jsonifier_internal::mm128ShuffleEpi32(std::forward<simd_int_t01>(value), other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE simd_int_128 opMul(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_INLINE jsonifier_simd_int_128 opMul(simd_int_t01&& value, simd_int_t02&& other) {
 		return jsonifier_internal::mm128MulEpi32(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 

@@ -31,32 +31,39 @@
 
 namespace jsonifier_internal {
 
-	template<const auto& options, size_t index, typename derived_type, typename value_type, typename buffer_type, typename index_type>
-	void invokeSerialize(value_type& value, buffer_type&& buffer, index_type&& indexVal) {
-		static constexpr auto& tuple	   = jsonifier::concepts::coreV<value_type>;
-		static constexpr size_t tuple_size = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
-		if constexpr (index < tuple_size) {
-			static constexpr auto ptr = std::get<1>(std::get<index>(tuple));
-			using member_type		  = unwrap_t<decltype(value.*ptr)>;
-			serialize_impl<derived_type, member_type>::template impl<options>(value.*ptr, buffer, indexVal);
-		}
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void invokeSerialize(value_type& value, buffer_type& buffer, index_type& indexVal) {
+		static constexpr auto ptr = std::get<index>(tuple).ptr();
+		using member_type = unwrap_t<decltype(value.*ptr)>;
+		serialize_impl<derived_type, member_type>::template impl<options>(value.*ptr, buffer, indexVal);
 	}
 
-	template<const auto& options, size_t index, typename derived_type, typename value_type, typename buffer_type, typename index_type>
-	using invoke_serialize_function_ptr = decltype(&invokeSerialize<options, index, derived_type, value_type, buffer_type, index_type>);
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename buffer_type, typename index_type> using invoke_serialize_function_ptr =
+		decltype(&invokeSerialize<options, tuple, index, derived_type, value_type,buffer_type, index_type>);
 
-	template<const auto& options, typename derived_type, typename value_type, typename buffer_type, typename index_type, size_t... indices>
-	constexpr auto generateArrayOfInvokeSerializePtrsHelper(std::index_sequence<indices...>) {
-		return std::array<invoke_serialize_function_ptr<options, 0, derived_type, value_type, buffer_type, index_type>, sizeof...(indices)>{
-			{ &invokeSerialize<options, indices, derived_type, value_type, buffer_type, index_type>... }
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type, size_t... indices>
+	constexpr auto generateArrayOfInvokeSerializePtrsInternal(std::index_sequence<indices...>) {
+		return std::array<invoke_serialize_function_ptr<options, tuple, 0, derived_type, value_type,buffer_type, index_type>, sizeof...(indices)>{
+			&invokeSerialize<options, tuple, indices, derived_type, value_type,buffer_type, index_type>...
 		};
 	}
 
-	template<const auto& options, typename derived_type, typename value_type, typename buffer_type, typename index_type>
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type>
 	constexpr auto generateArrayOfInvokeSerializePtrs() {
-		constexpr auto& tuple	 = jsonifier::concepts::coreV<value_type>;
-		constexpr auto tupleSize	 = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
-		return generateArrayOfInvokeSerializePtrsHelper<options, derived_type, value_type, buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
+		constexpr auto tupleSize = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
+		return  generateArrayOfInvokeSerializePtrsInternal<options, tuple, derived_type, value_type,buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
+	}
+
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type, size_t... indices>
+	constexpr auto generateTupleOfInvokeSerializePtrArraysInternal(std::index_sequence<indices...>) {
+		return std::make_tuple(generateArrayOfInvokeSerializePtrs<options, std::get<indices>(tuple).tuple, derived_type, value_type,buffer_type, index_type>()...);
+	}
+
+	template<const auto& options, typename derived_type, typename value_type, typename buffer_type, typename index_type>
+	constexpr auto generateTupleOfInvokeSerializePtrArrays() {
+		constexpr auto& tuple = tuple_construction_data<value_type>::finalTuple;
+		constexpr auto tupleSize = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
+		return generateTupleOfInvokeSerializePtrArraysInternal<options, tuple, derived_type, value_type,buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
 	}
 
 	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
@@ -78,7 +85,7 @@ namespace jsonifier_internal {
 		static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			static constexpr auto& group = std::get<indexNew>(jsonifier::concepts::coreV<unwrap_t<value_type>>);
 
-			static constexpr jsonifier::string_view key = std::get<0>(group);
+			static constexpr jsonifier::string_view key = group.view();
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
 				if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
@@ -93,12 +100,19 @@ namespace jsonifier_internal {
 			static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
 			writeCharacters<quotedKey>(buffer, index);
 
-			static constexpr auto frozenMap					 = makeMap<value_type>();
-			static constexpr auto arrayOfInvokeSerializePtrs = generateArrayOfInvokeSerializePtrs<options, derived_type, value_type, buffer_type, index_type>();
-			static constexpr auto iterNew					 = frozenMap.find(key.data(), key.size(), arrayOfInvokeSerializePtrs);
-			if constexpr (iterNew != arrayOfInvokeSerializePtrs.data() + arrayOfInvokeSerializePtrs.size()) {
-				(*iterNew)(value, buffer, index);
-			}
+			static constexpr auto frozenMap					 = makeHashTuple<value_type>();
+			static constexpr auto arrayOfInvokeSerializePtrs = generateTupleOfInvokeSerializePtrArrays<options, derived_type, value_type, buffer_type, index_type>();
+
+			static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& buffer, auto& index) {
+				static constexpr auto hashSubTuple = std::get<hashSubTupleIndex>(tuple_construction_data<value_type>::finalTuple);
+				static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(arrayOfInvokeSerializePtrs);
+				static constexpr auto iterNew = hashSubTuple.template find<subTupleFunctionPtrArray>(key.data(), key.size());
+				if constexpr (iterNew != subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) {
+					(*iterNew)(value, buffer, index);
+				}
+				return true;
+				};
+			frozenMap.template find<functionLambda>(key.size(), value, buffer, index);
 
 			if constexpr (indexNew != n - 1) {
 				if constexpr (options.optionsReal.prettify) {

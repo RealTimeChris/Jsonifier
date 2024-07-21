@@ -45,83 +45,87 @@ namespace jsonifier_internal {
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
 				switch (*iter) {
-					[[unlikely]] case '[':
-					[[unlikely]] case '{': {
-						++currentDepth;
-						++iter;
-						break;
-					}
-					[[unlikely]] case ']':
-					[[unlikely]] case '}': {
-						--currentDepth;
-						++iter;
-						break;
-					}
-					default: {
-						++iter;
-						break;
-					}
+				[[unlikely]] case '[':
+				[[unlikely]] case '{': {
+					++currentDepth;
+					++iter;
+					break;
+				}
+				[[unlikely]] case ']':
+				[[unlikely]] case '}': {
+					--currentDepth;
+					++iter;
+					break;
+				}
+				default: {
+					++iter;
+					break;
+				}
 				}
 			}
-		};
+			};
 		switch (*iter) {
-			[[unlikely]] case '[':
-			[[unlikely]] case '{': {
-				++iter;
-				skipToEnd();
-				break;
-			}
-			case '"': {
-				++iter;
-				break;
-			}
-			case ':': {
-				++iter;
-				skipToEndOfValue(iter, end);
-				break;
-			}
-			case 't': {
-				++iter;
-				break;
-			}
-			case 'f': {
-				++iter;
-				break;
-			}
-			case 'n': {
-				++iter;
-				break;
-			}
-			case '-':
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9': {
-				skipNumber(iter, end);
-				break;
-			}
-			[[likely]] default: {
-				++iter;
-				break;
-			}
+		[[unlikely]] case '[':
+		[[unlikely]] case '{': {
+			++iter;
+			skipToEnd();
+			break;
+		}
+		case '"': {
+			++iter;
+			break;
+		}
+		case ':': {
+			++iter;
+			skipToEndOfValue(iter, end);
+			break;
+		}
+		case 't': {
+			++iter;
+			break;
+		}
+		case 'f': {
+			++iter;
+			break;
+		}
+		case 'n': {
+			++iter;
+			break;
+		}
+		case '-':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': {
+			skipNumber(iter, end);
+			break;
+		}
+		[[likely]] default: {
+			++iter;
+			break;
+		}
 		}
 	}
 
 	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) {
-		switch (*iter) {
+		uint64_t currentDepth{ 1 };
+		while (iter != end && currentDepth > 0) {
+			switch (*iter) {
 			[[unlikely]] case '{':
 			[[unlikely]] case '[': {
-				skipToEndOfValue(iter, end);
+				++currentDepth;
+				++iter;
 				break;
 			}
-			[[unlikely]] case '"': {
-				++iter;
+			[[unlikely]] case '}':
+			[[unlikely]] case ']': {
+				--currentDepth;
 				break;
 			}
 			[[unlikely]] case ':': {
@@ -130,6 +134,9 @@ namespace jsonifier_internal {
 				break;
 			}
 			[[unlikely]] case ',': {
+				if (currentDepth == 1) {
+					return;
+				}
 				++iter;
 				skipToNextValue(iter, end);
 				break;
@@ -167,6 +174,7 @@ namespace jsonifier_internal {
 			[[likely]] default: {
 				++iter;
 				break;
+			}
 			}
 		}
 	}
@@ -303,66 +311,88 @@ namespace jsonifier_internal {
 				break;
 			}
 		}
+	} 
+	
+	template<typename iterator_type> void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept;
+
+	template<typename iterator_type> void skipObject(iterator_type& iter, iterator_type& end) noexcept
+	{
+		++iter;
+		if (*iter == '}') {
+			++iter;
+			return;
+		}
+		while (true) {
+			if (*iter != '"') {
+				return;
+			}
+			skipString(iter, end);
+			skipToNextValue(iter, end);
+			if (*iter != ',') {
+				break;
+			}
+			++iter;
+		}
+		++iter;
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) {
-		uint64_t currentDepth{};
-		while (iter != end) {
+	template<typename iterator_type> void skipArray(iterator_type& iter, iterator_type& end) noexcept
+	{
+		++iter;
+		if (*iter == ']') {
+			++iter;
+			return;
+		}
+		while (true) {
+			skipToNextValue(iter, end);
+			if (*iter != ',') {
+				break;
+			}
+			++iter;
+		}
+		++iter;
+	}
+
+	template<typename iterator_type> void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept {
 			switch (*iter) {
-				[[unlikely]] case '{':
-				[[unlikely]] case '[': {
-					skipToEndOfValue(iter, end);
-					break;
-				}
-				[[unlikely]] case '"': {
-					skipString(iter, end);
-					break;
-				}
-				[[unlikely]] case ':': {
-					++iter;
+			case '{': {
+				skipObject(iter, end);
+				break;
+			}
+			case '[': {
+				skipArray(iter, end);
+				break;
+			}
+			case '"': {
+				skipString(iter, end);
+				if (*iter == ':') {
 					++iter;
 					skipToNextValue(iter, end);
-					break;
 				}
-				[[unlikely]] case ',': {
-					++iter;
-					return;
-				}
-				[[unlikely]] case '\\': {
-					++iter;
-					++iter;
-					break;
-				}
-				[[unlikely]] case 't': {
-					iter += 4;
-					break;
-				}
-				[[unlikely]] case 'f': {
-					iter += 5;
-					break;
-				}
-				[[unlikely]] case 'n': {
-					iter += 4;
-					break;
-				}
-				[[unlikely]] case '0':
-				[[unlikely]] case '1':
-				[[unlikely]] case '2':
-				[[unlikely]] case '3':
-				[[unlikely]] case '4':
-				[[unlikely]] case '5':
-				[[unlikely]] case '6':
-				[[unlikely]] case '7':
-				[[unlikely]] case '8':
-				[[unlikely]] case '9':
-				[[unlikely]] case '-': {
-					skipNumber(iter, end);
-					break;
-				}
-				[[likely]] default : {
-						++iter;
-					break;
-				}
+				break;
+			}
+			case ':': {
+				++iter;
+				skipToNextValue(iter, end);
+				break;
+			}
+			case 'n': {
+				iter += 4;
+				break;
+			}
+			case 'f': {
+				iter += 5;
+				break;
+			}
+			case 't': {
+				iter += 4;
+				break;
+			}
+			case '\0': {
+				break;
+			}
+			default: {
+				skipNumber(iter, end);
 			}
 		}
 	}
@@ -441,7 +471,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto& first = std::get<0>(std::get<I>(jsonifier::concepts::coreV<unwrap_t<value_type>>));
+		constexpr auto first = std::get<I>(jsonifier::concepts::coreV<unwrap_t<value_type>>).view();
 		using T0			  = unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();

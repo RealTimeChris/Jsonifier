@@ -39,13 +39,13 @@
 
 namespace simd_internal {
 
-	using avx_list = jsonifier_internal::type_list<jsonifier_internal::type_holder<16, simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>,
-		jsonifier_internal::type_holder<32, simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
-		jsonifier_internal::type_holder<64, simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
+	using avx_list = jsonifier_internal::type_list<jsonifier_internal::type_holder<16, jsonifier_simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>,
+		jsonifier_internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
+		jsonifier_internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 
 	using avx_integer_list =
-		jsonifier_internal::type_list<jsonifier_internal::type_holder<8, uint64_t, uint64_t, 8>, jsonifier_internal::type_holder<16, simd_int_128, uint16_t, 16>,
-			jsonifier_internal::type_holder<32, simd_int_256, uint32_t, 32>, jsonifier_internal::type_holder<64, simd_int_512, uint64_t, 64>>;
+		jsonifier_internal::type_list<jsonifier_internal::type_holder<8, uint64_t, uint64_t, 8>, jsonifier_internal::type_holder<16, jsonifier_simd_int_128, uint16_t, 16>,
+			jsonifier_internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, jsonifier_internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
 
 	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle);
 
@@ -61,7 +61,7 @@ namespace simd_internal {
 		return prevInString;
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
+	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep];
 		store(value, values);
 		values[0]	 = prefixXor(values[0]) ^ prevInString;
@@ -84,10 +84,10 @@ namespace simd_internal {
 			values[7]	 = prefixXor(values[7]) ^ prevInString;
 			prevInString = static_cast<int64_t>(values[7]) >> 63;
 		}
-		return gatherValues<simd_int_t>(values);
+		return gatherValues<jsonifier_simd_int_t>(values);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
+	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + sixtyFourBitsPerStep);
@@ -112,10 +112,10 @@ namespace simd_internal {
 			values[7 + sixtyFourBitsPerStep] = values[7] - values[7 + sixtyFourBitsPerStep] - static_cast<uint64_t>(carryInNew);
 			carryInNew						 = values[7 + sixtyFourBitsPerStep] > values[7];
 		}
-		return gatherValues<simd_int_t>(values + sixtyFourBitsPerStep);
+		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-	template<uint64_t amount, typename simd_int_t01> JSONIFIER_INLINE simd_int_t opShl(simd_int_t01&& value) {
+	template<uint64_t amount, typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opShl(simd_int_t01&& value) {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		static constexpr uint64_t shiftAmount{ 64 - amount };
@@ -131,10 +131,10 @@ namespace simd_internal {
 			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
 			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
 		}
-		return gatherValues<simd_int_t>(values + sixtyFourBitsPerStep);
+		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_INLINE simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
+	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
 		return opSetLSB(opShl<1>(value), oldOverflow);
