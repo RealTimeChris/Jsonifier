@@ -40,8 +40,18 @@ target_link_libraries(
 	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
 )
 
+target_link_options(
+	"Json-Performance" INTERFACE
+	"$<$<CXX_COMPILER_ID:MSVC>:/LTCG /INCREMENTAL:NO>"
+)
+
 target_compile_options(
-	"Json-Performance" PUBLIC
+	"Json-Performance" INTERFACE
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
@@ -49,14 +59,7 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/EHsc>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
-)
-
-target_link_options(
-	"Json-Performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+	"${AVX_FLAG}"
 )
 
 if (WIN32)

@@ -75,6 +75,9 @@ namespace jsonifier_internal {
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) {
+			if (in.size() == 0) {
+				return false;
+			}
 			if constexpr (options.validateJson) {
 				if (!derivedRef.validateJson(in)) {
 					return false;
@@ -127,6 +130,9 @@ namespace jsonifier_internal {
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) {
+			if (in.size() == 0) {
+				return value_type{};
+			}
 			if constexpr (options.validateJson) {
 				if (!derivedRef.validateJson(in)) {
 					return value_type{};

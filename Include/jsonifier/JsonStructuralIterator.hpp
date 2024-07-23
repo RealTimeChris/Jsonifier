@@ -26,7 +26,7 @@
 
 #include <jsonifier/Reflection.hpp>
 #include <jsonifier/StringUtils.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashTuple.hpp>
 #include <jsonifier/StrToI.hpp>
 #include <jsonifier/Error.hpp>
 

@@ -107,13 +107,13 @@ namespace jsonifier_internal {
 			static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& buffer, auto& index) {
 				static constexpr auto hashSubTuple = std::get<hashSubTupleIndex>(tuple_construction_data<value_type>::finalTuple);
 				static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(arrayOfInvokeSerializePtrs);
-				static constexpr auto iterNew = hashSubTuple.find< subTupleFunctionPtrArray>(key.data(), key.size());
+				static constexpr auto iterNew = hashSubTuple.template find<subTupleFunctionPtrArray>(key.data(), key.size());
 				if constexpr (iterNew != subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) {
 					(*iterNew)(value, buffer, index);
 				}
 				return true;
 				};
-			frozenMap.find< functionLambda>(key.size(), value, buffer, index);
+			frozenMap.template find<functionLambda>(key.size(), value, buffer, index);
 
 			if constexpr (indexNew != n - 1) {
 				if constexpr (options.optionsReal.prettify) {

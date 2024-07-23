@@ -35,7 +35,7 @@
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Minify_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashTuple.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Tuple.hpp>

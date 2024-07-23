@@ -120,7 +120,7 @@ namespace jsonifier_internal {
 					static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& iter, auto& end, const auto keySize) {
 						static constexpr auto hashSubTuple = std::get<hashSubTupleIndex>(tuple_construction_data<value_type>::finalTuple);
 						static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(functionPtrArray);
-						auto memberIt = hashSubTuple.find< subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1, keySize);
+						auto memberIt = hashSubTuple.template find<subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1, keySize);
 						
 						if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
 							++iter;
@@ -147,7 +147,7 @@ namespace jsonifier_internal {
 							}
 						return true;
 						};
-					if (!frozenMap.find< functionLambda>(keySize, value, iter, end, keySize)) {
+					if (!frozenMap.template find<functionLambda>(keySize, value, iter, end, keySize)) {
 						skipToNextValue(iter, end);
 					}
 

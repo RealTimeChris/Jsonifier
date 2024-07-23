@@ -33,6 +33,41 @@
 
 namespace jsonifier_internal {
 
+	template<size_t length> struct map_simd {
+		using type = std::conditional_t<length >= 64 && bytesPerStep >= 64, jsonifier_simd_int_512, std::conditional_t<length >= 32 && bytesPerStep >= 32, jsonifier_simd_int_256, jsonifier_simd_int_128>>;
+	};
+
+	template<size_t length> constexpr size_t setSimdWidth() {
+		return length >= 64 && bytesPerStep >= 64 ? 64 : length >= 32 && bytesPerStep >= 32 ? 32 : 16;
+	}
+
+	template<size_t length> using map_simd_t = map_simd<length>::type;
+
+	struct map_construction_values {
+		size_t stringLength{ std::numeric_limits<size_t>::max() };
+		size_t maxSizeIndex{ std::numeric_limits<size_t>::max() };
+		bool success{};
+		size_t seed{};
+	};
+
+	template<typename value_type01, typename value_type02> constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) {
+		for (size_t x = 0; x < size; ++x) {
+			if (hashData[x] == byteToCheckFor) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	template<size_t size, size_t length> constexpr size_t getMaxSizeIndex(const std::array<size_t, length> maxSizes) {
+		for (size_t x = 0; x < std::size(maxSizes); ++x) {
+			if (size <= maxSizes[x]) {
+				return x;
+			}
+		}
+		return std::size(maxSizes) - 1;
+	}
+
 	struct string_length_counts {
 		size_t length{};
 		size_t count{};
@@ -80,9 +115,9 @@ namespace jsonifier_internal {
 		size_t currentIndex = 0;
 		std::size_t currentLength = static_cast<std::size_t>(-1);
 
-		for (std::size_t x = 0; x < arr.size() && currentIndex < counts; ++x) {
+		for (std::size_t x = 0; x < arr.size(); ++x) {
 			auto keyLength = arr[x].key.size();
-			if (currentLength != keyLength) {
+			if (currentLength != keyLength && currentIndex < counts) {
 				currentLength = keyLength;
 				returnValues[currentIndex].length = keyLength;
 				returnValues[currentIndex].count = 1;
@@ -187,7 +222,7 @@ namespace jsonifier_internal {
 		return compare<currentKey.size()>(currentKey.data(), string01);
 	}
 
-	template<const auto& tuple, size_t index> constexpr bool compareStringFunctionConst(const char* string01) {
+	template<const auto& tuple, size_t index> JSONIFIER_INLINE constexpr bool compareStringFunctionConst(const char* string01) {
 		constexpr auto currentKey = getKey<tuple, index>();
 		return currentKey == jsonifier::string_view{ string01, currentKey.size() };
 	}
@@ -196,20 +231,20 @@ namespace jsonifier_internal {
 
 	template<const auto& tuple, size_t index> using compare_string_function_const_tuple_ptr = decltype(&compareStringFunctionConst<tuple, index>);
 
-	template<const auto& tuple, size_t... indices> constexpr auto generateConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
+	template<const auto& tuple, size_t... indices> JSONIFIER_INLINE constexpr auto generateConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
 		return std::array<compare_string_function_const_tuple_ptr<tuple, 0>, sizeof...(indices)>{ { &compareStringFunctionConst<tuple, indices>... } };
 	}
 
-	template<const auto& tuple> constexpr auto generateConstCompareStringFunctionPtrArray() {
+	template<const auto& tuple> JSONIFIER_INLINE constexpr auto generateConstCompareStringFunctionPtrArray() {
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 		return generateConstCompareStringFunctionPtrArrayInternal<tuple>(std::make_index_sequence<tupleSize>{});
 	}
 
-	template<const auto& tuple, size_t... indices> constexpr auto generateNonConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
+	template<const auto& tuple, size_t... indices> JSONIFIER_INLINE constexpr auto generateNonConstCompareStringFunctionPtrArrayInternal(std::index_sequence<indices...>) {
 		return std::array<compare_string_function_non_const_tuple_ptr<tuple, 0>, sizeof...(indices)>{ { &compareStringFunctionNonConst<tuple, indices>... } };
 	}
 
-	template<const auto& tuple> constexpr auto generateNonConstCompareStringFunctionPtrArray() {
+	template<const auto& tuple> JSONIFIER_INLINE constexpr auto generateNonConstCompareStringFunctionPtrArray() {
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 		return generateNonConstCompareStringFunctionPtrArrayInternal<tuple>(std::make_index_sequence<tupleSize>{});
 	}
@@ -319,7 +354,7 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t maxSizeIndex, typename value_type, typename key_type, const auto& tuple, size_t actualCount>
-	constexpr auto constructSimdHashSubTupleInternal(const std::array<key_type, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
+	JSONIFIER_INLINE constexpr auto constructSimdHashSubTupleInternal(const std::array<key_type, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
 		auto constructForGivenStringLength = [&](size_t stringLength, auto&& constructForGivenStringLength, const auto maxSizeIndexNew) mutable -> map_construction_values {
 			constexpr size_t bucketSize = setSimdWidth<hashTupleMaxSizes[maxSizeIndexNew]>();
 			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndexNew];
@@ -383,7 +418,7 @@ namespace jsonifier_internal {
 		return bestValues;
 	}
 
-	template<typename value_type, typename key_type, const auto& tuple, size_t actualCount> constexpr auto constructSimdHashSubTuple(const std::array<key_type, actualCount>& pairsNew) {
+	template<typename value_type, typename key_type, const auto& tuple, size_t actualCount> JSONIFIER_INLINE constexpr auto constructSimdHashSubTuple(const std::array<key_type, actualCount>& pairsNew) {
 		key_stats_t keyStatsVal = keyStats<tuple>();
 		auto constructionValues =
 			constructSimdHashSubTupleInternal<getMaxSizeIndex<actualCount>(hashTupleMaxSizes), value_type, key_type, tuple, actualCount>(pairsNew, xoshiro256{}, keyStatsVal);
@@ -430,7 +465,7 @@ namespace jsonifier_internal {
 		tuple_type<value_type, key_type, tuple, actualCount, startingValue * 16>>;
 
 	template<typename value_type, typename key_type, const auto& tuple, size_t actualCount, size_t storageSize>
-	constexpr auto constructMinimalCharHashSubTupleFinal(const std::array<key_type, actualCount>& pairsNew, tuple_construction_values constructionValues)
+	JSONIFIER_INLINE constexpr auto constructMinimalCharHashSubTupleFinal(const std::array<key_type, actualCount>& pairsNew, tuple_construction_values constructionValues)
 		-> tuple_variant<16ull, actualCount, value_type, key_type, tuple, minimal_char_hash_sub_tuple> {
 		minimal_char_hash_sub_tuple<value_type, key_type, tuple, actualCount, storageSize> minimalCharHashSubTupleNew{};
 		minimalCharHashSubTupleNew.stringLength = constructionValues.stringLength;
@@ -446,7 +481,7 @@ namespace jsonifier_internal {
 			minimalCharHashSubTupleNew } };
 	}
 
-	template<template<typename, typename, const auto&, size_t> typename hash_wrapper, typename value_type, typename key_type, const auto& tuple, std::size_t... indices> constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+	template<template<typename, typename, const auto&, size_t> typename hash_wrapper, typename value_type, typename key_type, const auto& tuple, std::size_t... indices> JSONIFIER_INLINE constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
 		return std::array<decltype(&hash_wrapper<value_type, key_type, tuple, 0>::op), sizeof...(indices)>{ &hash_wrapper<value_type, key_type, tuple, indices>::op... };
 	}
 
@@ -461,7 +496,7 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t maxSizeIndex, typename value_type, typename key_type, const auto& tuple, size_t actualCount>
-	constexpr auto constructMinimalCharHashSubTupleInternal(const std::array<key_type, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
+	JSONIFIER_INLINE constexpr auto constructMinimalCharHashSubTupleInternal(const std::array<key_type, actualCount>& pairsNew, xoshiro256 prng, key_stats_t& keyStatsVal) {
 		auto constructForGivenStringLength = [&](size_t stringLength, auto&& constructForGivenStringLength, const auto maxSizeIndexNew) mutable -> tuple_construction_values {
 			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndexNew];
 			size_t slots[storageSize]{};
@@ -513,14 +548,14 @@ namespace jsonifier_internal {
 		return bestValues;
 	}
 
-	template<typename value_type, typename key_type, const auto& tuple, size_t actualCount> constexpr auto constructMinimalCharHashSubTuple(const std::array<key_type, actualCount>& pairsNew) {
+	template<typename value_type, typename key_type, const auto& tuple, size_t actualCount> JSONIFIER_INLINE constexpr auto constructMinimalCharHashSubTuple(const std::array<key_type, actualCount>& pairsNew) {
 		auto keyStatsVal = keyStats<tuple>();
 		auto constructionValues =
 			constructMinimalCharHashSubTupleInternal<getMaxSizeIndex<actualCount>(hashTupleMaxSizes), value_type, key_type, tuple, actualCount>(pairsNew, xoshiro256{}, keyStatsVal);
 		return constructMinimalCharHashSubTupleFinalPtrs<value_type, key_type, tuple, actualCount>[constructionValues.maxSizeIndex](pairsNew, constructionValues);
 	}
 
-	template<typename value_type, const auto& tuple, size_t... I> constexpr auto makeSubTupleImpl(std::index_sequence<I...>) {
+	template<typename value_type, const auto& tuple, size_t... I> JSONIFIER_INLINE constexpr auto makeSubTupleImpl(std::index_sequence<I...>) {
 		constexpr auto n = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 
 		if constexpr (n == 0) {
@@ -549,16 +584,16 @@ namespace jsonifier_internal {
 
 	template<const auto& function, typename value_type, size_t stringLength, typename... arg_types> JSONIFIER_INLINE constexpr auto collectSubTuple(arg_types&&...args);
 
-	template<typename value_type, const auto& tuple> constexpr auto makeSubTuple() {
+	template<typename value_type, const auto& tuple> JSONIFIER_INLINE constexpr auto makeSubTuple() {
 		return makeSubTupleImpl<value_type, tuple>(std::make_index_sequence<std::tuple_size_v<unwrap_t<decltype(tuple)>>>{});
 	}
 
-	template<typename value_type, const auto& tuple, std::size_t currentIndex> constexpr auto makeHashTupleInternal() {
+	template<typename value_type, const auto& tuple, std::size_t currentIndex> JSONIFIER_INLINE constexpr auto makeHashTupleInternal() {
 		constexpr auto& newTuple = std::get<currentIndex>(tuple);
 		return std::make_tuple(makeSubTuple<value_type, newTuple>());
 	}
 
-	template<typename value_type, const auto& tuple, std::size_t... indices> constexpr auto makeHashTupleInternal(std::index_sequence<indices...>) {
+	template<typename value_type, const auto& tuple, std::size_t... indices> JSONIFIER_INLINE constexpr auto makeHashTupleInternal(std::index_sequence<indices...>) {
 		return std::tuple_cat(makeHashTupleInternal<value_type, tuple, indices>()...);
 	}
 
@@ -587,11 +622,11 @@ namespace jsonifier_internal {
 
 	template<const auto& function, typename value_type, size_t index, typename... arg_types> using collect_sub_tuple_ptr = decltype(&collectSubTuple<function, value_type, index, arg_types...>);
 
-	template<const auto& function, typename value_type, typename... arg_types, size_t... indices> constexpr auto generateCollectSubTuplePtrArrayInternal(std::index_sequence<indices...>) {
+	template<const auto& function, typename value_type, typename... arg_types, size_t... indices> JSONIFIER_INLINE constexpr auto generateCollectSubTuplePtrArrayInternal(std::index_sequence<indices...>) {
 		return std::array<collect_sub_tuple_ptr<function, value_type, 0, arg_types...>, sizeof...(indices)>{ { &collectSubTuple<function, value_type, indices, arg_types...>... } };
 	}
 
-	template<const auto& function, typename value_type, typename... arg_types> constexpr auto generateCollectSubTuplePtrArray() {
+	template<const auto& function, typename value_type, typename... arg_types> JSONIFIER_INLINE constexpr auto generateCollectSubTuplePtrArray() {
 		return generateCollectSubTuplePtrArrayInternal<function, value_type, arg_types...>(std::make_index_sequence<512>{});
 	}
 
@@ -606,7 +641,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type> constexpr auto makeHashTuple() {
+	template<typename value_type> JSONIFIER_INLINE constexpr auto makeHashTuple() {
 		return hash_tuple<value_type>{};
 	}
 

@@ -24,7 +24,7 @@
 #pragma once
 
 #include <jsonifier/Derailleur.hpp>
-#include <jsonifier/HashMap.hpp>
+#include <jsonifier/HashTuple.hpp>
 #include <jsonifier/String.hpp>
 
 namespace std {
