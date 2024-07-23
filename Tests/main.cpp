@@ -2434,7 +2434,7 @@ int32_t main() {
 	file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
 	std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 	fileLoader03.saveFile(jsonMinifiedData);
-	file_loader fileLoader04{ basePath + "/Results.json" };
+	file_loader fileLoader04{ basePath + "/Results.json" };/*
 	file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
 	std::string discordData{ fileLoader05.operator std::string() };
 	discord_message discordMessage{};
@@ -2565,7 +2565,7 @@ int32_t main() {
 	}
 	parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 	fileLoader04.saveFile(resultsStringJson);
-	fileLoader01.saveFile(newerString);
+	fileLoader01.saveFile(newerString);*/
 } catch (std::runtime_error& e) {
 	std::cout << e.what() << std::endl;
 } catch (std::out_of_range& e) {
