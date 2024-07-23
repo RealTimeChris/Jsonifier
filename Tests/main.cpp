@@ -2446,8 +2446,7 @@ int32_t main() {
 	fileLoader05.saveFile(discordData);
 	file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
 	std::string discordMinifiedData{ fileLoader06.operator std::string() };
-	discordMinifiedData = parser.minifyJson(discordData);*/
-		jsonifier::jsonifier_core parser{};
+	discordMinifiedData = parser.minifyJson(discordData);
 	fileLoader06.saveFile(discordMinifiedData);
 	file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
 	std::string canadaData{ fileLoader07.operator std::string() };
@@ -2461,7 +2460,8 @@ int32_t main() {
 	file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
 	std::string canadaMinifiedData{ fileLoader08.operator std::string() };
 	canadaMinifiedData = parser.minifyJson(canadaData);
-	fileLoader08.saveFile(canadaMinifiedData);/*
+	fileLoader08.saveFile(canadaMinifiedData);*/
+		jsonifier::jsonifier_core parser{};
 	file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
 	std::string twitterData{ fileLoader09.operator std::string() };
 	twitter_message twitterMessage{};
@@ -2474,7 +2474,7 @@ int32_t main() {
 	file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
 	std::string twitterMinifiedData{ fileLoader10.operator std::string() };
 	twitterMinifiedData = parser.minifyJson(twitterData);
-	fileLoader10.saveFile(twitterMinifiedData);
+	fileLoader10.saveFile(twitterMinifiedData);/*
 	for (auto& value: parser.getErrors()) {
 		std::cout << "PARSER ERROR: " << value << std::endl;
 	}
