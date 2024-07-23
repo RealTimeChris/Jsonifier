@@ -2423,7 +2423,7 @@ alt="" width="400"/></p>
 #include "ConformanceTests.hpp"
 
 int32_t main() {
-	try {
+	try {/*
 	test_generator<test_struct> testJsonData{};
 	std::string jsonDataNew{};
 	jsonifier::jsonifier_core parser{};
@@ -2434,7 +2434,8 @@ int32_t main() {
 	file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
 	std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 	fileLoader03.saveFile(jsonMinifiedData);
-	file_loader fileLoader04{ basePath + "/Results.json" };/*
+	file_loader fileLoader04{ basePath + "/Results.json" };*/
+		jsonifier::jsonifier_core parser{};
 	file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
 	std::string discordData{ fileLoader05.operator std::string() };
 	discord_message discordMessage{};
@@ -2446,7 +2447,7 @@ int32_t main() {
 	fileLoader05.saveFile(discordData);
 	file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
 	std::string discordMinifiedData{ fileLoader06.operator std::string() };
-	discordMinifiedData = parser.minifyJson(discordData);
+	discordMinifiedData = parser.minifyJson(discordData);/*
 	fileLoader06.saveFile(discordMinifiedData);
 	file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
 	std::string canadaData{ fileLoader07.operator std::string() };
