@@ -403,7 +403,7 @@ namespace jsonifier_internal {
 
 		template<const auto& functionPtrs> JSONIFIER_INLINE constexpr auto find(const char* iter, size_type keyLength) const noexcept {
 			JSONIFIER_ALIGN const auto stringLengthNew = keyLength > stringLength ? stringLength : keyLength;
-			JSONIFIER_ALIGN const auto hash = seed * (operator uint64_t() ^ iter[0]) + iter[stringLengthNew];
+			JSONIFIER_ALIGN const auto hash = seed * (operator uint64_t() ^ iter[0]) + iter[stringLengthNew - 1];
 			JSONIFIER_ALIGN const auto finalIndex = hash % storageSizeNew;
 			if (!std::is_constant_evaluated()) {
 				if (nonConstCompareStringFunctions[items[finalIndex]](iter)) {
@@ -475,8 +475,8 @@ namespace jsonifier_internal {
 				for (size_t y = 0; y < actualCount; ++y) {
 					collided = false;
 					const auto keySize = pairsNew[y].size();
-					stringLength = (keySize > stringLength ? stringLength : keySize) > 0 ? (keySize > stringLength ? stringLength : keySize) : 1;
-					const auto hash = seed * (hasherNew.operator uint64_t() ^ pairsNew[y].data()[0]) + pairsNew[y].data()[stringLength];
+					const auto stringLengthNew = keySize > stringLength ? stringLength : keySize;
+					const auto hash = seed * (hasherNew.operator uint64_t() ^ pairsNew[y].data()[0]) + pairsNew[y].data()[stringLengthNew - 1];
 					const auto slot = hash % storageSize;
 
 					if (contains(slots, slot, storageSize)) {

@@ -3,20 +3,20 @@
 
 	Copyright (c) 2023 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
@@ -122,7 +122,7 @@ namespace jsonifier_internal {
 		using type = value_type;
 	};
 
-	template<typename value_type, typename member_type, typename... Args> struct remove_member_pointer<member_type (value_type::*)(Args...)> {
+	template<typename value_type, typename member_type, typename... Args> struct remove_member_pointer<member_type(value_type::*)(Args...)> {
 		using type = value_type;
 	};
 
@@ -149,14 +149,14 @@ namespace jsonifier_internal {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
 	template<typename value_type, auto p> consteval jsonifier::string_view getNameInternal() {
 		jsonifier::string_view str = std::source_location::current().function_name();
-		str						   = str.substr(str.find("->") + 2);
+		str = str.substr(str.find("->") + 2);
 		return str.substr(0, str.find(">"));
 	}
 #else
 	template<auto p> consteval jsonifier::string_view getNameInternal() {
 		jsonifier::string_view str = std::source_location::current().function_name();
-		str						   = str.substr(str.find("&") + 1);
-		str						   = str.substr(0, str.find(pretty_function_tail));
+		str = str.substr(str.find("&") + 1);
+		str = str.substr(0, str.find(pretty_function_tail));
 		return str.substr(str.rfind("::") + 2);
 	}
 #endif
@@ -165,8 +165,8 @@ namespace jsonifier_internal {
 		requires(std::is_member_pointer_v<decltype(p)>)
 	constexpr auto getName() {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-		using value_type		 = remove_member_pointer<unwrap_t<decltype(p)>>::type;
-		constexpr auto pNew		 = p;
+		using value_type = remove_member_pointer<unwrap_t<decltype(p)>>::type;
+		constexpr auto pNew = p;
 		constexpr auto newString = getNameInternal<value_type, &(external<value_type>.*pNew)>();
 #else
 		constexpr auto newString = getNameInternal<p>();

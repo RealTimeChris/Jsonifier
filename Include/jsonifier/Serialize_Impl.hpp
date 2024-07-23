@@ -39,31 +39,31 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename buffer_type, typename index_type> using invoke_serialize_function_ptr =
-		decltype(&invokeSerialize<options, tuple, index, derived_type, value_type,buffer_type, index_type>);
+		decltype(&invokeSerialize<options, tuple, index, derived_type, value_type, buffer_type, index_type>);
 
 	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type, size_t... indices>
 	constexpr auto generateArrayOfInvokeSerializePtrsInternal(std::index_sequence<indices...>) {
-		return std::array<invoke_serialize_function_ptr<options, tuple, 0, derived_type, value_type,buffer_type, index_type>, sizeof...(indices)>{
-			&invokeSerialize<options, tuple, indices, derived_type, value_type,buffer_type, index_type>...
+		return std::array<invoke_serialize_function_ptr<options, tuple, 0, derived_type, value_type, buffer_type, index_type>, sizeof...(indices)>{
+			&invokeSerialize<options, tuple, indices, derived_type, value_type, buffer_type, index_type>...
 		};
 	}
 
 	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type>
 	constexpr auto generateArrayOfInvokeSerializePtrs() {
 		constexpr auto tupleSize = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
-		return  generateArrayOfInvokeSerializePtrsInternal<options, tuple, derived_type, value_type,buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
+		return  generateArrayOfInvokeSerializePtrsInternal<options, tuple, derived_type, value_type, buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
 	}
 
 	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename buffer_type, typename index_type, size_t... indices>
 	constexpr auto generateTupleOfInvokeSerializePtrArraysInternal(std::index_sequence<indices...>) {
-		return std::make_tuple(generateArrayOfInvokeSerializePtrs<options, std::get<indices>(tuple).tuple, derived_type, value_type,buffer_type, index_type>()...);
+		return std::make_tuple(generateArrayOfInvokeSerializePtrs<options, std::get<indices>(tuple).tuple, derived_type, value_type, buffer_type, index_type>()...);
 	}
 
 	template<const auto& options, typename derived_type, typename value_type, typename buffer_type, typename index_type>
 	constexpr auto generateTupleOfInvokeSerializePtrArrays() {
 		constexpr auto& tuple = tuple_construction_data<value_type>::finalTuple;
 		constexpr auto tupleSize = std::tuple_size_v<std::decay_t<decltype(tuple)>>;
-		return generateTupleOfInvokeSerializePtrArraysInternal<options, tuple, derived_type, value_type,buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
+		return generateTupleOfInvokeSerializePtrArraysInternal<options, tuple, derived_type, value_type, buffer_type, index_type>(std::make_index_sequence<tupleSize>{});
 	}
 
 	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
@@ -91,39 +91,41 @@ namespace jsonifier_internal {
 				if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 					if constexpr (indexNew < n - 1) {
 						serializeObjects<options, n, indexNew + 1>(value, buffer, index);
-					} else {
+					}
+					else {
 						return;
 					}
 				}
 			}
 
-			static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
+			static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >>;
 			writeCharacters<quotedKey>(buffer, index);
 
-			static constexpr auto frozenMap					 = makeHashTuple<value_type>();
+			static constexpr auto frozenMap = makeHashTuple<value_type>();
 			static constexpr auto arrayOfInvokeSerializePtrs = generateTupleOfInvokeSerializePtrArrays<options, derived_type, value_type, buffer_type, index_type>();
 
 			static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& buffer, auto& index) {
 				static constexpr auto hashSubTuple = std::get<hashSubTupleIndex>(tuple_construction_data<value_type>::finalTuple);
 				static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(arrayOfInvokeSerializePtrs);
-				static constexpr auto iterNew = hashSubTuple.template find<subTupleFunctionPtrArray>(key.data(), key.size());
+				static constexpr auto iterNew = hashSubTuple.find< subTupleFunctionPtrArray>(key.data(), key.size());
 				if constexpr (iterNew != subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) {
 					(*iterNew)(value, buffer, index);
 				}
 				return true;
 				};
-			frozenMap.template find<functionLambda>(key.size(), value, buffer, index);
+			frozenMap.find< functionLambda>(key.size(), value, buffer, index);
 
 			if constexpr (indexNew != n - 1) {
 				if constexpr (options.optionsReal.prettify) {
 					if constexpr (jsonifier::concepts::buffer_like<buffer_type>) {
 						if (auto k = index + options.indent + 256; k > buffer.size()) [[unlikely]] {
 							buffer.resize(max(buffer.size() * 2, k));
-						}
+							}
 					}
 					writeCharactersUnchecked<",\n">(buffer, index);
 					writeCharactersUnchecked<' '>(options.indent * options.optionsReal.indentSize, buffer, index);
-				} else {
+				}
+				else {
 					writeCharacter<','>(buffer, index);
 				}
 			}
@@ -142,8 +144,8 @@ namespace jsonifier_internal {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
 			if constexpr (size > 0) {
 				static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
-				auto& newMember				 = getMember<newPtr>(value);
-				using member_type			 = unwrap_t<decltype(newMember)>;
+				auto& newMember = getMember<newPtr>(value);
+				using member_type = unwrap_t<decltype(newMember)>;
 				serialize_impl<derived_type, member_type>::template impl<options>(newMember, buffer, index);
 			}
 		}
@@ -175,7 +177,7 @@ namespace jsonifier_internal {
 					}
 					serialize_impl<derived_type, member_type>::template impl<options>(iter->second, buffer, index);
 				}
-			}
+				}
 			writeObjectExit<options>(buffer, index, value.size());
 		}
 	};
@@ -200,7 +202,8 @@ namespace jsonifier_internal {
 			if (value) {
 				using member_type = typename unwrap_t<value_type_new>::value_type;
 				serialize_impl<derived_type, member_type>::template impl<options>(*value, buffer, index);
-			} else {
+			}
+			else {
 				writeCharacters<"null">(buffer, index);
 			}
 		}
@@ -241,7 +244,7 @@ namespace jsonifier_internal {
 
 			if (n != 0) {
 				using member_type = typename unwrap_t<value_type_new>::value_type;
-				auto iter		  = value.begin();
+				auto iter = value.begin();
 				serialize_impl<derived_type, member_type>::template impl<options>(*iter, buffer, index);
 				++iter;
 				for (auto fin = value.end(); iter != fin; ++iter) {
@@ -266,7 +269,7 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type& value, buffer_type&& buffer, index_type&& index) {
-			using member_type		= unwrap_t<decltype(value[0])>;
+			using member_type = unwrap_t<decltype(value[0])>;
 			static constexpr auto n = std::size(value);
 			writeArrayEntry<options>(buffer, index, n);
 			if constexpr (n > 0) {
@@ -297,10 +300,10 @@ namespace jsonifier_internal {
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			auto valueSize = value.size();
-			auto k		   = index + 10 + (valueSize * 2);
+			auto k = index + 10 + (valueSize * 2);
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
-			}
+				}
 			writeCharacter<'"'>(buffer, index);
 			auto newPtr = buffer.data() + index;
 			serializeStringImpl(value.data(), newPtr, valueSize);
@@ -315,35 +318,35 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			writeCharacter<json_structural_type::String>(buffer, index);
 			switch (value) {
-				[[unlikely]] case '\b': {
-					writeCharacters(buffer, index, "\\b");
-					break;
-				}
-				[[unlikely]] case '\t': {
-					writeCharacters(buffer, index, "\\t");
-					break;
-				}
-				[[unlikely]] case '\n': {
-					writeCharacters(buffer, index, "\\n");
-					break;
-				}
-				[[unlikely]] case 0x0Cu: {
-					writeCharacters(buffer, index, "\\f");
-					break;
-				}
-				[[unlikely]] case '\r': {
-					writeCharacters(buffer, index, "\\r");
-					break;
-				}
-				[[unlikely]] case '"': {
-					writeCharacters(buffer, index, "\\\"");
-					break;
-				}
-				[[unlikely]] case 0x5CU: {
-					writeCharacters(buffer, index, "\\\\");
-					break;
-				}
-				[[likely]] default: { writeCharacter(buffer, index, value); }
+			[[unlikely]] case '\b': {
+				writeCharacters(buffer, index, "\\b");
+				break;
+			}
+			[[unlikely]] case '\t': {
+				writeCharacters(buffer, index, "\\t");
+				break;
+			}
+			[[unlikely]] case '\n': {
+				writeCharacters(buffer, index, "\\n");
+				break;
+			}
+			[[unlikely]] case 0x0Cu: {
+				writeCharacters(buffer, index, "\\f");
+				break;
+			}
+			[[unlikely]] case '\r': {
+				writeCharacters(buffer, index, "\\r");
+				break;
+			}
+			[[unlikely]] case '"': {
+				writeCharacters(buffer, index, "\\\"");
+				break;
+			}
+			[[unlikely]] case 0x5CU: {
+				writeCharacters(buffer, index, "\\\\");
+				break;
+			}
+			[[likely]] default: { writeCharacter(buffer, index, value); }
 			}
 			writeCharacter<json_structural_type::String>(buffer, index);
 		}
@@ -365,7 +368,7 @@ namespace jsonifier_internal {
 			auto k = index + 32;
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
-			}
+				}
 			int64_t valueNew{ static_cast<int64_t>(value) };
 			index = toChars(buffer.data() + index, valueNew) - buffer.data();
 		}
@@ -385,7 +388,8 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if (value) {
 				writeCharacters<"true">(buffer, index);
-			} else {
+			}
+			else {
 				writeCharacters<"false">(buffer, index);
 			}
 		}
@@ -398,7 +402,7 @@ namespace jsonifier_internal {
 			auto k = index + 32;
 			if (k >= buffer.size()) [[unlikely]] {
 				buffer.resize(max(buffer.size() * 2, k));
-			}
+				}
 			index = static_cast<size_t>(toChars(buffer.data() + index, value) - buffer.data());
 		}
 	};
