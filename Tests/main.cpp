@@ -2,7 +2,7 @@
 //#undef JSONIFIER_CPU_INSTRUCTIONS
 //#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2 | JSONIFIER_POPCNT)
 #endif
-//#include "UnicodeEmoji.hpp"
+#include "UnicodeEmoji.hpp"
 #include <BnchSwt/BenchmarkSuite.hpp>
 #include <jsonifier/Index.hpp>
 #include "glaze/glaze.hpp"
@@ -18,9 +18,9 @@
 constexpr bnch_swt::string_literal jsonifierLibraryName{ "jsonifier" };
 constexpr bnch_swt::string_literal simdjsonLibraryName{ "simdjson" };
 constexpr bnch_swt::string_literal glazeLibraryName{ "glaze" };
-constexpr bnch_swt::string_literal jsonifierCommitUrl{ "TEST" };
-constexpr bnch_swt::string_literal simdjsonCommitUrl{ "TEST" };
-constexpr bnch_swt::string_literal glazeCommitUrl{ "TEST" };
+constexpr bnch_swt::string_literal jsonifierCommitUrl{ JSONIFIER_COMMIT };
+constexpr bnch_swt::string_literal simdjsonCommitUrl{ SIMDJSON_COMMIT };
+constexpr bnch_swt::string_literal glazeCommitUrl{ GLAZE_COMMIT };
 
 struct geometry_data {
 	std::vector<std::vector<std::vector<double>>> coordinates{};
@@ -399,63 +399,63 @@ struct discord_message {
 };
 
 template<> struct jsonifier::core<geometry_data> {
-	using value_type = geometry_data;
+	using value_type				 = geometry_data;
 	static constexpr auto parseValue = createValue<&value_type::coordinates, &value_type::type>();
 };
 
 template<> struct jsonifier::core<properties_data> {
-	using value_type = properties_data;
+	using value_type				 = properties_data;
 	static constexpr auto parseValue = createValue<&value_type::name>();
 };
 
 template<> struct jsonifier::core<feature> {
-	using value_type = feature;
+	using value_type				 = feature;
 	static constexpr auto parseValue = createValue<&value_type::properties, &value_type::geometry, &value_type::type>();
 };
 
 template<> struct jsonifier::core<canada_message> {
-	using value_type = canada_message;
+	using value_type				 = canada_message;
 	static constexpr auto parseValue = createValue<&value_type::features, &value_type::type>();
 };
 
 template<> struct glz::meta<geometry_data> {
-	using value_type = geometry_data;
+	using value_type			= geometry_data;
 	static constexpr auto value = object("coordinates", &value_type::coordinates, "type", &value_type::type);
 };
 
 template<> struct glz::meta<properties_data> {
-	using value_type = properties_data;
+	using value_type			= properties_data;
 	static constexpr auto value = object("name", &value_type::name);
 };
 
 template<> struct glz::meta<feature> {
-	using value_type = feature;
+	using value_type			= feature;
 	static constexpr auto value = object("properties", &value_type::properties, "geometry", &value_type::geometry, "type", &value_type::type);
 };
 
 template<> struct glz::meta<canada_message> {
-	using value_type = canada_message;
+	using value_type			= canada_message;
 	static constexpr auto value = object("features", &value_type::features, "type", &value_type::type);
 };
 
 template<> struct jsonifier::core<search_metadata_data> {
-	using value_type = search_metadata_data;
+	using value_type				 = search_metadata_data;
 	static constexpr auto parseValue = createValue<&value_type::since_id_str, &value_type::next_results, &value_type::refresh_url, &value_type::max_id_str,
 		&value_type::completed_in, &value_type::query, &value_type::since_id, &value_type::count, &value_type::max_id>();
 };
 
 template<> struct jsonifier::core<hashtag> {
-	using value_type = hashtag;
+	using value_type				 = hashtag;
 	static constexpr auto parseValue = createValue<&value_type::indices, &value_type::text>();
 };
 
 template<> struct jsonifier::core<large_data> {
-	using value_type = large_data;
+	using value_type				 = large_data;
 	static constexpr auto parseValue = createValue<&value_type::resize, &value_type::w, &value_type::h>();
 };
 
 template<> struct jsonifier::core<sizes_data> {
-	using value_type = sizes_data;
+	using value_type				 = sizes_data;
 	static constexpr auto parseValue = createValue<&value_type::medium, &value_type::small, &value_type::thumb, &value_type::large>();
 };
 
@@ -463,41 +463,41 @@ template<> struct jsonifier::core<media_data> {
 	using value_type = media_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::source_status_id_str, &value_type::source_status_id, &value_type::indices, &value_type::media_url_https, &value_type::expanded_url,
-		&value_type::display_url, &value_type::media_url, &value_type::id_str, &value_type::type, &value_type::sizes, &value_type::url, &value_type::id>();
+			&value_type::display_url, &value_type::media_url, &value_type::id_str, &value_type::type, &value_type::sizes, &value_type::url, &value_type::id>();
 };
 
 template<> struct jsonifier::core<url_data> {
-	using value_type = url_data;
+	using value_type				 = url_data;
 	static constexpr auto parseValue = createValue<&value_type::indices, &value_type::expanded_url, &value_type::display_url, &value_type::url>();
 };
 
 template<> struct jsonifier::core<user_mention> {
-	using value_type = user_mention;
+	using value_type				 = user_mention;
 	static constexpr auto parseValue = createValue<&value_type::indices, &value_type::screen_name, &value_type::id_str, &value_type::name, &value_type::id>();
 };
 
 template<> struct jsonifier::core<status_entities> {
-	using value_type = status_entities;
+	using value_type				 = status_entities;
 	static constexpr auto parseValue = createValue<&value_type::media, &value_type::user_mentions, &value_type::symbols, &value_type::hashtags, &value_type::urls>();
 };
 
 template<> struct jsonifier::core<metadata_data> {
-	using value_type = metadata_data;
+	using value_type				 = metadata_data;
 	static constexpr auto parseValue = createValue<&value_type::iso_language_code, &value_type::result_type>();
 };
 
 template<> struct jsonifier::core<description_data> {
-	using value_type = description_data;
+	using value_type				 = description_data;
 	static constexpr auto parseValue = createValue<&value_type::urls>();
 };
 
 template<> struct jsonifier::core<user_entities> {
-	using value_type = user_entities;
+	using value_type				 = user_entities;
 	static constexpr auto parseValue = createValue<&value_type::url, &value_type::description>();
 };
 
 template<> struct jsonifier::core<twitter_user> {
-	using value_type = twitter_user;
+	using value_type				 = twitter_user;
 	static constexpr auto parseValue = createValue<&value_type::profile_background_image_url_https, &value_type::profile_banner_url, &value_type::profile_background_image_url,
 		&value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, &value_type::time_zone, &value_type::profile_background_color,
 		&value_type::profile_image_url_https, &value_type::utc_offset, &value_type::profile_use_background_image, &value_type::url, &value_type::profile_text_color,
@@ -510,7 +510,7 @@ template<> struct jsonifier::core<twitter_user> {
 };
 
 template<> struct jsonifier::core<retweeted_status_data> {
-	using value_type = retweeted_status_data;
+	using value_type				 = retweeted_status_data;
 	static constexpr auto parseValue = createValue<&value_type::in_reply_to_status_id_str, &value_type::in_reply_to_user_id_str, &value_type::in_reply_to_screen_name,
 		&value_type::in_reply_to_status_id, &value_type::in_reply_to_user_id, &value_type::possibly_sensitive, &value_type::contributors, &value_type::coordinates,
 		&value_type::place, &value_type::geo, &value_type::entities, &value_type::favorite_count, &value_type::metadata, &value_type::created_at, &value_type::retweet_count,
@@ -519,7 +519,7 @@ template<> struct jsonifier::core<retweeted_status_data> {
 };
 
 template<> struct jsonifier::core<status_data> {
-	using value_type = status_data;
+	using value_type				 = status_data;
 	static constexpr auto parseValue = createValue<&value_type::in_reply_to_status_id_str, &value_type::in_reply_to_user_id_str, &value_type::in_reply_to_screen_name,
 		&value_type::in_reply_to_status_id, &value_type::in_reply_to_user_id, &value_type::possibly_sensitive, &value_type::contributors, &value_type::coordinates,
 		&value_type::retweeted_status, &value_type::place, &value_type::geo, &value_type::entities, &value_type::favorite_count, &value_type::metadata, &value_type::created_at,
@@ -528,7 +528,7 @@ template<> struct jsonifier::core<status_data> {
 };
 
 template<> struct jsonifier::core<twitter_message> {
-	using value_type = twitter_message;
+	using value_type				 = twitter_message;
 	static constexpr auto parseValue = createValue<&value_type::search_metadata, &value_type::statuses>();
 };
 
@@ -540,22 +540,22 @@ template<> struct glz::meta<search_metadata_data> {
 };
 
 template<> struct glz::meta<hashtag> {
-	using value_type = hashtag;
+	using value_type			= hashtag;
 	static constexpr auto value = object("indices", &value_type::indices, "text", &value_type::text);
 };
 
 template<> struct glz::meta<large_data> {
-	using value_type = large_data;
+	using value_type			= large_data;
 	static constexpr auto value = object("resize", &value_type::resize, "w", &value_type::w, "h", &value_type::h);
 };
 
 template<> struct glz::meta<sizes_data> {
-	using value_type = sizes_data;
+	using value_type			= sizes_data;
 	static constexpr auto value = object("medium", &value_type::medium, "small", &value_type::small, "thumb", &value_type::thumb, "large", &value_type::large);
 };
 
 template<> struct glz::meta<media_data> {
-	using value_type = media_data;
+	using value_type			= media_data;
 	static constexpr auto value = object("source_status_id_str", &value_type::source_status_id_str, "source_status_id", &value_type::source_status_id, "indices",
 		&value_type::indices, "media_url_https", &value_type::media_url_https, "expanded_url", &value_type::expanded_url, "display_url", &value_type::display_url, "media_url",
 		&value_type::media_url, "id_str", &value_type::id_str, "type", &value_type::type, "sizes", &value_type::sizes, "url", &value_type::url, "id", &value_type::id);
@@ -574,28 +574,28 @@ template<> struct glz::meta<user_mention> {
 };
 
 template<> struct glz::meta<status_entities> {
-	using value_type = status_entities;
+	using value_type			= status_entities;
 	static constexpr auto value = object("media", &value_type::media, "user_mentions", &value_type::user_mentions, "symbols", &value_type::symbols, "hashtags",
 		&value_type::hashtags, "urls", &value_type::urls);
 };
 
 template<> struct glz::meta<metadata_data> {
-	using value_type = metadata_data;
+	using value_type			= metadata_data;
 	static constexpr auto value = object("iso_language_code", &value_type::iso_language_code, "result_type", &value_type::result_type);
 };
 
 template<> struct glz::meta<description_data> {
-	using value_type = description_data;
+	using value_type			= description_data;
 	static constexpr auto value = object("urls", &value_type::urls);
 };
 
 template<> struct glz::meta<user_entities> {
-	using value_type = user_entities;
+	using value_type			= user_entities;
 	static constexpr auto value = object("url", &value_type::url, "description", &value_type::description);
 };
 
 template<> struct glz::meta<twitter_user> {
-	using value_type = twitter_user;
+	using value_type			= twitter_user;
 	static constexpr auto value = object("profile_background_image_url_https", &value_type::profile_background_image_url_https, "profile_banner_url",
 		&value_type::profile_banner_url, "profile_background_image_url", &value_type::profile_banner_url, "profile_sidebar_border_color", &value_type::profile_sidebar_border_color,
 		"profile_sidebar_fill_color", &value_type::profile_sidebar_fill_color, "time_zone", &value_type::time_zone, "profile_background_color",
@@ -612,7 +612,7 @@ template<> struct glz::meta<twitter_user> {
 };
 
 template<> struct glz::meta<retweeted_status_data> {
-	using value_type = retweeted_status_data;
+	using value_type			= retweeted_status_data;
 	static constexpr auto value = object("in_reply_to_status_id_str", &value_type::in_reply_to_status_id_str, "in_reply_to_user_id_str", &value_type::in_reply_to_user_id_str,
 		"in_reply_to_screen_name", &value_type::in_reply_to_screen_name, "in_reply_to_status_id", &value_type::in_reply_to_status_id, "in_reply_to_user_id",
 		&value_type::in_reply_to_user_id, "possibly_sensitive", &value_type::possibly_sensitive, "contributors", &value_type::contributors, "coordinates", &value_type::coordinates,
@@ -623,7 +623,7 @@ template<> struct glz::meta<retweeted_status_data> {
 };
 
 template<> struct glz::meta<status_data> {
-	using value_type = status_data;
+	using value_type			= status_data;
 	static constexpr auto value = object("in_reply_to_status_id_str", &value_type::in_reply_to_status_id_str, "in_reply_to_user_id_str", &value_type::in_reply_to_user_id_str,
 		"in_reply_to_screen_name", &value_type::in_reply_to_screen_name, "in_reply_to_status_id", &value_type::in_reply_to_status_id, "in_reply_to_user_id",
 		&value_type::in_reply_to_user_id, "possibly_sensitive", &value_type::possibly_sensitive, "contributors", &value_type::contributors, "coordinates", &value_type::coordinates,
@@ -634,22 +634,22 @@ template<> struct glz::meta<status_data> {
 };
 
 template<> struct glz::meta<twitter_message> {
-	using value_type = twitter_message;
+	using value_type			= twitter_message;
 	static constexpr auto value = object("search_metadata", &value_type::search_metadata, "statuses", &value_type::statuses);
 };
 
 template<> struct jsonifier::core<icon_emoji_data> {
-	using value_type = icon_emoji_data;
+	using value_type				 = icon_emoji_data;
 	static constexpr auto parseValue = createValue<&value_type::name, &value_type::id>();
 };
 
 template<> struct jsonifier::core<permission_overwrite> {
-	using value_type = permission_overwrite;
+	using value_type				 = permission_overwrite;
 	static constexpr auto parseValue = createValue<&value_type::allow, &value_type::deny, &value_type::id, &value_type::type>();
 };
 
 template<> struct jsonifier::core<channel_data> {
-	using value_type = channel_data;
+	using value_type				 = channel_data;
 	static constexpr auto parseValue = createValue<&value_type::permission_overwrites, &value_type::last_message_id, &value_type::default_thread_rate_limit_per_user,
 		&value_type::applied_tags, &value_type::recipients, &value_type::default_auto_archive_duration, &value_type::status, &value_type::last_pin_timestamp, &value_type::topic,
 		&value_type::rate_limit_per_user, &value_type::icon_emoji, &value_type::total_message_sent, &value_type::video_quality_mode, &value_type::application_id,
@@ -662,30 +662,30 @@ template<> struct jsonifier::core<user_data> {
 	using value_type = user_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::avatar_decoration_data, &value_type::display_name, &value_type::global_name, &value_type::avatar, &value_type::banner, &value_type::locale,
-		&value_type::discriminator, &value_type::user_name, &value_type::accent_color, &value_type::premium_type, &value_type::public_flags, &value_type::email,
-		&value_type::mfa_enabled, &value_type::id, &value_type::flags, &value_type::verified, &value_type::system, &value_type::bot>();
+			&value_type::discriminator, &value_type::user_name, &value_type::accent_color, &value_type::premium_type, &value_type::public_flags, &value_type::email,
+			&value_type::mfa_enabled, &value_type::id, &value_type::flags, &value_type::verified, &value_type::system, &value_type::bot>();
 };
 
 template<> struct jsonifier::core<member_data> {
 	using value_type = member_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::communication_disabled_until, &value_type::premium_since, &value_type::nick, &value_type::avatar, &value_type::roles, &value_type::permissions,
-		&value_type::joined_at, &value_type::guild_id, &value_type::user, &value_type::flags, &value_type::pending, &value_type::deaf, &value_type::mute>();
+			&value_type::joined_at, &value_type::guild_id, &value_type::user, &value_type::flags, &value_type::pending, &value_type::deaf, &value_type::mute>();
 };
 
 template<> struct jsonifier::core<tags_data> {
-	using value_type = tags_data;
+	using value_type				 = tags_data;
 	static constexpr auto parseValue = createValue<&value_type::premium_subscriber, &value_type::bot_id>();
 };
 
 template<> struct jsonifier::core<role_data> {
-	using value_type = role_data;
+	using value_type				 = role_data;
 	static constexpr auto parseValue = createValue<&value_type::unicode_emoji, &value_type::icon, &value_type::permissions, &value_type::position, &value_type::name,
 		&value_type::mentionable, &value_type::version, &value_type::id, &value_type::tags, &value_type::color, &value_type::flags, &value_type::managed, &value_type::hoist>();
 };
 
 template<> struct jsonifier::core<guild_data> {
-	using value_type = guild_data;
+	using value_type				 = guild_data;
 	static constexpr auto parseValue = createValue<&value_type::latest_on_boarding_question_id, &value_type::guild_scheduled_events, &value_type::safety_alerts_channel_id,
 		&value_type::inventory_settings, &value_type::voice_states, &value_type::discovery_splash, &value_type::vanity_url_code, &value_type::application_id,
 		&value_type::afk_channel_id, &value_type::default_message_notifications, &value_type::max_stage_video_channel_users, &value_type::public_updates_channel_id,
@@ -700,24 +700,24 @@ template<> struct jsonifier::core<guild_data> {
 };
 
 template<> struct jsonifier::core<discord_message> {
-	using value_type = discord_message;
+	using value_type				 = discord_message;
 	static constexpr auto parseValue = createValue<&value_type::t, &value_type::d, &value_type::op, &value_type::s>();
 };
 
 #if !defined(ASAN)
 
 template<> struct glz::meta<icon_emoji_data> {
-	using value_type = icon_emoji_data;
+	using value_type			= icon_emoji_data;
 	static constexpr auto value = object("name", &value_type::name, "id", &value_type::id);
 };
 
 template<> struct glz::meta<permission_overwrite> {
-	using value_type = permission_overwrite;
+	using value_type			= permission_overwrite;
 	static constexpr auto value = object("allow", &value_type::allow, "deny", &value_type::deny, "id", &value_type::id, "type", &value_type::type);
 };
 
 template<> struct glz::meta<channel_data> {
-	using value_type = channel_data;
+	using value_type			= channel_data;
 	static constexpr auto value = object("permission_overwrites", &value_type::permission_overwrites, "last_message_id", &value_type::last_message_id,
 		"default_thread_rate_limit_per_user", &value_type::default_thread_rate_limit_per_user, "applied_tags", &value_type::applied_tags, "recipients", &value_type::recipients,
 		"default_auto_archive_duration", &value_type::default_auto_archive_duration, "status", &value_type::status, "last_pin_timestamp", &value_type::last_pin_timestamp, "topic",
@@ -730,7 +730,7 @@ template<> struct glz::meta<channel_data> {
 };
 
 template<> struct glz::meta<user_data> {
-	using value_type = user_data;
+	using value_type			= user_data;
 	static constexpr auto value = object("avatar_decoration_data", &value_type::avatar_decoration_data, "display_name", &value_type::display_name, "global_name",
 		&value_type::global_name, "avatar", &value_type::avatar, "banner", &value_type::banner, "locale", &value_type::locale, "discriminator", &value_type::discriminator,
 		"user_name", &value_type::user_name, "accent_color", &value_type::accent_color, "premium_type", &value_type::premium_type, "public_flags", &value_type::public_flags,
@@ -739,26 +739,26 @@ template<> struct glz::meta<user_data> {
 };
 
 template<> struct glz::meta<member_data> {
-	using value_type = member_data;
+	using value_type			= member_data;
 	static constexpr auto value = object("communication_disabled_until", &value_type::communication_disabled_until, "premium_since", &value_type::premium_since, "nick",
 		&value_type::nick, "avatar", &value_type::avatar, "roles", &value_type::roles, "permissions", &value_type::permissions, "joined_at", &value_type::joined_at, "guild_id",
 		&value_type::guild_id, "user", &value_type::user, "flags", &value_type::flags, "pending", &value_type::pending, "deaf", &value_type::deaf, "mute", &value_type::mute);
 };
 
 template<> struct glz::meta<tags_data> {
-	using value_type = tags_data;
+	using value_type			= tags_data;
 	static constexpr auto value = object("premium_subscriber", &value_type::premium_subscriber, "bot_id", &value_type::bot_id);
 };
 
 template<> struct glz::meta<role_data> {
-	using value_type = role_data;
+	using value_type			= role_data;
 	static constexpr auto value = object("unicode_emoji", &value_type::unicode_emoji, "icon", &value_type::icon, "permissions", &value_type::permissions, "position",
 		&value_type::position, "name", &value_type::name, "mentionable", &value_type::mentionable, "version", &value_type::version, "id", &value_type::id, "tags",
 		&value_type::tags, "color", &value_type::color, "flags", &value_type::flags, "managed", &value_type::managed, "hoist", &value_type::hoist);
 };
 
 template<> struct glz::meta<guild_data> {
-	using value_type = guild_data;
+	using value_type			= guild_data;
 	static constexpr auto value = object("latest_on_boarding_question_id", &value_type::latest_on_boarding_question_id, "guild_scheduled_events",
 		&value_type::guild_scheduled_events, "safety_alerts_channel_id", &value_type::safety_alerts_channel_id, "inventory_settings", &value_type::inventory_settings,
 		"voice_states", &value_type::voice_states, "discovery_splash", &value_type::discovery_splash, "vanity_url_code", &value_type::vanity_url_code, "application_id",
@@ -779,7 +779,7 @@ template<> struct glz::meta<guild_data> {
 };
 
 template<> struct glz::meta<discord_message> {
-	using value_type = discord_message;
+	using value_type			= discord_message;
 	static constexpr auto value = object("t", &value_type::t, "d", &value_type::d, "op", &value_type::op, "s", &value_type::s);
 };
 
@@ -796,7 +796,7 @@ struct test_struct {
 namespace fs = std::filesystem;
 
 class file_loader {
-public:
+  public:
 	file_loader(const std::string& filePathNew) {
 		filePath = filePathNew;
 		std::string directory{ filePathNew.substr(0, filePathNew.find_last_of("/")) };
@@ -826,7 +826,7 @@ public:
 		return std::string{ fileContents };
 	}
 
-protected:
+  protected:
 	std::string fileContents{};
 	std::string filePath{};
 };
@@ -858,14 +858,14 @@ template<typename value_type> struct test_generator {
 	}
 
 	void insertUnicodeInJSON(std::string& jsonString) {
-		//auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(std::size(unicode_emoji::unicodeEmoji) - 1)];
-		jsonString += "";// static_cast<std::string>(newStringView);
+		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(std::size(unicode_emoji::unicodeEmoji) - 1)];
+		jsonString += static_cast<std::string>(newStringView);
 	}
 
 	std::string generateString() {
 		auto length{ randomizeNumberNormal(64.0f, 16.0f) };
 		static constexpr uint32_t charsetSize = charset.size();
-		auto unicodeCount = randomizeNumberUniform(length / 8);
+		auto unicodeCount					  = randomizeNumberUniform(length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
 			if (x == static_cast<int32_t>(length / unicodeCount)) {
@@ -924,7 +924,7 @@ template<typename value_type> struct test_generator {
 					v[x].testDoubles.emplace_back(generateDouble());
 				}
 			}
-			};
+		};
 
 		fill(a);
 		fill(b);
@@ -988,7 +988,7 @@ template<> struct jsonifier::core<test_element_final> {
 };
 
 template<> struct jsonifier::core<test_elements_final> {
-	using value_type = test_elements_final;
+	using value_type				 = test_elements_final;
 	static constexpr auto parseValue = createValue<&value_type::results, &value_type::testName>();
 };
 
@@ -997,26 +997,26 @@ template<typename value_type> struct abc_test {
 };
 
 template<> struct jsonifier::core<test_struct> {
-	using value_type = test_struct;
+	using value_type				 = test_struct;
 	static constexpr auto parseValue = createValue<&value_type::testStrings, &value_type::testUints, &value_type::testDoubles, &value_type::testInts, &value_type::testBools>();
 };
 
 template<> struct jsonifier::core<test<test_struct>> {
-	using value_type = test<test_struct>;
+	using value_type				 = test<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
 };
 
 template<> struct jsonifier::core<test_generator<test_struct>> {
-	using value_type = test_generator<test_struct>;
+	using value_type				 = test_generator<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
 };
 
 template<> struct jsonifier::core<abc_test<test_struct>> {
-	using value_type = abc_test<test_struct>;
+	using value_type				 = abc_test<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::z, &value_type::y, &value_type::x, &value_type::w, &value_type::v, &value_type::u, &value_type::t, &value_type::s,
 		&value_type::r, &value_type::q, &value_type::p, &value_type::o, &value_type::n, &value_type::m, &value_type::l, &value_type::k, &value_type::j, &value_type::i,
 		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a>();
@@ -1025,13 +1025,13 @@ template<> struct jsonifier::core<abc_test<test_struct>> {
 #if !defined(ASAN)
 
 template<> struct glz::meta<test_struct> {
-	using value_type = test_struct;
+	using value_type			= test_struct;
 	static constexpr auto value = object("testStrings", &value_type::testStrings, "testUints", &value_type::testUints, "testDoubles", &value_type::testDoubles, "testInts",
 		&value_type::testInts, "testBools", &value_type::testBools);
 };
 
 template<> struct glz::meta<test<test_struct>> {
-	using value_type = test<test_struct>;
+	using value_type			= test<test_struct>;
 	static constexpr auto value = object("a", &value_type::a, "b", &value_type::b, "c", &value_type::c, "d", &value_type::d, "e", &value_type::e, "f", &value_type::f, "g",
 		&value_type::g, "h", &value_type::h, "i", &value_type::i, "j", &value_type::j, "k", &value_type::k, "l", &value_type::l, "m", &value_type::m, "n", &value_type::n, "o",
 		&value_type::o, "p", &value_type::p, "q", &value_type::q, "r", &value_type::r, "s", &value_type::s, "t", &value_type::t, "u", &value_type::u, "v", &value_type::v, "w",
@@ -1039,7 +1039,7 @@ template<> struct glz::meta<test<test_struct>> {
 };
 
 template<> struct glz::meta<test_generator<test_struct>> {
-	using value_type = test_generator<test_struct>;
+	using value_type			= test_generator<test_struct>;
 	static constexpr auto value = object("a", &value_type::a, "b", &value_type::b, "c", &value_type::c, "d", &value_type::d, "e", &value_type::e, "f", &value_type::f, "g",
 		&value_type::g, "h", &value_type::h, "i", &value_type::i, "j", &value_type::j, "k", &value_type::k, "l", &value_type::l, "m", &value_type::m, "n", &value_type::n, "o",
 		&value_type::o, "p", &value_type::p, "q", &value_type::q, "r", &value_type::r, "s", &value_type::s, "t", &value_type::t, "u", &value_type::u, "v", &value_type::v, "w",
@@ -1047,7 +1047,7 @@ template<> struct glz::meta<test_generator<test_struct>> {
 };
 
 template<> struct glz::meta<abc_test<test_struct>> {
-	using value_type = abc_test<test_struct>;
+	using value_type			= abc_test<test_struct>;
 	static constexpr auto value = object("z", &value_type::z, "y", &value_type::y, "x", &value_type::x, "w", &value_type::w, "v", &value_type::v, "u", &value_type::u, "t",
 		&value_type::t, "s", &value_type::s, "r", &value_type::r, "q", &value_type::q, "p", &value_type::p, "o", &value_type::o, "n", &value_type::n, "m", &value_type::m, "l",
 		&value_type::l, "k", &value_type::k, "j", &value_type::j, "i", &value_type::i, "h", &value_type::h, "g", &value_type::g, "f", &value_type::f, "e", &value_type::e, "d",
@@ -1073,10 +1073,10 @@ template<result_type type> struct result {
 	std::optional<double> medianAbsolutePercentageError{};
 	std::string color{};
 
-	result& operator=(result&&) noexcept = default;
-	result(result&&) noexcept = default;
+	result& operator=(result&&) noexcept	  = default;
+	result(result&&) noexcept				  = default;
 	result& operator=(const result&) noexcept = default;
-	result(const result&) noexcept = default;
+	result(const result&) noexcept			  = default;
 
 	result() noexcept = default;
 
@@ -1084,7 +1084,7 @@ template<result_type type> struct result {
 		byteLength.emplace(byteLengthNew);
 		jsonTime.emplace(results.resultValue);
 		medianAbsolutePercentageError.emplace(results.medianAbsolutePercentageError);
-		auto mbWrittenCount = static_cast<double>(byteLength.value()) / 1e+6l;
+		auto mbWrittenCount	  = static_cast<double>(byteLength.value()) / 1e+6l;
 		auto writeSecondCount = jsonTime.value() / 1e+9l;
 		jsonSpeed.emplace(mbWrittenCount / writeSecondCount);
 		color = colorNew;
@@ -1097,11 +1097,9 @@ template<result_type type> struct result {
 	bool operator>(const result& other) const {
 		if (jsonSpeed.has_value() && other.jsonSpeed.has_value()) {
 			return this->jsonSpeed.value() > other.jsonSpeed.value();
-		}
-		else if (!jsonSpeed.has_value()) {
+		} else if (!jsonSpeed.has_value()) {
 			return false;
-		}
-		else if (!other.jsonSpeed.has_value()) {
+		} else if (!other.jsonSpeed.has_value()) {
 			return true;
 		}
 		return false;
@@ -1120,42 +1118,39 @@ struct results_data {
 	bool operator>(const results_data& other) const {
 		if (readResult && other.readResult) {
 			return readResult > other.readResult;
-		}
-		else if (writeResult && other.writeResult) {
+		} else if (writeResult && other.writeResult) {
 			return writeResult > other.writeResult;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
 
-	results_data& operator=(results_data&&) noexcept = default;
-	results_data(results_data&&) noexcept = default;
+	results_data& operator=(results_data&&) noexcept	  = default;
+	results_data(results_data&&) noexcept				  = default;
 	results_data& operator=(const results_data&) noexcept = default;
-	results_data(const results_data&) noexcept = default;
+	results_data(const results_data&) noexcept			  = default;
 
 	results_data() noexcept = default;
 
 	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, uint64_t iterationsNew) {
 		iterations = iterationsNew;
-		name = nameNew;
-		test = testNew;
-		url = urlNew;
+		name	   = nameNew;
+		test	   = testNew;
+		url		   = urlNew;
 	}
 
 	void checkForMissingKeys() {
 		if (!writeResult.jsonSpeed.has_value()) {
 			jsonifierExcludedKeys.emplace("writeResult");
-		}
-		else if (!readResult.jsonSpeed.has_value()) {
+		} else if (!readResult.jsonSpeed.has_value()) {
 			jsonifierExcludedKeys.emplace("readResult");
 		}
 	}
 
 	void print() const {
 		std::cout << std::string{ "| " } + name + " " + test + ": " + url + "\n" +
-			"| ------------------------------------------------------------ "
-			"|\n";
+				"| ------------------------------------------------------------ "
+				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
@@ -1195,12 +1190,11 @@ struct results_data {
 			stream04 << std::setprecision(4) << readResult.medianAbsolutePercentageError.value();
 			readMape = stream04.str();
 			finalString += read + " | " + readLength + " | " + readTime + " | " + readMape + " | ";
-		}
-		else {
+		} else {
 			readLength = "N/A";
-			readTime = "N/A";
-			read = "N/A";
-			readMape = "N/A";
+			readTime   = "N/A";
+			read	   = "N/A";
+			readMape   = "N/A";
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
 			std::stringstream stream01{};
@@ -1216,12 +1210,11 @@ struct results_data {
 			stream04 << std::setprecision(4) << writeResult.medianAbsolutePercentageError.value();
 			writeMape = stream04.str();
 			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeMape + " |";
-		}
-		else {
+		} else {
 			writeLength = "N/A";
-			writeTime = "N/A";
-			write = "N/A";
-			writeMape = "N/A";
+			writeTime	= "N/A";
+			write		= "N/A";
+			writeMape	= "N/A";
 		}
 		return finalString;
 	}
@@ -1234,34 +1227,34 @@ struct test_results {
 };
 
 template<result_type type> struct jsonifier::core<result<type>> {
-	using value_type = result<type>;
+	using value_type				 = result<type>;
 	static constexpr auto parseValue = createValue<&value_type::byteLength, &value_type::jsonSpeed, &value_type::jsonTime, &value_type::color>();
 };
 
 template<> struct jsonifier::core<results_data> {
-	using value_type = results_data;
+	using value_type				 = results_data;
 	static constexpr auto parseValue = createValue<&value_type::name, &value_type::readResult, &value_type::writeResult, &value_type::test, &value_type::url>();
 };
 
 template<> struct jsonifier::core<test_results> {
-	using value_type = test_results;
+	using value_type				 = test_results;
 	static constexpr auto parseValue = createValue<&value_type::results, &value_type::testName>();
 };
 
 enum class test_type {
 	parse_and_serialize = 0,
-	minify = 1,
-	prettify = 2,
-	validate = 3,
+	minify				= 1,
+	prettify			= 2,
+	validate			= 3,
 };
 
 enum class json_library {
 	jsonifier = 0,
-	glaze = 1,
-	simdjson = 2,
+	glaze	  = 1,
+	simdjson  = 2,
 };
 
-const std::string basePath{ "C:/users/chris/source/repos/jsonifier/json" };
+const std::string basePath{ JSON_PATH };
 
 template<json_library lib, test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper {};
 
@@ -1270,34 +1263,34 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
 		test_data_type testData{};
 		auto readResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "teal", iterations>([&]() {
-			parser.parseJson < jsonifier::parse_options{ .minified = minified } > (testData, buffer);
-			auto* newPtr = &testData;
-			bnch_swt::doNotOptimizeAway(newPtr);
-				});
-		for (auto& value : parser.getErrors()) {
+				parser.parseJson<jsonifier::parse_options{ .minified = minified }>(testData, buffer);
+				auto* newPtr = &testData;
+				bnch_swt::doNotOptimizeAway(newPtr);
+			});
+		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		std::string newerBuffer{};
 		auto readSize = buffer.size();
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			parser.serializeJson < jsonifier::serialize_options{ .prettify = !minified } > (testData, newerBuffer);
-			auto* newPtr = &newerBuffer;
-			bnch_swt::doNotOptimizeAway(newPtr);
-				});
+				parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+				auto* newPtr = &newerBuffer;
+				bnch_swt::doNotOptimizeAway(newPtr);
+			});
 
-		for (auto& value : parser.getErrors()) {
+		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 
 		auto writtenSize = newerBuffer.size();
-		r.readResult = result<result_type::read>{ "teal", readSize, readResult };
-		r.writeResult = result<result_type::write>{ "steelblue", writtenSize, writeResult };
+		r.readResult	 = result<result_type::read>{ "teal", readSize, readResult };
+		r.writeResult	 = result<result_type::write>{ "steelblue", writtenSize, writeResult };
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
 		fileLoader.saveFile(buffer);
 		if (doWePrint) {
@@ -1312,15 +1305,15 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			parser.prettifyJson(buffer, newerBuffer);
-			bnch_swt::doNotOptimizeAway(newerBuffer);
-				});
-		for (auto& value : parser.getErrors()) {
+				parser.prettifyJson(buffer, newerBuffer);
+				bnch_swt::doNotOptimizeAway(newerBuffer);
+			});
+		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
@@ -1340,14 +1333,14 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 		std::string newerBuffer{};
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			parser.minifyJson(buffer, newerBuffer);
-			bnch_swt::doNotOptimizeAway(newerBuffer);
-				});
-		for (auto& value : parser.getErrors()) {
+				parser.minifyJson(buffer, newerBuffer);
+				bnch_swt::doNotOptimizeAway(newerBuffer);
+			});
+		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
@@ -1367,16 +1360,16 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
 
 		auto readResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			parser.validateJson(buffer);
-			bnch_swt::doNotOptimizeAway(buffer);
-				});
+				parser.validateJson(buffer);
+				bnch_swt::doNotOptimizeAway(buffer);
+			});
 
-		for (auto& value : parser.getErrors()) {
+		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 
@@ -1396,28 +1389,28 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
 		test_data_type testData{};
 		auto readResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			if (auto error = glz::read < glz::opts{ .skip_null_members = false, .minified = minified } > (testData, buffer); error) {
-				std::cout << "Glaze Error: " << glz::format_error(error, buffer) << std::endl;
-			}
-			auto* newPtr = &testData;
-			bnch_swt::doNotOptimizeAway(newPtr);
-				});
+				if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = minified }>(testData, buffer); error) {
+					std::cout << "Glaze Error: " << glz::format_error(error, buffer) << std::endl;
+				}
+				auto* newPtr = &testData;
+				bnch_swt::doNotOptimizeAway(newPtr);
+			});
 		std::string newerBuffer{};
 		auto readSize = buffer.size();
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			bnch_swt::doNotOptimizeAway(glz::write < glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified } > (testData, newerBuffer));
-			auto* newPtr = &newerBuffer;
-			bnch_swt::doNotOptimizeAway(newPtr);
-				});
+				bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer));
+				auto* newPtr = &newerBuffer;
+				bnch_swt::doNotOptimizeAway(newPtr);
+			});
 
 		auto writtenSize = newerBuffer.size();
-		r.readResult = result<result_type::read>{ "dodgerblue", readSize, readResult };
-		r.writeResult = result<result_type::write>{ "skyblue", writtenSize, writeResult };
+		r.readResult	 = result<result_type::read>{ "dodgerblue", readSize, readResult };
+		r.writeResult	 = result<result_type::write>{ "skyblue", writtenSize, writeResult };
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(buffer);
 		if (doWePrint) {
@@ -1432,13 +1425,13 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			glz::prettify_json(buffer, newerBuffer);
-			bnch_swt::doNotOptimizeAway(newerBuffer);
-				});
+				glz::prettify_json(buffer, newerBuffer);
+				bnch_swt::doNotOptimizeAway(newerBuffer);
+			});
 
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(newerBuffer);
@@ -1455,13 +1448,13 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
 		std::string newerBuffer{};
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			newerBuffer = glz::minify_json(buffer);
-			bnch_swt::doNotOptimizeAway(newerBuffer);
-				});
+				newerBuffer = glz::minify_json(buffer);
+				bnch_swt::doNotOptimizeAway(newerBuffer);
+			});
 
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(newerBuffer);
@@ -1478,12 +1471,12 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl),  iterations };
+		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
 		auto writeResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-			auto result = glz::validate_json(buffer);
-			bnch_swt::doNotOptimizeAway(result);
-				});
+				auto result = glz::validate_json(buffer);
+				bnch_swt::doNotOptimizeAway(result);
+			});
 
 		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(buffer);
@@ -1516,7 +1509,7 @@ template<test_type type, typename test_data_type, bool minified, uint64_t iterat
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<std::string>(testName);
 #if !defined(ASAN)
-		//resultsNew.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
 		resultsNew.emplace_back(json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
 #endif
 		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
@@ -1569,7 +1562,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<std::string>(testName);
 #if !defined(ASAN)
-		//resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 #endif
 		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
@@ -1625,11 +1618,9 @@ static const std::string section001{ R"(
 static constexpr auto newString02{ bnch_swt::joinLiterals<R"(#### Using the following commits:
 ----
 | Jsonifier: [)",
-	"", R"(](https://github.com/RealTimeChris/Jsonifier/commit/df00b7f)  
-| Glaze: [)",
-	"", R"(](https://github.com/stephenberry/glaze/commit/eb7eb40)  
-| Simdjson: [)",
-	"", R"(](https://github.com/simdjson/simdjson/commit/417e760))", "\n\n">() };
+	JSONIFIER_COMMIT, R"(](https://github.com/RealTimeChris/Jsonifier/commit/)", JSONIFIER_COMMIT, R"()  )", R"(| Glaze: [)", GLAZE_COMMIT,
+	R"(](https://github.com/stephenberry/glaze/commit/)", GLAZE_COMMIT, R"()  )", R"(| Simdjson: [)", SIMDJSON_COMMIT, R"(](https://github.com/simdjson/simdjson/commit/)",
+	SIMDJSON_COMMIT, R"()  )">() };
 
 static constexpr jsonifier::string_view section002{ newString02 };
 
@@ -1794,21 +1785,24 @@ int32_t main() {
 		jsonifier::jsonifier_core parser{};
 		//file_loader fileLoader01{ README_PATH };
 		file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
-		parser.serializeJson < jsonifier::serialize_options{ .prettify = true } > (testJsonData, jsonDataNew);
+		//parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
+		std::cout << "CURRENT DATA: " << jsonDataNew << std::endl;
 		fileLoader02.saveFile(jsonDataNew);
 		std::cout << "CURRENT DATA: " << jsonDataNew << std::endl;
 		file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
 		std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 		fileLoader03.saveFile(jsonMinifiedData);
-		file_loader fileLoader04{ basePath + "/Results.json" };/*
+		file_loader fileLoader04{ basePath + "/Results.json" };
 		file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
 		std::string discordData{ fileLoader05.operator std::string() };
 		discord_message discordMessage{};
+		std::cout << "CURRENT DATA: " << discordData << std::endl;
 		parser.parseJson(discordMessage, discordData);
-		for (auto& value : parser.getErrors()) {
+		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		parser.serializeJson < jsonifier::serialize_options{ .prettify = false } > (discordMessage, discordData);
+		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(discordMessage, discordData);
+		std::cout << "CURRENT DATA: " << discordData << std::endl;
 		fileLoader05.saveFile(discordData);
 		file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
 		std::string discordMinifiedData{ fileLoader06.operator std::string() };
@@ -1822,6 +1816,7 @@ int32_t main() {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(canadaMessage, canadaData);
+		std::cout << "CURRENT DATA: " << canadaData << std::endl;
 		fileLoader07.saveFile(canadaData);
 		file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
 		std::string canadaMinifiedData{ fileLoader08.operator std::string() };
@@ -1835,6 +1830,7 @@ int32_t main() {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(twitterMessage, twitterData);
+		std::cout << "CURRENT DATA: " << twitterData << std::endl;
 		fileLoader09.saveFile(twitterData);
 		file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
 		std::string twitterMinifiedData{ fileLoader10.operator std::string() };
@@ -1842,7 +1838,7 @@ int32_t main() {
 		fileLoader10.saveFile(twitterMinifiedData);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
-		}
+		} /*
 		std::string newTimeString{};
 		newTimeString.resize(1024);
 		std::tm resultTwo{};
@@ -1932,11 +1928,9 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 		fileLoader04.saveFile(resultsStringJson);
 		fileLoader01.saveFile(newerString);*/
-	}
-	catch (std::runtime_error& e) {
+	} catch (std::runtime_error& e) {
 		std::cout << e.what() << std::endl;
-	}
-	catch (std::out_of_range& e) {
+	} catch (std::out_of_range& e) {
 		std::cout << e.what() << std::endl;
 	}
 	return 0;

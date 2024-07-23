@@ -37,12 +37,11 @@ namespace jsonifier_internal {
 	using string_view = jsonifier::string_view_base<char>;
 
 	template<uint64_t sizeVal> struct string_literal {
-
 		static constexpr auto length{ sizeVal > 0 ? sizeVal - 1 : 0 };
 
 		constexpr string_literal() noexcept = default;
 
-		constexpr string_literal(const char(&str)[sizeVal]) {
+		constexpr string_literal(const char (&str)[sizeVal]) {
 			std::copy(str, str + sizeVal, values);
 		}
 
@@ -61,23 +60,21 @@ namespace jsonifier_internal {
 		char values[sizeVal]{};
 	};
 
-	template <size_t N>
-	constexpr auto stringLiteralFromView(jsonifier::string_view str)
-	{
+	template<size_t N> constexpr auto stringLiteralFromView(jsonifier::string_view str) {
 		string_literal<N + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.values);
 		*(sl.values + N) = '\0';
 		return sl;
 	}
 
-	template <typename member_type, typename class_type>
-	struct member_pointer {
-		member_type class_type::* ptr{};
-		constexpr member_pointer(member_type class_type::* p) : ptr(p) {};
+	template<typename member_type, typename class_type> struct member_pointer {
+		member_type class_type::*ptr{};
+		constexpr member_pointer(member_type class_type::*p) : ptr(p){};
 	};
 
-	template <typename member_type, typename class_type>
-	struct data_member {
+	template<typename member_type_new, typename class_type_new> struct data_member {
+		using member_type = member_type_new;
+		using class_type  = class_type_new;
 		member_pointer<member_type, class_type> memberPtr{};
 		jsonifier::string_view name{};
 
@@ -89,12 +86,10 @@ namespace jsonifier_internal {
 			return memberPtr.ptr;
 		}
 
-		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr)
-			: name(str), memberPtr(ptr) {};
+		constexpr data_member(jsonifier::string_view str, member_type class_type::*ptr) : memberPtr(ptr), name(str){};
 	};
 
-	template<typename member_type, typename class_type>
-	constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::* ptr) {
+	template<typename member_type, typename class_type> constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::*ptr) {
 		return data_member<member_type, class_type>(str, ptr);
 	}
 
@@ -122,7 +117,7 @@ namespace jsonifier_internal {
 		using type = value_type;
 	};
 
-	template<typename value_type, typename member_type, typename... Args> struct remove_member_pointer<member_type(value_type::*)(Args...)> {
+	template<typename value_type, typename member_type, typename... Args> struct remove_member_pointer<member_type (value_type::*)(Args...)> {
 		using type = value_type;
 	};
 
@@ -149,14 +144,14 @@ namespace jsonifier_internal {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
 	template<typename value_type, auto p> consteval jsonifier::string_view getNameInternal() {
 		jsonifier::string_view str = std::source_location::current().function_name();
-		str = str.substr(str.find("->") + 2);
+		str						   = str.substr(str.find("->") + 2);
 		return str.substr(0, str.find(">"));
 	}
 #else
 	template<auto p> consteval jsonifier::string_view getNameInternal() {
 		jsonifier::string_view str = std::source_location::current().function_name();
-		str = str.substr(str.find("&") + 1);
-		str = str.substr(0, str.find(pretty_function_tail));
+		str						   = str.substr(str.find("&") + 1);
+		str						   = str.substr(0, str.find(pretty_function_tail));
 		return str.substr(str.rfind("::") + 2);
 	}
 #endif
@@ -165,8 +160,8 @@ namespace jsonifier_internal {
 		requires(std::is_member_pointer_v<decltype(p)>)
 	constexpr auto getName() {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-		using value_type = remove_member_pointer<unwrap_t<decltype(p)>>::type;
-		constexpr auto pNew = p;
+		using value_type		 = remove_member_pointer<unwrap_t<decltype(p)>>::type;
+		constexpr auto pNew		 = p;
 		constexpr auto newString = getNameInternal<value_type, &(external<value_type>.*pNew)>();
 #else
 		constexpr auto newString = getNameInternal<p>();

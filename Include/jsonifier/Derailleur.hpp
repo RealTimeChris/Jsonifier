@@ -470,8 +470,8 @@ namespace jsonifier_internal {
 		uint64_t maxLength{};
 	};
 
-	template<typename value_type, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto first = std::get<I>(jsonifier::concepts::coreV<unwrap_t<value_type>>).view();
+	template<const auto& tuple, size_t I> constexpr jsonifier::string_view getKey() noexcept {
+		constexpr auto first = std::get<I>(tuple).view();
 		using T0			  = unwrap_t<decltype(first)>;
 		if constexpr (std::is_member_pointer_v<T0>) {
 			return getName<first>();
@@ -480,9 +480,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
+	template<const auto& tuple, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
-			constexpr jsonifier::string_view key{ getKey<value_type, index>() };
+			constexpr jsonifier::string_view key{ getKey<tuple, index>() };
 			constexpr auto n{ key.size() };
 			if (n < stats.minLength) {
 				stats.minLength = n;
@@ -490,7 +490,7 @@ namespace jsonifier_internal {
 			if (n > stats.maxLength) {
 				stats.maxLength = n;
 			}
-			return keyStatsInternal<value_type, maxIndex, index + 1>(stats);
+			return keyStatsInternal<tuple, maxIndex, index + 1>(stats);
 		} else {
 			if constexpr (maxIndex > 0) {
 				stats.lengthRange = stats.maxLength - stats.minLength;
@@ -499,10 +499,10 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> JSONIFIER_INLINE constexpr auto keyStats() {
-		constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
+	template<const auto& tuple> JSONIFIER_INLINE constexpr auto keyStats() {
+		constexpr auto N{ std::tuple_size_v<unwrap_t<decltype(tuple)>> };
 
-		return keyStatsInternal<value_type, N, 0>(key_stats_t{});
+		return keyStatsInternal<tuple, N, 0>(key_stats_t{});
 	}
 
 	template<const auto& options, typename value_type, typename iterator_type>
