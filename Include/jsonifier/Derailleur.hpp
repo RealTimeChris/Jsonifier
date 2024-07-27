@@ -517,9 +517,8 @@ namespace jsonifier_internal {
 		}
 		static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
 
-		static constexpr auto stats{ keyStats<value_type>() };
 		if constexpr (N == 1) {
-			static constexpr jsonifier::string_view key{ getKey<value_type, 0>() };
+			static constexpr jsonifier::string_view key{ std::get<0>(jsonifier::concepts::coreV<value_type>).view() };
 			return key.size();
 		} else {
 			auto start = iter;

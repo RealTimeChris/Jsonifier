@@ -861,9 +861,9 @@ namespace jsonifier_internal {
 
 	template<uint64_t length> JSONIFIER_INLINE uint64_t len1To3Rt(const char* value, const uint8_t* secret, uint64_t seed64) {
 		{
-			uint8_t const c1 = value[0];
-			uint8_t const c2 = value[length >> 1];
-			uint8_t const c3 = value[length - 1];
+			uint8_t const c1 = static_cast<uint8_t>(value[0]);
+			uint8_t const c2 = static_cast<uint8_t>(value[length >> 1]);
+			uint8_t const c3 = static_cast<uint8_t>(value[length - 1]);
 			uint32_t const combined =
 				(static_cast<uint32_t>(c1) << 16) | (static_cast<uint32_t>(c2) << 24) | (static_cast<uint32_t>(c3) << 0) | (static_cast<uint32_t>(length) << 8);
 			uint64_t const bitflip = (readBitsRt<uint32_t>(secret) ^ readBitsRt<uint32_t>(secret + 4)) + seed64;
@@ -874,9 +874,9 @@ namespace jsonifier_internal {
 
 	template<uint64_t length> constexpr uint64_t len1To3Ct(const char* value, const uint8_t* secret, uint64_t seed64) {
 		{
-			uint8_t const c1 = value[0];
-			uint8_t const c2 = value[length >> 1];
-			uint8_t const c3 = value[length - 1];
+			uint8_t const c1 = static_cast<uint8_t>(value[0]);
+			uint8_t const c2 = static_cast<uint8_t>(value[length >> 1]);
+			uint8_t const c3 = static_cast<uint8_t>(value[length - 1]);
 			uint32_t const combined =
 				(static_cast<uint32_t>(c1) << 16) | (static_cast<uint32_t>(c2) << 24) | (static_cast<uint32_t>(c3) << 0) | (static_cast<uint32_t>(length) << 8);
 			uint64_t const bitflip = (readBitsCt<uint32_t>(secret) ^ readBitsCt<uint32_t>(secret + 4)) + seed64;
@@ -1030,7 +1030,6 @@ namespace jsonifier_internal {
 			uint64_t acc = length * prime641;
 			uint64_t acc_end;
 			constexpr uint32_t nbRounds = ( uint32_t )length / 16;
-			uint32_t i;
 			acc		= len129To240Internal01Rt<0, 8>(acc, value, secret, seed64);
 			acc_end = mix16BRt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
 			acc		= avalanche(acc);
@@ -1064,7 +1063,6 @@ namespace jsonifier_internal {
 			uint64_t acc = length * prime641;
 			uint64_t acc_end;
 			constexpr uint32_t nbRounds = ( uint32_t )length / 16;
-			uint32_t i;
 			acc		= len129To240Internal01Ct<0, 8>(acc, value, secret, seed64);
 			acc_end = mix16BCt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
 			acc		= avalanche(acc);

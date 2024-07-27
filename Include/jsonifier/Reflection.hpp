@@ -78,11 +78,11 @@ namespace jsonifier_internal {
 		member_pointer<member_type, class_type> memberPtr{};
 		jsonifier::string_view name{};
 
-		constexpr jsonifier::string_view view() const {
+		constexpr auto& view() const {
 			return name;
 		}
 
-		constexpr auto ptr() const {
+		constexpr auto& ptr() const {
 			return memberPtr.ptr;
 		}
 

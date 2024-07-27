@@ -775,9 +775,9 @@ namespace jsonifier_internal {
 
 	template<string_literal string> JSONIFIER_INLINE bool compareStringAsInt(const char* iter) {
 		constexpr auto newString{ getStringAsInt<string>() };
-		convert_length_to_int_t<string.size()> newString02{};
-		std::memcpy(&newString02, iter, string.size());
-		return newString == newString02;
+		convert_length_to_int_t<string.size()> newerString{};
+		std::memcpy(&newerString, iter, string.size());
+		return newString == newerString;
 	}
 
 	template<typename iterator_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool parseBool(bool_type& value, iterator_type& iter) {
