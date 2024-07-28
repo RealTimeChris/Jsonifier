@@ -152,7 +152,7 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	template<typename return_type> constexpr return_type isLess32(return_type value) noexcept {
+	template<typename return_type> JSONIFIER_INLINE constexpr return_type isLess32(return_type value) noexcept {
 		constexpr return_type newBytes{ repeatByte<0b11100000u, return_type>() };
 		return hasZero(value & newBytes);
 	}
@@ -764,7 +764,7 @@ namespace jsonifier_internal {
 
 	template<uint64_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
 
-	template<string_literal string> constexpr convert_length_to_int_t<string.size()> getStringAsInt() {
+	template<string_literal string> JSONIFIER_INLINE constexpr convert_length_to_int_t<string.size()> getStringAsInt() {
 		const char* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (uint64_t x = 0; x < string.size(); ++x) {

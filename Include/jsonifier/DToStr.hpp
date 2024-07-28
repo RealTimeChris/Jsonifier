@@ -409,7 +409,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint32_t x> constexpr uint32_t numbits() noexcept {
+	template<uint32_t x> JSONIFIER_INLINE constexpr uint32_t numbits() noexcept {
 		return x < 2 ? x : 1 + numbits<(x >> 1)>();
 	}
 

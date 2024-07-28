@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 		return iter;
 	}
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> inline void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -313,9 +313,9 @@ namespace jsonifier_internal {
 		}
 	} 
 	
-	template<typename iterator_type> void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept;
+	template<typename iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept;
 
-	template<typename iterator_type> void skipObject(iterator_type& iter, iterator_type& end) noexcept
+	template<typename iterator_type> JSONIFIER_INLINE void skipObject(iterator_type& iter, iterator_type& end) noexcept
 	{
 		++iter;
 		if (*iter == '}') {
@@ -336,7 +336,7 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator_type> void skipArray(iterator_type& iter, iterator_type& end) noexcept
+	template<typename iterator_type> JSONIFIER_INLINE void skipArray(iterator_type& iter, iterator_type& end) noexcept
 	{
 		++iter;
 		if (*iter == ']') {
@@ -353,7 +353,7 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator_type> void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept {
+	template<typename iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept {
 			switch (*iter) {
 			case '{': {
 				skipObject(iter, end);
@@ -470,19 +470,13 @@ namespace jsonifier_internal {
 		uint64_t maxLength{};
 	};
 
-	template<const auto& tuple, size_t I> constexpr jsonifier::string_view getKey() noexcept {
-		constexpr auto first = std::get<I>(tuple).view();
-		using T0			  = unwrap_t<decltype(first)>;
-		if constexpr (std::is_member_pointer_v<T0>) {
-			return getName<first>();
-		} else {
-			return static_cast<jsonifier::string_view>(first);
-		}
+	template<const auto& tuple, size_t I> JSONIFIER_INLINE constexpr const jsonifier::string_view& getKey() noexcept {
+		return std::get<I>(tuple).view();
 	}
 
 	template<const auto& tuple, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
-			constexpr jsonifier::string_view key{ getKey<tuple, index>() };
+			constexpr const jsonifier::string_view& key{ getKey<tuple, index>() };
 			constexpr auto n{ key.size() };
 			if (n < stats.minLength) {
 				stats.minLength = n;

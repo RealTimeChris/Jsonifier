@@ -158,7 +158,7 @@
 
 #endif
 
-constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
+JSONIFIER_INLINE constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
 

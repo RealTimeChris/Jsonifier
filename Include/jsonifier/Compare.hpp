@@ -278,7 +278,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, class char_type> constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
+	template<uint64_t count, class char_type> JSONIFIER_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
 		if constexpr (count > 8) {
 			uint64_t countNew{ count };
 			uint64_t v[2];

@@ -155,7 +155,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE explicit operator uint64_t() const {
+		JSONIFIER_INLINE explicit operator size_t() const {
 			if (getType() == json_type::Number) {
 				return constructValueFromRawJsonData<uint64_t>(jsonData);
 			} else {

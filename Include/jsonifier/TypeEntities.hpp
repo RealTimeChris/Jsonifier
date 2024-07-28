@@ -95,9 +95,11 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<template<uint64_t> typename hash_wrapper, std::size_t... indices> constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
-		return std::array<decltype(&hash_wrapper<0>::op), sizeof...(indices)>{ &hash_wrapper<indices>::op... };
+	template<template<uint64_t>typename function_wrapper, std::size_t... indices> static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+		using function_type = decltype(&function_wrapper<0>::op);
+		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices>::op... } };
 	}
+
 }
 
 namespace jsonifier {

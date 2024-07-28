@@ -58,9 +58,7 @@ namespace jsonifier {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = reinterpret_cast<const char*>(string.data());
-			auto endIter	 = reinterpret_cast<const char*>(string.data() + string.size());
-			static constexpr jsonifier_internal::parse_options options{ jsonifier_internal::chars_format::json };
-			auto [ptr, ec] = jsonifier_internal::from_chars_advanced(currentIter, endIter, newValue, options);
+			jsonifier_internal::parseFloat(newValue, currentIter);
 		}
 		return newValue;
 	}
@@ -207,16 +205,15 @@ namespace jsonifier_internal {
 				}
 			}
 		} else {
-			static constexpr jsonifier_internal::parse_options optionsNew{ jsonifier_internal::chars_format::json };
-			auto [ptr, ec] = jsonifier_internal::from_chars_advanced(static_cast<const char*>(iter), static_cast<const char*>(end), value, optionsNew);
-			if (ec != std::errc()) [[unlikely]] {
+			auto s = parseFloat(value, newPtr);
+			++iter;
+			if (!s) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
 				skipToNextValue(iter, end);
 				return;
 			}
-			++iter;
 		}
 	}
 
@@ -313,16 +310,14 @@ namespace jsonifier_internal {
 				}
 			}
 		} else {
-			static constexpr jsonifier_internal::parse_options optionsNew{ jsonifier_internal::chars_format::json };
-			auto [ptr, ec] = jsonifier_internal::from_chars_advanced(iter, end, value, optionsNew);
-			if (ec != std::errc()) [[unlikely]] {
+			auto s = parseFloat(value, iter);
+			if (!s) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
 				skipToNextValue(iter, end);
 				return;
 			}
-			iter = ptr;
 		}
 	}
 

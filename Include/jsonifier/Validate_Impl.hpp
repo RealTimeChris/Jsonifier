@@ -28,7 +28,7 @@
 namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Object_Start, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, uint64_t& depth, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, uint64_t& depth, validator_type& validatorRef) {
 			if (!iter || *iter != '{') {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Object_Start>(
@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Array_Start, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, uint64_t& depth, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, uint64_t& depth, validator_type& validatorRef) {
 			if (!iter || *iter != '[') {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Array_Start>(
@@ -157,7 +157,7 @@ namespace jsonifier_internal {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 	template<typename derived_type> struct validate_impl<json_structural_type::String, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
 			auto endPtr = iter.operator->();
@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Number, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
 			auto endPtr	 = iter.operator->();
@@ -290,7 +290,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Bool, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
 			static constexpr char falseStr[]{ "false" };
@@ -312,7 +312,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Null, derived_type> {
-		template<typename validator_type, typename iterator_type> static bool impl(iterator_type&& iter, validator_type& validatorRef) {
+		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
 			auto newPtr = iter.operator->();
 			++iter;
 			newPtr = skipWs(newPtr);

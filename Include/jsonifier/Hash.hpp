@@ -1104,7 +1104,7 @@ namespace jsonifier_internal {
 	}
 
 	template<uint64_t N> struct hash_rt_wrapper {
-		static JSONIFIER_INLINE uint64_t op(const char* data, const uint8_t* secret, uint64_t seed64) {
+		JSONIFIER_INLINE static uint64_t op(const char* data, const uint8_t* secret, uint64_t seed64) {
 			return hashxBytesRt<N>(data, secret, seed64);
 		}
 	};
@@ -1134,8 +1134,8 @@ namespace jsonifier_internal {
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
-		constexpr key_hasher() {
-			setSeedCt(jsonifier_internal::xoshiro256{}.operator()());
+		constexpr key_hasher(size_t seedNew = 0) {
+			setSeedCt(seedNew);
 		}
 
 		/**
@@ -1163,7 +1163,7 @@ namespace jsonifier_internal {
 		 *
 		 * @return The current seed value.
 		 */
-		constexpr operator uint64_t() const {
+		constexpr operator size_t() const {
 			return seed;
 		}
 
@@ -1191,7 +1191,7 @@ namespace jsonifier_internal {
 		 * @return The hashed value.
 		 */
 		constexpr uint64_t hashKeyCt(const char* value, uint64_t length) const {
-			//std::cout << "NEW HASH STARTING: " << std::endl;
+			////std::cout << "NEW HASH STARTING: " << std::endl;
 			if (length <= 240) {
 				return (jsonifier_internal::arrayOfCtFunctionPtrs[length])(value, secret, seed);
 			} else {
