@@ -2450,7 +2450,6 @@ int32_t main() {
 		std::string canadaMinifiedData{ fileLoader08.operator std::string() };
 		canadaMinifiedData = parser.minifyJson(canadaData);
 		fileLoader08.saveFile(canadaMinifiedData);
-		/*
 		file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
 		std::string twitterData{ fileLoader09.operator std::string() };
 		twitter_message twitterMessage{};
@@ -2464,7 +2463,6 @@ int32_t main() {
 		std::string twitterMinifiedData{ fileLoader10.operator std::string() };
 		twitterMinifiedData = parser.minifyJson(twitterData);
 		fileLoader10.saveFile(twitterMinifiedData);
-		*/
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
@@ -2506,13 +2504,13 @@ int32_t main() {
 		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, iterationsVal, "Canada Test (Minified)">::run(canadaMinifiedData);
 		newerString += static_cast<std::string>(section08);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults); /*
+		benchmark_data.emplace_back(testResults); 
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, iterationsVal, "Twitter Test (Prettified)">::run(twitterData);
 		newerString += static_cast<std::string>(section09);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, iterationsVal, "Twitter Test (Minified)">::run(twitterMinifiedData);
-		newerString += static_cast<std::string>(section10);*/
+		newerString += static_cast<std::string>(section10);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::minify, std::string, false, iterationsVal, "Minify Test">::run(discordData);

@@ -204,7 +204,7 @@ namespace jsonifier_internal {
 		return (((value - 0x0101010101010101) & ~value) & 0x8080808080808080);
 	}
 
-	template<auto valueNew, typename return_type> constexpr return_type hasValue(return_type value) noexcept {
+	template<auto valueNew, typename return_type> JSONIFIER_INLINE constexpr return_type hasValue(return_type value) noexcept {
 		constexpr return_type newBytes{ repeatByte<valueNew, return_type>() };
 		return hasZero(value ^ newBytes);
 	}
@@ -248,7 +248,7 @@ namespace jsonifier_internal {
 	struct big_int_t final {
 		std::vector<uint32_t> data = {};
 
-		big_int_t(uint64_t num) noexcept {
+		JSONIFIER_INLINE big_int_t(uint64_t num) noexcept {
 			uint32_t lowerWord = uint32_t(num);
 			uint32_t upperWord = uint32_t(num >> 32);
 			if (upperWord > 0) {
@@ -258,7 +258,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		void mulU32(uint32_t num) noexcept {
+		JSONIFIER_INLINE void mulU32(uint32_t num) noexcept {
 			uint32_t carry = 0;
 			for (uint64_t i = 0; i < data.size(); i++) {
 				uint64_t res	   = uint64_t(data[i]) * uint64_t(num) + uint64_t(carry);
@@ -272,7 +272,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		void mulPow10(uint32_t pow10) noexcept {
+		JSONIFIER_INLINE void mulPow10(uint32_t pow10) noexcept {
 			for (; pow10 >= 9; pow10 -= 9) {
 				mulU32(static_cast<uint32_t>(powersOfTenInt[9]));
 			}
@@ -281,7 +281,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		void mulPow2(uint32_t exp) noexcept {
+		JSONIFIER_INLINE void mulPow2(uint32_t exp) noexcept {
 			uint32_t shft = exp % 32;
 			uint32_t move = exp / 32;
 			uint32_t idx  = static_cast<uint32_t>(data.size()) - 1;
@@ -308,7 +308,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		auto operator<=>(const big_int_t& rhs) const noexcept {
+		JSONIFIER_INLINE auto operator<=>(const big_int_t& rhs) const noexcept {
 			if (data.size() < rhs.data.size())
 				return -1;
 			if (data.size() > rhs.data.size())

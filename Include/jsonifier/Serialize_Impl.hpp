@@ -73,62 +73,61 @@ namespace jsonifier_internal {
 			static constexpr auto numMembers = std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>>;
 			writeObjectEntry<numMembers, options>(buffer, index);
 
-			static constexpr auto frozenMap = makeHashTuple<unwrap_t<value_type>>();
 			if constexpr (numMembers > 0) {
-				serializeObjects<options, frozenMap, 0, numMembers>(value, buffer, index);
+				serializeObjects<options, 0, numMembers>(value, buffer, index);
 			}
 
 			writeObjectExit<numMembers, options>(buffer, index);
 		}
 
-		template<const serialize_options_internal& options, const auto& frozenMap, size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type,
+		template<const serialize_options_internal& options, size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type,
 			jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			if constexpr (currentIndex < maxIndex) {
-				static constexpr auto& group = std::get<currentIndex>(jsonifier::concepts::coreV<unwrap_t<value_type>>);
+			if constexpr (currentIndex < maxIndex) {			
+
+				static constexpr auto frozenMap = makeHashTuple<unwrap_t<value_type>>();
+
+				static constexpr auto& group	= std::get<currentIndex>(jsonifier::concepts::coreV<unwrap_t<value_type>>);
 
 				static constexpr jsonifier::string_view key = group.view();
 				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 					auto& keys = value.jsonifierExcludedKeys;
 					if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 						if constexpr (currentIndex < maxIndex - 1) {
-							serializeObjects<options, frozenMap, currentIndex + 1, maxIndex>(value, buffer, index);
+							serializeObjects<options, currentIndex + 1, maxIndex>(value, buffer, index);
 						} else {
 							return;
 						}
 					}
 				}
-
-				static constexpr auto functionPtrArray = generateTupleOfInvokeSerializePtrArrays<options, derived_type, value_type, buffer_type, index_type>();
-
-				static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& buffer, auto& index) {
-					static constexpr auto hashSubTuple			   = std::get<hashSubTupleIndex>(hash_tuple<value_type>::tuple);
-					static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(functionPtrArray);
-					static constexpr auto memberIt				   = hashSubTuple.template find<subTupleFunctionPtrArray>(key.data());
-					if constexpr (memberIt < subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) {
-						static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
-						writeCharacters<quotedKey>(buffer, index);
-						(*memberIt)(value, buffer, index);
-						if constexpr (currentIndex < maxIndex - 1) {
-							if constexpr (options.optionsReal.prettify) {
-								if constexpr (jsonifier::concepts::buffer_like<buffer_type>) {
-									if (auto k = index + options.indent + 256; k > buffer.size()) [[unlikely]] {
-										buffer.resize(max(buffer.size() * 2, k));
-									}
+				
+				static constexpr auto functionPtrArray			= generateTupleOfInvokeSerializePtrArrays<options, derived_type, value_type, buffer_type, index_type>();
+				static constexpr auto hashSubTupleIndex			= getCurrentSubTupleIndex<key.size(), uniqueStringLengths<value_type>>();
+				static constexpr auto& hashSubTuple				= std::get<hashSubTupleIndex>(hash_tuple<value_type>::tuple);
+				static constexpr auto& subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(functionPtrArray);
+				static constexpr auto memberIt					= hashSubTuple.template find<subTupleFunctionPtrArray>(key.data());
+				if constexpr (memberIt < subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) {
+					static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
+					writeCharacters<quotedKey>(buffer, index);
+					static constexpr auto newFunction = *memberIt;
+					newFunction(value, buffer, index);
+					if constexpr (currentIndex < maxIndex - 1) {
+						if constexpr (options.optionsReal.prettify) {
+							if constexpr (jsonifier::concepts::buffer_like<buffer_type>) {
+								if (auto k = index + options.indent + 256; k > buffer.size()) [[unlikely]] {
+									buffer.resize(max(buffer.size() * 2, k));
 								}
-								writeCharactersUnchecked<",\n">(buffer, index);
-								writeCharactersUnchecked<' '>(options.indent * options.optionsReal.indentSize, buffer, index);
-							} else {
-								writeCharacter<','>(buffer, index);
 							}
+							writeCharactersUnchecked<",\n">(buffer, index);
+							writeCharactersUnchecked<' '>(options.indent * options.optionsReal.indentSize, buffer, index);
+						} else {
+							writeCharacter<','>(buffer, index);
 						}
 					}
-					return true;
-				};
-				frozenMap.template find<functionLambda>(key.size(), value, buffer, index);				
+				}
 
 				if constexpr (currentIndex < maxIndex - 1) {
-					serializeObjects<options, frozenMap, currentIndex + 1, maxIndex>(value, buffer, index);
+					serializeObjects<options, currentIndex + 1, maxIndex>(value, buffer, index);
 				}
 			}
 		}
