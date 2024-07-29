@@ -189,11 +189,11 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		static constexpr uint64_t mask = repeatByte<0b01111111, integer_type>();
-		const uint64_t lo7		 = simdValue & mask;
-		const uint64_t quote	 = (lo7 ^ repeatByte<'"', integer_type>()) + mask;
-		const uint64_t backslash = (lo7 ^ repeatByte<'\\', integer_type>()) + mask;
-		const uint64_t t0		 = ~((quote & backslash) | simdValue);
-		uint64_t next			 = t0 & repeatByte<0b10000000, integer_type>();
+		const uint64_t lo7			   = simdValue & mask;
+		const uint64_t quote		   = (lo7 ^ repeatByte<'"', integer_type>()) + mask;
+		const uint64_t backslash	   = (lo7 ^ repeatByte<'\\', integer_type>()) + mask;
+		const uint64_t t0			   = ~((quote & backslash) | simdValue);
+		uint64_t next				   = t0 & repeatByte<0b10000000, integer_type>();
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
@@ -211,12 +211,12 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		std::memcpy(string2, string1, sizeof(simd_type));
 		static constexpr uint64_t mask = repeatByte<0b01111111, integer_type>();
-		const uint64_t lo7		 = simdValue & mask;
-		const uint64_t quote	 = (lo7 ^ repeatByte<'"', integer_type>()) + mask;
-		const uint64_t backslash = (lo7 ^ repeatByte<'\\', integer_type>()) + mask;
-		const uint64_t less_32	 = (simdValue & repeatByte<0b01100000, integer_type>()) + mask;
-		const uint64_t t0		 = ~((quote & backslash & less_32) | simdValue);
-		uint64_t next			 = t0 & repeatByte<0b10000000, integer_type>();
+		const uint64_t lo7			   = simdValue & mask;
+		const uint64_t quote		   = (lo7 ^ repeatByte<'"', integer_type>()) + mask;
+		const uint64_t backslash	   = (lo7 ^ repeatByte<'\\', integer_type>()) + mask;
+		const uint64_t less_32		   = (simdValue & repeatByte<0b01100000, integer_type>()) + mask;
+		const uint64_t t0			   = ~((quote & backslash & less_32) | simdValue);
+		uint64_t next				   = t0 & repeatByte<0b10000000, integer_type>();
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 

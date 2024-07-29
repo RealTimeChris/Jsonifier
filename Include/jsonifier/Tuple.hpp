@@ -34,24 +34,21 @@ namespace jsonifier_internal {
 	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) {
 		if constexpr (std::tuple_size_v<tuple_type> > 0) {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			}
-			else {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+			} else {
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
 				return newerTuple;
 			}
-		}
-		else {
+		} else {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			}
-			else {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+			} else {
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = std::make_tuple(newerPair);
 				return newerTuple;
 			}

@@ -1005,8 +1005,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t currentIndex, uint64_t maxIndex>
-	JSONIFIER_INLINE uint64_t len129To240Internal01Rt(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
+	template<uint64_t currentIndex, uint64_t maxIndex> JSONIFIER_INLINE uint64_t len129To240Internal01Rt(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (currentIndex < maxIndex) {
 			acc += mix16BRt(value + (16 * currentIndex), secret + (16 * currentIndex), seed64);
 			return len129To240Internal01Rt<currentIndex + 1, maxIndex>(acc, value, secret, seed64);
@@ -1015,8 +1014,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t currentIndex, uint64_t maxIndex>
-	JSONIFIER_INLINE uint64_t len129To240Internal02Rt(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
+	template<uint64_t currentIndex, uint64_t maxIndex> JSONIFIER_INLINE uint64_t len129To240Internal02Rt(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (currentIndex < maxIndex) {
 			acc += mix16BRt(value + (16 * currentIndex), secret + (16 * (currentIndex - 8)) + midSizeStartOffset, seed64);
 			return len129To240Internal02Rt<currentIndex + 1, maxIndex>(acc, value, secret, seed64);
@@ -1030,16 +1028,15 @@ namespace jsonifier_internal {
 			uint64_t acc = length * prime641;
 			uint64_t acc_end;
 			constexpr uint32_t nbRounds = ( uint32_t )length / 16;
-			acc		= len129To240Internal01Rt<0, 8>(acc, value, secret, seed64);
-			acc_end = mix16BRt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
-			acc		= avalanche(acc);
-			acc_end = len129To240Internal02Rt<8, nbRounds>(acc_end, value, secret, seed64);
+			acc							= len129To240Internal01Rt<0, 8>(acc, value, secret, seed64);
+			acc_end						= mix16BRt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
+			acc							= avalanche(acc);
+			acc_end						= len129To240Internal02Rt<8, nbRounds>(acc_end, value, secret, seed64);
 			return avalanche(acc + acc_end);
 		}
 	}
 
-	template<uint64_t currentIndex, uint64_t maxIndex>
-	constexpr uint64_t len129To240Internal01Ct(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
+	template<uint64_t currentIndex, uint64_t maxIndex> constexpr uint64_t len129To240Internal01Ct(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (currentIndex < maxIndex) {
 			acc += mix16BCt(value + (16 * currentIndex), secret + (16 * currentIndex), seed64);
 			return len129To240Internal01Ct<currentIndex + 1, maxIndex>(acc, value, secret, seed64);
@@ -1048,8 +1045,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t currentIndex, uint64_t maxIndex>
-	constexpr uint64_t len129To240Internal02Ct(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
+	template<uint64_t currentIndex, uint64_t maxIndex> constexpr uint64_t len129To240Internal02Ct(uint64_t& acc, const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (currentIndex < maxIndex) {
 			acc += mix16BCt(value + (16 * currentIndex), secret + (16 * (currentIndex - 8)) + midSizeStartOffset, seed64);
 			return len129To240Internal02Ct<currentIndex + 1, maxIndex>(acc, value, secret, seed64);
@@ -1063,10 +1059,10 @@ namespace jsonifier_internal {
 			uint64_t acc = length * prime641;
 			uint64_t acc_end;
 			constexpr uint32_t nbRounds = ( uint32_t )length / 16;
-			acc		= len129To240Internal01Ct<0, 8>(acc, value, secret, seed64);
-			acc_end = mix16BCt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
-			acc		= avalanche(acc);
-			acc_end = len129To240Internal02Ct<8, nbRounds>(acc_end, value, secret, seed64);
+			acc							= len129To240Internal01Ct<0, 8>(acc, value, secret, seed64);
+			acc_end						= mix16BCt(value + length - 16, secret + secretSizeMin - midSizeLastOffset, seed64);
+			acc							= avalanche(acc);
+			acc_end						= len129To240Internal02Ct<8, nbRounds>(acc_end, value, secret, seed64);
 			return avalanche(acc + acc_end);
 		}
 	}

@@ -60,7 +60,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename derived_type, typename value_type, typename iterator_type> constexpr auto generateTupleOfInvokeParsePtrArrays() {
-		constexpr auto& tuple	 = final_tuple_data<value_type>::staticData;
+		constexpr auto& tuple	 = final_tuple_static_data<value_type>::staticData;
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
 		return generateTupleOfInvokeParsePtrArraysInternal<options, tuple, derived_type, value_type, iterator_type>(std::make_index_sequence<tupleSize>{});
 	}
@@ -113,9 +113,8 @@ namespace jsonifier_internal {
 					}
 
 					static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& iter, auto& end, const auto keySize) {
-						static constexpr auto hashSubTuple			   = std::get<hashSubTupleIndex>(hash_tuple<value_type>::tuple);
 						static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(functionPtrArray);
-						auto memberIt								   = hashSubTuple.template find<subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1);
+						auto memberIt = hash_tuple<value_type>::template find<hashSubTupleIndex, subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1);
 						if (memberIt != subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) [[likely]] {
 							if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
 								++iter;
@@ -138,7 +137,7 @@ namespace jsonifier_internal {
 						}
 						return true;
 					};
-					frozenMap.template find<functionLambda>(keySize, value, iter, end, keySize);
+					hash_tuple<value_type>::template find<functionLambda>(keySize, value, iter, end, keySize);
 				}
 			} else {
 				skipToEndOfValue(iter, end);

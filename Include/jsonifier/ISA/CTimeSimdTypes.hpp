@@ -491,8 +491,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> 
-	constexpr void mm256StoreUSi256(value_type* ptr, const __m256x& data) {
+	template<typename value_type> constexpr void mm256StoreUSi256(value_type* ptr, const __m256x& data) {
 		for (int32_t i = 0; i < 4; ++i) {
 			ptr[i] = static_cast<size_t>(data.m256x_uint64[i]);
 		}
@@ -807,8 +806,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> 
-	constexpr void mm512StoreUSi512(value_type* ptr, const __m512x& data) {
+	template<typename value_type> constexpr void mm512StoreUSi512(value_type* ptr, const __m512x& data) {
 		for (int32_t i = 0; i < 8; ++i) {
 			ptr[i] = static_cast<size_t>(data.m512x_uint64[i]);
 		}
