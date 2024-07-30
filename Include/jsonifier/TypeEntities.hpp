@@ -95,9 +95,27 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<template<uint64_t> typename function_wrapper, std::size_t... indices> JSONIFIER_INLINE static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+	template<template<uint64_t> typename function_wrapper, std::size_t... indices> static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
 		using function_type = decltype(&function_wrapper<0>::op);
 		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices>::op... } };
+	}
+
+	template<std::size_t... Indices> struct reverse_index_sequence {};
+
+	template<std::size_t N, std::size_t... Indices> struct make_reverse_index_sequence_impl {
+		using type = typename make_reverse_index_sequence_impl<N - 1, Indices..., N - 1>::type;
+	};
+
+	template<std::size_t... Indices> struct make_reverse_index_sequence_impl<0, Indices...> {
+		using type = reverse_index_sequence<Indices...>;
+	};
+
+	template<std::size_t N> using make_reverse_index_sequence = typename make_reverse_index_sequence_impl<N>::type;
+
+	template<std::size_t N, const auto& function, typename... arg_types> constexpr void forEach(arg_types&&... args) {
+		[&]<std::size_t... I>(reverse_index_sequence<I...>) constexpr {
+			(function(std::integral_constant<std::size_t, I>{}, std::forward<arg_types>(args)...), ...);
+		}(make_reverse_index_sequence<N>{});
 	}
 
 }

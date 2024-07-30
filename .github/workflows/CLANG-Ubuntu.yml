@@ -29,6 +29,10 @@ jobs:
             chmod u+x llvm.sh
             sudo ./llvm.sh 18
 
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
     - name: Configure CMake for Jsonifier
       working-directory: ./
       run: |

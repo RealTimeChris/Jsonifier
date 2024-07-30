@@ -78,8 +78,7 @@ namespace jsonifier_internal {
 				return;
 			}
 			bool isItFirst{ true };
-			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
-			static constexpr auto frozenMap{ makeHashTuple<value_type_new>() };
+			static constexpr auto memberCount	   = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
 			static constexpr auto functionPtrArray = generateTupleOfInvokeParsePtrArrays<options, derived_type, value_type, iterator_type>();
 			if constexpr (memberCount > 0) {
 				while (true) {
@@ -140,7 +139,7 @@ namespace jsonifier_internal {
 					hash_tuple<value_type>::template find<functionLambda>(keySize, value, iter, end, keySize);
 				}
 			} else {
-				skipToEndOfValue(iter, end);
+				skipToNextValue(iter, end);
 			}
 		}
 	};
@@ -269,12 +268,16 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::optional_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::optional_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			if (*iter == 'n') [[unlikely]] {
-				if (parseNull(iter)) [[unlikely]] {
-					return;
+			if (*iter != 'n') [[unlikely]] {
+				parse_impl<derived_type, decltype(*value)>::template impl<options>(value.emplace(), iter, end);
+			} else {
+				if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
+					++iter;
+				} else {
+					iter += 4;
 				}
+				return;
 			}
-			parse_impl<derived_type, decltype(*value)>::template impl<options>(value.emplace(), iter, end);
 		}
 	};
 

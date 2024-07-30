@@ -27,6 +27,10 @@ jobs:
             sudo apt-get install build-essential
             sudo apt-get install g++-12
 
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
     - name: Configure CMake for Jsonifier
       working-directory: ./
       run: |

@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
 			index += indentTotal;
 		} else {
-			static constexpr auto n = 1;
+			auto n = 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -238,7 +238,7 @@ namespace jsonifier_internal {
 			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
 			index += indentTotal;
 		} else {
-			static constexpr auto n = 1;
+			auto n = index + 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -267,7 +267,7 @@ namespace jsonifier_internal {
 				return;
 			}
 		}
-		static constexpr auto n = 1;
+		auto n = 1;
 		if (index + n >= buffer.size()) [[unlikely]] {
 			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 		}
@@ -295,7 +295,7 @@ namespace jsonifier_internal {
 				return;
 			}
 		}
-		static constexpr auto n = 1;
+		auto n = index + 1;
 		if (index + n >= buffer.size()) [[unlikely]] {
 			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 		}
@@ -303,25 +303,27 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index, uint64_t size) {
 		if constexpr (options.optionsReal.prettify) {
-			++options.indent;
-			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			if (size > 0) {
+				++options.indent;
+				auto indent		 = options.indent;
+				auto indentSize	 = options.optionsReal.indentSize;
+				auto indentTotal = indent * indentSize;
+				auto n			 = 3 + indentTotal;
+				if (index + n >= buffer.size()) [[unlikely]] {
+					buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+				}
+				buffer[index] = '[';
+				++index;
+				buffer[index] = '\n';
+				++index;
+				std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+				index += indentTotal;
+				return;
 			}
-			buffer[index] = '[';
-			++index;
-			buffer[index] = '\n';
-			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
-			index += indentTotal;
-			return;
 		}
-		static constexpr auto n = 1;
+		auto n = 1;
 		if (index + n >= buffer.size()) [[unlikely]] {
 			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 		}
@@ -329,20 +331,22 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index, uint64_t size) {
 		if constexpr (options.optionsReal.prettify) {
-			--options.indent;
-			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			if (size > 0) {
+				--options.indent;
+				auto indent		 = options.indent;
+				auto indentSize	 = options.optionsReal.indentSize;
+				auto indentTotal = indent * indentSize;
+				auto n			 = 3 + indentTotal;
+				if (index + n >= buffer.size()) [[unlikely]] {
+					buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+				}
+				buffer[index] = '\n';
+				++index;
+				std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+				index += indentTotal;
 			}
-			buffer[index] = '\n';
-			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
-			index += indentTotal;
 		}
 		auto n = index + 1;
 		if (index + n >= buffer.size()) [[unlikely]] {

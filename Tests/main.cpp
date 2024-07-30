@@ -2411,6 +2411,28 @@ alt="" width="400"/></p>
 
 //#include "ConformanceTests.hpp"
 
+inline std::string getCurrentWorkingDirectory() {
+	try {
+		return std::filesystem::current_path().string();
+	} catch (const std::filesystem::filesystem_error& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+		return "";
+	}
+}
+
+inline void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
+#if defined(JSONIFIER_WIN)
+	static constexpr std::string_view pythonName{ "python " };
+#else
+	static constexpr std::string_view pythonName{ "python3 " };
+#endif
+	std::string command = static_cast<std::string>(pythonName) + scriptPath + " " + argument01 + " " + argument02;
+	int32_t result		= system(command.c_str());
+	if (result != 0) {
+		std::cout << "Error: Failed to execute Python script. Command exited with code " << result << std::endl;
+	}
+}
+
 int32_t main() {
 	try {
 		test_generator<test_struct> testJsonData{};
@@ -2504,7 +2526,7 @@ int32_t main() {
 		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, iterationsVal, "Canada Test (Minified)">::run(canadaMinifiedData);
 		newerString += static_cast<std::string>(section08);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults); 
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, iterationsVal, "Twitter Test (Prettified)">::run(twitterData);
 		newerString += static_cast<std::string>(section09);
 		newerString += testResults.markdownResults;
@@ -2554,6 +2576,7 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 		fileLoader04.saveFile(resultsStringJson);
 		fileLoader01.saveFile(newerString);
+		executePythonScript(static_cast<std::string>(BASE_PATH) + "/GenerateGraphs.py", basePath + "/Results.json", static_cast<std::string>(GRAPHS_PATH));
 	} catch (std::runtime_error& e) {
 		std::cout << e.what() << std::endl;
 	} catch (std::out_of_range& e) {

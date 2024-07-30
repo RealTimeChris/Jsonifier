@@ -106,10 +106,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-			[[likely]] default: {
-				++iter;
-				break;
-			}
+				[[likely]] default : {
+					++iter;
+					break;
+				}
 		}
 	}
 
@@ -126,19 +126,19 @@ namespace jsonifier_internal {
 				[[unlikely]] case '}':
 				[[unlikely]] case ']': {
 					--currentDepth;
+					++iter;
 					break;
 				}
 				[[unlikely]] case ':': {
 					++iter;
-					skipToNextValue(iter, end);
 					break;
 				}
 				[[unlikely]] case ',': {
-					if (currentDepth == 1) {
+					if (currentDepth <= 1) {
 						return;
 					}
 					++iter;
-					skipToNextValue(iter, end);
+					++iter;
 					break;
 				}
 				[[unlikely]] case '\\': {
@@ -171,10 +171,10 @@ namespace jsonifier_internal {
 					++iter;
 					break;
 				}
-				[[likely]] default: {
-					++iter;
-					break;
-				}
+					[[likely]] default : {
+						++iter;
+						break;
+					}
 			}
 		}
 	}
@@ -306,10 +306,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-			[[likely]] default: {
-				++iter;
-				break;
-			}
+				[[likely]] default : {
+					++iter;
+					break;
+				}
 		}
 	}
 
@@ -453,10 +453,10 @@ namespace jsonifier_internal {
 					skipNumber(iter, end);
 					break;
 				}
-				[[likely]] default: {
-					++iter;
-					break;
-				}
+					[[likely]] default : {
+						++iter;
+						break;
+					}
 			}
 		}
 		return currentCount;
