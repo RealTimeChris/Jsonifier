@@ -95,7 +95,7 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<template<uint64_t> typename function_wrapper, std::size_t... indices> static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+	template<template<uint64_t> typename function_wrapper, std::size_t... indices> JSONIFIER_INLINE static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
 		using function_type = decltype(&function_wrapper<0>::op);
 		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices>::op... } };
 	}

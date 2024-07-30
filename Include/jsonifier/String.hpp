@@ -217,41 +217,41 @@ namespace jsonifier {
 			return result;
 		}
 
-		constexpr size_type maxSize() {
+		JSONIFIER_INLINE constexpr size_type maxSize() {
 			const size_type allocMax   = allocator::maxSize();
 			const size_type storageMax = jsonifier_internal::max(allocMax, static_cast<size_type>(bufSize));
 			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
-		constexpr iterator_type begin() noexcept {
+		JSONIFIER_INLINE constexpr iterator_type begin() noexcept {
 			return iterator_type{ dataVal };
 		}
 
-		constexpr iterator_type end() noexcept {
+		JSONIFIER_INLINE constexpr iterator_type end() noexcept {
 			return iterator_type{ dataVal + sizeVal };
 		}
 
-		constexpr reverse_iterator rbegin() noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator{ end() };
 		}
 
-		constexpr reverse_iterator rend() noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator{ begin() };
 		}
 
-		constexpr const_iterator begin() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
 			return const_iterator{ dataVal };
 		}
 
-		constexpr const_iterator end() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
 			return const_iterator{ dataVal + sizeVal };
 		}
 
-		constexpr const_reverse_iterator rbegin() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator{ end() };
 		}
 
-		constexpr const_reverse_iterator rend() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator{ begin() };
 		}
 
@@ -467,15 +467,15 @@ namespace jsonifier {
 			}
 		}
 
-		constexpr size_type capacity() const {
+		JSONIFIER_INLINE constexpr size_type capacity() const {
 			return capacityVal;
 		}
 
-		constexpr size_type size() const {
+		JSONIFIER_INLINE constexpr size_type size() const {
 			return sizeVal;
 		}
 
-		constexpr bool empty() const {
+		JSONIFIER_INLINE constexpr bool empty() const {
 			return sizeVal == 0;
 		}
 

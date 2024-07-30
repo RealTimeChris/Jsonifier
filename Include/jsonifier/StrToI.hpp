@@ -33,11 +33,11 @@
 
 namespace jsonifier_internal {
 
-	constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
+	JSONIFIER_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
 		return a <= (std::numeric_limits<uint64_t>::max)() - b;
 	}
 
-	constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
+	JSONIFIER_INLINE constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
 		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
 		return a <= b;
 	}
@@ -85,7 +85,7 @@ namespace jsonifier_internal {
 #undef expr_sepr
 	}
 
-	template<typename value_type, typename char_type> constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
+	template<typename value_type, typename char_type> JSONIFIER_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
 		if (!digitTableBool[static_cast<uint64_t>(*c)]) [[unlikely]] {
 			return false;
 		}

@@ -358,8 +358,7 @@ namespace jkj {
 			using format					  = Format;
 			using carrier_uint				  = CarrierUInt;
 			static constexpr int carrier_bits = int(detail::value_bits<carrier_uint>::value);
-			using exponent_int					   = ExponentInt;
-			static constexpr auto carrier_uint_val = carrier_uint(1);
+			using exponent_int				  = ExponentInt;
 
 			// Extract exponent bits from a bit pattern.
 			// The result must be aligned to the LSB so that there is no additional zero paddings
@@ -372,17 +371,17 @@ namespace jkj {
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. The result does not contain the implicit bit.
 			static constexpr carrier_uint extract_significand_bits(carrier_uint u) noexcept {
-				return carrier_uint(u & ((carrier_uint_val << format::significand_bits) - 1u));
+				return carrier_uint(u & ((carrier_uint(1) << format::significand_bits) - 1u));
 			}
 
 			// Remove the exponent bits and extract significand bits together with the sign bit.
 			static constexpr carrier_uint remove_exponent_bits(carrier_uint u) noexcept {
-				return carrier_uint(u & ~(((carrier_uint_val << format::exponent_bits) - 1u) << format::significand_bits));
+				return carrier_uint(u & ~(((carrier_uint(1) << format::exponent_bits) - 1u) << format::significand_bits));
 			}
 
 			// Shift the obtained signed significand bits to the left by 1 to remove the sign bit.
 			static constexpr carrier_uint remove_sign_bit_and_shift(carrier_uint u) noexcept {
-				return carrier_uint((carrier_uint(u) << 1) & ((((carrier_uint_val << (Format::total_bits - 1)) - 1u) << 1) | 1u));
+				return carrier_uint((carrier_uint(u) << 1) & ((((carrier_uint(1) << (Format::total_bits - 1)) - 1u) << 1) | 1u));
 			}
 
 			// Obtain the actual value of the binary exponent from the extracted exponent bits.
@@ -393,40 +392,28 @@ namespace jkj {
 			// Obtain the actual value of the binary significand from the extracted significand bits
 			// and exponent bits.
 			static constexpr carrier_uint binary_significand(carrier_uint significand_bits, exponent_int exponent_bits) noexcept {
-				return carrier_uint(exponent_bits == 0 ? significand_bits : (significand_bits | (carrier_uint_val << format::significand_bits)));
+				return carrier_uint(exponent_bits == 0 ? significand_bits : (significand_bits | (carrier_uint(1) << format::significand_bits)));
 			}
 
 			/* Various boolean observer functions */
 
-			static constexpr auto total_bits   = format::significand_bits + format::exponent_bits;
-			static constexpr carrier_uint mask = (carrier_uint_val << total_bits) - 1u;
-
 			static constexpr bool is_nonzero(carrier_uint u) noexcept {
-				return (u & mask) != 0;
+				return (u & ((carrier_uint(1) << (format::significand_bits + format::exponent_bits)) - 1u)) != 0;
 			}
-
 			static constexpr bool is_positive(carrier_uint u) noexcept {
-				return u < (carrier_uint_val << total_bits);
+				return u < (carrier_uint(1) << (format::significand_bits + format::exponent_bits));
 			}
-
 			static constexpr bool is_negative(carrier_uint u) noexcept {
 				return !is_positive(u);
 			}
-
-			static constexpr auto max_exponent_bits = (exponent_int(1) << format::exponent_bits) - 1;
-
 			static constexpr bool is_finite(exponent_int exponent_bits) noexcept {
-				return exponent_bits != max_exponent_bits;
+				return exponent_bits != ((exponent_int(1) << format::exponent_bits) - 1);
 			}
-
-			static constexpr auto significand_mask = ((((carrier_uint_val << (Format::total_bits - 1)) - 1u) << 1) | 1u);
-
 			static constexpr bool has_all_zero_significand_bits(carrier_uint u) noexcept {
-				return ((u << 1) & significand_mask) == 0;
+				return ((u << 1) & ((((carrier_uint(1) << (Format::total_bits - 1)) - 1u) << 1) | 1u)) == 0;
 			}
-
 			static constexpr bool has_even_significand_bits(carrier_uint u) noexcept {
-				return (u & 1) == 0;
+				return u % 2 == 0;
 			}
 		};
 
@@ -2496,7 +2483,6 @@ namespace jkj {
 				using format::max_exponent;
 				using format::min_exponent;
 				using format::significand_bits;
-				static constexpr auto carrier_uint_val = carrier_uint(1);
 
 				static constexpr int kappa = log::floor_log10_pow2(carrier_bits - significand_bits - 2) - 1;
 				static_assert(kappa >= 1, "");
@@ -2519,11 +2505,11 @@ namespace jkj {
 
 				static constexpr int case_shorter_interval_left_endpoint_lower_threshold = 2;
 				static constexpr int case_shorter_interval_left_endpoint_upper_threshold =
-					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint_val << (significand_bits + 2)) - 1) + 1>(10) / 3);
+					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint(1) << (significand_bits + 2)) - 1) + 1>(10) / 3);
 
 				static constexpr int case_shorter_interval_right_endpoint_lower_threshold = 0;
 				static constexpr int case_shorter_interval_right_endpoint_upper_threshold =
-					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint_val << (significand_bits + 1)) + 1) + 1>(10) / 3);
+					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint(1) << (significand_bits + 1)) + 1) + 1>(10) / 3);
 
 				static constexpr int shorter_interval_tie_lower_threshold = -log::floor_log5_pow2_minus_log5_3(significand_bits + 4) - 2 - significand_bits;
 				static constexpr int shorter_interval_tie_upper_threshold = -log::floor_log5_pow2(significand_bits + 2) - 2 - significand_bits;
@@ -2620,7 +2606,7 @@ namespace jkj {
 							// zi <= floor((2^(p+1) + 1) * 20/3) <= ceil((2^(p+1) + 1)/3) * 20.
 							// This computation does not overflow for any of the formats I care about.
 							carrier_uint decimal_significand =
-								div::divide_by_pow10<1, carrier_uint, carrier_uint(((((carrier_uint_val << (significand_bits + 1)) + 1) / 3) + 1) * 20)>(zi);
+								div::divide_by_pow10<1, carrier_uint, carrier_uint(((((carrier_uint(1) << (significand_bits + 1)) + 1) / 3) + 1) * 20)>(zi);
 
 							// If succeed, remove trailing zeros if necessary and return.
 							if (decimal_significand * 10 >= xi) {
@@ -2641,7 +2627,7 @@ namespace jkj {
 						}
 
 						// Normal interval case.
-						two_fc |= (carrier_uint_val << (format::significand_bits + 1));
+						two_fc |= (carrier_uint(1) << (format::significand_bits + 1));
 					}
 					// Is the input a subnormal number?
 					else {
@@ -2686,7 +2672,7 @@ namespace jkj {
 					// Using an upper bound on zi, we might be able to optimize the division
 					// better than the compiler; we are computing zi / big_divisor here.
 					carrier_uint decimal_significand =
-						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint_val << (significand_bits + 1)) * big_divisor - 1)>(z_result.integer_part);
+						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint(1) << (significand_bits + 1)) * big_divisor - 1)>(z_result.integer_part);
 					auto r = remainder_type_(z_result.integer_part - big_divisor * decimal_significand);
 
 					do {
@@ -2797,7 +2783,7 @@ namespace jkj {
 					// Is the input a normal number?
 					if (binary_exponent != 0) {
 						binary_exponent += format::exponent_bias - format::significand_bits;
-						two_fc |= (carrier_uint_val << (format::significand_bits + 1));
+						two_fc |= (carrier_uint(1) << (format::significand_bits + 1));
 					}
 					// Is the input a subnormal number?
 					else {
@@ -2846,7 +2832,7 @@ namespace jkj {
 					// Using an upper bound on xi, we might be able to optimize the division
 					// better than the compiler; we are computing xi / big_divisor here.
 					carrier_uint decimal_significand =
-						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint_val << (significand_bits + 1)) * big_divisor - 1)>(x_result.integer_part);
+						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint(1) << (significand_bits + 1)) * big_divisor - 1)>(x_result.integer_part);
 					auto r = remainder_type_(x_result.integer_part - big_divisor * decimal_significand);
 
 					if (r != 0) {
@@ -2916,7 +2902,7 @@ namespace jkj {
 							shorter_interval = true;
 						}
 						binary_exponent += format::exponent_bias - format::significand_bits;
-						two_fc |= (carrier_uint_val << (format::significand_bits + 1));
+						two_fc |= (carrier_uint(1) << (format::significand_bits + 1));
 					}
 					// Is the input a subnormal number?
 					else {
@@ -2949,7 +2935,7 @@ namespace jkj {
 					// Using an upper bound on zi, we might be able to optimize the division better
 					// than the compiler; we are computing zi / big_divisor here.
 					carrier_uint decimal_significand =
-						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint_val << (significand_bits + 1)) * big_divisor - 1)>(zi);
+						div::divide_by_pow10<kappa + 1, carrier_uint, carrier_uint((carrier_uint(1) << (significand_bits + 1)) * big_divisor - 1)>(zi);
 					const auto r = remainder_type_(zi - big_divisor * decimal_significand);
 
 					do {

@@ -269,8 +269,10 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::optional_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::optional_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			if (parseNull(iter)) {
-				return;
+			if (*iter == 'n') [[unlikely]] {
+				if (parseNull(iter)) [[unlikely]] {
+					return;
+				}
 			}
 			parse_impl<derived_type, decltype(*value)>::template impl<options>(value.emplace(), iter, end);
 		}

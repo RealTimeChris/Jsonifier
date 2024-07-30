@@ -5,36 +5,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 822.6288006935213,
-            "medianAbsolutePercentageError": 1.7067417386224633
+            "resultSpeed": 636.285135991187,
+            "medianAbsolutePercentageError": 1.6456849905823343
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 1178.450988295719,
-            "medianAbsolutePercentageError": 0.9537801931593289
+            "resultSpeed": 874.6979691587296,
+            "medianAbsolutePercentageError": 2.4821414605046335
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 609.3334071677491,
-            "medianAbsolutePercentageError": 1.1997442793333672
+            "resultSpeed": 570.5919137628248,
+            "medianAbsolutePercentageError": 2.734945686780532
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1309.4226906094057,
-            "medianAbsolutePercentageError": 1.5404727192227186
+            "resultSpeed": 1058.3534774096445,
+            "medianAbsolutePercentageError": 1.9162720319959434
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 248.83048473931643,
-            "medianAbsolutePercentageError": 0.7983354460166894
+            "resultSpeed": 208.465774802923,
+            "medianAbsolutePercentageError": 0.963257162117814
          }
       ],
       "testName": "Json Test (Prettified)"
@@ -45,36 +45,36 @@
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 717.9116059484684,
-            "medianAbsolutePercentageError": 0.8310203401751669
+            "resultSpeed": 721.7026282643471,
+            "medianAbsolutePercentageError": 0.8627743807261411
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1051.6170960274342,
-            "medianAbsolutePercentageError": 0.020997032766483906
+            "resultSpeed": 888.672787076761,
+            "medianAbsolutePercentageError": 1.3763879221376678
          },
          {
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 627.0336115645474,
-            "medianAbsolutePercentageError": 0.9747268958409941
+            "resultSpeed": 578.6559447713589,
+            "medianAbsolutePercentageError": 1.9254841939781906
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 904.0224466889035,
-            "medianAbsolutePercentageError": 1.5952565298062427
+            "resultSpeed": 762.3316770412436,
+            "medianAbsolutePercentageError": 0.028696295692842183
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 178.2955966777277,
-            "medianAbsolutePercentageError": 2.1583372310135718
+            "resultSpeed": 158.03573346582743,
+            "medianAbsolutePercentageError": 1.514743153880492
          }
       ],
       "testName": "Json Test (Minified)"
@@ -85,36 +85,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 815.7350248538753,
-            "medianAbsolutePercentageError": 0.12470702373213569
+            "resultSpeed": 719.7686791581159,
+            "medianAbsolutePercentageError": 1.3239728542595224
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 1205.2178931548576,
-            "medianAbsolutePercentageError": 1.9382084720251591
+            "resultSpeed": 1016.7456429451591,
+            "medianAbsolutePercentageError": 1.7540146788650381
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 614.3871267640446,
-            "medianAbsolutePercentageError": 1.095154644817219
+            "resultSpeed": 682.085863562384,
+            "medianAbsolutePercentageError": 1.0987982747525973
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1192.1619772577137,
-            "medianAbsolutePercentageError": 1.0893996963911987
+            "resultSpeed": 1196.8371291617236,
+            "medianAbsolutePercentageError": 0.5927997373972124
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 141.41394145326143,
-            "medianAbsolutePercentageError": 0.7856910755361688
+            "resultSpeed": 128.59722431111223,
+            "medianAbsolutePercentageError": 1.4544619870862523
          }
       ],
       "testName": "Abc Test (Prettified)"
@@ -125,36 +125,36 @@
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 676.8847244715398,
-            "medianAbsolutePercentageError": 1.8920175242112973
+            "resultSpeed": 730.4772665249344,
+            "medianAbsolutePercentageError": 1.4107856227199054
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1060.582754256909,
-            "medianAbsolutePercentageError": 1.256990422260274
+            "resultSpeed": 945.6154719426619,
+            "medianAbsolutePercentageError": 0.9725173019383115
          },
          {
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 638.39613375285,
-            "medianAbsolutePercentageError": 0.9610724400335663
+            "resultSpeed": 613.9085371636658,
+            "medianAbsolutePercentageError": 0.02541908152516817
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 862.4121092095106,
-            "medianAbsolutePercentageError": 1.2159849845294042
+            "resultSpeed": 610.4530745812632,
+            "medianAbsolutePercentageError": 3.124139238639201
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 95.56183128815933,
-            "medianAbsolutePercentageError": 1.391981737362915
+            "resultSpeed": 101.58887141948195,
+            "medianAbsolutePercentageError": 0.6280175035704932
          }
       ],
       "testName": "Abc Test (Minified)"
@@ -165,36 +165,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 884.7195252079663,
-            "medianAbsolutePercentageError": 0.03666955051267772
+            "resultSpeed": 767.5160382181426,
+            "medianAbsolutePercentageError": 0.0672627462759257
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 2782.79433747722,
-            "medianAbsolutePercentageError": 0.017025150532183835
+            "resultSpeed": 2461.228883991707,
+            "medianAbsolutePercentageError": 0.03829400419256735
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 203.71368579932164,
-            "medianAbsolutePercentageError": 1.0588833302085525
+            "resultSpeed": 171.75944978379607,
+            "medianAbsolutePercentageError": 0.10152638866321018
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 2021.3081092557402,
-            "medianAbsolutePercentageError": 0.01911294767070275
+            "resultSpeed": 2106.5658355693404,
+            "medianAbsolutePercentageError": 0.05860230412307778
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 94.83541135254744,
-            "medianAbsolutePercentageError": 0.03796268679723504
+            "resultSpeed": 93.81677397260466,
+            "medianAbsolutePercentageError": 0.5008157325236172
          }
       ],
       "testName": "Discord Test (Prettified)"
@@ -205,36 +205,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 531.4549188123729,
-            "medianAbsolutePercentageError": 0.016338716774712242
+            "resultSpeed": 568.8049377419165,
+            "medianAbsolutePercentageError": 0.08421419752306138
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 1594.031443055533,
-            "medianAbsolutePercentageError": 0.02584041265637079
+            "resultSpeed": 1699.2696507971814,
+            "medianAbsolutePercentageError": 0.2570588364787689
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 92.85571157897644,
-            "medianAbsolutePercentageError": 0.22293224834770775
+            "resultSpeed": 99.24864547580864,
+            "medianAbsolutePercentageError": 0.015920651978997058
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1601.8686807604759,
-            "medianAbsolutePercentageError": 0.025073213144508565
+            "resultSpeed": 1661.9460549126134,
+            "medianAbsolutePercentageError": 0.16691276069918146
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 41.81467598053106,
-            "medianAbsolutePercentageError": 3.0194205260238145
+            "resultSpeed": 47.5966626483281,
+            "medianAbsolutePercentageError": 0.03390269552595451
          }
       ],
       "testName": "Discord Test (Minified)"
@@ -245,36 +245,36 @@
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 1219.3650244474575,
-            "medianAbsolutePercentageError": 0.7373718245940579
+            "resultSpeed": 1148.8765350717922,
+            "medianAbsolutePercentageError": 1.4101198002796034
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1186.7060835095258,
-            "medianAbsolutePercentageError": 0.027827701216217703
+            "resultSpeed": 1123.2052849876186,
+            "medianAbsolutePercentageError": 0.03465067625615654
          },
          {
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 973.9391673090582,
-            "medianAbsolutePercentageError": 0.017030914116300123
+            "resultSpeed": 813.3136684483051,
+            "medianAbsolutePercentageError": 1.6662043519906415
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 1204.4198441319554,
-            "medianAbsolutePercentageError": 0.00704537490756511
+            "resultSpeed": 1112.693874599449,
+            "medianAbsolutePercentageError": 0.02400901453185626
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 283.47202098270753,
-            "medianAbsolutePercentageError": 0.741715512116416
+            "resultSpeed": 270.0625224298166,
+            "medianAbsolutePercentageError": 0.9881886075737109
          }
       ],
       "testName": "Canada Test (Prettified)"
@@ -285,36 +285,36 @@
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 744.9069306278947,
-            "medianAbsolutePercentageError": 1.216735548088365
+            "resultSpeed": 735.9934702064252,
+            "medianAbsolutePercentageError": 1.0533514738936525
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 474.7647431453109,
-            "medianAbsolutePercentageError": 0.9914897384358242
+            "resultSpeed": 427.22405803567005,
+            "medianAbsolutePercentageError": 0.012537284812827974
          },
          {
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 411.05498598321145,
-            "medianAbsolutePercentageError": 1.0528468364071784
+            "resultSpeed": 416.6501037033266,
+            "medianAbsolutePercentageError": 1.013628724648992
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 387.3764982217799,
-            "medianAbsolutePercentageError": 2.274509124512221
+            "resultSpeed": 406.39326633657356,
+            "medianAbsolutePercentageError": 1.1194946461015562
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 101.50546152414701,
-            "medianAbsolutePercentageError": 1.4876892132240915
+            "resultSpeed": 102.23381079956646,
+            "medianAbsolutePercentageError": 0.7816811863994293
          }
       ],
       "testName": "Canada Test (Minified)"
@@ -325,36 +325,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 910.8491806560205,
-            "medianAbsolutePercentageError": 0.09218877805673148
+            "resultSpeed": 758.2326245696116,
+            "medianAbsolutePercentageError": 0.8063123866161772
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 2706.9072737530723,
-            "medianAbsolutePercentageError": 0.08793998496357974
+            "resultSpeed": 2291.846241663561,
+            "medianAbsolutePercentageError": 0.0907743417263065
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 250.3834202420825,
-            "medianAbsolutePercentageError": 1.479102157322838
+            "resultSpeed": 245.98799314848029,
+            "medianAbsolutePercentageError": 0.7119105220583591
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 2765.2553070040985,
-            "medianAbsolutePercentageError": 0.3662089667742318
+            "resultSpeed": 2645.5159102228804,
+            "medianAbsolutePercentageError": 0.028565782952137107
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 107.1360980031477,
-            "medianAbsolutePercentageError": 1.0189201007302897
+            "resultSpeed": 92.19108344257951,
+            "medianAbsolutePercentageError": 1.2965761032235295
          }
       ],
       "testName": "Twitter Test (Prettified)"
@@ -365,36 +365,36 @@
             "color": "dodgerblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 678.0448842899209,
-            "medianAbsolutePercentageError": 0.0256211297624516
+            "resultSpeed": 766.903849268949,
+            "medianAbsolutePercentageError": 0.06820568594668827
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 2185.797976384055,
-            "medianAbsolutePercentageError": 0.01603597715401181
+            "resultSpeed": 2201.2758406348344,
+            "medianAbsolutePercentageError": 0.016156731101969295
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 187.76523865339112,
-            "medianAbsolutePercentageError": 0.9489201202464926
+            "resultSpeed": 167.38269408517527,
+            "medianAbsolutePercentageError": 1.4140353666407515
          },
          {
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 2506.7709926030475,
-            "medianAbsolutePercentageError": 0.9486055653163513
+            "resultSpeed": 2399.4884014163363,
+            "medianAbsolutePercentageError": 1.057612913816914
          },
          {
             "color": "cadetblue",
             "resultType": "Read",
             "libraryName": "simdjson",
-            "resultSpeed": 73.8129729305801,
-            "medianAbsolutePercentageError": 0.8849283654145356
+            "resultSpeed": 65.44946438778403,
+            "medianAbsolutePercentageError": 1.3300924851131388
          }
       ],
       "testName": "Twitter Test (Minified)"
@@ -405,22 +405,22 @@
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 535.8311409423665,
-            "medianAbsolutePercentageError": 0.06712158717923031
+            "resultSpeed": 533.0463275335836,
+            "medianAbsolutePercentageError": 0.020260640231833167
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 507.4423941830886,
-            "medianAbsolutePercentageError": 0.001701519456877161
+            "resultSpeed": 484.26690873750925,
+            "medianAbsolutePercentageError": 0.05681543205398336
          },
          {
             "color": "cornflowerblue",
             "resultType": "Write",
             "libraryName": "simdjson",
-            "resultSpeed": 171.54982805370145,
-            "medianAbsolutePercentageError": 0.03219747963883887
+            "resultSpeed": 162.82486398133562,
+            "medianAbsolutePercentageError": 0.10089590088067037
          }
       ],
       "testName": "Minify Test"
@@ -431,15 +431,15 @@
             "color": "steelblue",
             "resultType": "Write",
             "libraryName": "jsonifier",
-            "resultSpeed": 1398.7882387994346,
-            "medianAbsolutePercentageError": 1.0543514403921257
+            "resultSpeed": 1293.5463957601091,
+            "medianAbsolutePercentageError": 2.5476544103674055
          },
          {
             "color": "skyblue",
             "resultType": "Write",
             "libraryName": "glaze",
-            "resultSpeed": 1304.1483861197846,
-            "medianAbsolutePercentageError": 0.6658771813029828
+            "resultSpeed": 1196.325157951592,
+            "medianAbsolutePercentageError": 0.09310510769677469
          }
       ],
       "testName": "Prettify Test"
@@ -450,15 +450,15 @@
             "color": "skyblue",
             "resultType": "Read",
             "libraryName": "glaze",
-            "resultSpeed": 907.2011043838801,
-            "medianAbsolutePercentageError": 0.03406094911382903
+            "resultSpeed": 861.8382152062007,
+            "medianAbsolutePercentageError": 0.08489571808702058
          },
          {
             "color": "teal",
             "resultType": "Read",
             "libraryName": "jsonifier",
-            "resultSpeed": 719.6514432043023,
-            "medianAbsolutePercentageError": 0.0036010082832994587
+            "resultSpeed": 787.2313061302987,
+            "medianAbsolutePercentageError": 0.010284508937645133
          }
       ],
       "testName": "Validate Test"

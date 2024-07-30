@@ -192,15 +192,15 @@ namespace jsonifier_internal {
 		return digiIsType(d, uint8_t(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
-	template<jsonifier::concepts::uint16_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
+	template<jsonifier::concepts::uint16_type return_type> JSONIFIER_INLINE constexpr return_type hasZero(const return_type value) noexcept {
 		return (((value - 0x0101) & ~value) & 0x8080);
 	}
 
-	template<jsonifier::concepts::uint32_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
+	template<jsonifier::concepts::uint32_type return_type> JSONIFIER_INLINE constexpr return_type hasZero(const return_type value) noexcept {
 		return (((value - 0x01010101) & ~value) & 0x80808080);
 	}
 
-	template<jsonifier::concepts::uint64_type return_type> constexpr return_type hasZero(const return_type value) noexcept {
+	template<jsonifier::concepts::uint64_type return_type> JSONIFIER_INLINE constexpr return_type hasZero(const return_type value) noexcept {
 		return (((value - 0x0101010101010101) & ~value) & 0x8080808080808080);
 	}
 
@@ -241,7 +241,7 @@ namespace jsonifier_internal {
 	constexpr std::array<double, 23> powersOfTenFloat = { 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21,
 		1e22 };
 
-	consteval uint32_t ceillog2(uint32_t x) {
+	JSONIFIER_INLINE consteval uint32_t ceillog2(uint32_t x) {
 		return x < 2 ? x : 1 + ceillog2(x >> 1);
 	}
 
