@@ -32,37 +32,55 @@
 
 namespace jsonifier_internal {
 
-	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type>
-	JSONIFIER_INLINE void invokeParse(value_type& value, iterator_type& iter, iterator_type& end) {
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type>
+	JSONIFIER_INLINE void invokeParse(value_type& value, iterator_type& iter, iterator_type& end, size_type keySize) {
+		if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
+			++iter;
+		} else {
+			iter += keySize + 2;
+		}
+		if (*iter == ':') [[likely]] {
+			++iter;
+		} else {
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			options.parserPtr->getErrors().emplace_back(
+				error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(iter - options.rootIter, end - iter, options.rootIter));
+			skipToNextValue(iter, end);
+			return;
+		}
 		static constexpr auto& ptr = std::get<index>(tuple).ptr();
 		using member_type		   = unwrap_t<decltype(value.*ptr)>;
 		parse_impl<derived_type, member_type>::template impl<options>(value.*ptr, iter, end);
 	}
 
-	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type> using invoke_parse_function_ptr =
-		decltype(&invokeParse<options, tuple, index, derived_type, value_type, iterator_type>);
+	template<const auto& options, const auto& tuple, size_t index, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type>
+	using invoke_parse_function_ptr = decltype(&invokeParse<options, tuple, index, derived_type, value_type, iterator_type, size_type>);
 
-	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, size_t... indices>
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type,
+		size_t... indices>
 	constexpr auto generateArrayOfInvokeParsePtrsInternal(std::index_sequence<indices...>) {
-		return std::array<invoke_parse_function_ptr<options, tuple, 0, derived_type, value_type, iterator_type>, sizeof...(indices)>{
-			&invokeParse<options, tuple, indices, derived_type, value_type, iterator_type>...
+		return std::array<invoke_parse_function_ptr<options, tuple, 0, derived_type, value_type, iterator_type, size_type>, sizeof...(indices)>{
+			&invokeParse<options, tuple, indices, derived_type, value_type, iterator_type, size_type>...
 		};
 	}
 
-	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type> constexpr auto generateArrayOfInvokeParsePtrs() {
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type>
+	constexpr auto generateArrayOfInvokeParsePtrs() {
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
-		return generateArrayOfInvokeParsePtrsInternal<options, tuple, derived_type, value_type, iterator_type>(std::make_index_sequence<tupleSize>{});
+		return generateArrayOfInvokeParsePtrsInternal<options, tuple, derived_type, value_type, iterator_type, size_type>(std::make_index_sequence<tupleSize>{});
 	}
 
-	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, size_t... indices>
+	template<const auto& options, const auto& tuple, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type,
+		size_t... indices>
 	constexpr auto generateTupleOfInvokeParsePtrArraysInternal(std::index_sequence<indices...>) {
-		return std::make_tuple(generateArrayOfInvokeParsePtrs<options, std::get<indices>(tuple), derived_type, value_type, iterator_type>()...);
+		return std::make_tuple(generateArrayOfInvokeParsePtrs<options, std::get<indices>(tuple), derived_type, value_type, iterator_type, size_type>()...);
 	}
 
-	template<const auto& options, typename derived_type, typename value_type, typename iterator_type> constexpr auto generateTupleOfInvokeParsePtrArrays() {
+	template<const auto& options, typename derived_type, typename value_type, typename iterator_type, jsonifier::concepts::uint64_type size_type>
+	constexpr auto generateTupleOfInvokeParsePtrArrays() {
 		constexpr auto& tuple	 = final_tuple_static_data<value_type>::staticData;
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(tuple)>>;
-		return generateTupleOfInvokeParsePtrArraysInternal<options, tuple, derived_type, value_type, iterator_type>(std::make_index_sequence<tupleSize>{});
+		return generateTupleOfInvokeParsePtrArraysInternal<options, tuple, derived_type, value_type, iterator_type, size_type>(std::make_index_sequence<tupleSize>{});
 	}
 
 	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct parse_impl<derived_type, value_type_new> {
@@ -79,7 +97,7 @@ namespace jsonifier_internal {
 			}
 			bool isItFirst{ true };
 			static constexpr auto memberCount	   = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
-			static constexpr auto functionPtrArray = generateTupleOfInvokeParsePtrArrays<options, derived_type, value_type, iterator_type>();
+			static constexpr auto functionPtrArray = generateTupleOfInvokeParsePtrArrays<options, derived_type, value_type, iterator_type, size_t>();
 			if constexpr (memberCount > 0) {
 				while (true) {
 					if (*iter == '}') [[unlikely]] {
@@ -113,28 +131,12 @@ namespace jsonifier_internal {
 
 					static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& iter, auto& end, const auto keySize) {
 						static constexpr auto subTupleFunctionPtrArray = std::get<hashSubTupleIndex>(functionPtrArray);
-						auto memberIt = hash_tuple<value_type>::template find<hashSubTupleIndex, subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1);
-						if (memberIt != subTupleFunctionPtrArray.data() + subTupleFunctionPtrArray.size()) [[likely]] {
-							if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
-								++iter;
-							} else {
-								iter += keySize + 2;
-							}
-							if (*iter == ':') [[likely]] {
-								++iter;
-							} else {
-								static constexpr auto sourceLocation{ std::source_location::current() };
-								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-									iter - options.rootIter, end - iter, options.rootIter));
-								skipToNextValue(iter, end);
-								return false;
-							}
-							(*memberIt)(value, iter, end);
-						} else [[unlikely]] {
+						if (!hash_tuple<value_type>::template find<hashSubTupleIndex, subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1, value, iter, end, keySize)) {
 							skipToNextValue(iter, end);
 							return false;
+						} else {
+							return true;
 						}
-						return true;
 					};
 					hash_tuple<value_type>::template find<functionLambda>(keySize, value, iter, end, keySize);
 				}
@@ -385,7 +387,7 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::char_type value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::char_type value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			value = static_cast<value_type_new>(*iter.operator->() + 1);
+			value = static_cast<value_type_new>(*(static_cast<const char*>(iter) + 1));
 			++iter;
 		}
 	};
@@ -393,9 +395,9 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::raw_json_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::raw_json_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			auto newPtr = iter.operator->();
+			auto newPtr = static_cast<const char*>(iter);
 			iter.skipToNextValue();
-			int64_t newSize = iter.operator->() - newPtr;
+			int64_t newSize = static_cast<const char*>(iter) - newPtr;
 			if (newSize > 0) [[likely]] {
 				jsonifier::string newString{};
 				newString.resize(static_cast<size_t>(newSize));

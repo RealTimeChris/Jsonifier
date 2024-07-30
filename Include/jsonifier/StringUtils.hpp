@@ -829,7 +829,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE void parseString(value_type&& value, iterator_type& iter, iterator_type& end, jsonifier::vector<error>& errors) {
-		auto newPtr = iter.operator->();
+		auto newPtr = static_cast<const char*>(iter);
 		if (*newPtr == 0x22u) [[likely]] {
 			++iter;
 		} else {
@@ -839,7 +839,7 @@ namespace jsonifier_internal {
 			skipToNextValue(iter, end);
 			return;
 		}
-		auto newSize = static_cast<uint64_t>(iter.operator->() - newPtr);
+		auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - newPtr);
 		if (static_cast<int64_t>(newSize) > 1) {
 			static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
 			if (newSize > newString.size()) [[unlikely]] {

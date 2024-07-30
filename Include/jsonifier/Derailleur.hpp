@@ -552,7 +552,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
 	JSONIFIER_INLINE uint64_t getKeyLength(iterator_type iter, iterator_type& end, jsonifier::vector<error>& errors) {
-		auto start{ iter.operator->() };
+		auto start{ static_cast<const char*>(iter) };
 
 		if (*iter == '"') [[unlikely]] {
 			++iter;
@@ -563,7 +563,7 @@ namespace jsonifier_internal {
 			return {};
 		}
 
-		return static_cast<uint64_t>(iter.operator->() - (start + 2));
+		return static_cast<uint64_t>(static_cast<const char*>(iter) - (start + 2));
 	}
 
 }

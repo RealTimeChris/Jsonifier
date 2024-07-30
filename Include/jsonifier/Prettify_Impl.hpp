@@ -36,9 +36,9 @@ namespace jsonifier_internal {
 			while (iter) {
 				switch (asciiClassesMap[static_cast<uint8_t>(*iter)]) {
 					[[likely]] case json_structural_type::String: {
-						auto valueNew = iter.operator->();
+						auto valueNew = static_cast<const char*>(iter);
 						++iter;
-						auto newSize = static_cast<uint64_t>(iter.operator->() - valueNew);
+						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
 						writeCharactersUnchecked(out, valueNew, newSize, index);
 						break;
 					}
@@ -57,9 +57,9 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Number: {
-						auto valueNew = iter.operator->();
+						auto valueNew = static_cast<const char*>(iter);
 						++iter;
-						auto newSize = static_cast<uint64_t>(iter.operator->() - valueNew);
+						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
 						writeCharactersUnchecked(out, valueNew, newSize, index);
 						break;
 					}

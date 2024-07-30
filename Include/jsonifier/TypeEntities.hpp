@@ -112,10 +112,22 @@ namespace jsonifier_internal {
 
 	template<std::size_t N> using make_reverse_index_sequence = typename make_reverse_index_sequence_impl<N>::type;
 
-	template<std::size_t N, const auto& function, typename... arg_types> constexpr void forEach(arg_types&&... args) {
+	template<std::size_t N, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(arg_types&&... args) {
 		[&]<std::size_t... I>(reverse_index_sequence<I...>) constexpr {
 			(function(std::integral_constant<std::size_t, I>{}, std::forward<arg_types>(args)...), ...);
 		}(make_reverse_index_sequence<N>{});
+	}
+	
+	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
+	JSONIFIER_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
+		if constexpr (currentIndex < std::variant_size_v<jsonifier_internal::unwrap_t<variant_type>>) {
+			variant_type&& variantNew = std::forward<variant_type>(variant);
+			if (variantNew.index() == currentIndex) {
+				function(std::get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
+				return;
+			}
+			visit<function, currentIndex + 1>(variantNew, std::forward<arg_types>(args)...);
+		}
 	}
 
 }

@@ -158,9 +158,9 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::String, derived_type> {
 		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
-			auto newPtr = iter.operator->();
+			auto newPtr = static_cast<const char*>(iter);
 			++iter;
-			auto endPtr = iter.operator->();
+			auto endPtr = static_cast<const char*>(iter);
 			newPtr		= skipWs(newPtr);
 			if (newPtr == endPtr || *newPtr != '"') {
 				static constexpr auto sourceLocation{ std::source_location::current() };
@@ -215,9 +215,9 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Number, derived_type> {
 		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
-			auto newPtr = iter.operator->();
+			auto newPtr = static_cast<const char*>(iter);
 			++iter;
-			auto endPtr	 = iter.operator->();
+			auto endPtr	 = static_cast<const char*>(iter);
 			newPtr		 = skipWs(iter);
 			auto newSize = endPtr - newPtr;
 			if (!iter || (newSize > 1 && *newPtr == 0x30u && numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
@@ -291,7 +291,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Bool, derived_type> {
 		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
-			auto newPtr = iter.operator->();
+			auto newPtr = static_cast<const char*>(iter);
 			++iter;
 			static constexpr char falseStr[]{ "false" };
 			static constexpr char trueStr[]{ "true" };
@@ -313,7 +313,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Null, derived_type> {
 		template<typename validator_type, typename iterator_type> JSONIFIER_INLINE static bool impl(iterator_type&& iter, validator_type& validatorRef) {
-			auto newPtr = iter.operator->();
+			auto newPtr = static_cast<const char*>(iter);
 			++iter;
 			newPtr = skipWs(newPtr);
 			static constexpr char nullStr[]{ "null" };

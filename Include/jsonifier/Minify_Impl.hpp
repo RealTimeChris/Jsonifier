@@ -32,7 +32,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> struct minify_impl {
 		template<const minify_options_internal<derived_type>& options, jsonifier::concepts::string_t string_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(iterator_type&& iter, string_type& out, uint64_t& index) noexcept {
-			auto previousPtr = iter.operator->();
+			auto previousPtr = static_cast<const char*>(iter);
 			int64_t currentDistance{};
 
 			++iter;
@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 			while (iter) {
 				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {
 					[[likely]] case json_structural_type::String: {
-						currentDistance = iter.operator->() - previousPtr;
+						currentDistance = static_cast<const char*>(iter) - previousPtr;
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
 						auto newSize = static_cast<uint64_t>(currentDistance) + 1;
@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
-						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < iter.operator->())) {
+						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < static_cast<const char*>(iter))) {
 						}
 						if (currentDistance > 0) [[likely]] {
 							writeCharactersUnchecked(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 						return;
 					}
 				}
-				previousPtr = iter.operator->();
+				previousPtr = static_cast<const char*>(iter);
 				++iter;
 			}
 			writeCharacterUnchecked(*previousPtr, out, index);
