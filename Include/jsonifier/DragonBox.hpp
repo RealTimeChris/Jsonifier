@@ -355,9 +355,9 @@ namespace jkj {
 			static_assert(detail::value_bits<ExponentInt>::value >= Format::exponent_bits + 1, "jkj::dragonbox: insufficient number of bits");
 			static_assert(detail::stdr::is_signed<ExponentInt>::value, "");
 
-			using format					  = Format;
-			using carrier_uint				  = CarrierUInt;
-			static constexpr int carrier_bits = int(detail::value_bits<carrier_uint>::value);
+			using format						   = Format;
+			using carrier_uint					   = CarrierUInt;
+			static constexpr int carrier_bits	   = int(detail::value_bits<carrier_uint>::value);
 			using exponent_int					   = ExponentInt;
 			static constexpr auto carrier_uint_val = carrier_uint(1);
 

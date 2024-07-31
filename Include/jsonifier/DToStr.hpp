@@ -177,10 +177,10 @@ namespace jsonifier_internal {
 		Raw raw;
 		std::memcpy(&raw, &val, sizeof(value_type));
 
-		constexpr bool isFloat			 = std::is_same_v<float, value_type>;
+		constexpr bool isFloat			= std::is_same_v<float, value_type>;
 		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		bool sign						 = (raw >> (sizeof(value_type) * 8 - 1));
-		int32_t expRaw					 = raw << 1 >> (sizeof(Raw) * 8 - exponentBits);
+		bool sign						= (raw >> (sizeof(value_type) * 8 - 1));
+		int32_t expRaw					= raw << 1 >> (sizeof(Raw) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buf, "null", 4);
@@ -198,10 +198,10 @@ namespace jsonifier_internal {
 		if constexpr (isFloat) {
 			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::remove);
 
-			uint32_t sigDec		 = uint32_t(v.significand);
-			int32_t expDec			 = v.exponent;
+			uint32_t sigDec			= uint32_t(v.significand);
+			int32_t expDec			= v.exponent;
 			const int32_t numDigits = fastDigitCount(sigDec);
-			int32_t dotPos			 = numDigits + expDec;
+			int32_t dotPos			= numDigits + expDec;
 
 			if (-6 < dotPos && dotPos <= 9) {
 				if (dotPos <= 0) {
@@ -213,7 +213,7 @@ namespace jsonifier_internal {
 					}
 					return writeU32Len1To9(buf, sigDec);
 				} else {
-					auto numEnd		   = writeU32Len1To9(buf, sigDec);
+					auto numEnd			  = writeU32Len1To9(buf, sigDec);
 					int32_t digitsWritten = int32_t(numEnd - buf);
 					if (dotPos < digitsWritten) {
 						std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
@@ -251,7 +251,7 @@ namespace jsonifier_internal {
 			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::ignore);
 
 			uint64_t sigDec = v.significand;
-			int32_t expDec	 = v.exponent;
+			int32_t expDec	= v.exponent;
 
 			int32_t sigLen = 17;
 			sigLen -= (sigDec < 100000000ull * 100000000ull);
@@ -262,8 +262,8 @@ namespace jsonifier_internal {
 				if (dotPos <= 0) {
 					auto numHdr = buf + (2 - dotPos);
 					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-					buf[0]		 = '0';
-					buf[1]		 = '.';
+					buf[0]		= '0';
+					buf[1]		= '.';
 					buf += 2;
 					std::memset(buf, '0', numHdr - buf);
 					return numEnd;

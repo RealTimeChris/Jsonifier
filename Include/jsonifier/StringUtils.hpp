@@ -169,7 +169,7 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE integer_type copyAndFindParse(const void* string1, void* string2, simd_type& simdValue) {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		std::memcpy(string2, string1, sizeof(simd_type));
-		constexpr uint64_t mask	 = repeatByte<0b01111111, integer_type>();
+		static constexpr uint64_t mask	 = repeatByte<0b01111111, integer_type>();
 		const uint64_t lo7		 = simdValue & mask;
 		const uint64_t quote	 = (lo7 ^ repeatByte<'"', integer_type>()) + mask;
 		const uint64_t backslash = (lo7 ^ repeatByte<'\\', integer_type>()) + mask;
@@ -248,8 +248,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -274,8 +274,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -300,8 +300,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -325,8 +325,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -413,8 +413,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -460,8 +460,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -507,8 +507,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -553,8 +553,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -631,8 +631,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+			static constexpr integer_type mask		 = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -663,8 +663,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+			static constexpr integer_type mask = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -695,8 +695,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+			static constexpr integer_type mask = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -726,8 +726,8 @@ namespace jsonifier_internal {
 		{
 			using integer_type				  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
 			using simd_type					  = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
+			static constexpr uint64_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
+			static constexpr integer_type mask		  = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
@@ -774,7 +774,7 @@ namespace jsonifier_internal {
 	}
 
 	template<string_literal string> JSONIFIER_INLINE bool compareStringAsInt(const char* iter) {
-		constexpr auto newString{ getStringAsInt<string>() };
+		static constexpr auto newString{ getStringAsInt<string>() };
 		convert_length_to_int_t<string.size()> newerString{};
 		std::memcpy(&newerString, iter, string.size());
 		return newString == newerString;
@@ -851,8 +851,8 @@ namespace jsonifier_internal {
 				newSize = static_cast<uint64_t>(newPtr - newString.data());
 				if (value.size() != newSize) {
 					value.resize(newSize);
+					std::memcpy(value.data(), newString.data(), newSize);
 				}
-				std::memcpy(value.data(), newString.data(), newSize);
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
@@ -884,8 +884,8 @@ namespace jsonifier_internal {
 			newSize = newerPtr - newString.data();
 			if (value.size() != static_cast<uint64_t>(newSize)) {
 				value.resize(static_cast<uint64_t>(newSize));
+				std::memcpy(value.data(), newString.data(), static_cast<uint64_t>(newSize));
 			}
-			std::memcpy(value.data(), newString.data(), static_cast<uint64_t>(newSize));
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,

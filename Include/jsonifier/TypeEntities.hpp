@@ -117,7 +117,7 @@ namespace jsonifier_internal {
 			(function(std::integral_constant<std::size_t, I>{}, std::forward<arg_types>(args)...), ...);
 		}(make_reverse_index_sequence<N>{});
 	}
-	
+
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
 		if constexpr (currentIndex < std::variant_size_v<jsonifier_internal::unwrap_t<variant_type>>) {

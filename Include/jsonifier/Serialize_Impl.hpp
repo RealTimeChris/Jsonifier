@@ -300,9 +300,7 @@ namespace jsonifier_internal {
 					writeCharacters(std::forward<buffer_type>(buffer), std::forward<index_type>(index), R"(\\)");
 					break;
 				}
-					[[likely]] default : {
-						writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value));
-					}
+				[[likely]] default: { writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value)); }
 			}
 			writeCharacter<json_structural_type::String>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}

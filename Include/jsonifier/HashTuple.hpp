@@ -309,7 +309,7 @@ namespace jsonifier_internal {
 				collided = false;
 				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
 					const auto hash			 = (returnValues.hasher.operator size_t() ^ pairsNew[y].data()[stringLength]);
-					const auto groupPos		 = (hash >> 8) % numGroups;
+					const auto groupPos		 = (hash) % numGroups;
 					const auto ctrlByte		 = static_cast<uint8_t>(hash);
 					const auto bucketSizeNew = bucketSizes[groupPos]++;
 					const auto slot			 = ((groupPos * bucketSize) + bucketSizeNew);
@@ -433,7 +433,7 @@ namespace jsonifier_internal {
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
 			if (!std::is_constant_evaluated()) {
 				JSONIFIER_ALIGN const auto hash		   = (hasher.operator size_t() ^ iter[constructionData.stringLength]);
-				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % constructionData.numGroups) * constructionData.bucketSize;
+				JSONIFIER_ALIGN const auto resultIndex = ((hash) % constructionData.numGroups) * constructionData.bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 															  simd_internal::gatherValues<simd_type>(constructionData.controlBytes.data() + resultIndex))) +
 					 resultIndex);
@@ -445,7 +445,7 @@ namespace jsonifier_internal {
 				}
 			} else {
 				JSONIFIER_ALIGN const auto hash		   = (hasher.operator size_t() ^ iter[constructionData.stringLength]);
-				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % constructionData.numGroups) * constructionData.bucketSize;
+				JSONIFIER_ALIGN const auto resultIndex = ((hash) % constructionData.numGroups) * constructionData.bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (constMatch(constructionData.controlBytes.data() + resultIndex, static_cast<control_type>(hash)) + resultIndex);
 				if (constCompareStringFunctions[constructionData.indices[finalIndex]](iter)) {
 					functionPtrs[constructionData.indices[finalIndex]](std::forward<arg_types>(args)...);
@@ -556,8 +556,6 @@ namespace jsonifier_internal {
 			return simd_sub_tuple<value_type, subTupleIndexNew>{};
 		} else if constexpr (sub_tuple_construction_static_data<value_type, subTupleIndexNew>::staticData.type == sub_tuple_type::minimal_char) {
 			return minimal_char_sub_tuple<value_type, subTupleIndexNew>{};
-		} else {
-			static_assert(std::false_type::value, "Failed to construct that sub-tuple.");
 		}
 	}
 

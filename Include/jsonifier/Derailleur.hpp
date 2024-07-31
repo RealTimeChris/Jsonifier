@@ -106,10 +106,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -171,10 +171,10 @@ namespace jsonifier_internal {
 					++iter;
 					break;
 				}
-					[[likely]] default : {
-						++iter;
-						break;
-					}
+				[[likely]] default: {
+					++iter;
+					break;
+				}
 			}
 		}
 	}
@@ -306,10 +306,10 @@ namespace jsonifier_internal {
 				skipNumber(iter, end);
 				break;
 			}
-				[[likely]] default : {
-					++iter;
-					break;
-				}
+			[[likely]] default: {
+				++iter;
+				break;
+			}
 		}
 	}
 
@@ -453,10 +453,10 @@ namespace jsonifier_internal {
 					skipNumber(iter, end);
 					break;
 				}
-					[[likely]] default : {
-						++iter;
-						break;
-					}
+				[[likely]] default: {
+					++iter;
+					break;
+				}
 			}
 		}
 		return currentCount;

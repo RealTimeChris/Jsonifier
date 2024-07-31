@@ -1,11 +1,8 @@
-/*
-* From: https://github.com/simdjson/simdjson/blob/master/src/internal/isadetection.h
-*/
 #include <iostream>
-#include <fstream>
-
+#include <cstring>
 #include <cstdint>
 #include <cstdlib>
+
 #if defined(_MSC_VER)
 	#include <intrin.h>
 #elif defined(HAVE_GCC_GET_CPUID) && defined(USE_GCC_GET_CPUID)
@@ -24,20 +21,6 @@ enum instruction_set {
 	AVX512F = 0x80,
 };
 
-#if defined(__PPC64__)
-
-inline static uint32_t detectSupportedArchitectures() {
-	return instruction_set::ALTIVEC;
-}
-
-#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
-
-inline static uint32_t detectSupportedArchitectures() {
-	return instruction_set::NEON;
-}
-
-#elif defined(__x86_64__) || defined(_M_AMD64)
-
 namespace {
 	const uint32_t cpuidAvx2Bit		= 1ul << 5;
 	const uint32_t cpuidBmi1Bit		= 1ul << 3;
@@ -50,7 +33,68 @@ namespace {
 	const uint32_t cpuidPopcntBit	= 1ul << 23;
 }
 
-inline static void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
+static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx);
+inline static uint64_t xgetbv();
+
+static void getCPUBrandString(char* brand) {
+	unsigned int regs[12];
+	regs[0] = 0x80000000;
+	cpuid(regs, regs + 1, regs + 2, regs + 3);
+
+	if (regs[0] < 0x80000004)
+		return;
+	regs[0] = 0x80000002;
+	cpuid(regs, regs + 1, regs + 2, regs + 3);
+	regs[4] = 0x80000003;
+	cpuid(regs + 4, regs + 5, regs + 6, regs + 7);
+	regs[8] = 0x80000004;
+	cpuid(regs + 8, regs + 9, regs + 10, regs + 11);
+
+	memcpy(brand, regs, sizeof(regs));
+}
+
+void printCPUInfo(uint32_t supportedISA) {
+#if defined(__x86_64__) || defined(_M_AMD64)
+	char brand[49] = { 0 };
+	getCPUBrandString(brand);
+	std::cout << "CPU Brand: " << brand << "\n";
+#endif
+	std::cout << "Supported Instruction Sets:\n";
+	if (supportedISA & instruction_set::LZCNT) {
+		std::cout << " - LZCNT\n";
+	}
+	if (supportedISA & instruction_set::POPCNT) {
+		std::cout << " - POPCNT\n";
+	}
+	if (supportedISA & instruction_set::BMI1) {
+		std::cout << " - BMI1\n";
+	}
+	if (supportedISA & instruction_set::BMI2) {
+		std::cout << " - BMI2\n";
+	}
+	if (supportedISA & instruction_set::NEON) {
+		std::cout << " - NEON\n";
+	}
+	if (supportedISA & instruction_set::AVX) {
+		std::cout << " - AVX\n";
+	}
+	if (supportedISA & instruction_set::AVX2) {
+		std::cout << " - AVX2\n";
+	}
+	if (supportedISA & instruction_set::AVX512F) {
+		std::cout << " - AVX512F\n";
+	}
+}
+
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+
+inline static uint32_t detectSupportedArchitectures() {
+	return instruction_set::NEON;
+}
+
+#elif defined(__x86_64__) || defined(_M_AMD64)
+
+static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
 	#if defined(_MSC_VER)
 	int cpuInfo[4];
 	__cpuidex(cpuInfo, *eax, *ecx);
@@ -63,7 +107,7 @@ inline static void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* 
 	__get_cpuid(level, eax, ebx, ecx, edx);
 	#else
 	uint32_t a = *eax, b, c = *ecx, d;
-	asm volatile("cpuid\n\t" : "+a"(a), "=b"(b), "+c"(c), "=d"(d));
+	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(a), "c"(c));
 	*eax = a;
 	*ebx = b;
 	*ecx = c;
@@ -75,9 +119,9 @@ inline static uint64_t xgetbv() {
 	#if defined(_MSC_VER)
 	return _xgetbv(0);
 	#else
-	std::uint32_t xcr0_lo, xcr0_hi;
-	asm volatile("xgetbv\n\t" : "=a"(xcr0_lo), "=d"(xcr0_hi) : "c"(0));
-	return xcr0_lo | (uint64_t(xcr0_hi) << 32);
+	uint32_t eax, edx;
+	asm volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
+	return (( uint64_t )edx << 32) | eax;
 	#endif
 }
 
@@ -141,16 +185,10 @@ inline static uint32_t detectSupportedArchitectures() {
 	return hostIsa;
 }
 
-#elif defined(__loongarch_sx) && !defined(__loongarch_asx)
+#elif defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
 
 inline static uint32_t detectSupportedArchitectures() {
-	return instruction_set::LSX;
-}
-
-#elif defined(__loongarch_asx)
-
-inline static uint32_t detectSupportedArchitectures() {
-	return instruction_set::LASX;
+	return instruction_set::NEON;
 }
 
 #else
@@ -158,8 +196,11 @@ inline static uint32_t detectSupportedArchitectures() {
 inline static uint32_t detectSupportedArchitectures() {
 	return instruction_set::DEFAULT;
 }
+
 #endif
 
 int main() {
-	return detectSupportedArchitectures();
+	const auto supportedISA = detectSupportedArchitectures();
+	printCPUInfo(supportedISA);
+	return supportedISA;
 }
