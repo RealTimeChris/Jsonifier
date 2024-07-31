@@ -43,6 +43,9 @@
 
 namespace jsonifier_internal {
 
+	static constexpr auto emptyLambda = []() {
+	};
+
 	template<typename derived_type> class parser;
 
 	class json_structural_iterator;

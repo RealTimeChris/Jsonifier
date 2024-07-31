@@ -292,7 +292,7 @@ namespace jsonifier_internal {
 				return;
 			}
 
-			auto n		 = value.size();
+			const auto n = value.size();
 			auto iterNew = value.begin();
 			for (size_t i = 0; i < n; ++i) {
 				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
@@ -302,6 +302,8 @@ namespace jsonifier_internal {
 				} else {
 					if (*iter == ']') [[likely]] {
 						++iter;
+						value.size() != i + 1 ? value.resize(i + 1) : emptyLambda();
+						return;
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_End>(
@@ -438,7 +440,7 @@ namespace jsonifier_internal {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::bool_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
 			if (!parseBool(value, iter)) {
-				if (!options.optionsReal.minified) {
+				if constexpr (!options.optionsReal.minified) {
 					++iter;
 				}
 				static constexpr auto sourceLocation{ std::source_location::current() };

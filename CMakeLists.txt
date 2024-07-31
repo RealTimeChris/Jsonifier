@@ -65,8 +65,12 @@ set_target_properties(
 
 target_link_options(
 	"${PROJECT_NAME}" INTERFACE
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/LTCG /INCREMENTAL:NO>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF=4>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
 )
 
 target_include_directories(
@@ -77,10 +81,15 @@ target_include_directories(
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-ffunction-sections>"
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-std=c++20>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
 	"${AVX_FLAG}"
 )
 

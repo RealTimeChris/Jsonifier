@@ -5,7 +5,7 @@ include(GetCommitHash.cmake)
 
 FetchContent_Declare(
   glaze
-  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+  GIT_REPOSITORY https://github.com/realtimechris/glaze.git
   GIT_TAG main
   GIT_SHALLOW TRUE
 )
@@ -40,20 +40,10 @@ target_link_libraries(
 	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
 )
 
-target_link_options(
-	"Json-Performance" INTERFACE
-	"$<$<CXX_COMPILER_ID:MSVC>:/LTCG /INCREMENTAL:NO>"
-)
-
 target_compile_options(
-	"Json-Performance" INTERFACE
+	"Json-Performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"

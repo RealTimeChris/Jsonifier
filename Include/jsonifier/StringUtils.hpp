@@ -158,8 +158,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type copyAndFindParse(const void* string1, void* string2, simd_type& simdValue) {
-		static constexpr simd_type simdChars01{ simd_internal::simdFromValue<simd_type>('\\') };
-		static constexpr simd_type simdChars02{ simd_internal::simdFromValue<simd_type>('"') };
+		simd_type simdChars01{ simd_internal::gatherValue<simd_type>('\\') };
+		simd_type simdChars02{ simd_internal::gatherValue<simd_type>('"') };
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, simdChars01) | simd_internal::opCmpEq(simdValue, simdChars02)));
@@ -179,8 +179,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
-		static constexpr simd_type simdChars01{ simd_internal::simdFromValue<simd_type>('\\') };
-		static constexpr simd_type simdChars02{ simd_internal::simdFromValue<simd_type>('"') };
+		simd_type simdChars01{ simd_internal::gatherValue<simd_type>('\\') };
+		simd_type simdChars02{ simd_internal::gatherValue<simd_type>('"') };
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, simdChars01) | simd_internal::opCmpEq(simdValue, simdChars02)));
 	}
@@ -198,8 +198,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type copyAndFindSerialize(const void* string1, void* string2, simd_type& simdValue) {
-		static constexpr simd_type escapeableTable00{ simd_internal::simdFromTable<simd_type>(simd_internal::escapeableArray00) };
-		static constexpr simd_type escapeableTable01{ simd_internal::simdFromTable<simd_type>(simd_internal::escapeableArray01) };
+		simd_type escapeableTable00{ simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data()) };
+		simd_type escapeableTable01{ simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray01<bytesPerStep>.data()) };
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(escapeableTable00, simdValue), simdValue) |

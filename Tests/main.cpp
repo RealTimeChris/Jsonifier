@@ -2064,11 +2064,11 @@ struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, 
 		results_data r{ static_cast<std::string>(simdjsonLibraryName), static_cast<std::string>(testName), static_cast<std::string>(simdjsonCommitUrl), iterations };
 
 		simdjson::ondemand::parser parser{};
+		test_data_type testData{};
 		auto readSize = buffer.size();
 		auto readResult =
 			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), simdjsonLibraryName, "cornflowerblue", iterations>(
 				[&]() {
-					test_data_type testData{};
 					try {
 						getValue(testData, parser.iterate(buffer).value());
 						bnch_swt::doNotOptimizeAway(testData);

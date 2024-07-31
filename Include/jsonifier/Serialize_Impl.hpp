@@ -1,3 +1,4 @@
+
 /*
 	MIT License
 
@@ -300,7 +301,9 @@ namespace jsonifier_internal {
 					writeCharacters(std::forward<buffer_type>(buffer), std::forward<index_type>(index), R"(\\)");
 					break;
 				}
-				[[likely]] default: { writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value)); }
+					[[likely]] default : {
+						writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value));
+					}
 			}
 			writeCharacter<json_structural_type::String>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}
@@ -354,8 +357,7 @@ namespace jsonifier_internal {
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if (index + 64 > buffer.size()) [[unlikely]] {
-				const auto newSize = buffer.size() * 2 > index + 64 ? buffer.size() * 2 : index + 64;
-				buffer.resize(newSize);
+				buffer.resize(buffer.size() * 2 > index + 64 ? buffer.size() * 2 : index + 64);
 			}
 			index = static_cast<size_t>(toChars(buffer.data() + index, std::forward<value_type>(value)) - buffer.data());
 		}

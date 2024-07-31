@@ -1,11 +1,11 @@
 # Json-Performance
 Performance profiling of JSON libraries (Compiled and run on Ubuntu-22.04 using the Clang++18 compiler)
 
-Latest Results: (Jul 30, 2024)
+Latest Results: (Jul 31, 2024)
 #### Using the following commits:
 ----
 | Jsonifier: [](https://github.com/RealTimeChris/Jsonifier/commit/)  
-| Glaze: [4887061](https://github.com/stephenberry/glaze/commit/4887061)  
+| Glaze: [2222977](https://github.com/stephenberry/glaze/commit/2222977)  
 | Simdjson: [ba1819f](https://github.com/simdjson/simdjson/commit/ba1819f)  
 
  > At least 40 iterations on a 6 core (Intel i7 8700k), until Median Absolute Percentage Error (MAPE) reduced below 5.0%.
@@ -20,9 +20,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 808.777 | 3063044 | 3.78726e+06 | 0.04034 | 1259.64 | 3062565 | 2.43131e+06 | 0.8428 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 696.611 | 3063044 | 4.39707e+06 | 0.02366 | 1325.07 | 3058653 | 2.3083e+06 | 0.8155 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 148.784 | 3063044 | 2.05872e+07 | 0.7264 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 831.176 | 3180391 | 3.82638e+06 | 0.002279 | 1241.25 | 3179915 | 2.56187e+06 | 0.7904 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 720.91 | 3180391 | 4.41163e+06 | 0.5238 | 1269.61 | 3175785 | 2.50138e+06 | 0.5957 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 152.61 | 3180391 | 2.084e+07 | 0.575 | 
 
 ### Json Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
 
@@ -33,9 +33,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 755.103 | 2091044 | 2.76922e+06 | 0.03075 | 1060.28 | 2086653 | 1.96802e+06 | 0.02775 |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 692.076 | 2091044 | 3.02141e+06 | 0.6543 | 931.803 | 2090565 | 2.24357e+06 | 0.9171 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 106.9 | 2091044 | 1.95608e+07 | 0.5544 | 
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 748.614 | 2168834 | 2.89713e+06 | 0.02533 | 1004.24 | 2164228 | 2.1551e+06 | 0.7349 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 666.607 | 2168834 | 3.25354e+06 | 0.0595 | 906.161 | 2168358 | 2.39291e+06 | 0.03015 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 110.18 | 2168834 | 1.96845e+07 | 0.679 | 
 
 ### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
 
@@ -51,9 +51,9 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 819.499 | 3063044 | 3.7377e+06 | 0.02271 | 1293.28 | 3062565 | 2.36806e+06 | 0.892 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 716.285 | 3063044 | 4.27629e+06 | 0.02733 | 1364.05 | 3058653 | 2.24233e+06 | 0.7913 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 258.345 | 3063044 | 1.18564e+07 | 0.5859 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 823.997 | 3180391 | 3.85971e+06 | 0.04546 | 1241.33 | 3179915 | 2.56169e+06 | 0.0377 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 727.886 | 3180391 | 4.36935e+06 | 0.6232 | 1284.16 | 3175785 | 2.47305e+06 | 0.7388 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 266.815 | 3180391 | 1.19199e+07 | 0.6182 | 
 
 ### ABC Test (Out of Sequence Performance - Minified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
 
@@ -64,9 +64,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 729.933 | 2091044 | 2.86471e+06 | 1.441 | 1024.18 | 2086653 | 2.03738e+06 | 0.8936 |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 699.71 | 2091044 | 2.98844e+06 | 0.557 | 869.706 | 2090565 | 2.40376e+06 | 1.386 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 189.903 | 2091044 | 1.10111e+07 | 0.6624 | 
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 726.213 | 2168834 | 2.9865e+06 | 0.02493 | 955.018 | 2164228 | 2.26617e+06 | 1.48 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 686.09 | 2168834 | 3.16115e+06 | 1.154 | 848.382 | 2168358 | 2.55588e+06 | 1.96 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 189.595 | 2168834 | 1.14393e+07 | 1.677 | 
 
 ### Discord Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -77,9 +77,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 867.865 | 138774 | 159903 | 0.01665 | 2778.98 | 138774 | 49937.1 | 0.09744 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 199.819 | 138774 | 694497 | 0.1045 | 2572.61 | 138774 | 53942.8 | 0.01788 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 79.6578 | 138774 | 1.74213e+06 | 0.05306 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 897.879 | 138774 | 154558 | 0.04271 | 2831.08 | 138774 | 49018 | 0.1001 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 203.226 | 138774 | 682855 | 0.02148 | 2603.74 | 138774 | 53298 | 0.02969 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 84.3838 | 138774 | 1.64456e+06 | 0.06296 | 
 
 ### Discord Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
 
@@ -90,9 +90,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 626.118 | 69037 | 110262 | 0.04548 | 1821.79 | 69037 | 37895.2 | 0.05501 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 107.08 | 69037 | 644725 | 0.0448 | 1799.67 | 69037 | 38360.9 | 0.05233 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 41.0527 | 69037 | 1.68167e+06 | 0.02206 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 638.827 | 69037 | 108068 | 0.0611 | 1802.88 | 69037 | 38292.6 | 0.2005 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 108.921 | 69037 | 633825 | 0.007731 | 1806.6 | 69037 | 38213.8 | 0.05051 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 44.0624 | 69037 | 1.5668e+06 | 0.02098 | 
 
 ### Canada Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Prettified.json):
 
@@ -103,9 +103,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 1179.1 | 6661897 | 5.65e+06 | 1.651 | 1190.79 | 6661897 | 5.59451e+06 | 2.427 |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 957.731 | 6661897 | 6.95592e+06 | 1.333 | 1155.17 | 6661897 | 5.76705e+06 | 1.903 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 274.917 | 6661897 | 2.42324e+07 | 2.046 | 
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 1156.11 | 6661897 | 5.76235e+06 | 0.9842 | 1223.05 | 6661897 | 5.44696e+06 | 1.058 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 893.666 | 6661897 | 7.45457e+06 | 1.03 | 1083.98 | 6661897 | 6.14577e+06 | 1.089 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 521.86 | 6661897 | 1.27657e+07 | 0.1494 | 
 
 ### Canada Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Minified.json):
 
@@ -116,9 +116,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 702.068 | 2090234 | 2.97725e+06 | 2.07 | 427.757 | 2090234 | 4.8865e+06 | 1.398 |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 428.908 | 2090234 | 4.87339e+06 | 1.674 | 377.937 | 2090234 | 5.53065e+06 | 1.094 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 101.174 | 2090234 | 2.06598e+07 | 2.193 | 
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 777.976 | 2090234 | 2.68676e+06 | 0.01009 | 462.497 | 2090234 | 4.51945e+06 | 1.064 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 376.264 | 2090234 | 5.55523e+06 | 0.02456 | 436.208 | 2090234 | 4.79183e+06 | 0.04216 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 227.258 | 2090234 | 9.19764e+06 | 0.055 | 
 
 ### Twitter Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Prettified.json):
 
@@ -129,9 +129,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 875.785 | 722038 | 824446 | 0.235 | 2670.79 | 722415 | 270487 | 0.01983 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 220.64 | 722038 | 3.27247e+06 | 1.923 | 2563.89 | 722038 | 281618 | 0.01302 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 115.81 | 722038 | 6.23467e+06 | 1.569 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 1035.87 | 722038 | 697036 | 0.102 | 2801.93 | 722415 | 257828 | 0.3127 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 252.974 | 722038 | 2.8542e+06 | 0.007272 | 2736.15 | 722038 | 263888 | 0.1348 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 130.316 | 722038 | 5.54066e+06 | 0.03626 | 
 
 ### Twitter Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Minified.json):
 
@@ -142,9 +142,9 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 739.384 | 478986 | 647818 | 0.09085 | 2163.08 | 479363 | 221611 | 0.02924 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 168.559 | 478986 | 2.84165e+06 | 2.72 | 2323.01 | 478986 | 206192 | 0.01496 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 78.4668 | 478986 | 6.10431e+06 | 1.867 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 875.031 | 478986 | 547393 | 0.02642 | 2190.11 | 479363 | 218877 | 0.004759 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 173.511 | 478986 | 2.76054e+06 | 0.974 | 2402.01 | 478986 | 199411 | 0.02245 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 90.7765 | 478986 | 5.27654e+06 | 0.6105 | 
 
 ### Minify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -155,9 +155,9 @@ alt="" width="400"/></p>
 
 | Library | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 511.502 | 69037 | 134969 | 0.634 |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 446.533 | 69037 | 154607 | 0.01797 |
-| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 162.803 | 69037 | 424053 | 0.05116 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 494.8 | 69037 | 139525 | 0.7651 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 461.856 | 69037 | 149477 | 0.01626 |
+| [simdjson](https://github.com/simdjson/simdjson/commit/ba1819f) | 159.201 | 69037 | 433646 | 0.09289 |
 
 ### Prettify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
 
@@ -168,8 +168,8 @@ alt="" width="400"/></p>
 
 | Library | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 1274.84 | 3063044 | 2.40269e+06 | 2.625 |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 1204.12 | 3063044 | 2.54381e+06 | 0.747 |
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 1144.73 | 3180391 | 2.77828e+06 | 2.213 |
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 1102.26 | 3180391 | 2.88535e+06 | 0.7101 |
 
 ### Validation Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -180,5 +180,5 @@ alt="" width="400"/></p>
 
 | Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |
-| [glaze](https://github.com/stephenberry/glaze/commit/4887061) | 866.707 | 138774 | 160116 | 0.05232 | 
-| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 588.826 | 138774 | 235679 | 7.704 | 
+| [glaze](https://github.com/stephenberry/glaze/commit/2222977) | 953.549 | 138774 | 145534 | 0.5759 | 
+| [jsonifier](https://github.com/RealTimeChris/Jsonifier/commit/) | 783.763 | 138774 | 177061 | 0.6236 | 
