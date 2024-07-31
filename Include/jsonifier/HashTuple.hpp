@@ -262,65 +262,6 @@ namespace jsonifier_internal {
 		sub_tuple_construction_data_type<key_type, value_type, subTupleIndex, 1>, sub_tuple_construction_data_type<key_type, value_type, subTupleIndex, 2>,
 		sub_tuple_construction_data_type<key_type, value_type, subTupleIndex, 3>, sub_tuple_construction_data_type<key_type, value_type, subTupleIndex, 4>>;
 
-	template<typename key_type, typename value_type, size_t subTupleIndexNew>
-	JSONIFIER_INLINE constexpr auto collectSimdSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
-		constexpr auto& tuple = std::get<subTupleIndexNew>(final_tuple_static_data<value_type>::staticData);
-		auto keyStatsVal	  = keyStats<tuple>();
-		xoshiro256 prng{};
-		auto constructForGivenStringLength =
-			[&](const auto maxSizeIndex, auto&& constructForGivenStringLength,
-				size_t stringLength) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
-			constexpr size_t bucketSize	 = setSimdWidth<hashTupleMaxSizes[maxSizeIndex]>();
-			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndex];
-			constexpr size_t numGroups	 = storageSize > bucketSize ? storageSize / bucketSize : 1;
-			sub_tuple_construction_data<key_type, value_type, subTupleIndexNew, maxSizeIndex> returnValues{};
-			returnValues.stringLength = stringLength;
-			size_t bucketSizes[numGroups]{};
-			bool collided{};
-			for (size_t x = 0; x < 2; ++x) {
-				std::fill(returnValues.controlBytes.begin(), returnValues.controlBytes.end(), std::numeric_limits<uint8_t>::max());
-				std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
-				returnValues.hasher.setSeedCt(prng());
-				collided = false;
-				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
-					const auto keySize		 = pairsNew[y].size() > stringLength ? stringLength : pairsNew[y].size();
-					const auto hash			 = returnValues.hasher.hashKeyCt(pairsNew[y].data(), keySize);
-					const auto groupPos		 = (hash >> 8) % numGroups;
-					const auto ctrlByte		 = static_cast<uint8_t>(hash);
-					const auto bucketSizeNew = bucketSizes[groupPos]++;
-					const auto slot			 = ((groupPos * bucketSize) + bucketSizeNew);
-
-					if (bucketSizeNew >= bucketSize || contains(returnValues.controlBytes.data() + groupPos * bucketSize, ctrlByte, bucketSize)) {
-						std::fill(bucketSizes, bucketSizes + numGroups, 0);
-						collided = true;
-						break;
-					}
-					returnValues.controlBytes[slot] = ctrlByte;
-					returnValues.indices[slot]		= y;
-				}
-				if (!collided) {
-					break;
-				}
-			}
-			if (collided) {
-				if constexpr (maxSizeIndex < std::size(hashTupleMaxSizes) - 1) {
-					return sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data>{ constructForGivenStringLength(
-						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, stringLength) };
-				} else if (stringLength <= keyStatsVal.minLength) {
-					return sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data>{ constructForGivenStringLength(
-						std::integral_constant<size_t, 0>{}, constructForGivenStringLength, stringLength + 1) };
-				}
-				returnValues.stringLength = std::numeric_limits<size_t>::max();
-				returnValues.maxSizeIndex = std::numeric_limits<size_t>::max();
-				return returnValues;
-			}
-			returnValues.type = sub_tuple_type::simd;
-			return returnValues;
-		};
-
-		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, 1);
-	}
-
 	template<size_t size> JSONIFIER_INLINE constexpr size_t findUniqueColumnIndex(const std::array<jsonifier::string_view, size>& strings, const key_stats_t& keyStats) {
 		constexpr size_t alphabetSize = 256;
 
@@ -343,6 +284,62 @@ namespace jsonifier_internal {
 		}
 
 		return keyStats.minLength;
+	}
+
+	template<typename key_type, typename value_type, size_t subTupleIndexNew>
+	JSONIFIER_INLINE constexpr auto collectSimdSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
+		constexpr auto& tuple = std::get<subTupleIndexNew>(final_tuple_static_data<value_type>::staticData);
+		auto keyStatsVal	  = keyStats<tuple>();
+		xoshiro256 prng{};
+		const auto stringLength = findUniqueColumnIndex(pairsNew, keyStatsVal);
+		auto constructForGivenStringLength =
+			[&](const auto maxSizeIndex, auto&& constructForGivenStringLength,
+				size_t stringLength) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
+			constexpr size_t bucketSize	 = setSimdWidth<hashTupleMaxSizes[maxSizeIndex]>();
+			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndex];
+			constexpr size_t numGroups	 = storageSize > bucketSize ? storageSize / bucketSize : 1;
+			sub_tuple_construction_data<key_type, value_type, subTupleIndexNew, maxSizeIndex> returnValues{};
+			returnValues.stringLength = stringLength;
+			size_t bucketSizes[numGroups]{};
+			bool collided{};
+			for (size_t x = 0; x < 2; ++x) {
+				std::fill(returnValues.controlBytes.begin(), returnValues.controlBytes.end(), std::numeric_limits<uint8_t>::max());
+				std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
+				returnValues.hasher.setSeedCt(prng());
+				collided = false;
+				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
+					const auto hash			 = (returnValues.hasher.operator size_t() ^ pairsNew[y].data()[stringLength]);
+					const auto groupPos		 = (hash >> 8) % numGroups;
+					const auto ctrlByte		 = static_cast<uint8_t>(hash);
+					const auto bucketSizeNew = bucketSizes[groupPos]++;
+					const auto slot			 = ((groupPos * bucketSize) + bucketSizeNew);
+
+					if (bucketSizeNew >= bucketSize || contains(returnValues.controlBytes.data() + groupPos * bucketSize, ctrlByte, bucketSize)) {
+						std::fill(bucketSizes, bucketSizes + numGroups, 0);
+						collided = true;
+						break;
+					}
+					returnValues.controlBytes[slot] = ctrlByte;
+					returnValues.indices[slot]		= y;
+				}
+				if (!collided) {
+					break;
+				}
+			}
+			if (collided) {
+				if constexpr (maxSizeIndex < std::size(hashTupleMaxSizes) - 1) {
+					return sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data>{ constructForGivenStringLength(
+						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, stringLength) };
+				}
+				returnValues.stringLength = std::numeric_limits<size_t>::max();
+				returnValues.maxSizeIndex = std::numeric_limits<size_t>::max();
+				return returnValues;
+			}
+			returnValues.type = sub_tuple_type::simd;
+			return returnValues;
+		};
+
+		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, stringLength);
 	}
 
 	template<typename key_type, typename value_type, size_t subTupleIndexNew>
@@ -398,13 +395,6 @@ namespace jsonifier_internal {
 
 		if constexpr (tupleSize == 0) {
 			return nullptr;
-		} else if constexpr (tupleSize < 16) {
-			constexpr auto mapNew	= collectMinimalCharSubTupleData<jsonifier::string_view, value_type, subTupleIndex>({ getKey<tuple, I>()... });
-			constexpr auto newIndex = mapNew.index();
-			if constexpr (std::get<newIndex>(mapNew).type == sub_tuple_type::unset) {
-				return collectSimdSubTupleData<jsonifier::string_view, value_type, subTupleIndex>({ getKey<tuple, I>()... });
-			}
-			return mapNew;
 		} else {
 			return collectSimdSubTupleData<jsonifier::string_view, value_type, subTupleIndex>({ getKey<tuple, I>()... });
 		}
@@ -442,7 +432,7 @@ namespace jsonifier_internal {
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
 			if (!std::is_constant_evaluated()) {
-				JSONIFIER_ALIGN const auto hash		   = hasher.hashKeyRt(iter, constructionData.stringLength);
+				JSONIFIER_ALIGN const auto hash		   = (hasher.operator size_t() ^ iter[constructionData.stringLength]);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % constructionData.numGroups) * constructionData.bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 															  simd_internal::gatherValues<simd_type>(constructionData.controlBytes.data() + resultIndex))) +
@@ -454,7 +444,7 @@ namespace jsonifier_internal {
 					return false;
 				}
 			} else {
-				JSONIFIER_ALIGN const auto hash		   = hasher.hashKeyCt(iter, constructionData.stringLength);
+				JSONIFIER_ALIGN const auto hash		   = (hasher.operator size_t() ^ iter[constructionData.stringLength]);
 				JSONIFIER_ALIGN const auto resultIndex = ((hash >> 8) % constructionData.numGroups) * constructionData.bucketSize;
 				JSONIFIER_ALIGN const auto finalIndex  = (constMatch(constructionData.controlBytes.data() + resultIndex, static_cast<control_type>(hash)) + resultIndex);
 				if (constCompareStringFunctions[constructionData.indices[finalIndex]](iter)) {
@@ -566,6 +556,8 @@ namespace jsonifier_internal {
 			return simd_sub_tuple<value_type, subTupleIndexNew>{};
 		} else if constexpr (sub_tuple_construction_static_data<value_type, subTupleIndexNew>::staticData.type == sub_tuple_type::minimal_char) {
 			return minimal_char_sub_tuple<value_type, subTupleIndexNew>{};
+		} else {
+			static_assert(std::false_type::value, "Failed to construct that sub-tuple.");
 		}
 	}
 
