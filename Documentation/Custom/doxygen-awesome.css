@@ -942,7 +942,7 @@ code, div.fragment, pre.fragment {
 }
 
 code {
-    display: JSONIFIER_INLINE;
+    display: ;
     background: var(--code-background);
     color: var(--code-foreground);
     padding: 2px 6px;
@@ -1026,7 +1026,7 @@ div.fragment span.preprocessor {
 }
 
 div.fragment span.lineno {
-    display: JSONIFIER_INLINE-block;
+    display: -block;
     width: 27px;
     border-right: none;
     background: var(--fragment-linenumber-background);
@@ -1100,7 +1100,7 @@ dl.deprecated dt a {
 }
 
 dl.section dd, dl.bug dd, dl.deprecated dd {
-    margin-JSONIFIER_INLINE-start: 0px;
+    margin--start: 0px;
 }
 
 dl.invariant, dl.pre {
@@ -1429,7 +1429,7 @@ address.footer {
 
 .navpath li.navelem a {
     text-shadow: none;
-    display: JSONIFIER_INLINE-block;
+    display: -block;
     color: var(--primary-color) !important;
 }
 
@@ -1481,7 +1481,7 @@ li.navelem:first-child:before {
 */
 
 doxygen-awesome-dark-mode-toggle {
-    display: JSONIFIER_INLINE-block;
+    display: -block;
     margin: 0 0 0 var(--spacing-small);
     padding: 0;
     width: var(--searchbar-height);

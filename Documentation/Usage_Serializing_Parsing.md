@@ -85,10 +85,10 @@ The `parseJson` function now comes in two flavors:
 
 ```cpp
 template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
-JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in);
+ bool parseJson(value_type&& object, buffer_type&& in);
 
 template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-JSONIFIER_INLINE value_type parseJson(buffer_type&& in);
+ value_type parseJson(buffer_type&& in);
 ```
 
 These overloads provide flexibility in parsing JSON data, allowing you to choose between parsing directly into an existing object or creating a new object and returning it.
@@ -148,10 +148,10 @@ The `serializeJson` function now comes in two flavors:
 
 ```cpp
 template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& out);
+ bool serializeJson(value_type&& object, buffer_type&& out);
 
 template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object);
+ jsonifier::string serializeJson(value_type&& object);
 ```
 
 These overloads provide flexibility in how you handle serialization output, allowing you to choose between directly serializing into a buffer or obtaining the serialized JSON string as a return value.

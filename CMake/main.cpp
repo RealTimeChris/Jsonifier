@@ -59,31 +59,6 @@ void printCPUInfo(uint32_t supportedISA) {
 	getCPUBrandString(brand);
 	std::cout << "CPU Brand: " << brand << "\n";
 #endif
-	std::cout << "Supported Instruction Sets:\n";
-	if (supportedISA & instruction_set::LZCNT) {
-		std::cout << " - LZCNT\n";
-	}
-	if (supportedISA & instruction_set::POPCNT) {
-		std::cout << " - POPCNT\n";
-	}
-	if (supportedISA & instruction_set::BMI1) {
-		std::cout << " - BMI1\n";
-	}
-	if (supportedISA & instruction_set::BMI2) {
-		std::cout << " - BMI2\n";
-	}
-	if (supportedISA & instruction_set::NEON) {
-		std::cout << " - NEON\n";
-	}
-	if (supportedISA & instruction_set::AVX) {
-		std::cout << " - AVX\n";
-	}
-	if (supportedISA & instruction_set::AVX2) {
-		std::cout << " - AVX2\n";
-	}
-	if (supportedISA & instruction_set::AVX512F) {
-		std::cout << " - AVX512F\n";
-	}
 }
 
 #if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)

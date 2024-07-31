@@ -36,10 +36,10 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			static constexpr auto numMembers = std::tuple_size_v<unwrap_t<decltype(final_tuple_static_data<value_type>::staticData)>>;
+			static constexpr auto numMembers = std::tuple_size_v<unwrap_t<decltype(final_tuple_static_data<value_type>)>>;
 			writeObjectEntry<numMembers, options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			static constexpr auto serializeLambda = [](const auto currentIndex, auto&& valueNew, auto&& bufferNew, auto&& indexNew) {
-				static constexpr auto subTuple{ std::get<currentIndex>(final_tuple_static_data<value_type>::staticData) };
+				static constexpr auto subTuple{ std::get<currentIndex>(final_tuple_static_data<value_type>) };
 				static constexpr auto subTupleSize{ std::tuple_size_v<unwrap_t<decltype(subTuple)>> };
 				static constexpr auto isItLast{ (currentIndex == 0) };
 				static constexpr auto serializeLambdaNew = [](const auto currentIndexNewer, auto&& valueNewer, auto&& bufferNewer, auto&& indexNewer) {

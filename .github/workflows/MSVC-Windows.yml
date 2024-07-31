@@ -35,18 +35,6 @@ jobs:
       run: |
             pip install seaborn
 
-    - name: Build the Test
-      run: |
-           cmake --build ./Build --config=${{matrix.build_type}}
-
-    - name: Install the Test
-      run: |
-           cmake --install ./Build --config=${{matrix.build_type}}
-
-    - name: Clear the Build folder
-      run: |
-            Remove-Item -Recurse -Force "./Build"
-
     - name: Configure CMake
       run: |
            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"

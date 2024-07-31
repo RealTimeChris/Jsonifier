@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import re
 
-# Set up command-line argument parsing
 def parse_args():
     parser = argparse.ArgumentParser(description='Process benchmark results from a JSON file.')
     parser.add_argument('input_file', type=str, help='Path to the input JSON file')
@@ -61,4 +60,5 @@ def main():
 
         print('Graphs saved successfully in the "Graphs" folder.')
 
-main()
+if __name__ == "__main__":
+    main()

@@ -33,25 +33,6 @@ jobs:
       run: |
             pip install seaborn
 
-    - name: Configure CMake for Jsonifier
-      working-directory: ./
-      run: |
-           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
-
-    - name: Build the Test
-      working-directory: ./Build
-      run: |
-           sudo cmake --build . --config=${{matrix.build_type}}
-
-    - name: Install the Test
-      working-directory: ./Build
-      run: |
-           sudo cmake --install . --config=${{matrix.build_type}}
-
-    - name: Clear the Build folder
-      run: |
-            sudo rm -rf ./Build
-
     - name: Configure CMake
       working-directory: ./
       run: |
