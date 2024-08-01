@@ -19,18 +19,21 @@ jobs:
         std: [20]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Install the latest xcode compiler.
+    - name: Install Xcode
       run: |
-            sudo softwareupdate -i xcode
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            brew install rbenv
-            rbenv init
-            gem install xcode-install
-            xcversion list
-            xcversion install 12.5
-            sudo xcode-select -switch /Applications/Xcode.app
+          sudo xcode-select --switch /Applications/Xcode_15.4.app/Contents/Developer
+
+    - name: Install dependencies
+      run: |
+          cd path/to/your/xcode/project  # Change this to your Xcode project directory
+          xcodebuild -resolvePackageDependencies
+
+    - name: Get Xcode path
+      id: xcode-path
+      run: echo "::set-output name=xcode_path::$(xcode-select -p)"
             
     - name: Install Seaborn
       run: |
@@ -43,7 +46,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DJSONIFIER_TEST="TRUE"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DJSONIFIER_TEST="TRUE" -DCMAKE_XCODE_TOOLCHAIN=$(steps.xcode-path.outputs.xcode_path)/Toolchains/XcodeDefault.xctoolchain
 
     - name: Build the Test
       working-directory: ./Build

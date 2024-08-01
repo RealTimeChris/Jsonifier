@@ -94,6 +94,8 @@
 #ifndef JSONIFIER_FASTFLOAT_CONSTEXPR_FEATURE_DETECT_H
 #define JSONIFIER_FASTFLOAT_CONSTEXPR_FEATURE_DETECT_H
 
+#include <jsonifier/TypeEntities.hpp>
+
 #ifdef __has_include
 	#if __has_include(<version>)
 		#include <version>
@@ -111,12 +113,6 @@
 	#define JSONIFIER_FASTFLOAT_HAS_BIT_CAST 1
 #else
 	#define JSONIFIER_FASTFLOAT_HAS_BIT_CAST 0
-#endif
-
-#if defined(__cpp_lib_is_constant_evaluated) && __cpp_lib_is_constant_evaluated >= 201811L
-	#define JSONIFIER_FASTFLOAT_HAS_IS_CONSTANT_EVALUATED 1
-#else
-	#define JSONIFIER_FASTFLOAT_HAS_IS_CONSTANT_EVALUATED 0
 #endif
 
 // Testing for relevant C++20 constexpr library features
@@ -186,31 +182,11 @@ namespace jsonifier_fast_float {
 	#include <bit>
 #endif
 
-#if (defined(__x86_64) || defined(__x86_64__) || defined(_M_X64) || defined(__amd64) || defined(__aarch64__) || defined(_M_ARM64) || defined(__MINGW64__) || defined(__s390x__) || \
-	(defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || defined(__PPC64LE__)) || defined(__loongarch64))
-	#define JSONIFIER_FASTFLOAT_64BIT 1
-#elif (defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM) || defined(__ppc__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__))
-	#define JSONIFIER_FASTFLOAT_32BIT 1
-#else
-	// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
-	// We can never tell the register width, but the SIZE_MAX is a good approximation.
-	// UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max portability.
-	#if SIZE_MAX == 0xffff
-		#error Unknown platform (16-bit, unsupported)
-	#elif SIZE_MAX == 0xffffffff
-		#define JSONIFIER_FASTFLOAT_32BIT 1
-	#elif SIZE_MAX == 0xffffffffffffffff
-		#define JSONIFIER_FASTFLOAT_64BIT 1
-	#else
-		#error Unknown platform (not 32-bit, not 64-bit?)
-	#endif
-#endif
-
-#if ((defined(_WIN32) || defined(_WIN64)) && !defined(__clang__))
+#if ((defined(_WIN32) || defined(_WIN64)) && !defined(JSONIFIER_CLANG))
 	#include <intrin.h>
 #endif
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
 	#define JSONIFIER_FASTFLOAT_VISUAL_STUDIO 1
 #endif
 
@@ -262,14 +238,14 @@ namespace jsonifier_fast_float {
 	#define JSONIFIER_FASTFLOAT_HAS_SIMD 1
 #endif
 
-#if defined(__GNUC__)
+#if defined(JSONIFIER_GNUCXX)
 	// disable -Wcast-align=strict (GCC only)
 	#define JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 #else
 	#define JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
 #endif
 
-#if defined(__GNUC__)
+#if defined(JSONIFIER_GNUCXX)
 	#define JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS _Pragma("GCC diagnostic pop")
 #else
 	#define JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
@@ -304,14 +280,6 @@ namespace jsonifier_fast_float {
 
 
 namespace jsonifier_fast_float {
-
-	fastfloat_really_inline constexpr bool cpp20_and_in_constexpr() {
-#if JSONIFIER_FASTFLOAT_HAS_IS_CONSTANT_EVALUATED
-		return std::is_constant_evaluated();
-#else
-		return false;
-#endif
-	}
 
 	template<typename T> fastfloat_really_inline constexpr bool is_supported_float_type() {
 		return std::is_same<T, float>::value || std::is_same<T, double>::value
@@ -400,22 +368,11 @@ namespace jsonifier_fast_float {
 	/* result might be undefined when input_num is zero */
 	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 int32_t leading_zeroes(uint64_t input_num) {
 		assert(input_num > 0);
-		if (cpp20_and_in_constexpr()) {
+		if (!std::is_constant_evaluated()) {
+			return simd_internal::lzcnt(input_num);
+		} else {
 			return leading_zeroes_generic(input_num);
 		}
-#ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
-	#if defined(_M_X64) || defined(_M_ARM64)
-		unsigned long leading_zero = 0;
-		// Search the mask data from most significant bit (MSB)
-		// to least significant bit (LSB) for a set bit (1).
-		_BitScanReverse64(&leading_zero, input_num);
-		return ( int32_t )(63 - leading_zero);
-	#else
-		return leading_zeroes_generic(input_num);
-	#endif
-#else
-		return __builtin_clzll(input_num);
-#endif
 	}
 
 	// slow emulation routine for 32-bit
@@ -423,49 +380,65 @@ namespace jsonifier_fast_float {
 		return x * ( uint64_t )y;
 	}
 
-	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR14 uint64_t umul128_generic(uint64_t ab, uint64_t cd, uint64_t* hi) {
-		uint64_t ad			= emulu(( uint32_t )(ab >> 32), ( uint32_t )cd);
-		uint64_t bd			= emulu(( uint32_t )ab, ( uint32_t )cd);
-		uint64_t adbc		= ad + emulu(( uint32_t )ab, ( uint32_t )(cd >> 32));
+	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 uint64_t umul128_generic(uint64_t lhs, uint64_t rhs, uint64_t* hi) {
+		if (std::is_constant_evaluated()) {
+			uint64_t ad			= emulu(( uint32_t )(lhs >> 32), ( uint32_t )rhs);
+			uint64_t bd			= emulu(( uint32_t )lhs, ( uint32_t )rhs);
+			uint64_t adbc		= ad + emulu(( uint32_t )lhs, ( uint32_t )(rhs >> 32));
+			uint64_t adbc_carry = ( uint64_t )(adbc < ad);
+			uint64_t lo			= bd + (adbc << 32);
+			*hi					= emulu(( uint32_t )(lhs >> 32), ( uint32_t )(rhs >> 32)) + (adbc >> 32) + (adbc_carry << 32) + ( uint64_t )(lo < bd);
+			return lo;
+		}
+#if (defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)) && !defined(__wasm__) && defined(__SIZEOF_INT128__) || (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
+		__uint128_t const product = ( __uint128_t )lhs * ( __uint128_t )rhs;
+		jsonifier_internal::__m128x r128;
+		r128.m128x_uint64[0] = (product);
+		r128.m128x_uint64[1] = (product >> 64);
+		return r128.m128x_uint64[0];
+#elif (defined(_M_X64) || defined(_M_IA64)) && !defined(_M_ARM64EC)
+
+	#if !defined(JSONIFIER_MSVC)
+		#pragma intrinsic(_umul128)
+	#endif
+
+		return _umul128(lhs, rhs, hi);
+#elif defined(_M_ARM64) || defined(_M_ARM64EC)
+
+	#if !defined(JSONIFIER_MSVC)
+		#pragma intrinsic(__umulh)
+	#endif
+		return __umulh(lhs, rhs);
+#else
+		uint64_t ad			= emulu(( uint32_t )(lhs >> 32), ( uint32_t )rhs);
+		uint64_t bd			= emulu(( uint32_t )lhs, ( uint32_t )rhs);
+		uint64_t adbc		= ad + emulu(( uint32_t )lhs, ( uint32_t )(rhs >> 32));
 		uint64_t adbc_carry = ( uint64_t )(adbc < ad);
 		uint64_t lo			= bd + (adbc << 32);
-		*hi					= emulu(( uint32_t )(ab >> 32), ( uint32_t )(cd >> 32)) + (adbc >> 32) + (adbc_carry << 32) + ( uint64_t )(lo < bd);
+		*hi					= emulu(( uint32_t )(lhs >> 32), ( uint32_t )(rhs >> 32)) + (adbc >> 32) + (adbc_carry << 32) + ( uint64_t )(lo < bd);
 		return lo;
+#endif
 	}
-
-#ifdef JSONIFIER_FASTFLOAT_32BIT
-
-	// slow emulation routine for 32-bit
-	#if !defined(__MINGW64__)
-	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR14 uint64_t _umul128(uint64_t ab, uint64_t cd, uint64_t* hi) {
-		return umul128_generic(ab, cd, hi);
-	}
-	#endif// !__MINGW64__
-
-#endif// JSONIFIER_FASTFLOAT_32BIT
-
 
 	// compute 64-bit a*b
 	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 value128 full_multiplication(uint64_t a, uint64_t b) {
-		if (cpp20_and_in_constexpr()) {
+		if (std::is_constant_evaluated()) {
 			value128 answer;
 			answer.low = umul128_generic(a, b, &answer.high);
 			return answer;
 		}
 		value128 answer;
 #if defined(_M_ARM64) && !defined(__MINGW32__)
-		// ARM64 has native support for 64-bit multiplications, no need to emulate
-		// But MinGW on ARM64 doesn't have native support for 64-bit multiplications
 		answer.high = __umulh(a, b);
 		answer.low	= a * b;
-#elif defined(JSONIFIER_FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
-		answer.low = _umul128(a, b, &answer.high);// _umul128 not available on ARM64
-#elif defined(JSONIFIER_FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+#elif (defined(_WIN64) && !defined(JSONIFIER_CLANG))
+		answer.low = _umul128(a, b, &answer.high);
+#elif defined(__SIZEOF_INT128__)
 		__uint128_t r = (( __uint128_t )a) * b;
 		answer.low	  = uint64_t(r);
 		answer.high	  = uint64_t(r >> 64);
 #else
-		answer.low = umul128_generic(a, b, &answer.high);
+		answer.low = umul128_generic(a, b, &answer.high); 
 #endif
 		return answer;
 	}
@@ -836,11 +809,6 @@ namespace jsonifier_fast_float {
  */
 	template<typename T, typename UC = char, parse_options_t<UC> options>
 	JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept;
-	/**
-* from_chars for integer types.
-*/
-	template<typename T, typename UC = char, typename = JSONIFIER_FASTFLOAT_ENABLE_IF(!is_supported_float_type<T>())>
-	JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> from_chars(UC const* first, UC const* last, T& value, int32_t base = 10) noexcept;
 
 }// namespace jsonifier_fast_float
 #endif// JSONIFIER_FASTFLOAT_FAST_FLOAT_H
@@ -887,7 +855,7 @@ namespace jsonifier_fast_float {
 
 	// Read 8 UC into a u64. Truncates UC if not char.
 	template<typename UC> fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 uint64_t read8_to_u64(const UC* chars) {
-		if (cpp20_and_in_constexpr() || !std::is_same<UC, char>::value) {
+		if (std::is_constant_evaluated() || !std::is_same<UC, char>::value) {
 			uint64_t val = 0;
 			for (int32_t i = 0; i < 8; ++i) {
 				val |= uint64_t(uint8_t(*chars)) << (i * 8);
@@ -909,14 +877,7 @@ namespace jsonifier_fast_float {
 	fastfloat_really_inline uint64_t simd_read8_to_u64(const __m128i data) {
 		JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
 		const __m128i packed = _mm_packus_epi16(data, data);
-	#ifdef JSONIFIER_FASTFLOAT_64BIT
 		return uint64_t(_mm_cvtsi128_si64(packed));
-	#else
-		uint64_t value;
-		// Visual Studio + older versions of GCC don't support _mm_storeu_si64
-		_mm_storel_epi64(reinterpret_cast<__m128i*>(&value), packed);
-		return value;
-	#endif
 		JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
 	}
 
@@ -945,7 +906,7 @@ namespace jsonifier_fast_float {
 #endif// JSONIFIER_FASTFLOAT_SSE2
 
 // MSVC SFINAE is broken pre-VS2017
-#if defined(_MSC_VER) && _MSC_VER <= 1900
+#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
 	template<typename UC>
 #else
 	template<typename UC, JSONIFIER_FASTFLOAT_ENABLE_IF(!has_simd_opt<UC>()) = 0>
@@ -969,7 +930,7 @@ namespace jsonifier_fast_float {
 
 	// Call this if chars are definitely 8 digits.
 	template<typename UC> fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 uint32_t parse_eight_digits_unrolled(UC const* chars) noexcept {
-		if (cpp20_and_in_constexpr() || !has_simd_opt<UC>()) {
+		if (std::is_constant_evaluated() || !has_simd_opt<UC>()) {
 			return parse_eight_digits_unrolled(read8_to_u64(chars));// truncation okay
 		}
 		return parse_eight_digits_unrolled(simd_read8_to_u64(chars));
@@ -988,7 +949,7 @@ namespace jsonifier_fast_float {
 	// Using this style (instead of is_made_of_eight_digits_fast() then parse_eight_digits_unrolled())
 	// ensures we don't load SIMD registers twice.
 	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 bool simd_parse_if_eight_digits_unrolled(const char16_t* chars, uint64_t& i) noexcept {
-		if (cpp20_and_in_constexpr()) {
+		if (std::is_constant_evaluated()) {
 			return false;
 		}
 	#ifdef JSONIFIER_FASTFLOAT_SSE2
@@ -1031,7 +992,7 @@ namespace jsonifier_fast_float {
 #endif// JSONIFIER_FASTFLOAT_HAS_SIMD
 
 // MSVC SFINAE is broken pre-VS2017
-#if defined(_MSC_VER) && _MSC_VER <= 1900
+#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
 	template<typename UC>
 #else
 	template<typename UC, JSONIFIER_FASTFLOAT_ENABLE_IF(!has_simd_opt<UC>()) = 0>
@@ -1118,11 +1079,8 @@ namespace jsonifier_fast_float {
 		UC const* const end_of_integer_part = p;
 		int64_t digit_count					= int64_t(end_of_integer_part - start_digits);
 		answer.integer						= span<const UC>(start_digits, size_t(digit_count));
-		if (fmt & JSONIFIER_FASTFLOAT_JSONFMT) {
-			// at least 1 digit in integer part, without leading zeros
-			if (digit_count == 0 || (start_digits[0] == UC('0') && digit_count > 1)) {
-				return answer;
-			}
+		if (digit_count == 0 || (start_digits[0] == UC('0') && digit_count > 1)) {
+			return answer;
 		}
 
 		int64_t exponent			 = 0;
@@ -1143,15 +1101,8 @@ namespace jsonifier_fast_float {
 			answer.fraction = span<const UC>(before, size_t(p - before));
 			digit_count -= exponent;
 		}
-		if (fmt & JSONIFIER_FASTFLOAT_JSONFMT) {
-			// at least 1 digit in fractional part
-			if (has_decimal_point && exponent == 0) {
-				return answer;
-			}
-		} else {
-			if (digit_count == 0) {// we must have encountered at least one integer!
-				return answer;
-			}
+		if (has_decimal_point && exponent == 0) {
+			return answer;
 		}
 		int64_t exp_number = 0;// explicit exponential part
 		if (((fmt & chars_format::scientific) && (p != pend) && ((UC('e') == *p) || (UC('E') == *p))) ||
@@ -1188,11 +1139,6 @@ namespace jsonifier_fast_float {
 					exp_number = -exp_number;
 				}
 				exponent += exp_number;
-			}
-		} else {
-			// If it scientific and not fixed, we have to bail out.
-			if ((fmt & chars_format::scientific) && !(fmt & chars_format::fixed)) {
-				return answer;
 			}
 		}
 		answer.lastmatch = p;
@@ -1755,14 +1701,9 @@ namespace jsonifier_fast_float {
 // architecture except for sparc, which emulates 128-bit multiplication.
 // we might have platforms where `CHAR_BIT` is not 8, so let's avoid
 // doing `8 * sizeof(limb)`.
-#if defined(JSONIFIER_FASTFLOAT_64BIT) && !defined(__sparc)
-	#define JSONIFIER_FASTFLOAT_64BIT_LIMB 1
+#if !defined(__sparc)
 	typedef uint64_t limb;
 	constexpr size_t limb_bits = 64;
-#else
-	#define JSONIFIER_FASTFLOAT_32BIT_LIMB
-	typedef uint32_t limb;
-	constexpr size_t limb_bits = 32;
 #endif
 
 	typedef span<limb> limb_span;
@@ -1942,7 +1883,7 @@ namespace jsonifier_fast_float {
 // gcc and clang
 #if defined(__has_builtin)
 	#if __has_builtin(__builtin_add_overflow)
-		if (!cpp20_and_in_constexpr()) {
+		if (!std::is_constant_evaluated()) {
 			overflow = __builtin_add_overflow(x, y, &z);
 			return z;
 		}
@@ -1957,13 +1898,12 @@ namespace jsonifier_fast_float {
 
 	// multiply two small integers, getting both the high and low bits.
 	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 limb scalar_mul(limb x, limb y, limb& carry) noexcept {
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
-	#if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
 		// GCC and clang both define it as an extension.
 		__uint128_t z = __uint128_t(x) * __uint128_t(y) + __uint128_t(carry);
 		carry		  = limb(z >> limb_bits);
 		return limb(z);
-	#else
+#else
 		// fallback, no native 128-bit integer multiplication with carry.
 		// on msvc, this optimizes identically, somehow.
 		value128 z = full_multiplication(x, y);
@@ -1972,11 +1912,6 @@ namespace jsonifier_fast_float {
 		z.high += uint64_t(overflow);// cannot overflow
 		carry = z.high;
 		return z.low;
-	#endif
-#else
-		uint64_t z = uint64_t(x) * uint64_t(y) + uint64_t(carry);
-		carry	   = limb(z >> limb_bits);
-		return limb(z);
 #endif
 	}
 
@@ -2118,11 +2053,7 @@ namespace jsonifier_fast_float {
 			1490116119384765625UL,
 			7450580596923828125UL,
 		};
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 		constexpr static limb large_power_of_5[] = { 1414648277510068013UL, 9180637584431281687UL, 4539964771860779200UL, 10482974169319127550UL, 198276706040285095UL };
-#else
-		constexpr static limb large_power_of_5[] = { 4279965485U, 329373468U, 4020270615U, 2137533757U, 4287402176U, 1057042919U, 1071430142U, 2440757623U, 381945767U, 46164893U };
-#endif
 	};
 
 	template<typename T> constexpr uint32_t pow5_tables<T>::large_step;
@@ -2147,19 +2078,13 @@ namespace jsonifier_fast_float {
 		bigint& operator=(bigint&& other) = delete;
 
 		JSONIFIER_FASTFLOAT_CONSTEXPR20 bigint(uint64_t value) : vec() {
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 			vec.push_unchecked(value);
-#else
-			vec.push_unchecked(uint32_t(value));
-			vec.push_unchecked(uint32_t(value >> 32));
-#endif
 			vec.normalize();
 		}
 
 		// get the high 64 bits from the vector, and if bits were truncated.
 		// this is to get the significant digits for the float.
 		JSONIFIER_FASTFLOAT_CONSTEXPR20 uint64_t hi64(bool& truncated) const noexcept {
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 			if (vec.len() == 0) {
 				return empty_hi64(truncated);
 			} else {
@@ -2171,23 +2096,6 @@ namespace jsonifier_fast_float {
 					return result;
 				}
 			}
-#else
-			if (vec.len() == 0) {
-				return empty_hi64(truncated);
-			} else {
-				if (vec.len() == 1) {
-					return uint32_hi64(vec.rindex(0), truncated);
-				} else {
-					if (vec.len() == 2) {
-						return uint32_hi64(vec.rindex(0), vec.rindex(1), truncated);
-					} else {
-						uint64_t result = uint32_hi64(vec.rindex(0), vec.rindex(1), vec.rindex(2), truncated);
-						truncated |= vec.nonzero(3);
-						return result;
-					}
-				}
-			}
-#endif
 		}
 
 		// compare two big integers, returning the large value.
@@ -2287,13 +2195,7 @@ namespace jsonifier_fast_float {
 			if (vec.is_empty()) {
 				return 0;
 			} else {
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 				return leading_zeroes(vec.rindex(0));
-#else
-				// no use defining a specialized leading_zeroes for a 32-bit type.
-				uint64_t r0 = vec.rindex(0);
-				return leading_zeroes(r0 << 32);
-#endif
 			}
 		}
 
@@ -2325,13 +2227,8 @@ namespace jsonifier_fast_float {
 				JSONIFIER_FASTFLOAT_TRY(large_mul(vec, large));
 				exp -= large_step;
 			}
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 			uint32_t small_step = 27;
 			limb max_native		= 7450580596923828125UL;
-#else
-			uint32_t small_step = 13;
-			limb max_native		= 1220703125U;
-#endif
 			while (exp >= small_step) {
 				JSONIFIER_FASTFLOAT_TRY(small_mul(vec, max_native));
 				exp -= small_step;
@@ -2493,7 +2390,7 @@ namespace jsonifier_fast_float {
 	}
 	template<typename UC> fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 void skip_zeros(UC const*& first, UC const* last) noexcept {
 		uint64_t val;
-		while (!cpp20_and_in_constexpr() && std::distance(first, last) >= int_cmp_len<UC>()) {
+		while (!std::is_constant_evaluated() && std::distance(first, last) >= int_cmp_len<UC>()) {
 			::memcpy(&val, first, sizeof(uint64_t));
 			if (val != int_cmp_zeros<UC>()) {
 				break;
@@ -2513,7 +2410,7 @@ namespace jsonifier_fast_float {
 	template<typename UC> fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 bool is_truncated(UC const* first, UC const* last) noexcept {
 		// do 8-bit optimizations, can just compare to 8 literal 0s.
 		uint64_t val;
-		while (!cpp20_and_in_constexpr() && std::distance(first, last) >= int_cmp_len<UC>()) {
+		while (!std::is_constant_evaluated() && std::distance(first, last) >= int_cmp_len<UC>()) {
 			::memcpy(&val, first, sizeof(uint64_t));
 			if (val != int_cmp_zeros<UC>()) {
 				return true;
@@ -2567,11 +2464,7 @@ namespace jsonifier_fast_float {
 		size_t counter = 0;
 		digits		   = 0;
 		limb value	   = 0;
-#ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 		size_t step = 19;
-#else
-		size_t step = 9;
-#endif
 
 		// process all integer digits.
 		UC const* p	   = num.integer.ptr;
@@ -2817,7 +2710,7 @@ namespace jsonifier_fast_float {
  * It is the default on most system. This function is meant to be inexpensive.
  * Credit : @mwalcott3
  */
-		fastfloat_really_inline bool rounds_to_nearest() noexcept {
+		fastfloat_really_inline constexpr bool rounds_to_nearest() noexcept {
 			// https://lemire.me/blog/2020/06/26/gcc-not-nearest/
 #if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
 			return false;
@@ -2838,7 +2731,7 @@ namespace jsonifier_fast_float {
 			// The value does not need to be std::numeric_limits<float>::min(), any small
 			// value so that 1 + x should round to 1 would do (after accounting for excess
 			// precision, as in 387 instructions).
-			static volatile float fmin = std::numeric_limits<float>::min();
+			volatile float fmin = std::numeric_limits<float>::min();
 			float fmini				   = fmin;// we copy it so that it gets loaded at most once.
 //
 // Explanation:
@@ -2859,19 +2752,19 @@ namespace jsonifier_fast_float {
 	#pragma warning(push)
 //  todo: is there a VS warning?
 //  see https://stackoverflow.com/questions/46079446/is-there-a-warning-for-floating-point-equality-checking-in-visual-studio-2013
-#elif defined(__clang__)
+#elif defined(JSONIFIER_CLANG)
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wfloat-equal"
-#elif defined(__GNUC__)
+#elif defined(JSONIFIER_GNUCXX)
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wfloat-equal"
 #endif
 			return (fmini + 1.0f == 1.0f - fmini);
 #ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
 	#pragma warning(pop)
-#elif defined(__clang__)
+#elif defined(JSONIFIER_CLANG)
 	#pragma clang diagnostic pop
-#elif defined(__GNUC__)
+#elif defined(JSONIFIER_GNUCXX)
 	#pragma GCC diagnostic pop
 #endif
 		}
@@ -2944,7 +2837,7 @@ namespace jsonifier_fast_float {
 			// We could check it first (before the previous branch), but
 			// there might be performance advantages at having the check
 			// be last.
-			if (!cpp20_and_in_constexpr() && detail::rounds_to_nearest()) {
+			if (!std::is_constant_evaluated() && detail::rounds_to_nearest()) {
 				// We have that fegetround() == FE_TONEAREST.
 				// Next is Clinger's fast path.
 				if (pns.mantissa <= binary_format<T>::max_mantissa_fast_path()) {
@@ -2963,13 +2856,6 @@ namespace jsonifier_fast_float {
 				// We do not have that fegetround() == FE_TONEAREST.
 				// Next is a modified Clinger's fast path, inspired by Jakub Jelínek's proposal
 				if (pns.exponent >= 0 && pns.mantissa <= binary_format<T>::max_mantissa_fast_path(pns.exponent)) {
-#if defined(__clang__) || defined(JSONIFIER_FASTFLOAT_32BIT)
-					// Clang may map 0 to -0.0 when fegetround() == FE_DOWNWARD
-					if (pns.mantissa == 0) {
-						value = pns.negative ? T(-0.) : T(0.);
-						return answer;
-					}
-#endif
 					value = T(pns.mantissa) * binary_format<T>::exact_power_of_ten(pns.exponent);
 					if (pns.negative) {
 						value = -value;
