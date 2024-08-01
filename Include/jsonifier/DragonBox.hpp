@@ -598,7 +598,6 @@ namespace jkj {
 				// so we avoid using those built-ins. That said, they are still useful for
 				// implementing 64-bit x 64-bit -> 128-bit multiplication.
 
-				// clang-format off
 #if defined(__SIZEOF_INT128__)
       // To silence "error: ISO C++ does not support '__int128' for 'type name'
       // [-Wpedantic]"

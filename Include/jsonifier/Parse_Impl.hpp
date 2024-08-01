@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 						++iter;
 						return;
 					} else {
-						if (!isItFirst) {
+						if (!isItFirst) [[likely]] {
 							if (*iter == ',') [[likely]] {
 								++iter;
 							} else {
@@ -114,7 +114,7 @@ namespace jsonifier_internal {
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						jsonifier::string_view key{ static_cast<const char*>(iter) + 1, keySize };
 						auto& keys = value.jsonifierExcludedKeys;
-						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) [[unlikely]] {
 							skipToNextValue(iter, end);
 							return parseObjects<options, false>(value, iter, end);
 						}
@@ -123,11 +123,12 @@ namespace jsonifier_internal {
 					static constexpr auto functionLambda = [](const auto hashSubTupleIndex, auto& value, auto& iter, auto& end, const auto keySize) {
 						static constexpr auto subTupleFunctionPtrArray =
 							generateArrayOfInvokeParsePtrs<options, hashSubTupleIndex, derived_type, value_type, iterator_type, size_t>();
-						if (!hash_tuple<value_type>::template find<hashSubTupleIndex, subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1, value, iter, end, keySize)) {
+						if (hash_tuple<value_type>::template find<hashSubTupleIndex, subTupleFunctionPtrArray>(static_cast<const char*>(iter) + 1, value, iter, end, keySize))
+							[[likely]] {
+							return true;
+						} else {
 							skipToNextValue(iter, end);
 							return false;
-						} else {
-							return true;
 						}
 					};
 					hash_tuple<value_type>::template find<functionLambda>(keySize, value, iter, end, keySize);
@@ -264,7 +265,7 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::optional_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::optional_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			if (*iter != 'n') [[unlikely]] {
+			if (*iter != 'n') [[likely]] {
 				parse_impl<derived_type, decltype(*value)>::template impl<options>(value.emplace(), iter, end);
 			} else {
 				if constexpr (jsonifier::concepts::json_structural_iterator_t<iterator_type>) {
@@ -272,7 +273,6 @@ namespace jsonifier_internal {
 				} else {
 					iter += 4;
 				}
-				return;
 			}
 		}
 	};
@@ -403,7 +403,6 @@ namespace jsonifier_internal {
 				std::memcpy(newString.data(), newPtr, static_cast<size_t>(newSize));
 				value = newString;
 			}
-			return;
 		}
 	};
 
@@ -417,11 +416,10 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::always_null_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::null_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&&, iterator_type& iter, iterator_type& end) {
-			if (!parseNull(iter)) {
+			if (!parseNull(iter)) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Null_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
-				return;
 			}
 		}
 	};
@@ -445,14 +443,10 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::bool_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::bool_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			if (!parseBool(value, iter)) {
-				if constexpr (!options.optionsReal.minified) {
-					++iter;
-				}
+			if (!parseBool(value, iter)) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Bool_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
-				return;
 			}
 		}
 	};

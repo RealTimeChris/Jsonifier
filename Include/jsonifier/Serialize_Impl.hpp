@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 					static constexpr auto key = std::get<currentIndexNewer>(subTuple).view();
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						auto& keys = valueNewer.jsonifierExcludedKeys;
-						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) [[unlikely]] {
 							if constexpr (currentIndexNewer > 1) {
 								serializeSubObjects<options, subTuple, isItLast, currentIndexNewer - 1>(std::forward<value_type>(valueNewer),
 									std::forward<buffer_type>(bufferNewer), std::forward<index_type>(indexNewer));
@@ -149,7 +149,7 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			if (value) {
+			if (value) [[likely]] {
 				using member_type = typename unwrap_t<value_type_new>::value_type;
 				serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
 					std::forward<index_type>(index));

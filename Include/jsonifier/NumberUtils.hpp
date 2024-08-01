@@ -28,7 +28,7 @@
 
 #include <jsonifier/IToStr.hpp>
 #include <jsonifier/DToStr.hpp>
-#include <jsonifier/FastFloat.hpp>
+#include <jsonifier/StrToD.hpp>
 #include <jsonifier/StrToI.hpp>
 #include <jsonifier/Parser.hpp>
 
@@ -60,7 +60,9 @@ namespace jsonifier {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = reinterpret_cast<const char*>(string.data());
-			jsonifier_internal::parseFloat(newValue, currentIter);
+			auto endIter	 = reinterpret_cast<const char*>(string.data()) + string.size();
+			static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
+			//jsonifier_fast_float::fromCharsAdvanced<optionsNew>(currentIter, endIter, newValue);
 		}
 		return newValue;
 	}
@@ -210,7 +212,7 @@ namespace jsonifier_internal {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
 				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
 				if (ec != std::errc()) [[unlikely]] {
 					return;
 				}
@@ -218,7 +220,7 @@ namespace jsonifier_internal {
 				++iter;
 			} else {
 				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
 				if (ec != std::errc()) [[unlikely]] {
 					return;
 				}
@@ -323,7 +325,7 @@ namespace jsonifier_internal {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
 				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
 				if (ec != std::errc()) [[unlikely]] {
 					return;
 				}
@@ -331,7 +333,7 @@ namespace jsonifier_internal {
 				iter  = ptr;
 			} else {
 				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
 				if (ec != std::errc()) [[unlikely]] {
 					return;
 				}

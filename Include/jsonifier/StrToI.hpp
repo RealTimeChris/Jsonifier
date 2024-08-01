@@ -33,6 +33,55 @@
 
 namespace jsonifier_internal {
 
+	template<typename uint8_t> constexpr std::array<uint8_t, 256> digiTable{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x04u, 0x00u, '\b', 0x10u, 0x00u, 0x01u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x02u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x20u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x20u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+		0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
+
+	constexpr uint8_t digiTypeZero	  = 1 << 0;
+	constexpr uint8_t digiTypeNonZero = 1 << 1;
+	constexpr uint8_t digiTypeDot	  = 1 << 4;
+	constexpr uint8_t digiTypeExp	  = 1 << 5;
+
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsType(uint8_t d, uint8_t type) noexcept {
+		return (digiTable<uint8_t>[static_cast<uint64_t>(d)] & type) != 0;
+	}
+
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsFp(uint8_t d) noexcept {
+		return digiIsType(d, uint8_t(digiTypeDot | digiTypeExp));
+	}
+
+	template<typename uint8_t> JSONIFIER_INLINE bool digiIsDigitOrFp(uint8_t d) noexcept {
+		return digiIsType(d, uint8_t(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
+	}
+
+	constexpr uint8_t zero{ '0' };
+
+	constexpr std::array<uint64_t, 256> numberSubTable{ []() {
+		std::array<uint64_t, 256> returnValues{};
+		for (uint64_t x = 0; x < 256; ++x) {
+			returnValues[x] = static_cast<uint64_t>(x - zero);
+		}
+		return returnValues;
+	}() };
+
+	constexpr std::array<bool, 256> digitTableBool{ []() {
+		std::array<bool, 256> returnValues{};
+		returnValues[0x30u] = true;
+		returnValues[0x31u] = true;
+		returnValues[0x32u] = true;
+		returnValues[0x33u] = true;
+		returnValues[0x34u] = true;
+		returnValues[0x35u] = true;
+		returnValues[0x36u] = true;
+		returnValues[0x37u] = true;
+		returnValues[0x38u] = true;
+		returnValues[0x39u] = true;
+		return returnValues;
+	}() };
+
 	JSONIFIER_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
 		return a <= (std::numeric_limits<uint64_t>::max)() - b;
 	}
@@ -41,6 +90,9 @@ namespace jsonifier_internal {
 		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
 		return a <= b;
 	}
+
+	#define repeat_in_1_18(x) \
+	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
 	template<jsonifier::concepts::integer_t value_type_new, typename iterator_type> JSONIFIER_INLINE bool parseInt(value_type_new& value, iterator_type&& iter) {
 		using value_type = unwrap_t<value_type_new>;
