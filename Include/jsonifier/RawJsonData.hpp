@@ -67,18 +67,28 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) {
 		if (isNumberType(charToCheck)) [[likely]] {
 			return jsonifier::json_type::Number;
-		} else if (boolTable[charToCheck]) [[likely]] {
-			return jsonifier::json_type::Bool;
-		} else if (charToCheck == '{') [[unlikely]] {
-			return jsonifier::json_type::Object;
-		} else if (charToCheck == '[') [[unlikely]] {
-			return jsonifier::json_type::Array;
-		} else if (charToCheck == '"') [[unlikely]] {
-			return jsonifier::json_type::String;
-		} else if (charToCheck == 'n') [[unlikely]] {
-			return jsonifier::json_type::Null;
 		} else {
-			return jsonifier::json_type::Unset;
+			if (boolTable[charToCheck]) [[likely]] {
+				return jsonifier::json_type::Bool;
+			} else {
+				if (charToCheck == '{') [[unlikely]] {
+					return jsonifier::json_type::Object;
+				} else {
+					if (charToCheck == '[') [[unlikely]] {
+						return jsonifier::json_type::Array;
+					} else {
+						if (charToCheck == '"') [[unlikely]] {
+							return jsonifier::json_type::String;
+						} else {
+							if (charToCheck == 'n') [[unlikely]] {
+								return jsonifier::json_type::Null;
+							} else {
+								return jsonifier::json_type::Unset;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 

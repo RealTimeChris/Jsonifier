@@ -1070,32 +1070,48 @@ namespace jsonifier_internal {
 	template<uint64_t length> JSONIFIER_INLINE uint64_t hashxBytesRt(const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (length == 0) {
 			return avalanche(seed64 ^ (readBitsRt<uint64_t>(secret + 56) ^ readBitsRt<uint64_t>(secret + 64)));
-		} else if constexpr (length <= 3) {
-			return len1To3Rt<length>(value, secret, seed64);
-		} else if constexpr (length <= 8) {
-			return len4To8Rt<length>(value, secret, seed64);
-		} else if constexpr (length <= 16) {
-			return len9To16Rt<length>(value, secret, seed64);
-		} else if constexpr (length <= 128) {
-			return len17To128Rt<length>(value, secret, seed64);
 		} else {
-			return len129To240Rt<length>(value, secret, seed64);
+			if constexpr (length <= 3) {
+				return len1To3Rt<length>(value, secret, seed64);
+			} else {
+				if constexpr (length <= 8) {
+					return len4To8Rt<length>(value, secret, seed64);
+				} else {
+					if constexpr (length <= 16) {
+						return len9To16Rt<length>(value, secret, seed64);
+					} else {
+						if constexpr (length <= 128) {
+							return len17To128Rt<length>(value, secret, seed64);
+						} else {
+							return len129To240Rt<length>(value, secret, seed64);
+						}
+					}
+				}
+			}
 		}
 	}
 
 	template<uint64_t length> constexpr uint64_t hashxBytesCt(const char* value, const uint8_t* secret, uint64_t seed64) {
 		if constexpr (length == 0) {
 			return avalanche(seed64 ^ (readBitsCt<uint64_t>(secret + 56) ^ readBitsCt<uint64_t>(secret + 64)));
-		} else if constexpr (length <= 3) {
-			return len1To3Ct<length>(value, secret, seed64);
-		} else if constexpr (length <= 8) {
-			return len4To8Ct<length>(value, secret, seed64);
-		} else if constexpr (length <= 16) {
-			return len9To16Ct<length>(value, secret, seed64);
-		} else if constexpr (length <= 128) {
-			return len17To128Ct<length>(value, secret, seed64);
 		} else {
-			return len129To240Ct<length>(value, secret, seed64);
+			if constexpr (length <= 3) {
+				return len1To3Ct<length>(value, secret, seed64);
+			} else {
+				if constexpr (length <= 8) {
+					return len4To8Ct<length>(value, secret, seed64);
+				} else {
+					if constexpr (length <= 16) {
+						return len9To16Ct<length>(value, secret, seed64);
+					} else {
+						if constexpr (length <= 128) {
+							return len17To128Ct<length>(value, secret, seed64);
+						} else {
+							return len129To240Ct<length>(value, secret, seed64);
+						}
+					}
+				}
+			}
 		}
 	}
 

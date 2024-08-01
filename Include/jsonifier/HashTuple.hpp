@@ -119,8 +119,10 @@ namespace jsonifier_internal {
 				returnValues[currentIndex].length = keyLength;
 				returnValues[currentIndex].count  = 1;
 				++currentIndex;
-			} else if (currentIndex - 1 < returnValues.size()) {
-				++returnValues[currentIndex - 1].count;
+			} else {
+				if (currentIndex - 1 < returnValues.size()) {
+					++returnValues[currentIndex - 1].count;
+				}
 			}
 		}
 

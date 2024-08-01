@@ -100,13 +100,15 @@ namespace jsonifier_internal {
 					resize(newSize * 2);
 				}
 				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
-			} else if (currentParseBuffer != stringViewNew) {
-				currentParseBuffer = { reinterpret_cast<string_view_ptr>(stringViewNew), size };
-				auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
-				if (structuralIndexCount < newSize) {
-					resize(newSize * 2);
+			} else {
+				if (currentParseBuffer != stringViewNew) {
+					currentParseBuffer = { reinterpret_cast<string_view_ptr>(stringViewNew), size };
+					auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
+					if (structuralIndexCount < newSize) {
+						resize(newSize * 2);
+					}
+					return returnValue + resetInternalWithErrorPrintOut(errorIndex);
 				}
-				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
 			}
 		}
 

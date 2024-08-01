@@ -219,11 +219,13 @@ namespace jsonifier_internal {
 						std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
 						buf[dotPos] = '.';
 						return numEnd + 1;
-					} else if (dotPos > digitsWritten) {
-						std::memset(numEnd, '0', dotPos - digitsWritten);
-						return buf + dotPos;
 					} else {
-						return numEnd;
+						if (dotPos > digitsWritten) {
+							std::memset(numEnd, '0', dotPos - digitsWritten);
+							return buf + dotPos;
+						} else {
+							return numEnd;
+						}
 					}
 				}
 			} else {

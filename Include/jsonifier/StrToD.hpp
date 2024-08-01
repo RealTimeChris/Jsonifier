@@ -354,16 +354,20 @@ namespace jsonifier_internal {
 		if (sig > 9) {
 			if constexpr (std::integral<value_type>) {
 				return false;
-			} else if (*iter == 'n' && iter[1] == 'u' && iter[2] == 'l' && iter[3] == 'l') {
-				iter += 4;
-				value = std::numeric_limits<value_type>::quiet_NaN();
-				return true;
-			} else if ((*iter | eBit) == 'n' && (iter[1] | eBit) == 'a' && (iter[2] | eBit) == 'n') {
-				iter += 3;
-				value = sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN();
-				return true;
 			} else {
-				return false;
+				if (*iter == 'n' && iter[1] == 'u' && iter[2] == 'l' && iter[3] == 'l') {
+					iter += 4;
+					value = std::numeric_limits<value_type>::quiet_NaN();
+					return true;
+				} else {
+					if ((*iter | eBit) == 'n' && (iter[1] | eBit) == 'a' && (iter[2] | eBit) == 'n') {
+						iter += 3;
+						value = sign ? -std::numeric_limits<value_type>::quiet_NaN() : std::numeric_limits<value_type>::quiet_NaN();
+						return true;
+					} else {
+						return false;
+					}
+				}
 			}
 		}
 #define expr_intg(i) \
@@ -534,9 +538,11 @@ namespace jsonifier_internal {
 		if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
 			value = (sign ? -value_type{ 0 } : value_type{ 0 });
 			return true;
-		} else if ((expSig > f64MaxDecExp)) [[unlikely]] {
-			value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
-			return true;
+		} else {
+			if ((expSig > f64MaxDecExp)) [[unlikely]] {
+				value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
+				return true;
+			}
 		}
 		exp = expSig;
 	digi_finish:
@@ -606,9 +612,11 @@ namespace jsonifier_internal {
 		if (exp2 < std::numeric_limits<value_type>::min_exponent - 1) [[unlikely]] {
 			value = sign ? -value_type(0) : value_type(0);
 			return true;
-		} else if (exp2 > std::numeric_limits<value_type>::max_exponent - 1) [[unlikely]] {
-			value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
-			return true;
+		} else {
+			if (exp2 > std::numeric_limits<value_type>::max_exponent - 1) [[unlikely]] {
+				value = sign ? -std::numeric_limits<value_type>::infinity() : std::numeric_limits<value_type>::infinity();
+				return true;
+			}
 		}
 
 		uint64_t round = 0;
@@ -635,10 +643,12 @@ namespace jsonifier_internal {
 				} else {
 					round = (mantisa & (roundMask << 1)) != 0;
 				}
-			} else if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (roundMask << 1)) ||
-				(static_cast<size_t>(simd_internal::tzcnt(sigNorm) + simd_internal::tzcnt(sig2Norm)) <
-					128 - std::numeric_limits<value_type>::digits - (2 - sigProductStartsWith1))) {
-				round = 1;
+			} else {
+				if ((exp < pow10SigTableMinExact || exp > pow10SigTableMaxExact) || (mantisa & (roundMask << 1)) ||
+					(static_cast<size_t>(simd_internal::tzcnt(sigNorm) + simd_internal::tzcnt(sig2Norm)) <
+						128 - std::numeric_limits<value_type>::digits - (2 - sigProductStartsWith1))) {
+					round = 1;
+				}
 			}
 		}
 

@@ -85,18 +85,28 @@ namespace jsonifier_internal {
 		template<typename iterator_type, typename validator_type> JSONIFIER_INLINE static bool impl(iterator_type& iter, uint64_t& depth, validator_type& validator) {
 			if (iter && *iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth, validator);
-			} else if (iter && *iter == '[') {
-				return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth, validator);
-			} else if (iter && *iter == '"') {
-				return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
-			} else if (iter && numberTable[static_cast<uint8_t>(*iter)]) {
-				return validate_impl<json_structural_type::Number, derived_type>::impl(iter, validator);
-			} else if (iter && boolTable[static_cast<uint8_t>(*iter)]) {
-				return validate_impl<json_structural_type::Bool, derived_type>::impl(iter, validator);
-			} else if (iter && *iter == 'n') {
-				return validate_impl<json_structural_type::Null, derived_type>::impl(iter, validator);
 			} else {
-				return false;
+				if (iter && *iter == '[') {
+					return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth, validator);
+				} else {
+					if (iter && *iter == '"') {
+						return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
+					} else {
+						if (iter && numberTable[static_cast<uint8_t>(*iter)]) {
+							return validate_impl<json_structural_type::Number, derived_type>::impl(iter, validator);
+						} else {
+							if (iter && boolTable[static_cast<uint8_t>(*iter)]) {
+								return validate_impl<json_structural_type::Bool, derived_type>::impl(iter, validator);
+							} else {
+								if (iter && *iter == 'n') {
+									return validate_impl<json_structural_type::Null, derived_type>::impl(iter, validator);
+								} else {
+									return false;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 

@@ -2634,8 +2634,10 @@ namespace jkj {
 							if (BinaryToDecimalRoundingPolicy::prefer_round_down(decimal_significand) && binary_exponent >= shorter_interval_tie_lower_threshold &&
 								binary_exponent <= shorter_interval_tie_upper_threshold) {
 								--decimal_significand;
-							} else if (decimal_significand < xi) {
-								++decimal_significand;
+							} else {
+								if (decimal_significand < xi) {
+									++decimal_significand;
+								}
 							}
 							return SignPolicy::handle_sign(s, TrailingZeroPolicy::template no_trailing_zeros<format>(decimal_significand, decimal_exponent_type_(minus_k)));
 						}
@@ -2705,14 +2707,16 @@ namespace jkj {
 									break;
 								}
 							}
-						} else if (r > deltai) {
-							break;
 						} else {
-							// r == deltai; compare fractional parts.
-							const auto x_result = multiplication_traits_::compute_mul_parity(carrier_uint(two_fc - 1), cache, beta);
-
-							if (!(x_result.parity | (x_result.is_integer & interval_type.include_left_endpoint()))) {
+							if (r > deltai) {
 								break;
+							} else {
+								// r == deltai; compare fractional parts.
+								const auto x_result = multiplication_traits_::compute_mul_parity(carrier_uint(two_fc - 1), cache, beta);
+
+								if (!(x_result.parity | (x_result.is_integer & interval_type.include_left_endpoint()))) {
+									break;
+								}
 							}
 						}
 
@@ -2857,27 +2861,29 @@ namespace jkj {
 					do {
 						if (r > deltai) {
 							break;
-						} else if (r == deltai) {
-							// Compare the fractional parts.
-							// This branch is never taken for the exceptional cases
-							// 2f_c = 29711482, e = -81
-							// (6.1442649164096937243516663440523473127541365101933479309082... *
-							// 10^-18) and 2f_c = 29711482, e = -80
-							// (1.2288529832819387448703332688104694625508273020386695861816... *
-							// 10^-17).
-							// For the case of compressed cache for binary32, there is another
-							// exceptional case 2f_c = 33554430, e = -10 (16383.9990234375). In this
-							// case, the recovered cache is two large to make compute_mul_parity
-							// mistakenly conclude that z is not an integer, but actually z = 16384 is
-							// an integer.
-							JKJ_IF_CONSTEXPR(stdr::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
-								if (two_fc == 33554430 && binary_exponent == -10) {
+						} else {
+							if (r == deltai) {
+								// Compare the fractional parts.
+								// This branch is never taken for the exceptional cases
+								// 2f_c = 29711482, e = -81
+								// (6.1442649164096937243516663440523473127541365101933479309082... *
+								// 10^-18) and 2f_c = 29711482, e = -80
+								// (1.2288529832819387448703332688104694625508273020386695861816... *
+								// 10^-17).
+								// For the case of compressed cache for binary32, there is another
+								// exceptional case 2f_c = 33554430, e = -10 (16383.9990234375). In this
+								// case, the recovered cache is two large to make compute_mul_parity
+								// mistakenly conclude that z is not an integer, but actually z = 16384 is
+								// an integer.
+								JKJ_IF_CONSTEXPR(stdr::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
+									if (two_fc == 33554430 && binary_exponent == -10) {
+										break;
+									}
+								}
+								const auto z_result = multiplication_traits_::compute_mul_parity(carrier_uint(two_fc + 2), cache, beta);
+								if (z_result.parity || z_result.is_integer) {
 									break;
 								}
-							}
-							const auto z_result = multiplication_traits_::compute_mul_parity(carrier_uint(two_fc + 2), cache, beta);
-							if (z_result.parity || z_result.is_integer) {
-								break;
 							}
 						}
 
@@ -2955,10 +2961,12 @@ namespace jkj {
 					do {
 						if (r > deltai) {
 							break;
-						} else if (r == deltai) {
-							// Compare the fractional parts.
-							if (!multiplication_traits_::compute_mul_parity(carrier_uint(two_fc - (shorter_interval ? 1 : 2)), cache, beta).parity) {
-								break;
+						} else {
+							if (r == deltai) {
+								// Compare the fractional parts.
+								if (!multiplication_traits_::compute_mul_parity(carrier_uint(two_fc - (shorter_interval ? 1 : 2)), cache, beta).parity) {
+									break;
+								}
 							}
 						}
 

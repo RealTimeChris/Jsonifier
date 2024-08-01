@@ -93,19 +93,20 @@ namespace jsonifier_internal {
 					if (*iter == '}') [[unlikely]] {
 						++iter;
 						return;
-					}
-					if (!isItFirst) {
-						if (*iter == ',') [[likely]] {
-							++iter;
-						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
-								iter - options.rootIter, end - options.rootIter, options.rootIter));
-							skipToNextValue(iter, end);
-							return;
-						}
 					} else {
-						isItFirst = false;
+						if (!isItFirst) {
+							if (*iter == ',') [[likely]] {
+								++iter;
+							} else {
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
+									iter - options.rootIter, end - options.rootIter, options.rootIter));
+								skipToNextValue(iter, end);
+								return;
+							}
+						} else {
+							isItFirst = false;
+						}
 					}
 
 					const auto keySize = getKeyLength<options, value_type>(iter, end, options.parserPtr->getErrors());
@@ -216,17 +217,19 @@ namespace jsonifier_internal {
 				if (*iter == '}') [[unlikely]] {
 					++iter;
 					return;
-				} else if (first) {
-					first = false;
 				} else {
-					if (*iter == ',') [[likely]] {
-						++iter;
+					if (!first) {
+						if (*iter == ',') [[likely]] {
+							++iter;
+						} else {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(
+								iter - options.rootIter, end - options.rootIter, options.rootIter));
+							skipToNextValue(iter, end);
+							return;
+						}
 					} else {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
-							iter - options.rootIter, end - options.rootIter, options.rootIter));
-						skipToNextValue(iter, end);
-						return;
+						first = false;
 					}
 				}
 

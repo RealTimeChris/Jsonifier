@@ -43,13 +43,15 @@ namespace jsonifier {
 			uint64_t newValue{ static_cast<uint64_t>(value) };
 			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
-		} else if constexpr (jsonifier::concepts::signed_type<value_type01> && sizeof(value) < 8) {
-			int64_t newValue{ static_cast<int64_t>(value) };
-			auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
-			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		} else {
-			auto newPtr = jsonifier_internal::toChars(returnstring.data(), value);
-			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			if constexpr (jsonifier::concepts::signed_type<value_type01> && sizeof(value) < 8) {
+				int64_t newValue{ static_cast<int64_t>(value) };
+				auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
+				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			} else {
+				auto newPtr = jsonifier_internal::toChars(returnstring.data(), value);
+				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			}
 		}
 		return returnstring;
 	}

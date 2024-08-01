@@ -52,57 +52,63 @@ namespace jsonifier_internal {
 			std::memcpy(buf, charTable + (value * 2 + lz), 2);
 			buf -= lz;
 			return buf + 2;
-		} else if (value < 10000) {
-			aa = (value * 5243) >> 19;
-			bb = value - aa * 100;
-			lz = aa < 10;
-			std::memcpy(buf, charTable + (aa * 2 + lz), 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + (2 * bb), 2);
-
-			return buf + 4;
-		} else if (value < 1000000) {
-			aa	 = uint32_t((uint64_t(value) * 429497) >> 32);
-			bbcc = value - aa * 10000;
-			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			return buf + 6;
-		} else if (value < 100000000) {
-			aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
-			ccdd = value - aabb * 10000;
-			aa	 = (aabb * 5243) >> 19;
-			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			std::memcpy(buf + 6, charTable + dd * 2, 2);
-			return buf + 8;
 		} else {
-			aabbcc = uint32_t((uint64_t(value) * 3518437209ul) >> 45);
-			aa	   = uint32_t((uint64_t(aabbcc) * 429497) >> 32);
-			ddee   = value - aabbcc * 10000;
-			bbcc   = aabbcc - aa * 10000;
-			bb	   = (bbcc * 5243) >> 19;
-			dd	   = (ddee * 5243) >> 19;
-			cc	   = bbcc - bb * 100;
-			ee	   = ddee - dd * 100;
-			lz	   = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			std::memcpy(buf + 6, charTable + dd * 2, 2);
-			std::memcpy(buf + 8, charTable + ee * 2, 2);
-			return buf + 10;
+			if (value < 10000) {
+				aa = (value * 5243) >> 19;
+				bb = value - aa * 100;
+				lz = aa < 10;
+				std::memcpy(buf, charTable + (aa * 2 + lz), 2);
+				buf -= lz;
+				std::memcpy(buf + 2, charTable + (2 * bb), 2);
+
+				return buf + 4;
+			} else {
+				if (value < 1000000) {
+					aa	 = uint32_t((uint64_t(value) * 429497) >> 32);
+					bbcc = value - aa * 10000;
+					bb	 = (bbcc * 5243) >> 19;
+					cc	 = bbcc - bb * 100;
+					lz	 = aa < 10;
+					std::memcpy(buf, charTable + aa * 2 + lz, 2);
+					buf -= lz;
+					std::memcpy(buf + 2, charTable + bb * 2, 2);
+					std::memcpy(buf + 4, charTable + cc * 2, 2);
+					return buf + 6;
+				} else {
+					if (value < 100000000) {
+						aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
+						ccdd = value - aabb * 10000;
+						aa	 = (aabb * 5243) >> 19;
+						cc	 = (ccdd * 5243) >> 19;
+						bb	 = aabb - aa * 100;
+						dd	 = ccdd - cc * 100;
+						lz	 = aa < 10;
+						std::memcpy(buf, charTable + aa * 2 + lz, 2);
+						buf -= lz;
+						std::memcpy(buf + 2, charTable + bb * 2, 2);
+						std::memcpy(buf + 4, charTable + cc * 2, 2);
+						std::memcpy(buf + 6, charTable + dd * 2, 2);
+						return buf + 8;
+					} else {
+						aabbcc = uint32_t((uint64_t(value) * 3518437209ul) >> 45);
+						aa	   = uint32_t((uint64_t(aabbcc) * 429497) >> 32);
+						ddee   = value - aabbcc * 10000;
+						bbcc   = aabbcc - aa * 10000;
+						bb	   = (bbcc * 5243) >> 19;
+						dd	   = (ddee * 5243) >> 19;
+						cc	   = bbcc - bb * 100;
+						ee	   = ddee - dd * 100;
+						lz	   = aa < 10;
+						std::memcpy(buf, charTable + aa * 2 + lz, 2);
+						buf -= lz;
+						std::memcpy(buf + 2, charTable + bb * 2, 2);
+						std::memcpy(buf + 4, charTable + cc * 2, 2);
+						std::memcpy(buf + 6, charTable + dd * 2, 2);
+						std::memcpy(buf + 8, charTable + ee * 2, 2);
+						return buf + 10;
+					}
+				}
+			}
 		}
 	}
 
@@ -141,39 +147,43 @@ namespace jsonifier_internal {
 			std::memcpy(buf, charTable + value * 2 + lz, 2);
 			buf -= lz;
 			return buf + 2;
-		} else if (value < 10000) {
-			aa = (value * 5243) >> 19;
-			bb = value - aa * 100;
-			lz = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			return buf + 4;
-		} else if (value < 1000000) {
-			aa	 = uint32_t((uint64_t(value) * 429497) >> 32);
-			bbcc = value - aa * 10000;
-			bb	 = (bbcc * 5243) >> 19;
-			cc	 = bbcc - bb * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			return buf + 6;
 		} else {
-			aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
-			ccdd = value - aabb * 10000;
-			aa	 = (aabb * 5243) >> 19;
-			cc	 = (ccdd * 5243) >> 19;
-			bb	 = aabb - aa * 100;
-			dd	 = ccdd - cc * 100;
-			lz	 = aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
-			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			std::memcpy(buf + 6, charTable + dd * 2, 2);
-			return buf + 8;
+			if (value < 10000) {
+				aa = (value * 5243) >> 19;
+				bb = value - aa * 100;
+				lz = aa < 10;
+				std::memcpy(buf, charTable + aa * 2 + lz, 2);
+				buf -= lz;
+				std::memcpy(buf + 2, charTable + bb * 2, 2);
+				return buf + 4;
+			} else {
+				if (value < 1000000) {
+					aa	 = uint32_t((uint64_t(value) * 429497) >> 32);
+					bbcc = value - aa * 10000;
+					bb	 = (bbcc * 5243) >> 19;
+					cc	 = bbcc - bb * 100;
+					lz	 = aa < 10;
+					std::memcpy(buf, charTable + aa * 2 + lz, 2);
+					buf -= lz;
+					std::memcpy(buf + 2, charTable + bb * 2, 2);
+					std::memcpy(buf + 4, charTable + cc * 2, 2);
+					return buf + 6;
+				} else {
+					aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
+					ccdd = value - aabb * 10000;
+					aa	 = (aabb * 5243) >> 19;
+					cc	 = (ccdd * 5243) >> 19;
+					bb	 = aabb - aa * 100;
+					dd	 = ccdd - cc * 100;
+					lz	 = aa < 10;
+					std::memcpy(buf, charTable + aa * 2 + lz, 2);
+					buf -= lz;
+					std::memcpy(buf + 2, charTable + bb * 2, 2);
+					std::memcpy(buf + 4, charTable + cc * 2, 2);
+					std::memcpy(buf + 6, charTable + dd * 2, 2);
+					return buf + 8;
+				}
+			}
 		}
 	}
 
@@ -210,21 +220,23 @@ namespace jsonifier_internal {
 		if (value < 100000000) {
 			buf = to_chars_u64_len_1_8(buf, uint32_t(value));
 			return buf;
-		} else if (value < 100000000ull * 100000000ull) {
-			const uint64_t hgh = value / 100000000;
-			auto low		   = uint32_t(value - hgh * 100000000);
-			buf				   = to_chars_u64_len_1_8(buf, uint32_t(hgh));
-			buf				   = to_chars_u64_len_8(buf, low);
-			return buf;
 		} else {
-			const uint64_t tmp = value / 100000000;
-			auto low		   = uint32_t(value - tmp * 100000000);
-			auto hgh		   = uint32_t(tmp / 10000);
-			auto mid		   = uint32_t(tmp - hgh * 10000);
-			buf				   = to_chars_u64_len_5_8(buf, hgh);
-			buf				   = to_chars_u64_len_4(buf, mid);
-			buf				   = to_chars_u64_len_8(buf, low);
-			return buf;
+			if (value < 100000000ull * 100000000ull) {
+				const uint64_t hgh = value / 100000000;
+				auto low		   = uint32_t(value - hgh * 100000000);
+				buf				   = to_chars_u64_len_1_8(buf, uint32_t(hgh));
+				buf				   = to_chars_u64_len_8(buf, low);
+				return buf;
+			} else {
+				const uint64_t tmp = value / 100000000;
+				auto low		   = uint32_t(value - tmp * 100000000);
+				auto hgh		   = uint32_t(tmp / 10000);
+				auto mid		   = uint32_t(tmp - hgh * 10000);
+				buf				   = to_chars_u64_len_5_8(buf, hgh);
+				buf				   = to_chars_u64_len_4(buf, mid);
+				buf				   = to_chars_u64_len_8(buf, low);
+				return buf;
+			}
 		}
 	}
 

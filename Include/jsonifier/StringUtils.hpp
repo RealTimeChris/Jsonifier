@@ -144,8 +144,10 @@ namespace jsonifier_internal {
 					srcPtr += 6;
 				}
 			}
-		} else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
-			codePoint = 0xfffd;
+		} else {
+			if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+				codePoint = 0xfffd;
+			}
 		}
 		uint32_t offset = codePointToUtf8(codePoint, dstPtr);
 		dstPtr += offset;
@@ -379,22 +381,24 @@ namespace jsonifier_internal {
 				escapeChar = *string1;
 				if (escapeChar == '"') {
 					return string2;
-				} else if (escapeChar == '\\') {
-					escapeChar = string1[1];
-					if (escapeChar == 'u') {
-						if (!handleUnicodeCodePoint(string1, string2)) {
-							return nullptr;
+				} else {
+					if (escapeChar == '\\') {
+						escapeChar = string1[1];
+						if (escapeChar == 'u') {
+							if (!handleUnicodeCodePoint(string1, string2)) {
+								return nullptr;
+							}
+							continue;
 						}
-						continue;
+						escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
+						if (escapeChar == 0) {
+							return string2;
+						}
+						string2[0] = static_cast<char_type02>(escapeChar);
+						lengthNew -= 2;
+						string2 += 1;
+						string1 += 2;
 					}
-					escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
-					if (escapeChar == 0) {
-						return string2;
-					}
-					string2[0] = static_cast<char_type02>(escapeChar);
-					lengthNew -= 2;
-					string2 += 1;
-					string1 += 2;
 				}
 			} else {
 				--lengthNew;
@@ -429,29 +433,31 @@ namespace jsonifier_internal {
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
-					} else if (escapeChar == '\\') {
-						escapeChar = string1[nextBackslashOrQuote + 1];
-						if (escapeChar == 0x75u) {
-							lengthNew -= nextBackslashOrQuote;
-							string1 += nextBackslashOrQuote;
-							string2 += nextBackslashOrQuote;
-							if (!handleUnicodeCodePoint(string1, string2)) {
+					} else {
+						if (escapeChar == '\\') {
+							escapeChar = string1[nextBackslashOrQuote + 1];
+							if (escapeChar == 0x75u) {
+								lengthNew -= nextBackslashOrQuote;
+								string1 += nextBackslashOrQuote;
+								string2 += nextBackslashOrQuote;
+								if (!handleUnicodeCodePoint(string1, string2)) {
+									return static_cast<iterator_type02>(nullptr);
+								}
+								continue;
+							}
+							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
+							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							continue;
+							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							lengthNew -= nextBackslashOrQuote + 2ull;
+							string2 += nextBackslashOrQuote + 1ull;
+							string1 += nextBackslashOrQuote + 2ull;
+						} else {
+							lengthNew -= bytesProcessed;
+							string2 += bytesProcessed;
+							string1 += bytesProcessed;
 						}
-						escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
-						if (escapeChar == 0u) {
-							return static_cast<iterator_type02>(nullptr);
-						}
-						string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string2 += nextBackslashOrQuote + 1ull;
-						string1 += nextBackslashOrQuote + 2ull;
-					} else {
-						lengthNew -= bytesProcessed;
-						string2 += bytesProcessed;
-						string1 += bytesProcessed;
 					}
 				} else {
 					lengthNew -= bytesProcessed;
@@ -478,29 +484,31 @@ namespace jsonifier_internal {
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
-					} else if (escapeChar == '\\') {
-						escapeChar = string1[nextBackslashOrQuote + 1];
-						if (escapeChar == 0x75u) {
-							lengthNew -= nextBackslashOrQuote;
-							string1 += nextBackslashOrQuote;
-							string2 += nextBackslashOrQuote;
-							if (!handleUnicodeCodePoint(string1, string2)) {
+					} else {
+						if (escapeChar == '\\') {
+							escapeChar = string1[nextBackslashOrQuote + 1];
+							if (escapeChar == 0x75u) {
+								lengthNew -= nextBackslashOrQuote;
+								string1 += nextBackslashOrQuote;
+								string2 += nextBackslashOrQuote;
+								if (!handleUnicodeCodePoint(string1, string2)) {
+									return static_cast<iterator_type02>(nullptr);
+								}
+								continue;
+							}
+							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
+							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							continue;
+							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							lengthNew -= nextBackslashOrQuote + 2ull;
+							string2 += nextBackslashOrQuote + 1ull;
+							string1 += nextBackslashOrQuote + 2ull;
+						} else {
+							lengthNew -= bytesProcessed;
+							string2 += bytesProcessed;
+							string1 += bytesProcessed;
 						}
-						escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
-						if (escapeChar == 0u) {
-							return string2;
-						}
-						string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string2 += nextBackslashOrQuote + 1ull;
-						string1 += nextBackslashOrQuote + 2ull;
-					} else {
-						lengthNew -= bytesProcessed;
-						string2 += bytesProcessed;
-						string1 += bytesProcessed;
 					}
 				} else {
 					lengthNew -= bytesProcessed;
@@ -527,29 +535,31 @@ namespace jsonifier_internal {
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
-					} else if (escapeChar == '\\') {
-						escapeChar = string1[nextBackslashOrQuote + 1];
-						if (escapeChar == 0x75u) {
-							lengthNew -= nextBackslashOrQuote;
-							string1 += nextBackslashOrQuote;
-							string2 += nextBackslashOrQuote;
-							if (!handleUnicodeCodePoint(string1, string2)) {
+					} else {
+						if (escapeChar == '\\') {
+							escapeChar = string1[nextBackslashOrQuote + 1];
+							if (escapeChar == 0x75u) {
+								lengthNew -= nextBackslashOrQuote;
+								string1 += nextBackslashOrQuote;
+								string2 += nextBackslashOrQuote;
+								if (!handleUnicodeCodePoint(string1, string2)) {
+									return static_cast<iterator_type02>(nullptr);
+								}
+								continue;
+							}
+							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
+							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							continue;
+							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							lengthNew -= nextBackslashOrQuote + 2ull;
+							string2 += nextBackslashOrQuote + 1ull;
+							string1 += nextBackslashOrQuote + 2ull;
+						} else {
+							lengthNew -= bytesProcessed;
+							string2 += bytesProcessed;
+							string1 += bytesProcessed;
 						}
-						escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
-						if (escapeChar == 0u) {
-							return string2;
-						}
-						string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string2 += nextBackslashOrQuote + 1ull;
-						string1 += nextBackslashOrQuote + 2ull;
-					} else {
-						lengthNew -= bytesProcessed;
-						string2 += bytesProcessed;
-						string1 += bytesProcessed;
 					}
 				} else {
 					lengthNew -= bytesProcessed;
@@ -573,29 +583,31 @@ namespace jsonifier_internal {
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
-					} else if (escapeChar == '\\') {
-						escapeChar = string1[nextBackslashOrQuote + 1];
-						if (escapeChar == 0x75u) {
-							lengthNew -= nextBackslashOrQuote;
-							string1 += nextBackslashOrQuote;
-							string2 += nextBackslashOrQuote;
-							if (!handleUnicodeCodePoint(string1, string2)) {
+					} else {
+						if (escapeChar == '\\') {
+							escapeChar = string1[nextBackslashOrQuote + 1];
+							if (escapeChar == 0x75u) {
+								lengthNew -= nextBackslashOrQuote;
+								string1 += nextBackslashOrQuote;
+								string2 += nextBackslashOrQuote;
+								if (!handleUnicodeCodePoint(string1, string2)) {
+									return static_cast<iterator_type02>(nullptr);
+								}
+								continue;
+							}
+							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
+							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							continue;
+							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							lengthNew -= nextBackslashOrQuote + 2ull;
+							string2 += nextBackslashOrQuote + 1ull;
+							string1 += nextBackslashOrQuote + 2ull;
+						} else {
+							lengthNew -= bytesProcessed;
+							string2 += bytesProcessed;
+							string1 += bytesProcessed;
 						}
-						escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
-						if (escapeChar == 0u) {
-							return string2;
-						}
-						string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string2 += nextBackslashOrQuote + 1ull;
-						string1 += nextBackslashOrQuote + 2ull;
-					} else {
-						lengthNew -= bytesProcessed;
-						string2 += bytesProcessed;
-						string1 += bytesProcessed;
 					}
 				} else {
 					lengthNew -= bytesProcessed;
@@ -800,12 +812,14 @@ namespace jsonifier_internal {
 			value = true;
 			iter += 4;
 			return true;
-		} else if (compareStringAsInt<"false">(iter)) {
-			value = false;
-			iter += 5;
-			return true;
 		} else {
-			return false;
+			if (compareStringAsInt<"false">(iter)) [[likely]] {
+				value = false;
+				iter += 5;
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
@@ -815,17 +829,19 @@ namespace jsonifier_internal {
 			value = true;
 			++iter;
 			return true;
-		} else if (compareStringAsInt<"false">(iter)) {
-			value = false;
-			++iter;
-			return true;
 		} else {
-			return false;
+			if (compareStringAsInt<"false">(iter)) [[likely]] {
+				value = false;
+				++iter;
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
 	template<typename iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type& iter) {
-		if (compareStringAsInt<"null">(iter)) {
+		if (compareStringAsInt<"null">(iter)) [[likely]] {
 			iter += 4;
 			return true;
 		} else {
@@ -834,7 +850,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE bool parseNull(iterator_type& iter) {
-		if (compareStringAsInt<"null">(iter)) {
+		if (compareStringAsInt<"null">(iter)) [[likely]] {
 			++iter;
 			return true;
 		} else {

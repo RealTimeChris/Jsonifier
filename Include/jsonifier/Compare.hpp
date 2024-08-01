@@ -300,35 +300,47 @@ namespace jsonifier_internal {
 			std::memcpy(v, lhs, 8);
 			std::memcpy(v + 1, rhs, 8);
 			return v[0] == v[1];
-		} else if constexpr (count == 8) {
-			uint64_t v[2];
-			std::memcpy(v, lhs, count);
-			std::memcpy(v + 1, rhs, count);
-			return v[0] == v[1];
-		} else if constexpr (count > 4) {
-			uint64_t v[2]{};
-			std::memcpy(v, lhs, count);
-			std::memcpy(v + 1, rhs, count);
-			return v[0] == v[1];
-		} else if constexpr (count == 4) {
-			uint32_t v[2];
-			std::memcpy(v, lhs, count);
-			std::memcpy(v + 1, rhs, count);
-			return v[0] == v[1];
-		} else if constexpr (count == 3) {
-			uint32_t v[2]{};
-			std::memcpy(v, lhs, count);
-			std::memcpy(v + 1, rhs, count);
-			return v[0] == v[1];
-		} else if constexpr (count == 2) {
-			uint16_t v[2];
-			std::memcpy(v, lhs, count);
-			std::memcpy(v + 1, rhs, count);
-			return v[0] == v[1];
-		} else if constexpr (count == 1) {
-			return *lhs == *rhs;
 		} else {
-			return true;
+			if constexpr (count == 8) {
+				uint64_t v[2];
+				std::memcpy(v, lhs, count);
+				std::memcpy(v + 1, rhs, count);
+				return v[0] == v[1];
+			} else {
+				if constexpr (count > 4) {
+					uint64_t v[2]{};
+					std::memcpy(v, lhs, count);
+					std::memcpy(v + 1, rhs, count);
+					return v[0] == v[1];
+				} else {
+					if constexpr (count == 4) {
+						uint32_t v[2];
+						std::memcpy(v, lhs, count);
+						std::memcpy(v + 1, rhs, count);
+						return v[0] == v[1];
+					} else {
+						if constexpr (count == 3) {
+							uint32_t v[2]{};
+							std::memcpy(v, lhs, count);
+							std::memcpy(v + 1, rhs, count);
+							return v[0] == v[1];
+						} else {
+							if constexpr (count == 2) {
+								uint16_t v[2];
+								std::memcpy(v, lhs, count);
+								std::memcpy(v + 1, rhs, count);
+								return v[0] == v[1];
+							} else {
+								if constexpr (count == 1) {
+									return *lhs == *rhs;
+								} else {
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
