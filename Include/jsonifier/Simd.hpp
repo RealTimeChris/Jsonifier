@@ -229,7 +229,6 @@ namespace jsonifier_internal {
 				newPtr[6] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 6));
 				newPtr[7] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 7));
 			}
-			jsonifierPrefetchInternal(values + bytesPerStep * 15);
 		}
 
 		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, const jsonifier_simd_int_t& opChars, const jsonifier_simd_int_t& opTable,
