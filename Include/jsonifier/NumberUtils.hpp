@@ -28,7 +28,7 @@
 
 #include <jsonifier/IToStr.hpp>
 #include <jsonifier/DToStr.hpp>
-#include <jsonifier/StrToD.hpp>
+#include <jsonifier/FastFloat.hpp>
 #include <jsonifier/StrToI.hpp>
 #include <jsonifier/Parser.hpp>
 
@@ -205,14 +205,22 @@ namespace jsonifier_internal {
 				}
 			}
 		} else {
-			auto s = parseFloat(value, newPtr);
-			++iter;
-			if (!s) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-					end - options.rootIter, options.rootIter));
-				skipToNextValue(iter, end);
-				return;
+			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
+				value_type temp;
+				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
+				if (ec != std::errc()) [[unlikely]] {
+					return;
+				}
+				value = temp;
+				++iter;
+			} else {
+				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
+				if (ec != std::errc()) [[unlikely]] {
+					return;
+				}
+				++iter;
 			}
 		}
 	}
@@ -310,13 +318,22 @@ namespace jsonifier_internal {
 				}
 			}
 		} else {
-			auto s = parseFloat(value, iter);
-			if (!s) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(iter - options.rootIter,
-					end - options.rootIter, options.rootIter));
-				skipToNextValue(iter, end);
-				return;
+			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
+				value_type temp;
+				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
+				if (ec != std::errc()) [[unlikely]] {
+					return;
+				}
+				value = temp;
+				iter  = ptr;
+			} else {
+				static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced<value_type, char, optionsNew>(static_cast<const char*>(iter), static_cast<const char*>(end), value);
+				if (ec != std::errc()) [[unlikely]] {
+					return;
+				}
+				iter = ptr;
 			}
 		}
 	}

@@ -254,10 +254,11 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			auto valueSize = value.size();
-			auto k		   = index + 10 + (valueSize * 2);
-			if (k >= buffer.size()) [[unlikely]] {
-				buffer.resize(max(buffer.size() * 2, k));
+			const auto valueSize = value.size();
+			const auto bufferSize = buffer.size();
+			const auto k = index + 10 + (valueSize * 2);
+			if (k >= bufferSize) [[unlikely]] {
+				buffer.resize(bufferSize * 2 > k ? bufferSize * 2 : k);
 			}
 			writeCharacter<'"'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			auto newPtr = buffer.data() + index;
@@ -323,9 +324,10 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			auto k = index + 32;
-			if (k >= buffer.size()) [[unlikely]] {
-				buffer.resize(max(buffer.size() * 2, k));
+			const auto k		  = index + 32;
+			const auto bufferSize = buffer.size();
+			if (k >= bufferSize) [[unlikely]] {
+				buffer.resize(bufferSize * 2 > k ? bufferSize * 2 : k);
 			}
 			int64_t valueNew{ static_cast<int64_t>(value) };
 			index = toChars(buffer.data() + index, valueNew) - buffer.data();
@@ -356,8 +358,10 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			if (index + 64 > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + 64 ? buffer.size() * 2 : index + 64);
+			const auto bufferSize = buffer.size();
+			const auto newIndex	  = index + 64;
+			if (newIndex > bufferSize) [[unlikely]] {
+				buffer.resize(bufferSize * 2 > newIndex ? bufferSize * 2 : newIndex);
 			}
 			index = static_cast<size_t>(toChars(buffer.data() + index, std::forward<value_type>(value)) - buffer.data());
 		}
