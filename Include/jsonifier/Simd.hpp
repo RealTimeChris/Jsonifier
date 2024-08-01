@@ -174,11 +174,17 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE void generateJsonIndices() {
+			const jsonifier_simd_int_t opTable{ simd_internal::gatherValues<jsonifier_simd_int_t>(simd_internal::opArray<bytesPerStep>.data()) };
+			const jsonifier_simd_int_t simdChars{ simd_internal::gatherValue<jsonifier_simd_int_t>(0x20) };
+			const jsonifier_simd_int_t quotes{ simd_internal::gatherValue<jsonifier_simd_int_t>('"') };
+			const jsonifier_simd_int_t backslashes{ simd_internal::gatherValue<jsonifier_simd_int_t>('\\') };
+			const jsonifier_simd_int_t whitespaceTable{ simd_internal::gatherValues<jsonifier_simd_int_t>(simd_internal::whitespaceArray<bytesPerStep>.data()) };
+			const jsonifier_simd_int_t oddBitsVal{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals<false>(stringBlockReader.fullBlock());
+				generateStructurals<false>(stringBlockReader.fullBlock(), simdChars, opTable, quotes, backslashes, whitespaceTable, oddBitsVal);
 			}
 			if (stringBlockReader.getRemainder(block) > 0) [[likely]] {
-				generateStructurals<true>(block);
+				generateStructurals<true>(block, simdChars, opTable, quotes, backslashes, whitespaceTable, oddBitsVal);
 			}
 		}
 
@@ -226,10 +232,11 @@ namespace jsonifier_internal {
 			jsonifierPrefetchInternal(values + bytesPerStep * 15);
 		}
 
-		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values) {
+		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, const jsonifier_simd_int_t& opChars, const jsonifier_simd_int_t& opTable,
+			const jsonifier_simd_int_t& quotes, const jsonifier_simd_int_t& backslashes, const jsonifier_simd_int_t& whiteSpaceTable, const jsonifier_simd_int_t& oddBitsVal) {
 			collectStringValues<collectAligned>(values);
-			rawStructurals = simd_internal::collectIndices(newPtr);
-			collectStructurals();
+			rawStructurals = simd_internal::collectIndices(newPtr, opChars, opTable, quotes, backslashes, whiteSpaceTable);
+			collectStructurals(oddBitsVal);
 			simd_internal::store(rawStructurals.op, newBits);
 			addTapeValues();
 			stringIndex += bitsPerStep;
@@ -250,8 +257,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE void collectEscaped() noexcept {
-			jsonifier_simd_int_t oddBitsVal{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
+		JSONIFIER_INLINE void collectEscaped(const jsonifier_simd_int_t& oddBitsVal) noexcept {
 			jsonifier_simd_int_t potentialEscape		   = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			jsonifier_simd_int_t maybeEscaped			   = simd_internal::opShl<1>(potentialEscape);
 			jsonifier_simd_int_t maybeEscapedAndOddBits	   = simd_internal::opOr(maybeEscaped, oddBitsVal);
@@ -267,12 +273,12 @@ namespace jsonifier_internal {
 			escaped			= escapedNew;
 		}
 
-		JSONIFIER_INLINE void collectEscapedCharacters() {
-			return simd_internal::opBool(rawStructurals.backslashes) ? collectEscaped() : collectEmptyEscaped();
+		JSONIFIER_INLINE void collectEscapedCharacters(const jsonifier_simd_int_t& oddBitsVal) {
+			return simd_internal::opBool(rawStructurals.backslashes) ? collectEscaped(oddBitsVal) : collectEmptyEscaped();
 		}
 
-		JSONIFIER_INLINE void collectStructurals() {
-			collectEscapedCharacters();
+		JSONIFIER_INLINE void collectStructurals(const jsonifier_simd_int_t& oddBitsVal) {
+			collectEscapedCharacters(oddBitsVal);
 			rawStructurals.quotes						  = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t inString				  = simd_internal::opClMul(rawStructurals.quotes, prevInString);
 			jsonifier_simd_int_t stringTail				  = simd_internal::opXor(inString, rawStructurals.quotes);
@@ -307,7 +313,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE std::string generateStructuralsWithErrorPrintOut(string_view_ptr values, size_type errorIndex) {
 			std::stringstream returnValue{};
 			collectStringValues(values);
-			rawStructurals = simd_internal::collectIndices(newPtr);
+			//rawStructurals = simd_internal::collectIndices(newPtr);
 			if (stringIndex == errorIndex) {
 				returnValue << "Whitespace Bits, for index: " + std::to_string(stringIndex) + ": ";
 				returnValue << printBits(rawStructurals.whitespace).data();

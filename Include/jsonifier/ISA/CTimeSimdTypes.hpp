@@ -196,7 +196,7 @@ namespace jsonifier_internal {
 		}
 
 		constexpr __m512x() noexcept {
-			for (int i = 0; i < 8; ++i) {
+			for (int32_t i = 0; i < 8; ++i) {
 				m512x_uint64[i] = 0;
 			}
 		}
@@ -326,20 +326,20 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> constexpr uint32_t get32(const value_type* data, int index) {
+	template<typename value_type> constexpr uint32_t get32(const value_type* data, int32_t index) {
 		return (data[index / 2] >> (32 * (index % 2))) & 0xFFFFFFFF;
 	}
 
-	template<typename value_type> constexpr void set32(value_type* data, int index, uint32_t value) {
+	template<typename value_type> constexpr void set32(value_type* data, int32_t index, uint32_t value) {
 		data[index / 2] &= ~(0xFFFFFFFFull << (32 * (index % 2)));
 		data[index / 2] |= (static_cast<size_t>(value) << (32 * (index % 2)));
 	}
 
-	template<typename value_type> constexpr void set64(value_type* data, int index, size_t value) {
+	template<typename value_type> constexpr void set64(value_type* data, int32_t index, size_t value) {
 		data[index] = value;
 	}
 
-	constexpr __m128x mm128ShuffleEpi32(const __m128x& a, int imm8) {
+	constexpr __m128x mm128ShuffleEpi32(const __m128x& a, int32_t imm8) {
 		__m128x result{};
 		set32(result.m128x_uint64, 0, get32(a.m128x_uint64, (imm8 >> 0) & 0x3));
 		set32(result.m128x_uint64, 1, get32(a.m128x_uint64, (imm8 >> 2) & 0x3));
@@ -354,7 +354,7 @@ namespace jsonifier_internal {
 		uint32_t a_val[4];
 		uint32_t b_val[4];
 
-		for (int i = 0; i < 4; ++i) {
+		for (int32_t i = 0; i < 4; ++i) {
 			a_val[i] = get32(a.m128x_uint64, i);
 			b_val[i] = get32(b.m128x_uint64, i);
 		}
@@ -497,7 +497,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr __m256x mm256ShuffleEpi32(const __m256x& a, int imm8) {
+	constexpr __m256x mm256ShuffleEpi32(const __m256x& a, int32_t imm8) {
 		__m256x result{};
 		set32(result.m256x_uint64, 0, get32(a.m256x_uint64, (imm8 >> 0) & 0x3));
 		set32(result.m256x_uint64, 1, get32(a.m256x_uint64, (imm8 >> 2) & 0x3));
@@ -515,7 +515,7 @@ namespace jsonifier_internal {
 
 		uint32_t a_val[8];
 		uint32_t b_val[8];
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			a_val[i] = get32(a.m256x_uint64, i);
 			b_val[i] = get32(b.m256x_uint64, i);
 		}
@@ -706,7 +706,7 @@ namespace jsonifier_internal {
 
 		uint32_t a_val[16];
 		uint32_t b_val[16];
-		for (int i = 0; i < 16; ++i) {
+		for (int32_t i = 0; i < 16; ++i) {
 			a_val[i] = get32(a.m512x_uint64, i);
 			b_val[i] = get32(b.m512x_uint64, i);
 		}
@@ -722,7 +722,7 @@ namespace jsonifier_internal {
 		return result;
 	}
 
-	constexpr __m512x mm512ShuffleEpi32(const __m512x& a, int imm8) {
+	constexpr __m512x mm512ShuffleEpi32(const __m512x& a, int32_t imm8) {
 		__m512x result{};
 		set32(result.m512x_uint64, 0, get32(a.m512x_uint64, (imm8 >> 0) & 0x3));
 		set32(result.m512x_uint64, 1, get32(a.m512x_uint64, (imm8 >> 2) & 0x3));
@@ -833,14 +833,14 @@ namespace jsonifier_internal {
 	constexpr __m512x mm512TernarylogicEpi32(const __m512x& a, const __m512x& b, const __m512x& c, const uint8_t k) {
 		__m512x result;
 
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			size_t val_a = a.m512x_uint64[i];
 			size_t val_b = b.m512x_uint64[i];
 			size_t val_c = c.m512x_uint64[i];
 
 			size_t result_val = 0;
 
-			for (int bit = 0; bit < 64; ++bit) {
+			for (int32_t bit = 0; bit < 64; ++bit) {
 				uint8_t bit_a = (val_a >> bit) & 1;
 				uint8_t bit_b = (val_b >> bit) & 1;
 				uint8_t bit_c = (val_c >> bit) & 1;
@@ -860,7 +860,7 @@ namespace jsonifier_internal {
 	constexpr __m512x mm512MaskSubEpi64(const __m512x& a, uint8_t mask, const __m512x& b, const __m512x& c) {
 		__m512x result;
 
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			if (mask & (1 << i)) {
 				result.m512x_uint64[i] = b.m512x_uint64[i] - c.m512x_uint64[i];
 			} else {
@@ -888,11 +888,11 @@ namespace jsonifier_internal {
 		__m512x result;
 
 		size_t repeated_value = 0;
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			repeated_value |= (static_cast<size_t>(value) << (i * 8));
 		}
 
-		for (int i = 0; i < 8; ++i) {
+		for (int32_t i = 0; i < 8; ++i) {
 			result.m512x_uint64[i] = repeated_value;
 		}
 

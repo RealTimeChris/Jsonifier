@@ -334,6 +334,16 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
+		concept has_reserve = requires(jsonifier_internal::unwrap_t<value_type> value) {
+			{ value.reserve(std::declval<typename jsonifier_internal::unwrap_t<value_type>::size_type>()) } -> std::same_as<void>;
+		};
+
+		template<typename value_type>
+		concept has_capacity = requires(jsonifier_internal::unwrap_t<value_type> value) {
+			{ value.capacity() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::size_type>;
+		};
+
+		template<typename value_type>
 		concept has_release = requires(jsonifier_internal::unwrap_t<value_type> value) {
 			{ value.release() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::pointer>;
 		};

@@ -292,26 +292,29 @@ namespace jsonifier_internal {
 				return;
 			}
 
-			const auto bufferSize = value.size();
-			auto iterNew		  = value.begin();
-			for (size_t i = 0; i < bufferSize; ++i) {
-				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
+			const auto n = value.size();
 
-				if (*iter == ',') [[likely]] {
+			const auto rootIter = value.begin();
+
+			auto iterNew   = value.begin();
+			const auto endNew = value.end();
+
+			for (; iterNew < endNew; ++iterNew) {
+				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*iterNew, iter, end);
+				if (*iter == ',') {
 					++iter;
-				} else if (*iter == ']') [[likely]] {
+				} else if (*iter == ']') {
 					++iter;
-					if (value.size() != i + 1) {
-						value.resize(i + 1);
-					}
+					value.resize(iterNew - rootIter);
 					return;
-				} else {
+				} else [[unlikely]] {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_End>(
 						iter - options.rootIter, end - options.rootIter, options.rootIter));
 					return;
 				}
 			}
+
 			while (static_cast<const char*>(iter) != static_cast<const char*>(end)) {
 				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
 

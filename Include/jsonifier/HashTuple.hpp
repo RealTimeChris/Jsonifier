@@ -45,38 +45,42 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto& tuple, size_t currentIndex = 0, size_t maxIndex = std::tuple_size_v<unwrap_t<decltype(tuple)>>>
-	JSONIFIER_INLINE constexpr auto collectTupleReferences(std::array<tuple_reference, maxIndex> arrayOfRefs = std::array<tuple_reference, maxIndex>{}) {
+	JSONIFIER_INLINE constexpr auto collectTupleReferencesInternal(std::array<tuple_reference, maxIndex>& arrayOfRefs) {
 		if constexpr (currentIndex < maxIndex) {
 			tuple_reference values{};
 			values.oldIndex			  = currentIndex;
 			values.stringLength		  = std::get<currentIndex>(tuple).view().size();
 			arrayOfRefs[currentIndex] = values;
-			return collectTupleReferences<tuple, currentIndex + 1>(arrayOfRefs);
+			return collectTupleReferencesInternal<tuple, currentIndex + 1>(arrayOfRefs);
 		} else {
 			return arrayOfRefs;
 		}
 	}
 
-	template<const auto& arrayOfRefs> JSONIFIER_INLINE constexpr auto bubbleSort() {
-		std::array<tuple_reference, arrayOfRefs.size()> returnValues{ arrayOfRefs };
-		for (size_t i = 0; i < arrayOfRefs.size() - 1; ++i) {
-			for (size_t j = 0; j < arrayOfRefs.size() - i - 1; ++j) {
-				if (returnValues[j].stringLength > returnValues[j + 1].stringLength) {
-					std::swap(returnValues[j], returnValues[j + 1]);
+	template<const auto& tuple, size_t currentIndex = 0, size_t maxIndex = std::tuple_size_v<unwrap_t<decltype(tuple)>>>
+	JSONIFIER_INLINE constexpr auto collectTupleReferences() {
+		std::array<tuple_reference, maxIndex> arrayOfRefs{};
+		return collectTupleReferencesInternal<tuple, 0, maxIndex>(arrayOfRefs);
+	}
+
+	template<size_t size> JSONIFIER_INLINE constexpr auto bubbleSort(std::array<tuple_reference, size>& arrayOfRefs) {
+		for (size_t i = 0; i < size - 1; ++i) {
+			for (size_t j = 0; j < size - i - 1; ++j) { 
+				if (arrayOfRefs[j].stringLength > arrayOfRefs[j + 1].stringLength) {
+					std::swap(arrayOfRefs[j], arrayOfRefs[j + 1]);
 				}
 			}
 		}
-		for (size_t i = 0; i < arrayOfRefs.size(); ++i) {
-			returnValues[i].newIndex = i;
+		for (size_t i = 0; i < size; ++i) {
+			arrayOfRefs[i].newIndex = i;
 		}
-		return returnValues;
 	}
 
 	template<typename value_type> JSONIFIER_INLINE constexpr auto sortTupleReferences() {
-		constexpr auto& tuple		 = jsonifier::core<unwrap_t<value_type>>::parseValue.parseValue;
-		constexpr auto collectedRefs = collectTupleReferences<tuple>();
-		constexpr auto newRefs		 = bubbleSort<make_static<collectedRefs>::value>();
-		return newRefs;
+		constexpr auto& tuple = jsonifier::core<unwrap_t<value_type>>::parseValue.parseValue;
+		auto collectedRefs	  = collectTupleReferences<tuple>();
+		bubbleSort(collectedRefs);
+		return collectedRefs;
 	}
 
 	template<size_t start, size_t end, size_t... indices> JSONIFIER_INLINE constexpr auto generateCustomIndexSequence(std::index_sequence<indices...>) {

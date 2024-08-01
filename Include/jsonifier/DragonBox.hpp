@@ -319,30 +319,30 @@ namespace jkj {
 		// Currently available formats are IEEE-754 binary32 & IEEE-754 binary64.
 
 		struct ieee754_binary32 {
-			static constexpr int total_bits					= 32;
-			static constexpr int significand_bits			= 23;
-			static constexpr int exponent_bits				= 8;
-			static constexpr int min_exponent				= -126;
-			static constexpr int max_exponent				= 127;
-			static constexpr int exponent_bias				= -127;
-			static constexpr int decimal_significand_digits = 9;
-			static constexpr int decimal_exponent_digits	= 2;
+			static constexpr int32_t total_bits					= 32;
+			static constexpr int32_t significand_bits			= 23;
+			static constexpr int32_t exponent_bits				= 8;
+			static constexpr int32_t min_exponent				= -126;
+			static constexpr int32_t max_exponent				= 127;
+			static constexpr int32_t exponent_bias				= -127;
+			static constexpr int32_t decimal_significand_digits = 9;
+			static constexpr int32_t decimal_exponent_digits	= 2;
 		};
 		struct ieee754_binary64 {
-			static constexpr int total_bits					= 64;
-			static constexpr int significand_bits			= 52;
-			static constexpr int exponent_bits				= 11;
-			static constexpr int min_exponent				= -1022;
-			static constexpr int max_exponent				= 1023;
-			static constexpr int exponent_bias				= -1023;
-			static constexpr int decimal_significand_digits = 17;
-			static constexpr int decimal_exponent_digits	= 3;
+			static constexpr int32_t total_bits					= 64;
+			static constexpr int32_t significand_bits			= 52;
+			static constexpr int32_t exponent_bits				= 11;
+			static constexpr int32_t min_exponent				= -1022;
+			static constexpr int32_t max_exponent				= 1023;
+			static constexpr int32_t exponent_bias				= -1023;
+			static constexpr int32_t decimal_significand_digits = 17;
+			static constexpr int32_t decimal_exponent_digits	= 3;
 		};
 
 		// A floating-point format traits class defines ways to interpret a bit pattern of given size as
 		// an encoding of floating-point number. This is an implementation of such a traits class,
 		// supporting ways to interpret IEEE-754 binary floating-point numbers.
-		template<class Format, class CarrierUInt, class ExponentInt = int> struct ieee754_binary_traits {
+		template<class Format, class CarrierUInt, class ExponentInt = int32_t> struct ieee754_binary_traits {
 			// CarrierUInt needs to have enough size to hold the entire contents of floating-point
 			// numbers. The actual bits are assumed to be aligned to the LSB, and every other bits are
 			// assumed to be zeroed.
@@ -357,7 +357,7 @@ namespace jkj {
 
 			using format						   = Format;
 			using carrier_uint					   = CarrierUInt;
-			static constexpr int carrier_bits	   = int(detail::value_bits<carrier_uint>::value);
+			static constexpr int32_t carrier_bits	   = int32_t(detail::value_bits<carrier_uint>::value);
 			using exponent_int					   = ExponentInt;
 			static constexpr auto carrier_uint_val = carrier_uint(1);
 
@@ -580,7 +580,7 @@ namespace jkj {
 			namespace bits {
 				// Most compilers should be able to optimize this into the ROR instruction.
 				// n is assumed to be at most of bit_width bits.
-				template<stdr::size_t bit_width, class UInt> JKJ_CONSTEXPR14 UInt rotr(UInt n, unsigned int r) noexcept {
+				template<stdr::size_t bit_width, class UInt> JKJ_CONSTEXPR14 UInt rotr(UInt n, uint32_t r) noexcept {
 					static_assert(bit_width > 0, "jkj::dragonbox: rotation bit-width must be positive");
 					static_assert(bit_width <= value_bits<UInt>::value, "jkj::dragonbox: rotation bit-width is too large");
 					r &= (bit_width - 1);
@@ -662,10 +662,10 @@ namespace jkj {
 						}
 #endif
 #if JKJ_HAS_BUILTIN(__builtin_addc) && !defined(__ibmxl__)
-						JKJ_IF_CONSTEXPR(stdr::is_same<stdr::uint_least64_t, unsigned int>::value) {
-							unsigned int carry{};
-							low_  = stdr::uint_least64_t(__builtin_addc(static_cast<unsigned int>(low_), static_cast<unsigned int>(n), 0, &carry));
-							high_ = stdr::uint_least64_t(__builtin_addc(static_cast<unsigned int>(high_), 0, carry, &carry));
+						JKJ_IF_CONSTEXPR(stdr::is_same<stdr::uint_least64_t, uint32_t>::value) {
+							uint32_t carry{};
+							low_  = stdr::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(n), 0, &carry));
+							high_ = stdr::uint_least64_t(__builtin_addc(static_cast<uint32_t>(high_), 0, carry, &carry));
 							return *this;
 						}
 #endif
@@ -835,11 +835,11 @@ namespace jkj {
 			// Some simple utilities for constexpr computation.
 			////////////////////////////////////////////////////////////////////////////////////////
 
-			template<int k, class Int> constexpr Int compute_power(Int a) noexcept {
+			template<int32_t k, class Int> constexpr Int compute_power(Int a) noexcept {
 				static_assert(k >= 0, "");
 #if JKJ_HAS_CONSTEXPR14
 				Int p = 1;
-				for (int i = 0; i < k; ++i) {
+				for (int32_t i = 0; i < k; ++i) {
 					p *= a;
 				}
 				return p;
@@ -848,10 +848,10 @@ namespace jkj {
 #endif
 			}
 
-			template<int a, class UInt> constexpr int count_factors(UInt n) noexcept {
+			template<int32_t a, class UInt> constexpr int32_t count_factors(UInt n) noexcept {
 				static_assert(a > 1, "");
 #if JKJ_HAS_CONSTEXPR14
-				int c = 0;
+				int32_t c = 0;
 				while (n % a == 0) {
 					n /= a;
 					++c;
@@ -872,9 +872,9 @@ namespace jkj {
 
 				// For constexpr computation.
 				// Returns -1 when n = 0.
-				template<class UInt> constexpr int floor_log2(UInt n) noexcept {
+				template<class UInt> constexpr int32_t floor_log2(UInt n) noexcept {
 #if JKJ_HAS_CONSTEXPR14
-					int count = -1;
+					int32_t count = -1;
 					while (n != 0) {
 						++count;
 						n >>= 1;
@@ -887,7 +887,7 @@ namespace jkj {
 
 				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier,
 					stdr::int_least32_t supported_min_exponent = Info<current_tier>::min_exponent, stdr::int_least32_t supported_max_exponent = Info<current_tier>::max_exponent>
-				constexpr bool is_in_range(int) noexcept {
+				constexpr bool is_in_range(int32_t) noexcept {
 					return min_exponent >= supported_min_exponent && max_exponent <= supported_max_exponent;
 				}
 				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier>
@@ -1066,36 +1066,36 @@ namespace jkj {
 				// Returns true if and only if n is divisible by 10^N.
 				// Precondition: n <= 10^(N+1)
 				// !!It takes an in-out parameter!!
-				template<int N, class UInt> struct divide_by_pow10_info;
+				template<int32_t N, class UInt> struct divide_by_pow10_info;
 
 				template<class UInt> struct divide_by_pow10_info<1, UInt> {
 					static constexpr stdr::uint_fast32_t magic_number = 6554;
-					static constexpr int shift_amount				  = 16;
+					static constexpr int32_t shift_amount				  = 16;
 				};
 
 				template<> struct divide_by_pow10_info<1, stdr::uint_least8_t> {
 					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int shift_amount				  = 10;
+					static constexpr int32_t shift_amount				  = 10;
 				};
 
 				template<> struct divide_by_pow10_info<1, stdr::uint_least16_t> {
 					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int shift_amount				  = 10;
+					static constexpr int32_t shift_amount				  = 10;
 				};
 
 				template<class UInt> struct divide_by_pow10_info<2, UInt> {
 					static constexpr stdr::uint_fast32_t magic_number = 656;
-					static constexpr int shift_amount				  = 16;
+					static constexpr int32_t shift_amount				  = 16;
 				};
 
 				template<> struct divide_by_pow10_info<2, stdr::uint_least16_t> {
 					static constexpr stdr::uint_fast32_t magic_number = 41;
-					static constexpr int shift_amount				  = 12;
+					static constexpr int32_t shift_amount				  = 12;
 				};
 
-				template<int N, class UInt> JKJ_CONSTEXPR14 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
+				template<int32_t N, class UInt> JKJ_CONSTEXPR14 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
 					// Make sure the computation for max_n does not overflow.
-					static_assert(N + 1 <= log::floor_log10_pow2(int(value_bits<UInt>::value)), "");
+					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
 
 					using info				= divide_by_pow10_info<N, UInt>;
@@ -1111,9 +1111,9 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small n and N.
 				// Precondition: n <= 10^(N+1)
-				template<int N, class UInt> JKJ_CONSTEXPR14 UInt small_division_by_pow10(UInt n) noexcept {
+				template<int32_t N, class UInt> JKJ_CONSTEXPR14 UInt small_division_by_pow10(UInt n) noexcept {
 					// Make sure the computation for max_n does not overflow.
-					static_assert(N + 1 <= log::floor_log10_pow2(int(value_bits<UInt>::value)), "");
+					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
 
 					return UInt((n * divide_by_pow10_info<N, UInt>::magic_number) >> divide_by_pow10_info<N, UInt>::shift_amount);
@@ -1121,7 +1121,7 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small N.
 				// Precondition: n <= n_max
-				template<int N, class UInt, UInt n_max> JKJ_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
+				template<int32_t N, class UInt, UInt n_max> JKJ_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
 					static_assert(N >= 0, "");
 
 					// Specialize for 32-bit division by 10.
@@ -1224,9 +1224,9 @@ namespace jkj {
 
 		template<class Dummy> struct cache_holder<ieee754_binary32, Dummy> {
 			using cache_entry_type																									= detail::stdr::uint_least64_t;
-			static constexpr int cache_bits																							= 64;
-			static constexpr int min_k																								= -31;
-			static constexpr int max_k																								= 46;
+			static constexpr int32_t cache_bits																							= 64;
+			static constexpr int32_t min_k																								= -31;
+			static constexpr int32_t max_k																								= 46;
 			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
 				UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49), UINT64_C(0xc612062576589ddb),
 				UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2), UINT64_C(0x971da05074da7bef),
@@ -1253,9 +1253,9 @@ namespace jkj {
 
 		template<class Dummy> struct cache_holder<ieee754_binary64, Dummy> {
 			using cache_entry_type																									= detail::wuint::uint128;
-			static constexpr int cache_bits																							= 128;
-			static constexpr int min_k																								= -292;
-			static constexpr int max_k																								= 326;
+			static constexpr int32_t cache_bits																							= 128;
+			static constexpr int32_t min_k																								= -292;
+			static constexpr int32_t max_k																								= 326;
 			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
@@ -1578,9 +1578,9 @@ namespace jkj {
 		// Compressed cache.
 		template<class FloatFormat, class Dummy = void> struct compressed_cache_holder {
 			using cache_entry_type			= typename cache_holder<FloatFormat>::cache_entry_type;
-			static constexpr int cache_bits = cache_holder<FloatFormat>::cache_bits;
-			static constexpr int min_k		= cache_holder<FloatFormat>::min_k;
-			static constexpr int max_k		= cache_holder<FloatFormat>::max_k;
+			static constexpr int32_t cache_bits = cache_holder<FloatFormat>::cache_bits;
+			static constexpr int32_t min_k		= cache_holder<FloatFormat>::min_k;
+			static constexpr int32_t max_k		= cache_holder<FloatFormat>::max_k;
 
 			template<class ShiftAmountType, class DecimalExponentType> static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				return cache_holder<FloatFormat>::cache[k - min_k];
@@ -1589,10 +1589,10 @@ namespace jkj {
 
 		template<class Dummy> struct compressed_cache_holder<ieee754_binary32, Dummy> {
 			using cache_entry_type										= cache_holder<ieee754_binary32>::cache_entry_type;
-			static constexpr int cache_bits								= cache_holder<ieee754_binary32>::cache_bits;
-			static constexpr int min_k									= cache_holder<ieee754_binary32>::min_k;
-			static constexpr int max_k									= cache_holder<ieee754_binary32>::max_k;
-			static constexpr int compression_ratio						= 13;
+			static constexpr int32_t cache_bits								= cache_holder<ieee754_binary32>::cache_bits;
+			static constexpr int32_t min_k									= cache_holder<ieee754_binary32>::min_k;
+			static constexpr int32_t max_k									= cache_holder<ieee754_binary32>::max_k;
+			static constexpr int32_t compression_ratio						= 13;
 			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t((compression_ratio + 1) / 2);
 
@@ -1666,10 +1666,10 @@ namespace jkj {
 
 		template<class Dummy> struct compressed_cache_holder<ieee754_binary64, Dummy> {
 			using cache_entry_type										= cache_holder<ieee754_binary64>::cache_entry_type;
-			static constexpr int cache_bits								= cache_holder<ieee754_binary64>::cache_bits;
-			static constexpr int min_k									= cache_holder<ieee754_binary64>::min_k;
-			static constexpr int max_k									= cache_holder<ieee754_binary64>::max_k;
-			static constexpr int compression_ratio						= 27;
+			static constexpr int32_t cache_bits								= cache_holder<ieee754_binary64>::cache_bits;
+			static constexpr int32_t min_k									= cache_holder<ieee754_binary64>::min_k;
+			static constexpr int32_t max_k									= cache_holder<ieee754_binary64>::max_k;
+			static constexpr int32_t compression_ratio						= 27;
 			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t(compression_ratio);
 
@@ -1764,11 +1764,11 @@ namespace jkj {
 		// A collection of some common definitions to reduce boilerplate.
 		template<class FormatTraits, class CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits_base {
 			using format						  = typename FormatTraits::format;
-			static constexpr int significand_bits = format::significand_bits;
-			static constexpr int total_bits		  = format::total_bits;
+			static constexpr int32_t significand_bits = format::significand_bits;
+			static constexpr int32_t total_bits		  = format::total_bits;
 			using carrier_uint					  = typename FormatTraits::carrier_uint;
 			using cache_entry_type				  = CacheEntryType;
-			static constexpr int cache_bits		  = int(cache_bits_);
+			static constexpr int32_t cache_bits		  = int32_t(cache_bits_);
 
 			struct compute_mul_result {
 				carrier_uint integer_part;
@@ -2489,7 +2489,7 @@ namespace jkj {
 			template<class FormatTraits> struct impl : private FormatTraits::format {
 				using format					  = typename FormatTraits::format;
 				using carrier_uint				  = typename FormatTraits::carrier_uint;
-				static constexpr int carrier_bits = FormatTraits::carrier_bits;
+				static constexpr int32_t carrier_bits = FormatTraits::carrier_bits;
 				using exponent_int				  = typename FormatTraits::exponent_int;
 
 				using format::exponent_bias;
@@ -2498,35 +2498,35 @@ namespace jkj {
 				using format::significand_bits;
 				static constexpr auto carrier_uint_val = carrier_uint(1);
 
-				static constexpr int kappa = log::floor_log10_pow2(carrier_bits - significand_bits - 2) - 1;
+				static constexpr int32_t kappa = log::floor_log10_pow2(carrier_bits - significand_bits - 2) - 1;
 				static_assert(kappa >= 1, "");
 				static_assert(carrier_bits >= significand_bits + 2 + log::floor_log2_pow10(kappa + 1), "");
 
-				static constexpr int min(int x, int y) noexcept {
+				static constexpr int32_t min(int32_t x, int32_t y) noexcept {
 					return x < y ? x : y;
 				}
-				static constexpr int max(int x, int y) noexcept {
+				static constexpr int32_t max(int32_t x, int32_t y) noexcept {
 					return x > y ? x : y;
 				}
 
-				static constexpr int min_k =
+				static constexpr int32_t min_k =
 					min(-log::floor_log10_pow2_minus_log10_4_over_3(max_exponent - significand_bits), -log::floor_log10_pow2(max_exponent - significand_bits) + kappa);
 
 				// We do invoke shorter_interval_case for exponent == min_exponent case,
 				// so we should not add 1 here.
-				static constexpr int max_k =
+				static constexpr int32_t max_k =
 					max(-log::floor_log10_pow2_minus_log10_4_over_3(min_exponent - significand_bits /*+ 1*/), -log::floor_log10_pow2(min_exponent - significand_bits) + kappa);
 
-				static constexpr int case_shorter_interval_left_endpoint_lower_threshold = 2;
-				static constexpr int case_shorter_interval_left_endpoint_upper_threshold =
+				static constexpr int32_t case_shorter_interval_left_endpoint_lower_threshold = 2;
+				static constexpr int32_t case_shorter_interval_left_endpoint_upper_threshold =
 					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint_val << (significand_bits + 2)) - 1) + 1>(10) / 3);
 
-				static constexpr int case_shorter_interval_right_endpoint_lower_threshold = 0;
-				static constexpr int case_shorter_interval_right_endpoint_upper_threshold =
+				static constexpr int32_t case_shorter_interval_right_endpoint_lower_threshold = 0;
+				static constexpr int32_t case_shorter_interval_right_endpoint_upper_threshold =
 					2 + log::floor_log2(compute_power<count_factors<5>((carrier_uint_val << (significand_bits + 1)) + 1) + 1>(10) / 3);
 
-				static constexpr int shorter_interval_tie_lower_threshold = -log::floor_log5_pow2_minus_log5_3(significand_bits + 4) - 2 - significand_bits;
-				static constexpr int shorter_interval_tie_upper_threshold = -log::floor_log5_pow2(significand_bits + 2) - 2 - significand_bits;
+				static constexpr int32_t shorter_interval_tie_lower_threshold = -log::floor_log5_pow2_minus_log5_3(significand_bits + 4) - 2 - significand_bits;
+				static constexpr int32_t shorter_interval_tie_upper_threshold = -log::floor_log5_pow2(significand_bits + 2) - 2 - significand_bits;
 
 				template<class PreferredIntegerTypesPolicy> using remainder_type =
 					typename PreferredIntegerTypesPolicy::template remainder_type<FormatTraits, compute_power<kappa + 1>(detail::stdr::uint_least64_t(10))>;

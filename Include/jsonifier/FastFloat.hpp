@@ -312,7 +312,7 @@ using parse_options = parse_options_t<char>;
 // rust style `try!()` macro, or `?` operator
 #define JSONIFIER_FASTFLOAT_TRY(x) { if (!(x)) return false; }
 
-#define JSONIFIER_FASTFLOAT_ENABLE_IF(...) typename std::enable_if<(__VA_ARGS__), int>::type
+#define JSONIFIER_FASTFLOAT_ENABLE_IF(...) typename std::enable_if<(__VA_ARGS__), int32_t>::type
 
 
 namespace jsonifier_fast_float {
@@ -388,7 +388,7 @@ struct value128 {
 
 /* Helper C++14 constexpr generic implementation of leading_zeroes */
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR14
-int leading_zeroes_generic(uint64_t input_num, int last_bit = 0) {
+int32_t leading_zeroes_generic(uint64_t input_num, int32_t last_bit = 0) {
     if(input_num & uint64_t(0xffffffff00000000)) { input_num >>= 32; last_bit |= 32; }
     if(input_num & uint64_t(        0xffff0000)) { input_num >>= 16; last_bit |= 16; }
     if(input_num & uint64_t(            0xff00)) { input_num >>=  8; last_bit |=  8; }
@@ -400,7 +400,7 @@ int leading_zeroes_generic(uint64_t input_num, int last_bit = 0) {
 
 /* result might be undefined when input_num is zero */
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
-int leading_zeroes(uint64_t input_num) {
+int32_t leading_zeroes(uint64_t input_num) {
   assert(input_num > 0);
   if (cpp20_and_in_constexpr()) {
     return leading_zeroes_generic(input_num);
@@ -411,7 +411,7 @@ int leading_zeroes(uint64_t input_num) {
   // Search the mask data from most significant bit (MSB)
   // to least significant bit (LSB) for a set bit (1).
   _BitScanReverse64(&leading_zero, input_num);
-  return (int)(63 - leading_zero);
+  return (int32_t)(63 - leading_zero);
   #else
   return leading_zeroes_generic(input_num);
   #endif
@@ -500,18 +500,18 @@ struct binary_format_lookup_tables;
 template <typename T> struct binary_format : binary_format_lookup_tables<T> {
   using equiv_uint = typename std::conditional<sizeof(T) == 4, uint32_t, uint64_t>::type;
 
-  static inline constexpr int mantissa_explicit_bits();
-  static inline constexpr int minimum_exponent();
-  static inline constexpr int infinite_power();
-  static inline constexpr int sign_index();
-  static inline constexpr int min_exponent_fast_path(); // used when fegetround() == FE_TONEAREST
-  static inline constexpr int max_exponent_fast_path();
-  static inline constexpr int max_exponent_round_to_even();
-  static inline constexpr int min_exponent_round_to_even();
+  static inline constexpr int32_t mantissa_explicit_bits();
+  static inline constexpr int32_t minimum_exponent();
+  static inline constexpr int32_t infinite_power();
+  static inline constexpr int32_t sign_index();
+  static inline constexpr int32_t min_exponent_fast_path(); // used when fegetround() == FE_TONEAREST
+  static inline constexpr int32_t max_exponent_fast_path();
+  static inline constexpr int32_t max_exponent_round_to_even();
+  static inline constexpr int32_t min_exponent_round_to_even();
   static inline constexpr uint64_t max_mantissa_fast_path(int64_t power);
   static inline constexpr uint64_t max_mantissa_fast_path(); // used when fegetround() == FE_TONEAREST
-  static inline constexpr int largest_power_of_ten();
-  static inline constexpr int smallest_power_of_ten();
+  static inline constexpr int32_t largest_power_of_ten();
+  static inline constexpr int32_t smallest_power_of_ten();
   static inline constexpr T exact_power_of_ten(int64_t power);
   static inline constexpr size_t max_digits();
   static inline constexpr equiv_uint exponent_mask();
@@ -588,7 +588,7 @@ constexpr float binary_format_lookup_tables<float, U>::powers_of_ten[];
 template <typename U>
 constexpr uint64_t binary_format_lookup_tables<float, U>::max_mantissa[];
 
-template <> inline constexpr int binary_format<double>::min_exponent_fast_path() {
+template <> inline constexpr int32_t binary_format<double>::min_exponent_fast_path() {
 #if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
   return 0;
 #else
@@ -596,7 +596,7 @@ template <> inline constexpr int binary_format<double>::min_exponent_fast_path()
 #endif
 }
 
-template <> inline constexpr int binary_format<float>::min_exponent_fast_path() {
+template <> inline constexpr int32_t binary_format<float>::min_exponent_fast_path() {
 #if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
   return 0;
 #else
@@ -604,50 +604,50 @@ template <> inline constexpr int binary_format<float>::min_exponent_fast_path() 
 #endif
 }
 
-template <> inline constexpr int binary_format<double>::mantissa_explicit_bits() {
+template <> inline constexpr int32_t binary_format<double>::mantissa_explicit_bits() {
   return 52;
 }
-template <> inline constexpr int binary_format<float>::mantissa_explicit_bits() {
+template <> inline constexpr int32_t binary_format<float>::mantissa_explicit_bits() {
   return 23;
 }
 
-template <> inline constexpr int binary_format<double>::max_exponent_round_to_even() {
+template <> inline constexpr int32_t binary_format<double>::max_exponent_round_to_even() {
   return 23;
 }
 
-template <> inline constexpr int binary_format<float>::max_exponent_round_to_even() {
+template <> inline constexpr int32_t binary_format<float>::max_exponent_round_to_even() {
   return 10;
 }
 
-template <> inline constexpr int binary_format<double>::min_exponent_round_to_even() {
+template <> inline constexpr int32_t binary_format<double>::min_exponent_round_to_even() {
   return -4;
 }
 
-template <> inline constexpr int binary_format<float>::min_exponent_round_to_even() {
+template <> inline constexpr int32_t binary_format<float>::min_exponent_round_to_even() {
   return -17;
 }
 
-template <> inline constexpr int binary_format<double>::minimum_exponent() {
+template <> inline constexpr int32_t binary_format<double>::minimum_exponent() {
   return -1023;
 }
-template <> inline constexpr int binary_format<float>::minimum_exponent() {
+template <> inline constexpr int32_t binary_format<float>::minimum_exponent() {
   return -127;
 }
 
-template <> inline constexpr int binary_format<double>::infinite_power() {
+template <> inline constexpr int32_t binary_format<double>::infinite_power() {
   return 0x7FF;
 }
-template <> inline constexpr int binary_format<float>::infinite_power() {
+template <> inline constexpr int32_t binary_format<float>::infinite_power() {
   return 0xFF;
 }
 
-template <> inline constexpr int binary_format<double>::sign_index() { return 63; }
-template <> inline constexpr int binary_format<float>::sign_index() { return 31; }
+template <> inline constexpr int32_t binary_format<double>::sign_index() { return 63; }
+template <> inline constexpr int32_t binary_format<float>::sign_index() { return 31; }
 
-template <> inline constexpr int binary_format<double>::max_exponent_fast_path() {
+template <> inline constexpr int32_t binary_format<double>::max_exponent_fast_path() {
   return 22;
 }
-template <> inline constexpr int binary_format<float>::max_exponent_fast_path() {
+template <> inline constexpr int32_t binary_format<float>::max_exponent_fast_path() {
   return 10;
 }
 
@@ -685,20 +685,20 @@ inline constexpr float binary_format<float>::exact_power_of_ten(int64_t power) {
 
 
 template <>
-inline constexpr int binary_format<double>::largest_power_of_ten() {
+inline constexpr int32_t binary_format<double>::largest_power_of_ten() {
   return 308;
 }
 template <>
-inline constexpr int binary_format<float>::largest_power_of_ten() {
+inline constexpr int32_t binary_format<float>::largest_power_of_ten() {
   return 38;
 }
 
 template <>
-inline constexpr int binary_format<double>::smallest_power_of_ten() {
+inline constexpr int32_t binary_format<double>::smallest_power_of_ten() {
   return -342;
 }
 template <>
-inline constexpr int binary_format<float>::smallest_power_of_ten() {
+inline constexpr int32_t binary_format<float>::smallest_power_of_ten() {
   return -64;
 }
 
@@ -780,7 +780,7 @@ static constexpr uint64_t int_cmp_zeros()
     return (sizeof(UC) == 1) ? 0x3030303030303030 : (sizeof(UC) == 2) ? (uint64_t(UC('0')) << 48 | uint64_t(UC('0')) << 32 | uint64_t(UC('0')) << 16 | UC('0')) : (uint64_t(UC('0')) << 32 | UC('0'));
 }
 template<typename UC>
-static constexpr int int_cmp_len()
+static constexpr int32_t int_cmp_len()
 {
     return sizeof(uint64_t) / sizeof(UC);
 }
@@ -890,12 +890,12 @@ fastfloat_really_inline
 constexpr uint8_t ch_to_digit(UC c) { return int_luts<>::chdigit[static_cast<unsigned char>(c)]; }
 
 fastfloat_really_inline
-constexpr size_t max_digits_u64(int base) { return int_luts<>::maxdigits_u64[base - 2]; }
+constexpr size_t max_digits_u64(int32_t base) { return int_luts<>::maxdigits_u64[base - 2]; }
 
 // If a u64 is exactly max_digits_u64() in length, this is
 // the value below which it has definitely overflowed.
 fastfloat_really_inline
-constexpr uint64_t min_safe_u64(int base) { return int_luts<>::min_safe_u64[base - 2]; }
+constexpr uint64_t min_safe_u64(int32_t base) { return int_luts<>::min_safe_u64[base - 2]; }
 
 } // namespace jsonifier_fast_float
 
@@ -939,7 +939,7 @@ from_chars_result_t<UC> fromCharsAdvanced(UC const * first, UC const * last,
 */
 template <typename T, typename UC = char, typename = JSONIFIER_FASTFLOAT_ENABLE_IF(!is_supported_float_type<T>())>
 JSONIFIER_FASTFLOAT_CONSTEXPR20
-from_chars_result_t<UC> from_chars(UC const * first, UC const * last, T& value, int base = 10) noexcept;
+from_chars_result_t<UC> from_chars(UC const * first, UC const * last, T& value, int32_t base = 10) noexcept;
 
 } // namespace jsonifier_fast_float
 #endif // JSONIFIER_FASTFLOAT_FAST_FLOAT_H
@@ -998,7 +998,7 @@ fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
 uint64_t read8_to_u64(const UC *chars) {
   if (cpp20_and_in_constexpr() || !std::is_same<UC, char>::value) {
     uint64_t val = 0;
-    for(int i = 0; i < 8; ++i) {
+    for(int32_t i = 0; i < 8; ++i) {
       val |= uint64_t(uint8_t(*chars)) << (i*8);
       ++chars;
     }
@@ -1114,7 +1114,7 @@ JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
   const __m128i data = _mm_loadu_si128(reinterpret_cast<const __m128i*>(chars));
 
   // (x - '0') <= 9
-  // http://0x80.pl/articles/simd-parsing-int-sequences.html
+  // http://0x80.pl/articles/simd-parsing-int32_t-sequences.html
   const __m128i t0 = _mm_add_epi16(data, _mm_set1_epi16(32720));
   const __m128i t1 = _mm_cmpgt_epi16(t0, _mm_set1_epi16(-32759));
 
@@ -1129,7 +1129,7 @@ JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
   const uint16x8_t data = vld1q_u16(reinterpret_cast<const uint16_t*>(chars));
   
   // (x - '0') <= 9
-  // http://0x80.pl/articles/simd-parsing-int-sequences.html
+  // http://0x80.pl/articles/simd-parsing-int32_t-sequences.html
   const uint16x8_t t0 = vsubq_u16(data, vmovq_n_u16('0'));
   const uint16x8_t mask = vcltq_u16(t0, vmovq_n_u16('9' - '0' + 1));
 
@@ -1228,7 +1228,7 @@ parsed_number_string_t<UC> parseNumberString(UC const *p, UC const * pend) noexc
   }
   UC const * const start_digits = p;
 
-  uint64_t i = 0; // an unsigned int avoids signed overflows (which are bad)
+  uint64_t i = 0; // an uint32_t avoids signed overflows (which are bad)
 
   while ((p != pend) && is_integer(*p)) {
     // a multiplication by 10 is cheaper than an arbitrary integer
@@ -1369,7 +1369,7 @@ parsed_number_string_t<UC> parseNumberString(UC const *p, UC const * pend) noexc
 
 template <typename T, typename UC>
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
-from_chars_result_t<UC> parse_int_string(UC const* p, UC const* pend, T& value, int base) {
+from_chars_result_t<UC> parse_int_string(UC const* p, UC const* pend, T& value, int32_t base) {
   from_chars_result_t<UC> answer;
   
   UC const* const first = p;
@@ -1506,9 +1506,9 @@ namespace jsonifier_fast_float {
 template <class unused = void>
 struct powers_template {
 
-constexpr static int smallest_power_of_five = binary_format<double>::smallest_power_of_ten();
-constexpr static int largest_power_of_five = binary_format<double>::largest_power_of_ten();
-constexpr static int number_of_entries = 2 * (largest_power_of_five - smallest_power_of_five + 1);
+constexpr static int32_t smallest_power_of_five = binary_format<double>::smallest_power_of_ten();
+constexpr static int32_t largest_power_of_five = binary_format<double>::largest_power_of_ten();
+constexpr static int32_t number_of_entries = 2 * (largest_power_of_five - smallest_power_of_five + 1);
 // Powers of five from 5^-342 all the way to 5^308 rounded toward one.
 constexpr static uint64_t power_of_five_128[number_of_entries] = {
     0xeef453d6923bd65a,0x113faa2906a13b3f,
@@ -2189,10 +2189,10 @@ namespace jsonifier_fast_float {
 // the result, with the "high" part corresponding to the most significant bits and the
 // low part corresponding to the least significant bits.
 //
-template <int bit_precision>
+template <int32_t bit_precision>
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
 value128 compute_product_approximation(int64_t q, uint64_t w) {
-  const int index = 2 * int(q - powers::smallest_power_of_five);
+  const int32_t index = 2 * int32_t(q - powers::smallest_power_of_five);
   // For small values of q, e.g., q in [0,27], the answer is always exact because
   // The line value128 firstproduct = full_multiplication(w, power_of_five_128[index]);
   // gives the exact answer.
@@ -2237,11 +2237,11 @@ namespace detail {
 // for significant digits already multiplied by 10 ** q.
 template <typename binary>
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR14
-adjusted_mantissa compute_error_scaled(int64_t q, uint64_t w, int lz) noexcept  {
-  int hilz = int(w >> 63) ^ 1;
+adjusted_mantissa compute_error_scaled(int64_t q, uint64_t w, int32_t lz) noexcept  {
+  int32_t hilz = int32_t(w >> 63) ^ 1;
   adjusted_mantissa answer;
   answer.mantissa = w << hilz;
-  int bias = binary::mantissa_explicit_bits() - binary::minimum_exponent();
+  int32_t bias = binary::mantissa_explicit_bits() - binary::minimum_exponent();
   answer.power2 = int32_t(detail::power(int32_t(q)) + bias - hilz - lz - 62 + invalid_am_bias);
   return answer;
 }
@@ -2251,7 +2251,7 @@ adjusted_mantissa compute_error_scaled(int64_t q, uint64_t w, int lz) noexcept  
 template <typename binary>
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
 adjusted_mantissa compute_error(int64_t q, uint64_t w)  noexcept  {
-  int lz = leading_zeroes(w);
+  int32_t lz = leading_zeroes(w);
   w <<= lz;
   value128 product = compute_product_approximation<binary::mantissa_explicit_bits() + 3>(q, w);
   return compute_error_scaled<binary>(q, product.high, lz);
@@ -2281,7 +2281,7 @@ adjusted_mantissa compute_float(int64_t q, uint64_t w)  noexcept  {
   // At this point in time q is in [powers::smallest_power_of_five, powers::largest_power_of_five].
 
   // We want the most significant bit of i to be 1. Shift if needed.
-  int lz = leading_zeroes(w);
+  int32_t lz = leading_zeroes(w);
   w <<= lz;
 
   // The required precision is binary::mantissa_explicit_bits() + 3 because
@@ -2299,8 +2299,8 @@ adjusted_mantissa compute_float(int64_t q, uint64_t w)  noexcept  {
   // value128 product = compute_product(q, w);
   // but in practice, we can win big with the compute_product_approximation if its additional branch
   // is easily predicted. Which is best is data specific.
-  int upperbit = int(product.high >> 63);
-  int shift = upperbit + 64 - binary::mantissa_explicit_bits() - 3;
+  int32_t upperbit = int32_t(product.high >> 63);
+  int32_t shift = upperbit + 64 - binary::mantissa_explicit_bits() - 3;
 
   answer.mantissa = product.high >> shift;
 
@@ -2527,18 +2527,18 @@ uint64_t empty_hi64(bool& truncated) noexcept {
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
 uint64_t uint64_hi64(uint64_t r0, bool& truncated) noexcept {
   truncated = false;
-  int shl = leading_zeroes(r0);
+  int32_t shl = leading_zeroes(r0);
   return r0 << shl;
 }
 
 fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20
 uint64_t uint64_hi64(uint64_t r0, uint64_t r1, bool& truncated) noexcept {
-  int shl = leading_zeroes(r0);
+  int32_t shl = leading_zeroes(r0);
   if (shl == 0) {
     truncated = r1 != 0;
     return r0;
   } else {
-    int shr = 64 - shl;
+    int32_t shr = 64 - shl;
     truncated = (r1 << shl) != 0;
     return (r0 << shl) | (r1 >> shr);
   }
@@ -2822,7 +2822,7 @@ struct bigint : pow5_tables<> {
   // positive, this is larger, otherwise they are equal.
   // the limbs are stored in little-endian order, so we
   // must compare the limbs in ever order.
-  JSONIFIER_FASTFLOAT_CONSTEXPR20 int compare(const bigint& other) const noexcept {
+  JSONIFIER_FASTFLOAT_CONSTEXPR20 int32_t compare(const bigint& other) const noexcept {
     if (vec.len() > other.vec.len()) {
       return 1;
     } else if (vec.len() < other.vec.len()) {
@@ -2903,7 +2903,7 @@ struct bigint : pow5_tables<> {
   }
 
   // get the number of leading zeros in the bigint.
-  JSONIFIER_FASTFLOAT_CONSTEXPR20 int ctlz() const noexcept {
+  JSONIFIER_FASTFLOAT_CONSTEXPR20 int32_t ctlz() const noexcept {
     if (vec.is_empty()) {
       return 0;
     } else {
@@ -2918,9 +2918,9 @@ struct bigint : pow5_tables<> {
   }
 
   // get the number of bits in the bigint.
-  JSONIFIER_FASTFLOAT_CONSTEXPR20 int bit_length() const noexcept {
-    int lz = ctlz();
-    return int(limb_bits * vec.len()) - lz;
+  JSONIFIER_FASTFLOAT_CONSTEXPR20 int32_t bit_length() const noexcept {
+    int32_t lz = ctlz();
+    return int32_t(limb_bits * vec.len()) - lz;
   }
 
   JSONIFIER_FASTFLOAT_CONSTEXPR20 bool mul(limb y) noexcept {
@@ -3301,7 +3301,7 @@ adjusted_mantissa positive_digit_comp(bigint& bigmant, int32_t exponent) noexcep
   adjusted_mantissa answer;
   bool truncated;
   answer.mantissa = bigmant.hi64(truncated);
-  int bias = binary_format<T>::mantissa_explicit_bits() - binary_format<T>::minimum_exponent();
+  int32_t bias = binary_format<T>::mantissa_explicit_bits() - binary_format<T>::minimum_exponent();
   answer.power2 = bigmant.bit_length() - 64 + bias;
 
   round<T>(answer, [truncated](adjusted_mantissa& a, int32_t shift) {
@@ -3347,7 +3347,7 @@ adjusted_mantissa negative_digit_comp(bigint& bigmant, adjusted_mantissa am, int
   }
 
   // compare digits, and use it to director rounding
-  int ord = real_digits.compare(theor_digits);
+  int32_t ord = real_digits.compare(theor_digits);
   adjusted_mantissa answer = am;
   round<T>(answer, [ord](adjusted_mantissa& a, int32_t shift) {
     round_nearest_tie_even(a, shift, [ord](bool is_odd, bool _, bool __) -> bool {

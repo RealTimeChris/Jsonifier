@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 #endif
 	}
 
-	JSONIFIER_INLINE constexpr int intLog2(uint32_t x) noexcept {
+	JSONIFIER_INLINE constexpr int32_t intLog2(uint32_t x) noexcept {
 		return 31 - jsonifier_internal::countl_zero(x | 1);
 	}
 
@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 		34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
-	JSONIFIER_INLINE constexpr int fastDigitCount(const uint32_t x) noexcept {
+	JSONIFIER_INLINE constexpr int32_t fastDigitCount(const uint32_t x) noexcept {
 		return (x + digitCountTable[intLog2(x)]) >> 32;
 	}
 
@@ -172,15 +172,15 @@ namespace jsonifier_internal {
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-		using Raw = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
+		using raw = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
 
-		Raw raw;
-		std::memcpy(&raw, &val, sizeof(value_type));
+		raw rawVal;
+		std::memcpy(&rawVal, &val, sizeof(value_type));
 
 		constexpr bool isFloat			= std::is_same_v<float, value_type>;
 		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		bool sign						= (raw >> (sizeof(value_type) * 8 - 1));
-		int32_t expRaw					= raw << 1 >> (sizeof(Raw) * 8 - exponentBits);
+		bool sign						= (rawVal >> (sizeof(value_type) * 8 - 1));
+		int32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buf, "null", 4);
@@ -190,7 +190,7 @@ namespace jsonifier_internal {
 		*buf = '-';
 		buf += sign;
 
-		if ((raw << 1) == 0) [[unlikely]] {
+		if ((rawVal << 1) == 0) [[unlikely]] {
 			*buf = '0';
 			return buf + 1;
 		}

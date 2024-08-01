@@ -37,7 +37,7 @@ static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* 
 inline static uint64_t xgetbv();
 
 static void getCPUBrandString(char* brand) {
-	unsigned int regs[12];
+	uint32_t regs[12];
 	regs[0] = 0x80000000;
 	cpuid(regs, regs + 1, regs + 2, regs + 3);
 
@@ -71,7 +71,7 @@ inline static uint32_t detectSupportedArchitectures() {
 
 static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
 	#if defined(_MSC_VER)
-	int cpuInfo[4];
+	int32_t cpuInfo[4];
 	__cpuidex(cpuInfo, *eax, *ecx);
 	*eax = cpuInfo[0];
 	*ebx = cpuInfo[1];
@@ -174,7 +174,7 @@ inline static uint32_t detectSupportedArchitectures() {
 
 #endif
 
-int main() {
+int32_t main() {
 	const auto supportedISA = detectSupportedArchitectures();
 	printCPUInfo(supportedISA);
 	return supportedISA;

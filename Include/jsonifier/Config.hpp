@@ -88,7 +88,7 @@
 	#define JSONIFIER_INLINE inline __attribute__((always_inline))
 #elif defined(JSONIFIER_GNUCXX)
 	#define JSONIFIER_NO_INLINE __attribute__((noinline))
-	#define JSONIFIER_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_INLINE inline
 #else
 	#define JSONIFIER_INLINE inline
 	#define JSONIFIER_NO_INLINE
@@ -158,7 +158,7 @@
 
 #endif
 
-JSONIFIER_INLINE constexpr int mmShuffle(int fp3, int fp2, int fp1, int fp0) {
+JSONIFIER_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
 
