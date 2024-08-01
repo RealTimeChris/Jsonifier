@@ -82,13 +82,13 @@
 
 #if defined(JSONIFIER_MSVC)
 	#define JSONIFIER_NO_INLINE __declspec(noinline)
-	#define JSONIFIER_INLINE inline
+	#define JSONIFIER_INLINE __forceinline
 #elif defined(JSONIFIER_CLANG)
 	#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
 	#define JSONIFIER_INLINE inline __attribute__((always_inline))
 #elif defined(JSONIFIER_GNUCXX)
 	#define JSONIFIER_NO_INLINE __attribute__((noinline))
-	#define JSONIFIER_INLINE inline
+	#define JSONIFIER_INLINE inline __attribute__((always_inline))
 #else
 	#define JSONIFIER_INLINE inline
 	#define JSONIFIER_NO_INLINE

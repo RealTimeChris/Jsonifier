@@ -286,14 +286,14 @@ namespace jsonifier_internal {
 				skipToNextValue(iter, end);
 				return;
 			}
-			static thread_local unwrap_t<value_type_new> parseVector{};
+
 			if (*iter == ']') [[unlikely]] {
 				++iter;
 				return;
 			}
 
-			const auto bufferSize = parseVector.size();
-			auto iterNew		  = parseVector.begin();
+			const auto bufferSize = value.size();
+			auto iterNew		  = value.begin();
 			for (size_t i = 0; i < bufferSize; ++i) {
 				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
 
@@ -304,7 +304,6 @@ namespace jsonifier_internal {
 					if (value.size() != i + 1) {
 						value.resize(i + 1);
 					}
-					std::move(parseVector.begin(), parseVector.begin() + i, value.begin());
 					return;
 				} else {
 					static constexpr auto sourceLocation{ std::source_location::current() };
@@ -314,16 +313,12 @@ namespace jsonifier_internal {
 				}
 			}
 			while (static_cast<const char*>(iter) != static_cast<const char*>(end)) {
-				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(parseVector.emplace_back(), iter, end);
+				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(value.emplace_back(), iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;
 				} else if (*iter == ']') [[likely]] {
 					++iter;
-					if (value.size() != parseVector.size()) {
-						value.resize(parseVector.size());
-					}
-					std::move(parseVector.begin(), parseVector.end(), value.begin());
 					return;
 				} else {
 					static constexpr auto sourceLocation{ std::source_location::current() };
