@@ -100,14 +100,14 @@ namespace jsonifier_internal {
 		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices>::op... } };
 	}
 
-	template<std::size_t... Indices> struct reverse_index_sequence {};
+	template<std::size_t... indices> struct reverse_index_sequence {};
 
-	template<std::size_t N, std::size_t... Indices> struct make_reverse_index_sequence_impl {
-		using type = typename make_reverse_index_sequence_impl<N - 1, Indices..., N - 1>::type;
+	template<std::size_t N, std::size_t... indices> struct make_reverse_index_sequence_impl {
+		using type = typename make_reverse_index_sequence_impl<N - 1, indices..., N - 1>::type;
 	};
 
-	template<std::size_t... Indices> struct make_reverse_index_sequence_impl<0, Indices...> {
-		using type = reverse_index_sequence<Indices...>;
+	template<std::size_t... indices> struct make_reverse_index_sequence_impl<0, indices...> {
+		using type = reverse_index_sequence<indices...>;
 	};
 
 	template<std::size_t N> using make_reverse_index_sequence = typename make_reverse_index_sequence_impl<N>::type;
@@ -174,8 +174,8 @@ namespace jsonifier {
 			{ value.end() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::const_iterator>;
 		} || requires(jsonifier_internal::unwrap_t<value_type> value) {
 			typename jsonifier_internal::unwrap_t<value_type>::value_type;
-			{ value.begin() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::iterator_type>;
-			{ value.end() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::iterator_type>;
+			{ value.begin() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::iterator>;
+			{ value.end() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::iterator>;
 		};
 
 		template<typename value_type>

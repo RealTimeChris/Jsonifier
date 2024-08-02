@@ -54,7 +54,9 @@ set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 
-include("JsonifierDetectArchitecture")
+if (NOT JSONIFIER_CPU_INSTRUCTIONS)
+	include("JsonifierDetectArchitecture")
+endif()
 
 set_target_properties(
 	"${PROJECT_NAME}" PROPERTIES
@@ -94,7 +96,6 @@ target_compile_options(
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
-	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

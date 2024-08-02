@@ -61,8 +61,7 @@ namespace jsonifier {
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = reinterpret_cast<const char*>(string.data());
 			auto endIter	 = reinterpret_cast<const char*>(string.data()) + string.size();
-			static constexpr jsonifier_fast_float::parse_options optionsNew{ jsonifier_fast_float::chars_format::json };
-			//jsonifier_fast_float::fromCharsAdvanced<optionsNew>(currentIter, endIter, newValue);
+			jsonifier_fast_float::fromCharsAdvanced(currentIter, endIter, newValue);
 		}
 		return newValue;
 	}
@@ -112,8 +111,8 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, jsonifier::concepts::json_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE bool parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end) {
+	template<typename value_type_new, jsonifier::concepts::json_structural_iterator_t iterator>
+	JSONIFIER_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) {
 		using value_type = unwrap_t<value_type_new>;
 		auto newPtr		 = iter.operator const char*();
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
@@ -196,7 +195,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<typename value_type_new, typename iterator_type> JSONIFIER_INLINE bool parseNumber(value_type_new&& value, iterator_type&& iter, iterator_type&& end) {
+	template<typename value_type_new, typename iterator> JSONIFIER_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) {
 		using value_type = unwrap_t<value_type_new>;
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());

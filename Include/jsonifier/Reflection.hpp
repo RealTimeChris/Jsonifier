@@ -25,6 +25,7 @@
 
 #include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/StringView.hpp>
+#include <source_location>
 
 namespace jsonifier {
 

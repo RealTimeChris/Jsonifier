@@ -55,7 +55,8 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr) {
+		JSONIFIER_INLINE void deallocate(pointer ptr, size_type size = 0) {
+			( void )size;
 			if (ptr) [[likely]] {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);

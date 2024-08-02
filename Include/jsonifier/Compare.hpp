@@ -99,19 +99,19 @@ namespace jsonifier_internal {
 			static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
 			uint64_t simdValue, lo7, quote, t0, next;
 			while (lengthNew >= 8) {
-				std::memcpy(&simdValue, data, sizeof(uint64_t));
+				simdValue = *std::bit_cast<uint64_t*>(data);
 
 				lo7	  = simdValue & mask64;
 				quote = (lo7 ^ value64) + mask64;
 				t0	  = ~(quote | simdValue);
 				next  = simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
 
-				if (next != 8) {
-					data += next;
-					return;
-				} else {
+				if (next == 8) {
 					data += 8;
 					lengthNew -= 8;
+				} else {
+					data += next;
+					return;
 				}
 			}
 		}
@@ -121,19 +121,19 @@ namespace jsonifier_internal {
 			static constexpr uint32_t hiBit	  = repeatByte<0b10000000, uint32_t>();
 			uint32_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 4) {
-				std::memcpy(&simdValue, data, sizeof(uint32_t));
+				simdValue = *std::bit_cast<uint32_t*>(data);
 
 				lo7	  = simdValue & mask32;
 				quote = (lo7 ^ value32) + mask32;
 				t0	  = ~(quote | simdValue);
 				next  = simd_internal::tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
 
-				if (next != 4) {
-					data += next;
-					return;
-				} else {
+				if (next == 4) {
 					data += 4;
 					lengthNew -= 4;
+				} else {
+					data += next;
+					return;
 				}
 			}
 		}
@@ -143,19 +143,19 @@ namespace jsonifier_internal {
 			static constexpr uint16_t hiBit	  = repeatByte<0b10000000, uint16_t>();
 			uint16_t simdValue, lo7, quote, t0, next;
 			if (lengthNew >= 2) {
-				std::memcpy(&simdValue, data, sizeof(uint16_t));
+				simdValue = *std::bit_cast<uint16_t*>(data);
 
 				lo7	  = static_cast<uint16_t>(simdValue & mask16);
 				quote = static_cast<uint16_t>((lo7 ^ value16) + mask16);
 				t0	  = static_cast<uint16_t>(~(quote | simdValue));
 				next  = static_cast<uint16_t>(simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u);
 
-				if (next != 2) {
-					data += next;
-					return;
-				} else {
+				if (next == 2) {
 					data += 2;
 					lengthNew -= 2;
+				} else {
+					data += next;
+					return;
 				}
 			}
 		}
@@ -226,8 +226,8 @@ namespace jsonifier_internal {
 			static constexpr uint64_t n{ sizeof(uint64_t) };
 			uint64_t v[2];
 			while (lengthNew > n) {
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				v[0] = *std::bit_cast<uint64_t*>(lhs);
+				v[1] = *std::bit_cast<uint64_t*>(rhs);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -239,17 +239,16 @@ namespace jsonifier_internal {
 			auto shift = n - lengthNew;
 			lhs -= shift;
 			rhs -= shift;
-
-			std::memcpy(v, lhs, n);
-			std::memcpy(v + 1, rhs, n);
+			v[0] = *std::bit_cast<uint64_t*>(lhs);
+			v[1] = *std::bit_cast<uint64_t*>(rhs);
 			return v[0] == v[1];
 		}
 		{
 			static constexpr uint64_t n{ sizeof(uint32_t) };
 			if (lengthNew >= n) {
 				uint32_t v[2];
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				v[0] = *std::bit_cast<uint32_t*>(lhs);
+				v[1] = *std::bit_cast<uint32_t*>(rhs);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -262,8 +261,8 @@ namespace jsonifier_internal {
 			static constexpr uint64_t n{ sizeof(uint16_t) };
 			if (lengthNew >= n) {
 				uint16_t v[2];
-				std::memcpy(v, lhs, n);
-				std::memcpy(v + 1, rhs, n);
+				v[0] = *std::bit_cast<uint16_t*>(lhs);
+				v[1] = *std::bit_cast<uint16_t*>(rhs);
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -283,8 +282,8 @@ namespace jsonifier_internal {
 			uint64_t countNew{ count };
 			uint64_t v[2];
 			while (countNew > 8) {
-				std::copy_n(lhs, 8, reinterpret_cast<char_type*>(v));
-				std::copy_n(rhs, 8, reinterpret_cast<char_type*>(v + 1));
+				v[0] = *std::bit_cast<uint64_t*>(lhs);
+				v[1] = *std::bit_cast<uint64_t*>(rhs);
 				if (v[0] != v[1]) {
 					return false;
 				}

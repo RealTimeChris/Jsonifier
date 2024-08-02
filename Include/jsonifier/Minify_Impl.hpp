@@ -30,8 +30,8 @@
 namespace jsonifier_internal {
 
 	template<typename derived_type> struct minify_impl {
-		template<const minify_options_internal<derived_type>& options, jsonifier::concepts::string_t string_type, typename iterator_type>
-		JSONIFIER_INLINE static void impl(iterator_type&& iter, string_type& out, uint64_t& index) noexcept {
+		template<jsonifier::concepts::string_t string_type, typename minifier_type, typename iterator>
+		JSONIFIER_INLINE static void impl(iterator& iter, string_type&& out, uint64_t& index, minifier_type& minifier) noexcept {
 			auto previousPtr = static_cast<const char*>(iter);
 			int64_t currentDistance{};
 
@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 							writeCharacters<false>(out, previousPtr, newSize, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
-							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
+							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
 								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 							return;
 						}
@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 							writeCharacters<false>(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
-							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
+							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
 								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 							return;
 						}
@@ -105,7 +105,7 @@ namespace jsonifier_internal {
 						[[fallthrough]];
 					[[unlikely]] default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
+						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
 						return;
 					}

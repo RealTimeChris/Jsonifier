@@ -36,10 +36,10 @@ namespace jsonifier {
 		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator_type			 = jsonifier_internal::iterator<value_type>;
+		using iterator			 = jsonifier_internal::iterator<value_type>;
 		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using difference_type		 = std::ptrdiff_t;
-		using reverse_iterator		 = std::reverse_iterator<iterator_type>;
+		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
 		using size_type				 = uint64_t;
@@ -115,7 +115,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector(iterator_type first, iterator_type last) {
+		JSONIFIER_INLINE vector(iterator first, iterator last) {
 			difference_type insertCount = std::distance(first, last);
 			if (!first) {
 				return;
@@ -133,7 +133,7 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (iterator_type iter = first; iter < last; ++iter) {
+			for (iterator iter = first; iter < last; ++iter) {
 				allocator::construct(insertPos++, *iter);
 			}
 
@@ -175,7 +175,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void insert(iterator_type where, iterator_type first, iterator_type last) {
+		template<typename iterator02> JSONIFIER_INLINE void insert(iterator where, iterator02 first, iterator02 last) {
 			size_type insertCount = std::distance(first, last);
 
 			if (insertCount == 0) {
@@ -191,14 +191,14 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (iterator_type iter = first; iter != last; ++iter) {
+			for (iterator02 iter = first; iter != last; ++iter) {
 				allocator::construct(insertPos++, *iter);
 			}
 
 			sizeVal = newSize;
 		}
 
-		template<typename value_type_newer> JSONIFIER_INLINE void insert(iterator_type where, value_type_newer&& value) {
+		template<typename value_type_newer> JSONIFIER_INLINE void insert(iterator where, value_type_newer&& value) {
 			size_type insertCount = 1;
 
 			if (insertCount == 0) {
@@ -219,12 +219,12 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE iterator_type begin() noexcept {
-			return iterator_type{ dataVal };
+		JSONIFIER_INLINE iterator begin() noexcept {
+			return iterator{ dataVal };
 		}
 
-		JSONIFIER_INLINE iterator_type end() noexcept {
-			return iterator_type{ dataVal + sizeVal };
+		JSONIFIER_INLINE iterator end() noexcept {
+			return iterator{ dataVal + sizeVal };
 		}
 
 		JSONIFIER_INLINE reverse_iterator rbegin() noexcept {
@@ -357,7 +357,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE iterator_type erase(iterator_type iter) {
+		JSONIFIER_INLINE iterator erase(iterator iter) {
 			if (iter < begin() || iter > end()) {
 				return end();
 			}
@@ -370,7 +370,7 @@ namespace jsonifier {
 			std::uninitialized_move(dataVal + eraseIndex + 1, dataVal + sizeVal, dataVal + eraseIndex);
 
 			sizeVal = newSize;
-			return iterator_type{ dataVal + eraseIndex };
+			return iterator{ dataVal + eraseIndex };
 		}
 
 		JSONIFIER_INLINE void shrink_to_fit() {

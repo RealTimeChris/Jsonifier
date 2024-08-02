@@ -2508,7 +2508,8 @@ DOT_UML_DETAILS        = NO
 # to display on a single line. If the actual line length exceeds this threshold
 # significantly it will wrapped across multiple lines. Some heuristics are apply
 # to avoid ugly line breaks.
-# Minimum value: 0, maximum value: 1000, default value: 17.
+# Minimum value: 0, maximum value: 2
+, default value: 17.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_WRAP_THRESHOLD     = 17

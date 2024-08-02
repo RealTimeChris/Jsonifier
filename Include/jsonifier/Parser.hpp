@@ -66,11 +66,15 @@ namespace jsonifier_internal {
 
 	template<typename derived_type, typename value_type> struct parse_impl;
 
+	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
+		jsonifier::concepts::uint64_type size_type>
+	void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
+
 	template<typename derived_type> class parser {
 	  public:
-		template<const auto& options, size_t subTupleIndex, const auto& tuple, size_t index, typename derived_type_new, typename value_type, typename iterator_type,
+		template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
 			jsonifier::concepts::uint64_type size_type>
-		friend void invokeParse(value_type& value, iterator_type& iter, iterator_type& end, size_type keySize);
+		friend void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
 		template<typename derived_type_new, typename value_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
@@ -188,6 +192,10 @@ namespace jsonifier_internal {
 			return object;
 		}
 
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+			return derivedRef.errors;
+		}
+
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 
@@ -195,10 +203,6 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
-		}
-
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
-			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~parser() noexcept = default;

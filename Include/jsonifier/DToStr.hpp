@@ -34,29 +34,13 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_INLINE constexpr auto countl_zero(const uint32_t x) noexcept {
-#if defined(JSONIFIER_MSVC)
-		return std::countl_zero(x);
-#else
-	#if __has_builtin(__builtin_ctzll)
-		return __builtin_clz(x);
-	#else
-		return std::countl_zero(x);
-	#endif
-#endif
-	}
-
-	JSONIFIER_INLINE constexpr int32_t intLog2(uint32_t x) noexcept {
-		return 31 - jsonifier_internal::countl_zero(x | 1);
-	}
-
 	constexpr uint64_t digitCountTable[] = { 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184, 17179868184,
 		21474826480, 21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368, 34349738368,
 		34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
-	JSONIFIER_INLINE constexpr int32_t fastDigitCount(const uint32_t x) noexcept {
-		return (x + digitCountTable[intLog2(x)]) >> 32;
+	JSONIFIER_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
+		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
 	inline constexpr uint8_t decTrailingZeroTable[] = { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -196,7 +180,7 @@ namespace jsonifier_internal {
 		}
 
 		if constexpr (isFloat) {
-			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::remove);
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
 
 			uint32_t sigDec			= uint32_t(v.significand);
 			int32_t expDec			= v.exponent;
@@ -250,7 +234,7 @@ namespace jsonifier_internal {
 				return buf + 2 - lz;
 			}
 		} else {
-			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::ignore);
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
 
 			uint64_t sigDec = v.significand;
 			int32_t expDec	= v.exponent;

@@ -26,10 +26,6 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
           xcodebuild -version
 
-    - name: Install dependencies
-      run: |
-          brew install cmake
-
     - name: Configure CMake
       run: cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
 
@@ -44,8 +40,9 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
+      working-directory: /usr/local/bin/
       run: |
-           ./Json-Performance
+            sudo chmod +x ./Json-Performance
+            ./Json-Performance
       continue-on-error: true
       

@@ -73,17 +73,18 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_type simd_int_t01> JSONIFIER_INLINE jsonifier_internal::__m128x opSetLSB(simd_int_t01&& value, bool valueNew) {
-		jsonifier_internal::unwrap_t<jsonifier_internal::__m128x> mask = jsonifier_internal::mm128SetrEpi64x(0x00ll, 0x01ll);
+		static constexpr jsonifier_internal::unwrap_t<jsonifier_internal::__m128x> mask = jsonifier_internal::mm128SetrEpi64x(0x00ll, 0x01ll);
 		return valueNew ? jsonifier_internal::mm128OrSi128(value, mask) : jsonifier_internal::mm128AndNotSi128N(mask, value);
 	}
 
 	template<jsonifier::concepts::simd_int_type simd_int_t01> JSONIFIER_INLINE jsonifier_internal::__m128x opNot(simd_int_t01&& value) {
-		return jsonifier_internal::mm128XorSi128(std::forward<simd_int_t01>(value), jsonifier_internal::mm128Set1Epi64x(0xFFFFFFFFFFFFFFFFll));
+		static constexpr auto mask{ jsonifier_internal::mm128Set1Epi64x(0xFFFFFFFFFFFFFFFFll) };
+		return jsonifier_internal::mm128XorSi128(std::forward<simd_int_t01>(value), mask);
 	}
 
 	template<jsonifier::concepts::simd_int_type simd_int_t01> JSONIFIER_INLINE bool opGetMSB(simd_int_t01&& value) {
-		jsonifier_internal::__m128x result =
-			jsonifier_internal::mm128AndSi128(std::forward<simd_int_t01>(value), jsonifier_internal::mm128SetrEpi64x(0x8000000000000000ll, 0x00ll));
+		static constexpr auto mask{ jsonifier_internal::mm128SetrEpi64x(0x8000000000000000ll, 0x00ll) };
+		jsonifier_internal::__m128x result = jsonifier_internal::mm128AndSi128(std::forward<simd_int_t01>(value), mask);
 		return !mm128TestzSi128(result, result);
 	}
 
@@ -91,7 +92,7 @@ namespace simd_internal {
 		return !jsonifier_internal::mm128TestzSi128(value, value);
 	}
 
-	template<typename simd_int_t> JSONIFIER_INLINE jsonifier_internal::__m128x reset() {
+	template<typename jsonifier_simd_int_t> JSONIFIER_INLINE jsonifier_internal::__m128x reset() {
 		return jsonifier_internal::__m128x{};
 	}
 

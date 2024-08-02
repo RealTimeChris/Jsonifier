@@ -29,18 +29,18 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipNumber(iterator_type& iter, iterator_type&) noexcept {
+	template<jsonifier::concepts::json_structural_iterator_t iterator> JSONIFIER_INLINE void skipNumber(iterator& iter, iterator&) noexcept {
 		++iter;
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE iterator_type skipWs(iterator_type iter) noexcept {
+	template<typename iterator> JSONIFIER_INLINE iterator skipWs(iterator iter) noexcept {
 		while (whitespaceTable[static_cast<uint8_t>(*iter)]) {
 			++iter;
 		}
 		return iter;
 	}
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator> JSONIFIER_INLINE void skipToEndOfValue(iterator& iter, iterator& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -113,7 +113,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::json_structural_iterator_t iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) {
+	template<jsonifier::concepts::json_structural_iterator_t iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) {
 		uint64_t currentDepth{ 1 };
 		while (iter != end && currentDepth > 0) {
 			switch (*iter) {
@@ -179,7 +179,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipNumber(iterator_type& iter, iterator_type& end) noexcept {
+	template<typename iterator> JSONIFIER_INLINE void skipNumber(iterator& iter, iterator& end) noexcept {
 		iter += *iter == '-';
 		auto sig_start_it  = iter;
 		auto frac_start_it = end;
@@ -230,13 +230,13 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipString(iterator_type& iter, iterator_type& end) {
+	template<typename iterator> JSONIFIER_INLINE void skipString(iterator& iter, iterator& end) {
 		++iter;
 		auto newLength = static_cast<uint64_t>(end - iter);
 		skipStringImpl(iter, newLength);
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipToEndOfValue(iterator_type& iter, iterator_type& end) {
+	template<typename iterator> JSONIFIER_INLINE void skipToEndOfValue(iterator& iter, iterator& end) {
 		uint64_t currentDepth{ 1 };
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
@@ -313,9 +313,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept;
+	template<typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept;
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipObject(iterator_type& iter, iterator_type& end) noexcept {
+	template<typename iterator> JSONIFIER_INLINE void skipObject(iterator& iter, iterator& end) noexcept {
 		++iter;
 		if (*iter == '}') {
 			++iter;
@@ -335,7 +335,7 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipArray(iterator_type& iter, iterator_type& end) noexcept {
+	template<typename iterator> JSONIFIER_INLINE void skipArray(iterator& iter, iterator& end) noexcept {
 		++iter;
 		if (*iter == ']') {
 			++iter;
@@ -351,7 +351,7 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator_type> JSONIFIER_INLINE void skipToNextValue(iterator_type& iter, iterator_type& end) noexcept {
+	template<typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept {
 		switch (*iter) {
 			case '{': {
 				skipObject(iter, end);
@@ -395,7 +395,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<char startChar, char endChar, typename iterator_type> JSONIFIER_INLINE uint64_t countValueElements(iterator_type iter, iterator_type end) {
+	template<char startChar, char endChar, typename iterator> JSONIFIER_INLINE uint64_t countValueElements(iterator iter, iterator end) {
 		auto newValue = *iter;
 		if (newValue == ']' || newValue == '}') [[unlikely]] {
 			return 0;
@@ -468,40 +468,11 @@ namespace jsonifier_internal {
 		uint64_t maxLength{};
 	};
 
-	template<const auto& tuple, size_t I> JSONIFIER_INLINE constexpr const jsonifier::string_view& getKey() noexcept {
-		return std::get<I>(tuple).view();
-	}
-
 	template<typename value_type, size_t I> JSONIFIER_INLINE constexpr const jsonifier::string_view& getKey() noexcept {
 		return std::get<I>(jsonifier::concepts::coreV<value_type>).view();
 	}
 
-	template<const auto& tuple, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
-		if constexpr (index < maxIndex) {
-			constexpr const jsonifier::string_view& key{ getKey<tuple, index>() };
-			constexpr auto n{ key.size() };
-			if (n < stats.minLength) {
-				stats.minLength = n;
-			}
-			if (n > stats.maxLength) {
-				stats.maxLength = n;
-			}
-			return keyStatsInternal<tuple, maxIndex, index + 1>(stats);
-		} else {
-			if constexpr (maxIndex > 0) {
-				stats.lengthRange = stats.maxLength - stats.minLength;
-			}
-			return stats;
-		}
-	}
-
-	template<const auto& tuple> JSONIFIER_INLINE constexpr auto keyStats() {
-		constexpr auto N{ std::tuple_size_v<unwrap_t<decltype(tuple)>> };
-
-		return keyStatsInternal<tuple, N, 0>(key_stats_t{});
-	}
-
-	template<typename value_type, uint64_t maxIndex, uint64_t index = 0> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
+	template<typename value_type, uint64_t maxIndex, uint64_t index> JSONIFIER_INLINE constexpr auto keyStatsInternal(key_stats_t stats) {
 		if constexpr (index < maxIndex) {
 			constexpr const jsonifier::string_view& key{ getKey<value_type, index>() };
 			constexpr auto n{ key.size() };
@@ -526,8 +497,8 @@ namespace jsonifier_internal {
 		return keyStatsInternal<value_type, N, 0>(key_stats_t{});
 	}
 
-	template<const auto& options, typename value_type, typename iterator_type>
-	JSONIFIER_INLINE uint64_t getKeyLength(iterator_type iter, iterator_type& end, jsonifier::vector<error>& errors) {
+	template<const auto& options, typename value_type, typename iterator>
+	JSONIFIER_INLINE uint64_t getKeyLength(iterator iter, iterator& end, jsonifier::vector<error>& errors) {
 		if (*iter == '"') [[unlikely]] {
 			++iter;
 		} else {
@@ -538,20 +509,21 @@ namespace jsonifier_internal {
 		}
 		static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
 		static constexpr auto keyStatsVal{ keyStats<value_type>() };
+		static constexpr auto minLength{ keyStatsVal.minLength };
 
 		if constexpr (N == 1) {
 			static constexpr jsonifier::string_view key{ std::get<0>(jsonifier::concepts::coreV<value_type>).view() };
 			return key.size();
 		} else {
 			auto start = iter;
-			iter += keyStatsVal.minLength;
+			iter += minLength;
 			memchar<'"'>(iter, static_cast<uint64_t>(end - iter));
 			return size_t(iter - start);
 		}
 	}
 
-	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator_type>
-	JSONIFIER_INLINE uint64_t getKeyLength(iterator_type iter, iterator_type& end, jsonifier::vector<error>& errors) {
+	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator>
+	JSONIFIER_INLINE uint64_t getKeyLength(iterator iter, iterator& end, jsonifier::vector<error>& errors) {
 		const auto start{ static_cast<const char*>(iter) };
 
 		if (*iter == '"') [[unlikely]] {

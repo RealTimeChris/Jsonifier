@@ -53,3 +53,4 @@ jobs:
       run: |
            ./Json-Performance
       continue-on-error: true
+      

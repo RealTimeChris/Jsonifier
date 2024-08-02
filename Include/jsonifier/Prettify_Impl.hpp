@@ -28,8 +28,8 @@
 namespace jsonifier_internal {
 
 	template<typename derived_type> struct prettify_impl {
-		template<const prettify_options_internal& options, jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator_type>
-		JSONIFIER_INLINE static void impl(iterator_type& iter, string_type&& out, uint64_t& index, prettifier_type& prettifier) noexcept {
+		template<const prettify_options_internal& options, jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator>
+		JSONIFIER_INLINE static void impl(iterator& iter, string_type&& out, uint64_t& index, prettifier_type& prettifier) noexcept {
 			jsonifier::vector<json_structural_type> state{};
 			state.resize(64);
 

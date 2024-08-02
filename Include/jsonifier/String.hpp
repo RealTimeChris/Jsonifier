@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/Vector.hpp>
-#include <jsonifier/Hash.hpp>
 
 namespace jsonifier_internal {
 
@@ -93,9 +92,9 @@ namespace jsonifier {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using difference_type		 = std::ptrdiff_t;
-		using iterator_type			 = jsonifier_internal::iterator<value_type>;
+		using iterator			 = jsonifier_internal::iterator<value_type>;
 		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
-		using reverse_iterator		 = std::reverse_iterator<iterator_type>;
+		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
@@ -223,12 +222,12 @@ namespace jsonifier {
 			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
-		JSONIFIER_INLINE constexpr iterator_type begin() noexcept {
-			return iterator_type{ dataVal };
+		JSONIFIER_INLINE constexpr iterator begin() noexcept {
+			return iterator{ dataVal };
 		}
 
-		JSONIFIER_INLINE constexpr iterator_type end() noexcept {
-			return iterator_type{ dataVal + sizeVal };
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
+			return iterator{ dataVal + sizeVal };
 		}
 
 		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
@@ -301,7 +300,7 @@ namespace jsonifier {
 			}
 		}
 
-		template<typename Iterator01, typename Iterator02> JSONIFIER_INLINE void insert(Iterator01 where, Iterator02 start, Iterator02 end) {
+		template<typename Iterator> JSONIFIER_INLINE void insert(iterator where, Iterator start, Iterator end) {
 			int64_t newSize = end - start;
 			auto posNew		= where.operator->() - dataVal;
 
@@ -319,7 +318,7 @@ namespace jsonifier {
 			allocator::construct(&dataVal[sizeVal], value_type{});
 		}
 
-		JSONIFIER_INLINE void insert(iterator_type values, value_type toInsert) {
+		JSONIFIER_INLINE void insert(iterator values, value_type toInsert) {
 			auto positionNew = values - begin();
 			if (sizeVal + 1 >= capacityVal) [[unlikely]] {
 				reserve((sizeVal + 1) * 2);
@@ -341,7 +340,7 @@ namespace jsonifier {
 			allocator::construct(&dataVal[sizeVal], static_cast<value_type>(0x00u));
 		}
 
-		JSONIFIER_INLINE void erase(iterator_type count) {
+		JSONIFIER_INLINE void erase(iterator count) {
 			auto newSize = count.operator->() - dataVal;
 			if (newSize == 0) [[unlikely]] {
 				return;

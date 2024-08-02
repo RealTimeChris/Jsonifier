@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 namespace jsonifier {
 
 	template<typename... arg_types> constexpr auto createValue(arg_types&&... args) {
-		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
+		if constexpr (sizeof...(arg_types) > 1 && sizeof...(arg_types) % 2 == 0) {
 			return value{ jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), args...) };
 		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
 			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");

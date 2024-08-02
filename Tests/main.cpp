@@ -400,7 +400,7 @@ struct discord_message {
 
 template<> struct jsonifier::core<geometry_data> {
 	using value_type				 = geometry_data;
-	static constexpr auto parseValue = createValue<&value_type::coordinates, &value_type::type>();
+	static constexpr auto parseValue = createValue("coordinates", &value_type::coordinates, "type", &value_type::type);
 };
 
 template<> struct jsonifier::core<properties_data> {
@@ -967,7 +967,7 @@ struct test_element_final {
 	std::string libraryName{};
 	std::string resultType{};
 	double resultSpeed{};
-	double medianAbsolutePercentageError{};
+	double iterationCount{};
 	std::string color{};
 	bool operator>(const test_element_final& other) const {
 		return resultSpeed > other.resultSpeed;
@@ -990,9 +990,8 @@ struct test_elements_final {
 using test_results_final = std::vector<test_elements_final>;
 
 template<> struct jsonifier::core<test_element_final> {
-	using value_type = test_element_final;
-	static constexpr auto parseValue =
-		createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::medianAbsolutePercentageError, &value_type::color>();
+	using value_type				 = test_element_final;
+	static constexpr auto parseValue = createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::iterationCount, &value_type::color>();
 };
 
 template<> struct jsonifier::core<test_elements_final> {
@@ -1065,9 +1064,9 @@ template<> struct glz::meta<abc_test<test_struct>> {
 #endif
 
 #if defined(NDEBUG) && !defined(ASAN)
-constexpr uint64_t iterationsVal = 400;
+constexpr uint64_t iterationsVal = 2000;
 #else
-constexpr uint64_t iterationsVal = 1;
+constexpr uint64_t iterationsVal = 100;
 #endif
 
 enum class result_type { read = 0, write = 1 };
@@ -1080,7 +1079,7 @@ template<result_type type> struct result {
 	std::optional<uint64_t> byteLength{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
-	std::optional<double> medianAbsolutePercentageError{};
+	std::optional<double> iterationCount{};
 	std::string color{};
 
 	result& operator=(result&&) noexcept	  = default;
@@ -1093,7 +1092,7 @@ template<result_type type> struct result {
 	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_results& results) {
 		byteLength.emplace(byteLengthNew);
 		jsonTime.emplace(results.resultValue);
-		medianAbsolutePercentageError.emplace(results.medianAbsolutePercentageError);
+		iterationCount.emplace(results.iterationCount);
 		auto mbWrittenCount	  = static_cast<double>(byteLength.value()) / 1e+6l;
 		auto writeSecondCount = jsonTime.value() / 1e+9l;
 		jsonSpeed.emplace(mbWrittenCount / writeSecondCount);
@@ -1165,13 +1164,13 @@ struct results_data {
 			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Runtime (ns): " << std::setprecision(6) << readResult.jsonTime.value() << std::endl;
-			std::cout << enumToString<result_type::read>() + " Mape (%): " << std::setprecision(4) << readResult.medianAbsolutePercentageError.value() << std::endl;
+			std::cout << enumToString<result_type::read>() + " Iteration Count: " << std::setprecision(4) << readResult.iterationCount.value() << std::endl;
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Length (Bytes): " << writeResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Runtime (ns): " << std::setprecision(6) << writeResult.jsonTime.value() << std::endl;
-			std::cout << enumToString<result_type::write>() + " Mape (%): " << std::setprecision(4) << writeResult.medianAbsolutePercentageError.value() << std::endl;
+			std::cout << enumToString<result_type::write>() + " Iteration Count: " << std::setprecision(4) << writeResult.iterationCount.value() << std::endl;
 		}
 		std::cout << "\n---" << std::endl;
 	}
@@ -1179,11 +1178,11 @@ struct results_data {
 	std::string jsonStats() const {
 		std::string writeLength{};
 		std::string writeTime{};
-		std::string writeMape{};
+		std::string writeIterationCount{};
 		std::string write{};
 		std::string readLength{};
 		std::string readTime{};
-		std::string readMape{};
+		std::string readIterationCount{};
 		std::string read{};
 		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
@@ -1197,14 +1196,14 @@ struct results_data {
 			stream03 << std::setprecision(6) << readResult.jsonTime.value();
 			readTime = stream03.str();
 			std::stringstream stream04{};
-			stream04 << std::setprecision(4) << readResult.medianAbsolutePercentageError.value();
-			readMape = stream04.str();
-			finalString += read + " | " + readLength + " | " + readTime + " | " + readMape + " | ";
+			stream04 << std::setprecision(4) << readResult.iterationCount.value();
+			readIterationCount = stream04.str();
+			finalString += read + " | " + readLength + " | " + readTime + " | " + readIterationCount + " | ";
 		} else {
-			readLength = "N/A";
-			readTime   = "N/A";
-			read	   = "N/A";
-			readMape   = "N/A";
+			readLength		   = "N/A";
+			readTime		   = "N/A";
+			read			   = "N/A";
+			readIterationCount = "N/A";
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
 			std::stringstream stream01{};
@@ -1217,14 +1216,14 @@ struct results_data {
 			stream03 << std::setprecision(6) << writeResult.jsonTime.value();
 			writeTime = stream03.str();
 			std::stringstream stream04{};
-			stream04 << std::setprecision(4) << writeResult.medianAbsolutePercentageError.value();
-			writeMape = stream04.str();
-			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeMape + " |";
+			stream04 << std::setprecision(4) << writeResult.iterationCount.value();
+			writeIterationCount = stream04.str();
+			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeIterationCount + " |";
 		} else {
-			writeLength = "N/A";
-			writeTime	= "N/A";
-			write		= "N/A";
-			writeMape	= "N/A";
+			writeLength			= "N/A";
+			writeTime			= "N/A";
+			write				= "N/A";
+			writeIterationCount = "N/A";
 		}
 		return finalString;
 	}
@@ -1500,7 +1499,9 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-	#include "simdjson.h"
+#endif
+
+#include "simdjson.h"
 
 template<typename value_type> void getValue(value_type& valueNew, simdjson::ondemand::value value) {
 	value.get(valueNew);
@@ -1969,33 +1970,33 @@ template<> void getValue(discord_message& returnValue, simdjson::ondemand::value
 	getValue(returnValue.s, jsonDataNew, "s");
 }
 
-	#define SIMD_PULL(x) \
-		{ \
-			simdjson::ondemand::array newX = doc[#x].get_array().value(); \
-			for (simdjson::ondemand::value value: newX) { \
-				test_struct newStruct{}; \
-				getValue(newStruct.testStrings, value, "testStrings"); \
-				getValue(newStruct.testUints, value, "testUints"); \
-				getValue(newStruct.testDoubles, value, "testDoubles"); \
-				getValue(newStruct.testInts, value, "testInts"); \
-				getValue(newStruct.testBools, value, "testBools"); \
-				obj.x.emplace_back(std::move(newStruct)); \
-			} \
-		}
+#define SIMD_PULL(x) \
+	{ \
+		simdjson::ondemand::array newX = doc[#x].get_array().value(); \
+		for (simdjson::ondemand::value value: newX) { \
+			test_struct newStruct{}; \
+			getValue(newStruct.testStrings, value, "testStrings"); \
+			getValue(newStruct.testUints, value, "testUints"); \
+			getValue(newStruct.testDoubles, value, "testDoubles"); \
+			getValue(newStruct.testInts, value, "testInts"); \
+			getValue(newStruct.testBools, value, "testBools"); \
+			obj.x.emplace_back(std::move(newStruct)); \
+		} \
+	}
 
-	#define SIMD_PULL_ABC(x) \
-		{ \
-			simdjson::ondemand::array newX = doc[#x].get_array().value(); \
-			for (simdjson::ondemand::value value: newX) { \
-				test_struct newStruct{}; \
-				getValue(newStruct.testBools, value, "testBools"); \
-				getValue(newStruct.testInts, value, "testInts"); \
-				getValue(newStruct.testDoubles, value, "testDoubles"); \
-				getValue(newStruct.testUints, value, "testUints"); \
-				getValue(newStruct.testStrings, value, "testStrings"); \
-				obj.x.emplace_back(std::move(newStruct)); \
-			} \
-		}
+#define SIMD_PULL_ABC(x) \
+	{ \
+		simdjson::ondemand::array newX = doc[#x].get_array().value(); \
+		for (simdjson::ondemand::value value: newX) { \
+			test_struct newStruct{}; \
+			getValue(newStruct.testBools, value, "testBools"); \
+			getValue(newStruct.testInts, value, "testInts"); \
+			getValue(newStruct.testDoubles, value, "testDoubles"); \
+			getValue(newStruct.testUints, value, "testUints"); \
+			getValue(newStruct.testStrings, value, "testStrings"); \
+			obj.x.emplace_back(std::move(newStruct)); \
+		} \
+	}
 
 
 template<> void getValue<test<test_struct>>(test<test_struct>& obj, simdjson::ondemand::value doc) {
@@ -2120,132 +2121,23 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		return r;
 	}
 };
-#endif
 
 std::string table_header = R"(
-| Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |)";
 
 std::string read_table_header = R"(
-| Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) |
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
 
 std::string write_table_header = R"(
-| Library | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
+| Library | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
-
-template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper;
-
-template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += write_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += write_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += read_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
 
 static const std::string section001{ R"(
  > At least )" +
-	jsonifier::toString(static_cast<uint64_t>(static_cast<float>(iterationsVal) * 0.10f)) +
-	R"( iterations on a 6 core (Intel i7 8700k), until Median Absolute Percentage Error (MAPE) reduced below 5.0%.
+	jsonifier::toString(static_cast<uint64_t>(static_cast<float>(iterationsVal) * 0.05f)) +
+	R"( iterations on a 6 core (Intel i7 8700k), until Empirical Confidence is at or above 95.0% and mdape (Median Absolute Percentage Error) is at or below 5%.
 )" };
 
 static constexpr auto newString02{ bnch_swt::combineLiterals<R"(#### Using the following commits:
@@ -2286,7 +2178,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static const jsonifier::string_view section03{
+static constexpr jsonifier::string_view section03{
 	R"(
 
 ### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2409,9 +2301,7 @@ alt="" width="400"/></p>
 )"
 };
 
-//#include "ConformanceTests.hpp"
-
-inline std::string getCurrentWorkingDirectory() {
+JSONIFIER_INLINE std::string getCurrentWorkingDirectory() {
 	try {
 		return std::filesystem::current_path().string();
 	} catch (const std::filesystem::filesystem_error& e) {
@@ -2420,7 +2310,7 @@ inline std::string getCurrentWorkingDirectory() {
 	}
 }
 
-inline void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
+JSONIFIER_INLINE void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
 #if defined(JSONIFIER_WIN)
 	static constexpr std::string_view pythonName{ "python " };
 #else
@@ -2433,9 +2323,118 @@ inline void executePythonScript(const std::string& scriptPath, const std::string
 	}
 }
 
+template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper;
+
+template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper {
+	static test_results run(const std::string& jsonDataNew) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<std::string>(testName);
+#if !defined(ASAN)
+		resultsNew.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
+#endif
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (uint64_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<std::string>(testName);
+#if !defined(ASAN)
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+#endif
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += write_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (uint64_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<std::string>(testName);
+#if !defined(ASAN)
+		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+#endif
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += write_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (uint64_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<std::string>(testName);
+#if !defined(ASAN)
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
+#endif
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += read_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (uint64_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+//#include "ConformanceTests.hpp"
+
 int32_t main() {
 	try {
-		std::cout << "CUYRRENT TYPE: " << typeid(jsonifier_simd_int_t).name() << std::endl;
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};
@@ -2556,19 +2555,19 @@ int32_t main() {
 			for (auto& valueNew: value.results) {
 				test_element_final resultFinal{};
 				if (valueNew.readResult.jsonSpeed.has_value()) {
-					resultFinal.libraryName					  = valueNew.name;
-					resultFinal.color						  = valueNew.readResult.color;
-					resultFinal.resultSpeed					  = valueNew.readResult.jsonSpeed.value();
-					resultFinal.medianAbsolutePercentageError = valueNew.readResult.medianAbsolutePercentageError.value();
-					resultFinal.resultType					  = "Read";
+					resultFinal.libraryName	   = valueNew.name;
+					resultFinal.color		   = valueNew.readResult.color;
+					resultFinal.resultSpeed	   = valueNew.readResult.jsonSpeed.value();
+					resultFinal.iterationCount = valueNew.readResult.iterationCount.value();
+					resultFinal.resultType	   = "Read";
 					testElement.results.emplace_back(resultFinal);
 				}
 				if (valueNew.writeResult.jsonSpeed.has_value()) {
-					resultFinal.libraryName					  = valueNew.name;
-					resultFinal.color						  = valueNew.writeResult.color;
-					resultFinal.resultSpeed					  = valueNew.writeResult.jsonSpeed.value();
-					resultFinal.medianAbsolutePercentageError = valueNew.writeResult.medianAbsolutePercentageError.value();
-					resultFinal.resultType					  = "Write";
+					resultFinal.libraryName	   = valueNew.name;
+					resultFinal.color		   = valueNew.writeResult.color;
+					resultFinal.resultSpeed	   = valueNew.writeResult.jsonSpeed.value();
+					resultFinal.iterationCount = valueNew.writeResult.iterationCount.value();
+					resultFinal.resultType	   = "Write";
 					testElement.results.emplace_back(resultFinal);
 				}
 			}
