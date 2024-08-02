@@ -22,18 +22,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Xcode
+    - name: Set up Xcode
       run: |
-          sudo xcode-select --switch /Applications/Xcode_15.4.app/Contents/Developer
-
-    - name: Install dependencies
-      run: |
-          cd path/to/your/xcode/project  # Change this to your Xcode project directory
-          xcodebuild -resolvePackageDependencies
-
-    - name: Get Xcode path
-      id: xcode-path
-      run: echo "::set-output name=xcode_path::$(xcode-select -p)"
+          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
             
     - name: Install Seaborn
       run: |
