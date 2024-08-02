@@ -172,15 +172,14 @@ namespace jsonifier_internal {
 		}
 		*/
 		JSONIFIER_INLINE void generateJsonIndices() {
-			jsonifier_simd_int_t newPtr[stridesPerStep];
 			simd_internal::simd_int_t_holder rawStructurals{};
 			jsonifier_simd_int_t nextIsEscaped{};
 			jsonifier_simd_int_t escaped{};
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals<false>(stringBlockReader.fullBlock(), newPtr, escaped, nextIsEscaped, rawStructurals);
+				generateStructurals<false>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
 			}
 			if (stringBlockReader.getRemainder(block) > 0) [[likely]] {
-				generateStructurals<true>(block, newPtr, escaped, nextIsEscaped, rawStructurals);
+				generateStructurals<true>(block, escaped, nextIsEscaped, rawStructurals);
 			}
 		}
 
@@ -205,6 +204,10 @@ namespace jsonifier_internal {
 			return newBits;
 		}
 
+		template<size_t currentIndex = 0, size_t maxIndex> void prefetchStringValues(string_view_ptr values) {
+			jsonifierPrefetchInternal(values + (currentIndex * 64));
+		}
+
 		template<bool collectAligned> JSONIFIER_INLINE void collectStringValues(string_view_ptr values, jsonifier_simd_int_t (&newPtr)[stridesPerStep]) {
 			if constexpr (collectAligned) {
 				newPtr[0] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 0));
@@ -227,12 +230,19 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t (&newPtr)[stridesPerStep],
-			jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) {
+		template<bool collectAligned> JSONIFIER_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) {
+			jsonifier_simd_int_t newPtr[stridesPerStep];
 			collectStringValues<collectAligned>(values, newPtr);
-			rawStructurals = simd_internal::collectIndices(newPtr);
+			return simd_internal::collectIndices(newPtr);
+		}
+
+		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+			simd_internal::simd_int_t_holder& rawStructurals) {
+			rawStructurals = getRawIndices<collectAligned>(values);
 			collectStructurals(escaped, nextIsEscaped, rawStructurals);
+			static constexpr size_t maxIndex = bitsPerStep / 64;
 			simd_internal::store(rawStructurals.op, newBits);
+			prefetchStringValues<0, maxIndex>(values);
 			addTapeValues();
 			stringIndex += bitsPerStep;
 		}
@@ -264,7 +274,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) {
 			auto escapedNew = nextIsEscaped;
-			nextIsEscaped	= simd_internal::reset<jsonifier_simd_int_t>();
+			nextIsEscaped	= jsonifier_simd_int_t{};
 			escaped			= escapedNew;
 		}
 

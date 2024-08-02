@@ -63,9 +63,12 @@ namespace jsonifier_internal {
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
-			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), buffer, derivedRef.index);
+			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index);
 			if (buffer.size() != derivedRef.index) {
 				buffer.resize(derivedRef.index);
+			}
+			if (!compare(buffer.data(), derivedRef.stringBuffer.data(), derivedRef.index)) {
+				std::copy_n(derivedRef.stringBuffer.data(), derivedRef.index, buffer.data());
 			}
 			return true;
 		}

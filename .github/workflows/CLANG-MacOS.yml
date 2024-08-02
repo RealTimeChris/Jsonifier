@@ -14,24 +14,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [19]
+        clang: [17]
         build_type: [Debug, Release]
         std: [20]
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Xcode
+    - name: Install the latest clang compiler.
       run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
-          xcodebuild -version
+            brew install llvm
 
-    - name: Install dependencies
+    - name: Install Seaborn
       run: |
-          brew install cmake
+            pip install seaborn
+
+    - name: Install Nasm.
+      run: |
+            brew install nasm
 
     - name: Configure CMake
-      run: cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
+      working-directory: ./
+      run: |
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       working-directory: ./Build

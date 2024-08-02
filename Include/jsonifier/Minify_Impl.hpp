@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 						}
 						auto newSize = static_cast<uint64_t>(currentDistance) + 1;
 						if (currentDistance > 0) [[likely]] {
-							writeCharactersUnchecked(out, previousPtr, newSize, index);
+							writeCharacters<false>(out, previousPtr, newSize, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
@@ -55,14 +55,14 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma:
-						writeCharacterUnchecked<','>(out, index);
+						writeCharacter<',', false>(out, index);
 						break;
 					[[likely]] case json_structural_type::Number: {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < static_cast<const char*>(iter))) {
 						}
 						if (currentDistance > 0) [[likely]] {
-							writeCharactersUnchecked(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
+							writeCharacters<false>(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							options.minifierPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
@@ -72,32 +72,32 @@ namespace jsonifier_internal {
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon:
-						writeCharacterUnchecked<0x3A>(out, index);
+						writeCharacter<0x3A, false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Array_Start:
-						writeCharacterUnchecked<'['>(out, index);
+						writeCharacter<'[', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Array_End:
-						writeCharacterUnchecked<']'>(out, index);
+						writeCharacter<']', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Null: {
-						writeCharactersUnchecked(out, nullString.data(), nullString.size(), index);
+						writeCharacters<false>(out, nullString.data(), nullString.size(), index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (*previousPtr == 't') {
-							writeCharactersUnchecked(out, trueString.data(), trueString.size(), index);
+							writeCharacters<false>(out, trueString.data(), trueString.size(), index);
 							break;
 						} else {
-							writeCharactersUnchecked(out, falseString.data(), falseString.size(), index);
+							writeCharacters<false>(out, falseString.data(), falseString.size(), index);
 							break;
 						}
 					}
 					[[unlikely]] case json_structural_type::Object_Start:
-						writeCharacterUnchecked<'{'>(out, index);
+						writeCharacter<'{', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Object_End:
-						writeCharacterUnchecked<'}'>(out, index);
+						writeCharacter<'}', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Unset:
 					[[unlikely]] case json_structural_type::Error:
@@ -113,7 +113,7 @@ namespace jsonifier_internal {
 				previousPtr = static_cast<const char*>(iter);
 				++iter;
 			}
-			writeCharacterUnchecked(*previousPtr, out, index);
+			writeCharacter<false>(*previousPtr, out, index);
 		}
 	};
 

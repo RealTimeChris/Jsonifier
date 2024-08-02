@@ -2435,6 +2435,7 @@ inline void executePythonScript(const std::string& scriptPath, const std::string
 
 int32_t main() {
 	try {
+		std::cout << "CUYRRENT TYPE: " << typeid(jsonifier_simd_int_t).name() << std::endl;
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};

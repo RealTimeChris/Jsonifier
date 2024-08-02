@@ -183,7 +183,7 @@
 	#define JKJ_FORCEINLINE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
 	#define JKJ_SAFEBUFFERS __declspec(safebuffers)
-	#define JKJ_FORCEINLINE __forceinline
+	#define JKJ_FORCEINLINE inline
 #else
 	#define JKJ_SAFEBUFFERS
 	#define JKJ_FORCEINLINE inline
@@ -238,22 +238,22 @@ namespace jkj {
 				using JKJ_STD_REPLACEMENT_NAMESPACE::size_t;
 
 				// <limits>
-				template<class T> using numeric_limits = JKJ_STD_REPLACEMENT_NAMESPACE::numeric_limits<T>;
+				template<typename T> using numeric_limits = JKJ_STD_REPLACEMENT_NAMESPACE::numeric_limits<T>;
 
 				// <type_traits>
-				template<bool cond, class T = void> using enable_if				   = JKJ_STD_REPLACEMENT_NAMESPACE::enable_if<cond, T>;
-				template<class T> using add_rvalue_reference					   = JKJ_STD_REPLACEMENT_NAMESPACE::add_rvalue_reference<T>;
-				template<bool cond, class T_true, class T_false> using conditional = JKJ_STD_REPLACEMENT_NAMESPACE::conditional<cond, T_true, T_false>;
+				template<bool cond, typename T = void> using enable_if				   = JKJ_STD_REPLACEMENT_NAMESPACE::enable_if<cond, T>;
+				template<typename T> using add_rvalue_reference					   = JKJ_STD_REPLACEMENT_NAMESPACE::add_rvalue_reference<T>;
+				template<bool cond, typename T_true, typename T_false> using conditional = JKJ_STD_REPLACEMENT_NAMESPACE::conditional<cond, T_true, T_false>;
 #if JKJ_USE_IS_CONSTANT_EVALUATED
 				using JKJ_STD_REPLACEMENT_NAMESPACE::is_constant_evaluated;
 #endif
-				template<class T1, class T2> using is_same = JKJ_STD_REPLACEMENT_NAMESPACE::is_same<T1, T2>;
+				template<typename T1, typename T2> using is_same = JKJ_STD_REPLACEMENT_NAMESPACE::is_same<T1, T2>;
 #if !JKJ_HAS_BIT_CAST
-				template<class T> using is_trivially_copyable = JKJ_STD_REPLACEMENT_NAMESPACE::is_trivially_copyable<T>;
+				template<typename T> using is_trivially_copyable = JKJ_STD_REPLACEMENT_NAMESPACE::is_trivially_copyable<T>;
 #endif
-				template<class T> using is_integral = JKJ_STD_REPLACEMENT_NAMESPACE::is_integral<T>;
-				template<class T> using is_signed	= JKJ_STD_REPLACEMENT_NAMESPACE::is_signed<T>;
-				template<class T> using is_unsigned = JKJ_STD_REPLACEMENT_NAMESPACE::is_unsigned<T>;
+				template<typename T> using is_integral = JKJ_STD_REPLACEMENT_NAMESPACE::is_integral<T>;
+				template<typename T> using is_signed	= JKJ_STD_REPLACEMENT_NAMESPACE::is_signed<T>;
+				template<typename T> using is_unsigned = JKJ_STD_REPLACEMENT_NAMESPACE::is_unsigned<T>;
 			}
 		}
 
@@ -264,11 +264,11 @@ namespace jkj {
 #if !JKJ_HAS_CONSTEXPR17
 			template<stdr::size_t... indices> struct index_sequence {};
 
-			template<stdr::size_t current, stdr::size_t total, class Dummy, stdr::size_t... indices> struct make_index_sequence_impl {
+			template<stdr::size_t current, stdr::size_t total, typename Dummy, stdr::size_t... indices> struct make_index_sequence_impl {
 				using type = typename make_index_sequence_impl<current + 1, total, Dummy, indices..., current>::type;
 			};
 
-			template<stdr::size_t total, class Dummy, stdr::size_t... indices> struct make_index_sequence_impl<total, total, Dummy, indices...> {
+			template<stdr::size_t total, typename Dummy, stdr::size_t... indices> struct make_index_sequence_impl<total, total, Dummy, indices...> {
 				using type = index_sequence<indices...>;
 			};
 
@@ -276,10 +276,10 @@ namespace jkj {
 #endif
 
 			// Available since C++11, but including <utility> just for this is an overkill.
-			template<class T> typename stdr::add_rvalue_reference<T>::type declval() noexcept;
+			template<typename T> typename stdr::add_rvalue_reference<T>::type declval() noexcept;
 
 			// Similarly, including <array> is an overkill.
-			template<class T, stdr::size_t N> struct array {
+			template<typename T, stdr::size_t N> struct array {
 				T data_[N];
 				constexpr T operator[](stdr::size_t idx) const noexcept {
 					return data_[idx];
@@ -294,10 +294,10 @@ namespace jkj {
 		// Some basic features for encoding/decoding IEEE-754 formats.
 		////////////////////////////////////////////////////////////////////////////////////////
 		namespace detail {
-			template<class T> struct physical_bits {
+			template<typename T> struct physical_bits {
 				static constexpr stdr::size_t value = sizeof(T) * stdr::numeric_limits<unsigned char>::digits;
 			};
-			template<class T> struct value_bits {
+			template<typename T> struct value_bits {
 				static constexpr stdr::size_t value = stdr::numeric_limits<typename stdr::enable_if<stdr::is_integral<T>::value, T>::type>::digits;
 			};
 
@@ -342,7 +342,7 @@ namespace jkj {
 		// A floating-point format traits class defines ways to interpret a bit pattern of given size as
 		// an encoding of floating-point number. This is an implementation of such a traits class,
 		// supporting ways to interpret IEEE-754 binary floating-point numbers.
-		template<class Format, class CarrierUInt, class ExponentInt = int32_t> struct ieee754_binary_traits {
+		template<typename Format, typename CarrierUInt, typename ExponentInt = int32_t> struct ieee754_binary_traits {
 			// CarrierUInt needs to have enough size to hold the entire contents of floating-point
 			// numbers. The actual bits are assumed to be aligned to the LSB, and every other bits are
 			// assumed to be zeroed.
@@ -357,7 +357,7 @@ namespace jkj {
 
 			using format						   = Format;
 			using carrier_uint					   = CarrierUInt;
-			static constexpr int32_t carrier_bits	   = int32_t(detail::value_bits<carrier_uint>::value);
+			static constexpr int32_t carrier_bits  = int32_t(detail::value_bits<carrier_uint>::value);
 			using exponent_int					   = ExponentInt;
 			static constexpr auto carrier_uint_val = carrier_uint(1);
 
@@ -437,7 +437,7 @@ namespace jkj {
 		// Users might specialize this class to change the behavior for certain types.
 		// The default provided by the library is to treat the given floating-point type Float as either
 		// IEEE-754 binary32 or IEEE-754 binary64, depending on the bitwise size of Float.
-		template<class Float> struct default_float_bit_carrier_conversion_traits {
+		template<typename Float> struct default_float_bit_carrier_conversion_traits {
 			// Guards against types that have different internal representations than IEEE-754
 			// binary32/64. I don't know if there is a truly reliable way of detecting IEEE-754 binary
 			// formats. I just did my best here. Note that in some cases
@@ -470,7 +470,7 @@ namespace jkj {
 		// possible (e.g., no inheritance, no private non-static data member, etc.; this is an
 		// unfortunate fact about common ABI convention).
 
-		template<class FormatTraits> struct signed_significand_bits {
+		template<typename FormatTraits> struct signed_significand_bits {
 			using format_traits = FormatTraits;
 			using carrier_uint	= typename format_traits::carrier_uint;
 
@@ -499,7 +499,7 @@ namespace jkj {
 			}
 		};
 
-		template<class FormatTraits> struct float_bits {
+		template<typename FormatTraits> struct float_bits {
 			using format_traits = FormatTraits;
 			using carrier_uint	= typename format_traits::carrier_uint;
 			using exponent_int	= typename format_traits::exponent_int;
@@ -566,7 +566,7 @@ namespace jkj {
 			}
 		};
 
-		template<class Float, class ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
+		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>>
 		JKJ_CONSTEXPR20 float_bits<FormatTraits> make_float_bits(Float x) noexcept {
 			return float_bits<FormatTraits>(ConversionTraits::float_to_carrier(x));
@@ -580,7 +580,7 @@ namespace jkj {
 			namespace bits {
 				// Most compilers should be able to optimize this into the ROR instruction.
 				// n is assumed to be at most of bit_width bits.
-				template<stdr::size_t bit_width, class UInt> JKJ_CONSTEXPR14 UInt rotr(UInt n, uint32_t r) noexcept {
+				template<stdr::size_t bit_width, typename UInt> JKJ_CONSTEXPR14 UInt rotr(UInt n, uint32_t r) noexcept {
 					static_assert(bit_width > 0, "jkj::dragonbox: rotation bit-width must be positive");
 					static_assert(bit_width <= value_bits<UInt>::value, "jkj::dragonbox: rotation bit-width is too large");
 					r &= (bit_width - 1);
@@ -599,12 +599,12 @@ namespace jkj {
 				// implementing 64-bit x 64-bit -> 128-bit multiplication.
 
 #if defined(__SIZEOF_INT128__)
-      // To silence "error: ISO C++ does not support '__int128' for 'type name'
-      // [-Wpedantic]"
-#if defined(__GNUC__)
-         __extension__
-#endif
-         using builtin_uint128_t = unsigned __int128;
+					// To silence "error: ISO C++ does not support '__int128' for 'type name'
+					// [-Wpedantic]"
+	#if defined(__GNUC__)
+				__extension__
+	#endif
+					using builtin_uint128_t = unsigned __int128;
 #endif
 				// clang-format on
 
@@ -834,7 +834,7 @@ namespace jkj {
 			// Some simple utilities for constexpr computation.
 			////////////////////////////////////////////////////////////////////////////////////////
 
-			template<int32_t k, class Int> constexpr Int compute_power(Int a) noexcept {
+			template<int32_t k, typename Int> constexpr Int compute_power(Int a) noexcept {
 				static_assert(k >= 0, "");
 #if JKJ_HAS_CONSTEXPR14
 				Int p = 1;
@@ -847,7 +847,7 @@ namespace jkj {
 #endif
 			}
 
-			template<int32_t a, class UInt> constexpr int32_t count_factors(UInt n) noexcept {
+			template<int32_t a, typename UInt> constexpr int32_t count_factors(UInt n) noexcept {
 				static_assert(a > 1, "");
 #if JKJ_HAS_CONSTEXPR14
 				int32_t c = 0;
@@ -871,7 +871,7 @@ namespace jkj {
 
 				// For constexpr computation.
 				// Returns -1 when n = 0.
-				template<class UInt> constexpr int32_t floor_log2(UInt n) noexcept {
+				template<typename UInt> constexpr int32_t floor_log2(UInt n) noexcept {
 #if JKJ_HAS_CONSTEXPR14
 					int32_t count = -1;
 					while (n != 0) {
@@ -904,7 +904,7 @@ namespace jkj {
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, true> {
 					using info				  = Info<current_tier>;
 					using default_return_type = typename info::default_return_type;
-					template<class ReturnType, class Int> static constexpr ReturnType compute(Int e) noexcept {
+					template<typename ReturnType, typename Int> static constexpr ReturnType compute(Int e) noexcept {
 #if JKJ_HAS_CONSTEXPR14
 						assert(min_exponent <= e && e <= max_exponent);
 #endif
@@ -919,7 +919,7 @@ namespace jkj {
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, false> {
 					using next_tier			  = compute_impl<Info, min_exponent, max_exponent, current_tier + 1>;
 					using default_return_type = typename next_tier::default_return_type;
-					template<class ReturnType, class Int> static constexpr ReturnType compute(Int e) noexcept {
+					template<typename ReturnType, typename Int> static constexpr ReturnType compute(Int e) noexcept {
 						return next_tier::template compute<ReturnType>(e);
 					}
 				};
@@ -953,7 +953,7 @@ namespace jkj {
 					static constexpr stdr::int_least32_t max_exponent = 2620;
 				};
 				template<stdr::int_least32_t min_exponent = -2620, stdr::int_least32_t max_exponent = 2620,
-					class ReturnType = typename compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::default_return_type, class Int>
+					class ReturnType = typename compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log10_pow2(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
@@ -986,7 +986,7 @@ namespace jkj {
 					static constexpr stdr::int_least32_t max_exponent = 1233;
 				};
 				template<stdr::int_least32_t min_exponent = -1233, stdr::int_least32_t max_exponent = 1233,
-					class ReturnType = typename compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::default_return_type, class Int>
+					class ReturnType = typename compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log2_pow10(Int e) noexcept {
 					return compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
@@ -1020,7 +1020,7 @@ namespace jkj {
 					static constexpr stdr::int_least32_t max_exponent = 2936;
 				};
 				template<stdr::int_least32_t min_exponent = -2985, stdr::int_least32_t max_exponent = 2936,
-					class ReturnType = typename compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::default_return_type, class Int>
+					class ReturnType = typename compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log10_pow2_minus_log10_4_over_3(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
@@ -1035,7 +1035,7 @@ namespace jkj {
 					static constexpr stdr::int_least32_t max_exponent = 1831;
 				};
 				template<stdr::int_least32_t min_exponent = -1831, stdr::int_least32_t max_exponent = 1831,
-					class ReturnType = typename compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::default_return_type, class Int>
+					class ReturnType = typename compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log5_pow2(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
@@ -1050,7 +1050,7 @@ namespace jkj {
 					static constexpr stdr::int_least32_t max_exponent = 2427;
 				};
 				template<stdr::int_least32_t min_exponent = -3543, stdr::int_least32_t max_exponent = 2427,
-					class ReturnType = typename compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::default_return_type, class Int>
+					class ReturnType = typename compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log5_pow2_minus_log5_3(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
@@ -1065,34 +1065,34 @@ namespace jkj {
 				// Returns true if and only if n is divisible by 10^N.
 				// Precondition: n <= 10^(N+1)
 				// !!It takes an in-out parameter!!
-				template<int32_t N, class UInt> struct divide_by_pow10_info;
+				template<int32_t N, typename UInt> struct divide_by_pow10_info;
 
-				template<class UInt> struct divide_by_pow10_info<1, UInt> {
+				template<typename UInt> struct divide_by_pow10_info<1, UInt> {
 					static constexpr stdr::uint_fast32_t magic_number = 6554;
-					static constexpr int32_t shift_amount				  = 16;
+					static constexpr int32_t shift_amount			  = 16;
 				};
 
 				template<> struct divide_by_pow10_info<1, stdr::uint_least8_t> {
 					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int32_t shift_amount				  = 10;
+					static constexpr int32_t shift_amount			  = 10;
 				};
 
 				template<> struct divide_by_pow10_info<1, stdr::uint_least16_t> {
 					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int32_t shift_amount				  = 10;
+					static constexpr int32_t shift_amount			  = 10;
 				};
 
-				template<class UInt> struct divide_by_pow10_info<2, UInt> {
+				template<typename UInt> struct divide_by_pow10_info<2, UInt> {
 					static constexpr stdr::uint_fast32_t magic_number = 656;
-					static constexpr int32_t shift_amount				  = 16;
+					static constexpr int32_t shift_amount			  = 16;
 				};
 
 				template<> struct divide_by_pow10_info<2, stdr::uint_least16_t> {
 					static constexpr stdr::uint_fast32_t magic_number = 41;
-					static constexpr int32_t shift_amount				  = 12;
+					static constexpr int32_t shift_amount			  = 12;
 				};
 
-				template<int32_t N, class UInt> JKJ_CONSTEXPR14 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
+				template<int32_t N, typename UInt> JKJ_CONSTEXPR14 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
@@ -1110,7 +1110,7 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small n and N.
 				// Precondition: n <= 10^(N+1)
-				template<int32_t N, class UInt> JKJ_CONSTEXPR14 UInt small_division_by_pow10(UInt n) noexcept {
+				template<int32_t N, typename UInt> JKJ_CONSTEXPR14 UInt small_division_by_pow10(UInt n) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
@@ -1120,7 +1120,7 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small N.
 				// Precondition: n <= n_max
-				template<int32_t N, class UInt, UInt n_max> JKJ_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
+				template<int32_t N, typename UInt, UInt n_max> JKJ_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
 					static_assert(N >= 0, "");
 
 					// Specialize for 32-bit division by 10.
@@ -1162,70 +1162,70 @@ namespace jkj {
 		// Return types for the main interface function.
 		////////////////////////////////////////////////////////////////////////////////////////
 
-		template<class SignificandType, class ExponentType, bool is_signed, bool trailing_zero_flag> struct decimal_fp;
+		template<typename SignificandType, typename ExponentType, bool is_signed, bool trailing_zero_flag> struct decimal_fp;
 
-		template<class SignificandType, class ExponentType> struct decimal_fp<SignificandType, ExponentType, false, false> {
+		template<typename SignificandType, typename ExponentType> struct decimal_fp<SignificandType, ExponentType, false, false> {
 			SignificandType significand;
 			ExponentType exponent;
 		};
 
-		template<class SignificandType, class ExponentType> struct decimal_fp<SignificandType, ExponentType, true, false> {
+		template<typename SignificandType, typename ExponentType> struct decimal_fp<SignificandType, ExponentType, true, false> {
 			SignificandType significand;
 			ExponentType exponent;
 			bool is_negative;
 		};
 
-		template<class SignificandType, class ExponentType> struct decimal_fp<SignificandType, ExponentType, false, true> {
+		template<typename SignificandType, typename ExponentType> struct decimal_fp<SignificandType, ExponentType, false, true> {
 			SignificandType significand;
 			ExponentType exponent;
 			bool may_have_trailing_zeros;
 		};
 
-		template<class SignificandType, class ExponentType> struct decimal_fp<SignificandType, ExponentType, true, true> {
+		template<typename SignificandType, typename ExponentType> struct decimal_fp<SignificandType, ExponentType, true, true> {
 			SignificandType significand;
 			ExponentType exponent;
 			bool may_have_trailing_zeros;
 			bool is_negative;
 		};
 
-		template<class SignificandType, class ExponentType, bool trailing_zero_flag = false> using unsigned_decimal_fp =
+		template<typename SignificandType, typename ExponentType, bool trailing_zero_flag = false> using unsigned_decimal_fp =
 			decimal_fp<SignificandType, ExponentType, false, trailing_zero_flag>;
 
-		template<class SignificandType, class ExponentType, bool trailing_zero_flag = false> using signed_decimal_fp =
+		template<typename SignificandType, typename ExponentType, bool trailing_zero_flag = false> using signed_decimal_fp =
 			decimal_fp<SignificandType, ExponentType, true, trailing_zero_flag>;
 
-		template<class SignificandType, class ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, false> add_sign_to_unsigned_decimal_fp(bool is_negative,
+		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, false> add_sign_to_unsigned_decimal_fp(bool is_negative,
 			unsigned_decimal_fp<SignificandType, ExponentType, false> r) noexcept {
 			return { r.significand, r.exponent, is_negative };
 		}
 
-		template<class SignificandType, class ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, true> add_sign_to_unsigned_decimal_fp(bool is_negative,
+		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, true> add_sign_to_unsigned_decimal_fp(bool is_negative,
 			unsigned_decimal_fp<SignificandType, ExponentType, true> r) noexcept {
 			return { r.significand, r.exponent, r.may_have_trailing_zeros, is_negative };
 		}
 
 		namespace detail {
-			template<class UnsignedDecimalFp> struct unsigned_decimal_fp_to_signed;
+			template<typename UnsignedDecimalFp> struct unsigned_decimal_fp_to_signed;
 
-			template<class SignificandType, class ExponentType, bool trailing_zero_flag>
+			template<typename SignificandType, typename ExponentType, bool trailing_zero_flag>
 			struct unsigned_decimal_fp_to_signed<unsigned_decimal_fp<SignificandType, ExponentType, trailing_zero_flag>> {
 				using type = signed_decimal_fp<SignificandType, ExponentType, trailing_zero_flag>;
 			};
 
-			template<class UnsignedDecimalFp> using unsigned_decimal_fp_to_signed_t = typename unsigned_decimal_fp_to_signed<UnsignedDecimalFp>::type;
+			template<typename UnsignedDecimalFp> using unsigned_decimal_fp_to_signed_t = typename unsigned_decimal_fp_to_signed<UnsignedDecimalFp>::type;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////
 		// Computed cache entries.
 		////////////////////////////////////////////////////////////////////////////////////////
 
-		template<class FloatFormat, class Dummy = void> struct cache_holder;
+		template<typename FloatFormat, typename Dummy = void> struct cache_holder;
 
-		template<class Dummy> struct cache_holder<ieee754_binary32, Dummy> {
+		template<typename Dummy> struct cache_holder<ieee754_binary32, Dummy> {
 			using cache_entry_type																									= detail::stdr::uint_least64_t;
-			static constexpr int32_t cache_bits																							= 64;
-			static constexpr int32_t min_k																								= -31;
-			static constexpr int32_t max_k																								= 46;
+			static constexpr int32_t cache_bits																						= 64;
+			static constexpr int32_t min_k																							= -31;
+			static constexpr int32_t max_k																							= 46;
 			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
 				UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49), UINT64_C(0xc612062576589ddb),
 				UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2), UINT64_C(0x971da05074da7bef),
@@ -1247,14 +1247,14 @@ namespace jkj {
 #if !JKJ_HAS_INLINE_VARIABLE
 		// decltype(...) should not depend on Dummy; see
 		// https://stackoverflow.com/questions/76438400/decltype-on-static-variable-in-template-class.
-		template<class Dummy> constexpr decltype(cache_holder<ieee754_binary32>::cache) cache_holder<ieee754_binary32, Dummy>::cache;
+		template<typename Dummy> constexpr decltype(cache_holder<ieee754_binary32>::cache) cache_holder<ieee754_binary32, Dummy>::cache;
 #endif
 
-		template<class Dummy> struct cache_holder<ieee754_binary64, Dummy> {
+		template<typename Dummy> struct cache_holder<ieee754_binary64, Dummy> {
 			using cache_entry_type																									= detail::wuint::uint128;
-			static constexpr int32_t cache_bits																							= 128;
-			static constexpr int32_t min_k																								= -292;
-			static constexpr int32_t max_k																								= 326;
+			static constexpr int32_t cache_bits																						= 128;
+			static constexpr int32_t min_k																							= -292;
+			static constexpr int32_t max_k																							= 326;
 			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
@@ -1571,27 +1571,27 @@ namespace jkj {
 #if !JKJ_HAS_INLINE_VARIABLE
 		// decltype(...) should not depend on Dummy; see
 		// https://stackoverflow.com/questions/76438400/decltype-on-static-variable-in-template-class.
-		template<class Dummy> constexpr decltype(cache_holder<ieee754_binary64>::cache) cache_holder<ieee754_binary64, Dummy>::cache;
+		template<typename Dummy> constexpr decltype(cache_holder<ieee754_binary64>::cache) cache_holder<ieee754_binary64, Dummy>::cache;
 #endif
 
 		// Compressed cache.
-		template<class FloatFormat, class Dummy = void> struct compressed_cache_holder {
-			using cache_entry_type			= typename cache_holder<FloatFormat>::cache_entry_type;
+		template<typename FloatFormat, typename Dummy = void> struct compressed_cache_holder {
+			using cache_entry_type				= typename cache_holder<FloatFormat>::cache_entry_type;
 			static constexpr int32_t cache_bits = cache_holder<FloatFormat>::cache_bits;
 			static constexpr int32_t min_k		= cache_holder<FloatFormat>::min_k;
 			static constexpr int32_t max_k		= cache_holder<FloatFormat>::max_k;
 
-			template<class ShiftAmountType, class DecimalExponentType> static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				return cache_holder<FloatFormat>::cache[k - min_k];
 			}
 		};
 
-		template<class Dummy> struct compressed_cache_holder<ieee754_binary32, Dummy> {
+		template<typename Dummy> struct compressed_cache_holder<ieee754_binary32, Dummy> {
 			using cache_entry_type										= cache_holder<ieee754_binary32>::cache_entry_type;
-			static constexpr int32_t cache_bits								= cache_holder<ieee754_binary32>::cache_bits;
-			static constexpr int32_t min_k									= cache_holder<ieee754_binary32>::min_k;
-			static constexpr int32_t max_k									= cache_holder<ieee754_binary32>::max_k;
-			static constexpr int32_t compression_ratio						= 13;
+			static constexpr int32_t cache_bits							= cache_holder<ieee754_binary32>::cache_bits;
+			static constexpr int32_t min_k								= cache_holder<ieee754_binary32>::min_k;
+			static constexpr int32_t max_k								= cache_holder<ieee754_binary32>::max_k;
+			static constexpr int32_t compression_ratio					= 13;
 			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t((compression_ratio + 1) / 2);
 
@@ -1627,7 +1627,7 @@ namespace jkj {
 			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = make_pow5_table(detail::make_index_sequence<pow5_table_size>{});
 #endif
 
-			template<class ShiftAmountType, class DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 89 && compression_ratio == 13, "");
@@ -1659,16 +1659,16 @@ namespace jkj {
 			}
 		};
 #if !JKJ_HAS_INLINE_VARIABLE
-		template<class Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::cache;
-		template<class Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::pow5_table;
+		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::cache;
+		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::pow5_table;
 #endif
 
-		template<class Dummy> struct compressed_cache_holder<ieee754_binary64, Dummy> {
+		template<typename Dummy> struct compressed_cache_holder<ieee754_binary64, Dummy> {
 			using cache_entry_type										= cache_holder<ieee754_binary64>::cache_entry_type;
-			static constexpr int32_t cache_bits								= cache_holder<ieee754_binary64>::cache_bits;
-			static constexpr int32_t min_k									= cache_holder<ieee754_binary64>::min_k;
-			static constexpr int32_t max_k									= cache_holder<ieee754_binary64>::max_k;
-			static constexpr int32_t compression_ratio						= 27;
+			static constexpr int32_t cache_bits							= cache_holder<ieee754_binary64>::cache_bits;
+			static constexpr int32_t min_k								= cache_holder<ieee754_binary64>::min_k;
+			static constexpr int32_t max_k								= cache_holder<ieee754_binary64>::max_k;
+			static constexpr int32_t compression_ratio					= 27;
 			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t(compression_ratio);
 
@@ -1704,7 +1704,7 @@ namespace jkj {
 			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = make_pow5_table(detail::make_index_sequence<pow5_table_size>{});
 #endif
 
-			template<class ShiftAmountType, class DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 619 && compression_ratio == 27, "");
@@ -1743,8 +1743,8 @@ namespace jkj {
 			}
 		};
 #if !JKJ_HAS_INLINE_VARIABLE
-		template<class Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::cache;
-		template<class Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::pow5_table;
+		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::cache;
+		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::pow5_table;
 #endif
 
 		////////////////////////////////////////////////////////////////////////////////////////
@@ -1753,20 +1753,20 @@ namespace jkj {
 
 		// Remove trailing zeros from significand and add the number of removed zeros into
 		// exponent.
-		template<class TrailingZeroPolicy, class Format, class DecimalSignificand, class DecimalExponentType> struct remove_trailing_zeros_traits;
+		template<typename TrailingZeroPolicy, typename Format, typename DecimalSignificand, typename DecimalExponentType> struct remove_trailing_zeros_traits;
 
 		// Users can specialize this traits class to make Dragonbox work with their own formats.
 		// However, this requires detailed knowledge on how the algorithm works, so it is recommended to
 		// read through the paper.
-		template<class FormatTraits, class CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits;
+		template<typename FormatTraits, typename CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits;
 
 		// A collection of some common definitions to reduce boilerplate.
-		template<class FormatTraits, class CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits_base {
-			using format						  = typename FormatTraits::format;
+		template<typename FormatTraits, typename CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits_base {
+			using format							  = typename FormatTraits::format;
 			static constexpr int32_t significand_bits = format::significand_bits;
 			static constexpr int32_t total_bits		  = format::total_bits;
-			using carrier_uint					  = typename FormatTraits::carrier_uint;
-			using cache_entry_type				  = CacheEntryType;
+			using carrier_uint						  = typename FormatTraits::carrier_uint;
+			using cache_entry_type					  = CacheEntryType;
 			static constexpr int32_t cache_bits		  = int32_t(cache_bits_);
 
 			struct compute_mul_result {
@@ -1784,7 +1784,7 @@ namespace jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		namespace detail {
-			template<class T> struct dummy {};
+			template<typename T> struct dummy {};
 		}
 
 		namespace policy {
@@ -1796,18 +1796,18 @@ namespace jkj {
 #if defined(_MSC_VER) && !defined(__clang__)
 					// See
 					// https://developercommunity.visualstudio.com/t/Failure-to-optimize-intrinsics/10628226
-					template<class SignedSignificandBits, class DecimalSignificand, class DecimalExponentType>
+					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>
 					static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, false> handle_sign(SignedSignificandBits,
 						decimal_fp<DecimalSignificand, DecimalExponentType, false, false> r) noexcept {
 						return { r.significand, r.exponent };
 					}
-					template<class SignedSignificandBits, class DecimalSignificand, class DecimalExponentType>
+					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>
 					static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, true> handle_sign(SignedSignificandBits,
 						decimal_fp<DecimalSignificand, DecimalExponentType, false, true> r) noexcept {
 						return { r.significand, r.exponent, r.may_have_trailing_zeros };
 					}
 #else
-					template<class SignedSignificandBits, class UnsignedDecimalFp>
+					template<typename SignedSignificandBits, typename UnsignedDecimalFp>
 					static constexpr UnsignedDecimalFp handle_sign(SignedSignificandBits, UnsignedDecimalFp r) noexcept {
 						return r;
 					}
@@ -1818,7 +1818,7 @@ namespace jkj {
 					using sign_policy					  = return_sign_t;
 					static constexpr bool return_has_sign = true;
 
-					template<class SignedSignificandBits, class UnsignedDecimalFp>
+					template<typename SignedSignificandBits, typename UnsignedDecimalFp>
 					static constexpr detail::unsigned_decimal_fp_to_signed_t<UnsignedDecimalFp> handle_sign(SignedSignificandBits s, UnsignedDecimalFp r) noexcept {
 						return add_sign_to_unsigned_decimal_fp(s.is_negative(), r);
 					}
@@ -1830,12 +1830,12 @@ namespace jkj {
 					using trailing_zero_policy					= ignore_t;
 					static constexpr bool report_trailing_zeros = false;
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
 					on_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
 					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1845,14 +1845,14 @@ namespace jkj {
 					using trailing_zero_policy					= remove_t;
 					static constexpr bool report_trailing_zeros = false;
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
 					JKJ_FORCEINLINE static JKJ_CONSTEXPR14 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
 					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1862,14 +1862,14 @@ namespace jkj {
 					using trailing_zero_policy					= remove_compact_t;
 					static constexpr bool report_trailing_zeros = false;
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
 					JKJ_FORCEINLINE static JKJ_CONSTEXPR14 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_compact_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
 					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1879,12 +1879,12 @@ namespace jkj {
 					using trailing_zero_policy					= report_t;
 					static constexpr bool report_trailing_zeros = true;
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
 					on_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent, true };
 					}
 
-					template<class Format, class DecimalSignificand, class DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
 					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						return { significand, exponent, false };
 					}
@@ -1958,17 +1958,17 @@ namespace jkj {
 					using interval_type_provider			= nearest_to_even_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_to_even_t>(), Args{}...)) delegate(SignedSignificandBits,
 						Func f, Args... args) noexcept {
 						return f(nearest_to_even_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { s.has_even_significand_bits() };
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_to_even = {};
@@ -1978,16 +1978,16 @@ namespace jkj {
 					using interval_type_provider			= nearest_to_odd_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_to_odd_t>(), Args{}...)) delegate(SignedSignificandBits,
 						Func f, Args... args) noexcept {
 						return f(nearest_to_odd_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { !s.has_even_significand_bits() };
 					}
-					template<class SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_to_odd = {};
@@ -1997,16 +1997,16 @@ namespace jkj {
 					using interval_type_provider			= nearest_toward_plus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_plus_infinity_t>(), Args{}...)) delegate(
 						SignedSignificandBits, Func f, Args... args) noexcept {
 						return f(nearest_toward_plus_infinity_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { !s.is_negative() };
 					}
-					template<class SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
 						return { !s.is_negative() };
 					}
 				} nearest_toward_plus_infinity = {};
@@ -2016,16 +2016,16 @@ namespace jkj {
 					using interval_type_provider			= nearest_toward_minus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_minus_infinity_t>(), Args{}...)) delegate(
 						SignedSignificandBits, Func f, Args... args) noexcept {
 						return f(nearest_toward_minus_infinity_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { s.is_negative() };
 					}
-					template<class SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
 						return { s.is_negative() };
 					}
 				} nearest_toward_minus_infinity = {};
@@ -2035,16 +2035,16 @@ namespace jkj {
 					using interval_type_provider			= nearest_toward_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_zero_t>(), Args{}...)) delegate(
 						SignedSignificandBits, Func f, Args... args) noexcept {
 						return f(nearest_toward_zero_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::right_closed_left_open normal_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::right_closed_left_open normal_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
-					template<class SignedSignificandBits> static constexpr interval_type::right_closed_left_open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::right_closed_left_open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_toward_zero = {};
@@ -2054,16 +2054,16 @@ namespace jkj {
 					using interval_type_provider			= nearest_away_from_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_away_from_zero_t>(), Args{}...)) delegate(
 						SignedSignificandBits, Func f, Args... args) noexcept {
 						return f(nearest_away_from_zero_t{}, args...);
 					}
 
-					template<class SignedSignificandBits> static constexpr interval_type::left_closed_right_open normal_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::left_closed_right_open normal_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
-					template<class SignedSignificandBits> static constexpr interval_type::left_closed_right_open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> static constexpr interval_type::left_closed_right_open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_away_from_zero = {};
@@ -2073,10 +2073,10 @@ namespace jkj {
 						using interval_type_provider = nearest_always_closed_t;
 						static constexpr auto tag	 = tag_t::to_nearest;
 
-						template<class SignedSignificandBits> static constexpr interval_type::closed normal_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> static constexpr interval_type::closed normal_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
-						template<class SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
 					};
@@ -2084,10 +2084,10 @@ namespace jkj {
 						using interval_type_provider = nearest_always_open_t;
 						static constexpr auto tag	 = tag_t::to_nearest;
 
-						template<class SignedSignificandBits> static constexpr interval_type::open normal_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> static constexpr interval_type::open normal_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
-						template<class SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
 					};
@@ -2096,7 +2096,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct nearest_to_even_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_even_static_boundary_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_closed_t{}, args...) : f(detail::nearest_always_open_t{}, args...);
@@ -2106,7 +2106,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct nearest_to_odd_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_static_boundary_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_open_t{}, args...) : f(detail::nearest_always_closed_t{}, args...);
@@ -2116,7 +2116,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct nearest_toward_plus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_static_boundary_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.is_negative() ? f(nearest_toward_zero, args...) : f(nearest_away_from_zero, args...);
@@ -2126,7 +2126,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct nearest_toward_minus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_static_boundary_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.is_negative() ? f(nearest_away_from_zero, args...) : f(nearest_toward_zero, args...);
@@ -2145,7 +2145,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct toward_plus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_plus_infinity_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.is_negative() ? f(detail::left_closed_directed_t{}, args...) : f(detail::right_closed_directed_t{}, args...);
@@ -2155,7 +2155,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct toward_minus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_minus_infinity_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
 						Args... args) noexcept {
 						return s.is_negative() ? f(detail::right_closed_directed_t{}, args...) : f(detail::left_closed_directed_t{}, args...);
@@ -2165,7 +2165,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct toward_zero_t {
 					using decimal_to_binary_rounding_policy = toward_zero_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits, Func f,
 						Args... args) noexcept {
 						return f(detail::left_closed_directed_t{}, args...);
@@ -2175,7 +2175,7 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct away_from_zero_t {
 					using decimal_to_binary_rounding_policy = away_from_zero_t;
 
-					template<class SignedSignificandBits, class Func, class... Args>
+					template<typename SignedSignificandBits, typename Func, typename... Args>
 					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::right_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits, Func f,
 						Args... args) noexcept {
 						return f(detail::right_closed_directed_t{}, args...);
@@ -2194,7 +2194,7 @@ namespace jkj {
 					using binary_to_decimal_rounding_policy = do_not_care_t;
 					static constexpr auto tag				= tag_t::do_not_care;
 
-					template<class CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return false;
 					}
 				} do_not_care = {};
@@ -2203,7 +2203,7 @@ namespace jkj {
 					using binary_to_decimal_rounding_policy = to_even_t;
 					static constexpr auto tag				= tag_t::to_even;
 
-					template<class CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
+					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
 						return significand % 2 != 0;
 					}
 				} to_even = {};
@@ -2212,7 +2212,7 @@ namespace jkj {
 					using binary_to_decimal_rounding_policy = to_odd_t;
 					static constexpr auto tag				= tag_t::to_odd;
 
-					template<class CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
+					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
 						return significand % 2 == 0;
 					}
 				} to_odd = {};
@@ -2221,7 +2221,7 @@ namespace jkj {
 					using binary_to_decimal_rounding_policy = away_from_zero_t;
 					static constexpr auto tag				= tag_t::away_from_zero;
 
-					template<class CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return false;
 					}
 				} away_from_zero = {};
@@ -2230,7 +2230,7 @@ namespace jkj {
 					using binary_to_decimal_rounding_policy = toward_zero_t;
 					static constexpr auto tag				= tag_t::toward_zero;
 
-					template<class CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return true;
 					}
 				} toward_zero = {};
@@ -2239,9 +2239,9 @@ namespace jkj {
 			namespace cache {
 				JKJ_INLINE_VARIABLE struct full_t {
 					using cache_policy									= full_t;
-					template<class FloatFormat> using cache_holder_type = cache_holder<FloatFormat>;
+					template<typename FloatFormat> using cache_holder_type = cache_holder<FloatFormat>;
 
-					template<class FloatFormat, class ShiftAmountType, class DecimalExponentType>
+					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
 					static constexpr typename cache_holder_type<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
 #if JKJ_HAS_CONSTEXPR14
 						assert(k >= cache_holder_type<FloatFormat>::min_k && k <= cache_holder_type<FloatFormat>::max_k);
@@ -2252,9 +2252,9 @@ namespace jkj {
 
 				JKJ_INLINE_VARIABLE struct compact_t {
 					using cache_policy									= compact_t;
-					template<class FloatFormat> using cache_holder_type = compressed_cache_holder<FloatFormat>;
+					template<typename FloatFormat> using cache_holder_type = compressed_cache_holder<FloatFormat>;
 
-					template<class FloatFormat, class ShiftAmountType, class DecimalExponentType>
+					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
 					static JKJ_CONSTEXPR20 typename cache_holder<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
 						assert(k >= cache_holder<FloatFormat>::min_k && k <= cache_holder<FloatFormat>::max_k);
 
@@ -2267,39 +2267,39 @@ namespace jkj {
 				JKJ_INLINE_VARIABLE struct match_t {
 					using preferred_integer_types_policy = match_t;
 
-					template<class FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type = typename FormatTraits::carrier_uint;
+					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type = typename FormatTraits::carrier_uint;
 
-					template<class FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
+					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
 						typename FormatTraits::exponent_int;
 
-					template<class FormatTraits> using shift_amount_type = typename FormatTraits::exponent_int;
+					template<typename FormatTraits> using shift_amount_type = typename FormatTraits::exponent_int;
 				} match;
 
 				JKJ_INLINE_VARIABLE struct prefer_32_t {
 					using preferred_integer_types_policy = prefer_32_t;
 
-					template<class FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
+					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
 						typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least32_t>::max(), detail::stdr::uint_least32_t,
 							typename FormatTraits::carrier_uint>::type;
 
-					template<class FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
+					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
 						typename detail::stdr::conditional<FormatTraits::format::exponent_bits <= detail::value_bits<detail::stdr::int_least32_t>::value,
 							detail::stdr::int_least32_t, typename FormatTraits::exponent_int>::type;
 
-					template<class FormatTraits> using shift_amount_type = detail::stdr::int_least32_t;
+					template<typename FormatTraits> using shift_amount_type = detail::stdr::int_least32_t;
 				} prefer_32;
 
 				JKJ_INLINE_VARIABLE struct minimal_t {
 					using preferred_integer_types_policy = minimal_t;
 
-					template<class FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
+					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
 						typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least8_t>::max(), detail::stdr::uint_least8_t,
 							typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least16_t>::max(), detail::stdr::uint_least16_t,
 								typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least32_t>::max(), detail::stdr::uint_least32_t,
 									typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least64_t>::max(),
 										detail::stdr::uint_least64_t, typename FormatTraits::carrier_uint>::type>::type>::type>::type;
 
-					template<class FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
+					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
 						typename detail::stdr::conditional<lower_bound >= detail::stdr::numeric_limits<detail::stdr::int_least8_t>::min() &&
 								upper_bound <= detail::stdr::numeric_limits<detail::stdr::int_least8_t>::max(),
 							detail::stdr::int_least8_t,
@@ -2310,7 +2310,7 @@ namespace jkj {
 										upper_bound <= detail::stdr::numeric_limits<detail::stdr::int_least32_t>::max(),
 									detail::stdr::int_least32_t, typename FormatTraits::exponent_int>::type>::type>::type;
 
-					template<class FormatTraits> using shift_amount_type = detail::stdr::int_least8_t;
+					template<typename FormatTraits> using shift_amount_type = detail::stdr::int_least8_t;
 				} minimal;
 			}
 		}
@@ -2319,7 +2319,7 @@ namespace jkj {
 		// Specializations of user-specializable templates used in the main algorithm.
 		////////////////////////////////////////////////////////////////////////////////////////
 
-		template<class DecimalExponentType>
+		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary32, detail::stdr::uint_least32_t, DecimalExponentType> {
 			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
@@ -2345,7 +2345,7 @@ namespace jkj {
 			}
 		};
 
-		template<class DecimalExponentType>
+		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary64, detail::stdr::uint_least64_t, DecimalExponentType> {
 			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
@@ -2376,7 +2376,7 @@ namespace jkj {
 			}
 		};
 
-		template<class DecimalExponentType>
+		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary32, detail::stdr::uint_least32_t, DecimalExponentType> {
 			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
@@ -2392,7 +2392,7 @@ namespace jkj {
 			}
 		};
 
-		template<class DecimalExponentType>
+		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary64, detail::stdr::uint_least64_t, DecimalExponentType> {
 			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
@@ -2408,7 +2408,7 @@ namespace jkj {
 			}
 		};
 
-		template<class ExponentInt>
+		template<typename ExponentInt>
 		struct multiplication_traits<ieee754_binary_traits<ieee754_binary32, detail::stdr::uint_least32_t, ExponentInt>, detail::stdr::uint_least64_t, 64>
 			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary32, detail::stdr::uint_least32_t>, detail::stdr::uint_least64_t, 64> {
 			static JKJ_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
@@ -2416,11 +2416,11 @@ namespace jkj {
 				return { carrier_uint(r >> 32), carrier_uint(r) == 0 };
 			}
 
-			template<class ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return detail::stdr::uint_least64_t(cache >> ShiftAmountType(cache_bits - 1 - beta));
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static JKJ_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta <= 32);
@@ -2429,33 +2429,33 @@ namespace jkj {
 				return { ((r >> ShiftAmountType(64 - beta)) & 1) != 0, (UINT32_C(0xffffffff) & (r >> ShiftAmountType(32 - beta))) == 0 };
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return carrier_uint((cache - (cache >> (significand_bits + 2))) >> ShiftAmountType(cache_bits - significand_bits - 1 - beta));
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return carrier_uint((cache + (cache >> (significand_bits + 1))) >> ShiftAmountType(cache_bits - significand_bits - 1 - beta));
 			}
 
-			template<class ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (carrier_uint(cache >> ShiftAmountType(cache_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
 
-		template<class ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, detail::stdr::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
+		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, detail::stdr::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
 			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary64, detail::stdr::uint_least64_t>, detail::wuint::uint128, 128> {
 			static JKJ_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul192_upper128(u, cache);
 				return { r.high(), r.low() == 0 };
 			}
 
-			template<class ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return detail::stdr::uint_least64_t(cache.high() >> ShiftAmountType(total_bits - 1 - beta));
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static JKJ_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta < 64);
@@ -2465,17 +2465,17 @@ namespace jkj {
 					(((r.high() << beta) & UINT64_C(0xffffffffffffffff)) | (r.low() >> ShiftAmountType(64 - beta))) == 0 };
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (cache.high() - (cache.high() >> (significand_bits + 2))) >> ShiftAmountType(total_bits - significand_bits - 1 - beta);
 			}
 
-			template<class ShiftAmountType>
+			template<typename ShiftAmountType>
 			static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (cache.high() + (cache.high() >> (significand_bits + 1))) >> ShiftAmountType(total_bits - significand_bits - 1 - beta);
 			}
 
-			template<class ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return ((cache.high() >> ShiftAmountType(total_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
@@ -2485,11 +2485,11 @@ namespace jkj {
 			// The main algorithm.
 			////////////////////////////////////////////////////////////////////////////////////////
 
-			template<class FormatTraits> struct impl : private FormatTraits::format {
-				using format					  = typename FormatTraits::format;
-				using carrier_uint				  = typename FormatTraits::carrier_uint;
+			template<typename FormatTraits> struct impl : private FormatTraits::format {
+				using format						  = typename FormatTraits::format;
+				using carrier_uint					  = typename FormatTraits::carrier_uint;
 				static constexpr int32_t carrier_bits = FormatTraits::carrier_bits;
-				using exponent_int				  = typename FormatTraits::exponent_int;
+				using exponent_int					  = typename FormatTraits::exponent_int;
 
 				using format::exponent_bias;
 				using format::max_exponent;
@@ -2527,18 +2527,18 @@ namespace jkj {
 				static constexpr int32_t shorter_interval_tie_lower_threshold = -log::floor_log5_pow2_minus_log5_3(significand_bits + 4) - 2 - significand_bits;
 				static constexpr int32_t shorter_interval_tie_upper_threshold = -log::floor_log5_pow2(significand_bits + 2) - 2 - significand_bits;
 
-				template<class PreferredIntegerTypesPolicy> using remainder_type =
+				template<typename PreferredIntegerTypesPolicy> using remainder_type =
 					typename PreferredIntegerTypesPolicy::template remainder_type<FormatTraits, compute_power<kappa + 1>(detail::stdr::uint_least64_t(10))>;
 
-				template<class PreferredIntegerTypesPolicy> using decimal_exponent_type = typename PreferredIntegerTypesPolicy::template decimal_exponent_type<FormatTraits,
+				template<typename PreferredIntegerTypesPolicy> using decimal_exponent_type = typename PreferredIntegerTypesPolicy::template decimal_exponent_type<FormatTraits,
 					detail::stdr::int_least32_t(min(-max_k, min_k)), detail::stdr::int_least32_t(max(max_k, -min_k + kappa + 1))>;
 
-				template<class SignPolicy, class TrailingZeroPolicy, class PreferredIntegerTypesPolicy> using return_type =
+				template<typename SignPolicy, typename TrailingZeroPolicy, typename PreferredIntegerTypesPolicy> using return_type =
 					decimal_fp<carrier_uint, decimal_exponent_type<PreferredIntegerTypesPolicy>, SignPolicy::return_has_sign, TrailingZeroPolicy::report_trailing_zeros>;
 
 				//// The main algorithm assumes the input is a normal/subnormal finite number.
 
-				template<class SignPolicy, class TrailingZeroPolicy, class IntervalTypeProvider, class BinaryToDecimalRoundingPolicy, class CachePolicy,
+				template<typename SignPolicy, typename TrailingZeroPolicy, typename IntervalTypeProvider, typename BinaryToDecimalRoundingPolicy, typename CachePolicy,
 					class PreferredIntegerTypesPolicy>
 				JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
@@ -2782,7 +2782,7 @@ namespace jkj {
 					return SignPolicy::handle_sign(s, TrailingZeroPolicy::template no_trailing_zeros<format>(decimal_significand, decimal_exponent_type_(minus_k + kappa)));
 				}
 
-				template<class SignPolicy, class TrailingZeroPolicy, class CachePolicy, class PreferredIntegerTypesPolicy>
+				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
 				JKJ_FORCEINLINE JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_left_closed_directed(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
@@ -2899,7 +2899,7 @@ namespace jkj {
 					return SignPolicy::handle_sign(s, TrailingZeroPolicy::template no_trailing_zeros<format>(decimal_significand, decimal_exponent_type_(minus_k + kappa)));
 				}
 
-				template<class SignPolicy, class TrailingZeroPolicy, class CachePolicy, class PreferredIntegerTypesPolicy>
+				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
 				JKJ_FORCEINLINE JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_right_closed_directed(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
@@ -3013,13 +3013,13 @@ namespace jkj {
 			// For a given kind, find a policy belonging to that kind.
 			// Check if there are more than one such policies.
 			enum class policy_found_info { not_found, unique, repeated };
-			template<class Policy, policy_found_info info> struct found_policy_pair {
+			template<typename Policy, policy_found_info info> struct found_policy_pair {
 				// Either the policy parameter type given by the user, or the default policy.
 				using policy					 = Policy;
 				static constexpr auto found_info = info;
 			};
 
-			template<class KindDetector, class DefaultPolicy> struct detector_default_pair {
+			template<typename KindDetector, typename DefaultPolicy> struct detector_default_pair {
 				using kind_detector = KindDetector;
 
 				// Iterate through all given policy parameter types and see if there is a policy
@@ -3040,13 +3040,13 @@ namespace jkj {
 				// over Policies, replacing FoundPolicyInfo by the appropriate one if a parameter
 				// type belonging to the specified kind is found.
 
-				template<class FoundPolicyInfo, class... Policies> struct get_found_policy_pair_impl;
+				template<typename FoundPolicyInfo, typename... Policies> struct get_found_policy_pair_impl;
 
-				template<class FoundPolicyInfo> struct get_found_policy_pair_impl<FoundPolicyInfo> {
+				template<typename FoundPolicyInfo> struct get_found_policy_pair_impl<FoundPolicyInfo> {
 					using type = FoundPolicyInfo;
 				};
 
-				template<class FoundPolicyInfo, class FirstPolicy, class... RemainingPolicies>
+				template<typename FoundPolicyInfo, typename FirstPolicy, typename... RemainingPolicies>
 				struct get_found_policy_pair_impl<FoundPolicyInfo, FirstPolicy, RemainingPolicies...> {
 					using type = typename stdr::conditional<KindDetector{}(dummy<FirstPolicy>{}),
 						typename stdr::conditional<FoundPolicyInfo::found_info == policy_found_info::not_found,
@@ -3055,41 +3055,41 @@ namespace jkj {
 						typename get_found_policy_pair_impl<FoundPolicyInfo, RemainingPolicies...>::type>::type;
 				};
 
-				template<class... Policies> using get_found_policy_pair =
+				template<typename... Policies> using get_found_policy_pair =
 					typename get_found_policy_pair_impl<found_policy_pair<DefaultPolicy, policy_found_info::not_found>, Policies...>::type;
 			};
 
 			// Simple typelist of detector_default_pair's.
-			template<class... DetectorDefaultPairs> struct detector_default_pair_list {};
+			template<typename... DetectorDefaultPairs> struct detector_default_pair_list {};
 
 			// Check if a given policy belongs to one of the kinds specified by the library.
-			template<class Policy> constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<>) noexcept {
+			template<typename Policy> constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<>) noexcept {
 				return false;
 			}
-			template<class Policy, class FirstDetectorDefaultPair, class... RemainingDetectorDefaultPairs>
+			template<typename Policy, typename FirstDetectorDefaultPair, typename... RemainingDetectorDefaultPairs>
 			constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>) noexcept {
 				return typename FirstDetectorDefaultPair::kind_detector{}(dummy<Policy>{}) ||
 					check_policy_validity(dummy<Policy>{}, detector_default_pair_list<RemainingDetectorDefaultPairs...>{});
 			}
 
 			// Check if all of policies belong to some of the kinds specified by the library.
-			template<class DetectorDefaultPairList> constexpr bool check_policy_list_validity(DetectorDefaultPairList) noexcept {
+			template<typename DetectorDefaultPairList> constexpr bool check_policy_list_validity(DetectorDefaultPairList) noexcept {
 				return true;
 			}
-			template<class DetectorDefaultPairList, class FirstPolicy, class... RemainingPolicies>
+			template<typename DetectorDefaultPairList, typename FirstPolicy, typename... RemainingPolicies>
 			constexpr bool check_policy_list_validity(DetectorDefaultPairList, dummy<FirstPolicy> first_policy, dummy<RemainingPolicies>... remaining_policies) {
 				return check_policy_validity(first_policy, DetectorDefaultPairList{}) && check_policy_list_validity(DetectorDefaultPairList{}, remaining_policies...);
 			}
 
 			// Actual policy holder class deriving from all specified policy types.
-			template<class... Policies> struct policy_holder : Policies... {};
+			template<typename... Policies> struct policy_holder : Policies... {};
 
 			// Iterate through the library-specified list of base-default pairs, i.e., the list of
 			// policy kinds and their defaults. For each base-default pair, call
 			// base_default_pair::get_found_policy_pair on the list of user-specified list of
 			// policies to get found_policy_pair, and build the list of them.
 
-			template<bool repeated_, class... FoundPolicyPairs> struct found_policy_pair_list {
+			template<bool repeated_, typename... FoundPolicyPairs> struct found_policy_pair_list {
 				// This will be set to be true if and only if there exists at least one
 				// found_policy_pair inside FoundPolicyPairs with
 				// found_info == policy_found_info::repeated, in which case the compilation must
@@ -3099,11 +3099,11 @@ namespace jkj {
 
 			// Iterate through DetectorDefaultPairList and augment FoundPolicyPairList by one at each
 			// iteration.
-			template<class DetectorDefaultPairList, class FoundPolicyPairList, class... Policies> struct make_policy_pair_list_impl;
+			template<typename DetectorDefaultPairList, typename FoundPolicyPairList, typename... Policies> struct make_policy_pair_list_impl;
 
 			// When there is no more detector-default pair to iterate, then the current
 			// found_policy_pair_list is the final result.
-			template<bool repeated, class... FoundPolicyPairs, class... Policies>
+			template<bool repeated, typename... FoundPolicyPairs, typename... Policies>
 			struct make_policy_pair_list_impl<detector_default_pair_list<>, found_policy_pair_list<repeated, FoundPolicyPairs...>, Policies...> {
 				using type = found_policy_pair_list<repeated, FoundPolicyPairs...>;
 			};
@@ -3112,7 +3112,7 @@ namespace jkj {
 			// detector_default_pair::get_found_policy_pair on Policies and add the returned
 			// found_policy_pair into the current list of found_policy_pair's, and move to the next
 			// detector-default pair.
-			template<class FirstDetectorDefaultPair, class... RemainingDetectorDefaultPairs, bool repeated, class... FoundPolicyPairs, class... Policies>
+			template<typename FirstDetectorDefaultPair, typename... RemainingDetectorDefaultPairs, bool repeated, typename... FoundPolicyPairs, typename... Policies>
 			struct make_policy_pair_list_impl<detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>,
 				found_policy_pair_list<repeated, FoundPolicyPairs...>, Policies...> {
 				using new_found_policy_pair = typename FirstDetectorDefaultPair::template get_found_policy_pair<Policies...>;
@@ -3122,26 +3122,26 @@ namespace jkj {
 					Policies...>::type;
 			};
 
-			template<class DetectorDefaultPairList, class... Policies> using policy_pair_list =
+			template<typename DetectorDefaultPairList, typename... Policies> using policy_pair_list =
 				typename make_policy_pair_list_impl<DetectorDefaultPairList, found_policy_pair_list<false>, Policies...>::type;
 
 			// Unpack FoundPolicyPairList into found_policy_pair's and build the policy_holder type
 			// from the corresponding typelist of found_policy_pair::policy's.
-			template<class FoundPolicyPairList, class... RawPolicies> struct convert_to_policy_holder_impl;
+			template<typename FoundPolicyPairList, typename... RawPolicies> struct convert_to_policy_holder_impl;
 
-			template<bool repeated, class... RawPolicies> struct convert_to_policy_holder_impl<found_policy_pair_list<repeated>, RawPolicies...> {
+			template<bool repeated, typename... RawPolicies> struct convert_to_policy_holder_impl<found_policy_pair_list<repeated>, RawPolicies...> {
 				using type = policy_holder<RawPolicies...>;
 			};
 
-			template<bool repeated, class FirstFoundPolicyPair, class... RemainingFoundPolicyPairs, class... RawPolicies>
+			template<bool repeated, typename FirstFoundPolicyPair, typename... RemainingFoundPolicyPairs, typename... RawPolicies>
 			struct convert_to_policy_holder_impl<found_policy_pair_list<repeated, FirstFoundPolicyPair, RemainingFoundPolicyPairs...>, RawPolicies...> {
 				using type = typename convert_to_policy_holder_impl<found_policy_pair_list<repeated, RemainingFoundPolicyPairs...>, typename FirstFoundPolicyPair::policy,
 					RawPolicies...>::type;
 			};
 
-			template<class FoundPolicyPairList> using convert_to_policy_holder = typename convert_to_policy_holder_impl<FoundPolicyPairList>::type;
+			template<typename FoundPolicyPairList> using convert_to_policy_holder = typename convert_to_policy_holder_impl<FoundPolicyPairList>::type;
 
-			template<class DetectorDefaultPairList, class... Policies> struct make_policy_holder_impl {
+			template<typename DetectorDefaultPairList, typename... Policies> struct make_policy_holder_impl {
 				static_assert(check_policy_list_validity(DetectorDefaultPairList{}, dummy<Policies>{}...), "jkj::dragonbox: an invalid policy is specified");
 
 				static_assert(!policy_pair_list<DetectorDefaultPairList, Policies...>::repeated, "jkj::dragonbox: at most one policy should be specified for each policy kind");
@@ -3149,14 +3149,14 @@ namespace jkj {
 				using type = convert_to_policy_holder<policy_pair_list<DetectorDefaultPairList, Policies...>>;
 			};
 
-			template<class DetectorDefaultPairList, class... Policies> using make_policy_holder = typename make_policy_holder_impl<DetectorDefaultPairList, Policies...>::type;
+			template<typename DetectorDefaultPairList, typename... Policies> using make_policy_holder = typename make_policy_holder_impl<DetectorDefaultPairList, Policies...>::type;
 
 			// Policy kind detectors.
 			struct is_sign_policy {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
@@ -3164,7 +3164,7 @@ namespace jkj {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
@@ -3172,7 +3172,7 @@ namespace jkj {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
@@ -3180,7 +3180,7 @@ namespace jkj {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
@@ -3188,7 +3188,7 @@ namespace jkj {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
@@ -3196,12 +3196,12 @@ namespace jkj {
 				constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<class Policy, class = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 
-			template<class... Policies> using to_decimal_policy_holder =
+			template<typename... Policies> using to_decimal_policy_holder =
 				make_policy_holder<detector_default_pair_list<detector_default_pair<is_sign_policy, policy::sign::return_sign_t>,
 									   detector_default_pair<is_trailing_zero_policy, policy::trailing_zero::remove_t>,
 									   detector_default_pair<is_decimal_to_binary_rounding_policy, policy::decimal_to_binary_rounding::nearest_to_even_t>,
@@ -3210,11 +3210,11 @@ namespace jkj {
 									   detector_default_pair<is_preferred_integer_types_policy, policy::preferred_integer_types::match_t>>,
 					Policies...>;
 
-			template<class FormatTraits, class... Policies> using to_decimal_return_type =
+			template<typename FormatTraits, typename... Policies> using to_decimal_return_type =
 				typename impl<FormatTraits>::template return_type<typename to_decimal_policy_holder<Policies...>::sign_policy,
 					typename to_decimal_policy_holder<Policies...>::trailing_zero_policy, typename to_decimal_policy_holder<Policies...>::preferred_integer_types_policy>;
 
-			template<class FormatTraits, class PolicyHolder> struct to_decimal_dispatcher {
+			template<typename FormatTraits, typename PolicyHolder> struct to_decimal_dispatcher {
 				using sign_policy						= typename PolicyHolder::sign_policy;
 				using trailing_zero_policy				= typename PolicyHolder::trailing_zero_policy;
 				using binary_to_decimal_rounding_policy = typename PolicyHolder::binary_to_decimal_rounding_policy;
@@ -3222,7 +3222,7 @@ namespace jkj {
 				using preferred_integer_types_policy	= typename PolicyHolder::preferred_integer_types_policy;
 				using return_type						= typename impl<FormatTraits>::template return_type<sign_policy, trailing_zero_policy, preferred_integer_types_policy>;
 
-				template<class IntervalTypeProvider> JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
+				template<typename IntervalTypeProvider> JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
 					signed_significand_bits<FormatTraits> s, typename FormatTraits::exponent_int exponent_bits) noexcept {
 					constexpr auto tag = IntervalTypeProvider::tag;
 
@@ -3249,7 +3249,7 @@ namespace jkj {
 		// The interface function.
 		////////////////////////////////////////////////////////////////////////////////////////
 
-		template<class FormatTraits, class ExponentBits, class... Policies>
+		template<typename FormatTraits, typename ExponentBits, typename... Policies>
 		JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(signed_significand_bits<FormatTraits> s,
 			ExponentBits exponent_bits, Policies...) noexcept {
 			// Build policy holder type.
@@ -3258,8 +3258,8 @@ namespace jkj {
 			return policy_holder::delegate(s, detail::to_decimal_dispatcher<FormatTraits, policy_holder>{}, s, exponent_bits);
 		}
 
-		template<class Float, class ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
-			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>, class... Policies>
+		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
+			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>, typename... Policies>
 		JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x, Policies... policies) noexcept {
 			const auto br			 = make_float_bits<Float, ConversionTraits, FormatTraits>(x);
 			const auto exponent_bits = br.extract_exponent_bits();

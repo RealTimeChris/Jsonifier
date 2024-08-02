@@ -254,7 +254,7 @@ namespace jsonifier_fast_float {
 
 
 #ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
-	#define fastfloat_really_inline __forceinline
+	#define fastfloat_really_inline inline
 #else
 	#define fastfloat_really_inline inline __attribute__((always_inline))
 #endif
@@ -438,7 +438,7 @@ namespace jsonifier_fast_float {
 		answer.low	  = uint64_t(r);
 		answer.high	  = uint64_t(r >> 64);
 #else
-		answer.low = umul128_generic(a, b, &answer.high); 
+		answer.low = umul128_generic(a, b, &answer.high);
 #endif
 		return answer;
 	}
@@ -779,8 +779,8 @@ namespace jsonifier_fast_float {
 #endif
 
 
-#ifndef JSONIFIER_FASTFLOAT_FAST_FLOAT_H
-#define JSONIFIER_FASTFLOAT_FAST_FLOAT_H
+#ifndef JSONIFIER_FAST_FLOAT_H
+#define JSONIFIER_FAST_FLOAT_H
 
 
 namespace jsonifier_fast_float {
@@ -811,7 +811,7 @@ namespace jsonifier_fast_float {
 	JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept;
 
 }// namespace jsonifier_fast_float
-#endif// JSONIFIER_FASTFLOAT_FAST_FLOAT_H
+#endif// JSONIFIER_FAST_FLOAT_H
 
 #ifndef JSONIFIER_FASTFLOAT_ASCII_NUMBER_H
 #define JSONIFIER_FASTFLOAT_ASCII_NUMBER_H
@@ -1038,10 +1038,9 @@ namespace jsonifier_fast_float {
 
 	// Assuming that you use no more than 19 digits, this will
 	// parse an ASCII string.
-	template<typename UC, parse_options_t<UC> options>
-	fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 parsed_number_string_t<UC> parseNumberString(UC const* p, UC const* pend) noexcept {
-		constexpr chars_format fmt = options.format;
-		constexpr UC decimal_point = options.decimal_point;
+	template<typename UC> fastfloat_really_inline JSONIFIER_FASTFLOAT_CONSTEXPR20 parsed_number_string_t<UC> parseNumberString(UC const* p, UC const* pend) noexcept {
+		constexpr chars_format fmt = chars_format::json;
+		constexpr UC decimal_point = '.';
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
@@ -1329,7 +1328,7 @@ namespace jsonifier_fast_float {
  * infinite in binary64 so we never need to worry about powers
  * of 5 greater than 308.
  */
-	template<class unused = void> struct powers_template {
+	template<typename unused = void> struct powers_template {
 		constexpr static int32_t smallest_power_of_five = binary_format<double>::smallest_power_of_ten();
 		constexpr static int32_t largest_power_of_five	= binary_format<double>::largest_power_of_ten();
 		constexpr static int32_t number_of_entries		= 2 * (largest_power_of_five - smallest_power_of_five + 1);
@@ -1497,7 +1496,7 @@ namespace jsonifier_fast_float {
 			0xb6472e511c81471d, 0xe0133fe4adf8e952, 0xe3d8f9e563a198e5, 0x58180fddd97723a6, 0x8e679c2f5e44ff8f, 0x570f09eaa7ea7648 };
 	};
 
-	template<class unused> constexpr uint64_t powers_template<unused>::power_of_five_128[number_of_entries];
+	template<typename unused> constexpr uint64_t powers_template<unused>::power_of_five_128[number_of_entries];
 
 	using powers = powers_template<>;
 
@@ -2464,7 +2463,7 @@ namespace jsonifier_fast_float {
 		size_t counter = 0;
 		digits		   = 0;
 		limb value	   = 0;
-		size_t step = 19;
+		size_t step	   = 19;
 
 		// process all integer digits.
 		UC const* p	   = num.integer.ptr;
@@ -2682,11 +2681,8 @@ namespace jsonifier_fast_float {
 							if (*ptr == UC(')')) {
 								answer.ptr = ptr + 1;// valid nan(n-char-seq-opt)
 								break;
-							} else {
-								if (!((UC('a') <= *ptr && *ptr <= UC('z')) || (UC('A') <= *ptr && *ptr <= UC('Z')) || (UC('0') <= *ptr && *ptr <= UC('9')) || *ptr == UC('_'))) {
-									break;// forbidden char, not nan(n-char-seq-opt)
-								}
-							}
+							} else if (!((UC('a') <= *ptr && *ptr <= UC('z')) || (UC('A') <= *ptr && *ptr <= UC('Z')) || (UC('0') <= *ptr && *ptr <= UC('9')) || *ptr == UC('_')))
+								break;// forbidden char, not nan(n-char-seq-opt)
 						}
 					}
 					return answer;
@@ -2710,7 +2706,7 @@ namespace jsonifier_fast_float {
  * It is the default on most system. This function is meant to be inexpensive.
  * Credit : @mwalcott3
  */
-		fastfloat_really_inline constexpr bool rounds_to_nearest() noexcept {
+		fastfloat_really_inline bool rounds_to_nearest() noexcept {
 			// https://lemire.me/blog/2020/06/26/gcc-not-nearest/
 #if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
 			return false;
@@ -2731,7 +2727,7 @@ namespace jsonifier_fast_float {
 			// The value does not need to be std::numeric_limits<float>::min(), any small
 			// value so that 1 + x should round to 1 would do (after accounting for excess
 			// precision, as in 387 instructions).
-			float fmin = std::numeric_limits<float>::min();
+			static volatile float fmin = std::numeric_limits<float>::min();
 			float fmini				   = fmin;// we copy it so that it gets loaded at most once.
 //
 // Explanation:
@@ -2752,63 +2748,23 @@ namespace jsonifier_fast_float {
 	#pragma warning(push)
 //  todo: is there a VS warning?
 //  see https://stackoverflow.com/questions/46079446/is-there-a-warning-for-floating-point-equality-checking-in-visual-studio-2013
-#elif defined(JSONIFIER_CLANG)
+#elif defined(__clang__)
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wfloat-equal"
-#elif defined(JSONIFIER_GNUCXX)
+#elif defined(__GNUC__)
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wfloat-equal"
 #endif
 			return (fmini + 1.0f == 1.0f - fmini);
 #ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
 	#pragma warning(pop)
-#elif defined(JSONIFIER_CLANG)
+#elif defined(__clang__)
 	#pragma clang diagnostic pop
-#elif defined(JSONIFIER_GNUCXX)
+#elif defined(__GNUC__)
 	#pragma GCC diagnostic pop
 #endif
 		}
 
-	}// namespace detail
-
-	template<typename T> struct from_chars_caller {
-		template<typename UC> JSONIFIER_FASTFLOAT_CONSTEXPR20 static from_chars_result_t<UC> call(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept {
-			return fromCharsAdvanced(first, last, value, options);
-		}
-	};
-
-#if __STDCPP_FLOAT32_T__ == 1
-	template<> struct from_chars_caller<std::float32_t> {
-		template<typename UC>
-		JSONIFIER_FASTFLOAT_CONSTEXPR20 static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float32_t& value, parse_options_t<UC> options) noexcept {
-			// if std::float32_t is defined, and we are in C++23 mode; macro set for float32;
-			// set value to float due to equivalence between float and float32_t
-			float val;
-			auto ret = fromCharsAdvanced(first, last, val, options);
-			value	 = val;
-			return ret;
-		}
-	};
-#endif
-
-#if __STDCPP_FLOAT64_T__ == 1
-	template<> struct from_chars_caller<std::float64_t> {
-		template<typename UC>
-		JSONIFIER_FASTFLOAT_CONSTEXPR20 static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float64_t& value, parse_options_t<UC> options) noexcept {
-			// if std::float64_t is defined, and we are in C++23 mode; macro set for float64;
-			// set value as double due to equivalence between double and float64_t
-			double val;
-			auto ret = fromCharsAdvanced(first, last, val, options);
-			value	 = val;
-			return ret;
-		}
-	};
-#endif
-
-
-	template<typename T, typename UC, typename>
-	JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> from_chars(UC const* first, UC const* last, T& value, chars_format fmt /*= chars_format::general*/) noexcept {
-		return from_chars_caller<T>::call(first, last, value, parse_options_t<UC>(fmt));
 	}
 
 	/**
@@ -2816,7 +2772,7 @@ namespace jsonifier_fast_float {
  * either by fromCharsAdvanced function taking chars range and parsing options
  * or other parsing custom function implemented by user.
  */
-	template<typename T, typename UC> JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> fromCharsAdvanced(parsed_number_string_t<UC>& pns, T& value) noexcept {
+	template<typename T, typename UC> from_chars_result_t<UC> fromCharsAdvanced(parsed_number_string_t<UC>& pns, T& value) noexcept {
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
@@ -2856,6 +2812,13 @@ namespace jsonifier_fast_float {
 				// We do not have that fegetround() == FE_TONEAREST.
 				// Next is a modified Clinger's fast path, inspired by Jakub Jelínek's proposal
 				if (pns.exponent >= 0 && pns.mantissa <= binary_format<T>::max_mantissa_fast_path(pns.exponent)) {
+#if defined(__clang__) || defined(FASTFLOAT_32BIT)
+					// Clang may map 0 to -0.0 when fegetround() == FE_DOWNWARD
+					if (pns.mantissa == 0) {
+						value = pns.negative ? T(-0.) : T(0.);
+						return answer;
+					}
+#endif
 					value = T(pns.mantissa) * binary_format<T>::exact_power_of_ten(pns.exponent);
 					if (pns.negative) {
 						value = -value;
@@ -2883,21 +2846,16 @@ namespace jsonifier_fast_float {
 		return answer;
 	}
 
-	template<const auto& options, typename T, typename UC>
-	JSONIFIER_FASTFLOAT_CONSTEXPR20 from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept {
+	template<typename T, typename UC> from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept {
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		from_chars_result_t<UC> answer;
-		parsed_number_string_t<UC> pns = parseNumberString<UC, options>(first, last);
+		parsed_number_string_t<UC> pns = parseNumberString<UC>(first, last);
 		if (!pns.valid) {
-			if constexpr (options.format & chars_format::no_infnan) {
-				answer.ec  = std::errc::invalid_argument;
-				answer.ptr = first;
-				return answer;
-			} else {
-				return detail::parse_infnan(first, last, value);
-			}
+			answer.ec  = std::errc::invalid_argument;
+			answer.ptr = first;
+			return answer;
 		}
 
 		// call overload that takes parsed_number_string_t directly.

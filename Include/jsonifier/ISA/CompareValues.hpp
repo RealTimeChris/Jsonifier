@@ -31,7 +31,7 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01>  uint16_t toBitMask(simd_int_t01&& value) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> uint16_t toBitMask(simd_int_t01&& value) {
 		static uint8x16_t bit_mask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 		auto minput	   = value & bit_mask;
 		uint8x16_t tmp = vpaddq_u8(minput, minput);
@@ -41,28 +41,25 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	 uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
+	uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return toBitMask(vceqq_u8(value, other));
 	}
 
 #elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	 auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02> auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
 	}
 
 	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	 auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
+	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02> auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
 	}
 
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 
-	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	 auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02> auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other)));
 	}
 
@@ -73,7 +70,7 @@ namespace simd_internal {
 #else
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	 uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
+	uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) {
 		return static_cast<uint16_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other), std::make_index_sequence<16>{}),
 			std::make_index_sequence<16>{}));
 	}

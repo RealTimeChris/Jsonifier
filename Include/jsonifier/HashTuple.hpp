@@ -44,28 +44,28 @@ namespace jsonifier_internal {
 		size_t count{};
 	};
 
-	template<const auto& tuple, size_t currentIndex = 0, size_t maxIndex = std::tuple_size_v<unwrap_t<decltype(tuple)>>>
-	JSONIFIER_INLINE constexpr auto collectTupleReferencesInternal(std::array<tuple_reference, maxIndex>& arrayOfRefs) {
+	template<size_t currentIndex = 0, size_t maxIndex, typename tuple_type>
+	JSONIFIER_INLINE constexpr auto collectTupleReferencesInternal(const tuple_type& tuple, std::array<tuple_reference, maxIndex>& arrayOfRefs) {
 		if constexpr (currentIndex < maxIndex) {
 			tuple_reference values{};
 			values.oldIndex			  = currentIndex;
 			values.stringLength		  = std::get<currentIndex>(tuple).view().size();
 			arrayOfRefs[currentIndex] = values;
-			return collectTupleReferencesInternal<tuple, currentIndex + 1>(arrayOfRefs);
+			return collectTupleReferencesInternal<currentIndex + 1>(tuple, arrayOfRefs);
 		} else {
 			return arrayOfRefs;
 		}
 	}
 
-	template<const auto& tuple, size_t currentIndex = 0, size_t maxIndex = std::tuple_size_v<unwrap_t<decltype(tuple)>>>
-	JSONIFIER_INLINE constexpr auto collectTupleReferences() {
+	template<typename tuple_type> JSONIFIER_INLINE constexpr auto collectTupleReferences(const tuple_type& tuple) {
+		constexpr auto maxIndex = std::tuple_size_v<unwrap_t<tuple_type>>;
 		std::array<tuple_reference, maxIndex> arrayOfRefs{};
-		return collectTupleReferencesInternal<tuple, 0, maxIndex>(arrayOfRefs);
+		return collectTupleReferencesInternal<0, maxIndex>(tuple, arrayOfRefs);
 	}
 
 	template<size_t size> JSONIFIER_INLINE constexpr auto bubbleSort(std::array<tuple_reference, size>& arrayOfRefs) {
 		for (size_t i = 0; i < size - 1; ++i) {
-			for (size_t j = 0; j < size - i - 1; ++j) { 
+			for (size_t j = 0; j < size - i - 1; ++j) {
 				if (arrayOfRefs[j].stringLength > arrayOfRefs[j + 1].stringLength) {
 					std::swap(arrayOfRefs[j], arrayOfRefs[j + 1]);
 				}
@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> JSONIFIER_INLINE constexpr auto sortTupleReferences() {
 		constexpr auto& tuple = jsonifier::core<unwrap_t<value_type>>::parseValue.parseValue;
-		auto collectedRefs	  = collectTupleReferences<tuple>();
+		auto collectedRefs	  = collectTupleReferences(tuple);
 		bubbleSort(collectedRefs);
 		return collectedRefs;
 	}

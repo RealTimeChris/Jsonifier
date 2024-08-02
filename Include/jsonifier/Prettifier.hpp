@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 	};
 
 	struct prettify_options_internal {
-		jsonifier::prettify_options optionsReal{};
+		jsonifier::prettify_options optionsReal{}; 
 		mutable int64_t indent{};
 	};
 

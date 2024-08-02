@@ -278,13 +278,13 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, class char_type> JSONIFIER_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
+	template<uint64_t count, typename char_type> JSONIFIER_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
 		if constexpr (count > 8) {
 			uint64_t countNew{ count };
 			uint64_t v[2];
 			while (countNew > 8) {
-				std::memcpy(v, lhs, 8);
-				std::memcpy(v + 1, rhs, 8);
+				std::copy_n(lhs, 8, reinterpret_cast<char_type*>(v));
+				std::copy_n(rhs, 8, reinterpret_cast<char_type*>(v + 1));
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -297,38 +297,38 @@ namespace jsonifier_internal {
 			lhs -= shift;
 			rhs -= shift;
 
-			std::memcpy(v, lhs, 8);
-			std::memcpy(v + 1, rhs, 8);
+			std::copy_n(lhs, 8, reinterpret_cast<char_type*>(v));
+			std::copy_n(rhs, 8, reinterpret_cast<char_type*>(v + 1));
 			return v[0] == v[1];
 		} else {
 			if constexpr (count == 8) {
 				uint64_t v[2];
-				std::memcpy(v, lhs, count);
-				std::memcpy(v + 1, rhs, count);
+				std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
+				std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
 				return v[0] == v[1];
 			} else {
 				if constexpr (count > 4) {
 					uint64_t v[2]{};
-					std::memcpy(v, lhs, count);
-					std::memcpy(v + 1, rhs, count);
+					std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
+					std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
 					return v[0] == v[1];
 				} else {
 					if constexpr (count == 4) {
 						uint32_t v[2];
-						std::memcpy(v, lhs, count);
-						std::memcpy(v + 1, rhs, count);
+						std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
+						std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
 						return v[0] == v[1];
 					} else {
 						if constexpr (count == 3) {
 							uint32_t v[2]{};
-							std::memcpy(v, lhs, count);
-							std::memcpy(v + 1, rhs, count);
+							std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
+							std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
 							return v[0] == v[1];
 						} else {
 							if constexpr (count == 2) {
 								uint16_t v[2];
-								std::memcpy(v, lhs, count);
-								std::memcpy(v + 1, rhs, count);
+								std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
+								std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
 								return v[0] == v[1];
 							} else {
 								if constexpr (count == 1) {

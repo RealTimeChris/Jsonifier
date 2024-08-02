@@ -159,8 +159,7 @@ namespace jsonifier_internal {
 		return hasZero(value & newBytes);
 	}
 
-	template<typename simd_type, typename integer_type>
-	JSONIFIER_INLINE integer_type copyAndFindParse(const void* string1, void* string2, simd_type& simdValue) {
+	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type copyAndFindParse(const void* string1, void* string2, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(
@@ -180,8 +179,7 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type>
-	JSONIFIER_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
+	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		return simd_internal::tzcnt(static_cast<integer_type>(
 			simd_internal::opCmpEq(simdValue, simd_internal::simdBackslashes<simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdQuotes<simd_type>)));
@@ -199,8 +197,7 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type>
-	JSONIFIER_INLINE integer_type copyAndFindSerialize(const void* string1, void* string2, simd_type& simdValue) {
+	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type copyAndFindSerialize(const void* string1, void* string2, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::escapeableTable00<simd_type>, simdValue), simdValue) |
@@ -681,8 +678,7 @@ namespace jsonifier_internal {
 			simd_type collectionValue;
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				nextEscapeable =
-					copyAndFindSerialize<simd_type, integer_type>(string1, string2, collectionValue);
+				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, collectionValue);
 				if (nextEscapeable < mask) [[likely]] {
 					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 					if (escapeChar != 0u) [[likely]] {

@@ -298,7 +298,7 @@ namespace jsonifier_internal {
 			const auto bufferSize = value.size();
 			auto iterNew		  = value.begin();
 			for (size_t i = 0; i < bufferSize; ++i) {
-				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(*(iterNew++), iter, end);
+				parse_impl<derived_type, typename unwrap_t<value_type_new>::value_type>::template impl<options>(iterNew[i], iter, end);
 
 				if (*iter == ',') [[likely]] {
 					++iter;
@@ -436,7 +436,11 @@ namespace jsonifier_internal {
 	template<typename derived_type, jsonifier::concepts::num_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::num_t value_type, typename iterator_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, iterator_type& iter, iterator_type& end) {
-			parseNumber<options>(value, iter, end, options.parserPtr->getErrors());
+			if (!parseNumber(value, iter, end)) [[unlikely]] {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(
+					iter - options.rootIter, end - options.rootIter, options.rootIter));
+			}
 		}
 	};
 

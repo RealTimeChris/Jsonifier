@@ -39,19 +39,19 @@ namespace jsonifier_internal {
 						auto valueNew = static_cast<const char*>(iter);
 						++iter;
 						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
-						writeCharactersUnchecked(out, valueNew, newSize, index);
+						writeCharacters<false>(out, valueNew, newSize, index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma: {
-						writeCharacterUnchecked<','>(out, index);
+						writeCharacter<',', false>(out, index);
 						++iter;
 						if constexpr (options.optionsReal.newLinesInArray) {
-							writeNewLineUnchecked<options>(out, index);
+							writeNewLine<options, false>(out, index);
 						} else {
 							if (state[options.indent] == json_structural_type::Object_Start) {
-								writeNewLineUnchecked<options>(out, index);
+								writeNewLine<options, false>(out, index);
 							} else {
-								writeCharacterUnchecked<options.optionsReal.indentChar>(out, index);
+								writeCharacter<options.optionsReal.indentChar, false>(out, index);
 							}
 						}
 						break;
@@ -60,17 +60,17 @@ namespace jsonifier_internal {
 						auto valueNew = static_cast<const char*>(iter);
 						++iter;
 						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
-						writeCharactersUnchecked(out, valueNew, newSize, index);
+						writeCharacters<false>(out, valueNew, newSize, index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon: {
-						writeCharacterUnchecked<':'>(out, index);
-						writeCharacterUnchecked<options.optionsReal.indentChar>(out, index);
+						writeCharacter<':', false>(out, index);
+						writeCharacter<options.optionsReal.indentChar, false>(out, index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Array_Start: {
-						writeCharacterUnchecked<'['>(out, index);
+						writeCharacter<'[', false>(out, index);
 						++iter;
 						++options.indent;
 						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Array_Start;
@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 						}
 						if constexpr (options.optionsReal.newLinesInArray) {
 							if (*iter != ']') {
-								writeNewLineUnchecked<options>(out, index);
+								writeNewLine<options, false>(out, index);
 							}
 						}
 						break;
@@ -94,31 +94,31 @@ namespace jsonifier_internal {
 						}
 						if constexpr (options.optionsReal.newLinesInArray) {
 							if (*(iter.sub(1)) != '[') {
-								writeNewLineUnchecked<options>(out, index);
+								writeNewLine<options, false>(out, index);
 							}
 						}
-						writeCharacterUnchecked<']'>(out, index);
+						writeCharacter<']', false>(out, index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Null: {
-						writeCharactersUnchecked<"null">(out, index);
+						writeCharacters<"null", false>(out, index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (*iter == 't') {
-							writeCharactersUnchecked<"true">(out, index);
+							writeCharacters<"true", false>(out, index);
 							++iter;
 							break;
 						} else {
-							writeCharactersUnchecked<"false">(out, index);
+							writeCharacters<"false", false>(out, index);
 							++iter;
 							break;
 						}
 					}
 					[[unlikely]] case json_structural_type::Object_Start: {
-						writeCharacterUnchecked<'{'>(out, index);
+						writeCharacter<'{', false>(out, index);
 						++iter;
 						++options.indent;
 						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Object_Start;
@@ -126,7 +126,7 @@ namespace jsonifier_internal {
 							state.resize(state.size() * 2);
 						}
 						if (*iter != '}') {
-							writeNewLineUnchecked<options>(out, index);
+							writeNewLine<options, false>(out, index);
 						}
 						break;
 					}
@@ -139,9 +139,9 @@ namespace jsonifier_internal {
 							return;
 						}
 						if (*(iter.sub(1)) != '{') {
-							writeNewLineUnchecked<options>(out, index);
+							writeNewLine<options, false>(out, index);
 						}
-						writeCharacterUnchecked<'}'>(out, index);
+						writeCharacter<'}', false>(out, index);
 						++iter;
 						break;
 					}

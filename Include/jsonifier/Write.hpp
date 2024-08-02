@@ -60,123 +60,119 @@ namespace jsonifier_internal {
 	constexpr jsonifier::string_view trueString{ "true" };
 	constexpr jsonifier::string_view nullString{ "null" };
 
-	template<jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacter(const char c, buffer_type& buffer, uint64_t& index) noexcept {
-		if (index >= buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+	template<bool checked = true, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(const auto c, buffer_type& buffer, index_type& index) noexcept {
+		if constexpr (checked) {
+			if (index == buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+			}
 		}
 		buffer[index] = c;
 		++index;
 	}
 
-	template<char c, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacter(buffer_type& buffer, uint64_t& index) noexcept {
-		if (index >= buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+	template<auto c, bool checked = true, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
+		if constexpr (checked) {
+			if (index == buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+			}
 		}
 		buffer[index] = c;
 		++index;
 	}
 
-	template<string_literal str, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, uint64_t& index) noexcept {
+	template<string_literal str, bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
 		static constexpr auto s = str.view();
 		static constexpr auto n = s.size();
 
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		if constexpr (checked) {
+			if (index + n > buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
 		}
 		std::memcpy(buffer.data() + index, s.data(), n);
 		index += n;
 	}
 
-	template<char c, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacterUnchecked(buffer_type& buffer, uint64_t& index) noexcept {
-		buffer[index] = c;
-		++index;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacterUnchecked(const char c, buffer_type& buffer, uint64_t& index) noexcept {
-		buffer[index] = c;
-		++index;
-	}
-
-	template<string_literal str, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharactersUnchecked(buffer_type& buffer, uint64_t& index) noexcept {
-		static constexpr auto s = str.view();
-		static constexpr auto n = s.size();
-
-		std::memcpy(buffer.data() + index, s.data(), n);
+	template<bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
+		const auto n = str.size();
+		if constexpr (checked) {
+			if (index + n > buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
+		}
+		std::memcpy(buffer.data() + index, str.data(), n);
 		index += n;
 	}
 
-	template<char c, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacters(size_t n, buffer_type& buffer, uint64_t& index) noexcept {
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+	template<auto c, bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void writeCharacters(size_t n, buffer_type& buffer, index_type& index) noexcept {
+		if constexpr (checked) {
+			if (index + n > buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
 		}
 		std::memset(buffer.data() + index, c, n);
 		index += n;
 	}
 
-	template<char c, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharactersUnchecked(size_t n, buffer_type& buffer, uint64_t& index) noexcept {
+	template<auto c, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(size_t n, buffer_type& buffer, index_type& index) noexcept {
 		std::memset(buffer.data() + index, c, n);
 		index += n;
 	}
 
-	template<const jsonifier::string_view& str, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, uint64_t& index) noexcept {
-		static constexpr auto s = str;
-		static constexpr auto n = s.size();
-
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-		}
-		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, const char* str, uint64_t size, uint64_t& index) noexcept {
-		auto n = size;
-
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-		}
-		std::memcpy(buffer.data() + index, str, n);
-		index += n;
-	}
-
-	template<jsonifier::concepts::buffer_like buffer_type>
-	JSONIFIER_INLINE void writeCharactersUnchecked(buffer_type& buffer, const char* str, uint64_t size, uint64_t& index) noexcept {
-		std::memcpy(buffer.data() + index, str, size);
-		index += size;
-	}
-
-	template<const jsonifier::string_view& str, jsonifier::concepts::buffer_like buffer_type>
-	JSONIFIER_INLINE void writeCharactersUnchecked(buffer_type& buffer, uint64_t& index) noexcept {
-		static constexpr auto s = str;
-		static constexpr auto n = s.size();
-
-		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
-
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeNewLineUnchecked(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, bool checked = true, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) {
 		auto indent		 = options.indent;
-		auto indentSize	 = options.optionsReal.indentSize;
-		auto indentTotal = indent * indentSize;
-		buffer[index]	 = '\n';
-		++index;
-		std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
-		index += indentTotal;
-	};
-
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) {
-		auto indent		 = options.indent;
-		auto indentSize	 = options.optionsReal.indentSize;
+		constexpr auto indentSize = options.optionsReal.indentSize;
 		auto indentTotal = indent * indentSize;
 		auto n			 = 3 + indentTotal;
-		if (index + n >= buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		if constexpr (checked) {
+			if (index + n >= buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
 		}
 		buffer[index] = '\n';
 		++index;
-		std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+		std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 		index += indentTotal;
 	};
+
+
+	template<const jsonifier::string_view& str, bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
+		static constexpr auto s = str;
+		static constexpr auto n = s.size();
+
+		if constexpr (checked) {
+			if (index + n > buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
+		}
+		std::memcpy(buffer.data() + index, s.data(), n);
+		index += n;
+	}
+
+	template<typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacters(const auto& bytes, buffer_type& buffer, index_type& index) noexcept {
+		const auto n = bytes.size();
+		if (index + n > buffer.size()) [[unlikely]] {
+			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		}
+		std::memcpy(buffer.data() + index, bytes.data(), n);
+		index += n;
+	}
+
+	template<bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, const char* string, size_t size, index_type& index) noexcept {
+		const auto n = size;
+		if constexpr (checked) {
+			if (index + n > buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			}
+		}
+		std::memcpy(buffer.data() + index, string, n);
+		index += n;
+	}
 
 	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeEntrySeparator(buffer_type&& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify) {
@@ -186,10 +182,11 @@ namespace jsonifier_internal {
 			static constexpr char s[]{ ",\n" };
 			static constexpr auto n = std::size(s) - 1;
 			auto indent				= options.indent;
-			auto indentSize			= options.optionsReal.indentSize;
-			std::memcpy(buffer.data() + index, s, n);
+			constexpr auto indentSize = options.optionsReal.indentSize;
+			auto indentTotal		= indent * indentSize;
+			std::copy_n(s, n, buffer.data() + index);
 			index += n;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indent * indentSize);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indent * indentSize;
 		} else {
 			buffer[index] = ',';
@@ -201,7 +198,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			++options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -211,7 +208,7 @@ namespace jsonifier_internal {
 			++index;
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
 			auto n = 1;
@@ -227,7 +224,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			--options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -235,7 +232,7 @@ namespace jsonifier_internal {
 			}
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
 			auto n = index + 1;
@@ -251,7 +248,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -261,7 +258,7 @@ namespace jsonifier_internal {
 			++index;
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
 			if (index + 1 >= buffer.size()) [[unlikely]] {
@@ -276,7 +273,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal + 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -284,7 +281,7 @@ namespace jsonifier_internal {
 			}
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 			buffer[index] = '}';
 			++index;
@@ -301,7 +298,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -311,7 +308,7 @@ namespace jsonifier_internal {
 			++index;
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
 			if (index + 1 >= buffer.size()) [[unlikely]] {
@@ -326,7 +323,7 @@ namespace jsonifier_internal {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
 			auto indent		 = options.indent;
-			auto indentSize	 = options.optionsReal.indentSize;
+			constexpr auto indentSize = options.optionsReal.indentSize;
 			auto indentTotal = indent * indentSize;
 			auto n			 = 3 + indentTotal + 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
@@ -334,7 +331,7 @@ namespace jsonifier_internal {
 			}
 			buffer[index] = '\n';
 			++index;
-			std::memset(buffer.data() + index, options.optionsReal.indentChar, indentTotal);
+			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 			buffer[index] = ']';
 			++index;

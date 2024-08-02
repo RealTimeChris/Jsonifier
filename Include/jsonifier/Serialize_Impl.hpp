@@ -69,8 +69,8 @@ namespace jsonifier_internal {
 									bufferNewer.resize(max(bufferNewer.size() * 2, k));
 								}
 							}
-							writeCharactersUnchecked<",\n">(bufferNewer, indexNewer);
-							writeCharactersUnchecked<' '>(options.indent * options.optionsReal.indentSize, bufferNewer, indexNewer);
+							writeCharacters<",\n", false>(bufferNewer, indexNewer);
+							writeCharacters<' ', false>(options.indent * options.optionsReal.indentSize, bufferNewer, indexNewer);
 						} else {
 							writeCharacter<','>(bufferNewer, indexNewer);
 						}
@@ -254,9 +254,9 @@ namespace jsonifier_internal {
 		template<const serialize_options_internal& options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
-			const auto valueSize = value.size();
+			const auto valueSize  = value.size();
 			const auto bufferSize = buffer.size();
-			const auto k = index + 10 + (valueSize * 2);
+			const auto k		  = index + 10 + (valueSize * 2);
 			if (k >= bufferSize) [[unlikely]] {
 				buffer.resize(bufferSize * 2 > k ? bufferSize * 2 : k);
 			}
@@ -302,9 +302,7 @@ namespace jsonifier_internal {
 					writeCharacters(std::forward<buffer_type>(buffer), std::forward<index_type>(index), R"(\\)");
 					break;
 				}
-					[[likely]] default : {
-						writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value));
-					}
+				[[likely]] default: { writeCharacter(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value)); }
 			}
 			writeCharacter<json_structural_type::String>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}
