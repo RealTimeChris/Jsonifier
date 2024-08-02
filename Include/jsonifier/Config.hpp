@@ -25,24 +25,20 @@
 
 #include <cstdint>
 
-#if !defined(__GNUC__)
-	#pragma warning(disable : 4371)
-	#pragma warning(disable : 4514)
-	#pragma warning(disable : 4625)
-	#pragma warning(disable : 4706)
-	#pragma warning(disable : 4710)
-	#pragma warning(disable : 4711)
-	#pragma warning(disable : 4820)
-	#pragma warning(disable : 5045)
-	#pragma warning(disable : 5246)
-#endif
-
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__)) || (defined(__APPLE__) && defined(__clang__))
 	#define JSONIFIER_CLANG 1
 #elif defined(_MSC_VER)
 	#define JSONIFIER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
 	#define JSONIFIER_GNUCXX 1
+#endif
+
+#if (__has_cpp_attribute(no_unique_address))
+	#define JSONIFIER_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#elif (__has_cpp_attribute(msvc::no_unique_address)) || (defined(JSONIFIER_MSVC)) && (!defined(JSONIFIER_CLANG))
+	#define JSONIFIER_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+	#define JSONIFIER_NO_UNIQUE_ADDRESS
 #endif
 
 #if defined(__has_builtin)
@@ -61,37 +57,24 @@
 	#define JSONIFIER_WIN 1
 #endif
 
-#if defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
-	#define LIKELY(x) (__builtin_expect(!!(x), 1))
-	#define UNLIKELY(x) (__builtin_expect(!!(x), 0))
-	#define ASSUME(x) \
-		do { \
-			if (!(x)) \
-				__builtin_unreachable(); \
-		} while (0)
-#elif defined(JSONIFIER_MSVC)
-	#include <intrin.h>
-	#define LIKELY(x) (x)
-	#define UNLIKELY(x) (x)
-	#define ASSUME(x) __assume(x)
+#if defined(NDEBUG)
+	#if defined(JSONIFIER_MSVC)
+		#define JSONIFIER_FLATTEN [[msvc::flatten]]
+		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_INLINE inline
+	#elif defined(JSONIFIER_CLANG) || defined(JSONIFIER_GNUCXX)
+		#define JSONIFIER_FLATTEN __attribute__((flatten))
+		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_INLINE inline
+	#else
+		#define JSONIFIER_FLATTEN
+		#define JSONIFIER_ALWAYS_INLINE inline
+		#define JSONIFIER_INLINE inline
+	#endif
 #else
-	#define LIKELY(x) (x)
-	#define UNLIKELY(x) (x)
-	#define ASSUME(x) (( void )0)
-#endif
-
-#if defined(JSONIFIER_MSVC)
-	#define JSONIFIER_NO_INLINE __declspec(noinline)
-	#define JSONIFIER_INLINE inline
-#elif defined(JSONIFIER_CLANG)
-	#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
-	#define JSONIFIER_INLINE inline __attribute__((always_inline))
-#elif defined(JSONIFIER_GNUCXX)
-	#define JSONIFIER_NO_INLINE __attribute__((noinline))
-	#define JSONIFIER_INLINE inline
-#else
-	#define JSONIFIER_INLINE inline
-	#define JSONIFIER_NO_INLINE
+	#define JSONIFIER_FLATTEN 
+	#define JSONIFIER_ALWAYS_INLINE 
+	#define JSONIFIER_INLINE 
 #endif
 
 #if !defined(JSONIFIER_CPU_INSTRUCTIONS)
@@ -158,7 +141,7 @@
 
 #endif
 
-JSONIFIER_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) {
+JSONIFIER_ALWAYS_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) noexcept {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
 
@@ -175,17 +158,17 @@ using jsonifier_simd_int_t = __m512i;
 constexpr uint64_t bitsPerStep{ 512 };
 using jsonifier_string_parsing_type = uint64_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m512x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using jsonifier_simd_int_t = __m256i;
 constexpr uint64_t bitsPerStep{ 256 };
 using jsonifier_string_parsing_type = uint32_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m256x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using jsonifier_simd_int_t = __m128i;
 constexpr uint64_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-	#endif
+	   #endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	#include <arm_neon.h>
@@ -218,17 +201,17 @@ using structural_index	= const char*;
 using string_buffer_ptr = char*;
 
 #if defined(__APPLE__) && defined(__arm64__)
-	#define PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
+	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
 #elif defined(JSONIFIER_MSVC)
 	#include <intrin.h>
-	#define PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
 #elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
 	#include <xmmintrin.h>
-	#define PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
 #else
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 
-JSONIFIER_INLINE void jsonifierPrefetchInternal(const void* ptr) {
-	PREFETCH(ptr)
+JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
+	JSONIFIER_PREFETCH(ptr)
 }

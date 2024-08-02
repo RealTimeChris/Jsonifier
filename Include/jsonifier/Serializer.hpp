@@ -45,58 +45,61 @@ namespace jsonifier_internal {
 
 	struct serialize_options_internal {
 		jsonifier::serialize_options optionsReal{};
-		mutable uint64_t indent{};
 	};
 
-	template<typename derived_type, typename value_type> struct serialize_impl;
+	template<const auto& options, typename derived_type, typename value_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<typename derived_type_new, typename value_type> friend struct serialize_impl;
+		template<const auto& options, typename derived_type_new, typename value_type> friend struct serialize_impl;
 
-		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
+		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
+		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
-			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index);
-			if (buffer.size() != derivedRef.index) {
-				buffer.resize(derivedRef.index);
+			serializePair.index	 = 0;
+			serializePair.indent = 0;
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), derivedRef.stringBuffer, serializePair);
+			if (buffer.size() != serializePair.index) [[unlikely]] {
+				buffer.resize(serializePair.index);
 			}
-			if (!compare(buffer.data(), derivedRef.stringBuffer.data(), derivedRef.index)) {
-				std::copy_n(derivedRef.stringBuffer.data(), derivedRef.index, buffer.data());
+			if (!compare(derivedRef.stringBuffer.data(), buffer.data(), serializePair.index)) [[unlikely]] {
+				std::copy_n(derivedRef.stringBuffer.data(), serializePair.index, buffer.data());
 			}
 			return true;
 		}
 
-		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type> JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) {
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) noexcept {
 			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
+			serializePair.index	 = 0;
+			serializePair.indent = 0;
 			jsonifier::string newString{};
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
-			derivedRef.errors.clear();
-			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), newString, derivedRef.index);
-			if (derivedRef.index != minifyError) [[likely]] {
-				newString.resize(derivedRef.index);
-			}
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, serializePair);
+			newString.resize(serializePair.index);
 			return newString;
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
+		struct serialize_pair {
+			size_t indent{};
+			size_t index{};
+		} serializePair{};
 
-		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE ~serializer() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~serializer() noexcept = default;
 	};
 
 }

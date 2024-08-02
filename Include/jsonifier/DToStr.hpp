@@ -34,36 +34,20 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_INLINE constexpr auto countl_zero(const uint32_t x) noexcept {
-#if defined(JSONIFIER_MSVC)
-		return std::countl_zero(x);
-#else
-	#if __has_builtin(__builtin_ctzll)
-		return __builtin_clz(x);
-	#else
-		return std::countl_zero(x);
-	#endif
-#endif
-	}
-
-	JSONIFIER_INLINE constexpr int32_t intLog2(uint32_t x) noexcept {
-		return 31 - jsonifier_internal::countl_zero(x | 1);
-	}
-
-	constexpr uint64_t digitCountTable[] = { 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184, 17179868184,
-		21474826480, 21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368, 34349738368,
-		34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
+	constexpr uint64_t digitCountTable[]{ 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184, 17179868184, 21474826480,
+		21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368, 34349738368, 34349738368,
+		38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
-	JSONIFIER_INLINE constexpr int32_t fastDigitCount(const uint32_t x) noexcept {
-		return (x + digitCountTable[intLog2(x)]) >> 32;
+	JSONIFIER_ALWAYS_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
+		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
-	inline constexpr uint8_t decTrailingZeroTable[] = { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-		0, 0 };
+	inline constexpr uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+		0 };
 
-	template<typename char_type> JSONIFIER_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
+	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = uint32_t(sig / 100000000);
@@ -75,7 +59,7 @@ namespace jsonifier_internal {
 		uint32_t bb		   = abb - a * 100;
 		uint32_t cc		   = abbcc - abb * 100;
 
-		buf[0] = uint8_t(a + '0');
+		buf[0] = char_type(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
 		std::memcpy(buf, charTable + (bb * 2 + lz), 2);
@@ -131,7 +115,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename char_type> JSONIFIER_INLINE char_type* writeU32Len1To9(char_type* buf, uint32_t val) noexcept {
+	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* writeU32Len1To9(char_type* buf, uint32_t val) noexcept {
 		if (val < 10) {
 			*buf = uint8_t(val + '0');
 			return buf + 1;
@@ -142,7 +126,7 @@ namespace jsonifier_internal {
 			return buf + 2;
 		}
 
-		const uint32_t digits = fastDigitCount(val);
+		const uint64_t digits = fastDigitCount(val);
 
 		auto* end = buf + digits;
 		auto* p	  = end;
@@ -163,11 +147,11 @@ namespace jsonifier_internal {
 		return end;
 	}
 
-	JSONIFIER_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
+	JSONIFIER_ALWAYS_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
+	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
@@ -180,7 +164,7 @@ namespace jsonifier_internal {
 		constexpr bool isFloat			= std::is_same_v<float, value_type>;
 		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
 		bool sign						= (rawVal >> (sizeof(value_type) * 8 - 1));
-		int32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
+		uint32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buf, "null", 4);
@@ -196,11 +180,11 @@ namespace jsonifier_internal {
 		}
 
 		if constexpr (isFloat) {
-			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::remove);
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
 
 			uint32_t sigDec			= uint32_t(v.significand);
 			int32_t expDec			= v.exponent;
-			const int32_t numDigits = fastDigitCount(sigDec);
+			const int32_t numDigits = static_cast<int32_t>(fastDigitCount(sigDec));
 			int32_t dotPos			= numDigits + expDec;
 
 			if (-6 < dotPos && dotPos <= 9) {
@@ -250,7 +234,7 @@ namespace jsonifier_internal {
 				return buf + 2 - lz;
 			}
 		} else {
-			const auto v = jkj::dragonbox::to_decimal(val, jkj::dragonbox::policy::sign::ignore, jkj::dragonbox::policy::trailing_zero::ignore);
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
 
 			uint64_t sigDec = v.significand;
 			int32_t expDec	= v.exponent;
@@ -267,13 +251,13 @@ namespace jsonifier_internal {
 					buf[0]		= '0';
 					buf[1]		= '.';
 					buf += 2;
-					std::memset(buf, '0', numHdr - buf);
+					std::memset(buf, '0', static_cast<size_t>(numHdr - buf));
 					return numEnd;
 				} else {
 					std::memset(buf, '0', 24);
 					auto numHdr = buf + 1;
 					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-					std::memmove(buf, buf + 1, dotPos);
+					std::memmove(buf, buf + 1, static_cast<size_t>(dotPos));
 					buf[dotPos] = '.';
 					return ((numEnd - numHdr) <= dotPos) ? buf + dotPos : numEnd;
 				}

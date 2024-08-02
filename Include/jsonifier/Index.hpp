@@ -27,7 +27,6 @@
 	#define NOMINMAX
 #endif
 
-#include <jsonifier/JsonStructuralIterator.hpp>
 #include <jsonifier/Parse_Impl.hpp>
 #include <jsonifier/Serialize_Impl.hpp>
 #include <jsonifier/JsonifierCore.hpp>
@@ -35,7 +34,7 @@
 #include <jsonifier/RawJsonData.hpp>
 #include <jsonifier/Minify_Impl.hpp>
 #include <jsonifier/Serializer.hpp>
-#include <jsonifier/HashTuple.hpp>
+#include <jsonifier/HashMap.hpp>
 #include <jsonifier/Parser.hpp>
 #include <jsonifier/String.hpp>
 #include <jsonifier/Tuple.hpp>

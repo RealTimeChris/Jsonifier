@@ -56,293 +56,315 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	constexpr jsonifier::string_view falseString{ "false" };
-	constexpr jsonifier::string_view trueString{ "true" };
-	constexpr jsonifier::string_view nullString{ "null" };
-
-	template<bool checked = true, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(const auto c, buffer_type& buffer, index_type& index) noexcept {
-		if constexpr (checked) {
-			if (index == buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+	template<const auto&... optionsNew> struct writer {
+		static constexpr auto options{ [] {
+			if constexpr (sizeof...(optionsNew) > 0) {
+				std::tuple optionsNewer{ optionsNew... };
+				return std::get<0>(optionsNewer);
+			} else {
+				return bool{};
 			}
-		}
-		buffer[index] = c;
-		++index;
-	}
+		}() };
 
-	template<auto c, bool checked = true, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
-		if constexpr (checked) {
-			if (index == buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
+		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (checked) {
+				if (index == bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize == 0 ? 128 : bufferSize * 2);
+				}
 			}
+			buffer[index] = c;
+			++index;
 		}
-		buffer[index] = c;
-		++index;
-	}
 
-	template<string_literal str, bool checked = true, typename buffer_type, typename index_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
-		static constexpr auto s = str.view();
-		static constexpr auto n = s.size();
-
-		if constexpr (checked) {
-			if (index + n > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		template<char c, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (checked) {
+				if (index == bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize == 0 ? 128 : bufferSize * 2);
+				}
 			}
+			buffer[index] = c;
+			++index;
 		}
-		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
 
-	template<bool checked = true, typename buffer_type, typename index_type>
-	JSONIFIER_INLINE void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
-		const auto n = str.size();
-		if constexpr (checked) {
-			if (index + n > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		template<string_literal str, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize	= buffer.size();
+			static constexpr auto s = str.view();
+			static constexpr auto n = s.size();
+
+			if constexpr (checked) {
+				if (index + n > bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > index + n ? bufferSize * 2 : index + n);
+				}
 			}
-		}
-		std::memcpy(buffer.data() + index, str.data(), n);
-		index += n;
-	}
-
-	template<auto c, bool checked = true, typename buffer_type, typename index_type>
-	JSONIFIER_INLINE void writeCharacters(size_t n, buffer_type& buffer, index_type& index) noexcept {
-		if constexpr (checked) {
-			if (index + n > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-		}
-		std::memset(buffer.data() + index, c, n);
-		index += n;
-	}
-
-	template<auto c, typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacter(size_t n, buffer_type& buffer, index_type& index) noexcept {
-		std::memset(buffer.data() + index, c, n);
-		index += n;
-	}
-
-	template<auto& options, bool checked = true, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) {
-		auto indent		 = options.indent;
-		constexpr auto indentSize = options.optionsReal.indentSize;
-		auto indentTotal = indent * indentSize;
-		auto n			 = 3 + indentTotal;
-		if constexpr (checked) {
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-		}
-		buffer[index] = '\n';
-		++index;
-		std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-		index += indentTotal;
-	};
-
-
-	template<const jsonifier::string_view& str, bool checked = true, typename buffer_type, typename index_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
-		static constexpr auto s = str;
-		static constexpr auto n = s.size();
-
-		if constexpr (checked) {
-			if (index + n > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-		}
-		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
-
-	template<typename buffer_type, typename index_type> JSONIFIER_INLINE void writeCharacters(const auto& bytes, buffer_type& buffer, index_type& index) noexcept {
-		const auto n = bytes.size();
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-		}
-		std::memcpy(buffer.data() + index, bytes.data(), n);
-		index += n;
-	}
-
-	template<bool checked = true, typename buffer_type, typename index_type>
-	JSONIFIER_INLINE void writeCharacters(buffer_type& buffer, const char* string, size_t size, index_type& index) noexcept {
-		const auto n = size;
-		if constexpr (checked) {
-			if (index + n > buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-		}
-		std::memcpy(buffer.data() + index, string, n);
-		index += n;
-	}
-
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeEntrySeparator(buffer_type&& buffer, uint64_t& index) noexcept {
-		if constexpr (options.optionsReal.prettify) {
-			if (auto k = index + options.indent + 256; k > buffer.size()) [[unlikely]] {
-				buffer.resize(max(buffer.size() * 2, k));
-			}
-			static constexpr char s[]{ ",\n" };
-			static constexpr auto n = std::size(s) - 1;
-			auto indent				= options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal		= indent * indentSize;
-			std::copy_n(s, n, buffer.data() + index);
+			std::memcpy(buffer.data() + index, s.data(), n);
 			index += n;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indent * indentSize;
-		} else {
-			buffer[index] = ',';
-			++index;
 		}
-	}
 
-	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify && objectSize > 0) {
-			++options.indent;
-			auto indent		 = options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize = buffer.size();
+			const auto n		  = str.size();
+			if constexpr (checked) {
+				if (index + n > bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > index + n ? bufferSize * 2 : index + n);
+				}
 			}
-			buffer[index] = '{';
-			++index;
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-		} else {
-			auto n = 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-			buffer[index] = '{';
-			++index;
+			std::memcpy(buffer.data() + index, str.data(), n);
+			index += n;
 		}
-	}
 
-	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify && objectSize > 0) {
-			--options.indent;
-			auto indent		 = options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+		template<char c, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacters(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (checked) {
+				if (index + n > bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > index + n ? bufferSize * 2 : index + n);
+				}
 			}
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-		} else {
-			auto n = index + 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
+			std::memset(buffer.data() + index, c, n);
+			index += n;
 		}
-		buffer[index] = '}';
-		++index;
-	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify) {
-			++options.indent;
-			auto indent		 = options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-			buffer[index] = '{';
-			++index;
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-		} else {
-			if (index + 1 >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
-			}
-			buffer[index] = '{';
-			++index;
+		template<char c, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacter(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
+			std::memset(buffer.data() + index, c, n);
+			index += n;
 		}
-	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify) {
-			--options.indent;
-			auto indent		 = options.indent;
+		template<bool checked = true, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeNewLine(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize	  = buffer.size();
+			auto indent				  = serializePair.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal + 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal;
+			if constexpr (checked) {
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
 			}
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-			buffer[index] = '}';
-			++index;
-		} else {
-			if (index + 1 >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
-			}
-			buffer[index] = '}';
-			++index;
-		}
-	}
+			buffer[serializePair.index] = '\n';
+			++serializePair.index;
+			std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+			serializePair.index += indentTotal;
+		};
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify) {
-			++options.indent;
-			auto indent		 = options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-			}
-			buffer[index] = '[';
-			++index;
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-		} else {
-			if (index + 1 >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
-			}
-			buffer[index] = '[';
-			++index;
-		}
-	}
+		template<const jsonifier::string_view& str, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
+			const auto bufferSize	= buffer.size();
+			static constexpr auto s = str;
+			static constexpr auto n = s.size();
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index) {
-		if constexpr (options.optionsReal.prettify) {
-			--options.indent;
-			auto indent		 = options.indent;
-			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal + 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			if constexpr (checked) {
+				if (index + n > bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > index + n ? bufferSize * 2 : index + n);
+				}
 			}
-			buffer[index] = '\n';
-			++index;
-			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
-			index += indentTotal;
-			buffer[index] = ']';
-			++index;
-		} else {
-			if (index + 1 >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
-			}
-			buffer[index] = ']';
-			++index;
+			std::memcpy(buffer.data() + index, s.data(), n);
+			index += n;
 		}
-	}
+
+		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
+		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, const char* string, uint64_t size, index_type& index) noexcept {
+			const auto bufferSize = buffer.size();
+			const auto n		  = size;
+			if constexpr (checked) {
+				if (index + n > bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > index + n ? bufferSize * 2 : index + n);
+				}
+			}
+			std::memcpy(buffer.data() + index, string, n);
+			index += n;
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeEntrySeparator(buffer_type&& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify) {
+				auto k = serializePair.index + serializePair.indent + 256;
+				if (k > bufferSize) [[unlikely]] {
+					buffer.resize(max(bufferSize * 2, k));
+				}
+				static constexpr char s[]{ ",\n" };
+				static constexpr auto n	  = std::size(s) - 1;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				std::copy_n(s, n, buffer.data() + serializePair.index);
+				serializePair.index += n;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indent * indentSize;
+			} else {
+				buffer[serializePair.index] = ',';
+				++serializePair.index;
+			}
+		}
+
+		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify && objectSize > 0) {
+				++serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+			}
+		}
+
+		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify && objectSize > 0) {
+				--serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+			}
+			buffer[serializePair.index] = '}';
+			++serializePair.index;
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify) {
+				++serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+			}
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify) {
+				--serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal + 1;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
+			}
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeArrayEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify) {
+				++serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '[';
+				++serializePair.index;
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+				buffer[serializePair.index] = '[';
+				++serializePair.index;
+			}
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static void writeArrayExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+			const auto bufferSize = buffer.size();
+			if constexpr (options.optionsReal.prettify) {
+				--serializePair.indent;
+				auto indent				  = serializePair.indent;
+				constexpr auto indentSize = options.optionsReal.indentSize;
+				auto indentTotal		  = indent * indentSize;
+				auto n					  = 3 + indentTotal + 1;
+				if (serializePair.index + n >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
+				}
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
+				serializePair.index += indentTotal;
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
+			} else {
+				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
+					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
+				}
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
+			}
+		}
+	};
 
 	template<string_literal Str> struct chars_impl {
 		static constexpr jsonifier::string_view value{ Str.values, Str.size() };
@@ -350,9 +372,9 @@ namespace jsonifier_internal {
 
 	template<string_literal Str> constexpr jsonifier::string_view chars = chars_impl<Str>::value;
 
-	template<const jsonifier::string_view&... Strs> JSONIFIER_INLINE constexpr jsonifier::string_view join() {
+	template<const jsonifier::string_view&... Strs> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view join() noexcept {
 		constexpr auto joined_arr = []() {
-			constexpr size_t len = (Strs.size() + ... + 0);
+			constexpr uint64_t len = (Strs.size() + ... + 0);
 			std::array<char, len + 1> arr{};
 			auto append = [i = 0ull, &arr](auto& s) mutable {
 				for (char c: s)
@@ -362,7 +384,7 @@ namespace jsonifier_internal {
 			arr[len] = 0;
 			return arr;
 		}();
-		auto& static_arr = make_static<joined_arr>::value;
+		constexpr auto& static_arr = make_static<joined_arr>::value;
 		return { static_arr.data(), static_arr.size() - 1 };
 	}
 

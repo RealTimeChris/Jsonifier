@@ -14,37 +14,31 @@
 // Unless required by applicable law or agreed to in writing, this software
 // is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.
-
-#ifndef JKJ_HEADER_DRAGONBOX
-#define JKJ_HEADER_DRAGONBOX
+#pragma once
 
 // Attribute for storing static data into a dedicated place, e.g. flash memory. Every ODR-used
 // static data declaration will be decorated with this macro. The users may define this macro,
 // before including the library headers, into whatever they want.
-#ifndef JKJ_STATIC_DATA_SECTION
-	#define JKJ_STATIC_DATA_SECTION
+#ifndef JSONIFIER_STATIC_DATA_SECTION
+	#define JSONIFIER_STATIC_DATA_SECTION
 #else
-	#define JKJ_STATIC_DATA_SECTION_DEFINED 1
+	#define JSONIFIER_STATIC_DATA_SECTION_DEFINED 1
 #endif
 
 // To use the library with toolchains without standard C++ headers, the users may define this macro
 // into their custom namespace which contains the defintions of all the standard C++ library
 // features used in this header. (The list can be found below.)
-#ifndef JKJ_STD_REPLACEMENT_NAMESPACE
-	#define JKJ_STD_REPLACEMENT_NAMESPACE std
-	#include <cassert>
-	#include <cstdint>
-	#include <cstring>
-	#include <limits>
-	#include <type_traits>
+#include <jsonifier/Config.hpp>
+#include <cassert>
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <type_traits>
 
-	#ifdef __has_include
-		#if __has_include(<version>)
-			#include <version>
-		#endif
+#ifdef __has_include
+	#if __has_include(<version>)
+		#include <version>
 	#endif
-#else
-	#define JKJ_STD_REPLACEMENT_NAMESPACE_DEFINED 1
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -53,263 +47,128 @@
 
 // C++14 constexpr
 #if defined(__cpp_constexpr) && __cpp_constexpr >= 201304L
-	#define JKJ_HAS_CONSTEXPR14 1
+	#define JSONIFIER_HAS_CONSTEXPR14 1
 #elif __cplusplus >= 201402L
-	#define JKJ_HAS_CONSTEXPR14 1
-#elif defined(_MSC_VER) && _MSC_VER >= 1910 && _MSVC_LANG >= 201402L
-	#define JKJ_HAS_CONSTEXPR14 1
+	#define JSONIFIER_HAS_CONSTEXPR14 1
+#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1910 && _MSVC_LANG >= 201402L
+	#define JSONIFIER_HAS_CONSTEXPR14 1
 #else
-	#define JKJ_HAS_CONSTEXPR14 0
+	#define JSONIFIER_HAS_CONSTEXPR14 0
 #endif
 
-#if JKJ_HAS_CONSTEXPR14
-	#define JKJ_CONSTEXPR14 constexpr
-#else
-	#define JKJ_CONSTEXPR14
-#endif
-
-// C++17 constexpr lambdas
-#if defined(__cpp_constexpr) && __cpp_constexpr >= 201603L
-	#define JKJ_HAS_CONSTEXPR17 1
-#elif __cplusplus >= 201703L
-	#define JKJ_HAS_CONSTEXPR17 1
-#elif defined(_MSC_VER) && _MSC_VER >= 1911 && _MSVC_LANG >= 201703L
-	#define JKJ_HAS_CONSTEXPR17 1
-#else
-	#define JKJ_HAS_CONSTEXPR17 0
-#endif
-
-// C++17 inline variables
+// C++17 JSONIFIER_ALWAYS_INLINE variables
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
-	#define JKJ_HAS_INLINE_VARIABLE 1
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
 #elif __cplusplus >= 201703L
-	#define JKJ_HAS_INLINE_VARIABLE 1
-#elif defined(_MSC_VER) && _MSC_VER >= 1912 && _MSVC_LANG >= 201703L
-	#define JKJ_HAS_INLINE_VARIABLE 1
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
+#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1912 && _MSVC_LANG >= 201703L
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
 #else
-	#define JKJ_HAS_INLINE_VARIABLE 0
+	#define JSONIFIER_HAS_INLINE_VARIABLE 0
 #endif
 
-#if JKJ_HAS_INLINE_VARIABLE
-	#define JKJ_INLINE_VARIABLE inline constexpr
+#if JSONIFIER_HAS_INLINE_VARIABLE
+	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
 #else
-	#define JKJ_INLINE_VARIABLE static constexpr
+	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
 #endif
 
 // C++17 if constexpr
 #if defined(__cpp_if_constexpr) && __cpp_if_constexpr >= 201606L
-	#define JKJ_HAS_IF_CONSTEXPR 1
+	#define JSONIFIER_HAS_IF_CONSTEXPR 1
 #elif __cplusplus >= 201703L
-	#define JKJ_HAS_IF_CONSTEXPR 1
-#elif defined(_MSC_VER) && _MSC_VER >= 1911 && _MSVC_LANG >= 201703L
-	#define JKJ_HAS_IF_CONSTEXPR 1
+	#define JSONIFIER_HAS_IF_CONSTEXPR 1
+#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1911 && _MSVC_LANG >= 201703L
+	#define JSONIFIER_HAS_IF_CONSTEXPR 1
 #else
-	#define JKJ_HAS_IF_CONSTEXPR 0
+	#define JSONIFIER_HAS_IF_CONSTEXPR 0
 #endif
 
-#if JKJ_HAS_IF_CONSTEXPR
-	#define JKJ_IF_CONSTEXPR if constexpr
+#if JSONIFIER_HAS_IF_CONSTEXPR
+	#define JSONIFIER_IF_CONSTEXPR if constexpr
 #else
-	#define JKJ_IF_CONSTEXPR if
+	#define JSONIFIER_IF_CONSTEXPR if
 #endif
 
 // C++20 std::bit_cast
-#if JKJ_STD_REPLACEMENT_NAMESPACE_DEFINED
-	#if JKJ_STD_REPLACEMENT_HAS_BIT_CAST
-		#define JKJ_HAS_BIT_CAST 1
-	#else
-		#define JKJ_HAS_BIT_CAST 0
-	#endif
-#elif defined(__cpp_lib_bit_cast) && __cpp_lib_bit_cast >= 201806L
+#if defined(__cpp_lib_bit_cast) && __cpp_lib_bit_cast >= 201806L
 	#include <bit>
-	#define JKJ_HAS_BIT_CAST 1
+	#define JSONIFIER_HAS_BIT_CAST 1
 #else
-	#define JKJ_HAS_BIT_CAST 0
+	#define JSONIFIER_HAS_BIT_CAST 0
 #endif
 
 // C++23 if consteval or C++20 std::is_constant_evaluated
 #if defined(__cpp_if_consteval) && __cpp_is_consteval >= 202106L
-	#define JKJ_IF_CONSTEVAL if consteval
-	#define JKJ_IF_NOT_CONSTEVAL if !consteval
-	#define JKJ_CAN_BRANCH_ON_CONSTEVAL 1
-	#define JKJ_USE_IS_CONSTANT_EVALUATED 0
-#elif JKJ_STD_REPLACEMENT_NAMESPACE_DEFINED
-	#if JKJ_STD_REPLACEMENT_HAS_IS_CONSTANT_EVALUATED
-		#define JKJ_IF_CONSTEVAL if (stdr::is_constant_evaluated())
-		#define JKJ_IF_NOT_CONSTEVAL if (!stdr::is_constant_evaluated())
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 1
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 1
-	#elif JKJ_HAS_IF_CONSTEXPR
-		#define JKJ_IF_CONSTEVAL if constexpr (false)
-		#define JKJ_IF_NOT_CONSTEVAL if constexpr (true)
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 0
-	#else
-		#define JKJ_IF_CONSTEVAL if (false)
-		#define JKJ_IF_NOT_CONSTEVAL if (true)
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 0
-	#endif
+	#define JSONIFIER_IF_CONSTEVAL if consteval
+	#define JSONIFIER_IF_NOT_CONSTEVAL if !consteval
+	#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 1
+	#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 0
 #else
 	#if defined(__cpp_lib_is_constant_evaluated) && __cpp_lib_is_constant_evaluated >= 201811L
-		#define JKJ_IF_CONSTEVAL if (stdr::is_constant_evaluated())
-		#define JKJ_IF_NOT_CONSTEVAL if (!stdr::is_constant_evaluated())
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 1
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 1
-	#elif JKJ_HAS_IF_CONSTEXPR
-		#define JKJ_IF_CONSTEVAL if constexpr (false)
-		#define JKJ_IF_NOT_CONSTEVAL if constexpr (true)
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 0
+		#define JSONIFIER_IF_CONSTEVAL if (std::is_constant_evaluated())
+		#define JSONIFIER_IF_NOT_CONSTEVAL if (!std::is_constant_evaluated())
+		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 1
+		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 1
+	#elif JSONIFIER_HAS_IF_CONSTEXPR
+		#define JSONIFIER_IF_CONSTEVAL if constexpr (false)
+		#define JSONIFIER_IF_NOT_CONSTEVAL if constexpr (true)
+		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 0
+		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 0
 	#else
-		#define JKJ_IF_CONSTEVAL if (false)
-		#define JKJ_IF_NOT_CONSTEVAL if (true)
-		#define JKJ_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JKJ_USE_IS_CONSTANT_EVALUATED 0
+		#define JSONIFIER_IF_CONSTEVAL if (false)
+		#define JSONIFIER_IF_NOT_CONSTEVAL if (true)
+		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 0
+		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 0
 	#endif
 #endif
 
-#if JKJ_CAN_BRANCH_ON_CONSTEVAL && JKJ_HAS_BIT_CAST
-	#define JKJ_CONSTEXPR20 constexpr
+#if JSONIFIER_CAN_BRANCH_ON_CONSTEVAL && JSONIFIER_HAS_BIT_CAST
+	#define JSONIFIER_CONSTEXPR20 constexpr
 #else
-	#define JKJ_CONSTEXPR20
+	#define JSONIFIER_CONSTEXPR20
 #endif
 
 // Suppress additional buffer overrun check.
 // I have no idea why MSVC thinks some functions here are vulnerable to the buffer overrun
 // attacks. No, they aren't.
-#if defined(__GNUC__) || defined(__clang__)
-	#define JKJ_SAFEBUFFERS
-	#define JKJ_FORCEINLINE inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-	#define JKJ_SAFEBUFFERS __declspec(safebuffers)
-	#define JKJ_FORCEINLINE inline
+#if defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	#define JSONIFIER_SAFEBUFFERS
+#elif defined(JSONIFIER_MSVC)
+	#define JSONIFIER_SAFEBUFFERS __declspec(safebuffers)
 #else
-	#define JKJ_SAFEBUFFERS
-	#define JKJ_FORCEINLINE inline
+	#define JSONIFIER_SAFEBUFFERS
 #endif
 
-#if defined(__has_builtin)
-	#define JKJ_HAS_BUILTIN(x) __has_builtin(x)
-#else
-	#define JKJ_HAS_BUILTIN(x) false
-#endif
-
-#if defined(_MSC_VER)
+#if defined(JSONIFIER_MSVC)
 	#include <intrin.h>
 #elif defined(__INTEL_COMPILER)
 	#include <immintrin.h>
 #endif
 
-namespace jkj {
+namespace jsonifier_jkj {
 	namespace dragonbox {
-		////////////////////////////////////////////////////////////////////////////////////////
-		// The Compatibility layer for toolchains without standard C++ headers.
-		////////////////////////////////////////////////////////////////////////////////////////
-		namespace detail {
-			namespace stdr {
-				// <bit>
-#if JKJ_HAS_BIT_CAST
-				using JKJ_STD_REPLACEMENT_NAMESPACE::bit_cast;
-#endif
-
-				// <cassert>
-				// We need assert() macro, but it is not namespaced anyway, so nothing to do here.
-
-				// <cstdint>
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_fast16_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_fast32_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_fast8_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_least16_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_least32_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::int_least8_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_fast16_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_fast32_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_fast8_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_least16_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_least32_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_least64_t;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::uint_least8_t;
-				// We need INT32_C, UINT32_C and UINT64_C macros too, but again there is nothing to do
-				// here.
-
-				// <cstring>
-				using JKJ_STD_REPLACEMENT_NAMESPACE::memcpy;
-				using JKJ_STD_REPLACEMENT_NAMESPACE::size_t;
-
-				// <limits>
-				template<typename T> using numeric_limits = JKJ_STD_REPLACEMENT_NAMESPACE::numeric_limits<T>;
-
-				// <type_traits>
-				template<bool cond, typename T = void> using enable_if				   = JKJ_STD_REPLACEMENT_NAMESPACE::enable_if<cond, T>;
-				template<typename T> using add_rvalue_reference					   = JKJ_STD_REPLACEMENT_NAMESPACE::add_rvalue_reference<T>;
-				template<bool cond, typename T_true, typename T_false> using conditional = JKJ_STD_REPLACEMENT_NAMESPACE::conditional<cond, T_true, T_false>;
-#if JKJ_USE_IS_CONSTANT_EVALUATED
-				using JKJ_STD_REPLACEMENT_NAMESPACE::is_constant_evaluated;
-#endif
-				template<typename T1, typename T2> using is_same = JKJ_STD_REPLACEMENT_NAMESPACE::is_same<T1, T2>;
-#if !JKJ_HAS_BIT_CAST
-				template<typename T> using is_trivially_copyable = JKJ_STD_REPLACEMENT_NAMESPACE::is_trivially_copyable<T>;
-#endif
-				template<typename T> using is_integral = JKJ_STD_REPLACEMENT_NAMESPACE::is_integral<T>;
-				template<typename T> using is_signed	= JKJ_STD_REPLACEMENT_NAMESPACE::is_signed<T>;
-				template<typename T> using is_unsigned = JKJ_STD_REPLACEMENT_NAMESPACE::is_unsigned<T>;
-			}
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////
-		// Some general utilities for C++11-compatibility.
-		////////////////////////////////////////////////////////////////////////////////////////
-		namespace detail {
-#if !JKJ_HAS_CONSTEXPR17
-			template<stdr::size_t... indices> struct index_sequence {};
-
-			template<stdr::size_t current, stdr::size_t total, typename Dummy, stdr::size_t... indices> struct make_index_sequence_impl {
-				using type = typename make_index_sequence_impl<current + 1, total, Dummy, indices..., current>::type;
-			};
-
-			template<stdr::size_t total, typename Dummy, stdr::size_t... indices> struct make_index_sequence_impl<total, total, Dummy, indices...> {
-				using type = index_sequence<indices...>;
-			};
-
-			template<stdr::size_t N> using make_index_sequence = typename make_index_sequence_impl<0, N, void>::type;
-#endif
-
-			// Available since C++11, but including <utility> just for this is an overkill.
-			template<typename T> typename stdr::add_rvalue_reference<T>::type declval() noexcept;
-
-			// Similarly, including <array> is an overkill.
-			template<typename T, stdr::size_t N> struct array {
-				T data_[N];
-				constexpr T operator[](stdr::size_t idx) const noexcept {
-					return data_[idx];
-				}
-				JKJ_CONSTEXPR14 T& operator[](stdr::size_t idx) noexcept {
-					return data_[idx];
-				}
-			};
-		}
 
 		////////////////////////////////////////////////////////////////////////////////////////
 		// Some basic features for encoding/decoding IEEE-754 formats.
 		////////////////////////////////////////////////////////////////////////////////////////
 		namespace detail {
 			template<typename T> struct physical_bits {
-				static constexpr stdr::size_t value = sizeof(T) * stdr::numeric_limits<unsigned char>::digits;
+				static constexpr std::size_t value = sizeof(T) * std::numeric_limits<uint8_t>::digits;
 			};
 			template<typename T> struct value_bits {
-				static constexpr stdr::size_t value = stdr::numeric_limits<typename stdr::enable_if<stdr::is_integral<T>::value, T>::type>::digits;
+				static constexpr std::size_t value = std::numeric_limits<typename std::enable_if<std::is_integral<T>::value, T>::type>::digits;
 			};
 
-			template<typename To, typename From> JKJ_CONSTEXPR20 To bit_cast(const From& from) {
-#if JKJ_HAS_BIT_CAST
-				return stdr::bit_cast<To>(from);
+			template<typename To, typename From> JSONIFIER_CONSTEXPR20 To bit_cast(const From& from) noexcept {
+#if JSONIFIER_HAS_BIT_CAST
+				return std::bit_cast<To>(from);
 #else
 				static_assert(sizeof(From) == sizeof(To), "");
-				static_assert(stdr::is_trivially_copyable<To>::value, "");
-				static_assert(stdr::is_trivially_copyable<From>::value, "");
+				static_assert(std::is_trivially_copyable<To>::value, "");
+				static_assert(std::is_trivially_copyable<From>::value, "");
 				To to;
-				stdr::memcpy(&to, &from, sizeof(To));
+				std::memcpy(&to, &from, sizeof(To));
 				return to;
 #endif
 			}
@@ -346,14 +205,14 @@ namespace jkj {
 			// CarrierUInt needs to have enough size to hold the entire contents of floating-point
 			// numbers. The actual bits are assumed to be aligned to the LSB, and every other bits are
 			// assumed to be zeroed.
-			static_assert(detail::value_bits<CarrierUInt>::value >= Format::total_bits, "jkj::dragonbox: insufficient number of bits");
-			static_assert(detail::stdr::is_unsigned<CarrierUInt>::value, "");
+			static_assert(detail::value_bits<CarrierUInt>::value >= Format::total_bits, "jsonifier_jkj::dragonbox: insufficient number of bits");
+			static_assert(std::is_unsigned<CarrierUInt>::value, "");
 
 			// ExponentUInt needs to be large enough to hold (unsigned) exponent bits as well as the
 			// (signed) actual exponent.
 			// TODO: static overflow guard against intermediate computations.
-			static_assert(detail::value_bits<ExponentInt>::value >= Format::exponent_bits + 1, "jkj::dragonbox: insufficient number of bits");
-			static_assert(detail::stdr::is_signed<ExponentInt>::value, "");
+			static_assert(detail::value_bits<ExponentInt>::value >= Format::exponent_bits + 1, "jsonifier_jkj::dragonbox: insufficient number of bits");
+			static_assert(std::is_signed<ExponentInt>::value, "");
 
 			using format						   = Format;
 			using carrier_uint					   = CarrierUInt;
@@ -398,15 +257,16 @@ namespace jkj {
 
 			/* Various boolean observer functions */
 
-			static constexpr auto total_bits   = format::significand_bits + format::exponent_bits;
-			static constexpr carrier_uint mask = (carrier_uint_val << total_bits) - 1u;
+			static constexpr auto total_bits{ format::significand_bits + format::exponent_bits };
+			static constexpr auto shiftedUintCarrier{ (carrier_uint_val << total_bits) };
+			static constexpr carrier_uint mask{ (carrier_uint_val << total_bits) - 1u };
 
 			static constexpr bool is_nonzero(carrier_uint u) noexcept {
 				return (u & mask) != 0;
 			}
 
 			static constexpr bool is_positive(carrier_uint u) noexcept {
-				return u < (carrier_uint_val << total_bits);
+				return u < shiftedUintCarrier;
 			}
 
 			static constexpr bool is_negative(carrier_uint u) noexcept {
@@ -444,23 +304,23 @@ namespace jkj {
 			// numeric_limits<Float>::is_iec559 may report false even if the internal representation is
 			// IEEE-754 compatible. In such a case, the user can specialize this traits template and
 			// remove this static sanity check in order to make Dragonbox work for Float.
-			static_assert(detail::stdr::numeric_limits<Float>::is_iec559 && detail::stdr::numeric_limits<Float>::radix == 2 &&
+			static_assert(std::numeric_limits<Float>::is_iec559 && std::numeric_limits<Float>::radix == 2 &&
 					(detail::physical_bits<Float>::value == 32 || detail::physical_bits<Float>::value == 64),
-				"jkj::dragonbox: Float may not be of IEEE-754 binary32/binary64");
+				"jsonifier_jkj::dragonbox: Float may not be of IEEE-754 binary32/binary64");
 
 			// Specifies the unsigned integer type to hold bitwise value of Float.
-			using carrier_uint = typename detail::stdr::conditional<detail::physical_bits<Float>::value == 32, detail::stdr::uint_least32_t, detail::stdr::uint_least64_t>::type;
+			using carrier_uint = typename std::conditional<detail::physical_bits<Float>::value == 32, std::uint_least32_t, std::uint_least64_t>::type;
 
 			// Specifies the floating-point format.
-			using format = typename detail::stdr::conditional<detail::physical_bits<Float>::value == 32, ieee754_binary32, ieee754_binary64>::type;
+			using format = typename std::conditional<detail::physical_bits<Float>::value == 32, ieee754_binary32, ieee754_binary64>::type;
 
 			// Converts the floating-point type into the bit-carrier unsigned integer type.
-			static JKJ_CONSTEXPR20 carrier_uint float_to_carrier(Float x) noexcept {
+			static JSONIFIER_CONSTEXPR20 carrier_uint float_to_carrier(Float x) noexcept {
 				return detail::bit_cast<carrier_uint>(x);
 			}
 
 			// Converts the bit-carrier unsigned integer type into the floating-point type.
-			static JKJ_CONSTEXPR20 Float carrier_to_float(carrier_uint x) noexcept {
+			static JSONIFIER_CONSTEXPR20 Float carrier_to_float(carrier_uint x) noexcept {
 				return detail::bit_cast<Float>(x);
 			}
 		};
@@ -568,7 +428,7 @@ namespace jkj {
 
 		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>>
-		JKJ_CONSTEXPR20 float_bits<FormatTraits> make_float_bits(Float x) noexcept {
+		JSONIFIER_CONSTEXPR20 float_bits<FormatTraits> make_float_bits(Float x) noexcept {
 			return float_bits<FormatTraits>(ConversionTraits::float_to_carrier(x));
 		}
 
@@ -580,9 +440,9 @@ namespace jkj {
 			namespace bits {
 				// Most compilers should be able to optimize this into the ROR instruction.
 				// n is assumed to be at most of bit_width bits.
-				template<stdr::size_t bit_width, typename UInt> JKJ_CONSTEXPR14 UInt rotr(UInt n, uint32_t r) noexcept {
-					static_assert(bit_width > 0, "jkj::dragonbox: rotation bit-width must be positive");
-					static_assert(bit_width <= value_bits<UInt>::value, "jkj::dragonbox: rotation bit-width is too large");
+				template<std::size_t bit_width, typename UInt> JSONIFIER_CONSTEXPR20 UInt rotr(UInt n, uint32_t r) noexcept {
+					static_assert(bit_width > 0, "jsonifier_jkj::dragonbox: rotation bit-width must be positive");
+					static_assert(bit_width <= value_bits<UInt>::value, "jsonifier_jkj::dragonbox: rotation bit-width is too large");
 					r &= (bit_width - 1);
 					return (n >> r) | (n << ((bit_width - r) & (bit_width - 1)));
 				}
@@ -599,9 +459,9 @@ namespace jkj {
 				// implementing 64-bit x 64-bit -> 128-bit multiplication.
 
 #if defined(__SIZEOF_INT128__)
-					// To silence "error: ISO C++ does not support '__int128' for 'type name'
-					// [-Wpedantic]"
-	#if defined(__GNUC__)
+				// To silence "error: ISO C++ does not support '__int128' for 'type name'
+				// [-Wpedantic]"
+	#if defined(JSONIFIER_GNUCXX)
 				__extension__
 	#endif
 					using builtin_uint128_t = unsigned __int128;
@@ -611,20 +471,20 @@ namespace jkj {
 				struct uint128 {
 					uint128() = default;
 
-					stdr::uint_least64_t high_;
-					stdr::uint_least64_t low_;
+					std::uint_least64_t high_;
+					std::uint_least64_t low_;
 
-					constexpr uint128(stdr::uint_least64_t high, stdr::uint_least64_t low) noexcept : high_{ high }, low_{ low } {
+					constexpr uint128(std::uint_least64_t high, std::uint_least64_t low) noexcept : high_{ high }, low_{ low } {
 					}
 
-					constexpr stdr::uint_least64_t high() const noexcept {
+					constexpr std::uint_least64_t high() const noexcept {
 						return high_;
 					}
-					constexpr stdr::uint_least64_t low() const noexcept {
+					constexpr std::uint_least64_t low() const noexcept {
 						return low_;
 					}
 
-					JKJ_CONSTEXPR20 uint128& operator+=(stdr::uint_least64_t n) & noexcept {
+					JSONIFIER_CONSTEXPR20 uint128& operator+=(std::uint_least64_t n) & noexcept {
 						const auto generic_impl = [&] {
 							auto const sum = (low_ + n) & UINT64_C(0xffffffffffffffff);
 							high_ += (sum < low_ ? 1 : 0);
@@ -633,61 +493,61 @@ namespace jkj {
 						// To suppress warning.
 						static_cast<void>(generic_impl);
 
-						JKJ_IF_CONSTEXPR(value_bits<stdr::uint_least64_t>::value > 64) {
+						JSONIFIER_IF_CONSTEXPR(value_bits<std::uint_least64_t>::value > 64) {
 							generic_impl();
 							return *this;
 						}
 
-						JKJ_IF_CONSTEVAL {
+						JSONIFIER_IF_CONSTEVAL {
 							generic_impl();
 							return *this;
 						}
 
 						// See https://github.com/fmtlib/fmt/pull/2985.
-#if JKJ_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
-						JKJ_IF_CONSTEXPR(stdr::is_same<stdr::uint_least64_t, unsigned long long>::value) {
+#if JSONIFIER_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, unsigned long long>::value) {
 							unsigned long long carry{};
-							low_  = stdr::uint_least64_t(__builtin_addcll(low_, n, 0, &carry));
-							high_ = stdr::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
+							low_  = std::uint_least64_t(__builtin_addcll(low_, n, 0, &carry));
+							high_ = std::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
 							return *this;
 						}
 #endif
-#if JKJ_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
-						JKJ_IF_CONSTEXPR(stdr::is_same<stdr::uint_least64_t, unsigned long>::value) {
+#if JSONIFIER_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, unsigned long>::value) {
 							unsigned long carry{};
-							low_  = stdr::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(low_), static_cast<unsigned long>(n), 0, &carry));
-							high_ = stdr::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(high_), 0, carry, &carry));
+							low_  = std::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(low_), static_cast<unsigned long>(n), 0, &carry));
+							high_ = std::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(high_), 0, carry, &carry));
 							return *this;
 						}
 #endif
-#if JKJ_HAS_BUILTIN(__builtin_addc) && !defined(__ibmxl__)
-						JKJ_IF_CONSTEXPR(stdr::is_same<stdr::uint_least64_t, uint32_t>::value) {
+#if JSONIFIER_HAS_BUILTIN(__builtin_addc) && !defined(__ibmxl__)
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint32_t>::value) {
 							uint32_t carry{};
-							low_  = stdr::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(n), 0, &carry));
-							high_ = stdr::uint_least64_t(__builtin_addc(static_cast<uint32_t>(high_), 0, carry, &carry));
+							low_  = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(n), 0, &carry));
+							high_ = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(high_), 0, carry, &carry));
 							return *this;
 						}
 #endif
 
-#if JKJ_HAS_BUILTIN(__builtin_ia32_addcarry_u64)
+#if JSONIFIER_HAS_BUILTIN(__builtin_ia32_addcarry_u64)
 						// __builtin_ia32_addcarry_u64 is not documented, but it seems it takes unsigned
 						// long long arguments.
 						unsigned long long result{};
 						const auto carry = __builtin_ia32_addcarry_u64(0, low_, n, &result);
-						low_			 = stdr::uint_least64_t(result);
+						low_			 = std::uint_least64_t(result);
 						__builtin_ia32_addcarry_u64(carry, high_, 0, &result);
-						high_ = stdr::uint_least64_t(result);
-#elif defined(_MSC_VER) && defined(_M_X64)
+						high_ = std::uint_least64_t(result);
+#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
 						// On MSVC, uint_least64_t and __int64 must be unsigned long long; see
 						// https://learn.microsoft.com/en-us/cpp/c-runtime-library/standard-types
 						// and https://learn.microsoft.com/en-us/cpp/cpp/int8-int16-int32-int64.
-						static_assert(stdr::is_same<unsigned long long, stdr::uint_least64_t>::value, "");
+						static_assert(std::is_same<unsigned long long, std::uint_least64_t>::value, "");
 						const auto carry = _addcarry_u64(0, low_, n, &low_);
 						_addcarry_u64(carry, high_, 0, &high_);
 #elif defined(__INTEL_COMPILER) && (defined(_M_X64) || defined(__x86_64))
 						// Cannot find any documentation on how things are defined, but hopefully this
 						// is always true...
-						static_assert(stdr::is_same<unsigned __int64, stdr::uint_least64_t>::value, "");
+						static_assert(std::is_same<unsigned __int64, std::uint_least64_t>::value, "");
 						const auto carry = _addcarry_u64(0, low_, n, &low_);
 						_addcarry_u64(carry, high_, 0, &high_);
 #else
@@ -697,40 +557,40 @@ namespace jkj {
 					}
 				};
 
-				inline JKJ_CONSTEXPR20 stdr::uint_least64_t umul64(stdr::uint_least32_t x, stdr::uint_least32_t y) noexcept {
-#if defined(_MSC_VER) && defined(_M_IX86)
-					JKJ_IF_NOT_CONSTEVAL {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
+#if defined(JSONIFIER_MSVC) && defined(_M_IX86)
+					JSONIFIER_IF_NOT_CONSTEVAL {
 						return __emulu(x, y);
 					}
 #endif
-					return x * stdr::uint_least64_t(y);
+					return x * std::uint_least64_t(y);
 				}
 
 				// Get 128-bit result of multiplication of two 64-bit unsigned integers.
-				JKJ_SAFEBUFFERS inline JKJ_CONSTEXPR20 uint128 umul128(stdr::uint_least64_t x, stdr::uint_least64_t y) noexcept {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul128(std::uint_least64_t x, std::uint_least64_t y) noexcept {
 					const auto generic_impl = [=]() -> uint128 {
-						auto const a = stdr::uint_least32_t(x >> 32);
-						auto const b = stdr::uint_least32_t(x);
-						auto const c = stdr::uint_least32_t(y >> 32);
-						auto const d = stdr::uint_least32_t(y);
+						auto const a = std::uint_least32_t(x >> 32);
+						auto const b = std::uint_least32_t(x);
+						auto const c = std::uint_least32_t(y >> 32);
+						auto const d = std::uint_least32_t(y);
 
 						auto const ac = umul64(a, c);
 						auto const bc = umul64(b, c);
 						auto const ad = umul64(a, d);
 						auto const bd = umul64(b, d);
 
-						auto const intermediate = (bd >> 32) + stdr::uint_least32_t(ad) + stdr::uint_least32_t(bc);
+						auto const intermediate = (bd >> 32) + std::uint_least32_t(ad) + std::uint_least32_t(bc);
 
-						return { ac + (intermediate >> 32) + (ad >> 32) + (bc >> 32), (intermediate << 32) + stdr::uint_least32_t(bd) };
+						return { ac + (intermediate >> 32) + (ad >> 32) + (bc >> 32), (intermediate << 32) + std::uint_least32_t(bd) };
 					};
 					// To silence warning.
 					static_cast<void>(generic_impl);
 
 #if defined(__SIZEOF_INT128__)
 					const auto result = builtin_uint128_t(x) * builtin_uint128_t(y);
-					return { stdr::uint_least64_t(result >> 64), stdr::uint_least64_t(result) };
-#elif defined(_MSC_VER) && defined(_M_X64)
-					JKJ_IF_CONSTEVAL {
+					return { std::uint_least64_t(result >> 64), std::uint_least64_t(result) };
+#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
+					JSONIFIER_IF_CONSTEVAL {
 						// This redundant variable is to workaround MSVC's codegen bug caused by the
 						// interaction of NRVO and intrinsics.
 						const auto result = generic_impl();
@@ -750,19 +610,19 @@ namespace jkj {
 
 				// Get high half of the 128-bit result of multiplication of two 64-bit unsigned
 				// integers.
-				JKJ_SAFEBUFFERS inline JKJ_CONSTEXPR20 stdr::uint_least64_t umul128_upper64(stdr::uint_least64_t x, stdr::uint_least64_t y) noexcept {
-					const auto generic_impl = [=]() -> stdr::uint_least64_t {
-						auto const a = stdr::uint_least32_t(x >> 32);
-						auto const b = stdr::uint_least32_t(x);
-						auto const c = stdr::uint_least32_t(y >> 32);
-						auto const d = stdr::uint_least32_t(y);
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 std::uint_least64_t umul128_upper64(std::uint_least64_t x, std::uint_least64_t y) noexcept {
+					const auto generic_impl = [=]() -> std::uint_least64_t {
+						auto const a = std::uint_least32_t(x >> 32);
+						auto const b = std::uint_least32_t(x);
+						auto const c = std::uint_least32_t(y >> 32);
+						auto const d = std::uint_least32_t(y);
 
 						auto const ac = umul64(a, c);
 						auto const bc = umul64(b, c);
 						auto const ad = umul64(a, d);
 						auto const bd = umul64(b, d);
 
-						auto const intermediate = (bd >> 32) + stdr::uint_least32_t(ad) + stdr::uint_least32_t(bc);
+						auto const intermediate = (bd >> 32) + std::uint_least32_t(ad) + std::uint_least32_t(bc);
 
 						return ac + (intermediate >> 32) + (ad >> 32) + (bc >> 32);
 					};
@@ -771,15 +631,15 @@ namespace jkj {
 
 #if defined(__SIZEOF_INT128__)
 					const auto result = builtin_uint128_t(x) * builtin_uint128_t(y);
-					return stdr::uint_least64_t(result >> 64);
-#elif defined(_MSC_VER) && defined(_M_X64)
-					JKJ_IF_CONSTEVAL {
+					return std::uint_least64_t(result >> 64);
+#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
+					JSONIFIER_IF_CONSTEVAL {
 						// This redundant variable is to workaround MSVC's codegen bug caused by the
 						// interaction of NRVO and intrinsics.
 						const auto result = generic_impl();
 						return result;
 					}
-					stdr::uint_least64_t result;
+					std::uint_least64_t result;
 	#if defined(__AVX2__)
 					_mulx_u64(x, y, &result);
 	#else
@@ -793,7 +653,7 @@ namespace jkj {
 
 				// Get upper 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JKJ_SAFEBUFFERS inline JKJ_CONSTEXPR20 uint128 umul192_upper128(stdr::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_upper128(std::uint_least64_t x, uint128 y) noexcept {
 					auto r = umul128(x, y.high());
 					r += umul128_upper64(x, y.low());
 					return r;
@@ -801,12 +661,12 @@ namespace jkj {
 
 				// Get upper 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
-				inline JKJ_CONSTEXPR20 stdr::uint_least64_t umul96_upper64(stdr::uint_least32_t x, stdr::uint_least64_t y) noexcept {
-#if defined(__SIZEOF_INT128__) || (defined(_MSC_VER) && defined(_M_X64))
-					return umul128_upper64(stdr::uint_least64_t(x) << 32, y);
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
+#if defined(__SIZEOF_INT128__) || (defined(JSONIFIER_MSVC) && defined(_M_X64))
+					return umul128_upper64(std::uint_least64_t(x) << 32, y);
 #else
-					const auto yh = stdr::uint_least32_t(y >> 32);
-					const auto yl = stdr::uint_least32_t(y);
+					const auto yh = std::uint_least32_t(y >> 32);
+					const auto yl = std::uint_least32_t(y);
 
 					const auto xyh = umul64(x, yh);
 					const auto xyl = umul64(x, yl);
@@ -817,7 +677,7 @@ namespace jkj {
 
 				// Get lower 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JKJ_SAFEBUFFERS inline JKJ_CONSTEXPR20 uint128 umul192_lower128(stdr::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_lower128(std::uint_least64_t x, uint128 y) noexcept {
 					const auto high		= x * y.high();
 					const auto high_low = umul128(x, y.low());
 					return { (high + high_low.high()) & UINT64_C(0xffffffffffffffff), high_low.low() };
@@ -825,7 +685,7 @@ namespace jkj {
 
 				// Get lower 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
-				constexpr stdr::uint_least64_t umul96_lower64(stdr::uint_least32_t x, stdr::uint_least64_t y) noexcept {
+				constexpr std::uint_least64_t umul96_lower64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
 					return (x * y) & UINT64_C(0xffffffffffffffff);
 				}
 			}
@@ -836,7 +696,7 @@ namespace jkj {
 
 			template<int32_t k, typename Int> constexpr Int compute_power(Int a) noexcept {
 				static_assert(k >= 0, "");
-#if JKJ_HAS_CONSTEXPR14
+#if JSONIFIER_HAS_CONSTEXPR14
 				Int p = 1;
 				for (int32_t i = 0; i < k; ++i) {
 					p *= a;
@@ -849,7 +709,7 @@ namespace jkj {
 
 			template<int32_t a, typename UInt> constexpr int32_t count_factors(UInt n) noexcept {
 				static_assert(a > 1, "");
-#if JKJ_HAS_CONSTEXPR14
+#if JSONIFIER_HAS_CONSTEXPR14
 				int32_t c = 0;
 				while (n % a == 0) {
 					n /= a;
@@ -866,13 +726,13 @@ namespace jkj {
 			////////////////////////////////////////////////////////////////////////////////////////
 
 			namespace log {
-				static_assert((stdr::int_fast32_t(-1) >> 1) == stdr::int_fast32_t(-1) && (stdr::int_fast16_t(-1) >> 1) == stdr::int_fast16_t(-1),
-					"jkj::dragonbox: right-shift for signed integers must be arithmetic");
+				static_assert((std::int_fast32_t(-1) >> 1) == std::int_fast32_t(-1) && (std::int_fast16_t(-1) >> 1) == std::int_fast16_t(-1),
+					"jsonifier_jkj::dragonbox: right-shift for signed integers must be arithmetic");
 
 				// For constexpr computation.
 				// Returns -1 when n = 0.
 				template<typename UInt> constexpr int32_t floor_log2(UInt n) noexcept {
-#if JKJ_HAS_CONSTEXPR14
+#if JSONIFIER_HAS_CONSTEXPR14
 					int32_t count = -1;
 					while (n != 0) {
 						++count;
@@ -884,28 +744,28 @@ namespace jkj {
 #endif
 				}
 
-				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier,
-					stdr::int_least32_t supported_min_exponent = Info<current_tier>::min_exponent, stdr::int_least32_t supported_max_exponent = Info<current_tier>::max_exponent>
+				template<template<std::size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, std::size_t current_tier,
+					std::int_least32_t supported_min_exponent = Info<current_tier>::min_exponent, std::int_least32_t supported_max_exponent = Info<current_tier>::max_exponent>
 				constexpr bool is_in_range(int32_t) noexcept {
 					return min_exponent >= supported_min_exponent && max_exponent <= supported_max_exponent;
 				}
-				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier>
+				template<template<std::size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, std::size_t current_tier>
 				constexpr bool is_in_range(...) noexcept {
 					// Supposed to be always false, but formally dependent on the template parameters.
-					static_assert(min_exponent > max_exponent, "jkj::dragonbox: exponent range is too wide");
+					static_assert(min_exponent > max_exponent, "jsonifier_jkj::dragonbox: exponent range is too wide");
 					return false;
 				}
 
-				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier = 0,
+				template<template<std::size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, std::size_t current_tier = 0,
 					bool = is_in_range<Info, min_exponent, max_exponent, current_tier>(0)>
 				struct compute_impl;
 
-				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier>
+				template<template<std::size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, std::size_t current_tier>
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, true> {
 					using info				  = Info<current_tier>;
 					using default_return_type = typename info::default_return_type;
 					template<typename ReturnType, typename Int> static constexpr ReturnType compute(Int e) noexcept {
-#if JKJ_HAS_CONSTEXPR14
+#if JSONIFIER_HAS_CONSTEXPR14
 						assert(min_exponent <= e && e <= max_exponent);
 #endif
 						// The sign is irrelevant for the mathematical validity of the formula, but
@@ -915,7 +775,7 @@ namespace jkj {
 					}
 				};
 
-				template<template<stdr::size_t> class Info, stdr::int_least32_t min_exponent, stdr::int_least32_t max_exponent, stdr::size_t current_tier>
+				template<template<std::size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, std::size_t current_tier>
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, false> {
 					using next_tier			  = compute_impl<Info, min_exponent, max_exponent, current_tier + 1>;
 					using default_return_type = typename next_tier::default_return_type;
@@ -924,132 +784,132 @@ namespace jkj {
 					}
 				};
 
-				template<stdr::size_t tier> struct floor_log10_pow2_info;
+				template<std::size_t tier> struct floor_log10_pow2_info;
 				template<> struct floor_log10_pow2_info<0> {
-					using default_return_type						  = stdr::int_fast8_t;
-					static constexpr stdr::int_fast16_t multiply	  = 77;
-					static constexpr stdr::int_fast16_t subtract	  = 0;
-					static constexpr stdr::size_t shift				  = 8;
-					static constexpr stdr::int_least32_t min_exponent = -102;
-					static constexpr stdr::int_least32_t max_exponent = 102;
+					using default_return_type						 = std::int_fast8_t;
+					static constexpr std::int_fast16_t multiply		 = 77;
+					static constexpr std::int_fast16_t subtract		 = 0;
+					static constexpr std::size_t shift				 = 8;
+					static constexpr std::int_least32_t min_exponent = -102;
+					static constexpr std::int_least32_t max_exponent = 102;
 				};
 				template<> struct floor_log10_pow2_info<1> {
-					using default_return_type = stdr::int_fast8_t;
+					using default_return_type = std::int_fast8_t;
 					// 24-bits are enough in fact.
-					static constexpr stdr::int_fast32_t multiply = 1233;
-					static constexpr stdr::int_fast32_t subtract = 0;
-					static constexpr stdr::size_t shift			 = 12;
+					static constexpr std::int_fast32_t multiply = 1233;
+					static constexpr std::int_fast32_t subtract = 0;
+					static constexpr std::size_t shift			= 12;
 					// Formula itself holds on [-680,680]; [-425,425] is to ensure that the output is
 					// within [-127,127].
-					static constexpr stdr::int_least32_t min_exponent = -425;
-					static constexpr stdr::int_least32_t max_exponent = 425;
+					static constexpr std::int_least32_t min_exponent = -425;
+					static constexpr std::int_least32_t max_exponent = 425;
 				};
 				template<> struct floor_log10_pow2_info<2> {
-					using default_return_type						  = stdr::int_fast16_t;
-					static constexpr stdr::int_fast32_t multiply	  = INT32_C(315653);
-					static constexpr stdr::int_fast32_t subtract	  = 0;
-					static constexpr stdr::size_t shift				  = 20;
-					static constexpr stdr::int_least32_t min_exponent = -2620;
-					static constexpr stdr::int_least32_t max_exponent = 2620;
+					using default_return_type						 = std::int_fast16_t;
+					static constexpr std::int_fast32_t multiply		 = INT32_C(315653);
+					static constexpr std::int_fast32_t subtract		 = 0;
+					static constexpr std::size_t shift				 = 20;
+					static constexpr std::int_least32_t min_exponent = -2620;
+					static constexpr std::int_least32_t max_exponent = 2620;
 				};
-				template<stdr::int_least32_t min_exponent = -2620, stdr::int_least32_t max_exponent = 2620,
+				template<std::int_least32_t min_exponent = -2620, std::int_least32_t max_exponent = 2620,
 					class ReturnType = typename compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log10_pow2(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
-				template<stdr::size_t tier> struct floor_log2_pow10_info;
+				template<std::size_t tier> struct floor_log2_pow10_info;
 				template<> struct floor_log2_pow10_info<0> {
-					using default_return_type						  = stdr::int_fast8_t;
-					static constexpr stdr::int_fast16_t multiply	  = 53;
-					static constexpr stdr::int_fast16_t subtract	  = 0;
-					static constexpr stdr::size_t shift				  = 4;
-					static constexpr stdr::int_least32_t min_exponent = -15;
-					static constexpr stdr::int_least32_t max_exponent = 18;
+					using default_return_type						 = std::int_fast8_t;
+					static constexpr std::int_fast16_t multiply		 = 53;
+					static constexpr std::int_fast16_t subtract		 = 0;
+					static constexpr std::size_t shift				 = 4;
+					static constexpr std::int_least32_t min_exponent = -15;
+					static constexpr std::int_least32_t max_exponent = 18;
 				};
 				template<> struct floor_log2_pow10_info<1> {
-					using default_return_type = stdr::int_fast16_t;
+					using default_return_type = std::int_fast16_t;
 					// 24-bits are enough in fact.
-					static constexpr stdr::int_fast32_t multiply	  = 1701;
-					static constexpr stdr::int_fast32_t subtract	  = 0;
-					static constexpr stdr::size_t shift				  = 9;
-					static constexpr stdr::int_least32_t min_exponent = -58;
-					static constexpr stdr::int_least32_t max_exponent = 58;
+					static constexpr std::int_fast32_t multiply		 = 1701;
+					static constexpr std::int_fast32_t subtract		 = 0;
+					static constexpr std::size_t shift				 = 9;
+					static constexpr std::int_least32_t min_exponent = -58;
+					static constexpr std::int_least32_t max_exponent = 58;
 				};
 				template<> struct floor_log2_pow10_info<2> {
-					using default_return_type					 = stdr::int_fast16_t;
-					static constexpr stdr::int_fast32_t multiply = INT32_C(1741647);
-					static constexpr stdr::int_fast32_t subtract = 0;
-					static constexpr stdr::size_t shift			 = 19;
+					using default_return_type					= std::int_fast16_t;
+					static constexpr std::int_fast32_t multiply = INT32_C(1741647);
+					static constexpr std::int_fast32_t subtract = 0;
+					static constexpr std::size_t shift			= 19;
 					// Formula itself holds on [-4003,4003]; [-1233,1233] is to ensure no overflow.
-					static constexpr stdr::int_least32_t min_exponent = -1233;
-					static constexpr stdr::int_least32_t max_exponent = 1233;
+					static constexpr std::int_least32_t min_exponent = -1233;
+					static constexpr std::int_least32_t max_exponent = 1233;
 				};
-				template<stdr::int_least32_t min_exponent = -1233, stdr::int_least32_t max_exponent = 1233,
+				template<std::int_least32_t min_exponent = -1233, std::int_least32_t max_exponent = 1233,
 					class ReturnType = typename compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log2_pow10(Int e) noexcept {
 					return compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
-				template<stdr::size_t tier> struct floor_log10_pow2_minus_log10_4_over_3_info;
+				template<std::size_t tier> struct floor_log10_pow2_minus_log10_4_over_3_info;
 				template<> struct floor_log10_pow2_minus_log10_4_over_3_info<0> {
-					using default_return_type						  = stdr::int_fast8_t;
-					static constexpr stdr::int_fast16_t multiply	  = 77;
-					static constexpr stdr::int_fast16_t subtract	  = 31;
-					static constexpr stdr::size_t shift				  = 8;
-					static constexpr stdr::int_least32_t min_exponent = -75;
-					static constexpr stdr::int_least32_t max_exponent = 129;
+					using default_return_type						 = std::int_fast8_t;
+					static constexpr std::int_fast16_t multiply		 = 77;
+					static constexpr std::int_fast16_t subtract		 = 31;
+					static constexpr std::size_t shift				 = 8;
+					static constexpr std::int_least32_t min_exponent = -75;
+					static constexpr std::int_least32_t max_exponent = 129;
 				};
 				template<> struct floor_log10_pow2_minus_log10_4_over_3_info<1> {
-					using default_return_type = stdr::int_fast8_t;
+					using default_return_type = std::int_fast8_t;
 					// 24-bits are enough in fact.
-					static constexpr stdr::int_fast32_t multiply = 19728;
-					static constexpr stdr::int_fast32_t subtract = 8241;
-					static constexpr stdr::size_t shift			 = 16;
+					static constexpr std::int_fast32_t multiply = 19728;
+					static constexpr std::int_fast32_t subtract = 8241;
+					static constexpr std::size_t shift			= 16;
 					// Formula itself holds on [-849,315]; [-424,315] is to ensure that the output is
 					// within [-127,127].
-					static constexpr stdr::int_least32_t min_exponent = -424;
-					static constexpr stdr::int_least32_t max_exponent = 315;
+					static constexpr std::int_least32_t min_exponent = -424;
+					static constexpr std::int_least32_t max_exponent = 315;
 				};
 				template<> struct floor_log10_pow2_minus_log10_4_over_3_info<2> {
-					using default_return_type						  = stdr::int_fast16_t;
-					static constexpr stdr::int_fast32_t multiply	  = INT32_C(631305);
-					static constexpr stdr::int_fast32_t subtract	  = INT32_C(261663);
-					static constexpr stdr::size_t shift				  = 21;
-					static constexpr stdr::int_least32_t min_exponent = -2985;
-					static constexpr stdr::int_least32_t max_exponent = 2936;
+					using default_return_type						 = std::int_fast16_t;
+					static constexpr std::int_fast32_t multiply		 = INT32_C(631305);
+					static constexpr std::int_fast32_t subtract		 = INT32_C(261663);
+					static constexpr std::size_t shift				 = 21;
+					static constexpr std::int_least32_t min_exponent = -2985;
+					static constexpr std::int_least32_t max_exponent = 2936;
 				};
-				template<stdr::int_least32_t min_exponent = -2985, stdr::int_least32_t max_exponent = 2936,
+				template<std::int_least32_t min_exponent = -2985, std::int_least32_t max_exponent = 2936,
 					class ReturnType = typename compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log10_pow2_minus_log10_4_over_3(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
-				template<stdr::size_t tier> struct floor_log5_pow2_info;
+				template<std::size_t tier> struct floor_log5_pow2_info;
 				template<> struct floor_log5_pow2_info<0> {
-					using default_return_type						  = stdr::int_fast32_t;
-					static constexpr stdr::int_fast32_t multiply	  = INT32_C(225799);
-					static constexpr stdr::int_fast32_t subtract	  = 0;
-					static constexpr stdr::size_t shift				  = 19;
-					static constexpr stdr::int_least32_t min_exponent = -1831;
-					static constexpr stdr::int_least32_t max_exponent = 1831;
+					using default_return_type						 = std::int_fast32_t;
+					static constexpr std::int_fast32_t multiply		 = INT32_C(225799);
+					static constexpr std::int_fast32_t subtract		 = 0;
+					static constexpr std::size_t shift				 = 19;
+					static constexpr std::int_least32_t min_exponent = -1831;
+					static constexpr std::int_least32_t max_exponent = 1831;
 				};
-				template<stdr::int_least32_t min_exponent = -1831, stdr::int_least32_t max_exponent = 1831,
+				template<std::int_least32_t min_exponent = -1831, std::int_least32_t max_exponent = 1831,
 					class ReturnType = typename compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log5_pow2(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
-				template<stdr::size_t tier> struct floor_log5_pow2_minus_log5_3_info;
+				template<std::size_t tier> struct floor_log5_pow2_minus_log5_3_info;
 				template<> struct floor_log5_pow2_minus_log5_3_info<0> {
-					using default_return_type						  = stdr::int_fast32_t;
-					static constexpr stdr::int_fast32_t multiply	  = INT32_C(451597);
-					static constexpr stdr::int_fast32_t subtract	  = INT32_C(715764);
-					static constexpr stdr::size_t shift				  = 20;
-					static constexpr stdr::int_least32_t min_exponent = -3543;
-					static constexpr stdr::int_least32_t max_exponent = 2427;
+					using default_return_type						 = std::int_fast32_t;
+					static constexpr std::int_fast32_t multiply		 = INT32_C(451597);
+					static constexpr std::int_fast32_t subtract		 = INT32_C(715764);
+					static constexpr std::size_t shift				 = 20;
+					static constexpr std::int_least32_t min_exponent = -3543;
+					static constexpr std::int_least32_t max_exponent = 2427;
 				};
-				template<stdr::int_least32_t min_exponent = -3543, stdr::int_least32_t max_exponent = 2427,
+				template<std::int_least32_t min_exponent = -3543, std::int_least32_t max_exponent = 2427,
 					class ReturnType = typename compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
 				constexpr ReturnType floor_log5_pow2_minus_log5_3(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
@@ -1068,31 +928,31 @@ namespace jkj {
 				template<int32_t N, typename UInt> struct divide_by_pow10_info;
 
 				template<typename UInt> struct divide_by_pow10_info<1, UInt> {
-					static constexpr stdr::uint_fast32_t magic_number = 6554;
-					static constexpr int32_t shift_amount			  = 16;
+					static constexpr std::uint_fast32_t magic_number = 6554;
+					static constexpr int32_t shift_amount			 = 16;
 				};
 
-				template<> struct divide_by_pow10_info<1, stdr::uint_least8_t> {
-					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int32_t shift_amount			  = 10;
+				template<> struct divide_by_pow10_info<1, std::uint_least8_t> {
+					static constexpr std::uint_fast16_t magic_number = 103;
+					static constexpr int32_t shift_amount			 = 10;
 				};
 
-				template<> struct divide_by_pow10_info<1, stdr::uint_least16_t> {
-					static constexpr stdr::uint_fast16_t magic_number = 103;
-					static constexpr int32_t shift_amount			  = 10;
+				template<> struct divide_by_pow10_info<1, std::uint_least16_t> {
+					static constexpr std::uint_fast16_t magic_number = 103;
+					static constexpr int32_t shift_amount			 = 10;
 				};
 
 				template<typename UInt> struct divide_by_pow10_info<2, UInt> {
-					static constexpr stdr::uint_fast32_t magic_number = 656;
-					static constexpr int32_t shift_amount			  = 16;
+					static constexpr std::uint_fast32_t magic_number = 656;
+					static constexpr int32_t shift_amount			 = 16;
 				};
 
-				template<> struct divide_by_pow10_info<2, stdr::uint_least16_t> {
-					static constexpr stdr::uint_fast32_t magic_number = 41;
-					static constexpr int32_t shift_amount			  = 12;
+				template<> struct divide_by_pow10_info<2, std::uint_least16_t> {
+					static constexpr std::uint_fast32_t magic_number = 41;
+					static constexpr int32_t shift_amount			 = 12;
 				};
 
-				template<int32_t N, typename UInt> JKJ_CONSTEXPR14 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
+				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
@@ -1110,7 +970,7 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small n and N.
 				// Precondition: n <= 10^(N+1)
-				template<int32_t N, typename UInt> JKJ_CONSTEXPR14 UInt small_division_by_pow10(UInt n) noexcept {
+				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 UInt small_division_by_pow10(UInt n) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(int32_t(value_bits<UInt>::value)), "");
 					assert(n <= compute_power<N + 1>(UInt(10)));
@@ -1120,7 +980,7 @@ namespace jkj {
 
 				// Compute floor(n / 10^N) for small N.
 				// Precondition: n <= n_max
-				template<int32_t N, typename UInt, UInt n_max> JKJ_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
+				template<int32_t N, typename UInt, UInt n_max> JSONIFIER_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
 					static_assert(N >= 0, "");
 
 					// Specialize for 32-bit division by 10.
@@ -1129,25 +989,25 @@ namespace jkj {
 					// code for 32-bit or smaller architectures. Even for 64-bit architectures, it seems
 					// compilers tend to generate mov + mul instead of a single imul for an unknown
 					// reason if we just write n / 10.
-					JKJ_IF_CONSTEXPR(stdr::is_same<UInt, stdr::uint_least32_t>::value && N == 1 && n_max <= UINT32_C(1073741828)) {
+					JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 1 && n_max <= UINT32_C(1073741828)) {
 						return UInt(wuint::umul64(n, UINT32_C(429496730)) >> 32);
 					}
 					// Specialize for 64-bit division by 10.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// minimum needed amount of shift is larger than 64.
-					else JKJ_IF_CONSTEXPR(stdr::is_same<UInt, stdr::uint_least64_t>::value && N == 1 && n_max <= UINT64_C(4611686018427387908)) {
+					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 1 && n_max <= UINT64_C(4611686018427387908)) {
 						return UInt(wuint::umul128_upper64(n, UINT64_C(1844674407370955162)));
 					}
 					// Specialize for 32-bit division by 100.
 					// It seems compilers tend to generate mov + mul instead of a single imul for an
 					// unknown reason if we just write n / 100.
-					else JKJ_IF_CONSTEXPR(stdr::is_same<UInt, stdr::uint_least32_t>::value && N == 2) {
+					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 2) {
 						return UInt(wuint::umul64(n, UINT32_C(1374389535)) >> 37);
 					}
 					// Specialize for 64-bit division by 1000.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// smallest magic number for this computation does not fit into 64-bits.
-					else JKJ_IF_CONSTEXPR(stdr::is_same<UInt, stdr::uint_least64_t>::value && N == 3 && n_max <= UINT64_C(15534100272597517998)) {
+					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 3 && n_max <= UINT64_C(15534100272597517998)) {
 						return UInt(wuint::umul128_upper64(n, UINT64_C(4722366482869645214)) >> 8);
 					}
 					else {
@@ -1194,8 +1054,8 @@ namespace jkj {
 		template<typename SignificandType, typename ExponentType, bool trailing_zero_flag = false> using signed_decimal_fp =
 			decimal_fp<SignificandType, ExponentType, true, trailing_zero_flag>;
 
-		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, false> add_sign_to_unsigned_decimal_fp(bool is_negative,
-			unsigned_decimal_fp<SignificandType, ExponentType, false> r) noexcept {
+		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, false> add_sign_to_unsigned_decimal_fp(
+			bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, false> r) noexcept {
 			return { r.significand, r.exponent, is_negative };
 		}
 
@@ -1222,11 +1082,11 @@ namespace jkj {
 		template<typename FloatFormat, typename Dummy = void> struct cache_holder;
 
 		template<typename Dummy> struct cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type																									= detail::stdr::uint_least64_t;
-			static constexpr int32_t cache_bits																						= 64;
-			static constexpr int32_t min_k																							= -31;
-			static constexpr int32_t max_k																							= 46;
-			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
+			using cache_entry_type																							  = std::uint_least64_t;
+			static constexpr int32_t cache_bits																				  = 64;
+			static constexpr int32_t min_k																					  = -31;
+			static constexpr int32_t max_k																					  = 46;
+			static constexpr std::array<cache_entry_type, std::size_t(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
 				UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49), UINT64_C(0xc612062576589ddb),
 				UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2), UINT64_C(0x971da05074da7bef),
 				UINT64_C(0xbce5086492111aeb), UINT64_C(0xec1e4a7db69561a6), UINT64_C(0x9392ee8e921d5d08), UINT64_C(0xb877aa3236a4b44a), UINT64_C(0xe69594bec44de15c),
@@ -1244,18 +1104,18 @@ namespace jkj {
 				UINT64_C(0xeb194f8e1ae525fe), UINT64_C(0x92efd1b8d0cf37bf), UINT64_C(0xb7abc627050305ae), UINT64_C(0xe596b7b0c643c71a), UINT64_C(0x8f7e32ce7bea5c70),
 				UINT64_C(0xb35dbf821ae4f38c), UINT64_C(0xe0352f62a19e306f) } };
 		};
-#if !JKJ_HAS_INLINE_VARIABLE
+#if !JSONIFIER_HAS_INLINE_VARIABLE
 		// decltype(...) should not depend on Dummy; see
 		// https://stackoverflow.com/questions/76438400/decltype-on-static-variable-in-template-class.
 		template<typename Dummy> constexpr decltype(cache_holder<ieee754_binary32>::cache) cache_holder<ieee754_binary32, Dummy>::cache;
 #endif
 
 		template<typename Dummy> struct cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type																									= detail::wuint::uint128;
-			static constexpr int32_t cache_bits																						= 128;
-			static constexpr int32_t min_k																							= -292;
-			static constexpr int32_t max_k																							= 326;
-			static constexpr detail::array<cache_entry_type, detail::stdr::size_t(max_k - min_k + 1)> cache JKJ_STATIC_DATA_SECTION = {
+			using cache_entry_type																							  = detail::wuint::uint128;
+			static constexpr int32_t cache_bits																				  = 128;
+			static constexpr int32_t min_k																					  = -292;
+			static constexpr int32_t max_k																					  = 326;
+			static constexpr std::array<cache_entry_type, std::size_t(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
 					{ UINT64_C(0x9becce62836ac577), UINT64_C(0x4ee367f9430aec33) }, { UINT64_C(0xc2e801fb244576d5), UINT64_C(0x229c41f793cda740) },
@@ -1568,7 +1428,7 @@ namespace jkj {
 					{ UINT64_C(0xf70867153aa2db38), UINT64_C(0xb8cbee4fc66d1ea8) } }
 			};
 		};
-#if !JKJ_HAS_INLINE_VARIABLE
+#if !JSONIFIER_HAS_INLINE_VARIABLE
 		// decltype(...) should not depend on Dummy; see
 		// https://stackoverflow.com/questions/76438400/decltype-on-static-variable-in-template-class.
 		template<typename Dummy> constexpr decltype(cache_holder<ieee754_binary64>::cache) cache_holder<ieee754_binary64, Dummy>::cache;
@@ -1587,52 +1447,39 @@ namespace jkj {
 		};
 
 		template<typename Dummy> struct compressed_cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type										= cache_holder<ieee754_binary32>::cache_entry_type;
-			static constexpr int32_t cache_bits							= cache_holder<ieee754_binary32>::cache_bits;
-			static constexpr int32_t min_k								= cache_holder<ieee754_binary32>::min_k;
-			static constexpr int32_t max_k								= cache_holder<ieee754_binary32>::max_k;
-			static constexpr int32_t compression_ratio					= 13;
-			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
-			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t((compression_ratio + 1) / 2);
+			using cache_entry_type							   = cache_holder<ieee754_binary32>::cache_entry_type;
+			static constexpr int32_t cache_bits				   = cache_holder<ieee754_binary32>::cache_bits;
+			static constexpr int32_t min_k					   = cache_holder<ieee754_binary32>::min_k;
+			static constexpr int32_t max_k					   = cache_holder<ieee754_binary32>::max_k;
+			static constexpr int32_t compression_ratio		   = 13;
+			static constexpr std::size_t compressed_table_size = std::size_t((max_k - min_k + compression_ratio) / compression_ratio);
+			static constexpr std::size_t pow5_table_size	   = std::size_t((compression_ratio + 1) / 2);
 
-			using cache_holder_t = detail::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t	 = detail::array<detail::stdr::uint_least16_t, pow5_table_size>;
-
-#if JKJ_HAS_CONSTEXPR17
-			static constexpr cache_holder_t cache JKJ_STATIC_DATA_SECTION = [] {
+			using cache_holder_t												= std::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t													= std::array<std::uint_least16_t, pow5_table_size>;
+			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};
-				for (detail::stdr::size_t i = 0; i < compressed_table_size; ++i) {
+				for (std::size_t i = 0; i < compressed_table_size; ++i) {
 					res[i] = cache_holder<ieee754_binary32>::cache[i * compression_ratio];
 				}
 				return res;
 			}();
-			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = [] {
+			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = [] {
 				pow5_holder_t res{};
-				detail::stdr::uint_least16_t p = 1;
-				for (detail::stdr::size_t i = 0; i < pow5_table_size; ++i) {
+				std::uint_least16_t p = 1;
+				for (std::size_t i = 0; i < pow5_table_size; ++i) {
 					res[i] = p;
 					p *= 5;
 				}
 				return res;
 			}();
-#else
-			template<detail::stdr::size_t... indices> static constexpr cache_holder_t make_cache(detail::index_sequence<indices...>) {
-				return { cache_holder<ieee754_binary32>::cache[indices * compression_ratio]... };
-			}
-			static constexpr cache_holder_t cache JKJ_STATIC_DATA_SECTION = make_cache(detail::make_index_sequence<compressed_table_size>{});
 
-			template<detail::stdr::size_t... indices> static constexpr pow5_holder_t make_pow5_table(detail::index_sequence<indices...>) {
-				return { detail::compute_power<indices>(detail::stdr::uint_least16_t(5))... };
-			}
-			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = make_pow5_table(detail::make_index_sequence<pow5_table_size>{});
-#endif
-
-			template<typename ShiftAmountType, typename DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> static JSONIFIER_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 89 && compression_ratio == 13, "");
-				static_assert(max_k - min_k <= detail::stdr::numeric_limits<DecimalExponentType>::max(), "");
-				const auto cache_index = DecimalExponentType(detail::stdr::uint_fast16_t(DecimalExponentType(k - min_k) * detail::stdr::int_fast16_t(79)) >> 10);
+				static_assert(max_k - min_k <= std::numeric_limits<DecimalExponentType>::max(), "");
+				const auto cache_index = DecimalExponentType(std::uint_fast16_t(DecimalExponentType(k - min_k) * std::int_fast16_t(79)) >> 10);
 				const auto kb		   = DecimalExponentType(cache_index * compression_ratio + min_k);
 				const auto offset	   = DecimalExponentType(k - kb);
 
@@ -1647,8 +1494,7 @@ namespace jkj {
 					assert(alpha > 0 && alpha < 64);
 
 					// Try to recover the real cache.
-					const auto pow5 = offset >= 7 ? detail::stdr::uint_fast32_t(detail::stdr::uint_fast32_t(pow5_table[6]) * pow5_table[offset - 6])
-												  : detail::stdr::uint_fast32_t(pow5_table[offset]);
+					const auto pow5 = offset >= 7 ? std::uint_fast32_t(std::uint_fast32_t(pow5_table[6]) * pow5_table[offset - 6]) : std::uint_fast32_t(pow5_table[offset]);
 					auto mul_result = detail::wuint::umul128(base_cache, pow5);
 					const auto recovered_cache =
 						cache_entry_type((((mul_result.high() << ShiftAmountType(64 - alpha)) | (mul_result.low() >> alpha)) + 1) & UINT64_C(0xffffffffffffffff));
@@ -1658,58 +1504,46 @@ namespace jkj {
 				}
 			}
 		};
-#if !JKJ_HAS_INLINE_VARIABLE
+#if !JSONIFIER_HAS_INLINE_VARIABLE
 		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::cache;
 		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary32, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary32, Dummy>::pow5_table;
 #endif
 
 		template<typename Dummy> struct compressed_cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type										= cache_holder<ieee754_binary64>::cache_entry_type;
-			static constexpr int32_t cache_bits							= cache_holder<ieee754_binary64>::cache_bits;
-			static constexpr int32_t min_k								= cache_holder<ieee754_binary64>::min_k;
-			static constexpr int32_t max_k								= cache_holder<ieee754_binary64>::max_k;
-			static constexpr int32_t compression_ratio					= 27;
-			static constexpr detail::stdr::size_t compressed_table_size = detail::stdr::size_t((max_k - min_k + compression_ratio) / compression_ratio);
-			static constexpr detail::stdr::size_t pow5_table_size		= detail::stdr::size_t(compression_ratio);
+			using cache_entry_type							   = cache_holder<ieee754_binary64>::cache_entry_type;
+			static constexpr int32_t cache_bits				   = cache_holder<ieee754_binary64>::cache_bits;
+			static constexpr int32_t min_k					   = cache_holder<ieee754_binary64>::min_k;
+			static constexpr int32_t max_k					   = cache_holder<ieee754_binary64>::max_k;
+			static constexpr int32_t compression_ratio		   = 27;
+			static constexpr std::size_t compressed_table_size = std::size_t((max_k - min_k + compression_ratio) / compression_ratio);
+			static constexpr std::size_t pow5_table_size	   = std::size_t(compression_ratio);
 
-			using cache_holder_t = detail::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t	 = detail::array<detail::stdr::uint_least64_t, pow5_table_size>;
+			using cache_holder_t = std::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t	 = std::array<std::uint_least64_t, pow5_table_size>;
 
-#if JKJ_HAS_CONSTEXPR17
-			static constexpr cache_holder_t cache JKJ_STATIC_DATA_SECTION = [] {
+			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};
-				for (detail::stdr::size_t i = 0; i < compressed_table_size; ++i) {
+				for (std::size_t i = 0; i < compressed_table_size; ++i) {
 					res[i] = cache_holder<ieee754_binary64>::cache[i * compression_ratio];
 				}
 				return res;
 			}();
-			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = [] {
+			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = [] {
 				pow5_holder_t res{};
-				detail::stdr::uint_least64_t p = 1;
-				for (detail::stdr::size_t i = 0; i < pow5_table_size; ++i) {
+				std::uint_least64_t p = 1;
+				for (std::size_t i = 0; i < pow5_table_size; ++i) {
 					res[i] = p;
 					p *= 5;
 				}
 				return res;
 			}();
-#else
-			template<detail::stdr::size_t... indices> static constexpr cache_holder_t make_cache(detail::index_sequence<indices...>) {
-				return { cache_holder<ieee754_binary64>::cache[indices * compression_ratio]... };
-			}
-			static constexpr cache_holder_t cache JKJ_STATIC_DATA_SECTION = make_cache(detail::make_index_sequence<compressed_table_size>{});
 
-			template<detail::stdr::size_t... indices> static constexpr pow5_holder_t make_pow5_table(detail::index_sequence<indices...>) {
-				return { detail::compute_power<indices>(detail::stdr::uint_least64_t(5))... };
-			}
-			static constexpr pow5_holder_t pow5_table JKJ_STATIC_DATA_SECTION = make_pow5_table(detail::make_index_sequence<pow5_table_size>{});
-#endif
-
-			template<typename ShiftAmountType, typename DecimalExponentType> static JKJ_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> static JSONIFIER_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 619 && compression_ratio == 27, "");
-				static_assert(max_k - min_k <= detail::stdr::numeric_limits<DecimalExponentType>::max(), "");
-				const auto cache_index = DecimalExponentType(detail::stdr::uint_fast32_t(DecimalExponentType(k - min_k) * detail::stdr::int_fast32_t(607)) >> 14);
+				static_assert(max_k - min_k <= std::numeric_limits<DecimalExponentType>::max(), "");
+				const auto cache_index = DecimalExponentType(std::uint_fast32_t(DecimalExponentType(k - min_k) * std::int_fast32_t(607)) >> 14);
 				const auto kb		   = DecimalExponentType(cache_index * compression_ratio + min_k);
 				const auto offset	   = DecimalExponentType(k - kb);
 
@@ -1730,19 +1564,19 @@ namespace jkj {
 
 					recovered_cache += middle_low.high();
 
-					const auto high_to_middle = detail::stdr::uint_least64_t((recovered_cache.high() << ShiftAmountType(64 - alpha)) & UINT64_C(0xffffffffffffffff));
-					const auto middle_to_low  = detail::stdr::uint_least64_t((recovered_cache.low() << ShiftAmountType(64 - alpha)) & UINT64_C(0xffffffffffffffff));
+					const auto high_to_middle = std::uint_least64_t((recovered_cache.high() << ShiftAmountType(64 - alpha)) & UINT64_C(0xffffffffffffffff));
+					const auto middle_to_low  = std::uint_least64_t((recovered_cache.low() << ShiftAmountType(64 - alpha)) & UINT64_C(0xffffffffffffffff));
 
 					recovered_cache = { (recovered_cache.low() >> alpha) | high_to_middle, ((middle_low.low() >> alpha) | middle_to_low) };
 
 					assert(recovered_cache.low() != UINT64_C(0xffffffffffffffff));
-					recovered_cache = { recovered_cache.high(), detail::stdr::uint_least64_t(recovered_cache.low() + 1) };
+					recovered_cache = { recovered_cache.high(), std::uint_least64_t(recovered_cache.low() + 1) };
 
 					return recovered_cache;
 				}
 			}
 		};
-#if !JKJ_HAS_INLINE_VARIABLE
+#if !JSONIFIER_HAS_INLINE_VARIABLE
 		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::cache_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::cache;
 		template<typename Dummy> constexpr typename compressed_cache_holder<ieee754_binary64, Dummy>::pow5_holder_t compressed_cache_holder<ieee754_binary64, Dummy>::pow5_table;
 #endif
@@ -1758,10 +1592,10 @@ namespace jkj {
 		// Users can specialize this traits class to make Dragonbox work with their own formats.
 		// However, this requires detailed knowledge on how the algorithm works, so it is recommended to
 		// read through the paper.
-		template<typename FormatTraits, typename CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits;
+		template<typename FormatTraits, typename CacheEntryType, std::size_t cache_bits_> struct multiplication_traits;
 
 		// A collection of some common definitions to reduce boilerplate.
-		template<typename FormatTraits, typename CacheEntryType, detail::stdr::size_t cache_bits_> struct multiplication_traits_base {
+		template<typename FormatTraits, typename CacheEntryType, std::size_t cache_bits_> struct multiplication_traits_base {
 			using format							  = typename FormatTraits::format;
 			static constexpr int32_t significand_bits = format::significand_bits;
 			static constexpr int32_t total_bits		  = format::total_bits;
@@ -1789,11 +1623,11 @@ namespace jkj {
 
 		namespace policy {
 			namespace sign {
-				JKJ_INLINE_VARIABLE struct ignore_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct ignore_t {
 					using sign_policy					  = ignore_t;
 					static constexpr bool return_has_sign = false;
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
 					// See
 					// https://developercommunity.visualstudio.com/t/Failure-to-optimize-intrinsics/10628226
 					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>
@@ -1814,7 +1648,7 @@ namespace jkj {
 #endif
 				} ignore = {};
 
-				JKJ_INLINE_VARIABLE struct return_sign_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct return_sign_t {
 					using sign_policy					  = return_sign_t;
 					static constexpr bool return_has_sign = true;
 
@@ -1826,66 +1660,72 @@ namespace jkj {
 			}
 
 			namespace trailing_zero {
-				JKJ_INLINE_VARIABLE struct ignore_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct ignore_t {
 					using trailing_zero_policy					= ignore_t;
 					static constexpr bool report_trailing_zeros = false;
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
-					on_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
-					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 				} ignore = {};
 
-				JKJ_INLINE_VARIABLE struct remove_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct remove_t {
 					using trailing_zero_policy					= remove_t;
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JKJ_FORCEINLINE static JKJ_CONSTEXPR14 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
-						DecimalExponentType exponent) noexcept {
+					JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
+						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
-					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 				} remove = {};
 
-				JKJ_INLINE_VARIABLE struct remove_compact_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct remove_compact_t {
 					using trailing_zero_policy					= remove_compact_t;
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JKJ_FORCEINLINE static JKJ_CONSTEXPR14 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
-						DecimalExponentType exponent) noexcept {
+					JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
+						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_compact_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false>
-					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 				} remove_compact = {};
 
-				JKJ_INLINE_VARIABLE struct report_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct report_t {
 					using trailing_zero_policy					= report_t;
 					static constexpr bool report_trailing_zeros = true;
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
-					on_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> on_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent, true };
 					}
 
-					template<typename Format, typename DecimalSignificand, typename DecimalExponentType> static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true>
-					no_trailing_zeros(DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
+					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> no_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						return { significand, exponent, false };
 					}
 				} report = {};
@@ -1953,14 +1793,14 @@ namespace jkj {
 					};
 				}
 
-				JKJ_INLINE_VARIABLE struct nearest_to_even_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_to_even_t {
 					using decimal_to_binary_rounding_policy = nearest_to_even_t;
 					using interval_type_provider			= nearest_to_even_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_to_even_t>(), Args{}...)) delegate(SignedSignificandBits,
-						Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_even_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_to_even_t{}, args...);
 					}
 
@@ -1973,14 +1813,14 @@ namespace jkj {
 					}
 				} nearest_to_even = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_to_odd_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_to_odd_t {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_t;
 					using interval_type_provider			= nearest_to_odd_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_to_odd_t>(), Args{}...)) delegate(SignedSignificandBits,
-						Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_odd_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_to_odd_t{}, args...);
 					}
 
@@ -1992,14 +1832,14 @@ namespace jkj {
 					}
 				} nearest_to_odd = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_toward_plus_infinity_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_toward_plus_infinity_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_t;
 					using interval_type_provider			= nearest_toward_plus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_plus_infinity_t>(), Args{}...)) delegate(
-						SignedSignificandBits, Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_plus_infinity_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_plus_infinity_t{}, args...);
 					}
 
@@ -2011,14 +1851,14 @@ namespace jkj {
 					}
 				} nearest_toward_plus_infinity = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_toward_minus_infinity_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_toward_minus_infinity_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_t;
 					using interval_type_provider			= nearest_toward_minus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_minus_infinity_t>(), Args{}...)) delegate(
-						SignedSignificandBits, Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_minus_infinity_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_minus_infinity_t{}, args...);
 					}
 
@@ -2030,14 +1870,14 @@ namespace jkj {
 					}
 				} nearest_toward_minus_infinity = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_toward_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_toward_zero_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_zero_t;
 					using interval_type_provider			= nearest_toward_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_toward_zero_t>(), Args{}...)) delegate(
-						SignedSignificandBits, Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_zero_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_zero_t{}, args...);
 					}
 
@@ -2049,14 +1889,14 @@ namespace jkj {
 					}
 				} nearest_toward_zero = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_away_from_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_away_from_zero_t {
 					using decimal_to_binary_rounding_policy = nearest_away_from_zero_t;
 					using interval_type_provider			= nearest_away_from_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(dragonbox::detail::declval<nearest_away_from_zero_t>(), Args{}...)) delegate(
-						SignedSignificandBits, Func f, Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_away_from_zero_t>(), arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_away_from_zero_t{}, args...);
 					}
 
@@ -2093,42 +1933,42 @@ namespace jkj {
 					};
 				}
 
-				JKJ_INLINE_VARIABLE struct nearest_to_even_static_boundary_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_to_even_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_even_static_boundary_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_closed_t{}, args...) : f(detail::nearest_always_open_t{}, args...);
 					}
 				} nearest_to_even_static_boundary = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_to_odd_static_boundary_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_to_odd_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_static_boundary_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_open_t{}, args...) : f(detail::nearest_always_closed_t{}, args...);
 					}
 				} nearest_to_odd_static_boundary = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_toward_plus_infinity_static_boundary_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_toward_plus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_static_boundary_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
+						arg_types... args) noexcept {
 						return s.is_negative() ? f(nearest_toward_zero, args...) : f(nearest_away_from_zero, args...);
 					}
 				} nearest_toward_plus_infinity_static_boundary = {};
 
-				JKJ_INLINE_VARIABLE struct nearest_toward_minus_infinity_static_boundary_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct nearest_toward_minus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_static_boundary_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
+						arg_types... args) noexcept {
 						return s.is_negative() ? f(nearest_away_from_zero, args...) : f(nearest_toward_zero, args...);
 					}
 				} nearest_toward_minus_infinity_static_boundary = {};
@@ -2142,42 +1982,42 @@ namespace jkj {
 					};
 				}
 
-				JKJ_INLINE_VARIABLE struct toward_plus_infinity_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct toward_plus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_plus_infinity_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.is_negative() ? f(detail::left_closed_directed_t{}, args...) : f(detail::right_closed_directed_t{}, args...);
 					}
 				} toward_plus_infinity = {};
 
-				JKJ_INLINE_VARIABLE struct toward_minus_infinity_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct toward_minus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_minus_infinity_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits s, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.is_negative() ? f(detail::right_closed_directed_t{}, args...) : f(detail::left_closed_directed_t{}, args...);
 					}
 				} toward_minus_infinity = {};
 
-				JKJ_INLINE_VARIABLE struct toward_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct toward_zero_t {
 					using decimal_to_binary_rounding_policy = toward_zero_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(detail::left_closed_directed_t{}, args...);
 					}
 				} toward_zero = {};
 
-				JKJ_INLINE_VARIABLE struct away_from_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct away_from_zero_t {
 					using decimal_to_binary_rounding_policy = away_from_zero_t;
 
-					template<typename SignedSignificandBits, typename Func, typename... Args>
-					JKJ_FORCEINLINE JKJ_SAFEBUFFERS static constexpr decltype(Func{}(detail::right_closed_directed_t{}, Args{}...)) delegate(SignedSignificandBits, Func f,
-						Args... args) noexcept {
+					template<typename SignedSignificandBits, typename Func, typename... arg_types>
+					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::right_closed_directed_t{}, arg_types{}...)) delegate(
+						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(detail::right_closed_directed_t{}, args...);
 					}
 				} away_from_zero = {};
@@ -2190,7 +2030,7 @@ namespace jkj {
 
 				// The parameter significand corresponds to 10\tilde{s}+t in the paper.
 
-				JKJ_INLINE_VARIABLE struct do_not_care_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct do_not_care_t {
 					using binary_to_decimal_rounding_policy = do_not_care_t;
 					static constexpr auto tag				= tag_t::do_not_care;
 
@@ -2199,7 +2039,7 @@ namespace jkj {
 					}
 				} do_not_care = {};
 
-				JKJ_INLINE_VARIABLE struct to_even_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct to_even_t {
 					using binary_to_decimal_rounding_policy = to_even_t;
 					static constexpr auto tag				= tag_t::to_even;
 
@@ -2208,7 +2048,7 @@ namespace jkj {
 					}
 				} to_even = {};
 
-				JKJ_INLINE_VARIABLE struct to_odd_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct to_odd_t {
 					using binary_to_decimal_rounding_policy = to_odd_t;
 					static constexpr auto tag				= tag_t::to_odd;
 
@@ -2217,7 +2057,7 @@ namespace jkj {
 					}
 				} to_odd = {};
 
-				JKJ_INLINE_VARIABLE struct away_from_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct away_from_zero_t {
 					using binary_to_decimal_rounding_policy = away_from_zero_t;
 					static constexpr auto tag				= tag_t::away_from_zero;
 
@@ -2226,7 +2066,7 @@ namespace jkj {
 					}
 				} away_from_zero = {};
 
-				JKJ_INLINE_VARIABLE struct toward_zero_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct toward_zero_t {
 					using binary_to_decimal_rounding_policy = toward_zero_t;
 					static constexpr auto tag				= tag_t::toward_zero;
 
@@ -2237,25 +2077,25 @@ namespace jkj {
 			}
 
 			namespace cache {
-				JKJ_INLINE_VARIABLE struct full_t {
-					using cache_policy									= full_t;
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct full_t {
+					using cache_policy									   = full_t;
 					template<typename FloatFormat> using cache_holder_type = cache_holder<FloatFormat>;
 
 					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
 					static constexpr typename cache_holder_type<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
-#if JKJ_HAS_CONSTEXPR14
+#if JSONIFIER_HAS_CONSTEXPR14
 						assert(k >= cache_holder_type<FloatFormat>::min_k && k <= cache_holder_type<FloatFormat>::max_k);
 #endif
-						return cache_holder_type<FloatFormat>::cache[detail::stdr::size_t(k - cache_holder_type<FloatFormat>::min_k)];
+						return cache_holder_type<FloatFormat>::cache[std::size_t(k - cache_holder_type<FloatFormat>::min_k)];
 					}
 				} full = {};
 
-				JKJ_INLINE_VARIABLE struct compact_t {
-					using cache_policy									= compact_t;
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct compact_t {
+					using cache_policy									   = compact_t;
 					template<typename FloatFormat> using cache_holder_type = compressed_cache_holder<FloatFormat>;
 
 					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
-					static JKJ_CONSTEXPR20 typename cache_holder<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
+					static JSONIFIER_CONSTEXPR20 typename cache_holder<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
 						assert(k >= cache_holder<FloatFormat>::min_k && k <= cache_holder<FloatFormat>::max_k);
 
 						return cache_holder_type<FloatFormat>::template get_cache<ShiftAmountType>(k);
@@ -2264,53 +2104,49 @@ namespace jkj {
 			}
 
 			namespace preferred_integer_types {
-				JKJ_INLINE_VARIABLE struct match_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct match_t {
 					using preferred_integer_types_policy = match_t;
 
-					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type = typename FormatTraits::carrier_uint;
+					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type = typename FormatTraits::carrier_uint;
 
-					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
+					template<typename FormatTraits, std::int_least32_t lower_bound, std::uint_least32_t upper_bound> using decimal_exponent_type =
 						typename FormatTraits::exponent_int;
 
 					template<typename FormatTraits> using shift_amount_type = typename FormatTraits::exponent_int;
 				} match;
 
-				JKJ_INLINE_VARIABLE struct prefer_32_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct prefer_32_t {
 					using preferred_integer_types_policy = prefer_32_t;
 
-					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
-						typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least32_t>::max(), detail::stdr::uint_least32_t,
-							typename FormatTraits::carrier_uint>::type;
+					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type =
+						typename std::conditional<upper_bound <= std::numeric_limits<std::uint_least32_t>::max(), std::uint_least32_t, typename FormatTraits::carrier_uint>::type;
 
-					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
-						typename detail::stdr::conditional<FormatTraits::format::exponent_bits <= detail::value_bits<detail::stdr::int_least32_t>::value,
-							detail::stdr::int_least32_t, typename FormatTraits::exponent_int>::type;
+					template<typename FormatTraits, std::int_least32_t lower_bound, std::uint_least32_t upper_bound> using decimal_exponent_type =
+						typename std::conditional<FormatTraits::format::exponent_bits <= detail::value_bits<std::int_least32_t>::value, std::int_least32_t,
+							typename FormatTraits::exponent_int>::type;
 
-					template<typename FormatTraits> using shift_amount_type = detail::stdr::int_least32_t;
+					template<typename FormatTraits> using shift_amount_type = std::int_least32_t;
 				} prefer_32;
 
-				JKJ_INLINE_VARIABLE struct minimal_t {
+				JSONIFIER_ALWAYS_INLINE_VARIABLE struct minimal_t {
 					using preferred_integer_types_policy = minimal_t;
 
-					template<typename FormatTraits, detail::stdr::uint_least64_t upper_bound> using remainder_type =
-						typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least8_t>::max(), detail::stdr::uint_least8_t,
-							typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least16_t>::max(), detail::stdr::uint_least16_t,
-								typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least32_t>::max(), detail::stdr::uint_least32_t,
-									typename detail::stdr::conditional<upper_bound <= detail::stdr::numeric_limits<detail::stdr::uint_least64_t>::max(),
-										detail::stdr::uint_least64_t, typename FormatTraits::carrier_uint>::type>::type>::type>::type;
+					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type =
+						typename std::conditional<upper_bound <= std::numeric_limits<std::uint_least8_t>::max(), std::uint_least8_t,
+							typename std::conditional<upper_bound <= std::numeric_limits<std::uint_least16_t>::max(), std::uint_least16_t,
+								typename std::conditional<upper_bound <= std::numeric_limits<std::uint_least32_t>::max(), std::uint_least32_t,
+									typename std::conditional<upper_bound <= std::numeric_limits<std::uint_least64_t>::max(), std::uint_least64_t,
+										typename FormatTraits::carrier_uint>::type>::type>::type>::type;
 
-					template<typename FormatTraits, detail::stdr::int_least32_t lower_bound, detail::stdr::uint_least32_t upper_bound> using decimal_exponent_type =
-						typename detail::stdr::conditional<lower_bound >= detail::stdr::numeric_limits<detail::stdr::int_least8_t>::min() &&
-								upper_bound <= detail::stdr::numeric_limits<detail::stdr::int_least8_t>::max(),
-							detail::stdr::int_least8_t,
-							typename detail::stdr::conditional<lower_bound >= detail::stdr::numeric_limits<detail::stdr::int_least16_t>::min() &&
-									upper_bound <= detail::stdr::numeric_limits<detail::stdr::int_least16_t>::max(),
-								detail::stdr::int_least16_t,
-								typename detail::stdr::conditional<lower_bound >= detail::stdr::numeric_limits<detail::stdr::int_least32_t>::min() &&
-										upper_bound <= detail::stdr::numeric_limits<detail::stdr::int_least32_t>::max(),
-									detail::stdr::int_least32_t, typename FormatTraits::exponent_int>::type>::type>::type;
+					template<typename FormatTraits, std::int_least32_t lower_bound, std::uint_least32_t upper_bound> using decimal_exponent_type = typename std::conditional<
+						lower_bound >= std::numeric_limits<std::int_least8_t>::min() && upper_bound <= std::numeric_limits<std::int_least8_t>::max(), std::int_least8_t,
+						typename std::conditional<lower_bound >= std::numeric_limits<std::int_least16_t>::min() && upper_bound <= std::numeric_limits<std::int_least16_t>::max(),
+							std::int_least16_t,
+							typename std::conditional<lower_bound >= std::numeric_limits<std::int_least32_t>::min() &&
+									upper_bound <= std::numeric_limits<std::int_least32_t>::max(),
+								std::int_least32_t, typename FormatTraits::exponent_int>::type>::type>::type;
 
-					template<typename FormatTraits> using shift_amount_type = detail::stdr::int_least8_t;
+					template<typename FormatTraits> using shift_amount_type = std::int_least8_t;
 				} minimal;
 			}
 		}
@@ -2319,24 +2155,23 @@ namespace jkj {
 		// Specializations of user-specializable templates used in the main algorithm.
 		////////////////////////////////////////////////////////////////////////////////////////
 
-		template<typename DecimalExponentType>
-		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary32, detail::stdr::uint_least32_t, DecimalExponentType> {
-			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
+			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
 
-				auto r		= detail::bits::rotr<32>(detail::stdr::uint_least32_t(significand * UINT32_C(184254097)), 4);
+				auto r		= detail::bits::rotr<32>(std::uint_least32_t(significand * UINT32_C(184254097)), 4);
 				auto b		= r < UINT32_C(429497);
-				auto s		= detail::stdr::size_t(b);
+				auto s		= std::size_t(b);
 				significand = b ? r : significand;
 
-				r			= detail::bits::rotr<32>(detail::stdr::uint_least32_t(significand * UINT32_C(42949673)), 2);
+				r			= detail::bits::rotr<32>(std::uint_least32_t(significand * UINT32_C(42949673)), 2);
 				b			= r < UINT32_C(42949673);
 				s			= s * 2 + b;
 				significand = b ? r : significand;
 
-				r			= detail::bits::rotr<32>(detail::stdr::uint_least32_t(significand * UINT32_C(1288490189)), 1);
+				r			= detail::bits::rotr<32>(std::uint_least32_t(significand * UINT32_C(1288490189)), 1);
 				b			= r < UINT32_C(429496730);
 				s			= s * 2 + b;
 				significand = b ? r : significand;
@@ -2345,29 +2180,28 @@ namespace jkj {
 			}
 		};
 
-		template<typename DecimalExponentType>
-		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary64, detail::stdr::uint_least64_t, DecimalExponentType> {
-			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
+			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
 
-				auto r		= detail::bits::rotr<64>(detail::stdr::uint_least64_t(significand * UINT64_C(28999941890838049)), 8);
+				auto r		= detail::bits::rotr<64>(std::uint_least64_t(significand * UINT64_C(28999941890838049)), 8);
 				auto b		= r < UINT64_C(184467440738);
-				auto s		= detail::stdr::size_t(b);
+				auto s		= std::size_t(b);
 				significand = b ? r : significand;
 
-				r			= detail::bits::rotr<64>(detail::stdr::uint_least64_t(significand * UINT64_C(182622766329724561)), 4);
+				r			= detail::bits::rotr<64>(std::uint_least64_t(significand * UINT64_C(182622766329724561)), 4);
 				b			= r < UINT64_C(1844674407370956);
 				s			= s * 2 + b;
 				significand = b ? r : significand;
 
-				r			= detail::bits::rotr<64>(detail::stdr::uint_least64_t(significand * UINT64_C(10330176681277348905)), 2);
+				r			= detail::bits::rotr<64>(std::uint_least64_t(significand * UINT64_C(10330176681277348905)), 2);
 				b			= r < UINT64_C(184467440737095517);
 				s			= s * 2 + b;
 				significand = b ? r : significand;
 
-				r			= detail::bits::rotr<64>(detail::stdr::uint_least64_t(significand * UINT32_C(14757395258967641293)), 1);
+				r			= detail::bits::rotr<64>(std::uint_least64_t(significand * UINT32_C(14757395258967641293)), 1);
 				b			= r < UINT64_C(1844674407370955162);
 				s			= s * 2 + b;
 				significand = b ? r : significand;
@@ -2377,13 +2211,13 @@ namespace jkj {
 		};
 
 		template<typename DecimalExponentType>
-		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary32, detail::stdr::uint_least32_t, DecimalExponentType> {
-			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
+			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
-					const auto r = detail::stdr::uint_least32_t(significand * UINT32_C(1288490189));
+					const auto r = std::uint_least32_t(significand * UINT32_C(1288490189));
 					if (r < UINT32_C(429496731)) {
-						significand = detail::stdr::uint_least32_t(r >> 1);
+						significand = std::uint_least32_t(r >> 1);
 						exponent += 1;
 					} else {
 						break;
@@ -2393,13 +2227,13 @@ namespace jkj {
 		};
 
 		template<typename DecimalExponentType>
-		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary64, detail::stdr::uint_least64_t, DecimalExponentType> {
-			JKJ_FORCEINLINE static JKJ_CONSTEXPR14 void remove_trailing_zeros(detail::stdr::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
+			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
-					const auto r = detail::stdr::uint_least64_t(significand * UINT64_C(5534023222112865485));
+					const auto r = std::uint_least64_t(significand * UINT64_C(5534023222112865485));
 					if (r < UINT64_C(1844674407370955163)) {
-						significand = detail::stdr::uint_least64_t(r >> 1);
+						significand = std::uint_least64_t(r >> 1);
 						exponent += 1;
 					} else {
 						break;
@@ -2408,20 +2242,19 @@ namespace jkj {
 			}
 		};
 
-		template<typename ExponentInt>
-		struct multiplication_traits<ieee754_binary_traits<ieee754_binary32, detail::stdr::uint_least32_t, ExponentInt>, detail::stdr::uint_least64_t, 64>
-			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary32, detail::stdr::uint_least32_t>, detail::stdr::uint_least64_t, 64> {
-			static JKJ_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
+		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary32, std::uint_least32_t, ExponentInt>, std::uint_least64_t, 64>
+			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary32, std::uint_least32_t>, std::uint_least64_t, 64> {
+			static JSONIFIER_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul96_upper64(u, cache);
 				return { carrier_uint(r >> 32), carrier_uint(r) == 0 };
 			}
 
-			template<typename ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
-				return detail::stdr::uint_least64_t(cache >> ShiftAmountType(cache_bits - 1 - beta));
+			template<typename ShiftAmountType> static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+				return std::uint_least64_t(cache >> ShiftAmountType(cache_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static JKJ_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			static JSONIFIER_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta <= 32);
 
@@ -2439,24 +2272,25 @@ namespace jkj {
 				return carrier_uint((cache + (cache >> (significand_bits + 1))) >> ShiftAmountType(cache_bits - significand_bits - 1 - beta));
 			}
 
-			template<typename ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType>
+			static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (carrier_uint(cache >> ShiftAmountType(cache_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
 
-		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, detail::stdr::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
-			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary64, detail::stdr::uint_least64_t>, detail::wuint::uint128, 128> {
-			static JKJ_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
+		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
+			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t>, detail::wuint::uint128, 128> {
+			static JSONIFIER_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul192_upper128(u, cache);
 				return { r.high(), r.low() == 0 };
 			}
 
-			template<typename ShiftAmountType> static constexpr detail::stdr::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
-				return detail::stdr::uint_least64_t(cache.high() >> ShiftAmountType(total_bits - 1 - beta));
+			template<typename ShiftAmountType> static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+				return std::uint_least64_t(cache.high() >> ShiftAmountType(total_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static JKJ_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			static JSONIFIER_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta < 64);
 
@@ -2475,7 +2309,8 @@ namespace jkj {
 				return (cache.high() + (cache.high() >> (significand_bits + 1))) >> ShiftAmountType(total_bits - significand_bits - 1 - beta);
 			}
 
-			template<typename ShiftAmountType> static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType>
+			static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return ((cache.high() >> ShiftAmountType(total_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
@@ -2528,10 +2363,10 @@ namespace jkj {
 				static constexpr int32_t shorter_interval_tie_upper_threshold = -log::floor_log5_pow2(significand_bits + 2) - 2 - significand_bits;
 
 				template<typename PreferredIntegerTypesPolicy> using remainder_type =
-					typename PreferredIntegerTypesPolicy::template remainder_type<FormatTraits, compute_power<kappa + 1>(detail::stdr::uint_least64_t(10))>;
+					typename PreferredIntegerTypesPolicy::template remainder_type<FormatTraits, compute_power<kappa + 1>(std::uint_least64_t(10))>;
 
 				template<typename PreferredIntegerTypesPolicy> using decimal_exponent_type = typename PreferredIntegerTypesPolicy::template decimal_exponent_type<FormatTraits,
-					detail::stdr::int_least32_t(min(-max_k, min_k)), detail::stdr::int_least32_t(max(max_k, -min_k + kappa + 1))>;
+					std::int_least32_t(min(-max_k, min_k)), std::int_least32_t(max(max_k, -min_k + kappa + 1))>;
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename PreferredIntegerTypesPolicy> using return_type =
 					decimal_fp<carrier_uint, decimal_exponent_type<PreferredIntegerTypesPolicy>, SignPolicy::return_has_sign, TrailingZeroPolicy::report_trailing_zeros>;
@@ -2540,7 +2375,7 @@ namespace jkj {
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename IntervalTypeProvider, typename BinaryToDecimalRoundingPolicy, typename CachePolicy,
 					class PreferredIntegerTypesPolicy>
-				JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
+				JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2585,7 +2420,7 @@ namespace jkj {
 						// 10^-308. This is indeed of the shortest length, and it is the unique
 						// one closest to the true value among valid representations of the same
 						// length.
-						static_assert(stdr::is_same<format, ieee754_binary32>::value || stdr::is_same<format, ieee754_binary64>::value, "");
+						static_assert(std::is_same<format, ieee754_binary32>::value || std::is_same<format, ieee754_binary64>::value, "");
 
 						// Shorter interval case.
 						if (two_fc == 0) {
@@ -2694,7 +2529,7 @@ namespace jkj {
 						if (r < deltai) {
 							// Exclude the right endpoint if necessary.
 							if ((r | remainder_type_(!z_result.is_integer) | remainder_type_(interval_type.include_right_endpoint())) == 0) {
-								JKJ_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
+								JSONIFIER_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
 									decimal_significand *= 10;
 									--decimal_significand;
 									return SignPolicy::handle_sign(s,
@@ -2729,7 +2564,7 @@ namespace jkj {
 
 					decimal_significand *= 10;
 
-					JKJ_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
+					JSONIFIER_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
 						// Normally, we want to compute
 						// significand += r / small_divisor
 						// and return, but we need to take care of the case that the resulting
@@ -2783,8 +2618,8 @@ namespace jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JKJ_FORCEINLINE JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_left_closed_directed(
-					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
+				compute_left_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
 
@@ -2830,7 +2665,7 @@ namespace jkj {
 					// and 29711844 * 2^-81
 					// = 1.2288530660000000001731007559513386695471126586198806762695... * 10^-17
 					// for binary32.
-					JKJ_IF_CONSTEXPR(stdr::is_same<format, ieee754_binary32>::value) {
+					JSONIFIER_IF_CONSTEXPR(std::is_same<format, ieee754_binary32>::value) {
 						if (binary_exponent <= -80) {
 							x_result.is_integer = false;
 						}
@@ -2874,7 +2709,7 @@ namespace jkj {
 								// case, the recovered cache is two large to make compute_mul_parity
 								// mistakenly conclude that z is not an integer, but actually z = 16384 is
 								// an integer.
-								JKJ_IF_CONSTEXPR(stdr::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
+								JSONIFIER_IF_CONSTEXPR(std::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
 									if (two_fc == 33554430 && binary_exponent == -10) {
 										break;
 									}
@@ -2900,8 +2735,8 @@ namespace jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JKJ_FORCEINLINE JKJ_SAFEBUFFERS static JKJ_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_right_closed_directed(
-					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
+				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
+				compute_right_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
 
@@ -3048,8 +2883,8 @@ namespace jkj {
 
 				template<typename FoundPolicyInfo, typename FirstPolicy, typename... RemainingPolicies>
 				struct get_found_policy_pair_impl<FoundPolicyInfo, FirstPolicy, RemainingPolicies...> {
-					using type = typename stdr::conditional<KindDetector{}(dummy<FirstPolicy>{}),
-						typename stdr::conditional<FoundPolicyInfo::found_info == policy_found_info::not_found,
+					using type = typename std::conditional<KindDetector{}(dummy<FirstPolicy>{}),
+						typename std::conditional<FoundPolicyInfo::found_info == policy_found_info::not_found,
 							typename get_found_policy_pair_impl<found_policy_pair<FirstPolicy, policy_found_info::unique>, RemainingPolicies...>::type,
 							typename get_found_policy_pair_impl<found_policy_pair<FirstPolicy, policy_found_info::repeated>, RemainingPolicies...>::type>::type,
 						typename get_found_policy_pair_impl<FoundPolicyInfo, RemainingPolicies...>::type>::type;
@@ -3142,18 +2977,20 @@ namespace jkj {
 			template<typename FoundPolicyPairList> using convert_to_policy_holder = typename convert_to_policy_holder_impl<FoundPolicyPairList>::type;
 
 			template<typename DetectorDefaultPairList, typename... Policies> struct make_policy_holder_impl {
-				static_assert(check_policy_list_validity(DetectorDefaultPairList{}, dummy<Policies>{}...), "jkj::dragonbox: an invalid policy is specified");
+				static_assert(check_policy_list_validity(DetectorDefaultPairList{}, dummy<Policies>{}...), "jsonifier_jkj::dragonbox: an invalid policy is specified");
 
-				static_assert(!policy_pair_list<DetectorDefaultPairList, Policies...>::repeated, "jkj::dragonbox: at most one policy should be specified for each policy kind");
+				static_assert(!policy_pair_list<DetectorDefaultPairList, Policies...>::repeated,
+					"jsonifier_jkj::dragonbox: at most one policy should be specified for each policy kind");
 
 				using type = convert_to_policy_holder<policy_pair_list<DetectorDefaultPairList, Policies...>>;
 			};
 
-			template<typename DetectorDefaultPairList, typename... Policies> using make_policy_holder = typename make_policy_holder_impl<DetectorDefaultPairList, Policies...>::type;
+			template<typename DetectorDefaultPairList, typename... Policies> using make_policy_holder =
+				typename make_policy_holder_impl<DetectorDefaultPairList, Policies...>::type;
 
 			// Policy kind detectors.
 			struct is_sign_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3161,7 +2998,7 @@ namespace jkj {
 				}
 			};
 			struct is_trailing_zero_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3169,7 +3006,7 @@ namespace jkj {
 				}
 			};
 			struct is_decimal_to_binary_rounding_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3177,7 +3014,7 @@ namespace jkj {
 				}
 			};
 			struct is_binary_to_decimal_rounding_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3185,7 +3022,7 @@ namespace jkj {
 				}
 			};
 			struct is_cache_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3193,7 +3030,7 @@ namespace jkj {
 				}
 			};
 			struct is_preferred_integer_types_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3222,20 +3059,20 @@ namespace jkj {
 				using preferred_integer_types_policy	= typename PolicyHolder::preferred_integer_types_policy;
 				using return_type						= typename impl<FormatTraits>::template return_type<sign_policy, trailing_zero_policy, preferred_integer_types_policy>;
 
-				template<typename IntervalTypeProvider> JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
+				template<typename IntervalTypeProvider> JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
 					signed_significand_bits<FormatTraits> s, typename FormatTraits::exponent_int exponent_bits) noexcept {
 					constexpr auto tag = IntervalTypeProvider::tag;
 
-					JKJ_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::to_nearest) {
+					JSONIFIER_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::to_nearest) {
 						return impl<FormatTraits>::template compute_nearest<sign_policy, trailing_zero_policy, IntervalTypeProvider, binary_to_decimal_rounding_policy,
 							cache_policy, preferred_integer_types_policy>(s, exponent_bits);
 					}
-					else JKJ_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::left_closed_directed) {
+					else JSONIFIER_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::left_closed_directed) {
 						return impl<FormatTraits>::template compute_left_closed_directed<sign_policy, trailing_zero_policy, cache_policy, preferred_integer_types_policy>(s,
 							exponent_bits);
 					}
 					else {
-#if JKJ_HAS_IF_CONSTEXPR
+#if JSONIFIER_HAS_IF_CONSTEXPR
 						static_assert(tag == policy::decimal_to_binary_rounding::tag_t::right_closed_directed, "");
 #endif
 						return impl<FormatTraits>::template compute_right_closed_directed<sign_policy, trailing_zero_policy, cache_policy, preferred_integer_types_policy>(s,
@@ -3250,8 +3087,8 @@ namespace jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		template<typename FormatTraits, typename ExponentBits, typename... Policies>
-		JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(signed_significand_bits<FormatTraits> s,
-			ExponentBits exponent_bits, Policies...) noexcept {
+		JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(
+			signed_significand_bits<FormatTraits> s, ExponentBits exponent_bits, Policies...) noexcept {
 			// Build policy holder type.
 			using policy_holder = detail::to_decimal_policy_holder<Policies...>;
 
@@ -3260,7 +3097,8 @@ namespace jkj {
 
 		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>, typename... Policies>
-		JKJ_FORCEINLINE JKJ_SAFEBUFFERS JKJ_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x, Policies... policies) noexcept {
+		JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x,
+			Policies... policies) noexcept {
 			const auto br			 = make_float_bits<Float, ConversionTraits, FormatTraits>(x);
 			const auto exponent_bits = br.extract_exponent_bits();
 			const auto s			 = br.remove_exponent_bits();
@@ -3270,32 +3108,3 @@ namespace jkj {
 		}
 	}
 }
-
-#undef JKJ_HAS_BUILTIN
-#undef JKJ_FORCEINLINE
-#undef JKJ_SAFEBUFFERS
-#undef JKJ_CONSTEXPR20
-#undef JKJ_USE_IS_CONSTANT_EVALUATED
-#undef JKJ_CAN_BRANCH_ON_CONSTEVAL
-#undef JKJ_IF_NOT_CONSTEVAL
-#undef JKJ_IF_CONSTEVAL
-#undef JKJ_HAS_BIT_CAST
-#undef JKJ_IF_CONSTEXPR
-#undef JKJ_HAS_IF_CONSTEXPR
-#undef JKJ_INLINE_VARIABLE
-#undef JKJ_HAS_INLINE_VARIABLE
-#undef JKJ_HAS_CONSTEXPR17
-#undef JKJ_CONSTEXPR14
-#undef JKJ_HAS_CONSTEXPR14
-#if JKJ_STD_REPLACEMENT_NAMESPACE_DEFINED
-	#undef JKJ_STD_REPLACEMENT_NAMESPACE_DEFINED
-#else
-	#undef JKJ_STD_REPLACEMENT_NAMESPACE
-#endif
-#if JKJ_STATIC_DATA_SECTION_DEFINED
-	#undef JKJ_STATIC_DATA_SECTION_DEFINED
-#else
-	#undef JKJ_STATIC_DATA_SECTION
-#endif
-
-#endif

@@ -29,17 +29,17 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type pdep(value_type value01, value_type value02) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type pdep(value_type value01, value_type value02) noexcept {
 		return _pdep_u32(value01, value02);
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type pdep(value_type value01, value_type value02) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type pdep(value_type value01, value_type value02) noexcept {
 		return _pdep_u64(value01, value02);
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_INLINE value_type pdep(value_type src, value_type mask) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type pdep(value_type src, value_type mask) noexcept {
 		value_type result  = 0;
 		value_type src_bit = 1;
 

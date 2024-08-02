@@ -43,13 +43,13 @@ namespace jsonifier {
 		friend class jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		JSONIFIER_INLINE jsonifier_core() noexcept {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core() noexcept {
 			if constexpr (doWeUseInitialBuffer) {
 				stringBuffer.resize(1024 * 1024 * 4);
 			}
 		}
 
-		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if (this != &other) [[likely]] {
 				stringBuffer = std::move(other.stringBuffer);
 				section		 = std::move(other.section);
@@ -58,11 +58,11 @@ namespace jsonifier {
 			return *this;
 		}
 
-		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = std::move(other);
 		};
 
-		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
 			if (this != &other) [[likely]] {
 				stringBuffer = other.stringBuffer;
 				section		 = other.section;
@@ -71,15 +71,15 @@ namespace jsonifier {
 			return *this;
 		}
 
-		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = other;
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() noexcept {
 			return errors;
 		}
 
-		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~jsonifier_core() noexcept = default;
 
 	  protected:
 		using prettifier = jsonifier_internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;

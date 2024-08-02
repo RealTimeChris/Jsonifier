@@ -40,16 +40,20 @@ target_link_libraries(
 	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
 )
 
+target_link_options(
+	"Json-Performance" PUBLIC
+	"$<$<CXX_COMPILER_ID:MSVC>:/Debug>"
+)
+
 target_compile_options(
 	"Json-Performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/EHsc>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
-	"${AVX_FLAG}"
 )
 
 if (WIN32)

@@ -400,7 +400,7 @@ struct discord_message {
 
 template<> struct jsonifier::core<geometry_data> {
 	using value_type				 = geometry_data;
-	static constexpr auto parseValue = createValue<&value_type::coordinates, &value_type::type>();
+	static constexpr auto parseValue = createValue("coordinates", &value_type::coordinates, "type", &value_type::type);
 };
 
 template<> struct jsonifier::core<properties_data> {
@@ -418,7 +418,7 @@ template<> struct jsonifier::core<canada_message> {
 	static constexpr auto parseValue = createValue<&value_type::features, &value_type::type>();
 };
 
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 
 template<> struct glz::meta<geometry_data> {
 	using value_type			= geometry_data;
@@ -536,7 +536,7 @@ template<> struct jsonifier::core<twitter_message> {
 	static constexpr auto parseValue = createValue<&value_type::search_metadata, &value_type::statuses>();
 };
 
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 
 template<> struct glz::meta<search_metadata_data> {
 	using value_type = search_metadata_data;
@@ -712,7 +712,7 @@ template<> struct jsonifier::core<discord_message> {
 	static constexpr auto parseValue = createValue<&value_type::t, &value_type::d, &value_type::op, &value_type::s>();
 };
 
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 
 template<> struct glz::meta<icon_emoji_data> {
 	using value_type			= icon_emoji_data;
@@ -801,44 +801,6 @@ struct test_struct {
 	std::vector<bool> testBools{};
 };
 
-namespace fs = std::filesystem;
-
-class file_loader {
-  public:
-	file_loader(const std::string& filePathNew) {
-		filePath = filePathNew;
-		std::string directory{ filePathNew.substr(0, filePathNew.find_last_of("/")) };
-		if (!fs::exists(directory)) {
-			std::filesystem::create_directories(directory);
-		}
-
-		if (!fs::exists(filePath)) {
-			std::ofstream createFile(filePath.data());
-			createFile.close();
-		}
-
-		std::ifstream theStream(filePath.data(), std::ios::binary | std::ios::in);
-		std::stringstream inputStream{};
-		inputStream << theStream.rdbuf();
-		fileContents = inputStream.str();
-		theStream.close();
-	}
-
-	void saveFile(const std::string& fileToSave) {
-		std::ofstream theStream(filePath.data(), std::ios::binary | std::ios::out | std::ios::trunc);
-		theStream.write(fileToSave.data(), static_cast<int64_t>(fileToSave.size()));
-		theStream.close();
-	}
-
-	operator std::string() {
-		return std::string{ fileContents };
-	}
-
-  protected:
-	std::string fileContents{};
-	std::string filePath{};
-};
-
 template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
@@ -851,84 +813,77 @@ template<typename value_type> struct test_generator {
 
 	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 
-	template<typename value_type_new> value_type_new randomizeNumberNormal(value_type_new mean, value_type_new stdDeviation) {
-		std::normal_distribution<> normalDistributionTwo{ static_cast<double>(mean), static_cast<double>(stdDeviation) };
-		auto theResult = normalDistributionTwo(randomEngine);
-		if (theResult < 0) {
-			theResult = -theResult;
-		}
-		return theResult;
+	template<typename value_type01, typename value_type02> value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
+		std::uniform_real_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
+		return dis(gen);
 	}
 
-	template<typename value_type_new> value_type_new randomizeNumberUniform(value_type_new range) {
-		std::uniform_int_distribution<uint64_t> dis(0, range);
-		return dis(randomEngine);
+	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02> value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
+		std::uniform_int_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
+		return dis(gen);
 	}
 
 	void insertUnicodeInJSON(std::string& jsonString) {
-		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(std::size(unicode_emoji::unicodeEmoji) - 1)];
-		jsonString += static_cast<std::string>(newStringView);
+		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(0ull, std::size(unicode_emoji::unicodeEmoji) - 1)];
+		jsonString += static_cast<jsonifier::string>(newStringView);
 	}
 
 	std::string generateString() {
-		auto length{ randomizeNumberNormal(64.0f, 16.0f) };
-		static constexpr uint32_t charsetSize = charset.size();
-		auto unicodeCount					  = randomizeNumberUniform(length / 8);
+		auto length{ randomizeNumberUniform(32, 64) };
+		static constexpr size_t charsetSize = charset.size();
+		auto unicodeCount					= randomizeNumberUniform(1, length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
-			if (x == static_cast<int32_t>(length / unicodeCount)) {
+			if (x % unicodeCount == 0) [[unlikely]] {
 				insertUnicodeInJSON(result);
 			}
-			result += charset[randomizeNumberUniform(charsetSize - 1)];
+			result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];
 		}
 		return result;
 	}
 
 	double generateDouble() {
-		auto newValue = randomizeNumberNormal(double{}, std::numeric_limits<double>::max() / 50000000);
-		return generateBool() ? newValue : -newValue;
+		return randomizeNumberUniform(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
 	};
 
 	bool generateBool() {
-		return static_cast<bool>(randomizeNumberNormal(50.0f, 50.0f) >= 50.0f);
+		return static_cast<bool>(randomizeNumberUniform(0, 100) >= 50);
 	};
 
-	uint64_t generateUint() {
-		return randomizeNumberNormal(std::numeric_limits<uint64_t>::max() / 2, std::numeric_limits<uint64_t>::max() / 2);
+	size_t generateUint() {
+		return randomizeNumberUniform(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max());
 	};
 
 	int64_t generateInt() {
-		auto newValue = randomizeNumberNormal(int64_t{}, std::numeric_limits<int64_t>::max());
-		return generateBool() ? newValue : -newValue;
+		return randomizeNumberUniform(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max());
 	};
 
 	test_generator() {
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberNormal(35ull, 10ull);
-			auto arraySize02 = randomizeNumberNormal(15ull, 10ull);
-			auto arraySize03 = randomizeNumberNormal(5ull, 1ull);
+			auto arraySize01 = randomizeNumberUniform(5ull, 25ull);
 			v.resize(arraySize01);
-			for (uint64_t x = 0; x < arraySize01; ++x) {
-				auto arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
-				for (uint64_t y = 0; y < arraySize01; ++y) {
+			for (size_t x = 0; x < arraySize01; ++x) {
+				auto arraySize02 = randomizeNumberUniform(5ull, 35ull);
+				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
 					v[x].testStrings.emplace_back(newString);
 				}
-				arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
-				for (uint64_t y = 0; y < arraySize01; ++y) {
+				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				for (size_t y = 0; y < arraySize03; ++y) {
 					v[x].testUints.emplace_back(generateUint());
 				}
-				arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
-				for (uint64_t y = 0; y < arraySize01; ++y) {
+				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				for (size_t y = 0; y < arraySize03; ++y) {
 					v[x].testInts.emplace_back(generateInt());
 				}
-				arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
-				for (uint64_t y = 0; y < arraySize01; ++y) {
+				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
 					v[x].testBools.emplace_back(newBool);
 				}
-				arraySize01 = randomizeNumberNormal(arraySize02, arraySize03);
-				for (uint64_t y = 0; y < arraySize01; ++y) {
+				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				for (size_t y = 0; y < arraySize03; ++y) {
 					v[x].testDoubles.emplace_back(generateDouble());
 				}
 			}
@@ -967,9 +922,9 @@ struct test_element_final {
 	std::string libraryName{};
 	std::string resultType{};
 	double resultSpeed{};
-	double medianAbsolutePercentageError{};
+	double iterationCount{};
 	std::string color{};
-	bool operator>(const test_element_final& other) const {
+	bool operator>(const test_element_final& other) const noexcept {
 		return resultSpeed > other.resultSpeed;
 	}
 };
@@ -977,7 +932,7 @@ struct test_element_final {
 struct test_element_pair {
 	test_element_final writeData{};
 	test_element_final readData{};
-	bool operator>(const test_element_pair& other) const {
+	bool operator>(const test_element_pair& other) const noexcept {
 		return writeData > other.writeData && readData > other.readData;
 	}
 };
@@ -990,9 +945,8 @@ struct test_elements_final {
 using test_results_final = std::vector<test_elements_final>;
 
 template<> struct jsonifier::core<test_element_final> {
-	using value_type = test_element_final;
-	static constexpr auto parseValue =
-		createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::medianAbsolutePercentageError, &value_type::color>();
+	using value_type				 = test_element_final;
+	static constexpr auto parseValue = createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::iterationCount, &value_type::color>();
 };
 
 template<> struct jsonifier::core<test_elements_final> {
@@ -1030,7 +984,7 @@ template<> struct jsonifier::core<abc_test<test_struct>> {
 		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a>();
 };
 
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 
 template<> struct glz::meta<test_struct> {
 	using value_type			= test_struct;
@@ -1064,10 +1018,10 @@ template<> struct glz::meta<abc_test<test_struct>> {
 
 #endif
 
-#if defined(NDEBUG) && !defined(ASAN)
-constexpr uint64_t iterationsVal = 400;
+#if defined(NDEBUG)
+constexpr size_t totalIterationCountCap{ 500 };
 #else
-constexpr uint64_t iterationsVal = 1;
+constexpr size_t totalIterationCountCap{ 101 };
 #endif
 
 enum class result_type { read = 0, write = 1 };
@@ -1077,10 +1031,11 @@ template<result_type type> std::string enumToString() {
 }
 
 template<result_type type> struct result {
-	std::optional<uint64_t> byteLength{};
+	std::optional<size_t> byteLength{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
-	std::optional<double> medianAbsolutePercentageError{};
+	std::optional<double> iterationCount{};
+	std::optional<double> cv{};
 	std::string color{};
 
 	result& operator=(result&&) noexcept	  = default;
@@ -1090,23 +1045,25 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
-	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_results& results) {
+	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::benchmark_result_final& results) {
+		iterationCount.emplace(results.iterationCount);
 		byteLength.emplace(byteLengthNew);
-		jsonTime.emplace(results.resultValue);
-		medianAbsolutePercentageError.emplace(results.medianAbsolutePercentageError);
+		const auto cpuFrequency = bnch_swt::getCpuFrequency();
+		jsonTime.emplace(results.median);
+		cv.emplace(results.cv * 100.0f);
 		auto mbWrittenCount	  = static_cast<double>(byteLength.value()) / 1e+6l;
 		auto writeSecondCount = jsonTime.value() / 1e+9l;
 		jsonSpeed.emplace(mbWrittenCount / writeSecondCount);
 		color = colorNew;
 	}
 
-	operator bool() const {
+	operator bool() const noexcept {
 		return jsonSpeed.has_value();
 	}
 
-	bool operator>(const result& other) const {
+	bool operator>(const result& other) const noexcept {
 		if (jsonSpeed.has_value() && other.jsonSpeed.has_value()) {
-			return this->jsonSpeed.value() > other.jsonSpeed.value();
+			return jsonSpeed.value() > other.jsonSpeed.value();
 		} else if (!jsonSpeed.has_value()) {
 			return false;
 		} else if (!other.jsonSpeed.has_value()) {
@@ -1120,12 +1077,12 @@ struct results_data {
 	std::unordered_set<std::string> jsonifierExcludedKeys{};
 	result<result_type::write> writeResult{};
 	result<result_type::read> readResult{};
-	uint64_t iterations{};
-	std::string name{};
-	std::string test{};
-	std::string url{};
+	jsonifier::string name{};
+	jsonifier::string test{};
+	jsonifier::string url{};
+	size_t iterations{};
 
-	bool operator>(const results_data& other) const {
+	bool operator>(const results_data& other) const noexcept {
 		if (readResult && other.readResult) {
 			return readResult > other.readResult;
 		} else if (writeResult && other.writeResult) {
@@ -1142,7 +1099,7 @@ struct results_data {
 
 	results_data() noexcept = default;
 
-	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, uint64_t iterationsNew) {
+	results_data(const jsonifier::string& nameNew, const jsonifier::string& testNew, const jsonifier::string& urlNew, size_t iterationsNew) {
 		iterations = iterationsNew;
 		name	   = nameNew;
 		test	   = testNew;
@@ -1157,33 +1114,37 @@ struct results_data {
 		}
 	}
 
-	void print() const {
-		std::cout << std::string{ "| " } + name + " " + test + ": " + url + "\n" +
+	void print() const noexcept {
+		std::cout << jsonifier::string{ "| " } + name + " " + test + ": " + url + "\n" +
 				"| ------------------------------------------------------------ "
 				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Runtime (ns): " << std::setprecision(6) << readResult.jsonTime.value() << std::endl;
-			std::cout << enumToString<result_type::read>() + " Mape (%): " << std::setprecision(4) << readResult.medianAbsolutePercentageError.value() << std::endl;
+			std::cout << enumToString<result_type::read>() + " Iteration Count: " << std::setprecision(4) << readResult.iterationCount.value() << std::endl;
+			std::cout << enumToString<result_type::read>() + " Coefficient of Variance (%): " << std::setprecision(4) << readResult.cv.value() << std::endl;
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Length (Bytes): " << writeResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Runtime (ns): " << std::setprecision(6) << writeResult.jsonTime.value() << std::endl;
-			std::cout << enumToString<result_type::write>() + " Mape (%): " << std::setprecision(4) << writeResult.medianAbsolutePercentageError.value() << std::endl;
+			std::cout << enumToString<result_type::write>() + " Iteration Count: " << std::setprecision(4) << writeResult.iterationCount.value() << std::endl;
+			std::cout << enumToString<result_type::write>() + " Coefficient of Variance (%): " << std::setprecision(4) << writeResult.cv.value() << std::endl;
 		}
 		std::cout << "\n---" << std::endl;
 	}
 
-	std::string jsonStats() const {
+	std::string jsonStats() const noexcept {
 		std::string writeLength{};
 		std::string writeTime{};
-		std::string writeMape{};
+		std::string writeIterationCount{};
+		std::string writeCv{};
 		std::string write{};
 		std::string readLength{};
 		std::string readTime{};
-		std::string readMape{};
+		std::string readIterationCount{};
+		std::string readCv{};
 		std::string read{};
 		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
@@ -1197,14 +1158,14 @@ struct results_data {
 			stream03 << std::setprecision(6) << readResult.jsonTime.value();
 			readTime = stream03.str();
 			std::stringstream stream04{};
-			stream04 << std::setprecision(4) << readResult.medianAbsolutePercentageError.value();
-			readMape = stream04.str();
-			finalString += read + " | " + readLength + " | " + readTime + " | " + readMape + " | ";
+			stream04 << std::setprecision(4) << readResult.iterationCount.value();
+			readIterationCount = stream04.str();
+			finalString += read + " | " + readLength + " | " + readTime + " | " + readIterationCount + " | ";
 		} else {
-			readLength = "N/A";
-			readTime   = "N/A";
-			read	   = "N/A";
-			readMape   = "N/A";
+			readLength		   = "N/A";
+			readTime		   = "N/A";
+			read			   = "N/A";
+			readIterationCount = "N/A";
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
 			std::stringstream stream01{};
@@ -1217,19 +1178,18 @@ struct results_data {
 			stream03 << std::setprecision(6) << writeResult.jsonTime.value();
 			writeTime = stream03.str();
 			std::stringstream stream04{};
-			stream04 << std::setprecision(4) << writeResult.medianAbsolutePercentageError.value();
-			writeMape = stream04.str();
-			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeMape + " |";
+			stream04 << std::setprecision(4) << writeResult.iterationCount.value();
+			writeIterationCount = stream04.str();
+			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeIterationCount + " | ";
 		} else {
-			writeLength = "N/A";
-			writeTime	= "N/A";
-			write		= "N/A";
-			writeMape	= "N/A";
+			writeLength			= "N/A";
+			writeTime			= "N/A";
+			write				= "N/A";
+			writeIterationCount = "N/A";
 		}
 		return finalString;
 	}
 };
-
 struct test_results {
 	std::vector<results_data> results{};
 	std::string markdownResults{};
@@ -1264,243 +1224,11 @@ enum class json_library {
 	simdjson  = 2,
 };
 
-const std::string basePath{ JSON_PATH };
+const jsonifier::string basePath{ JSON_PATH };
 
-template<json_library lib, test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper {};
+template<json_library lib, test_type type, typename test_data_type, bool minified, size_t iterations, bnch_swt::string_literal testName> struct json_test_helper {};
 
-template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
-struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
-		jsonifier::jsonifier_core parser{};
-		test_data_type testData{};
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "teal", iterations>([&]() {
-				parser.parseJson<jsonifier::parse_options{ .minified = minified }>(testData, buffer);
-				auto* newPtr = &testData;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
-		for (auto& value: parser.getErrors()) {
-			std::cout << "Jsonifier Error: " << value << std::endl;
-		}
-		std::string newerBuffer{};
-		auto readSize = buffer.size();
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
-				auto* newPtr = &newerBuffer;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
-
-		for (auto& value: parser.getErrors()) {
-			std::cout << "Jsonifier Error: " << value << std::endl;
-		}
-
-		auto writtenSize = newerBuffer.size();
-		r.readResult	 = result<result_type::read>{ "teal", readSize, readResult };
-		r.writeResult	 = result<result_type::write>{ "steelblue", writtenSize, writeResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
-		fileLoader.saveFile(buffer);
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
-		jsonifier::jsonifier_core parser{};
-		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.prettifyJson(buffer, newerBuffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
-		for (auto& value: parser.getErrors()) {
-			std::cout << "Jsonifier Error: " << value << std::endl;
-		}
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
-		fileLoader.saveFile(newerBuffer);
-
-		r.writeResult = result<result_type::write>{ "steelblue", newerBuffer.size(), writeResult };
-
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-		std::string newerBuffer{};
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
-		jsonifier::jsonifier_core parser{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.minifyJson(buffer, newerBuffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
-		for (auto& value: parser.getErrors()) {
-			std::cout << "Jsonifier Error: " << value << std::endl;
-		}
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
-		fileLoader.saveFile(newerBuffer);
-
-		r.writeResult = result<result_type::write>{ "steelblue", newerBuffer.size(), writeResult };
-		;
-
-		if (doWePrint) {
-			r.print();
-		}
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(jsonifierLibraryName), static_cast<std::string>(testName), static_cast<std::string>(jsonifierCommitUrl), iterations };
-		jsonifier::jsonifier_core parser{};
-
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.validateJson(buffer);
-				bnch_swt::doNotOptimizeAway(buffer);
-			});
-
-		for (auto& value: parser.getErrors()) {
-			std::cout << "Jsonifier Error: " << value << std::endl;
-		}
-
-		r.readResult = result<result_type::read>{ "teal", buffer.size(), readResult };
-
-		if (doWePrint) {
-			r.print();
-		}
-
-
-		return r;
-	}
-};
-
-#if !defined(ASAN)
-template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
-struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
-		test_data_type testData{};
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = minified }>(testData, buffer); error) {
-					std::cout << "Glaze Error: " << glz::format_error(error, buffer) << std::endl;
-				}
-				auto* newPtr = &testData;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
-		std::string newerBuffer{};
-		auto readSize = buffer.size();
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer));
-				auto* newPtr = &newerBuffer;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
-
-		auto writtenSize = newerBuffer.size();
-		r.readResult	 = result<result_type::read>{ "dodgerblue", readSize, readResult };
-		r.writeResult	 = result<result_type::write>{ "skyblue", writtenSize, writeResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
-		fileLoader.saveFile(buffer);
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
-		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				glz::prettify_json(buffer, newerBuffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
-
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
-		fileLoader.saveFile(newerBuffer);
-		r.writeResult = result<result_type::write>{ "skyblue", newerBuffer.size(), writeResult };
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
-		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				newerBuffer = glz::minify_json(buffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
-
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
-		fileLoader.saveFile(newerBuffer);
-		r.writeResult = result<result_type::write>{ "skyblue", newerBuffer.size(), writeResult };
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(glazeLibraryName), static_cast<std::string>(testName), static_cast<std::string>(glazeCommitUrl), iterations };
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				auto result = glz::validate_json(buffer);
-				bnch_swt::doNotOptimizeAway(result);
-			});
-
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
-		fileLoader.saveFile(buffer);
-		r.readResult = result<result_type::read>{ "skyblue", buffer.size(), writeResult };
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-	#include "simdjson.h"
+#include "simdjson.h"
 
 template<typename value_type> void getValue(value_type& valueNew, simdjson::ondemand::value value) {
 	value.get(valueNew);
@@ -1518,7 +1246,7 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& val
 	auto oldSize = valueNew.size();
 	if (auto resultCode = value.get(result); !resultCode) {
 		auto iter = result.begin();
-		for (uint64_t x = 0; x < oldSize && iter != result.end(); ++x, ++iter) {
+		for (size_t x = 0; x < oldSize && iter != result.end(); ++x, ++iter) {
 			getValue(valueNew[x], iter.operator*().value());
 		}
 		for (; iter != result.end(); ++iter) {
@@ -1530,7 +1258,7 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& val
 template<> void getValue<std::string>(std::string& valueNew, simdjson::ondemand::value value) {
 	std::string_view result;
 	if (auto resultCode = value.get(result); !resultCode) {
-		valueNew = static_cast<std::string>(result);
+		valueNew = static_cast<jsonifier::string>(result);
 	}
 }
 
@@ -1565,7 +1293,7 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& ret
 	if (auto resultCode = value[key].get(result); !resultCode) {
 		auto oldSize = returnValues.size();
 		auto iter	 = result.begin();
-		for (uint64_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
+		for (size_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
 			getValue(returnValues[x], iter.operator*().value());
 		}
 		for (; iter != result.end(); ++iter) {
@@ -1580,7 +1308,7 @@ template<jsonifier::concepts::map_t value_type> void getValue(value_type& return
 	if (auto resultCode = value[key].get(result); !resultCode) {
 		auto oldSize = returnValues.size();
 		auto iter	 = result.begin();
-		for (uint64_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
+		for (size_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
 			typename value_type::mapped_type returnValue{};
 			getValue(returnValue, iter.operator*().value());
 			returnValues[static_cast<typename value_type::key_type>(iter.operator*().key().raw())] = std::move(returnValue);
@@ -1594,658 +1322,463 @@ template<jsonifier::concepts::map_t value_type> void getValue(value_type& return
 	return;
 }
 
-template<> void getValue(geometry_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.coordinates, jsonDataNew, "coordinates");
-	getValue(returnValue.type, jsonDataNew, "type");
+template<> void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.testBools, jsonData, "testBools");
+	getValue(returnValue.testInts, jsonData, "testInts");
+	getValue(returnValue.testUints, jsonData, "testUints");
+	getValue(returnValue.testStrings, jsonData, "testStrings");
+	getValue(returnValue.testDoubles, jsonData, "testDoubles");
 }
 
-template<> void getValue(properties_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.name, jsonDataNew, "name");
+template<> void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.a, jsonData, "a");
+	getValue(returnValue.b, jsonData, "b");
+	getValue(returnValue.c, jsonData, "c");
+	getValue(returnValue.d, jsonData, "d");
+	getValue(returnValue.e, jsonData, "e");
+	getValue(returnValue.f, jsonData, "f");
+	getValue(returnValue.g, jsonData, "g");
+	getValue(returnValue.h, jsonData, "h");
+	getValue(returnValue.i, jsonData, "i");
+	getValue(returnValue.j, jsonData, "j");
+	getValue(returnValue.k, jsonData, "k");
+	getValue(returnValue.l, jsonData, "l");
+	getValue(returnValue.m, jsonData, "m");
+	getValue(returnValue.n, jsonData, "n");
+	getValue(returnValue.o, jsonData, "o");
+	getValue(returnValue.p, jsonData, "p");
+	getValue(returnValue.q, jsonData, "q");
+	getValue(returnValue.r, jsonData, "r");
+	getValue(returnValue.s, jsonData, "s");
+	getValue(returnValue.t, jsonData, "t");
+	getValue(returnValue.u, jsonData, "u");
+	getValue(returnValue.v, jsonData, "v");
+	getValue(returnValue.w, jsonData, "w");
+	getValue(returnValue.x, jsonData, "x");
+	getValue(returnValue.y, jsonData, "y");
+	getValue(returnValue.z, jsonData, "z");
 }
 
-template<> void getValue(feature& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.properties, jsonDataNew, "properties");
-	getValue(returnValue.geometry, jsonDataNew, "geometry");
-	getValue(returnValue.type, jsonDataNew, "type");
+template<> void getValue(geometry_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.coordinates, jsonData, "coordinates");
+	getValue(returnValue.type, jsonData, "type");
 }
 
-template<> void getValue(canada_message& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.features, jsonDataNew, "features");
-	getValue(returnValue.type, jsonDataNew, "type");
+template<> void getValue(properties_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.name, jsonData, "name");
 }
 
-template<> void getValue(search_metadata_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.since_id_str, jsonDataNew, "since_id_str");
-	getValue(returnValue.next_results, jsonDataNew, "next_results");
-	getValue(returnValue.refresh_url, jsonDataNew, "refresh_url");
-	getValue(returnValue.max_id_str, jsonDataNew, "max_id_str");
-	getValue(returnValue.completed_in, jsonDataNew, "completed_in");
-	getValue(returnValue.query, jsonDataNew, "query");
-	getValue(returnValue.since_id, jsonDataNew, "since_id");
-	getValue(returnValue.count, jsonDataNew, "count");
-	getValue(returnValue.max_id, jsonDataNew, "max_id");
+template<> void getValue(feature& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.properties, jsonData, "properties");
+	getValue(returnValue.geometry, jsonData, "geometry");
+	getValue(returnValue.type, jsonData, "type");
 }
 
-template<> void getValue(hashtag& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.indices, jsonDataNew, "indices");
-	getValue(returnValue.text, jsonDataNew, "text");
+template<> void getValue(canada_message& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.features, jsonData, "features");
+	getValue(returnValue.type, jsonData, "type");
 }
 
-template<> void getValue(large_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.resize, jsonDataNew, "resize");
-	getValue(returnValue.w, jsonDataNew, "w");
-	getValue(returnValue.h, jsonDataNew, "h");
+template<> void getValue(search_metadata_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.since_id_str, jsonData, "since_id_str");
+	getValue(returnValue.next_results, jsonData, "next_results");
+	getValue(returnValue.refresh_url, jsonData, "refresh_url");
+	getValue(returnValue.max_id_str, jsonData, "max_id_str");
+	getValue(returnValue.completed_in, jsonData, "completed_in");
+	getValue(returnValue.query, jsonData, "query");
+	getValue(returnValue.since_id, jsonData, "since_id");
+	getValue(returnValue.count, jsonData, "count");
+	getValue(returnValue.max_id, jsonData, "max_id");
 }
 
-template<> void getValue(sizes_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.medium, jsonDataNew, "medium");
-	getValue(returnValue.small, jsonDataNew, "small");
-	getValue(returnValue.thumb, jsonDataNew, "thumb");
-	getValue(returnValue.large, jsonDataNew, "large");
+template<> void getValue(hashtag& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.indices, jsonData, "indices");
+	getValue(returnValue.text, jsonData, "text");
 }
 
-template<> void getValue(media_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.source_status_id_str, jsonDataNew, "source_status_id_str");
-	getValue(returnValue.source_status_id, jsonDataNew, "source_status_id");
-	getValue(returnValue.indices, jsonDataNew, "indices");
-	getValue(returnValue.media_url_https, jsonDataNew, "media_url_https");
-	getValue(returnValue.expanded_url, jsonDataNew, "expanded_url");
-	getValue(returnValue.display_url, jsonDataNew, "display_url");
-	getValue(returnValue.media_url, jsonDataNew, "media_url");
-	getValue(returnValue.id_str, jsonDataNew, "id_str");
-	getValue(returnValue.type, jsonDataNew, "type");
-	getValue(returnValue.sizes, jsonDataNew, "sizes");
-	getValue(returnValue.url, jsonDataNew, "url");
-	getValue(returnValue.id, jsonDataNew, "id");
+template<> void getValue(large_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.resize, jsonData, "resize");
+	getValue(returnValue.w, jsonData, "w");
+	getValue(returnValue.h, jsonData, "h");
 }
 
-template<> void getValue(url_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.indices, jsonDataNew, "indices");
-	getValue(returnValue.expanded_url, jsonDataNew, "expanded_url");
-	getValue(returnValue.display_url, jsonDataNew, "display_url");
-	getValue(returnValue.url, jsonDataNew, "url");
+template<> void getValue(sizes_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.medium, jsonData, "medium");
+	getValue(returnValue.small, jsonData, "small");
+	getValue(returnValue.thumb, jsonData, "thumb");
+	getValue(returnValue.large, jsonData, "large");
 }
 
-template<> void getValue(user_mention& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.indices, jsonDataNew, "indices");
-	getValue(returnValue.screen_name, jsonDataNew, "screen_name");
-	getValue(returnValue.id_str, jsonDataNew, "id_str");
-	getValue(returnValue.name, jsonDataNew, "name");
-	getValue(returnValue.id, jsonDataNew, "id");
+template<> void getValue(media_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.source_status_id_str, jsonData, "source_status_id_str");
+	getValue(returnValue.source_status_id, jsonData, "source_status_id");
+	getValue(returnValue.indices, jsonData, "indices");
+	getValue(returnValue.media_url_https, jsonData, "media_url_https");
+	getValue(returnValue.expanded_url, jsonData, "expanded_url");
+	getValue(returnValue.display_url, jsonData, "display_url");
+	getValue(returnValue.media_url, jsonData, "media_url");
+	getValue(returnValue.id_str, jsonData, "id_str");
+	getValue(returnValue.type, jsonData, "type");
+	getValue(returnValue.sizes, jsonData, "sizes");
+	getValue(returnValue.url, jsonData, "url");
+	getValue(returnValue.id, jsonData, "id");
 }
 
-template<> void getValue(status_entities& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.media, jsonDataNew, "media");
-	getValue(returnValue.user_mentions, jsonDataNew, "user_mentions");
-	getValue(returnValue.symbols, jsonDataNew, "symbols");
-	getValue(returnValue.hashtags, jsonDataNew, "hashtags");
-	getValue(returnValue.urls, jsonDataNew, "urls");
+template<> void getValue(url_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.indices, jsonData, "indices");
+	getValue(returnValue.expanded_url, jsonData, "expanded_url");
+	getValue(returnValue.display_url, jsonData, "display_url");
+	getValue(returnValue.url, jsonData, "url");
 }
 
-template<> void getValue(metadata_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.iso_language_code, jsonDataNew, "iso_language_code");
-	getValue(returnValue.result_type, jsonDataNew, "result_type");
+template<> void getValue(user_mention& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.indices, jsonData, "indices");
+	getValue(returnValue.screen_name, jsonData, "screen_name");
+	getValue(returnValue.id_str, jsonData, "id_str");
+	getValue(returnValue.name, jsonData, "name");
+	getValue(returnValue.id, jsonData, "id");
 }
 
-template<> void getValue(description_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.urls, jsonDataNew, "urls");
+template<> void getValue(status_entities& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.media, jsonData, "media");
+	getValue(returnValue.user_mentions, jsonData, "user_mentions");
+	getValue(returnValue.symbols, jsonData, "symbols");
+	getValue(returnValue.hashtags, jsonData, "hashtags");
+	getValue(returnValue.urls, jsonData, "urls");
 }
 
-template<> void getValue(user_entities& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.url, jsonDataNew, "url");
-	getValue(returnValue.description, jsonDataNew, "description");
+template<> void getValue(metadata_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.iso_language_code, jsonData, "iso_language_code");
+	getValue(returnValue.result_type, jsonData, "result_type");
 }
 
-template<> void getValue(twitter_user& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.profile_background_image_url_https, jsonDataNew, "profile_background_image_url_https");
-	getValue(returnValue.profile_banner_url, jsonDataNew, "profile_banner_url");
-	getValue(returnValue.profile_background_image_url, jsonDataNew, "profile_background_image_url");
-	getValue(returnValue.profile_sidebar_fill_color, jsonDataNew, "profile_sidebar_fill_color");
-	getValue(returnValue.time_zone, jsonDataNew, "time_zone");
-	getValue(returnValue.profile_background_color, jsonDataNew, "profile_background_color");
-	getValue(returnValue.profile_image_url_https, jsonDataNew, "profile_image_url_https");
-	getValue(returnValue.utc_offset, jsonDataNew, "utc_offset");
-	getValue(returnValue.profile_use_background_image, jsonDataNew, "profile_use_background_image");
-	getValue(returnValue.url, jsonDataNew, "url");
-	getValue(returnValue.profile_text_color, jsonDataNew, "profile_text_color");
-	getValue(returnValue.profile_link_color, jsonDataNew, "profile_link_color");
-	getValue(returnValue.profile_image_url, jsonDataNew, "profile_image_url");
-	getValue(returnValue.profile_background_tile, jsonDataNew, "profile_background_tile");
-	getValue(returnValue.is_translation_enabled, jsonDataNew, "is_translation_enabled");
-	getValue(returnValue.default_profile_image, jsonDataNew, "default_profile_image");
-	getValue(returnValue.contributors_enabled, jsonDataNew, "contributors_enabled");
-	getValue(returnValue.follow_request_sent, jsonDataNew, "follow_request_sent");
-	getValue(returnValue.favourites_count, jsonDataNew, "favourites_count");
-	getValue(returnValue.description, jsonDataNew, "description");
-	getValue(returnValue.screen_name, jsonDataNew, "screen_name");
-	getValue(returnValue.followers_count, jsonDataNew, "followers_count");
-	getValue(returnValue.statuses_count, jsonDataNew, "statuses_count");
-	getValue(returnValue.created_at, jsonDataNew, "created_at");
-	getValue(returnValue.entities, jsonDataNew, "entities");
-	getValue(returnValue.friends_count, jsonDataNew, "friends_count");
-	getValue(returnValue.default_profile, jsonDataNew, "default_profile");
-	getValue(returnValue.listed_count, jsonDataNew, "listed_count");
-	getValue(returnValue.location, jsonDataNew, "location");
-	getValue(returnValue.user_protected, jsonDataNew, "user_protected");
-	getValue(returnValue.is_translator, jsonDataNew, "is_translator");
-	getValue(returnValue.id_str, jsonDataNew, "id_str");
-	getValue(returnValue.notifications, jsonDataNew, "notifications");
-	getValue(returnValue.string, jsonDataNew, "string");
-	getValue(returnValue.name, jsonDataNew, "name");
-	getValue(returnValue.geo_enabled, jsonDataNew, "geo_enabled");
-	getValue(returnValue.lang, jsonDataNew, "lang");
-	getValue(returnValue.following, jsonDataNew, "following");
-	getValue(returnValue.verified, jsonDataNew, "verified");
-	getValue(returnValue.id, jsonDataNew, "id");
+template<> void getValue(description_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.urls, jsonData, "urls");
 }
 
-template<> void getValue(retweeted_status_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.in_reply_to_status_id_str, jsonDataNew, "in_reply_to_status_id_str");
-	getValue(returnValue.in_reply_to_user_id_str, jsonDataNew, "in_reply_to_user_id_str");
-	getValue(returnValue.in_reply_to_screen_name, jsonDataNew, "in_reply_to_screen_name");
-	getValue(returnValue.in_reply_to_status_id, jsonDataNew, "in_reply_to_status_id");
-	getValue(returnValue.in_reply_to_user_id, jsonDataNew, "in_reply_to_user_id");
-	getValue(returnValue.possibly_sensitive, jsonDataNew, "possibly_sensitive");
-	getValue(returnValue.contributors, jsonDataNew, "contributors");
-	getValue(returnValue.coordinates, jsonDataNew, "coordinates");
-	getValue(returnValue.place, jsonDataNew, "place");
-	getValue(returnValue.geo, jsonDataNew, "geo");
-	getValue(returnValue.entities, jsonDataNew, "entities");
-	getValue(returnValue.favorite_count, jsonDataNew, "favorite_count");
-	getValue(returnValue.metadata, jsonDataNew, "metadata");
-	getValue(returnValue.created_at, jsonDataNew, "created_at");
-	getValue(returnValue.retweet_count, jsonDataNew, "retweet_count");
-	getValue(returnValue.source, jsonDataNew, "source");
-	getValue(returnValue.id_str, jsonDataNew, "id_str");
-	getValue(returnValue.user, jsonDataNew, "user");
-	getValue(returnValue.lang, jsonDataNew, "lang");
-	getValue(returnValue.text, jsonDataNew, "text");
-	getValue(returnValue.truncated, jsonDataNew, "truncated");
-	getValue(returnValue.favorited, jsonDataNew, "favorited");
-	getValue(returnValue.retweeted, jsonDataNew, "retweeted");
-	getValue(returnValue.id, jsonDataNew, "id");
+template<> void getValue(user_entities& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.url, jsonData, "url");
+	getValue(returnValue.description, jsonData, "description");
 }
 
-template<> void getValue(status_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.in_reply_to_status_id_str, jsonDataNew, "in_reply_to_status_id_str");
-	getValue(returnValue.in_reply_to_user_id_str, jsonDataNew, "in_reply_to_user_id_str");
-	getValue(returnValue.in_reply_to_screen_name, jsonDataNew, "in_reply_to_screen_name");
-	getValue(returnValue.in_reply_to_status_id, jsonDataNew, "in_reply_to_status_id");
-	getValue(returnValue.in_reply_to_user_id, jsonDataNew, "in_reply_to_user_id");
-	getValue(returnValue.possibly_sensitive, jsonDataNew, "possibly_sensitive");
-	getValue(returnValue.contributors, jsonDataNew, "contributors");
-	getValue(returnValue.coordinates, jsonDataNew, "coordinates");
-	getValue(returnValue.place, jsonDataNew, "place");
-	getValue(returnValue.geo, jsonDataNew, "geo");
-	getValue(returnValue.entities, jsonDataNew, "entities");
-	getValue(returnValue.favorite_count, jsonDataNew, "favorite_count");
-	getValue(returnValue.metadata, jsonDataNew, "metadata");
-	getValue(returnValue.created_at, jsonDataNew, "created_at");
-	getValue(returnValue.retweet_count, jsonDataNew, "retweet_count");
-	getValue(returnValue.source, jsonDataNew, "source");
-	getValue(returnValue.id_str, jsonDataNew, "id_str");
-	getValue(returnValue.user, jsonDataNew, "user");
-	getValue(returnValue.lang, jsonDataNew, "lang");
-	getValue(returnValue.text, jsonDataNew, "text");
-	getValue(returnValue.truncated, jsonDataNew, "truncated");
-	getValue(returnValue.favorited, jsonDataNew, "favorited");
-	getValue(returnValue.retweeted, jsonDataNew, "retweeted");
-	getValue(returnValue.retweeted_status, jsonDataNew, "retweeted_status");
-	getValue(returnValue.id, jsonDataNew, "id");
+template<> void getValue(twitter_user& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.profile_background_image_url_https, jsonData, "profile_background_image_url_https");
+	getValue(returnValue.profile_banner_url, jsonData, "profile_banner_url");
+	getValue(returnValue.profile_background_image_url, jsonData, "profile_background_image_url");
+	getValue(returnValue.profile_sidebar_fill_color, jsonData, "profile_sidebar_fill_color");
+	getValue(returnValue.time_zone, jsonData, "time_zone");
+	getValue(returnValue.profile_background_color, jsonData, "profile_background_color");
+	getValue(returnValue.profile_image_url_https, jsonData, "profile_image_url_https");
+	getValue(returnValue.utc_offset, jsonData, "utc_offset");
+	getValue(returnValue.profile_use_background_image, jsonData, "profile_use_background_image");
+	getValue(returnValue.url, jsonData, "url");
+	getValue(returnValue.profile_text_color, jsonData, "profile_text_color");
+	getValue(returnValue.profile_link_color, jsonData, "profile_link_color");
+	getValue(returnValue.profile_image_url, jsonData, "profile_image_url");
+	getValue(returnValue.profile_background_tile, jsonData, "profile_background_tile");
+	getValue(returnValue.is_translation_enabled, jsonData, "is_translation_enabled");
+	getValue(returnValue.default_profile_image, jsonData, "default_profile_image");
+	getValue(returnValue.contributors_enabled, jsonData, "contributors_enabled");
+	getValue(returnValue.follow_request_sent, jsonData, "follow_request_sent");
+	getValue(returnValue.favourites_count, jsonData, "favourites_count");
+	getValue(returnValue.description, jsonData, "description");
+	getValue(returnValue.screen_name, jsonData, "screen_name");
+	getValue(returnValue.followers_count, jsonData, "followers_count");
+	getValue(returnValue.statuses_count, jsonData, "statuses_count");
+	getValue(returnValue.created_at, jsonData, "created_at");
+	getValue(returnValue.entities, jsonData, "entities");
+	getValue(returnValue.friends_count, jsonData, "friends_count");
+	getValue(returnValue.default_profile, jsonData, "default_profile");
+	getValue(returnValue.listed_count, jsonData, "listed_count");
+	getValue(returnValue.location, jsonData, "location");
+	getValue(returnValue.user_protected, jsonData, "user_protected");
+	getValue(returnValue.is_translator, jsonData, "is_translator");
+	getValue(returnValue.id_str, jsonData, "id_str");
+	getValue(returnValue.notifications, jsonData, "notifications");
+	getValue(returnValue.string, jsonData, "string");
+	getValue(returnValue.name, jsonData, "name");
+	getValue(returnValue.geo_enabled, jsonData, "geo_enabled");
+	getValue(returnValue.lang, jsonData, "lang");
+	getValue(returnValue.following, jsonData, "following");
+	getValue(returnValue.verified, jsonData, "verified");
+	getValue(returnValue.id, jsonData, "id");
 }
 
-template<> void getValue(twitter_message& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.search_metadata, jsonDataNew, "search_metadata");
-	getValue(returnValue.statuses, jsonDataNew, "statuses");
+template<> void getValue(retweeted_status_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.in_reply_to_status_id_str, jsonData, "in_reply_to_status_id_str");
+	getValue(returnValue.in_reply_to_user_id_str, jsonData, "in_reply_to_user_id_str");
+	getValue(returnValue.in_reply_to_screen_name, jsonData, "in_reply_to_screen_name");
+	getValue(returnValue.in_reply_to_status_id, jsonData, "in_reply_to_status_id");
+	getValue(returnValue.in_reply_to_user_id, jsonData, "in_reply_to_user_id");
+	getValue(returnValue.possibly_sensitive, jsonData, "possibly_sensitive");
+	getValue(returnValue.contributors, jsonData, "contributors");
+	getValue(returnValue.coordinates, jsonData, "coordinates");
+	getValue(returnValue.place, jsonData, "place");
+	getValue(returnValue.geo, jsonData, "geo");
+	getValue(returnValue.entities, jsonData, "entities");
+	getValue(returnValue.favorite_count, jsonData, "favorite_count");
+	getValue(returnValue.metadata, jsonData, "metadata");
+	getValue(returnValue.created_at, jsonData, "created_at");
+	getValue(returnValue.retweet_count, jsonData, "retweet_count");
+	getValue(returnValue.source, jsonData, "source");
+	getValue(returnValue.id_str, jsonData, "id_str");
+	getValue(returnValue.user, jsonData, "user");
+	getValue(returnValue.lang, jsonData, "lang");
+	getValue(returnValue.text, jsonData, "text");
+	getValue(returnValue.truncated, jsonData, "truncated");
+	getValue(returnValue.favorited, jsonData, "favorited");
+	getValue(returnValue.retweeted, jsonData, "retweeted");
+	getValue(returnValue.id, jsonData, "id");
 }
 
-template<> void getValue(icon_emoji_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.name, jsonDataNew, "name");
+template<> void getValue(status_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.in_reply_to_status_id_str, jsonData, "in_reply_to_status_id_str");
+	getValue(returnValue.in_reply_to_user_id_str, jsonData, "in_reply_to_user_id_str");
+	getValue(returnValue.in_reply_to_screen_name, jsonData, "in_reply_to_screen_name");
+	getValue(returnValue.in_reply_to_status_id, jsonData, "in_reply_to_status_id");
+	getValue(returnValue.in_reply_to_user_id, jsonData, "in_reply_to_user_id");
+	getValue(returnValue.possibly_sensitive, jsonData, "possibly_sensitive");
+	getValue(returnValue.contributors, jsonData, "contributors");
+	getValue(returnValue.coordinates, jsonData, "coordinates");
+	getValue(returnValue.place, jsonData, "place");
+	getValue(returnValue.geo, jsonData, "geo");
+	getValue(returnValue.entities, jsonData, "entities");
+	getValue(returnValue.favorite_count, jsonData, "favorite_count");
+	getValue(returnValue.metadata, jsonData, "metadata");
+	getValue(returnValue.created_at, jsonData, "created_at");
+	getValue(returnValue.retweet_count, jsonData, "retweet_count");
+	getValue(returnValue.source, jsonData, "source");
+	getValue(returnValue.id_str, jsonData, "id_str");
+	getValue(returnValue.user, jsonData, "user");
+	getValue(returnValue.lang, jsonData, "lang");
+	getValue(returnValue.text, jsonData, "text");
+	getValue(returnValue.truncated, jsonData, "truncated");
+	getValue(returnValue.favorited, jsonData, "favorited");
+	getValue(returnValue.retweeted, jsonData, "retweeted");
+	getValue(returnValue.retweeted_status, jsonData, "retweeted_status");
+	getValue(returnValue.id, jsonData, "id");
+}
+
+template<> void getValue(twitter_message& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.search_metadata, jsonData, "search_metadata");
+	getValue(returnValue.statuses, jsonData, "statuses");
+}
+
+template<> void getValue(icon_emoji_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.name, jsonData, "name");
 	// Since nullptr_t is not typically deserialized, handling it as necessary.
 }
 
-template<> void getValue(permission_overwrite& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.allow, jsonDataNew, "allow");
-	getValue(returnValue.deny, jsonDataNew, "deny");
-	getValue(returnValue.id, jsonDataNew, "id");
-	getValue(returnValue.type, jsonDataNew, "type");
+template<> void getValue(permission_overwrite& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.allow, jsonData, "allow");
+	getValue(returnValue.deny, jsonData, "deny");
+	getValue(returnValue.id, jsonData, "id");
+	getValue(returnValue.type, jsonData, "type");
 }
 
-template<> void getValue(channel_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.permission_overwrites, jsonDataNew, "permission_overwrites");
-	getValue(returnValue.last_message_id, jsonDataNew, "last_message_id");
-	getValue(returnValue.default_thread_rate_limit_per_user, jsonDataNew, "default_thread_rate_limit_per_user");
-	getValue(returnValue.applied_tags, jsonDataNew, "applied_tags");
-	getValue(returnValue.recipients, jsonDataNew, "recipients");
-	getValue(returnValue.default_auto_archive_duration, jsonDataNew, "default_auto_archive_duration");
-	getValue(returnValue.status, jsonDataNew, "status");
-	getValue(returnValue.last_pin_timestamp, jsonDataNew, "last_pin_timestamp");
-	getValue(returnValue.topic, jsonDataNew, "topic");
-	getValue(returnValue.rate_limit_per_user, jsonDataNew, "rate_limit_per_user");
-	getValue(returnValue.icon_emoji, jsonDataNew, "icon_emoji");
-	getValue(returnValue.total_message_sent, jsonDataNew, "total_message_sent");
-	getValue(returnValue.video_quality_mode, jsonDataNew, "video_quality_mode");
-	getValue(returnValue.application_id, jsonDataNew, "application_id");
-	getValue(returnValue.permissions, jsonDataNew, "permissions");
-	getValue(returnValue.message_count, jsonDataNew, "message_count");
-	getValue(returnValue.parent_id, jsonDataNew, "parent_id");
-	getValue(returnValue.member_count, jsonDataNew, "member_count");
-	getValue(returnValue.owner_id, jsonDataNew, "owner_id");
-	getValue(returnValue.guild_id, jsonDataNew, "guild_id");
-	getValue(returnValue.user_limit, jsonDataNew, "user_limit");
-	getValue(returnValue.position, jsonDataNew, "position");
-	getValue(returnValue.name, jsonDataNew, "name");
-	getValue(returnValue.icon, jsonDataNew, "icon");
-	getValue(returnValue.version, jsonDataNew, "version");
-	getValue(returnValue.bitrate, jsonDataNew, "bitrate");
-	getValue(returnValue.id, jsonDataNew, "id");
-	getValue(returnValue.flags, jsonDataNew, "flags");
-	getValue(returnValue.type, jsonDataNew, "type");
-	getValue(returnValue.managed, jsonDataNew, "managed");
-	getValue(returnValue.nsfw, jsonDataNew, "nsfw");
+template<> void getValue(channel_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.permission_overwrites, jsonData, "permission_overwrites");
+	getValue(returnValue.last_message_id, jsonData, "last_message_id");
+	getValue(returnValue.default_thread_rate_limit_per_user, jsonData, "default_thread_rate_limit_per_user");
+	getValue(returnValue.applied_tags, jsonData, "applied_tags");
+	getValue(returnValue.recipients, jsonData, "recipients");
+	getValue(returnValue.default_auto_archive_duration, jsonData, "default_auto_archive_duration");
+	getValue(returnValue.status, jsonData, "status");
+	getValue(returnValue.last_pin_timestamp, jsonData, "last_pin_timestamp");
+	getValue(returnValue.topic, jsonData, "topic");
+	getValue(returnValue.rate_limit_per_user, jsonData, "rate_limit_per_user");
+	getValue(returnValue.icon_emoji, jsonData, "icon_emoji");
+	getValue(returnValue.total_message_sent, jsonData, "total_message_sent");
+	getValue(returnValue.video_quality_mode, jsonData, "video_quality_mode");
+	getValue(returnValue.application_id, jsonData, "application_id");
+	getValue(returnValue.permissions, jsonData, "permissions");
+	getValue(returnValue.message_count, jsonData, "message_count");
+	getValue(returnValue.parent_id, jsonData, "parent_id");
+	getValue(returnValue.member_count, jsonData, "member_count");
+	getValue(returnValue.owner_id, jsonData, "owner_id");
+	getValue(returnValue.guild_id, jsonData, "guild_id");
+	getValue(returnValue.user_limit, jsonData, "user_limit");
+	getValue(returnValue.position, jsonData, "position");
+	getValue(returnValue.name, jsonData, "name");
+	getValue(returnValue.icon, jsonData, "icon");
+	getValue(returnValue.version, jsonData, "version");
+	getValue(returnValue.bitrate, jsonData, "bitrate");
+	getValue(returnValue.id, jsonData, "id");
+	getValue(returnValue.flags, jsonData, "flags");
+	getValue(returnValue.type, jsonData, "type");
+	getValue(returnValue.managed, jsonData, "managed");
+	getValue(returnValue.nsfw, jsonData, "nsfw");
 }
 
-template<> void getValue(user_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.avatar_decoration_data, jsonDataNew, "avatar_decoration_data");
-	getValue(returnValue.display_name, jsonDataNew, "display_name");
-	getValue(returnValue.global_name, jsonDataNew, "global_name");
-	getValue(returnValue.avatar, jsonDataNew, "avatar");
-	getValue(returnValue.banner, jsonDataNew, "banner");
-	getValue(returnValue.locale, jsonDataNew, "locale");
-	getValue(returnValue.discriminator, jsonDataNew, "discriminator");
-	getValue(returnValue.user_name, jsonDataNew, "user_name");
-	getValue(returnValue.accent_color, jsonDataNew, "accent_color");
-	getValue(returnValue.premium_type, jsonDataNew, "premium_type");
-	getValue(returnValue.public_flags, jsonDataNew, "public_flags");
-	getValue(returnValue.email, jsonDataNew, "email");
-	getValue(returnValue.mfa_enabled, jsonDataNew, "mfa_enabled");
-	getValue(returnValue.id, jsonDataNew, "id");
-	getValue(returnValue.flags, jsonDataNew, "flags");
-	getValue(returnValue.verified, jsonDataNew, "verified");
-	getValue(returnValue.system, jsonDataNew, "system");
-	getValue(returnValue.bot, jsonDataNew, "bot");
+template<> void getValue(user_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.avatar_decoration_data, jsonData, "avatar_decoration_data");
+	getValue(returnValue.display_name, jsonData, "display_name");
+	getValue(returnValue.global_name, jsonData, "global_name");
+	getValue(returnValue.avatar, jsonData, "avatar");
+	getValue(returnValue.banner, jsonData, "banner");
+	getValue(returnValue.locale, jsonData, "locale");
+	getValue(returnValue.discriminator, jsonData, "discriminator");
+	getValue(returnValue.user_name, jsonData, "user_name");
+	getValue(returnValue.accent_color, jsonData, "accent_color");
+	getValue(returnValue.premium_type, jsonData, "premium_type");
+	getValue(returnValue.public_flags, jsonData, "public_flags");
+	getValue(returnValue.email, jsonData, "email");
+	getValue(returnValue.mfa_enabled, jsonData, "mfa_enabled");
+	getValue(returnValue.id, jsonData, "id");
+	getValue(returnValue.flags, jsonData, "flags");
+	getValue(returnValue.verified, jsonData, "verified");
+	getValue(returnValue.system, jsonData, "system");
+	getValue(returnValue.bot, jsonData, "bot");
 }
 
-template<> void getValue(member_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.communication_disabled_until, jsonDataNew, "communication_disabled_until");
-	getValue(returnValue.premium_since, jsonDataNew, "premium_since");
-	getValue(returnValue.nick, jsonDataNew, "nick");
-	getValue(returnValue.avatar, jsonDataNew, "avatar");
-	getValue(returnValue.roles, jsonDataNew, "roles");
-	getValue(returnValue.permissions, jsonDataNew, "permissions");
-	getValue(returnValue.joined_at, jsonDataNew, "joined_at");
-	getValue(returnValue.guild_id, jsonDataNew, "guild_id");
-	getValue(returnValue.user, jsonDataNew, "user");
-	getValue(returnValue.flags, jsonDataNew, "flags");
-	getValue(returnValue.pending, jsonDataNew, "pending");
-	getValue(returnValue.deaf, jsonDataNew, "deaf");
-	getValue(returnValue.mute, jsonDataNew, "mute");
+template<> void getValue(member_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.communication_disabled_until, jsonData, "communication_disabled_until");
+	getValue(returnValue.premium_since, jsonData, "premium_since");
+	getValue(returnValue.nick, jsonData, "nick");
+	getValue(returnValue.avatar, jsonData, "avatar");
+	getValue(returnValue.roles, jsonData, "roles");
+	getValue(returnValue.permissions, jsonData, "permissions");
+	getValue(returnValue.joined_at, jsonData, "joined_at");
+	getValue(returnValue.guild_id, jsonData, "guild_id");
+	getValue(returnValue.user, jsonData, "user");
+	getValue(returnValue.flags, jsonData, "flags");
+	getValue(returnValue.pending, jsonData, "pending");
+	getValue(returnValue.deaf, jsonData, "deaf");
+	getValue(returnValue.mute, jsonData, "mute");
 }
 
-template<> void getValue(tags_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.premium_subscriber, jsonDataNew, "premium_subscriber");
-	getValue(returnValue.bot_id, jsonDataNew, "bot_id");
+template<> void getValue(tags_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.premium_subscriber, jsonData, "premium_subscriber");
+	getValue(returnValue.bot_id, jsonData, "bot_id");
 }
 
-template<> void getValue(role_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.unicode_emoji, jsonDataNew, "unicode_emoji");
-	getValue(returnValue.icon, jsonDataNew, "icon");
-	getValue(returnValue.permissions, jsonDataNew, "permissions");
-	getValue(returnValue.position, jsonDataNew, "position");
-	getValue(returnValue.name, jsonDataNew, "name");
-	getValue(returnValue.mentionable, jsonDataNew, "mentionable");
-	getValue(returnValue.version, jsonDataNew, "version");
-	getValue(returnValue.id, jsonDataNew, "id");
-	getValue(returnValue.tags, jsonDataNew, "tags");
-	getValue(returnValue.color, jsonDataNew, "color");
-	getValue(returnValue.flags, jsonDataNew, "flags");
-	getValue(returnValue.managed, jsonDataNew, "managed");
-	getValue(returnValue.hoist, jsonDataNew, "hoist");
+template<> void getValue(role_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.unicode_emoji, jsonData, "unicode_emoji");
+	getValue(returnValue.icon, jsonData, "icon");
+	getValue(returnValue.permissions, jsonData, "permissions");
+	getValue(returnValue.position, jsonData, "position");
+	getValue(returnValue.name, jsonData, "name");
+	getValue(returnValue.mentionable, jsonData, "mentionable");
+	getValue(returnValue.version, jsonData, "version");
+	getValue(returnValue.id, jsonData, "id");
+	getValue(returnValue.tags, jsonData, "tags");
+	getValue(returnValue.color, jsonData, "color");
+	getValue(returnValue.flags, jsonData, "flags");
+	getValue(returnValue.managed, jsonData, "managed");
+	getValue(returnValue.hoist, jsonData, "hoist");
 }
 
-template<> void getValue(guild_data& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.latest_on_boarding_question_id, jsonDataNew, "latest_on_boarding_question_id");
-	getValue(returnValue.guild_scheduled_events, jsonDataNew, "guild_scheduled_events");
-	getValue(returnValue.safety_alerts_channel_id, jsonDataNew, "safety_alerts_channel_id");
-	getValue(returnValue.inventory_settings, jsonDataNew, "inventory_settings");
-	getValue(returnValue.voice_states, jsonDataNew, "voice_states");
-	getValue(returnValue.discovery_splash, jsonDataNew, "discovery_splash");
-	getValue(returnValue.vanity_url_code, jsonDataNew, "vanity_url_code");
-	getValue(returnValue.application_id, jsonDataNew, "application_id");
-	getValue(returnValue.afk_channel_id, jsonDataNew, "afk_channel_id");
-	getValue(returnValue.default_message_notifications, jsonDataNew, "default_message_notifications");
-	getValue(returnValue.max_stage_video_channel_users, jsonDataNew, "max_stage_video_channel_users");
-	getValue(returnValue.public_updates_channel_id, jsonDataNew, "public_updates_channel_id");
-	getValue(returnValue.description, jsonDataNew, "description");
-	getValue(returnValue.threads, jsonDataNew, "threads");
-	getValue(returnValue.channels, jsonDataNew, "channels");
-	getValue(returnValue.premium_subscription_count, jsonDataNew, "premium_subscription_count");
-	getValue(returnValue.approximate_presence_count, jsonDataNew, "approximate_presence_count");
-	getValue(returnValue.features, jsonDataNew, "features");
-	getValue(returnValue.stickers, jsonDataNew, "stickers");
-	getValue(returnValue.premium_progress_bar_enabled, jsonDataNew, "premium_progress_bar_enabled");
-	getValue(returnValue.members, jsonDataNew, "members");
-	getValue(returnValue.hub_type, jsonDataNew, "hub_type");
-	getValue(returnValue.approximate_member_count, jsonDataNew, "approximate_member_count");
-	getValue(returnValue.explicit_content_filter, jsonDataNew, "explicit_content_filter");
-	getValue(returnValue.max_video_channel_users, jsonDataNew, "max_video_channel_users");
-	getValue(returnValue.splash, jsonDataNew, "splash");
-	getValue(returnValue.banner, jsonDataNew, "banner");
-	getValue(returnValue.system_channel_id, jsonDataNew, "system_channel_id");
-	getValue(returnValue.widget_channel_id, jsonDataNew, "widget_channel_id");
-	getValue(returnValue.preferred_locale, jsonDataNew, "preferred_locale");
-	getValue(returnValue.system_channel_flags, jsonDataNew, "system_channel_flags");
-	getValue(returnValue.rules_channel_id, jsonDataNew, "rules_channel_id");
-	getValue(returnValue.roles, jsonDataNew, "roles");
-	getValue(returnValue.verification_level, jsonDataNew, "verification_level");
-	getValue(returnValue.permissions, jsonDataNew, "permissions");
-	getValue(returnValue.max_presences, jsonDataNew, "max_presences");
-	getValue(returnValue.discovery, jsonDataNew, "discovery");
-	getValue(returnValue.joined_at, jsonDataNew, "joined_at");
-	getValue(returnValue.member_count, jsonDataNew, "member_count");
-	getValue(returnValue.premium_tier, jsonDataNew, "premium_tier");
-	getValue(returnValue.owner_id, jsonDataNew, "owner_id");
-	getValue(returnValue.max_members, jsonDataNew, "max_members");
-	getValue(returnValue.afk_timeout, jsonDataNew, "afk_timeout");
-	getValue(returnValue.widget_enabled, jsonDataNew, "widget_enabled");
-	getValue(returnValue.region, jsonDataNew, "region");
-	getValue(returnValue.nsfw_level, jsonDataNew, "nsfw_level");
-	getValue(returnValue.mfa_level, jsonDataNew, "mfa_level");
-	getValue(returnValue.name, jsonDataNew, "name");
-	getValue(returnValue.icon, jsonDataNew, "icon");
-	getValue(returnValue.unavailable, jsonDataNew, "unavailable");
-	getValue(returnValue.id, jsonDataNew, "id");
-	getValue(returnValue.flags, jsonDataNew, "flags");
-	getValue(returnValue.large, jsonDataNew, "large");
-	getValue(returnValue.owner, jsonDataNew, "owner");
-	getValue(returnValue.nsfw, jsonDataNew, "nsfw");
-	getValue(returnValue.lazy, jsonDataNew, "lazy");
+template<> void getValue(guild_data& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.latest_on_boarding_question_id, jsonData, "latest_on_boarding_question_id");
+	getValue(returnValue.guild_scheduled_events, jsonData, "guild_scheduled_events");
+	getValue(returnValue.safety_alerts_channel_id, jsonData, "safety_alerts_channel_id");
+	getValue(returnValue.inventory_settings, jsonData, "inventory_settings");
+	getValue(returnValue.voice_states, jsonData, "voice_states");
+	getValue(returnValue.discovery_splash, jsonData, "discovery_splash");
+	getValue(returnValue.vanity_url_code, jsonData, "vanity_url_code");
+	getValue(returnValue.application_id, jsonData, "application_id");
+	getValue(returnValue.afk_channel_id, jsonData, "afk_channel_id");
+	getValue(returnValue.default_message_notifications, jsonData, "default_message_notifications");
+	getValue(returnValue.max_stage_video_channel_users, jsonData, "max_stage_video_channel_users");
+	getValue(returnValue.public_updates_channel_id, jsonData, "public_updates_channel_id");
+	getValue(returnValue.description, jsonData, "description");
+	getValue(returnValue.threads, jsonData, "threads");
+	getValue(returnValue.channels, jsonData, "channels");
+	getValue(returnValue.premium_subscription_count, jsonData, "premium_subscription_count");
+	getValue(returnValue.approximate_presence_count, jsonData, "approximate_presence_count");
+	getValue(returnValue.features, jsonData, "features");
+	getValue(returnValue.stickers, jsonData, "stickers");
+	getValue(returnValue.premium_progress_bar_enabled, jsonData, "premium_progress_bar_enabled");
+	getValue(returnValue.members, jsonData, "members");
+	getValue(returnValue.hub_type, jsonData, "hub_type");
+	getValue(returnValue.approximate_member_count, jsonData, "approximate_member_count");
+	getValue(returnValue.explicit_content_filter, jsonData, "explicit_content_filter");
+	getValue(returnValue.max_video_channel_users, jsonData, "max_video_channel_users");
+	getValue(returnValue.splash, jsonData, "splash");
+	getValue(returnValue.banner, jsonData, "banner");
+	getValue(returnValue.system_channel_id, jsonData, "system_channel_id");
+	getValue(returnValue.widget_channel_id, jsonData, "widget_channel_id");
+	getValue(returnValue.preferred_locale, jsonData, "preferred_locale");
+	getValue(returnValue.system_channel_flags, jsonData, "system_channel_flags");
+	getValue(returnValue.rules_channel_id, jsonData, "rules_channel_id");
+	getValue(returnValue.roles, jsonData, "roles");
+	getValue(returnValue.verification_level, jsonData, "verification_level");
+	getValue(returnValue.permissions, jsonData, "permissions");
+	getValue(returnValue.max_presences, jsonData, "max_presences");
+	getValue(returnValue.discovery, jsonData, "discovery");
+	getValue(returnValue.joined_at, jsonData, "joined_at");
+	getValue(returnValue.member_count, jsonData, "member_count");
+	getValue(returnValue.premium_tier, jsonData, "premium_tier");
+	getValue(returnValue.owner_id, jsonData, "owner_id");
+	getValue(returnValue.max_members, jsonData, "max_members");
+	getValue(returnValue.afk_timeout, jsonData, "afk_timeout");
+	getValue(returnValue.widget_enabled, jsonData, "widget_enabled");
+	getValue(returnValue.region, jsonData, "region");
+	getValue(returnValue.nsfw_level, jsonData, "nsfw_level");
+	getValue(returnValue.mfa_level, jsonData, "mfa_level");
+	getValue(returnValue.name, jsonData, "name");
+	getValue(returnValue.icon, jsonData, "icon");
+	getValue(returnValue.unavailable, jsonData, "unavailable");
+	getValue(returnValue.id, jsonData, "id");
+	getValue(returnValue.flags, jsonData, "flags");
+	getValue(returnValue.large, jsonData, "large");
+	getValue(returnValue.owner, jsonData, "owner");
+	getValue(returnValue.nsfw, jsonData, "nsfw");
+	getValue(returnValue.lazy, jsonData, "lazy");
 }
 
-template<> void getValue(discord_message& returnValue, simdjson::ondemand::value jsonDataNew) {
-	getValue(returnValue.t, jsonDataNew, "t");
-	getValue(returnValue.d, jsonDataNew, "d");
-	getValue(returnValue.op, jsonDataNew, "op");
-	getValue(returnValue.s, jsonDataNew, "s");
+template<> void getValue(discord_message& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.t, jsonData, "t");
+	getValue(returnValue.d, jsonData, "d");
+	getValue(returnValue.op, jsonData, "op");
+	getValue(returnValue.s, jsonData, "s");
 }
 
-	#define SIMD_PULL(x) \
-		{ \
-			simdjson::ondemand::array newX = doc[#x].get_array().value(); \
-			for (simdjson::ondemand::value value: newX) { \
-				test_struct newStruct{}; \
-				getValue(newStruct.testStrings, value, "testStrings"); \
-				getValue(newStruct.testUints, value, "testUints"); \
-				getValue(newStruct.testDoubles, value, "testDoubles"); \
-				getValue(newStruct.testInts, value, "testInts"); \
-				getValue(newStruct.testBools, value, "testBools"); \
-				obj.x.emplace_back(std::move(newStruct)); \
-			} \
-		}
-
-	#define SIMD_PULL_ABC(x) \
-		{ \
-			simdjson::ondemand::array newX = doc[#x].get_array().value(); \
-			for (simdjson::ondemand::value value: newX) { \
-				test_struct newStruct{}; \
-				getValue(newStruct.testBools, value, "testBools"); \
-				getValue(newStruct.testInts, value, "testInts"); \
-				getValue(newStruct.testDoubles, value, "testDoubles"); \
-				getValue(newStruct.testUints, value, "testUints"); \
-				getValue(newStruct.testStrings, value, "testStrings"); \
-				obj.x.emplace_back(std::move(newStruct)); \
-			} \
-		}
-
-
-template<> void getValue<test<test_struct>>(test<test_struct>& obj, simdjson::ondemand::value doc) {
-	SIMD_PULL(a);
-	SIMD_PULL(b);
-	SIMD_PULL(c);
-	SIMD_PULL(d);
-	SIMD_PULL(e);
-	SIMD_PULL(f);
-	SIMD_PULL(g);
-	SIMD_PULL(h);
-	SIMD_PULL(i);
-	SIMD_PULL(j);
-	SIMD_PULL(k);
-	SIMD_PULL(l);
-	SIMD_PULL(m);
-	SIMD_PULL(n);
-	SIMD_PULL(o);
-	SIMD_PULL(p);
-	SIMD_PULL(q);
-	SIMD_PULL(r);
-	SIMD_PULL(s);
-	SIMD_PULL(t);
-	SIMD_PULL(u);
-	SIMD_PULL(v);
-	SIMD_PULL(w);
-	SIMD_PULL(x);
-	SIMD_PULL(y);
-	SIMD_PULL(z);
+template<> void getValue(abc_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.a, jsonData, "a");
+	getValue(returnValue.b, jsonData, "b");
+	getValue(returnValue.c, jsonData, "c");
+	getValue(returnValue.d, jsonData, "d");
+	getValue(returnValue.e, jsonData, "e");
+	getValue(returnValue.f, jsonData, "f");
+	getValue(returnValue.g, jsonData, "g");
+	getValue(returnValue.h, jsonData, "h");
+	getValue(returnValue.i, jsonData, "i");
+	getValue(returnValue.j, jsonData, "j");
+	getValue(returnValue.k, jsonData, "k");
+	getValue(returnValue.l, jsonData, "l");
+	getValue(returnValue.m, jsonData, "m");
+	getValue(returnValue.n, jsonData, "n");
+	getValue(returnValue.o, jsonData, "o");
+	getValue(returnValue.p, jsonData, "p");
+	getValue(returnValue.q, jsonData, "q");
+	getValue(returnValue.r, jsonData, "r");
+	getValue(returnValue.s, jsonData, "s");
+	getValue(returnValue.t, jsonData, "t");
+	getValue(returnValue.u, jsonData, "u");
+	getValue(returnValue.v, jsonData, "v");
+	getValue(returnValue.w, jsonData, "w");
+	getValue(returnValue.x, jsonData, "x");
+	getValue(returnValue.y, jsonData, "y");
+	getValue(returnValue.z, jsonData, "z");
 }
-
-template<> void getValue<abc_test<test_struct>>(abc_test<test_struct>& obj, simdjson::ondemand::value doc) {
-	SIMD_PULL_ABC(z);
-	SIMD_PULL_ABC(y);
-	SIMD_PULL_ABC(x);
-	SIMD_PULL_ABC(w);
-	SIMD_PULL_ABC(v);
-	SIMD_PULL_ABC(u);
-	SIMD_PULL_ABC(t);
-	SIMD_PULL_ABC(s);
-	SIMD_PULL_ABC(r);
-	SIMD_PULL_ABC(q);
-	SIMD_PULL_ABC(p);
-	SIMD_PULL_ABC(o);
-	SIMD_PULL_ABC(n);
-	SIMD_PULL_ABC(m);
-	SIMD_PULL_ABC(l);
-	SIMD_PULL_ABC(k);
-	SIMD_PULL_ABC(j);
-	SIMD_PULL_ABC(i);
-	SIMD_PULL_ABC(h);
-	SIMD_PULL_ABC(g);
-	SIMD_PULL_ABC(f);
-	SIMD_PULL_ABC(e);
-	SIMD_PULL_ABC(d);
-	SIMD_PULL_ABC(c);
-	SIMD_PULL_ABC(b);
-	SIMD_PULL_ABC(a);
-}
-
-template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
-struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(simdjsonLibraryName), static_cast<std::string>(testName), static_cast<std::string>(simdjsonCommitUrl), iterations };
-
-		simdjson::ondemand::parser parser{};
-		test_data_type testData{};
-		auto readSize = buffer.size();
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), simdjsonLibraryName, "cornflowerblue", iterations>(
-				[&]() {
-					try {
-						getValue(testData, parser.iterate(buffer).value());
-						bnch_swt::doNotOptimizeAway(testData);
-					} catch (std::exception& error) {
-						std::cout << "Simdjson Error: " << error.what() << std::endl;
-					}
-				});
-
-		r.readResult = result<result_type::read>{ "cadetblue", readSize, readResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
-		fileLoader.saveFile(buffer);
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName> {
-	static auto run(const std::string& newBuffer, bool doWePrint = true) {
-		std::string buffer{ newBuffer };
-
-		results_data r{ static_cast<std::string>(simdjsonLibraryName), static_cast<std::string>(testName), static_cast<std::string>(simdjsonCommitUrl), iterations };
-
-		simdjson::dom::parser parser{};
-		std::string newerBuffer{};
-
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), simdjsonLibraryName, "cornflowerblue", iterations>(
-				[&]() {
-					try {
-						newerBuffer = simdjson::minify(parser.parse(buffer));
-						bnch_swt::doNotOptimizeAway(newerBuffer);
-					} catch (std::exception& error) {
-						std::cout << "Simdjson Error: " << error.what() << std::endl;
-					}
-					return;
-				});
-
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
-		fileLoader.saveFile(newerBuffer);
-		r.writeResult = result<result_type::write>{ "cornflowerblue", newerBuffer.size(), writeResult };
-
-		if (doWePrint) {
-			r.print();
-		}
-
-		return r;
-	}
-};
-#endif
 
 std::string table_header = R"(
-| Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |)";
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
+| ------- | ----------- | ------------------- | -------------- | -------------------- | ------------ | -------------------- | --------------- | --------------------- |   )";
 
 std::string read_table_header = R"(
-| Library | Read (MB/s) | ReadLength (Bytes) | ReadTime (ns) | ReadMape (%) |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count |
+| ------- | ----------- | ------------------- | -------------- | -------------------- |   )";
 
 std::string write_table_header = R"(
-| Library | Write (MB/s) | WriteLength (Bytes) | WriteTime (ns) | WriteMape (%) |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
-
-template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper;
-
-template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += write_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += write_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
-
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, iterations, testName> {
-	static test_results run(const std::string& jsonDataNew) {
-		jsonifier::vector<results_data> resultsNew{};
-		test_results jsonResults{};
-		jsonResults.testName = static_cast<std::string>(testName);
-#if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
-#endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
-
-		std::string table{};
-		const auto n = resultsNew.size();
-		table += read_table_header + "\n";
-		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (uint64_t x = 0; x < n; ++x) {
-			jsonResults.results.emplace_back(resultsNew[x]);
-			table += resultsNew[x].jsonStats();
-			if (x != n - 1) {
-				table += "\n";
-			}
-		}
-		jsonResults.markdownResults = table;
-		return jsonResults;
-	}
-};
+| Library | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
+| ------- | ------------ | -------------------- | --------------- | --------------------- |   )";
 
 static const std::string section001{ R"(
  > At least )" +
-	jsonifier::toString(static_cast<uint64_t>(static_cast<float>(iterationsVal) * 0.10f)) +
-	R"( iterations on a 6 core (Intel i7 8700k), until Median Absolute Percentage Error (MAPE) reduced below 5.0%.
+	jsonifier::toString(30) +
+	R"( iterations on a 6 core (Intel i7 8700k), until coefficient of variance is at or below 1%.
 )" };
 
 static constexpr auto newString02{ bnch_swt::combineLiterals<R"(#### Using the following commits:
@@ -2286,7 +1819,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static const jsonifier::string_view section03{
+static constexpr jsonifier::string_view section03{
 	R"(
 
 ### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2409,9 +1942,7 @@ alt="" width="400"/></p>
 )"
 };
 
-//#include "ConformanceTests.hpp"
-
-inline std::string getCurrentWorkingDirectory() {
+std::string getCurrentWorkingDirectory() {
 	try {
 		return std::filesystem::current_path().string();
 	} catch (const std::filesystem::filesystem_error& e) {
@@ -2420,70 +1951,292 @@ inline std::string getCurrentWorkingDirectory() {
 	}
 }
 
-inline void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
+void executePythonScript(const jsonifier::string& scriptPath, const jsonifier::string& argument01, const jsonifier::string& argument02) {
 #if defined(JSONIFIER_WIN)
 	static constexpr std::string_view pythonName{ "python " };
 #else
 	static constexpr std::string_view pythonName{ "python3 " };
 #endif
-	std::string command = static_cast<std::string>(pythonName) + scriptPath + " " + argument01 + " " + argument02;
-	int32_t result		= system(command.c_str());
+	jsonifier::string command = static_cast<jsonifier::string>(pythonName) + scriptPath + " " + argument01 + " " + argument02;
+	int32_t result			  = system(command.data());
 	if (result != 0) {
 		std::cout << "Error: Failed to execute Python script. Command exited with code " << result << std::endl;
 	}
 }
 
+template<test_type type, typename test_data_type, bool minified, bnch_swt::string_literal testName> struct json_tests_helper;
+
+template<bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, testName> {
+	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<jsonifier::string>(testName);
+#if !defined(ASAN_ENABLED)
+		std::string glazeBuffer{ jsonData };
+		std::string glazeNewerBuffer{};
+		auto glazeWriteResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Write">(), glazeLibraryName, "steelblue">([&]() {
+					glz::prettify_json(glazeBuffer, glazeNewerBuffer);
+					bnch_swt::doNotOptimizeAway(glazeNewerBuffer);
+				});
+
+		results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl),
+			glazeWriteResult.iterationCount };
+
+		bnch_swt::file_loader glazeFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-glaze.json" };
+		glazeFileLoader.saveFile(glazeNewerBuffer);
+		glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeNewerBuffer.size(), glazeWriteResult };
+		glazeResults.print();
+
+		resultsNew.emplace_back(glazeResults);
+#endif
+		std::string jsonifierBuffer{ jsonData };
+
+		jsonifier::jsonifier_core parser{};
+		std::string jsonifierNewerBuffer{};
+		auto jsonifierWriteResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+					parser.prettifyJson(jsonifierBuffer, jsonifierNewerBuffer);
+					bnch_swt::doNotOptimizeAway(jsonifierNewerBuffer);
+				});
+
+		results_data jsonifierResults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName),
+			static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierWriteResult.iterationCount };
+
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
+		bnch_swt::file_loader jsonifierFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-jsonifier.json" };
+		jsonifierFileLoader.saveFile(jsonifierNewerBuffer);
+
+		jsonifierResults.writeResult = result<result_type::write>{ "steelblue", jsonifierNewerBuffer.size(), jsonifierWriteResult };
+
+		jsonifierResults.print();
+
+		resultsNew.emplace_back(jsonifierResults);
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += write_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (size_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+template<bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, testName> {
+	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<jsonifier::string>(testName);
+#if !defined(ASAN_ENABLED)
+
+		std::string simdjsonBuffer{ jsonData };
+
+		simdjson::dom::parser simdjsonParser{};
+		std::string simdjsonNewerBuffer{};
+
+		auto simdjsonWriteResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Write">(), glazeLibraryName, "cornflowerblue">([&]() {
+					try {
+						simdjsonNewerBuffer = simdjson::minify(simdjsonParser.parse(simdjsonBuffer));
+						bnch_swt::doNotOptimizeAway(simdjsonNewerBuffer);
+					} catch (std::exception& error) {
+						std::cout << "Simdjson Error: " << error.what() << std::endl;
+					}
+					return;
+				});
+
+		results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>(testName),
+			static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonWriteResult.iterationCount };
+
+		bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-simdjson.json" };
+		simdjsonFileLoader.saveFile(simdjsonNewerBuffer);
+		simdjsonResults.writeResult = result<result_type::write>{ "cornflowerblue", simdjsonNewerBuffer.size(), simdjsonWriteResult };
+
+		simdjsonResults.print();
+
+		resultsNew.emplace_back(simdjsonResults);
+		std::string glazeBuffer{ jsonData };
+
+
+		std::string glazeNewerBuffer{};
+		auto glazeWriteResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Write">(), glazeLibraryName, "steelblue">([&]() {
+					glazeNewerBuffer = glz::minify_json(glazeBuffer);
+					bnch_swt::doNotOptimizeAway(glazeNewerBuffer);
+				});
+		results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl),
+			glazeWriteResult.iterationCount };
+
+		bnch_swt::file_loader glazeFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-glaze.json" };
+		glazeFileLoader.saveFile(glazeNewerBuffer);
+		glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeNewerBuffer.size(), glazeWriteResult };
+		glazeResults.print();
+		resultsNew.emplace_back(glazeResults);
+#endif
+		std::string jsonifierBuffer{ jsonData };
+		std::string jsonifierNewerBuffer{};
+		jsonifier::jsonifier_core parser{};
+		auto jsonifierWriteResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Read">(), jsonifierLibraryName, "steelblue">([&]() {
+					parser.minifyJson(jsonifierBuffer, jsonifierNewerBuffer);
+					bnch_swt::doNotOptimizeAway(jsonifierNewerBuffer);
+				});
+		results_data jsonifierResults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName),
+			static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierWriteResult.iterationCount };
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
+		bnch_swt::file_loader jsonifierFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-jsonifier.json" };
+		jsonifierFileLoader.saveFile(jsonifierNewerBuffer);
+
+		jsonifierResults.writeResult = result<result_type::write>{ "steelblue", jsonifierNewerBuffer.size(), jsonifierWriteResult };
+		jsonifierResults.print();
+		resultsNew.emplace_back(jsonifierResults);
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += write_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (size_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+template<bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, testName> {
+	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+		jsonifier::vector<results_data> resultsNew{};
+		test_results jsonResults{};
+		jsonResults.testName = static_cast<jsonifier::string>(testName);
+#if !defined(ASAN_ENABLED)
+
+		std::string glazeBuffer{ jsonData };
+		auto glazeReadResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Read">(), glazeLibraryName, "skyblue">([&]() {
+					auto result = glz::validate_json(glazeBuffer);
+					bnch_swt::doNotOptimizeAway(result);
+				});
+
+		results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl),
+			glazeReadResult.iterationCount };
+
+		bnch_swt::file_loader glazeFileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-glaze.json" };
+		glazeFileLoader.saveFile(glazeBuffer);
+		glazeResults.readResult = result<result_type::read>{ "skyblue", glazeBuffer.size(), glazeReadResult };
+		glazeResults.print();
+		resultsNew.emplace_back(glazeResults);
+#endif
+		std::string jsonifierBuffer{ jsonData };
+		jsonifier::jsonifier_core parser{};
+		auto jsonifierReadResult =
+			bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+				runBenchmark<bnch_swt::combineLiterals<testName, "-Read">(), jsonifierLibraryName, "steelblue">([&]() {
+					parser.validateJson(jsonifierBuffer);
+					bnch_swt::doNotOptimizeAway(jsonifierBuffer);
+				});
+
+		results_data jsonifierResults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName),
+			static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
+
+		jsonifierResults.readResult = result<result_type::read>{ "teal", jsonifierBuffer.size(), jsonifierReadResult };
+
+		jsonifierResults.print();
+
+		resultsNew.emplace_back(jsonifierResults);
+
+		std::string table{};
+		const auto n = resultsNew.size();
+		table += read_table_header + "\n";
+		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+		for (size_t x = 0; x < n; ++x) {
+			jsonResults.results.emplace_back(resultsNew[x]);
+			table += resultsNew[x].jsonStats();
+			if (x != n - 1) {
+				table += "\n";
+			}
+		}
+		jsonResults.markdownResults = table;
+		return jsonResults;
+	}
+};
+
+//#include "ConformanceTests.hpp"
+
 int32_t main() {
 	try {
-		std::cout << "CUYRRENT TYPE: " << typeid(jsonifier_simd_int_t).name() << std::endl;
 		test_generator<test_struct> testJsonData{};
-		std::string jsonDataNew{};
+		std::string jsonData{};
 		jsonifier::jsonifier_core parser{};
-		file_loader fileLoader01{ README_PATH };
-		file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
-		fileLoader02.saveFile(jsonDataNew);
-		file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
-		std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
+		bnch_swt::file_loader fileLoader01{ README_PATH };
+		bnch_swt::file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
+		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonData);
+		fileLoader02.saveFile(jsonData);
+		bnch_swt::file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
+		std::string jsonMinifiedData{ parser.minifyJson(jsonData) };
 		fileLoader03.saveFile(jsonMinifiedData);
-		file_loader fileLoader04{ basePath + "/Results.json" };
-		file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
-		std::string discordData{ fileLoader05.operator std::string() };
+		bnch_swt::file_loader fileLoader04{ basePath + "/Results.json" };
+		bnch_swt::file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
+		std::string discordData{ fileLoader05.operator jsonifier::string&() };
 		discord_message discordMessage{};
+		//std::cout << "WERE HERE THIS IS IT 0101: " << jsonMinifiedData << std::endl;
 		parser.parseJson(discordMessage, discordData);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(discordMessage, discordData);
+		//std::cout << "WERE HERE THIS IS IT 0101: " << discordData << std::endl;
 		fileLoader05.saveFile(discordData);
-		file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
-		std::string discordMinifiedData{ fileLoader06.operator std::string() };
+		bnch_swt::file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
+		std::string discordMinifiedData{ fileLoader06.operator jsonifier::string&() };
 		discordMinifiedData = parser.minifyJson(discordData);
 		fileLoader06.saveFile(discordMinifiedData);
-		file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
-		std::string canadaData{ fileLoader07.operator std::string() };
+		bnch_swt::file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
+		std::string canadaData{ fileLoader07.operator jsonifier::string&() };
 		canada_message canadaMessage{};
 		parser.parseJson(canadaMessage, canadaData);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(canadaMessage, canadaData);
+		//std::cout << "WERE HERE THIS IS IT 0202: " << canadaData << std::endl;
 		fileLoader07.saveFile(canadaData);
-		file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
-		std::string canadaMinifiedData{ fileLoader08.operator std::string() };
+		bnch_swt::file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
+		std::string canadaMinifiedData{ fileLoader08.operator jsonifier::string&() };
 		canadaMinifiedData = parser.minifyJson(canadaData);
 		fileLoader08.saveFile(canadaMinifiedData);
-		file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
-		std::string twitterData{ fileLoader09.operator std::string() };
+		bnch_swt::file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
+		std::string twitterData{ fileLoader09.operator jsonifier::string&() };
 		twitter_message twitterMessage{};
 		parser.parseJson(twitterMessage, twitterData);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(twitterMessage, twitterData);
+		//std::cout << "WERE HERE THIS IS IT 0303: " << twitterData << std::endl;
 		fileLoader09.saveFile(twitterData);
-		file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
-		std::string twitterMinifiedData{ fileLoader10.operator std::string() };
+		bnch_swt::file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
+		std::string twitterMinifiedData{ fileLoader10.operator jsonifier::string&() };
 		twitterMinifiedData = parser.minifyJson(twitterData);
 		fileLoader10.saveFile(twitterMinifiedData);
 		for (auto& value: parser.getErrors()) {
@@ -2492,62 +2245,1169 @@ int32_t main() {
 		std::string newTimeString{};
 		newTimeString.resize(1024);
 		std::tm resultTwo{};
-		std::time_t result = std::time(nullptr);
-		resultTwo		   = *localtime(&result);
+		std::time_t timeResult = std::time(nullptr);
+		resultTwo			   = *localtime(&timeResult);
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
-		std::string newerString{ section00 + newTimeString + ")\n" + section002 + section001 + section01 };
-		auto testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, iterationsVal, "Json Test (Prettified)">::run(jsonDataNew);
+		jsonifier::string newerString{ section00 + newTimeString + ")\n" + section002 + section001 + section01 };
+
+		std::string jsonifierBuffer{ jsonData };
+		std::string simdjsonBuffer{ jsonData };
+		std::string glazeBuffer{ jsonData };
+#if !defined(ASAN_ENABLED)
+		simdjson::ondemand::parser simdjsonParser{};
+#endif
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			jsonResults.testName = static_cast<jsonifier::string>("Json Test (Prettified)");
+#if !defined(ASAN_ENABLED)
+			test<test_struct> simdjsonTestData{};
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Prettified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Json Test (Prettified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Prettified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			test<test_struct> glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Prettified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Json Test (Prettified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Prettified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = true, .minified = false }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Prettified)") + "-glaze.json" };
+			glazeFileLoader.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			test<test_struct> jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Prettified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Json Test (Prettified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Prettified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Prettified)") + "-jsonifier.json" };
+			jsonifierFileLoader.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			jsonResults.testName = static_cast<jsonifier::string>("Json Test (Minified)");
+
+#if !defined(ASAN_ENABLED)
+			test<test_struct> simdjsonTestData{};
+			simdjsonBuffer = jsonMinifiedData;
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Minified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Json Test (Minified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Minified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = jsonMinifiedData;
+
+			test<test_struct> glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Minified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Json Test (Minified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Minified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = false, .minified = true }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderJson{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Minified)") + "-glaze.json" };
+			glazeFileLoaderJson.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = jsonMinifiedData;
+			test<test_struct> jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Minified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Json Test (Minified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Json Test (Minified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = false }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderJson{ basePath + "/" + static_cast<jsonifier::string>("Json Test (Minified)") + "-jsonifier.json" };
+			jsonifierFileLoaderJson.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section02);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			simdjsonBuffer		 = jsonData;
+			jsonResults.testName = static_cast<jsonifier::string>("Abc Test (Prettified)");
+#if !defined(ASAN_ENABLED)
+			abc_test<test_struct> simdjsonTestData{};
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Prettified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Abc Test (Prettified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Prettified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = jsonData;
+
+			abc_test<test_struct> glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Prettified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Abc Test (Prettified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Prettified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = true, .minified = false }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderAbc{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Prettified)") + "-glaze.json" };
+			glazeFileLoaderAbc.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = jsonData;
+			abc_test<test_struct> jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Prettified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Abc Test (Prettified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Abcifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Prettified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Abcifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderAbc{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Prettified)") + "-jsonifier.json" };
+			jsonifierFileLoaderAbc.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section03);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			simdjsonBuffer		 = jsonMinifiedData;
+			jsonResults.testName = static_cast<jsonifier::string>("Abc Test (Minified)");
+#if !defined(ASAN_ENABLED)
+			abc_test<test_struct> simdjsonTestData{};
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Minified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Abc Test (Minified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Minified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = jsonMinifiedData;
+
+			abc_test<test_struct> glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Minified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Abc Test (Minified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Minified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = false, .minified = true }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderAbc{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Minified)") + "-glaze.json" };
+			glazeFileLoaderAbc.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = jsonMinifiedData;
+			abc_test<test_struct> jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Minified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Abc Test (Minified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Abcifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Abc Test (Minified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = false }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Abcifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderAbc{ basePath + "/" + static_cast<jsonifier::string>("Abc Test (Minified)") + "-jsonifier.json" };
+			jsonifierFileLoaderAbc.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section04);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			simdjsonBuffer		 = discordData;
+			jsonResults.testName = static_cast<jsonifier::string>("Discord Test (Prettified)");
+#if !defined(ASAN_ENABLED)
+			discord_message simdjsonTestData{};
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Prettified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Discord Test (Prettified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Prettified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = discordData;
+
+			discord_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Prettified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Discord Test (Prettified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Prettified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = true, .minified = false }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderDiscord{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Prettified)") + "-glaze.json" };
+			glazeFileLoaderDiscord.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = discordData;
+			discord_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Prettified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Discord Test (Prettified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Discordifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Prettified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Discordifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderDiscord{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Prettified)") + "-jsonifier.json" };
+			jsonifierFileLoaderDiscord.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section05);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			jsonResults.testName = static_cast<jsonifier::string>("Discord Test (Minified)");
+#if !defined(ASAN_ENABLED)
+			discord_message simdjsonTestData{};
+			simdjsonBuffer = discordMinifiedData;
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Minified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Discord Test (Minified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Minified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = discordMinifiedData;
+
+			discord_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Minified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Discord Test (Minified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Minified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = false, .minified = true }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderDiscord{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Minified)") + "-glaze.json" };
+			glazeFileLoaderDiscord.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = discordMinifiedData;
+			discord_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Minified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Discord Test (Minified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Discordifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Discord Test (Minified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = false }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Discordifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderDiscord{ basePath + "/" + static_cast<jsonifier::string>("Discord Test (Minified)") + "-jsonifier.json" };
+			jsonifierFileLoaderDiscord.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section06);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+			jsonResults.testName = static_cast<jsonifier::string>("Canada Test (Prettified)");
+#if !defined(ASAN_ENABLED)
+			canada_message simdjsonTestData{};
+			resultsNew.clear();
+			simdjsonBuffer = canadaData;
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Prettified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Canada Test (Prettified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Prettified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = canadaData;
+
+			canada_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Prettified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Canada Test (Prettified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Prettified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = true, .minified = false }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderCanada{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Prettified)") + "-glaze.json" };
+			glazeFileLoaderCanada.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = canadaData;
+			canada_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Prettified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Canada Test (Prettified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Prettified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderCanada{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Prettified)") + "-jsonifier.json" };
+			jsonifierFileLoaderCanada.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section07);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+#if !defined(ASAN_ENABLED)
+			canada_message simdjsonTestData{};
+			simdjsonBuffer		 = canadaMinifiedData;
+			jsonResults.testName = static_cast<jsonifier::string>("Canada Test (Minified)");
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Minified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Canada Test (Minified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Minified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = canadaMinifiedData;
+
+			canada_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Minified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Canada Test (Minified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Minified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = false, .minified = true }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderCanada{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Minified)") + "-glaze.json" };
+			glazeFileLoaderCanada.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = canadaMinifiedData;
+			canada_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Minified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Canada Test (Minified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Canada Test (Minified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = false }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderCanada{ basePath + "/" + static_cast<jsonifier::string>("Canada Test (Minified)") + "-jsonifier.json" };
+			jsonifierFileLoaderCanada.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section08);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+#if !defined(ASAN_ENABLED)
+			twitter_message simdjsonTestData{};
+			simdjsonBuffer		 = twitterData;
+			jsonResults.testName = static_cast<jsonifier::string>("Twitter Test (Prettified)");
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Prettified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Twitter Test (Prettified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Prettified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = twitterData;
+
+			twitter_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Prettified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Twitter Test (Prettified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Prettified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = true, .minified = false }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderTwitter{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Prettified)") + "-glaze.json" };
+			glazeFileLoaderTwitter.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = twitterData;
+			twitter_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Prettified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Twitter Test (Prettified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Prettified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderTwitter{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Prettified)") + "-jsonifier.json" };
+			jsonifierFileLoaderTwitter.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section09);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		{
+			jsonifier::vector<results_data> resultsNew{};
+			test_results jsonResults{};
+#if !defined(ASAN_ENABLED)
+			twitter_message simdjsonTestData{};
+			simdjsonBuffer		 = twitterMinifiedData;
+			jsonResults.testName = static_cast<jsonifier::string>("Twitter Test (Minified)");
+			auto simdjsonReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Minified)", "-Read">(), simdjsonLibraryName, "cadetblue">([&]() {
+						try {
+							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						} catch (std::exception& error) {
+							std::cout << "Simdjson Error: " << error.what() << std::endl;
+						}
+					});
+			parser.serializeJson(simdjsonTestData, simdjsonBuffer);
+			auto simdjsonReadSize = simdjsonBuffer.size();
+			results_data simdjsonResults{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>("Twitter Test (Minified)"),
+				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
+
+			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
+			bnch_swt::file_loader simdjsonFileLoader{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Minified)") + "-simdjson.json" };
+			simdjsonFileLoader.saveFile(simdjsonBuffer);
+			simdjsonResults.print();
+			resultsNew.emplace_back(simdjsonResults);
+
+			glazeBuffer = twitterMinifiedData;
+
+			twitter_message glazeTestData{};
+			auto glazeReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Minified)", "-Read">(), glazeLibraryName, "dodgerblue">([&]() {
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
+						}
+						auto* newPtr = &glazeTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			results_data glazeResults{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>("Twitter Test (Minified)"),
+				static_cast<jsonifier::string>(glazeCommitUrl), glazeReadResult.iterationCount };
+			std::string glazeNewerBuffer{};
+			auto glazeWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Minified)", "-Write">(), glazeLibraryName, "steelblue">([&]() {
+						bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = false, .minified = true }>(glazeTestData, glazeNewerBuffer));
+						auto* newPtr = &glazeNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			auto glazeReadSize		 = glazeNewerBuffer.size();
+			auto glazeWrittenSize	 = glazeNewerBuffer.size();
+			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
+			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
+			bnch_swt::file_loader glazeFileLoaderTwitter{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Minified)") + "-glaze.json" };
+			glazeFileLoaderTwitter.saveFile(glazeBuffer);
+			glazeResults.print();
+			resultsNew.emplace_back(glazeResults);
+#endif
+			jsonifierBuffer = twitterMinifiedData;
+			twitter_message jsonifierTestData{};
+			auto jsonifierReadResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Minified)", "-Read">(), jsonifierLibraryName, "teal">([&]() {
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						auto* newPtr = &jsonifierTestData;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Twitter Test (Minified)"),
+				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string jsonifierNewerBuffer{};
+			auto jsonifierWriteResult =
+				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
+					runBenchmark<bnch_swt::combineLiterals<"Twitter Test (Minified)", "-Write">(), jsonifierLibraryName, "steelblue">([&]() {
+						parser.serializeJson<jsonifier::serialize_options{ .prettify = false }>(jsonifierTestData, jsonifierNewerBuffer);
+						auto* newPtr = &jsonifierNewerBuffer;
+						bnch_swt::doNotOptimizeAway(newPtr);
+					});
+
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+
+			auto jsonifierReadSize		   = jsonifierNewerBuffer.size();
+			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
+			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
+			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
+			bnch_swt::file_loader jsonifierFileLoaderTwitter{ basePath + "/" + static_cast<jsonifier::string>("Twitter Test (Minified)") + "-jsonifier.json" };
+			jsonifierFileLoaderTwitter.saveFile(jsonifierBuffer);
+			jsonifierResesults.print();
+			resultsNew.emplace_back(jsonifierResesults);
+
+			std::string table{};
+			const auto n = resultsNew.size();
+			table += table_header + "\n";
+			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
+			for (size_t x = 0; x < n; ++x) {
+				jsonResults.results.emplace_back(resultsNew[x]);
+				table += resultsNew[x].jsonStats();
+				if (x != n - 1) {
+					table += "\n";
+				}
+			}
+			jsonResults.markdownResults = table;
+			auto testResults			= jsonResults;
+			newerString += static_cast<jsonifier::string>(section10);
+			newerString += testResults.markdownResults;
+			benchmark_data.emplace_back(testResults);
+		}
+		auto testResults = json_tests_helper<test_type::minify, std::string, false, "Minify Test">::run(discordData);
+		newerString += static_cast<jsonifier::string>(section11);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, iterationsVal, "Json Test (Minified)">::run(jsonMinifiedData);
-		newerString += static_cast<std::string>(section02);
+		testResults = json_tests_helper<test_type::prettify, std::string, false, "Prettify Test">::run(jsonMinifiedData);
+		newerString += static_cast<jsonifier::string>(section12);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, false, iterationsVal, "Abc Test (Prettified)">::run(jsonDataNew);
-		newerString += static_cast<std::string>(section03);
+		testResults = json_tests_helper<test_type::validate, std::string, false, "Validate Test">::run(discordData);
+		newerString += static_cast<jsonifier::string>(section13);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, iterationsVal, "Abc Test (Minified)">::run(jsonMinifiedData);
-		newerString += static_cast<std::string>(section04);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, false, iterationsVal, "Discord Test (Prettified)">::run(discordData);
-		newerString += static_cast<std::string>(section05);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, true, iterationsVal, "Discord Test (Minified)">::run(discordMinifiedData);
-		newerString += static_cast<std::string>(section06);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, false, iterationsVal, "Canada Test (Prettified)">::run(canadaData);
-		newerString += static_cast<std::string>(section07);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, iterationsVal, "Canada Test (Minified)">::run(canadaMinifiedData);
-		newerString += static_cast<std::string>(section08);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, iterationsVal, "Twitter Test (Prettified)">::run(twitterData);
-		newerString += static_cast<std::string>(section09);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, iterationsVal, "Twitter Test (Minified)">::run(twitterMinifiedData);
-		newerString += static_cast<std::string>(section10);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::minify, std::string, false, iterationsVal, "Minify Test">::run(discordData);
-		newerString += static_cast<std::string>(section11);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::prettify, std::string, false, iterationsVal, "Prettify Test">::run(jsonMinifiedData);
-		newerString += static_cast<std::string>(section12);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::validate, std::string, false, iterationsVal, "Validate Test">::run(discordData);
-		newerString += static_cast<std::string>(section13);
-		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
+		bnch_swt::benchmark_stage<"Json-Performance">::printResults();
 		std::string resultsStringJson{};
 		test_results_final resultsData{};
 		for (auto& value: benchmark_data) {
@@ -2556,25 +3416,26 @@ int32_t main() {
 			for (auto& valueNew: value.results) {
 				test_element_final resultFinal{};
 				if (valueNew.readResult.jsonSpeed.has_value()) {
-					resultFinal.libraryName					  = valueNew.name;
-					resultFinal.color						  = valueNew.readResult.color;
-					resultFinal.resultSpeed					  = valueNew.readResult.jsonSpeed.value();
-					resultFinal.medianAbsolutePercentageError = valueNew.readResult.medianAbsolutePercentageError.value();
-					resultFinal.resultType					  = "Read";
+					resultFinal.libraryName	   = valueNew.name;
+					resultFinal.color		   = valueNew.readResult.color;
+					resultFinal.resultSpeed	   = valueNew.readResult.jsonSpeed.value();
+					resultFinal.iterationCount = valueNew.readResult.iterationCount.value();
+					resultFinal.resultType	   = "Read";
 					testElement.results.emplace_back(resultFinal);
 				}
 				if (valueNew.writeResult.jsonSpeed.has_value()) {
-					resultFinal.libraryName					  = valueNew.name;
-					resultFinal.color						  = valueNew.writeResult.color;
-					resultFinal.resultSpeed					  = valueNew.writeResult.jsonSpeed.value();
-					resultFinal.medianAbsolutePercentageError = valueNew.writeResult.medianAbsolutePercentageError.value();
-					resultFinal.resultType					  = "Write";
+					resultFinal.libraryName	   = valueNew.name;
+					resultFinal.color		   = valueNew.writeResult.color;
+					resultFinal.resultSpeed	   = valueNew.writeResult.jsonSpeed.value();
+					resultFinal.iterationCount = valueNew.writeResult.iterationCount.value();
+					resultFinal.resultType	   = "Write";
 					testElement.results.emplace_back(resultFinal);
 				}
 			}
 			resultsData.emplace_back(testElement);
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
+		std::cout << "Json Data: " << resultsStringJson << std::endl;
 		fileLoader04.saveFile(resultsStringJson);
 		fileLoader01.saveFile(newerString);
 		executePythonScript(static_cast<std::string>(BASE_PATH) + "/GenerateGraphs.py", basePath + "/Results.json", static_cast<std::string>(GRAPHS_PATH));

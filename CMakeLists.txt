@@ -25,7 +25,6 @@
 cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
-
 include("CollectVersion")
 collect_version("jsonifier")
 
@@ -54,35 +53,40 @@ set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 
-include("JsonifierDetectArchitecture")
+if (NOT JSONIFIER_CPU_INSTRUCTIONS)
+	include("JsonifierDetectArchitecture")
+endif()
 
-set_target_properties(
-	"${PROJECT_NAME}" PROPERTIES
-	OUTPUT_NAME "jsonifier"
-	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS OFF
-)
-
-target_link_options(
-	"${PROJECT_NAME}" INTERFACE
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF=4>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
-)
-
-target_include_directories(
-	"${PROJECT_NAME}" INTERFACE
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
-)
+ set_target_properties(
+     "${PROJECT_NAME}" PROPERTIES
+     OUTPUT_NAME "jsonifier"
+     CXX_STANDARD_REQUIRED ON
+     CXX_EXTENSIONS OFF
+ )
+ 
+ target_link_options(
+     "${PROJECT_NAME}" INTERFACE
+     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+     "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
+     "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+     "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
+ )
+ 
+ target_include_directories(
+     "${PROJECT_NAME}" INTERFACE
+     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
+    "$<INSTALL_INTERFACE:include/>"
+ )
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps 2097152>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wno-ignored-attributes>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-march=native>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
+	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
@@ -94,7 +98,7 @@ target_compile_options(
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
 	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
-	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN>"
+	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN_ENABLED>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

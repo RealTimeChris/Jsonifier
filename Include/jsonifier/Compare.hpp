@@ -27,19 +27,19 @@
 
 namespace jsonifier_internal {
 
-	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> constexpr return_type repeatByte() {
+	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> constexpr return_type repeatByte() noexcept {
 		return 0x0101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> constexpr return_type repeatByte() {
+	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> constexpr return_type repeatByte() noexcept {
 		return 0x01010101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> constexpr return_type repeatByte() {
+	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> constexpr return_type repeatByte() noexcept {
 		return 0x0101010101010101ull * repeat;
 	}
 
-	template<auto value> JSONIFIER_INLINE void memchar(const char*& data, size_t lengthNew) {
+	template<auto value, typename char_type> JSONIFIER_ALWAYS_INLINE void memchar(const char_type*& data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -49,7 +49,7 @@ namespace jsonifier_internal {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
-					data += simd_internal::tzcnt(mask);
+					data += tzcnt(mask);
 					return;
 				};
 				lengthNew -= vectorSize;
@@ -67,7 +67,7 @@ namespace jsonifier_internal {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
-					data += simd_internal::tzcnt(mask);
+					data += tzcnt(mask);
 					return;
 				};
 				lengthNew -= vectorSize;
@@ -85,7 +85,7 @@ namespace jsonifier_internal {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
 				if (mask != 0) {
-					data += simd_internal::tzcnt(mask);
+					data += tzcnt(mask);
 					return;
 				};
 				lengthNew -= vectorSize;
@@ -104,7 +104,7 @@ namespace jsonifier_internal {
 				lo7	  = simdValue & mask64;
 				quote = (lo7 ^ value64) + mask64;
 				t0	  = ~(quote | simdValue);
-				next  = simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
+				next  = tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
 
 				if (next != 8) {
 					data += next;
@@ -126,7 +126,7 @@ namespace jsonifier_internal {
 				lo7	  = simdValue & mask32;
 				quote = (lo7 ^ value32) + mask32;
 				t0	  = ~(quote | simdValue);
-				next  = simd_internal::tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
+				next  = tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
 
 				if (next != 4) {
 					data += next;
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 				lo7	  = static_cast<uint16_t>(simdValue & mask16);
 				quote = static_cast<uint16_t>((lo7 ^ value16) + mask16);
 				t0	  = static_cast<uint16_t>(~(quote | simdValue));
-				next  = static_cast<uint16_t>(simd_internal::tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u);
+				next  = static_cast<uint16_t>(tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u);
 
 				if (next != 2) {
 					data += next;
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 		data = nullptr;
 	}
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) {
+	template<typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -278,13 +278,13 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, typename char_type> JSONIFIER_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
+	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE constexpr bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
 		if constexpr (count > 8) {
 			uint64_t countNew{ count };
 			uint64_t v[2];
 			while (countNew > 8) {
-				std::copy_n(lhs, 8, reinterpret_cast<char_type*>(v));
-				std::copy_n(rhs, 8, reinterpret_cast<char_type*>(v + 1));
+				std::copy_n(lhs, 8, reinterpret_cast<char_type01*>(v));
+				std::copy_n(rhs, 8, reinterpret_cast<char_type01*>(v + 1));
 				if (v[0] != v[1]) {
 					return false;
 				}
@@ -297,38 +297,38 @@ namespace jsonifier_internal {
 			lhs -= shift;
 			rhs -= shift;
 
-			std::copy_n(lhs, 8, reinterpret_cast<char_type*>(v));
-			std::copy_n(rhs, 8, reinterpret_cast<char_type*>(v + 1));
+			std::copy_n(lhs, 8, reinterpret_cast<char_type01*>(v));
+			std::copy_n(rhs, 8, reinterpret_cast<char_type01*>(v + 1));
 			return v[0] == v[1];
 		} else {
 			if constexpr (count == 8) {
 				uint64_t v[2];
-				std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
-				std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
+				std::copy_n(lhs, count, reinterpret_cast<char_type01*>(v));
+				std::copy_n(rhs, count, reinterpret_cast<char_type01*>(v + 1));
 				return v[0] == v[1];
 			} else {
 				if constexpr (count > 4) {
 					uint64_t v[2]{};
-					std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
-					std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
+					std::copy_n(lhs, count, reinterpret_cast<char_type01*>(v));
+					std::copy_n(rhs, count, reinterpret_cast<char_type01*>(v + 1));
 					return v[0] == v[1];
 				} else {
 					if constexpr (count == 4) {
 						uint32_t v[2];
-						std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
-						std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
+						std::copy_n(lhs, count, reinterpret_cast<char_type01*>(v));
+						std::copy_n(rhs, count, reinterpret_cast<char_type01*>(v + 1));
 						return v[0] == v[1];
 					} else {
 						if constexpr (count == 3) {
 							uint32_t v[2]{};
-							std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
-							std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
+							std::copy_n(lhs, count, reinterpret_cast<char_type01*>(v));
+							std::copy_n(rhs, count, reinterpret_cast<char_type01*>(v + 1));
 							return v[0] == v[1];
 						} else {
 							if constexpr (count == 2) {
 								uint16_t v[2];
-								std::copy_n(lhs, count, reinterpret_cast<char_type*>(v));
-								std::copy_n(rhs, count, reinterpret_cast<char_type*>(v + 1));
+								std::copy_n(lhs, count, reinterpret_cast<char_type01*>(v));
+								std::copy_n(rhs, count, reinterpret_cast<char_type01*>(v + 1));
 								return v[0] == v[1];
 							} else {
 								if constexpr (count == 1) {

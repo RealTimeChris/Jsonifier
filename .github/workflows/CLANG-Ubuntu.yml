@@ -41,7 +41,7 @@ jobs:
     - name: Build the Test
       working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}}
+           cmake --build . --config=${{matrix.build_type}} -v
 
     - name: Install the Test
       working-directory: ./Build
@@ -53,3 +53,4 @@ jobs:
       run: |
            ./Json-Performance
       continue-on-error: true
+      

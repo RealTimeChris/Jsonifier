@@ -910,7 +910,7 @@ INPUT                  = . \
 				  ./../Include/jsonifier
 
 # This tag can be used to specify the character encoding of the source files
-# that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
+# that doxygen parses. Implly doxygen uses the UTF-8 encoding. Doxygen uses
 # libiconv (or the iconv built into libc) for the transcoding. See the libiconv
 # documentation (see:
 # https://www.gnu.org/software/libiconv/) for the list of possible encodings.
@@ -2508,7 +2508,8 @@ DOT_UML_DETAILS        = NO
 # to display on a single line. If the actual line length exceeds this threshold
 # significantly it will wrapped across multiple lines. Some heuristics are apply
 # to avoid ugly line breaks.
-# Minimum value: 0, maximum value: 1000, default value: 17.
+# Minimum value: 0, maximum value: 2
+, default value: 17.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_WRAP_THRESHOLD     = 17
