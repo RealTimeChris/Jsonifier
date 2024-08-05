@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 		return 0x0101010101010101ull * repeat;
 	}
 
-	template<auto value> JSONIFIER_INLINE void memchar(const char*& data, size_t lengthNew) {
+	template<auto value> JSONIFIER_ALWAYS_INLINE void memchar(const char*& data, size_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 		data = nullptr;
 	}
 
-	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) {
+	template<typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -277,7 +277,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, typename char_type> JSONIFIER_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
+	template<uint64_t count, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool compare(const char_type* lhs, const char_type* rhs) noexcept {
 		if constexpr (count > 8) {
 			uint64_t countNew{ count };
 			uint64_t v[2];

@@ -31,7 +31,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct minify_impl {
 		template<jsonifier::concepts::string_t string_type, typename minifier_type, typename iterator>
-		JSONIFIER_INLINE static void impl(iterator& iter, string_type&& out, uint64_t& index, minifier_type& minifier) noexcept {
+		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, uint64_t& index, minifier_type& minifier) noexcept {
 			auto previousPtr = static_cast<const char*>(iter);
 			int64_t currentDistance{};
 

@@ -81,17 +81,17 @@
 #endif
 
 #if defined(JSONIFIER_MSVC)
-	#define JSONIFIER_NO_INLINE __declspec(noinline)
+	#define JSONIFIER_ALWAYS_INLINE __forceinline
 	#define JSONIFIER_INLINE inline
 #elif defined(JSONIFIER_CLANG)
-	#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
-	#define JSONIFIER_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_INLINE inline
 #elif defined(JSONIFIER_GNUCXX)
-	#define JSONIFIER_NO_INLINE __attribute__((noinline))
+	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
 	#define JSONIFIER_INLINE inline
 #else
+	#define JSONIFIER_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
-	#define JSONIFIER_NO_INLINE
 #endif
 
 #if !defined(JSONIFIER_CPU_INSTRUCTIONS)
@@ -158,7 +158,7 @@
 
 #endif
 
-JSONIFIER_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) {
+JSONIFIER_ALWAYS_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
 
@@ -229,6 +229,6 @@ using string_buffer_ptr = char*;
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 
-JSONIFIER_INLINE void jsonifierPrefetchInternal(const void* ptr) {
+JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchInternal(const void* ptr) {
 	PREFETCH(ptr)
 }

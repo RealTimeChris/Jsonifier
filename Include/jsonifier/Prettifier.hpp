@@ -58,11 +58,11 @@ namespace jsonifier_internal {
 	  public:
 		template<typename derived_type_new> friend struct prettify_impl;
 
-		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE prettifier& operator=(const prettifier& other) = delete;
+		JSONIFIER_ALWAYS_INLINE prettifier(const prettifier& other)			= delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier ::concepts::string_t string_type>
-		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
+		JSONIFIER_ALWAYS_INLINE auto prettifyJson(string_type&& in) noexcept {
 			if (derivedRef.stringBuffer.size() < in.size() * 5) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 5);
 			}
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if (derivedRef.stringBuffer.size() < in.size() * 5) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size() * 5);
 			}
@@ -122,17 +122,17 @@ namespace jsonifier_internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 		mutable const char* rootIter{};
 
-		JSONIFIER_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_INLINE ~prettifier() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~prettifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

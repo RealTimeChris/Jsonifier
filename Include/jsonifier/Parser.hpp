@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 		mutable const char* rootIter{};
 	};
 
-	JSONIFIER_INLINE std::pair<const char*, const char*> collectIterPair(const char* startPtr, const char* endPtr) {
+	JSONIFIER_ALWAYS_INLINE std::pair<const char*, const char*> collectIterPair(const char* startPtr, const char* endPtr) {
 		while (whitespaceTable[static_cast<uint64_t>(*startPtr)]) {
 			++startPtr;
 		}
@@ -77,11 +77,11 @@ namespace jsonifier_internal {
 		friend void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
 		template<typename derived_type_new, typename value_type> friend struct parse_impl;
 
-		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
-		JSONIFIER_INLINE parser(const parser& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
+		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			= delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) {
+		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) {
 			if (in.size() == 0) {
 				return false;
 			}
@@ -136,7 +136,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) {
+		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) {
 			if (in.size() == 0) {
 				return value_type{};
 			}
@@ -192,19 +192,19 @@ namespace jsonifier_internal {
 			return object;
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() {
 			return derivedRef.errors;
 		}
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 
-		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE ~parser() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~parser() noexcept = default;
 	};
 };

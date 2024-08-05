@@ -115,6 +115,7 @@ namespace jsonifier_internal {
 	JSONIFIER_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) {
 		using value_type = unwrap_t<value_type_new>;
 		auto newPtr		 = iter.operator const char*();
+		++iter;
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
 			if constexpr (std::is_unsigned_v<value_type>) {
@@ -122,10 +123,13 @@ namespace jsonifier_internal {
 					if (*newPtr == '-') [[unlikely]] {
 						return false;
 					}
+					auto newerPtr = iter.operator const char*();
+					while (!std::isdigit(*newerPtr)) {
+						--newerPtr;
+					}
 
 					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(value, newPtr);
-					++iter;
+					auto s = parseInt(value, newPtr, (newerPtr - newPtr));
 					if (!s) [[unlikely]] {
 						return false;
 					}
@@ -134,10 +138,13 @@ namespace jsonifier_internal {
 					if (*newPtr == '-') [[unlikely]] {
 						return false;
 					}
+					auto newerPtr = iter.operator const char*();
+					while (!std::isdigit(*newerPtr)) {
+						--newerPtr;
+					}
 
 					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(i, newPtr);
-					++iter;
+					auto s = parseInt(i, newPtr, (newerPtr - newPtr));
 					if (!s) [[unlikely]] {
 						return false;
 					}
@@ -154,10 +161,13 @@ namespace jsonifier_internal {
 					sign = -1;
 					++newPtr;
 				}
+				auto newerPtr = iter.operator const char*();
+				while (!std::isdigit(*newerPtr)) {
+					--newerPtr;
+				}
 
 				static_assert(sizeof(*newPtr) == sizeof(char));
-				auto s = parseInt(i, newPtr);
-				++iter;
+				auto s = parseInt(i, newPtr, (newerPtr - newPtr));
 				if (!s) [[unlikely]] {
 					return false;
 				}
@@ -178,18 +188,16 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(newPtr), static_cast<const char*>(end), temp);
 				if (ec != std::errc()) [[unlikely]] {
 					return false;
 				}
 				value = temp;
-				++iter;
 			} else {
-				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(iter), static_cast<const char*>(end), value);
+				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(newPtr), static_cast<const char*>(end), value);
 				if (ec != std::errc()) [[unlikely]] {
 					return false;
 				}
-				++iter;
 			}
 		}
 		return true;
@@ -202,28 +210,38 @@ namespace jsonifier_internal {
 			if constexpr (std::is_unsigned_v<value_type>) {
 				if constexpr (std::same_as<value_type, uint64_t>) {
 					if (*iter == '-') [[unlikely]] {
-						return true;
+						return false;
 					}
+					auto newPtr = iter;
+					while (std::isdigit(*iter)) {
+						++iter;
+					}
+					auto newerPtr = iter;
 
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt(value, iter);
+					auto s = parseInt(value, newPtr, newerPtr - newPtr);
 					if (!s) [[unlikely]] {
-						return true;
+						return false;
 					}
 				} else {
 					uint64_t i{};
 					if (*iter == '-') [[unlikely]] {
-						return true;
+						return false;
 					}
 
+					auto newPtr = iter;
+					while (std::isdigit(*iter)) {
+						++iter;
+					}
+					auto newerPtr = iter;
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<unwrap_t<decltype(i)>>(i, iter);
+					auto s = parseInt<unwrap_t<decltype(i)>>(i, newPtr, newerPtr - newPtr);
 					if (!s) [[unlikely]] {
-						return true;
+						return false;
 					}
 
 					if (i > maximum) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(i);
 				}
@@ -234,22 +252,27 @@ namespace jsonifier_internal {
 					sign = -1;
 					++iter;
 				}
+				auto newPtr = iter;
+				while (std::isdigit(*iter)) {
+					++iter;
+				}
+				auto newerPtr = iter;
 
 				static_assert(sizeof(*iter) == sizeof(char));
-				auto s = parseInt(i, iter);
+				auto s = parseInt(i, newPtr, newerPtr - newPtr);
 				if (!s) [[unlikely]] {
-					return true;
+					return false;
 				}
 
 				if (sign == -1) {
 					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
 					if (i > min_abs) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(sign * i);
 				} else {
 					if (i > maximum) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(i);
 				}
@@ -259,14 +282,14 @@ namespace jsonifier_internal {
 				value_type temp;
 				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(iter), static_cast<const char*>(end), temp);
 				if (ec != std::errc()) [[unlikely]] {
-					return true;
+					return false;
 				}
 				value = temp;
 				iter  = ptr;
 			} else {
 				auto [ptr, ec] = jsonifier_fast_float::fromCharsAdvanced(static_cast<const char*>(iter), static_cast<const char*>(end), value);
 				if (ec != std::errc()) [[unlikely]] {
-					return true;
+					return false;
 				}
 				iter = ptr;
 			}

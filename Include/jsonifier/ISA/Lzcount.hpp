@@ -29,17 +29,17 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) {
 		return _lzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) {
 		return _lzcnt_u64(value);
 	}
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
 		unsigned long leading_zero = 0;
 		if (_BitScanReverse32(&leading_zero, value)) {
@@ -52,7 +52,7 @@ namespace simd_internal {
 	#endif
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_INLINE value_type lzcnt(value_type value) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
 		unsigned long leading_zero = 0;
 		if (_BitScanReverse64(&leading_zero, value)) {

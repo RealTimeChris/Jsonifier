@@ -90,6 +90,8 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-march=native>"
+	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
 	"${AVX_FLAG}"
 )
 

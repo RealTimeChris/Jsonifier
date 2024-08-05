@@ -28,12 +28,12 @@
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundUpToMultiple(value_type value) {
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundUpToMultiple(value_type value) {
 		auto remainder = value % multiple;
 		return remainder == 0 ? value : value + (multiple - remainder);
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundDownToMultiple(value_type value) {
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundDownToMultiple(value_type value) {
 		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 	}
 
@@ -41,10 +41,10 @@ namespace jsonifier_internal {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
-		using size_type		   = uint64_t;
+		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_INLINE pointer allocate(size_type count) {
+		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) {
 			if (count == 0) [[unlikely]] {
 				return nullptr;
 			}
@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr, size_type size = 0) {
+		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_type size = 0) {
 			( void )size;
 			if (ptr) [[likely]] {
 #if defined(JSONIFIER_MSVC)
@@ -66,15 +66,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) {
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE void construct(pointer ptr, arg_types&&... args) {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_INLINE size_type maxSize() {
+		JSONIFIER_ALWAYS_INLINE size_type maxSize() {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
-		JSONIFIER_INLINE void destroy(pointer ptr) {
+		JSONIFIER_ALWAYS_INLINE void destroy(pointer ptr) {
 			ptr->~value_type();
 		}
 	};

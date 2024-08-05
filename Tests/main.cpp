@@ -1064,7 +1064,7 @@ template<> struct glz::meta<abc_test<test_struct>> {
 #endif
 
 #if defined(NDEBUG) && !defined(ASAN)
-constexpr uint64_t iterationsVal = 2000;
+constexpr uint64_t iterationsVal = 5000;
 #else
 constexpr uint64_t iterationsVal = 100;
 #endif
@@ -2136,8 +2136,8 @@ std::string write_table_header = R"(
 
 static const std::string section001{ R"(
  > At least )" +
-	jsonifier::toString(static_cast<uint64_t>(static_cast<float>(iterationsVal) * 0.05f)) +
-	R"( iterations on a 6 core (Intel i7 8700k), until Empirical Confidence is at or above 95.0% and mdape (Median Absolute Percentage Error) is at or below 5%.
+	jsonifier::toString(30) +
+	R"( iterations on a 6 core (Intel i7 8700k), until coefficient of variance is at or below 3%.
 )" };
 
 static constexpr auto newString02{ bnch_swt::combineLiterals<R"(#### Using the following commits:
@@ -2301,7 +2301,7 @@ alt="" width="400"/></p>
 )"
 };
 
-JSONIFIER_INLINE std::string getCurrentWorkingDirectory() {
+JSONIFIER_ALWAYS_INLINE std::string getCurrentWorkingDirectory() {
 	try {
 		return std::filesystem::current_path().string();
 	} catch (const std::filesystem::filesystem_error& e) {
@@ -2310,7 +2310,7 @@ JSONIFIER_INLINE std::string getCurrentWorkingDirectory() {
 	}
 }
 
-JSONIFIER_INLINE void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
+JSONIFIER_ALWAYS_INLINE void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
 #if defined(JSONIFIER_WIN)
 	static constexpr std::string_view pythonName{ "python " };
 #else

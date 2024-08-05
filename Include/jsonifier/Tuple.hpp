@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<const auto& member_ptr, typename value_type> JSONIFIER_INLINE constexpr decltype(auto) getMember(value_type&& value) {
+	template<const auto& member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) {
 		using value_type02 = unwrap_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
 			return value.*member_ptr;

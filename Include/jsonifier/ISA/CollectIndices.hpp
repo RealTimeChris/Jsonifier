@@ -88,7 +88,7 @@ namespace simd_internal {
 	template<auto valueToCollect, typename simd_type> const simd_type simdValue{ simd_internal::gatherValue<simd_type>(valueToCollect) };
 	template<const auto& valuesToCollect, typename simd_type> const simd_type simdValues{ simd_internal::gatherValues<simd_type>(valuesToCollect.data()) };
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralsAsSimdBase(const jsonifier_simd_int_t* values) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralsAsSimdBase(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		valuesNew[0] = opCmpEq(opShuffle(simdValues<opArray<bytesPerStep>, jsonifier_simd_int_t>, values[0]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[0]));
 		valuesNew[1] = opCmpEq(opShuffle(simdValues<opArray<bytesPerStep>, jsonifier_simd_int_t>, values[1]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[1]));
@@ -101,7 +101,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceAsSimdBase(const jsonifier_simd_int_t* values) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectWhitespaceAsSimdBase(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		valuesNew[0] = opCmpEq(opShuffle(simdValues<whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[0]), values[0]);
 		valuesNew[1] = opCmpEq(opShuffle(simdValues<whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[1]), values[1]);
@@ -114,7 +114,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<char valueToCollect> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) {
+	template<char valueToCollect> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		valuesNew[0] = opCmpEq(simdValue<valueToCollect, jsonifier_simd_int_t>, values[0]);
 		valuesNew[1] = opCmpEq(simdValue<valueToCollect, jsonifier_simd_int_t>, values[1]);
@@ -127,7 +127,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) {
+	JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) {
 		simd_int_t_holder returnValues;
 		returnValues.op			 = collectStructuralsAsSimdBase(values);
 		returnValues.quotes		 = collectValues<'"'>(values);
