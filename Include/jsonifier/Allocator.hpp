@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
-		using size_type		   = size_t;
+		using size_type		   = uint64_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
 		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) {
@@ -55,8 +55,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_type size = 0) {
-			( void )size;
+		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr) {
 			if (ptr) [[likely]] {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);

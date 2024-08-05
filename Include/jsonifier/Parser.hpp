@@ -50,20 +50,6 @@ namespace jsonifier_internal {
 		mutable const char* rootIter{};
 	};
 
-	JSONIFIER_ALWAYS_INLINE std::pair<const char*, const char*> collectIterPair(const char* startPtr, const char* endPtr) {
-		while (whitespaceTable[static_cast<uint64_t>(*startPtr)]) {
-			++startPtr;
-		}
-		auto startPtrNew = startPtr;
-
-		while (whitespaceTable[static_cast<uint64_t>(*endPtr)]) {
-			--endPtr;
-		}
-		auto endPtrNew = endPtr;
-
-		return std::make_pair(startPtrNew, endPtrNew);
-	}
-
 	template<typename derived_type, typename value_type> struct parse_impl;
 
 	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
@@ -115,19 +101,20 @@ namespace jsonifier_internal {
 					}
 				}
 			} else {
-				auto readIters = collectIterPair(reinterpret_cast<const char*>(in.data()), reinterpret_cast<const char*>(in.data() + in.size()));
-				if (!readIters.first || (*readIters.first != '{' && *readIters.first != '[')) {
+				auto readIter = reinterpret_cast<const char*>(in.data());
+				auto endIter  = reinterpret_cast<const char*>(in.data() + in.size());
+				if (!readIter || (*readIter != '{' && *readIter != '[')) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
-					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIters.first - optionsReal.rootIter,
-						readIters.second - optionsReal.rootIter, optionsReal.rootIter));
+					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
+						endIter - optionsReal.rootIter, optionsReal.rootIter));
 					return false;
 				}
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIters.first, readIters.second);
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIter, endIter);
 				if constexpr (!options.minified) {
-					if (readIters.first != readIters.second) {
+					if (readIter != endIter) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIters.first - optionsReal.rootIter,
-							readIters.second - optionsReal.rootIter, optionsReal.rootIter));
+						getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
+							endIter - optionsReal.rootIter, optionsReal.rootIter));
 						return false;
 					}
 				}
@@ -172,19 +159,20 @@ namespace jsonifier_internal {
 					}
 				}
 			} else {
-				auto readIters = collectIterPair(reinterpret_cast<const char*>(in.data()), reinterpret_cast<const char*>(in.data() + in.size()));
-				if (!readIters.first || (*readIters.first != '{' && *readIters.first != '[')) {
+				auto readIter = reinterpret_cast<const char*>(in.data());
+				auto endIter  = reinterpret_cast<const char*>(in.data() + in.size());
+				if (!readIter || (*readIter != '{' && *readIter != '[')) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
-					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIters.first - optionsReal.rootIter,
-						readIters.second - optionsReal.rootIter, optionsReal.rootIter));
+					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
+						endIter - optionsReal.rootIter, optionsReal.rootIter));
 					return object;
 				}
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIters.first, readIters.second);
+				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIter, endIter);
 				if constexpr (!options.minified) {
-					if (readIters.first != readIters.second) {
+					if (readIter != endIter) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIters.first - optionsReal.rootIter,
-							readIters.second - optionsReal.rootIter, optionsReal.rootIter));
+						getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
+							endIter - optionsReal.rootIter, optionsReal.rootIter));
 						return object;
 					}
 				}

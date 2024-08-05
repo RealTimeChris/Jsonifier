@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 		using value_type	= uint8_t;
 		using pointer		= value_type*;
 		using const_pointer = const value_type*;
-		using size_type		= size_t;
+		using size_type		= uint64_t;
 
 		static constexpr void move(pointer firstNew, pointer first2, size_type count) {
 			if (std::is_constant_evaluated()) {
@@ -52,11 +52,11 @@ namespace jsonifier_internal {
 				}
 
 				if (loopForward) {
-					for (size_t index = 0; index != count; ++index) {
+					for (uint64_t index = 0; index != count; ++index) {
 						firstNew[index] = first2[index];
 					}
 				} else {
-					for (size_t index = count; index != 0; --index) {
+					for (uint64_t index = count; index != 0; --index) {
 						firstNew[index - 1] = first2[index - 1];
 					}
 				}
@@ -84,7 +84,7 @@ namespace jsonifier {
 
 	template<typename value_type> class string_view_base;
 
-	template<typename value_type_new, size_t newerSize = 0> class string_base : protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, uint64_t newerSize = 0> class string_base : protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -96,7 +96,7 @@ namespace jsonifier {
 		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-		using size_type				 = size_t;
+		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
@@ -183,7 +183,7 @@ namespace jsonifier {
 			*this = other;
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_base(const_pointer other, size_t newSize) : capacityVal{}, sizeVal{}, dataVal{} {
+		JSONIFIER_ALWAYS_INLINE string_base(const_pointer other, uint64_t newSize) : capacityVal{}, sizeVal{}, dataVal{} {
 			if (newSize > 0 && newSize < maxSize()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
@@ -192,7 +192,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_base(const_iterator other, size_t newSize) : capacityVal{}, sizeVal{}, dataVal{} {
+		JSONIFIER_ALWAYS_INLINE string_base(const_iterator other, uint64_t newSize) : capacityVal{}, sizeVal{}, dataVal{} {
 			if (newSize > 0 && newSize < maxSize()) [[likely]] {
 				reserve(newSize);
 				sizeVal = newSize;
@@ -289,7 +289,7 @@ namespace jsonifier {
 			}
 		}
 
-		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE void append(value_type_newer* values, size_t newSize) {
+		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE void append(value_type_newer* values, uint64_t newSize) {
 			if (sizeVal + newSize >= capacityVal) [[unlikely]] {
 				reserve(sizeVal + newSize);
 			}
@@ -300,7 +300,7 @@ namespace jsonifier {
 			}
 		}
 
-		template<typename Iterator> JSONIFIER_ALWAYS_INLINE void insert(iterator where, Iterator start, Iterator end) {
+		template<typename Iterator01, typename Iterator02> JSONIFIER_ALWAYS_INLINE void insert(Iterator01 where, Iterator02 start, Iterator02 end) {
 			int64_t newSize = end - start;
 			auto posNew		= where.operator->() - dataVal;
 
@@ -411,7 +411,7 @@ namespace jsonifier {
 			sizeVal = 0;
 		}
 
-		JSONIFIER_INLINE void resize(size_type newSize) {
+		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
 			if (static_cast<int64_t>(newSize) > 0) [[likely]] {
 				if (newSize > capacityVal) [[likely]] {
 					pointer newPtr = allocator::allocate(newSize + 1);
@@ -446,7 +446,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE void reserve(size_type capacityNew) {
+		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
 			if (capacityNew > capacityVal) [[likely]] {
 				pointer newPtr = allocator::allocate(capacityNew + 1);
 				try {

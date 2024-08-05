@@ -34,7 +34,6 @@ namespace std {
 			return std::hash<std::string_view>::operator()(std::string_view{ string });
 		}
 	};
-
 }
 
 namespace jsonifier {

@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 		return numBytes;
 	}
 
-	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator01& srcPtr, iterator02& dstPtr) {
+	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) {
 		using char_type01 = uint8_t;
 		static constexpr char_type01 quotesValue{ static_cast<char_type01>('\\' << 8) };
 		static constexpr char_type01 uValue{ static_cast<char_type01>(0x75u) };
@@ -163,7 +163,7 @@ namespace jsonifier_internal {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(
-			simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'\\', simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'"', simd_type>)));
+			simd_internal::opCmpEq(simdValue, simd_internal::simdBackslashes<simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdQuotes<simd_type>)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -182,7 +182,7 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		return simd_internal::tzcnt(static_cast<integer_type>(
-			simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'\\', simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'"', simd_type>)));
+			simd_internal::opCmpEq(simdValue, simd_internal::simdBackslashes<simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdQuotes<simd_type>)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -200,9 +200,8 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const void* string1, void* string2, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(
-			simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::simdValues<simd_internal::escapeableArray00<bytesPerStep>, simd_type>, simdValue), simdValue) |
-			simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::simdValues<simd_internal::escapeableArray01<bytesPerStep>, simd_type>, simdValue), simdValue)));
+		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::escapeableTable00<simd_type>, simdValue), simdValue) |
+			simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::escapeableTable01<simd_type>, simdValue), simdValue)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -219,7 +218,7 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename iterator01> JSONIFIER_ALWAYS_INLINE void skipShortStringImpl(iterator01& string1, uint64_t& lengthNew) {
+	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipShortStringImpl(iterator_type01& string1, uint64_t& lengthNew) {
 		static constexpr char quotesValue{ static_cast<char>('"') };
 		while (static_cast<int64_t>(lengthNew) > 0) {
 			if (*string1 == quotesValue || *string1 == '\\') {
@@ -238,9 +237,9 @@ namespace jsonifier_internal {
 		return;
 	}
 
-	template<typename iterator01> JSONIFIER_ALWAYS_INLINE void skipStringImpl(iterator01& string1, uint64_t& lengthNew) {
+	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipStringImpl(iterator_type01& string1, uint64_t& lengthNew) {
 		using char_type01 =
-			typename std::conditional_t<std::is_pointer_v<iterator01>, std::remove_pointer_t<iterator01>, typename std::iterator_traits<iterator01>::value_type>;
+			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
 		constexpr char quotesValue{ static_cast<char>('"') };
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
@@ -364,12 +363,12 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<typename iterator01, typename iterator02>
-	JSONIFIER_ALWAYS_INLINE iterator02 parseShortStringImpl(iterator01& string1, iterator02 string2, uint64_t lengthNew) {
+	template<typename iterator_type01, typename iterator_type02>
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseShortStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) {
 		using char_type01 =
-			typename std::conditional_t<std::is_pointer_v<iterator01>, std::remove_pointer_t<iterator01>, typename std::iterator_traits<iterator01>::value_type>;
+			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		using char_type02 =
-			typename std::conditional_t<std::is_pointer_v<iterator02>, std::remove_pointer_t<iterator02>, typename std::iterator_traits<iterator02>::value_type>;
+			typename std::conditional_t<std::is_pointer_v<iterator_type02>, std::remove_pointer_t<iterator_type02>, typename std::iterator_traits<iterator_type02>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
 		while (lengthNew > 0) {
 			*string2 = static_cast<char_type02>(*string1);
@@ -405,12 +404,12 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
-	template<typename iterator01, typename iterator02>
-	JSONIFIER_ALWAYS_INLINE iterator02 parseStringImpl(iterator01& string1, iterator02 string2, uint64_t lengthNew) {
+	template<typename iterator_type01, typename iterator_type02>
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) {
 		using char_type01 =
-			typename std::conditional_t<std::is_pointer_v<iterator01>, std::remove_pointer_t<iterator01>, typename std::iterator_traits<iterator01>::value_type>;
+			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		using char_type02 =
-			typename std::conditional_t<std::is_pointer_v<iterator02>, std::remove_pointer_t<iterator02>, typename std::iterator_traits<iterator02>::value_type>;
+			typename std::conditional_t<std::is_pointer_v<iterator_type02>, std::remove_pointer_t<iterator_type02>, typename std::iterator_traits<iterator_type02>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
@@ -435,13 +434,13 @@ namespace jsonifier_internal {
 								string1 += nextBackslashOrQuote;
 								string2 += nextBackslashOrQuote;
 								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<iterator02>(nullptr);
+									return static_cast<iterator_type02>(nullptr);
 								}
 								continue;
 							}
 							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
 							if (escapeChar == 0u) {
-								return static_cast<iterator02>(nullptr);
+								return static_cast<iterator_type02>(nullptr);
 							}
 							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
@@ -484,13 +483,13 @@ namespace jsonifier_internal {
 								string1 += nextBackslashOrQuote;
 								string2 += nextBackslashOrQuote;
 								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<iterator02>(nullptr);
+									return static_cast<iterator_type02>(nullptr);
 								}
 								continue;
 							}
 							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
 							if (escapeChar == 0u) {
-								return static_cast<iterator02>(nullptr);
+								return static_cast<iterator_type02>(nullptr);
 							}
 							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
@@ -533,13 +532,13 @@ namespace jsonifier_internal {
 								string1 += nextBackslashOrQuote;
 								string2 += nextBackslashOrQuote;
 								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<iterator02>(nullptr);
+									return static_cast<iterator_type02>(nullptr);
 								}
 								continue;
 							}
 							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
 							if (escapeChar == 0u) {
-								return static_cast<iterator02>(nullptr);
+								return static_cast<iterator_type02>(nullptr);
 							}
 							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
@@ -581,13 +580,13 @@ namespace jsonifier_internal {
 								string1 += nextBackslashOrQuote;
 								string2 += nextBackslashOrQuote;
 								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<iterator02>(nullptr);
+									return static_cast<iterator_type02>(nullptr);
 								}
 								continue;
 							}
 							escapeChar = escapeMap<char>[static_cast<uint8_t>(escapeChar)];
 							if (escapeChar == 0u) {
-								return static_cast<iterator02>(nullptr);
+								return static_cast<iterator_type02>(nullptr);
 							}
 							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
@@ -622,8 +621,8 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<typename iterator01, typename iterator02>
-	JSONIFIER_ALWAYS_INLINE void serializeShortStringImpl(iterator01 string1, iterator02& string2, uint64_t lengthNew) {
+	template<typename iterator_type01, typename iterator_type02>
+	JSONIFIER_ALWAYS_INLINE void serializeShortStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) {
 		auto* end = string1 + lengthNew;
 		for (; string1 < end; ++string1) {
 			if (auto escapeChar = escapeTable[static_cast<uint8_t>(*string1)]; escapeChar) [[likely]] {
@@ -636,7 +635,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void serializeStringImpl(iterator01 string1, iterator02& string2, uint64_t lengthNew) {
+	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) {
 		uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{

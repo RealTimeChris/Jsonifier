@@ -55,9 +55,9 @@ namespace jsonifier_internal {
 
 	template<template<typename...> class value_type, typename... Args> constexpr bool is_specialization_v<value_type<Args...>, value_type> = true;
 
-	template<size_t index> using tag = std::integral_constant<size_t, index>;
+	template<uint64_t index> using tag = std::integral_constant<uint64_t, index>;
 
-	template<size_t index> constexpr tag<index> TagV{};
+	template<uint64_t index> constexpr tag<index> TagV{};
 
 	template<typename value_type, typename... value_types> struct collect_first_type {
 		using type = value_type;
@@ -65,8 +65,8 @@ namespace jsonifier_internal {
 
 	template<typename... value_type> using unwrap_t = std::remove_cvref_t<typename collect_first_type<value_type...>::type>;
 
-	template<size_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
-		static constexpr size_t bytesProcessed{ bytesProcessedNew };
+	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
+		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
 		static constexpr integer_type_new mask{ maskNew };
 		using type		   = simd_type;
 		using integer_type = integer_type_new;
@@ -77,38 +77,37 @@ namespace jsonifier_internal {
 	template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
 		using current_type			   = value_type;
 		using remaining_types		   = type_list<rest...>;
-		static constexpr size_t size = 1 + sizeof...(rest);
+		static constexpr uint64_t size = 1 + sizeof...(rest);
 	};
 
 	template<typename value_type> struct type_list<value_type> {
 		using current_type			   = value_type;
-		static constexpr size_t size = 1;
+		static constexpr uint64_t size = 1;
 	};
 
-	template<typename type_list, size_t index> struct get_type_at_index;
+	template<typename type_list, uint64_t index> struct get_type_at_index;
 
 	template<typename value_type, typename... rest> struct get_type_at_index<type_list<value_type, rest...>, 0> {
 		using type = value_type;
 	};
 
-	template<typename value_type, typename... rest, size_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
+	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<template<size_t, typename, typename> typename function_wrapper, typename value_type, typename iterator, std::size_t... indices>
-	static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
-		using function_type = decltype(&function_wrapper<0, value_type, iterator>::op);
-		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices, value_type, iterator>::op... } };
+	template<template<uint64_t> typename function_wrapper, std::size_t... indices> static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
+		using function_type = decltype(&function_wrapper<0>::op);
+		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices>::op... } };
 	}
 
-	template<std::size_t... indices> struct reverse_index_sequence {};
+	template<std::size_t... Indices> struct reverse_index_sequence {};
 
-	template<std::size_t N, std::size_t... indices> struct make_reverse_index_sequence_impl {
-		using type = typename make_reverse_index_sequence_impl<N - 1, indices..., N - 1>::type;
+	template<std::size_t N, std::size_t... Indices> struct make_reverse_index_sequence_impl {
+		using type = typename make_reverse_index_sequence_impl<N - 1, Indices..., N - 1>::type;
 	};
 
-	template<std::size_t... indices> struct make_reverse_index_sequence_impl<0, indices...> {
-		using type = reverse_index_sequence<indices...>;
+	template<std::size_t... Indices> struct make_reverse_index_sequence_impl<0, Indices...> {
+		using type = reverse_index_sequence<Indices...>;
 	};
 
 	template<std::size_t N> using make_reverse_index_sequence = typename make_reverse_index_sequence_impl<N>::type;
@@ -119,7 +118,7 @@ namespace jsonifier_internal {
 		}(make_reverse_index_sequence<N>{});
 	}
 
-	template<const auto& function, size_t currentIndex = 0, typename variant_type, typename... arg_types>
+	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
 		if constexpr (currentIndex < std::variant_size_v<jsonifier_internal::unwrap_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
@@ -135,13 +134,13 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<typename value_type, size_t> class string_base;
+	template<typename value_type, uint64_t> class string_base;
 
 	using string = string_base<char, 0>;
 
 	class raw_json_data;
 
-	template<typename value_type_new, size_t sizeVal = 0> class vector;
+	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
 	template<typename value_type> struct core {};
 
@@ -483,17 +482,17 @@ namespace jsonifier {
 
 namespace std {
 
-	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<size_t, 0> {};
+	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 
-	template<typename... value_types> struct variant_size<jsonifier::value<value_types...>> : integral_constant<size_t, sizeof...(value_types)> {};
+	template<typename... value_types> struct variant_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 
-	template<typename... value_types> struct variant_size<std::tuple<value_types...>> : integral_constant<size_t, sizeof...(value_types)> {};
+	template<typename... value_types> struct variant_size<std::tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 
-	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : integral_constant<size_t, sizeof...(value_types)> {};
+	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 
-	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<size_t, 0> {};
+	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 
-	template<typename... value_types> struct tuple_size<jsonifier_internal::array_tuple<value_types...>> : integral_constant<size_t, sizeof...(value_types)> {};
+	template<typename... value_types> struct tuple_size<jsonifier_internal::array_tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 }
 
 namespace jsonifier_internal {
@@ -515,7 +514,7 @@ namespace jsonifier_internal {
 		std::cout << valuesTitle;
 		for (jsonifier_string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
 			for (jsonifier_string_parsing_type y = 0; y < 8; ++y) {
-				std::cout << std::bitset<1>{ static_cast<size_t>(*(values + x)) >> y };
+				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
 			}
 		}
 		std::cout << std::endl;
@@ -532,9 +531,9 @@ namespace jsonifier_internal {
 		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
-		for (size_t x = 0; x < bytesPerStep; ++x) {
-			for (size_t y = 0; y < 8; ++y) {
-				theStream << std::bitset<1>{ static_cast<size_t>(*(values + x)) >> y };
+		for (uint64_t x = 0; x < bytesPerStep; ++x) {
+			for (uint64_t y = 0; y < 8; ++y) {
+				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
 			}
 		}
 		theStream << std::endl;
@@ -545,7 +544,7 @@ namespace jsonifier_internal {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
-		JSONIFIER_ALWAYS_INLINE stop_watch(size_t newTime) {
+		JSONIFIER_ALWAYS_INLINE stop_watch(uint64_t newTime) {
 			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
 		}
 

@@ -29,7 +29,7 @@
 
 namespace jsonifier {
 
-	template<typename value_type_new, size_t sizeValNewer> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, uint64_t sizeValNewer> class vector : protected std::equal_to<value_type_new>, protected jsonifier_internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
@@ -42,7 +42,7 @@ namespace jsonifier {
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
-		using size_type				 = size_t;
+		using size_type				 = uint64_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
 		JSONIFIER_ALWAYS_INLINE vector() {
@@ -175,7 +175,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		template<typename iterator02> JSONIFIER_ALWAYS_INLINE void insert(iterator where, iterator02 first, iterator02 last) {
+		JSONIFIER_ALWAYS_INLINE void insert(iterator where, iterator first, iterator last) {
 			size_type insertCount = std::distance(first, last);
 
 			if (insertCount == 0) {
@@ -191,7 +191,7 @@ namespace jsonifier {
 
 			pointer insertPos = dataVal + insertPosIndex;
 
-			for (iterator02 iter = first; iter != last; ++iter) {
+			for (iterator iter = first; iter != last; ++iter) {
 				allocator::construct(insertPos++, *iter);
 			}
 
@@ -389,7 +389,7 @@ namespace jsonifier {
 			return (std::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
-		JSONIFIER_INLINE void resize(size_type newSize) {
+		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
 			if (newSize > capacityVal) [[likely]] {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
@@ -418,7 +418,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void reserve(size_type capacityNew) {
+		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
 			if (capacityNew > capacityVal) [[likely]] {
 				pointer newPtr = allocator::allocate(capacityNew);
 				try {

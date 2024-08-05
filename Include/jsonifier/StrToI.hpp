@@ -45,24 +45,24 @@ namespace jsonifier_internal {
 	constexpr uint8_t digiTypeDot	  = 1 << 4;
 	constexpr uint8_t digiTypeExp	  = 1 << 5;
 
-	template<typename uint8_t> JSONIFIER_INLINE bool digiIsType(uint8_t d, uint8_t type) noexcept {
-		return (digiTable<uint8_t>[static_cast<size_t>(d)] & type) != 0;
+	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsType(uint8_t d, uint8_t type) noexcept {
+		return (digiTable<uint8_t>[static_cast<uint64_t>(d)] & type) != 0;
 	}
 
-	template<typename uint8_t> JSONIFIER_INLINE bool digiIsFp(uint8_t d) noexcept {
+	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsFp(uint8_t d) noexcept {
 		return digiIsType(d, uint8_t(digiTypeDot | digiTypeExp));
 	}
 
-	template<typename uint8_t> JSONIFIER_INLINE bool digiIsDigitOrFp(uint8_t d) noexcept {
+	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsDigitOrFp(uint8_t d) noexcept {
 		return digiIsType(d, uint8_t(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
 	constexpr uint8_t zero{ '0' };
 
-	constexpr std::array<size_t, 256> numberSubTable{ []() {
-		std::array<size_t, 256> returnValues{};
-		for (size_t x = 0; x < 256; ++x) {
-			returnValues[x] = static_cast<size_t>(x - zero);
+	constexpr std::array<uint64_t, 256> numberSubTable{ []() {
+		std::array<uint64_t, 256> returnValues{};
+		for (uint64_t x = 0; x < 256; ++x) {
+			returnValues[x] = static_cast<uint64_t>(x - zero);
 		}
 		return returnValues;
 	}() };
@@ -82,47 +82,67 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_INLINE constexpr bool isSafeAddition(size_t a, size_t b) noexcept {
-		return a <= (std::numeric_limits<size_t>::max)() - b;
+	JSONIFIER_ALWAYS_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
+		return a <= (std::numeric_limits<uint64_t>::max)() - b;
 	}
 
-	JSONIFIER_INLINE constexpr bool isSafeMultiplication10(size_t a) noexcept {
-		constexpr size_t b = (std::numeric_limits<size_t>::max)() / 10;
+	JSONIFIER_ALWAYS_INLINE constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
+		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
 		return a <= b;
 	}
 
-	template<size_t maxIndex, size_t index = 0, jsonifier::concepts::integer_t value_type, typename iterator> void opReal(value_type& value, iterator&& iter, size_t sig = 0) {
-		if constexpr (index < maxIndex) {
-			size_t numTmp = numberSubTable[static_cast<uint8_t>(iter[index])];
-			sig				= numTmp + sig * 10;
-			return opReal<maxIndex, index + 1>(value, iter, sig);
-		}
-		value = sig;
-	}
+#define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
-	template<size_t index, jsonifier::concepts::integer_t value_type, typename iterator> struct int_parser {
-		static void op(value_type& value, iterator&& iter) {
-			return opReal<index>(value, iter);
-		}
-	};
+	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(value_type_new& value, iterator&& iter) {
+		using value_type = unwrap_t<value_type_new>;
+		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
+		uint64_t numTmp;
 
-	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_INLINE bool parseInt(value_type_new& value, iterator&& iter, size_t length) {
-		static constexpr auto arrayOfParseIntPtrs = generateArrayOfFunctionPtrs<int_parser, value_type_new, iterator>(std::make_index_sequence<21>{});
-		if (length < 21) {
-			arrayOfParseIntPtrs[length](value, iter);
-			return true;
-		} else {
+		if (sig > 9) [[unlikely]] {
 			return false;
 		}
+
+#define expr_intg(i) \
+	if (numTmp = numberSubTable[static_cast<uint8_t>(iter[i])]; numTmp <= 9) [[likely]] \
+		sig = numTmp + sig * 10; \
+	else { \
+		if constexpr (i > 1) { \
+			if (*iter == zero) \
+				return false; \
+		} \
+		goto digi_sepr_##i; \
+	}
+		repeat_in_1_18(expr_intg);
+#undef expr_intg
+
+		if (*iter == zero)
+			return false;
+
+		iter += 19;
+		if (!digiIsDigitOrFp(*iter)) {
+			value = static_cast<value_type>(sig);
+			return true;
+		}
+
+#define expr_sepr(i) \
+	digi_sepr_##i : if (!digiIsFp(uint8_t(iter[i]))) [[likely]] { \
+		iter += i; \
+		value = sig; \
+		return true; \
+	} \
+	iter += i; \
+	return false;
+		repeat_in_1_18(expr_sepr)
+#undef expr_sepr
 	}
 
-	template<typename value_type, typename char_type> JSONIFIER_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
-		if (!digitTableBool[static_cast<size_t>(*c)]) [[unlikely]] {
+	template<typename value_type, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
+		if (!digitTableBool[static_cast<uint64_t>(*c)]) [[unlikely]] {
 			return false;
 		}
 
 		constexpr std::array<uint32_t, 4> maxDigitsFromSize = { 4, 6, 11, 20 };
-		constexpr auto N									= maxDigitsFromSize[static_cast<size_t>(std::bit_width(sizeof(value_type)) - 1)];
+		constexpr auto N									= maxDigitsFromSize[static_cast<uint64_t>(std::bit_width(sizeof(value_type)) - 1)];
 
 		std::array<uint8_t, N> digits{ 0 };
 		auto nextDigit	  = digits.begin();
@@ -143,14 +163,14 @@ namespace jsonifier_internal {
 			}
 		}
 
-		while (digitTableBool[static_cast<size_t>(*c)]) {
+		while (digitTableBool[static_cast<uint64_t>(*c)]) {
 			consumeDigit();
 		}
 		auto n = std::distance(digits.begin(), nextDigit);
 
 		if (*c == '.') {
 			++c;
-			while (digitTableBool[static_cast<size_t>(*c)]) {
+			while (digitTableBool[static_cast<uint64_t>(*c)]) {
 				consumeDigit();
 			}
 		}
@@ -164,7 +184,7 @@ namespace jsonifier_internal {
 				++c;
 			}
 			uint8_t exp = 0;
-			while (digitTableBool[static_cast<size_t>(*c)] && exp < 128) {
+			while (digitTableBool[static_cast<uint64_t>(*c)] && exp < 128) {
 				exp = static_cast<uint8_t>(10 * exp + (*c - 0x30u));
 				++c;
 			}
@@ -176,14 +196,14 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		if constexpr (std::is_same_v<value_type, size_t>) {
+		if constexpr (std::is_same_v<value_type, uint64_t>) {
 			if (n > 20) [[unlikely]] {
 				return false;
 			}
 
 			if (n == 20) [[unlikely]] {
 				for (auto k = 0; k < 19; ++k) {
-					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<size_t>(k)]);
+					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<uint64_t>(k)]);
 				}
 
 				if (isSafeMultiplication10(res)) [[likely]] {
@@ -198,7 +218,7 @@ namespace jsonifier_internal {
 				}
 			} else [[likely]] {
 				for (auto k = 0; k < n; ++k) {
-					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<size_t>(k)]);
+					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<uint64_t>(k)]);
 				}
 			}
 		} else {
@@ -206,7 +226,7 @@ namespace jsonifier_internal {
 				return false;
 			} else [[likely]] {
 				for (auto k = 0; k < n; ++k) {
-					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<size_t>(k)]);
+					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<uint64_t>(k)]);
 				}
 			}
 		}

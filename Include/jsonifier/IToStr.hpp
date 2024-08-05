@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 		0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u, 0x39u, 0x32u, 0x39u, 0x33u,
 		0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
-	template<jsonifier::concepts::uint32_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type&& value) noexcept {
+	template<jsonifier::concepts::uint32_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type value) noexcept {
 		uint32_t aa, bb, cc, dd, ee, aabb, bbcc, ccdd, ddee, aabbcc;
 		uint32_t lz;
 
@@ -112,9 +112,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::int32_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type&& value) noexcept {
+	template<jsonifier::concepts::int32_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type x) noexcept {
 		*buf = '-';
-		return toChars(buf + (value < 0), uint32_t(value ^ (value >> 31)) - (value >> 31));
+		return toChars(buf + (x < 0), uint32_t(x ^ (x >> 31)) - (x >> 31));
 	}
 
 	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* to_chars_u64_len_8(char_type* buf, uint32_t value) noexcept {
@@ -216,7 +216,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::uint64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type&& value) noexcept {
+	template<jsonifier::concepts::uint64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type value) noexcept {
 		if (value < 100000000) {
 			buf = to_chars_u64_len_1_8(buf, uint32_t(value));
 			return buf;
@@ -240,9 +240,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::int64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type&& value) noexcept {
+	template<jsonifier::concepts::int64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type x) noexcept {
 		*buf = '-';
-		return toChars(buf + (value < 0), uint64_t(value ^ (value >> 63)) - (value >> 63));
+		return toChars(buf + (x < 0), uint64_t(x ^ (x >> 63)) - (x >> 63));
 	}
 
 }// namespace jsonifier_internal

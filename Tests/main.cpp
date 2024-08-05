@@ -801,44 +801,6 @@ struct test_struct {
 	std::vector<bool> testBools{};
 };
 
-namespace fs = std::filesystem;
-
-class file_loader {
-  public:
-	file_loader(const std::string& filePathNew) {
-		filePath = filePathNew;
-		std::string directory{ filePathNew.substr(0, filePathNew.find_last_of("/")) };
-		if (!fs::exists(directory)) {
-			std::filesystem::create_directories(directory);
-		}
-
-		if (!fs::exists(filePath)) {
-			std::ofstream createFile(filePath.data());
-			createFile.close();
-		}
-
-		std::ifstream theStream(filePath.data(), std::ios::binary | std::ios::in);
-		std::stringstream inputStream{};
-		inputStream << theStream.rdbuf();
-		fileContents = inputStream.str();
-		theStream.close();
-	}
-
-	void saveFile(const std::string& fileToSave) {
-		std::ofstream theStream(filePath.data(), std::ios::binary | std::ios::out | std::ios::trunc);
-		theStream.write(fileToSave.data(), static_cast<int64_t>(fileToSave.size()));
-		theStream.close();
-	}
-
-	operator std::string() {
-		return std::string{ fileContents };
-	}
-
-  protected:
-	std::string fileContents{};
-	std::string filePath{};
-};
-
 template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
@@ -1064,7 +1026,7 @@ template<> struct glz::meta<abc_test<test_struct>> {
 #endif
 
 #if defined(NDEBUG) && !defined(ASAN)
-constexpr uint64_t iterationsVal = 5000;
+constexpr uint64_t iterationsVal = 1000;
 #else
 constexpr uint64_t iterationsVal = 100;
 #endif
@@ -1300,7 +1262,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 		auto writtenSize = newerBuffer.size();
 		r.readResult	 = result<result_type::read>{ "teal", readSize, readResult };
 		r.writeResult	 = result<result_type::write>{ "steelblue", writtenSize, writeResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
 		fileLoader.saveFile(buffer);
 		if (doWePrint) {
 			r.print();
@@ -1325,7 +1287,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
 		fileLoader.saveFile(newerBuffer);
 
 		r.writeResult = result<result_type::write>{ "steelblue", newerBuffer.size(), writeResult };
@@ -1352,7 +1314,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-jsonifier.json" };
 		fileLoader.saveFile(newerBuffer);
 
 		r.writeResult = result<result_type::write>{ "steelblue", newerBuffer.size(), writeResult };
@@ -1421,7 +1383,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 		auto writtenSize = newerBuffer.size();
 		r.readResult	 = result<result_type::read>{ "dodgerblue", readSize, readResult };
 		r.writeResult	 = result<result_type::write>{ "skyblue", writtenSize, writeResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(buffer);
 		if (doWePrint) {
 			r.print();
@@ -1443,7 +1405,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 			});
 
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(newerBuffer);
 		r.writeResult = result<result_type::write>{ "skyblue", newerBuffer.size(), writeResult };
 		if (doWePrint) {
@@ -1466,7 +1428,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 			});
 
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(newerBuffer);
 		r.writeResult = result<result_type::write>{ "skyblue", newerBuffer.size(), writeResult };
 		if (doWePrint) {
@@ -1488,7 +1450,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 				bnch_swt::doNotOptimizeAway(result);
 			});
 
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(buffer);
 		r.readResult = result<result_type::read>{ "skyblue", buffer.size(), writeResult };
 		if (doWePrint) {
@@ -2079,7 +2041,7 @@ struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, 
 				});
 
 		r.readResult = result<result_type::read>{ "cadetblue", readSize, readResult };
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
 		fileLoader.saveFile(buffer);
 		if (doWePrint) {
 			r.print();
@@ -2110,7 +2072,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 					return;
 				});
 
-		file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
+		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<std::string>(testName) + "-simdjson.json" };
 		fileLoader.saveFile(newerBuffer);
 		r.writeResult = result<result_type::write>{ "cornflowerblue", newerBuffer.size(), writeResult };
 
@@ -2438,16 +2400,16 @@ int32_t main() {
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};
-		file_loader fileLoader01{ README_PATH };
-		file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
+		bnch_swt::file_loader fileLoader01{ README_PATH };
+		bnch_swt::file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
 		fileLoader02.saveFile(jsonDataNew);
-		file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
+		bnch_swt::file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
 		std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 		fileLoader03.saveFile(jsonMinifiedData);
-		file_loader fileLoader04{ basePath + "/Results.json" };
-		file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
-		std::string discordData{ fileLoader05.operator std::string() };
+		bnch_swt::file_loader fileLoader04{ basePath + "/Results.json" };
+		bnch_swt::file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
+		std::string discordData{ fileLoader05.operator jsonifier::string&() };
 		discord_message discordMessage{};
 		parser.parseJson(discordMessage, discordData);
 		for (auto& value: parser.getErrors()) {
@@ -2455,12 +2417,12 @@ int32_t main() {
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(discordMessage, discordData);
 		fileLoader05.saveFile(discordData);
-		file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
-		std::string discordMinifiedData{ fileLoader06.operator std::string() };
+		bnch_swt::file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
+		std::string discordMinifiedData{ fileLoader06.operator jsonifier::string&() };
 		discordMinifiedData = parser.minifyJson(discordData);
 		fileLoader06.saveFile(discordMinifiedData);
-		file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
-		std::string canadaData{ fileLoader07.operator std::string() };
+		bnch_swt::file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
+		std::string canadaData{ fileLoader07.operator jsonifier::string&() };
 		canada_message canadaMessage{};
 		parser.parseJson(canadaMessage, canadaData);
 		for (auto& value: parser.getErrors()) {
@@ -2468,12 +2430,12 @@ int32_t main() {
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(canadaMessage, canadaData);
 		fileLoader07.saveFile(canadaData);
-		file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
-		std::string canadaMinifiedData{ fileLoader08.operator std::string() };
+		bnch_swt::file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
+		std::string canadaMinifiedData{ fileLoader08.operator jsonifier::string&() };
 		canadaMinifiedData = parser.minifyJson(canadaData);
 		fileLoader08.saveFile(canadaMinifiedData);
-		file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
-		std::string twitterData{ fileLoader09.operator std::string() };
+		bnch_swt::file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
+		std::string twitterData{ fileLoader09.operator jsonifier::string&() };
 		twitter_message twitterMessage{};
 		parser.parseJson(twitterMessage, twitterData);
 		for (auto& value: parser.getErrors()) {
@@ -2481,8 +2443,8 @@ int32_t main() {
 		}
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(twitterMessage, twitterData);
 		fileLoader09.saveFile(twitterData);
-		file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
-		std::string twitterMinifiedData{ fileLoader10.operator std::string() };
+		bnch_swt::file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
+		std::string twitterMinifiedData{ fileLoader10.operator jsonifier::string&() };
 		twitterMinifiedData = parser.minifyJson(twitterData);
 		fileLoader10.saveFile(twitterMinifiedData);
 		for (auto& value: parser.getErrors()) {

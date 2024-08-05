@@ -255,16 +255,6 @@ namespace jsonifier_internal {
 		}
 		return false;
 	}
-
-	template<size_t size, size_t length> JSONIFIER_ALWAYS_INLINE constexpr size_t getMaxSizeIndex(const std::array<size_t, length>& maxSizes) {
-		for (size_t x = 0; x < std::size(maxSizes); ++x) {
-			if (size <= maxSizes[x]) {
-				return x;
-			}
-		}
-		return std::size(maxSizes) - 1;
-	}
-
 	template<size_t length> JSONIFIER_ALWAYS_INLINE constexpr size_t setSimdWidth() {
 		return length >= 64 && bytesPerStep >= 64 ? 64 : length >= 32 && bytesPerStep >= 32 ? 32 : 16;
 	}
@@ -323,14 +313,13 @@ namespace jsonifier_internal {
 		using simd_type = tuple_simd_t<hashTupleMaxSizes[maxSizeIndexNew]>;
 		JSONIFIER_ALIGN std::array<uint8_t, hashTupleMaxSizes[maxSizeIndexNew]> controlBytes{};
 		JSONIFIER_ALIGN std::array<size_t, hashTupleMaxSizes[maxSizeIndexNew] + 1> indices{};
-		size_t maxSizeIndex{ maxSizeIndexNew };
-		size_t actualCount{ getActualSize<value_type, subTupleIndexNew>() };
-		size_t storageSize{ hashTupleMaxSizes[maxSizeIndexNew] };
-		size_t subTupleIndex{ subTupleIndexNew };
 		size_t bucketSize{ setSimdWidth<hashTupleMaxSizes[maxSizeIndexNew]>() };
+		size_t storageSize{ hashTupleMaxSizes[maxSizeIndexNew] };
 		size_t numGroups{ storageSize > bucketSize ? storageSize / bucketSize : 1 };
+		size_t actualCount{ getActualSize<value_type, subTupleIndexNew>() };
+		size_t subTupleIndex{ subTupleIndexNew };
 		sub_tuple_type type{};
-		size_t stringLength{};
+		size_t uniqueIndex{};
 		size_t seed{};
 
 		JSONIFIER_ALWAYS_INLINE constexpr sub_tuple_construction_data() noexcept = default;
@@ -369,15 +358,15 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
 		auto keyStatsVal	  = keyStats<value_type, subTupleIndexNew>();
 		xoshiro256 prng{};
-		const auto stringLength = findUniqueColumnIndex(pairsNew, keyStatsVal);
+		const auto uniqueIndex = findUniqueColumnIndex(pairsNew, keyStatsVal);
 		auto constructForGivenStringLength =
 			[&](const auto maxSizeIndex, auto&& constructForGivenStringLength,
-				size_t stringLength) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
+				size_t uniqueIndex) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
 			constexpr size_t bucketSize	 = setSimdWidth<hashTupleMaxSizes[maxSizeIndex]>();
 			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndex];
 			constexpr size_t numGroups	 = storageSize > bucketSize ? storageSize / bucketSize : 1;
 			sub_tuple_construction_data<key_type, value_type, subTupleIndexNew, maxSizeIndex> returnValues{};
-			returnValues.stringLength = stringLength;
+			returnValues.uniqueIndex = uniqueIndex;
 			size_t bucketSizes[numGroups]{};
 			bool collided{};
 			for (size_t x = 0; x < 2; ++x) {
@@ -386,7 +375,7 @@ namespace jsonifier_internal {
 				returnValues.seed = prng();
 				collided = false;
 				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
-					const auto hash			 = (returnValues.seed ^ pairsNew[y].data()[stringLength]);
+					const auto hash			 = (returnValues.seed ^ pairsNew[y].data()[uniqueIndex]);
 					const auto groupPos		 = (hash) % numGroups;
 					const auto ctrlByte		 = static_cast<uint8_t>(hash);
 					const auto bucketSizeNew = bucketSizes[groupPos]++;
@@ -407,37 +396,36 @@ namespace jsonifier_internal {
 			if (collided) {
 				if constexpr (maxSizeIndex < std::size(hashTupleMaxSizes) - 1) {
 					return sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data>{ constructForGivenStringLength(
-						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, stringLength) };
+						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, uniqueIndex) };
 				}
-				returnValues.stringLength = std::numeric_limits<size_t>::max();
-				returnValues.maxSizeIndex = std::numeric_limits<size_t>::max();
+				returnValues.uniqueIndex = std::numeric_limits<size_t>::max();
 				return returnValues;
 			}
 			returnValues.type = sub_tuple_type::simd;
 			return returnValues;
 		};
 
-		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, stringLength);
+		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, uniqueIndex);
 	}
 
 	template<typename key_type, typename value_type, size_t subTupleIndexNew>
 	JSONIFIER_ALWAYS_INLINE constexpr auto collectMinimalCharSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
 		auto keyStatsVal	  = keyStats<value_type, subTupleIndexNew>();
 		xoshiro256 prng{};
-		const auto stringLength = findUniqueColumnIndex(pairsNew, keyStatsVal);
+		const auto uniqueIndex = findUniqueColumnIndex(pairsNew, keyStatsVal);
 		auto constructForGivenStringLength =
 			[&](const auto maxSizeIndex, auto&& constructForGivenStringLength,
-				size_t stringLength) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
+				size_t uniqueIndex) mutable -> sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data> {
 			constexpr size_t storageSize = hashTupleMaxSizes[maxSizeIndex];
 			sub_tuple_construction_data<key_type, value_type, subTupleIndexNew, maxSizeIndex> returnValues{};
-			returnValues.stringLength = stringLength;
+			returnValues.uniqueIndex = uniqueIndex;
 			bool collided{};
 			for (size_t x = 0; x < 2; ++x) {
 				std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
 				returnValues.seed = prng();
 				collided = false;
 				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
-					const auto hash = (returnValues.seed ^ pairsNew[y].data()[stringLength]);
+					const auto hash = (returnValues.seed ^ pairsNew[y].data()[uniqueIndex]);
 					const auto slot = hash % storageSize;
 					if (returnValues.indices[slot] != returnValues.indices.size() - 1) {
 						collided = true;
@@ -452,17 +440,16 @@ namespace jsonifier_internal {
 			if (collided) {
 				if constexpr (maxSizeIndex < std::size(hashTupleMaxSizes) - 1) {
 					return sub_tuple_construction_data_variant<key_type, value_type, subTupleIndexNew, sub_tuple_construction_data>{ constructForGivenStringLength(
-						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, stringLength) };
+						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength, uniqueIndex) };
 				}
-				returnValues.stringLength = std::numeric_limits<size_t>::max();
-				returnValues.maxSizeIndex = std::numeric_limits<size_t>::max();
+				returnValues.uniqueIndex = std::numeric_limits<size_t>::max();
 				return returnValues;
 			}
 			returnValues.type = sub_tuple_type::minimal_char;
 			return returnValues;
 		};
 
-		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, stringLength);
+		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, uniqueIndex);
 	}
 
 	template<typename value_type, size_t subTupleIndex, size_t... I>
@@ -504,7 +491,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr simd_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
-			JSONIFIER_ALIGN const auto hash		   = (seed ^ iter[constructionData.stringLength]);
+			JSONIFIER_ALIGN const auto hash		   = (seed ^ iter[constructionData.uniqueIndex]);
 			JSONIFIER_ALIGN const auto resultIndex = ((hash) % constructionData.numGroups) * constructionData.bucketSize;
 			JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 														  simd_internal::gatherValues<simd_type>(constructionData.controlBytes.data() + resultIndex))) +
@@ -556,7 +543,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr minimal_char_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
-			JSONIFIER_ALIGN const auto hash		  = (seed ^ iter[constructionData.stringLength]);
+			JSONIFIER_ALIGN const auto hash		  = (seed ^ iter[constructionData.uniqueIndex]);
 			JSONIFIER_ALIGN const auto finalIndex = hash % constructionData.storageSize;
 			if (nonConstCompareStringFunctions[constructionData.indices[finalIndex]](iter)) {
 				functionPtrs[constructionData.indices[finalIndex]](std::forward<arg_types>(args)...);
@@ -576,9 +563,9 @@ namespace jsonifier_internal {
 		return std::numeric_limits<size_t>::max();
 	}
 
-	template<const auto& function, typename value_type, size_t stringLength, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto collectSubTuple(arg_types&&... args) {
+	template<const auto& function, typename value_type, size_t uniqueIndex, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto collectSubTuple(arg_types&&... args) {
 		using tuple_type	   = unwrap_t<decltype(final_tuple_static_data<value_type>)>;
-		constexpr size_t index = getCurrentSubTupleIndex<stringLength, uniqueStringLengths<value_type>>();
+		constexpr size_t index = getCurrentSubTupleIndex<uniqueIndex, uniqueStringLengths<value_type>>();
 		if constexpr (index < std::tuple_size_v<tuple_type>) {
 			return function(std::integral_constant<size_t, index>{}, std::forward<arg_types>(args)...);
 		} else {
@@ -612,9 +599,9 @@ namespace jsonifier_internal {
 			return sub_tuple_t<value_type, subTupleIndex>::template find<subTupleFunctionPtrArray>(ptr01, std::forward<arg_types>(args)...);
 		}
 
-		template<const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(size_type stringLength, arg_types&&... args) {
+		template<const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(size_type uniqueIndex, arg_types&&... args) {
 			constexpr auto getSubTuplePtrArray = generateCollectSubTuplePtrArray<function, unwrap_t<value_type>, arg_types...>();
-			return getSubTuplePtrArray[stringLength](std::forward<arg_types>(args)...);
+			return getSubTuplePtrArray[uniqueIndex](std::forward<arg_types>(args)...);
 		}
 	};
 

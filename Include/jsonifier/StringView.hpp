@@ -36,7 +36,7 @@ namespace jsonifier {
 		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-		using size_type				 = size_t;
+		using size_type				 = uint64_t;
 		using traits_type			 = jsonifier_internal::char_traits<value_type>;
 
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
@@ -127,7 +127,7 @@ namespace jsonifier {
 		}
 
 		constexpr size_type maxSize() const {
-			return std::min(static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<size_t>(-1) / sizeof(value_type));
+			return std::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
 		constexpr const_reference at(const size_type offsetNew) const {
@@ -218,7 +218,7 @@ namespace jsonifier {
 		template<jsonifier::concepts::string_t value_type_newer> constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) {
 			if (std::is_constant_evaluated()) {
 				auto compareValues = [=]() -> bool {
-					for (size_t x = 0; x < rhs.size(); ++x) {
+					for (uint64_t x = 0; x < rhs.size(); ++x) {
 						if (rhs[x] != lhs[x]) {
 							return false;
 						}

@@ -125,25 +125,25 @@ namespace simd_internal {
 #else
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) {
-		jsonifier_simd_int_t returnValue{};
-		std::memcpy(&returnValue, str, sizeof(jsonifier_simd_int_t));
+		simd_int_t returnValue{};
+		std::memcpy(&returnValue, str, sizeof(simd_int_t));
 		return returnValue;
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(char_type* str) {
-		jsonifier_simd_int_t returnValue{};
-		std::memcpy(&returnValue, str, sizeof(jsonifier_simd_int_t));
+		simd_int_t returnValue{};
+		std::memcpy(&returnValue, str, sizeof(simd_int_t));
 		return returnValue;
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) {
-		jsonifier_simd_int_t returnValue{};
-		std::memset(&returnValue, str, sizeof(jsonifier_simd_int_t));
+		simd_int_t returnValue{};
+		std::memset(&returnValue, str, sizeof(simd_int_t));
 		return returnValue;
 	}
 
-	template<typename char_type> JSONIFIER_ALWAYS_INLINE void store(const jsonifier_simd_int_t& value, char_type* storageLocation) {
-		std::memcpy(storageLocation, &value, sizeof(jsonifier_simd_int_t));
+	template<typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_t& value, char_type* storageLocation) {
+		std::memcpy(storageLocation, &value, sizeof(simd_int_t));
 	}
 
 #endif
