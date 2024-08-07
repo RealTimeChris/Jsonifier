@@ -268,23 +268,11 @@ namespace jsonifier_internal {
 
 	template<size_t length> using tuple_simd_t = tuple_simd<length>::type;
 
-	template<typename value_type, size_t subTupleIndex, uint64_t index> struct string_compare_wrapper_const {
-		JSONIFIER_ALWAYS_INLINE static constexpr bool op(const char* string01) {
-			constexpr auto& subTuple = std::get<subTupleIndex>(final_tuple_static_data<value_type>);
-			if constexpr (index < std::tuple_size_v<unwrap_t<decltype(subTuple)>>) {
-				constexpr auto currentKey = getKey<value_type, subTupleIndex, index>();
-				return currentKey == jsonifier::string_view{ string01, currentKey.size() };
-			} else {
-				return false;
-			}
-		}
-	};
-
 	template<typename value_type, size_t subTupleIndex, uint64_t index> struct string_compare_wrapper_non_const {
 		JSONIFIER_ALWAYS_INLINE static bool op(const char* string01) {
-			constexpr auto& subTuple = std::get<subTupleIndex>(final_tuple_static_data<value_type>);
+			static constexpr auto& subTuple = std::get<subTupleIndex>(final_tuple_static_data<value_type>);
 			if constexpr (index < std::tuple_size_v<unwrap_t<decltype(subTuple)>>) {
-				constexpr auto currentKey = getKey<value_type, subTupleIndex, index>();
+				static constexpr auto currentKey = getKey<value_type, subTupleIndex, index>();
 				return compare<currentKey.size()>(currentKey.data(), string01);
 			} else {
 				return false;
@@ -495,6 +483,8 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr simd_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
+			jsonifierPrefetchInternal(controlBytes.data());
+			jsonifierPrefetchInternal(indices.data());
 			JSONIFIER_ALIGN const auto hash		   = (seed ^ iter[uniqueIndex]);
 			JSONIFIER_ALIGN const auto resultIndex = ((hash) % numGroups) * bucketSize;
 			JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
@@ -547,6 +537,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr minimal_char_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
+			jsonifierPrefetchInternal(indices.data());
 			JSONIFIER_ALIGN const auto hash		  = (seed ^ iter[uniqueIndex]);
 			JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
 			if (stringCompareFunctions[indices[finalIndex]](iter)) {

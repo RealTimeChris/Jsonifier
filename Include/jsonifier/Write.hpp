@@ -60,7 +60,7 @@ namespace jsonifier_internal {
 	constexpr jsonifier::string_view trueString{ "true" };
 	constexpr jsonifier::string_view nullString{ "null" };
 
-	template<bool checked = true, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(const auto c, buffer_type& buffer, index_type& index) noexcept {
+	template<bool checked = true, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
 		if constexpr (checked) {
 			if (index == buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<auto c, bool checked = true, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
+	template<char c, bool checked = true, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
 		if constexpr (checked) {
 			if (index == buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 		index += n;
 	}
 
-	template<auto c, bool checked = true, typename buffer_type, typename index_type>
+	template<char c, bool checked = true, typename buffer_type, typename index_type>
 	JSONIFIER_ALWAYS_INLINE void writeCharacters(size_t n, buffer_type& buffer, index_type& index) noexcept {
 		if constexpr (checked) {
 			if (index + n > buffer.size()) [[unlikely]] {
@@ -117,7 +117,7 @@ namespace jsonifier_internal {
 		index += n;
 	}
 
-	template<auto c, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(size_t n, buffer_type& buffer, index_type& index) noexcept {
+	template<char c, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(size_t n, buffer_type& buffer, index_type& index) noexcept {
 		std::memset(buffer.data() + index, c, n);
 		index += n;
 	}
@@ -150,15 +150,6 @@ namespace jsonifier_internal {
 			}
 		}
 		std::memcpy(buffer.data() + index, s.data(), n);
-		index += n;
-	}
-
-	template<typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacters(const auto& bytes, buffer_type& buffer, index_type& index) noexcept {
-		const auto n = bytes.size();
-		if (index + n > buffer.size()) [[unlikely]] {
-			buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
-		}
-		std::memcpy(buffer.data() + index, bytes.data(), n);
 		index += n;
 	}
 
@@ -362,7 +353,7 @@ namespace jsonifier_internal {
 			arr[len] = 0;
 			return arr;
 		}();
-		auto& static_arr = make_static<joined_arr>::value;
+		constexpr auto& static_arr = make_static<joined_arr>::value;
 		return { static_arr.data(), static_arr.size() - 1 };
 	}
 
