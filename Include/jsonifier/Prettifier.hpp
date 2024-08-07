@@ -105,9 +105,9 @@ namespace jsonifier_internal {
 				return false;
 			}
 			prettify_impl<derived_type>::template impl<optionsFinal>(iter, derivedRef.stringBuffer, derivedRef.index, *this);
-			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
-				if (!compare(derivedRef.stringBuffer.data(), buffer.data(), derivedRef.index)) {
-					if (buffer.size() != derivedRef.index) {
+			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) [[likely]] {
+				if (!compare(derivedRef.stringBuffer.data(), buffer.data(), derivedRef.index)) [[likely]] {
+					if (buffer.size() != derivedRef.index) [[likely]] {
 						buffer.resize(derivedRef.index);
 					}
 					std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
@@ -123,11 +123,11 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 

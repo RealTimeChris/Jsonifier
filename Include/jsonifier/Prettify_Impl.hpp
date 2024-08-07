@@ -34,12 +34,12 @@ namespace jsonifier_internal {
 			state.resize(64);
 
 			while (iter) {
-				switch (asciiClassesMap[static_cast<uint8_t>(*iter)]) {
+				switch (asciiClassesMap[uint8_t(*iter)]) {
 					[[likely]] case json_structural_type::String: {
-						auto valueNew = static_cast<const char*>(iter);
+						const auto newPtr = static_cast<const char*>(iter);
 						++iter;
-						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
-						writeCharacters<false>(out, valueNew, newSize, index);
+						const auto newSize = static_cast<const char*>(iter) - newPtr;
+						writeCharacters<false>(out, newPtr, newSize, index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma: {
@@ -56,11 +56,11 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Number: {
-						auto valueNew = static_cast<const char*>(iter);
+					[[likely]] case json_structural_type::Number: {
+						const auto newPtr = static_cast<const char*>(iter);
 						++iter;
-						auto newSize = static_cast<uint64_t>(static_cast<const char*>(iter) - valueNew);
-						writeCharacters<false>(out, valueNew, newSize, index);
+						const auto newSize = static_cast<const char*>(iter) - newPtr;
+						writeCharacters<false>(out, newPtr, newSize, index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon: {
@@ -73,10 +73,10 @@ namespace jsonifier_internal {
 						writeCharacter<'[', false>(out, index);
 						++iter;
 						++options.indent;
-						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Array_Start;
-						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
+						if (size_t(options.indent) >= state.size()) [[unlikely]] {
 							state.resize(state.size() * 2);
 						}
+						state[options.indent] = json_structural_type::Array_Start;
 						if constexpr (options.optionsReal.newLinesInArray) {
 							if (*iter != ']') {
 								writeNewLine<options, false>(out, index);
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 							return;
 						}
 						if constexpr (options.optionsReal.newLinesInArray) {
-							if (*(iter.sub(1)) != '[') {
+							if (iter[-1] != '[') {
 								writeNewLine<options, false>(out, index);
 							}
 						}
@@ -121,10 +121,10 @@ namespace jsonifier_internal {
 						writeCharacter<'{', false>(out, index);
 						++iter;
 						++options.indent;
-						state[static_cast<uint64_t>(options.indent)] = json_structural_type::Object_Start;
-						if (static_cast<uint64_t>(options.indent) >= state.size()) [[unlikely]] {
+						if (size_t(options.indent) >= state.size()) [[unlikely]] {
 							state.resize(state.size() * 2);
 						}
+						state[options.indent] = json_structural_type::Object_Start;
 						if (*iter != '}') {
 							writeNewLine<options, false>(out, index);
 						}
@@ -138,18 +138,18 @@ namespace jsonifier_internal {
 								iter - iter.getRootPtr(), iter.getEndPtr() - iter.getRootPtr(), iter.getRootPtr()));
 							return;
 						}
-						if (*(iter.sub(1)) != '{') {
+						if (iter[-1] != '{') {
 							writeNewLine<options, false>(out, index);
 						}
 						writeCharacter<'}', false>(out, index);
 						++iter;
 						break;
 					}
-					case json_structural_type::Unset:
+					[[unlikely]] case json_structural_type::Unset:
 						[[fallthrough]];
-					case json_structural_type::Error:
+					[[unlikely]] case json_structural_type::Error:
 						[[fallthrough]];
-					case json_structural_type::Type_Count:
+					[[unlikely]] case json_structural_type::Type_Count:
 						[[fallthrough]];
 					[[unlikely]] default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };

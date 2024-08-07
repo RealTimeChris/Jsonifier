@@ -104,7 +104,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			using member_type = unwrap_t<decltype(value[std::declval<typename unwrap_t<value_type_new>::key_type>()])>;
 			if (value.size() > 0) [[likely]] {
-				writeObjectEntry(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+				writeObjectEntry<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 
 				if (value.size() > 0) [[likely]] {
 					auto iter = value.begin();
@@ -126,7 +126,7 @@ namespace jsonifier_internal {
 						serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					}
 				}
-				writeObjectExit<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value).size());
+				writeObjectExit<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			} else {
 				writeCharacters<"{}">(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			}

@@ -50,23 +50,23 @@ namespace jsonifier_internal {
 		mutable const char* rootIter{};
 	};
 
-	template<typename derived_type, typename value_type> struct parse_impl;
+	template<typename derived_type, const parse_options_internal<derived_type>&, typename value_type> struct parse_impl;
 
 	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator, jsonifier::concepts::uint64_type size_type>
-	void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
+	void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize) noexcept;
 
 	template<typename derived_type> class parser {
 	  public:
 		template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
 			jsonifier::concepts::uint64_type size_type>
-		friend void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
-		template<typename derived_type_new, typename value_type> friend struct parse_impl;
+		friend void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize) noexcept;
+		template<typename derived_type_new, const parse_options_internal<derived_type_new>&, typename value_type> friend struct parse_impl;
 
 		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			   = delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) {
+		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if (in.size() == 0) {
 				return false;
 			}
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 						end - optionsReal.rootIter, optionsReal.rootIter));
 					return false;
 				}
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), iter, end);
+				parse_impl<derived_type, optionsReal, value_type>::impl(std::forward<value_type>(object), iter, end);
 				if constexpr (!options.minified) {
 					if (iter != end) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -108,7 +108,7 @@ namespace jsonifier_internal {
 						endIter - optionsReal.rootIter, optionsReal.rootIter));
 					return false;
 				}
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIter, endIter);
+				parse_impl<derived_type, optionsReal, value_type>::impl(std::forward<value_type>(object), readIter, endIter);
 				if constexpr (!options.minified) {
 					if (readIter != endIter) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -122,7 +122,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) {
+		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			if (in.size() == 0) {
 				return value_type{};
 			}
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 					return object;
 				}
 
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), iter, end);
+				parse_impl<derived_type, optionsReal, value_type>::impl(std::forward<value_type>(object), iter, end);
 				if constexpr (!options.minified) {
 					if (iter != end) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -166,7 +166,7 @@ namespace jsonifier_internal {
 						endIter - optionsReal.rootIter, optionsReal.rootIter));
 					return object;
 				}
-				parse_impl<derived_type, value_type>::template impl<optionsReal>(std::forward<value_type>(object), readIter, endIter);
+				parse_impl<derived_type, optionsReal, value_type>::impl(std::forward<value_type>(object), readIter, endIter);
 				if constexpr (!options.minified) {
 					if (readIter != endIter) {
 						static constexpr auto sourceLocation{ std::source_location::current() };
