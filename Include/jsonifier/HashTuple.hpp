@@ -481,26 +481,26 @@ namespace jsonifier_internal {
 		using size_type	   = size_t;
 		using control_type = uint8_t;
 
-		JSONIFIER_ALIGN inline static constexpr auto controlBytes{ constructionData.controlBytes };
-		JSONIFIER_ALIGN inline static constexpr auto uniqueIndex{ constructionData.uniqueIndex };
-		JSONIFIER_ALIGN inline static constexpr auto storageSize{ constructionData.storageSize };
-		JSONIFIER_ALIGN inline static constexpr auto bucketSize{ constructionData.bucketSize };
-		JSONIFIER_ALIGN inline static constexpr auto numGroups{ constructionData.numGroups };
-		JSONIFIER_ALIGN inline static constexpr auto indices{ constructionData.indices };
-		JSONIFIER_ALIGN inline static constexpr auto seed{ constructionData.seed };
+		JSONIFIER_ALIGN size_t uniqueIndex{ constructionData.uniqueIndex };
+		JSONIFIER_ALIGN size_t storageSize{ constructionData.storageSize };
+		JSONIFIER_ALIGN std::array<control_type, constructionData.storageSize + 1> controlBytes{ constructionData.controlBytes };
+		JSONIFIER_ALIGN size_t bucketSize{ constructionData.bucketSize };
+		JSONIFIER_ALIGN size_t numGroups{ constructionData.numGroups };
+		JSONIFIER_ALIGN std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
+		JSONIFIER_ALIGN size_t seed{ constructionData.seed };
 
-		inline static constexpr auto nonConstCompareStringFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
-			std::make_index_sequence<storageSize + 1>{}) };
+		JSONIFIER_ALIGN static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
+			std::make_index_sequence<constructionData.storageSize + 1>{}) };
 
 		JSONIFIER_ALWAYS_INLINE constexpr simd_sub_tuple() noexcept = default;
 
-		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
+		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
 			JSONIFIER_ALIGN const auto hash		   = (seed ^ iter[uniqueIndex]);
 			JSONIFIER_ALIGN const auto resultIndex = ((hash) % numGroups) * bucketSize;
 			JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 														  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
 				 resultIndex);
-			if (nonConstCompareStringFunctions[indices[finalIndex]](iter)) {
+			if (stringCompareFunctions[indices[finalIndex]](iter)) {
 				functionPtrs[indices[finalIndex]](std::forward<arg_types>(args)...);
 				return true;
 			} else {
@@ -536,20 +536,20 @@ namespace jsonifier_internal {
 		using size_type	   = size_t;
 		using control_type = uint8_t;
 
-		JSONIFIER_ALIGN inline static constexpr auto uniqueIndex{ constructionData.uniqueIndex };
-		JSONIFIER_ALIGN inline static constexpr auto storageSize{ constructionData.storageSize };
-		JSONIFIER_ALIGN inline static constexpr auto indices{ constructionData.indices };
-		JSONIFIER_ALIGN inline static constexpr auto seed{ constructionData.seed };
+		JSONIFIER_ALIGN size_t uniqueIndex{ constructionData.uniqueIndex };
+		JSONIFIER_ALIGN size_t storageSize{ constructionData.storageSize };
+		JSONIFIER_ALIGN std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
+		JSONIFIER_ALIGN size_t seed{ constructionData.seed };
 
-		inline static constexpr auto nonConstCompareStringFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
-			std::make_index_sequence<storageSize + 1>{}) };
+		JSONIFIER_ALIGN static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
+			std::make_index_sequence<constructionData.storageSize + 1>{}) };
 
 		JSONIFIER_ALWAYS_INLINE constexpr minimal_char_sub_tuple() noexcept = default;
 
-		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(const char* iter, arg_types&&... args) noexcept {
+		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
 			JSONIFIER_ALIGN const auto hash		  = (seed ^ iter[uniqueIndex]);
 			JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
-			if (nonConstCompareStringFunctions[indices[finalIndex]](iter)) {
+			if (stringCompareFunctions[indices[finalIndex]](iter)) {
 				functionPtrs[indices[finalIndex]](std::forward<arg_types>(args)...);
 				return true;
 			} else {
@@ -600,7 +600,8 @@ namespace jsonifier_internal {
 
 		template<size_t subTupleIndex, const auto& subTupleFunctionPtrArray, typename... arg_types>
 		JSONIFIER_ALWAYS_INLINE static constexpr auto find(const char* ptr01, arg_types&&... args) {
-			return sub_tuple_t<value_type, subTupleIndex>::template find<subTupleFunctionPtrArray>(ptr01, std::forward<arg_types>(args)...);
+			constexpr auto subTuple{ sub_tuple_t<value_type, subTupleIndex>{} };
+			return subTuple.template find<subTupleFunctionPtrArray>(ptr01, std::forward<arg_types>(args)...);
 		}
 
 		template<const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE static constexpr auto find(size_type uniqueIndex, arg_types&&... args) {
