@@ -36,7 +36,8 @@ namespace jsonifier {
 
 	template<bool> class jsonifier_core;
 
-	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01> JSONIFIER_ALWAYS_INLINE jsonifier::string_base<value_type_new> toString(const value_type01& value) {
+	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01>
+	JSONIFIER_ALWAYS_INLINE jsonifier::string_base<value_type_new> toString(const value_type01& value) {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
 		if constexpr (jsonifier::concepts::unsigned_type<value_type01> && sizeof(value) < 8) {

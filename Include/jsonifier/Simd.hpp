@@ -86,7 +86,32 @@ namespace jsonifier_internal {
 			}
 			resetInternal();
 		}
-
+		/*
+		template<bool refreshString, typename char_type> JSONIFIER_ALWAYS_INLINE std::string resetWithErrorPrintOut(char_type* stringViewNew, size_type size, size_type errorIndex) {
+			std::string returnValue{ "For the following string values: " };
+			if (static_cast<int64_t>(errorIndex) < std::string{}.max_size()) {
+				returnValue += std::string_view{ reinterpret_cast<string_view_ptr>(stringViewNew + errorIndex), 24 };
+				returnValue += "\n";
+			}
+			if constexpr (refreshString) {
+				currentParseBuffer = { reinterpret_cast<string_view_ptr>(stringViewNew), size };
+				auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
+				if (structuralIndexCount < newSize) {
+					resize(newSize * 2);
+				}
+				return returnValue + resetInternalWithErrorPrintOut(errorIndex);
+			} else {
+				if (currentParseBuffer != stringViewNew) {
+					currentParseBuffer = { reinterpret_cast<string_view_ptr>(stringViewNew), size };
+					auto newSize	   = roundUpToMultiple<8ull>(static_cast<uint64_t>(static_cast<double>(currentParseBuffer.size()) * multiplier));
+					if (structuralIndexCount < newSize) {
+						resize(newSize * 2);
+					}
+					return returnValue + resetInternalWithErrorPrintOut(errorIndex);
+				}
+			}
+		}
+		*/
 		JSONIFIER_ALWAYS_INLINE auto end() {
 			return structuralIndices + tapeIndex;
 		}
@@ -138,7 +163,14 @@ namespace jsonifier_internal {
 				structuralIndexCount = 0;
 			}
 		}
-
+		/*
+		JSONIFIER_ALWAYS_INLINE std::string resetInternalWithErrorPrintOut(size_type errorIndex) {
+			stringBlockReader.reset(currentParseBuffer.data(), currentParseBuffer.size());
+			stringIndex = 0;
+			tapeIndex	= 0;
+			return generateJsonIndicesWithErrorPrintOut(errorIndex);
+		}
+		*/
 		JSONIFIER_ALWAYS_INLINE void generateJsonIndices() {
 			simd_internal::simd_int_t_holder rawStructurals{};
 			jsonifier_simd_int_t nextIsEscaped{};
@@ -229,11 +261,12 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
+			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
 			jsonifier_simd_int_t potentialEscape		   = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			jsonifier_simd_int_t maybeEscaped			   = simd_internal::opShl<1>(potentialEscape);
-			jsonifier_simd_int_t maybeEscapedAndOddBits	   = simd_internal::opOr(maybeEscaped, simd_internal::simdValue<0xAA, jsonifier_simd_int_t>);
+			jsonifier_simd_int_t maybeEscapedAndOddBits	   = simd_internal::opOr(maybeEscaped, simdValue);
 			jsonifier_simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
-			jsonifier_simd_int_t escapeAndTerminalCode	   = simd_internal::opXor(evenSeriesCodesAndOddBits, simd_internal::simdValue<0xAA, jsonifier_simd_int_t>);
+			jsonifier_simd_int_t escapeAndTerminalCode	   = simd_internal::opXor(evenSeriesCodesAndOddBits, simdValue);
 			escaped										   = simd_internal::opXor(escapeAndTerminalCode, simd_internal::opOr(rawStructurals.backslashes, nextIsEscaped));
 			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
 		}
@@ -244,7 +277,8 @@ namespace jsonifier_internal {
 			escaped			= escapedNew;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) {
+		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+			simd_internal::simd_int_t_holder& rawStructurals) {
 			return simd_internal::opBool(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals) : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 

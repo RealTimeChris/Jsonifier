@@ -132,7 +132,7 @@ namespace jsonifier_fast_float {
 	using from_chars_result = from_chars_result_t<char>;
 
 	template<typename UC> struct parse_options_t {
-		constexpr explicit parse_options_t(chars_format fmt = chars_format::json, UC dot = UC('.')) : format(fmt), decimal_point(dot){};
+		constexpr explicit parse_options_t(chars_format fmt = chars_format::json, UC dot = UC('.')) : format(fmt), decimal_point(dot) {};
 
 		/** Which number formats are accepted */
 		chars_format format;
@@ -319,7 +319,7 @@ namespace jsonifier_fast_float {
 	}
 
 	/* result might be undefined when input_num is zero */
-	fastfloat_really_inline constexpr uint64_t  leading_zeroes(uint64_t input_num) {
+	fastfloat_really_inline constexpr uint64_t leading_zeroes(uint64_t input_num) {
 		assert(input_num > 0);
 		if (!std::is_constant_evaluated()) {
 			return simd_internal::lzcnt(input_num);
@@ -728,7 +728,7 @@ namespace jsonifier_fast_float {
 }// namespace jsonifier_fast_float
 
 #ifndef JSONIFIER_FAST_FLOAT_H
-#define JSONIFIER_FAST_FLOAT_H
+	#define JSONIFIER_FAST_FLOAT_H
 
 
 namespace jsonifier_fast_float {
@@ -755,39 +755,38 @@ namespace jsonifier_fast_float {
 	/**
  * Like from_chars, but accepts an `options` argument to govern number parsing.
  */
-	template<typename T, typename UC = char, parse_options_t<UC> options>
-	constexpr from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept;
+	template<typename T, typename UC = char, parse_options_t<UC> options> constexpr from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept;
 
 }// namespace jsonifier_fast_float
 #endif// JSONIFIER_FAST_FLOAT_H
 
 #ifndef JSONIFIER_FASTFLOAT_ASCII_NUMBER_H
-#define JSONIFIER_FASTFLOAT_ASCII_NUMBER_H
+	#define JSONIFIER_FASTFLOAT_ASCII_NUMBER_H
 
-#include <cctype>
-#include <cstdint>
-#include <cstring>
-#include <iterator>
-#include <limits>
-#include <type_traits>
+	#include <cctype>
+	#include <cstdint>
+	#include <cstring>
+	#include <iterator>
+	#include <limits>
+	#include <type_traits>
 
 
-#ifdef JSONIFIER_FASTFLOAT_SSE2
-	#include <emmintrin.h>
-#endif
+	#ifdef JSONIFIER_FASTFLOAT_SSE2
+		#include <emmintrin.h>
+	#endif
 
-#ifdef JSONIFIER_FASTFLOAT_NEON
-	#include <arm_neon.h>
-#endif
+	#ifdef JSONIFIER_FASTFLOAT_NEON
+		#include <arm_neon.h>
+	#endif
 
 namespace jsonifier_fast_float {
 
 	template<typename UC> fastfloat_really_inline constexpr bool has_simd_opt() {
-#ifdef JSONIFIER_FASTFLOAT_HAS_SIMD
+	#ifdef JSONIFIER_FASTFLOAT_HAS_SIMD
 		return std::is_same<UC, char16_t>::value;
-#else
+	#else
 		return false;
-#endif
+	#endif
 	}
 
 	// Next function can be micro-optimized, but compilers are entirely
@@ -813,14 +812,14 @@ namespace jsonifier_fast_float {
 		}
 		uint64_t val;
 		::memcpy(&val, chars, sizeof(uint64_t));
-#if JSONIFIER_FASTFLOAT_IS_BIG_ENDIAN == 1
+	#if JSONIFIER_FASTFLOAT_IS_BIG_ENDIAN == 1
 		// Need to read as-if the number was in little-endian order.
 		val = byteswap(val);
-#endif
+	#endif
 		return val;
 	}
 
-#ifdef JSONIFIER_FASTFLOAT_SSE2
+	#ifdef JSONIFIER_FASTFLOAT_SSE2
 
 	fastfloat_really_inline uint64_t simd_read8_to_u64(const __m128i data) {
 		JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
@@ -835,7 +834,7 @@ namespace jsonifier_fast_float {
 		JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
 	}
 
-#elif defined(JSONIFIER_FASTFLOAT_NEON)
+	#elif defined(JSONIFIER_FASTFLOAT_NEON)
 
 
 	fastfloat_really_inline uint64_t simd_read8_to_u64(const uint16x8_t data) {
@@ -851,14 +850,14 @@ namespace jsonifier_fast_float {
 		JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
 	}
 
-#endif// JSONIFIER_FASTFLOAT_SSE2
+	#endif// JSONIFIER_FASTFLOAT_SSE2
 
-// MSVC SFINAE is broken pre-VS2017
-#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
+	// MSVC SFINAE is broken pre-VS2017
+	#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
 	template<typename UC>
-#else
+	#else
 	template<typename UC, JSONIFIER_FASTFLOAT_ENABLE_IF(!has_simd_opt<UC>()) = 0>
-#endif
+	#endif
 	// dummy for compile
 	uint64_t simd_read8_to_u64(UC const*) {
 		return 0;
@@ -891,7 +890,7 @@ namespace jsonifier_fast_float {
 	}
 
 
-#ifdef JSONIFIER_FASTFLOAT_HAS_SIMD
+	#ifdef JSONIFIER_FASTFLOAT_HAS_SIMD
 
 	// Call this if chars might not be 8 digits.
 	// Using this style (instead of is_made_of_eight_digits_fast() then parse_eight_digits_unrolled())
@@ -900,7 +899,7 @@ namespace jsonifier_fast_float {
 		if (std::is_constant_evaluated()) {
 			return false;
 		}
-	#ifdef JSONIFIER_FASTFLOAT_SSE2
+		#ifdef JSONIFIER_FASTFLOAT_SSE2
 		JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
 		const __m128i data = _mm_loadu_si128(reinterpret_cast<const __m128i*>(chars));
 
@@ -915,7 +914,7 @@ namespace jsonifier_fast_float {
 		} else
 			return false;
 		JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
-	#elif defined(JSONIFIER_FASTFLOAT_NEON)
+		#elif defined(JSONIFIER_FASTFLOAT_NEON)
 		JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS
 		const uint16x8_t data = vld1q_u16(reinterpret_cast<const uint16_t*>(chars));
 
@@ -930,21 +929,21 @@ namespace jsonifier_fast_float {
 		} else
 			return false;
 		JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS
-	#else
+		#else
 		( void )chars;
 		( void )i;
 		return false;
-	#endif// JSONIFIER_FASTFLOAT_SSE2
+		#endif// JSONIFIER_FASTFLOAT_SSE2
 	}
 
-#endif// JSONIFIER_FASTFLOAT_HAS_SIMD
+	#endif// JSONIFIER_FASTFLOAT_HAS_SIMD
 
-// MSVC SFINAE is broken pre-VS2017
-#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
+	// MSVC SFINAE is broken pre-VS2017
+	#if defined(JSONIFIER_MSVC) && JSONIFIER_MSVC <= 1900
 	template<typename UC>
-#else
+	#else
 	template<typename UC, JSONIFIER_FASTFLOAT_ENABLE_IF(!has_simd_opt<UC>()) = 0>
-#endif
+	#endif
 	// dummy for compile
 	bool simd_parse_if_eight_digits_unrolled(UC const*, uint64_t&) {
 		return 0;
@@ -987,7 +986,6 @@ namespace jsonifier_fast_float {
 	// Assuming that you use no more than 19 digits, this will
 	// parse an ASCII string.
 	template<typename UC> fastfloat_really_inline constexpr parsed_number_string_t<UC> parseNumberString(UC const* p, UC const* pend) noexcept {
-		
 	}
 
 }// namespace jsonifier_fast_float
@@ -995,9 +993,9 @@ namespace jsonifier_fast_float {
 #endif
 
 #ifndef JSONIFIER_FASTFLOAT_FAST_TABLE_H
-#define JSONIFIER_FASTFLOAT_FAST_TABLE_H
+	#define JSONIFIER_FASTFLOAT_FAST_TABLE_H
 
-#include <cstdint>
+	#include <cstdint>
 
 namespace jsonifier_fast_float {
 
@@ -1202,14 +1200,14 @@ namespace jsonifier_fast_float {
 #endif
 
 #ifndef JSONIFIER_FASTFLOAT_DECIMAL_TO_BINARY_H
-#define JSONIFIER_FASTFLOAT_DECIMAL_TO_BINARY_H
+	#define JSONIFIER_FASTFLOAT_DECIMAL_TO_BINARY_H
 
-#include <cfloat>
-#include <cinttypes>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
+	#include <cfloat>
+	#include <cinttypes>
+	#include <cmath>
+	#include <cstdint>
+	#include <cstdlib>
+	#include <cstring>
 
 namespace jsonifier_fast_float {
 
@@ -1381,26 +1379,26 @@ namespace jsonifier_fast_float {
 #endif
 
 #ifndef JSONIFIER_FASTFLOAT_BIGINT_H
-#define JSONIFIER_FASTFLOAT_BIGINT_H
+	#define JSONIFIER_FASTFLOAT_BIGINT_H
 
-#include <algorithm>
-#include <cstdint>
-#include <climits>
-#include <cstring>
+	#include <algorithm>
+	#include <cstdint>
+	#include <climits>
+	#include <cstring>
 
 
 namespace jsonifier_fast_float {
 
-// the limb width: we want efficient multiplication of double the bits in
-// limb, or for 64-bit limbs, at least 64-bit multiplication where we can
-// extract the high and low parts efficiently. this is every 64-bit
-// architecture except for sparc, which emulates 128-bit multiplication.
-// we might have platforms where `CHAR_BIT` is not 8, so let's avoid
-// doing `8 * sizeof(limb)`.
-#if !defined(__sparc)
+	// the limb width: we want efficient multiplication of double the bits in
+	// limb, or for 64-bit limbs, at least 64-bit multiplication where we can
+	// extract the high and low parts efficiently. this is every 64-bit
+	// architecture except for sparc, which emulates 128-bit multiplication.
+	// we might have platforms where `CHAR_BIT` is not 8, so let's avoid
+	// doing `8 * sizeof(limb)`.
+	#if !defined(__sparc)
 	typedef uint64_t limb;
 	constexpr size_t limb_bits = 64;
-#endif
+	#endif
 
 	typedef span<limb> limb_span;
 
@@ -1489,8 +1487,7 @@ namespace jsonifier_fast_float {
 		// resize the vector, without bounds checking
 		// if the new size is longer than the vector, assign value to each
 		// appended item.
-		constexpr
-		void resize_unchecked(size_t new_len, limb value) noexcept {
+		constexpr void resize_unchecked(size_t new_len, limb value) noexcept {
 			if (new_len > length) {
 				size_t count = new_len - length;
 				limb* first	 = data + length;
@@ -1536,7 +1533,7 @@ namespace jsonifier_fast_float {
 	}
 
 	fastfloat_really_inline constexpr uint64_t uint64_hi64(uint64_t r0, bool& truncated) noexcept {
-		truncated	= false;
+		truncated	 = false;
 		uint64_t shl = leading_zeroes(r0);
 		return r0 << shl;
 	}
@@ -1576,15 +1573,15 @@ namespace jsonifier_fast_float {
 	// pretty fast.
 	fastfloat_really_inline constexpr limb scalar_add(limb x, limb y, bool& overflow) noexcept {
 		limb z;
-// gcc and clang
-#if defined(__has_builtin)
-	#if __has_builtin(__builtin_add_overflow)
+	// gcc and clang
+	#if defined(__has_builtin)
+		#if __has_builtin(__builtin_add_overflow)
 		if (!std::is_constant_evaluated()) {
 			overflow = __builtin_add_overflow(x, y, &z);
 			return z;
 		}
+		#endif
 	#endif
-#endif
 
 		// generic, this still optimizes correctly on MSVC.
 		z		 = x + y;
@@ -1594,12 +1591,12 @@ namespace jsonifier_fast_float {
 
 	// multiply two small integers, getting both the high and low bits.
 	fastfloat_really_inline constexpr limb scalar_mul(limb x, limb y, limb& carry) noexcept {
-#if defined(__SIZEOF_INT128__)
+	#if defined(__SIZEOF_INT128__)
 		// GCC and clang both define it as an extension.
 		__uint128_t z = __uint128_t(x) * __uint128_t(y) + __uint128_t(carry);
 		carry		  = limb(z >> limb_bits);
 		return limb(z);
-#else
+	#else
 		// fallback, no native 128-bit integer multiplication with carry.
 		// on msvc, this optimizes identically, somehow.
 		value128 z = full_multiplication(x, y);
@@ -1608,7 +1605,7 @@ namespace jsonifier_fast_float {
 		z.high += uint64_t(overflow);// cannot overflow
 		carry = z.high;
 		return z.low;
-#endif
+	#endif
 	}
 
 	// add scalar value to bigint starting from offset.
@@ -1951,12 +1948,12 @@ namespace jsonifier_fast_float {
 #endif
 
 #ifndef JSONIFIER_FASTFLOAT_DIGIT_COMPARISON_H
-#define JSONIFIER_FASTFLOAT_DIGIT_COMPARISON_H
+	#define JSONIFIER_FASTFLOAT_DIGIT_COMPARISON_H
 
-#include <algorithm>
-#include <cstdint>
-#include <cstring>
-#include <iterator>
+	#include <algorithm>
+	#include <cstdint>
+	#include <cstring>
+	#include <iterator>
 
 
 namespace jsonifier_fast_float {
@@ -2228,9 +2225,9 @@ namespace jsonifier_fast_float {
 		JSONIFIER_FASTFLOAT_ASSERT(bigmant.pow10(uint32_t(exponent)));
 		adjusted_mantissa answer;
 		bool truncated;
-		answer.mantissa = bigmant.hi64(truncated);
+		answer.mantissa		   = bigmant.hi64(truncated);
 		constexpr int32_t bias = binary_format<T>::mantissa_explicit_bits() - binary_format<T>::minimum_exponent();
-		answer.power2	= bigmant.bit_length() - 64 + bias;
+		answer.power2		   = bigmant.bit_length() - 64 + bias;
 
 		round<T>(answer, [truncated](adjusted_mantissa& a, int32_t shift) {
 			round_nearest_tie_even(a, shift, [truncated](bool is_odd, bool is_halfway, bool is_above) -> bool {
@@ -2334,13 +2331,13 @@ namespace jsonifier_fast_float {
 #endif
 
 #ifndef JSONIFIER_FASTFLOAT_PARSE_NUMBER_H
-#define JSONIFIER_FASTFLOAT_PARSE_NUMBER_H
+	#define JSONIFIER_FASTFLOAT_PARSE_NUMBER_H
 
 
-#include <cmath>
-#include <cstring>
-#include <limits>
-#include <system_error>
+	#include <cmath>
+	#include <cstring>
+	#include <limits>
+	#include <system_error>
 namespace jsonifier_fast_float {
 
 
@@ -2359,23 +2356,25 @@ namespace jsonifier_fast_float {
 				minusSign = true;
 				++first;
 			}
-#ifdef JSONIFIER_FASTFLOAT_ALLOWS_LEADING_PLUS// disabled by default
+	#ifdef JSONIFIER_FASTFLOAT_ALLOWS_LEADING_PLUS// disabled by default
 			if (*first == UC('+')) {
 				++first;
 			}
-#endif
+	#endif
 			if (last - first >= 3) {
 				if (fastfloat_strncasecmp(first, str_const_nan<UC>(), 3)) {
 					answer.ptr = (first += 3);
 					value	   = minusSign ? -std::numeric_limits<T>::quiet_NaN() : std::numeric_limits<T>::quiet_NaN();
-					// Check for possible nan(n-char-seq-opt), C++17 20.19.3.7, C11 7.20.1.3.3. At least MSVC produces nan(ind) and nan(snan).
 					if (first != last && *first == UC('(')) {
 						for (UC const* ptr = first + 1; ptr != last; ++ptr) {
 							if (*ptr == UC(')')) {
-								answer.ptr = ptr + 1;// valid nan(n-char-seq-opt)
+								answer.ptr = ptr + 1;
 								break;
-							} else if (!((UC('a') <= *ptr && *ptr <= UC('z')) || (UC('A') <= *ptr && *ptr <= UC('Z')) || (UC('0') <= *ptr && *ptr <= UC('9')) || *ptr == UC('_')))
-								break;// forbidden char, not nan(n-char-seq-opt)
+							} else {
+								if (!((UC('a') <= *ptr && *ptr <= UC('z')) || (UC('A') <= *ptr && *ptr <= UC('Z')) || (UC('0') <= *ptr && *ptr <= UC('9')) || *ptr == UC('_'))) {
+									break;
+								}
+							}
 						}
 					}
 					return answer;
@@ -2401,9 +2400,9 @@ namespace jsonifier_fast_float {
  */
 		fastfloat_really_inline bool rounds_to_nearest() noexcept {
 			// https://lemire.me/blog/2020/06/26/gcc-not-nearest/
-#if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
+	#if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
 			return false;
-#endif
+	#endif
 			// See
 			// A fast function to check your floating-point rounding mode
 			// https://lemire.me/blog/2022/11/16/a-fast-function-to-check-your-floating-point-rounding-mode/
@@ -2422,40 +2421,40 @@ namespace jsonifier_fast_float {
 			// precision, as in 387 instructions).
 			static volatile float fmin = std::numeric_limits<float>::min();
 			float fmini				   = fmin;// we copy it so that it gets loaded at most once.
-//
-// Explanation:
-// Only when fegetround() == FE_TONEAREST do we have that
-// fmin + 1.0f == 1.0f - fmin.
-//
-// FE_UPWARD:
-//  fmin + 1.0f > 1
-//  1.0f - fmin == 1
-//
-// FE_DOWNWARD or  FE_TOWARDZERO:
-//  fmin + 1.0f == 1
-//  1.0f - fmin < 1
-//
-// Note: This may fail to be accurate if fast-math has been
-// enabled, as rounding conventions may not apply.
-#ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
-	#pragma warning(push)
-//  todo: is there a VS warning?
-//  see https://stackoverflow.com/questions/46079446/is-there-a-warning-for-floating-point-equality-checking-in-visual-studio-2013
-#elif defined(JSONIFIER_CLANG)
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wfloat-equal"
-#elif defined(JSONIFIER_GNUCXX)
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wfloat-equal"
-#endif
+	//
+	// Explanation:
+	// Only when fegetround() == FE_TONEAREST do we have that
+	// fmin + 1.0f == 1.0f - fmin.
+	//
+	// FE_UPWARD:
+	//  fmin + 1.0f > 1
+	//  1.0f - fmin == 1
+	//
+	// FE_DOWNWARD or  FE_TOWARDZERO:
+	//  fmin + 1.0f == 1
+	//  1.0f - fmin < 1
+	//
+	// Note: This may fail to be accurate if fast-math has been
+	// enabled, as rounding conventions may not apply.
+	#ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
+		#pragma warning(push)
+	//  todo: is there a VS warning?
+	//  see https://stackoverflow.com/questions/46079446/is-there-a-warning-for-floating-point-equality-checking-in-visual-studio-2013
+	#elif defined(JSONIFIER_CLANG)
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wfloat-equal"
+	#elif defined(JSONIFIER_GNUCXX)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wfloat-equal"
+	#endif
 			return (fmini + 1.0f == 1.0f - fmini);
-#ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
-	#pragma warning(pop)
-#elif defined(JSONIFIER_CLANG)
-	#pragma clang diagnostic pop
-#elif defined(JSONIFIER_GNUCXX)
-	#pragma GCC diagnostic pop
-#endif
+	#ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
+		#pragma warning(pop)
+	#elif defined(JSONIFIER_CLANG)
+		#pragma clang diagnostic pop
+	#elif defined(JSONIFIER_GNUCXX)
+		#pragma GCC diagnostic pop
+	#endif
 		}
 
 	}
@@ -2463,147 +2462,145 @@ namespace jsonifier_fast_float {
 	template<typename T, typename UC> from_chars_result_t<UC> fromCharsAdvanced(UC const* first, UC const* last, T& value) noexcept {
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
-		static constexpr auto parseNumberString =
-			[](auto p, auto pend) {
-				constexpr UC decimal_point = '.';
+		static constexpr auto parseNumberString = [](auto p, auto pend) {
+			constexpr UC decimal_point = '.';
 
-				parsed_number_string_t<UC> answer;
-				answer.valid		   = false;
-				answer.too_many_digits = false;
-				answer.negative		   = (*p == UC('-'));
-				if (*p == UC('-')) {// C++17 20.19.3.(7.1) explicitly forbids '+' sign here
-					++p;
-					if (p == pend) {
-						return answer;
-					}
-					if (!is_integer(*p)) {// a sign must be followed by an integer
-						return answer;
-					}
+			parsed_number_string_t<UC> answer;
+			answer.valid		   = false;
+			answer.too_many_digits = false;
+			answer.negative		   = (*p == UC('-'));
+			if (*p == UC('-')) {// C++17 20.19.3.(7.1) explicitly forbids '+' sign here
+				++p;
+				if (p == pend) {
+					return answer;
 				}
-				UC const* const start_digits = p;
+				if (!is_integer(*p)) {// a sign must be followed by an integer
+					return answer;
+				}
+			}
+			UC const* const start_digits = p;
 
-				uint64_t i = 0;// an uint32_t avoids signed overflows (which are bad)
+			uint64_t i = 0;// an uint32_t avoids signed overflows (which are bad)
+
+			while ((p != pend) && is_integer(*p)) {
+				// a multiplication by 10 is cheaper than an arbitrary integer
+				// multiplication
+				i = 10 * i + uint64_t(*p - UC('0'));// might overflow, we will handle the overflow later
+				++p;
+			}
+			UC const* const end_of_integer_part = p;
+			int64_t digit_count					= int64_t(end_of_integer_part - start_digits);
+			answer.integer						= span<const UC>(start_digits, size_t(digit_count));
+			if (digit_count == 0 || (start_digits[0] == UC('0') && digit_count > 1)) {
+				return answer;
+			}
+
+			int64_t exponent			 = 0;
+			const bool has_decimal_point = (p != pend) && (*p == decimal_point);
+			if (has_decimal_point) {
+				++p;
+				UC const* before = p;
+				// can occur at most twice without overflowing, but let it occur more, since
+				// for integers with many digits, digit parsing is the primary bottleneck.
+				loop_parse_if_eight_digits(p, pend, i);
 
 				while ((p != pend) && is_integer(*p)) {
-					// a multiplication by 10 is cheaper than an arbitrary integer
-					// multiplication
-					i = 10 * i + uint64_t(*p - UC('0'));// might overflow, we will handle the overflow later
+					uint8_t digit = uint8_t(*p - UC('0'));
+					++p;
+					i = i * 10 + digit;// in rare cases, this will overflow, but that's ok
+				}
+				exponent		= before - p;
+				answer.fraction = span<const UC>(before, size_t(p - before));
+				digit_count -= exponent;
+			}
+			if (has_decimal_point && exponent == 0) {
+				return answer;
+			}
+			int64_t exp_number = 0;// explicit exponential part
+			if (((p != pend) && ((UC('e') == *p) || (UC('E') == *p))) || (p != pend) && ((UC('+') == *p) || (UC('-') == *p) || (UC('d') == *p) || (UC('D') == *p))) {
+				UC const* location_of_e = p;
+				if ((UC('e') == *p) || (UC('E') == *p) || (UC('d') == *p) || (UC('D') == *p)) {
 					++p;
 				}
-				UC const* const end_of_integer_part = p;
-				int64_t digit_count					= int64_t(end_of_integer_part - start_digits);
-				answer.integer						= span<const UC>(start_digits, size_t(digit_count));
-				if (digit_count == 0 || (start_digits[0] == UC('0') && digit_count > 1)) {
+				bool neg_exp = false;
+				if ((p != pend) && (UC('-') == *p)) {
+					neg_exp = true;
+					++p;
+				} else {
+					if ((p != pend) && (UC('+') == *p)) {// '+' on exponent is allowed by C++17 20.19.3.(7.1)
+						++p;
+					}
+				}
+				if ((p == pend) || !is_integer(*p)) {
 					return answer;
-				}
-
-				int64_t exponent			 = 0;
-				const bool has_decimal_point = (p != pend) && (*p == decimal_point);
-				if (has_decimal_point) {
-					++p;
-					UC const* before = p;
-					// can occur at most twice without overflowing, but let it occur more, since
-					// for integers with many digits, digit parsing is the primary bottleneck.
-					loop_parse_if_eight_digits(p, pend, i);
-
+					// Otherwise, we will be ignoring the 'e'.
+					p = location_of_e;
+				} else {
 					while ((p != pend) && is_integer(*p)) {
 						uint8_t digit = uint8_t(*p - UC('0'));
-						++p;
-						i = i * 10 + digit;// in rare cases, this will overflow, but that's ok
-					}
-					exponent		= before - p;
-					answer.fraction = span<const UC>(before, size_t(p - before));
-					digit_count -= exponent;
-				}
-				if (has_decimal_point && exponent == 0) {
-					return answer;
-				}
-				int64_t exp_number = 0;// explicit exponential part
-				if (((p != pend) && ((UC('e') == *p) || (UC('E') == *p))) ||
-					(p != pend) && ((UC('+') == *p) || (UC('-') == *p) || (UC('d') == *p) || (UC('D') == *p))) {
-					UC const* location_of_e = p;
-					if ((UC('e') == *p) || (UC('E') == *p) || (UC('d') == *p) || (UC('D') == *p)) {
+						if (exp_number < 0x10000000) {
+							exp_number = 10 * exp_number + digit;
+						}
 						++p;
 					}
-					bool neg_exp = false;
-					if ((p != pend) && (UC('-') == *p)) {
-						neg_exp = true;
-						++p;
-					} else {
-						if ((p != pend) && (UC('+') == *p)) {// '+' on exponent is allowed by C++17 20.19.3.(7.1)
-							++p;
-						}
+					if (neg_exp) {
+						exp_number = -exp_number;
 					}
-					if ((p == pend) || !is_integer(*p)) {
-						return answer;
-						// Otherwise, we will be ignoring the 'e'.
-						p = location_of_e;
-					} else {
-						while ((p != pend) && is_integer(*p)) {
-							uint8_t digit = uint8_t(*p - UC('0'));
-							if (exp_number < 0x10000000) {
-								exp_number = 10 * exp_number + digit;
-							}
-							++p;
-						}
-						if (neg_exp) {
-							exp_number = -exp_number;
-						}
-						exponent += exp_number;
-					}
+					exponent += exp_number;
 				}
-				answer.lastmatch = p;
-				answer.valid	 = true;
+			}
+			answer.lastmatch = p;
+			answer.valid	 = true;
 
-				// If we frequently had to deal with long strings of digits,
-				// we could extend our code by using a 128-bit integer instead
-				// of a 64-bit integer. However, this is uncommon.
-				//
-				// We can deal with up to 19 digits.
-				if (digit_count > 19) {// this is uncommon
-					// It is possible that the integer had an overflow.
-					// We have to handle the case where we have 0.0000somenumber.
-					// We need to be mindful of the case where we only have zeroes...
-					// E.g., 0.000000000...000.
-					UC const* start = start_digits;
-					while ((start != pend) && (*start == UC('0') || *start == decimal_point)) {
-						if (*start == UC('0')) {
-							digit_count--;
-						}
-						start++;
+			// If we frequently had to deal with long strings of digits,
+			// we could extend our code by using a 128-bit integer instead
+			// of a 64-bit integer. However, this is uncommon.
+			//
+			// We can deal with up to 19 digits.
+			if (digit_count > 19) {// this is uncommon
+				// It is possible that the integer had an overflow.
+				// We have to handle the case where we have 0.0000somenumber.
+				// We need to be mindful of the case where we only have zeroes...
+				// E.g., 0.000000000...000.
+				UC const* start = start_digits;
+				while ((start != pend) && (*start == UC('0') || *start == decimal_point)) {
+					if (*start == UC('0')) {
+						digit_count--;
 					}
+					start++;
+				}
 
-					if (digit_count > 19) {
-						answer.too_many_digits = true;
-						// Let us start again, this time, avoiding overflows.
-						// We don't need to check if is_integer, since we use the
-						// pre-tokenized spans from above.
-						i				  = 0;
-						p				  = answer.integer.ptr;
-						UC const* int_end = p + answer.integer.len();
-						const uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
-						while ((i < minimal_nineteen_digit_integer) && (p != int_end)) {
+				if (digit_count > 19) {
+					answer.too_many_digits = true;
+					// Let us start again, this time, avoiding overflows.
+					// We don't need to check if is_integer, since we use the
+					// pre-tokenized spans from above.
+					i				  = 0;
+					p				  = answer.integer.ptr;
+					UC const* int_end = p + answer.integer.len();
+					const uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
+					while ((i < minimal_nineteen_digit_integer) && (p != int_end)) {
+						i = i * 10 + uint64_t(*p - UC('0'));
+						++p;
+					}
+					if (i >= minimal_nineteen_digit_integer) {// We have a big integers
+						exponent = end_of_integer_part - p + exp_number;
+					} else {// We have a value with a fractional component.
+						p				   = answer.fraction.ptr;
+						UC const* frac_end = p + answer.fraction.len();
+						while ((i < minimal_nineteen_digit_integer) && (p != frac_end)) {
 							i = i * 10 + uint64_t(*p - UC('0'));
 							++p;
 						}
-						if (i >= minimal_nineteen_digit_integer) {// We have a big integers
-							exponent = end_of_integer_part - p + exp_number;
-						} else {// We have a value with a fractional component.
-							p				   = answer.fraction.ptr;
-							UC const* frac_end = p + answer.fraction.len();
-							while ((i < minimal_nineteen_digit_integer) && (p != frac_end)) {
-								i = i * 10 + uint64_t(*p - UC('0'));
-								++p;
-							}
-							exponent = answer.fraction.ptr - p + exp_number;
-						}
-						// We have now corrected both exponent and i, to a truncated value
+						exponent = answer.fraction.ptr - p + exp_number;
 					}
+					// We have now corrected both exponent and i, to a truncated value
 				}
-				answer.exponent = exponent;
-				answer.mantissa = i;
-				return answer;
-			};
+			}
+			answer.exponent = exponent;
+			answer.mantissa = i;
+			return answer;
+		};
 		from_chars_result_t<UC> answer;
 		parsed_number_string_t<UC> pns = parseNumberString(first, last);
 		if (!pns.valid) {

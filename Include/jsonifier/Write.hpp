@@ -56,11 +56,8 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	constexpr jsonifier::string_view falseString{ "false" };
-	constexpr jsonifier::string_view trueString{ "true" };
-	constexpr jsonifier::string_view nullString{ "null" };
-
-	template<bool checked = true, typename buffer_type, typename index_type> JSONIFIER_ALWAYS_INLINE void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
+	template<bool checked = true, typename buffer_type, typename index_type>
+	JSONIFIER_ALWAYS_INLINE void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
 		if constexpr (checked) {
 			if (index == buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() == 0 ? 128 : buffer.size() * 2);
@@ -123,10 +120,10 @@ namespace jsonifier_internal {
 	}
 
 	template<auto& options, bool checked = true, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) {
-		auto indent		 = options.indent;
+		auto indent				  = options.indent;
 		constexpr auto indentSize = options.optionsReal.indentSize;
-		auto indentTotal = indent * indentSize;
-		auto n			 = 3 + indentTotal;
+		auto indentTotal		  = indent * indentSize;
+		auto n					  = 3 + indentTotal;
 		if constexpr (checked) {
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
@@ -171,10 +168,10 @@ namespace jsonifier_internal {
 				buffer.resize(max(buffer.size() * 2, k));
 			}
 			static constexpr char s[]{ ",\n" };
-			static constexpr auto n = std::size(s) - 1;
-			auto indent				= options.indent;
+			static constexpr auto n	  = std::size(s) - 1;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal		= indent * indentSize;
+			auto indentTotal		  = indent * indentSize;
 			std::copy_n(s, n, buffer.data() + index);
 			index += n;
 			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
@@ -188,10 +185,10 @@ namespace jsonifier_internal {
 	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			++options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -202,9 +199,8 @@ namespace jsonifier_internal {
 			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
-			auto n = 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			if (index + 1 >= buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
 			}
 			buffer[index] = '{';
 			++index;
@@ -214,10 +210,10 @@ namespace jsonifier_internal {
 	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			--options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -226,9 +222,8 @@ namespace jsonifier_internal {
 			std::fill_n(buffer.data() + index, indentTotal, options.optionsReal.indentChar);
 			index += indentTotal;
 		} else {
-			auto n = index + 1;
-			if (index + n >= buffer.size()) [[unlikely]] {
-				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
+			if (index + 1 >= buffer.size()) [[unlikely]] {
+				buffer.resize(buffer.size() * 2 > index + 1 ? buffer.size() * 2 : index + 1);
 			}
 		}
 		buffer[index] = '}';
@@ -238,10 +233,10 @@ namespace jsonifier_internal {
 	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -263,10 +258,10 @@ namespace jsonifier_internal {
 	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal + 1;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal + 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -288,10 +283,10 @@ namespace jsonifier_internal {
 	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}
@@ -313,10 +308,10 @@ namespace jsonifier_internal {
 	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index) {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
-			auto indent		 = options.indent;
+			auto indent				  = options.indent;
 			constexpr auto indentSize = options.optionsReal.indentSize;
-			auto indentTotal = indent * indentSize;
-			auto n			 = 3 + indentTotal + 1;
+			auto indentTotal		  = indent * indentSize;
+			auto n					  = 3 + indentTotal + 1;
 			if (index + n >= buffer.size()) [[unlikely]] {
 				buffer.resize(buffer.size() * 2 > index + n ? buffer.size() * 2 : index + n);
 			}

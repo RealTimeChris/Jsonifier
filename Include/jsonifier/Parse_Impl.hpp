@@ -32,8 +32,7 @@
 
 namespace jsonifier_internal {
 
-	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type, typename value_type, typename iterator,
-		jsonifier::concepts::uint64_type size_type>
+	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type, typename value_type, typename iterator, jsonifier::concepts::uint64_type size_type>
 	JSONIFIER_ALWAYS_INLINE void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize) {
 		static constexpr auto& tuple	= jsonifier_internal::final_tuple_static_data<value_type>;
 		static constexpr auto& subTuple = std::get<subTupleIndex>(tuple);
@@ -56,12 +55,11 @@ namespace jsonifier_internal {
 		parse_impl<derived_type, member_type>::template impl<options>(value.*ptr, iter, end);
 	}
 
-	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type, typename value_type, typename iterator,
-		jsonifier::concepts::uint64_type size_type>
+	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type, typename value_type, typename iterator, jsonifier::concepts::uint64_type size_type>
 	using invoke_parse_function_ptr = const decltype(&invokeParse<options, subTupleIndex, index, derived_type, value_type, iterator, size_type>);
 
-	template<const auto& options, size_t subTupleIndex, typename derived_type, typename value_type, typename iterator,
-		jsonifier::concepts::uint64_type size_type, size_t... indices>
+	template<const auto& options, size_t subTupleIndex, typename derived_type, typename value_type, typename iterator, jsonifier::concepts::uint64_type size_type,
+		size_t... indices>
 	constexpr auto generateArrayOfInvokeParsePtrsInternal(std::index_sequence<indices...>) {
 		return std::array<invoke_parse_function_ptr<options, subTupleIndex, 0, derived_type, value_type, iterator, size_type>, sizeof...(indices)>{
 			&invokeParse<options, subTupleIndex, indices, derived_type, value_type, iterator, size_type>...
@@ -73,7 +71,7 @@ namespace jsonifier_internal {
 		constexpr auto& tuple	 = final_tuple_static_data<value_type>;
 		constexpr auto& subTuple = std::get<subTupleIndex>(tuple);
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(subTuple)>>;
-		using tuple_type = unwrap_t<decltype(subTuple)>;
+		using tuple_type		 = unwrap_t<decltype(subTuple)>;
 		return generateArrayOfInvokeParsePtrsInternal<options, subTupleIndex, derived_type, value_type, iterator, size_type>(std::make_index_sequence<tupleSize>{});
 	}
 
@@ -276,7 +274,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	void noop(){};
+	void noop() {};
 
 	template<typename derived_type, jsonifier::concepts::vector_t value_type_new> struct parse_impl<derived_type, value_type_new> {
 		template<const parse_options_internal<derived_type>& options, jsonifier::concepts::vector_t value_type, typename iterator>

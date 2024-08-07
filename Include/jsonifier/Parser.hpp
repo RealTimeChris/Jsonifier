@@ -52,8 +52,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type, typename value_type> struct parse_impl;
 
-	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
-		jsonifier::concepts::uint64_type size_type>
+	template<const auto& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator, jsonifier::concepts::uint64_type size_type>
 	void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize);
 
 	template<typename derived_type> class parser {
@@ -64,7 +63,7 @@ namespace jsonifier_internal {
 		template<typename derived_type_new, typename value_type> friend struct parse_impl;
 
 		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
-		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			   = delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) {

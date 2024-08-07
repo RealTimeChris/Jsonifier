@@ -50,8 +50,8 @@ namespace jsonifier_internal {
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& newData);
 
-	template<>
-	JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(const jsonifier::string& newData);
+	template<> JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(
+		const jsonifier::string& newData);
 
 	template<> JSONIFIER_ALWAYS_INLINE jsonifier::string constructValueFromRawJsonData<jsonifier::string>(const jsonifier::string& newData);
 
@@ -272,7 +272,7 @@ namespace jsonifier_internal {
 				newIter01	= skipWs(newIter01);
 				auto newKey = collectKey();
 				newIter01	= skipWs(newIter01);
-				collectCharacter(':');
+				collectCharacter(0x3A);
 				newIter01 = skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
@@ -283,8 +283,8 @@ namespace jsonifier_internal {
 		return results;
 	}
 
-	template<>
-	JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(const jsonifier::string& jsonData) {
+	template<> JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(
+		const jsonifier::string& jsonData) {
 		jsonifier::raw_json_data::array_type results{};
 		if (jsonData.size() > 0) {
 			jsonifier::string::const_iterator newIter01 = jsonData.begin();

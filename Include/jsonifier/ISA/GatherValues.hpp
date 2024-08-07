@@ -35,11 +35,13 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint16_type char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint16_type char_type>
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) {
 		return vreinterpretq_u8_u16(vld1q_u16(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) {
 		return vreinterpretq_u8_u64(vld1q_u64(str));
 	}
 
@@ -55,7 +57,8 @@ namespace simd_internal {
 		return vdupq_n_u8(str);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
+	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
 		vst1q_u64(storageLocation, vreinterpretq_u64_u8(value));
 	}
 
@@ -78,7 +81,8 @@ namespace simd_internal {
 		return _mm_set1_epi8(static_cast<char>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
+	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
 		_mm_store_si128(reinterpret_cast<__m128i*>(storageLocation), value);
 	}
 
@@ -96,7 +100,8 @@ namespace simd_internal {
 		return _mm256_set1_epi8(static_cast<char>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
+	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type>
+	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
 		_mm256_store_si256(reinterpret_cast<__m256i*>(storageLocation), value);
 	}
 
@@ -114,7 +119,8 @@ namespace simd_internal {
 		return _mm512_set1_epi8(str);
 	}
 
-	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
+	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type>
+	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) {
 		_mm512_store_si512(storageLocation, value);
 	}
 

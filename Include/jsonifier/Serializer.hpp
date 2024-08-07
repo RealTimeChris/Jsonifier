@@ -73,7 +73,8 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type> JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) {
+		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
+		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) {
 			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.index = 0;

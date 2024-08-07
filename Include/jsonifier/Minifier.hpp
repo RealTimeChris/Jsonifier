@@ -44,10 +44,9 @@ namespace jsonifier_internal {
 		template<typename derived_type_new> friend struct minify_impl;
 
 		JSONIFIER_ALWAYS_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_ALWAYS_INLINE minifier(const minifier& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE minifier(const minifier& other)			   = delete;
 
-		template<jsonifier ::concepts::string_t string_type>
-		JSONIFIER_ALWAYS_INLINE auto minifyJson(string_type&& in) noexcept {
+		template<jsonifier ::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE auto minifyJson(string_type&& in) noexcept {
 			if (derivedRef.stringBuffer.size() < in.size()) [[unlikely]] {
 				derivedRef.stringBuffer.resize(in.size());
 			}

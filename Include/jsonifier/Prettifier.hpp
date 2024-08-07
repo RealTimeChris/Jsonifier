@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 	};
 
 	struct prettify_options_internal {
-		jsonifier::prettify_options optionsReal{}; 
+		jsonifier::prettify_options optionsReal{};
 		mutable int64_t indent{};
 	};
 
@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 		template<typename derived_type_new> friend struct prettify_impl;
 
 		JSONIFIER_ALWAYS_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_ALWAYS_INLINE prettifier(const prettifier& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE prettifier(const prettifier& other)			   = delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier ::concepts::string_t string_type>
 		JSONIFIER_ALWAYS_INLINE auto prettifyJson(string_type&& in) noexcept {

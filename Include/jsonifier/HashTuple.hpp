@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 		return createNewTupleInternal<value_type>(std::make_index_sequence<countUniqueStringLengths(tupleRefs)>{});
 	}
 
-	template<typename value_type> inline static constexpr auto final_tuple_static_data = createNewTuple<unwrap_t<value_type>>();	
+	template<typename value_type> inline static constexpr auto final_tuple_static_data = createNewTuple<unwrap_t<value_type>>();
 
 	template<typename value_type, size_t subTupleIndex, size_t I> JSONIFIER_ALWAYS_INLINE constexpr const jsonifier::string_view& getKey() noexcept {
 		constexpr auto& subTuple = std::get<subTupleIndex>(final_tuple_static_data<value_type>);
@@ -344,7 +344,7 @@ namespace jsonifier_internal {
 
 	template<typename key_type, typename value_type, size_t subTupleIndexNew>
 	JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
-		auto keyStatsVal	  = keyStats<value_type, subTupleIndexNew>();
+		auto keyStatsVal = keyStats<value_type, subTupleIndexNew>();
 		xoshiro256 prng{};
 		const auto uniqueIndex = findUniqueColumnIndex(pairsNew, keyStatsVal);
 		auto constructForGivenStringLength =
@@ -361,7 +361,7 @@ namespace jsonifier_internal {
 				std::fill(returnValues.controlBytes.begin(), returnValues.controlBytes.end(), std::numeric_limits<uint8_t>::max());
 				std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
 				returnValues.seed = prng();
-				collided = false;
+				collided		  = false;
 				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
 					const auto hash			 = (returnValues.seed ^ pairsNew[y].data()[uniqueIndex]);
 					const auto groupPos		 = (hash) % numGroups;
@@ -398,7 +398,7 @@ namespace jsonifier_internal {
 
 	template<typename key_type, typename value_type, size_t subTupleIndexNew>
 	JSONIFIER_ALWAYS_INLINE constexpr auto collectMinimalCharSubTupleData(const std::array<key_type, getActualSize<value_type, subTupleIndexNew>()>& pairsNew) {
-		auto keyStatsVal	  = keyStats<value_type, subTupleIndexNew>();
+		auto keyStatsVal = keyStats<value_type, subTupleIndexNew>();
 		xoshiro256 prng{};
 		const auto uniqueIndex = findUniqueColumnIndex(pairsNew, keyStatsVal);
 		auto constructForGivenStringLength =
@@ -411,7 +411,7 @@ namespace jsonifier_internal {
 			for (size_t x = 0; x < 2; ++x) {
 				std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
 				returnValues.seed = prng();
-				collided = false;
+				collided		  = false;
 				for (size_t y = 0; y < getActualSize<value_type, subTupleIndexNew>(); ++y) {
 					const auto hash = (returnValues.seed ^ pairsNew[y].data()[uniqueIndex]);
 					const auto slot = hash % storageSize;
@@ -440,8 +440,7 @@ namespace jsonifier_internal {
 		return constructForGivenStringLength(std::integral_constant<size_t, 0>{}, constructForGivenStringLength, uniqueIndex);
 	}
 
-	template<typename value_type, size_t subTupleIndex, size_t... I>
-	JSONIFIER_ALWAYS_INLINE constexpr auto generateSubTupleConstructionDataImpl(std::index_sequence<I...>) {
+	template<typename value_type, size_t subTupleIndex, size_t... I> JSONIFIER_ALWAYS_INLINE constexpr auto generateSubTupleConstructionDataImpl(std::index_sequence<I...>) {
 		constexpr auto& tuple	 = std::get<subTupleIndex>(final_tuple_static_data<value_type>);
 		using tuple_type		 = unwrap_t<decltype(tuple)>;
 		constexpr auto tupleSize = std::tuple_size_v<tuple_type>;
@@ -458,7 +457,7 @@ namespace jsonifier_internal {
 	template<typename value_type, size_t subTupleIndex> JSONIFIER_ALWAYS_INLINE constexpr auto generateSubTupleConstructionData() {
 		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(std::get<subTupleIndex>(final_tuple_static_data<value_type>))>>;
 		constexpr auto mapNew	 = generateSubTupleConstructionDataImpl<value_type, subTupleIndex>(std::make_index_sequence<tupleSize>{});
-		constexpr auto newIndex = mapNew.index();
+		constexpr auto newIndex	 = mapNew.index();
 		return std::get<newIndex>(mapNew);
 	}
 
@@ -489,7 +488,7 @@ namespace jsonifier_internal {
 			const auto hash		   = (seed ^ iter[uniqueIndex]);
 			const auto resultIndex = ((hash) % numGroups) * bucketSize;
 			const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
-														  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
+										  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
 				 resultIndex);
 			if (stringCompareFunctions[indices[finalIndex]](iter)) {
 				functionPtrs[indices[finalIndex]](std::forward<arg_types>(args)...);

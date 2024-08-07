@@ -36,7 +36,7 @@ namespace jsonifier {
 		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator			 = jsonifier_internal::iterator<value_type>;
+		using iterator				 = jsonifier_internal::iterator<value_type>;
 		using const_iterator		 = jsonifier_internal::const_iterator<value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;

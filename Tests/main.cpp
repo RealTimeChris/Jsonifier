@@ -827,16 +827,16 @@ template<typename value_type> struct test_generator {
 		return dis(randomEngine);
 	}
 
-	void insertUnicodeInJSON(jsonifier::string& jsonString) {
+	void insertUnicodeInJSON(std::string& jsonString) {
 		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(std::size(unicode_emoji::unicodeEmoji) - 1)];
 		jsonString += static_cast<jsonifier::string>(newStringView);
 	}
 
-	jsonifier::string generateString() {
+	std::string generateString() {
 		auto length{ randomizeNumberNormal(64.0f, 16.0f) };
 		static constexpr uint32_t charsetSize = charset.size();
 		auto unicodeCount					  = randomizeNumberUniform(length / 8);
-		jsonifier::string result{};
+		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
 			if (x == static_cast<int32_t>(length / unicodeCount)) {
 				insertUnicodeInJSON(result);
@@ -926,11 +926,11 @@ template<typename value_type> struct test_generator {
 };
 
 struct test_element_final {
-	jsonifier::string libraryName{};
-	jsonifier::string resultType{};
+	std::string libraryName{};
+	std::string resultType{};
 	double resultSpeed{};
 	double iterationCount{};
-	jsonifier::string color{};
+	std::string color{};
 	bool operator>(const test_element_final& other) const {
 		return resultSpeed > other.resultSpeed;
 	}
@@ -946,7 +946,7 @@ struct test_element_pair {
 
 struct test_elements_final {
 	std::vector<test_element_final> results{};
-	jsonifier::string testName{};
+	std::string testName{};
 };
 
 using test_results_final = std::vector<test_elements_final>;
@@ -1033,16 +1033,16 @@ constexpr uint64_t iterationsVal = 100;
 
 enum class result_type { read = 0, write = 1 };
 
-template<result_type type> jsonifier::string enumToString() {
+template<result_type type> std::string enumToString() {
 	return type == result_type::read ? "Read" : "Write";
 }
 
 template<result_type type> struct result {
-	std::optional<double> iterationCount{};
 	std::optional<uint64_t> byteLength{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
-	jsonifier::string color{};
+	std::optional<double> iterationCount{};
+	std::string color{};
 
 	result& operator=(result&&) noexcept	  = default;
 	result(result&&) noexcept				  = default;
@@ -1051,7 +1051,7 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
-	result(const jsonifier::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_results& results) {
+	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_results& results) {
 		byteLength.emplace(byteLengthNew);
 		jsonTime.emplace(results.resultValue);
 		iterationCount.emplace(results.iterationCount);
@@ -1078,7 +1078,7 @@ template<result_type type> struct result {
 };
 
 struct results_data {
-	std::unordered_set<jsonifier::string> jsonifierExcludedKeys{};
+	std::unordered_set<std::string> jsonifierExcludedKeys{};
 	result<result_type::write> writeResult{};
 	result<result_type::read> readResult{};
 	jsonifier::string name{};
@@ -1137,16 +1137,16 @@ struct results_data {
 		std::cout << "\n---" << std::endl;
 	}
 
-	jsonifier::string jsonStats() const {
-		jsonifier::string writeLength{};
-		jsonifier::string writeTime{};
-		jsonifier::string writeIterationCount{};
-		jsonifier::string write{};
-		jsonifier::string readLength{};
-		jsonifier::string readTime{};
-		jsonifier::string readIterationCount{};
-		jsonifier::string read{};
-		jsonifier::string finalString{ "| [" + name + "](" + url + ") | " };
+	std::string jsonStats() const {
+		std::string writeLength{};
+		std::string writeTime{};
+		std::string writeIterationCount{};
+		std::string write{};
+		std::string readLength{};
+		std::string readTime{};
+		std::string readIterationCount{};
+		std::string read{};
+		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
 			std::stringstream stream01{};
 			stream01 << std::setprecision(6) << readResult.jsonSpeed.value();
@@ -1193,8 +1193,8 @@ struct results_data {
 
 struct test_results {
 	std::vector<results_data> results{};
-	jsonifier::string markdownResults{};
-	jsonifier::string testName{};
+	std::string markdownResults{};
+	std::string testName{};
 };
 
 template<result_type type> struct jsonifier::core<result<type>> {
@@ -1231,7 +1231,7 @@ template<json_library lib, test_type type, typename test_data_type, bool minifie
 
 template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
 struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
@@ -1272,8 +1272,8 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::prettify, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
@@ -1300,8 +1300,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::minify, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 		std::string newerBuffer{};
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
@@ -1327,8 +1327,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::validate, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
@@ -1358,7 +1358,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 #if !defined(ASAN)
 template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
 struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
@@ -1393,8 +1393,8 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::prettify, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
@@ -1416,8 +1416,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::minify, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
@@ -1439,8 +1439,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::validate, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
@@ -1491,13 +1491,6 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& val
 }
 
 template<> void getValue<std::string>(std::string& valueNew, simdjson::ondemand::value value) {
-	std::string_view result;
-	if (auto resultCode = value.get(result); !resultCode) {
-		valueNew = static_cast<std::string>(result);
-	}
-}
-
-template<> void getValue<jsonifier::string>(jsonifier::string& valueNew, simdjson::ondemand::value value) {
 	std::string_view result;
 	if (auto resultCode = value.get(result); !resultCode) {
 		valueNew = static_cast<jsonifier::string>(result);
@@ -2028,7 +2021,7 @@ template<> void getValue<abc_test<test_struct>>(abc_test<test_struct>& obj, simd
 
 template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName>
 struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(simdjsonCommitUrl), iterations };
@@ -2058,8 +2051,8 @@ struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, 
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::simdjson, test_type::minify, jsonifier::string, false, iterations, testName> {
-	static auto run(const jsonifier::string& newBuffer, bool doWePrint = true) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName> {
+	static auto run(const std::string& newBuffer, bool doWePrint = true) {
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(simdjsonLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(simdjsonCommitUrl), iterations };
@@ -2091,19 +2084,19 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-jsonifier::string table_header = R"(
+std::string table_header = R"(
 | Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |)";
 
-jsonifier::string read_table_header = R"(
+std::string read_table_header = R"(
 | Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
 
-jsonifier::string write_table_header = R"(
+std::string write_table_header = R"(
 | Library | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
 | ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
 
-static const jsonifier::string section001{ R"(
+static const std::string section001{ R"(
  > At least )" +
 	jsonifier::toString(30) +
 	R"( iterations on a 6 core (Intel i7 8700k), until coefficient of variance is at or below 3%.
@@ -2270,7 +2263,7 @@ alt="" width="400"/></p>
 )"
 };
 
-JSONIFIER_ALWAYS_INLINE jsonifier::string getCurrentWorkingDirectory() {
+JSONIFIER_ALWAYS_INLINE std::string getCurrentWorkingDirectory() {
 	try {
 		return std::filesystem::current_path().string();
 	} catch (const std::filesystem::filesystem_error& e) {
@@ -2286,7 +2279,7 @@ JSONIFIER_ALWAYS_INLINE void executePythonScript(const jsonifier::string& script
 	static constexpr std::string_view pythonName{ "python3 " };
 #endif
 	jsonifier::string command = static_cast<jsonifier::string>(pythonName) + scriptPath + " " + argument01 + " " + argument02;
-	int32_t result		= system(command.data());
+	int32_t result			  = system(command.data());
 	if (result != 0) {
 		std::cout << "Error: Failed to execute Python script. Command exited with code " << result << std::endl;
 	}
@@ -2295,7 +2288,7 @@ JSONIFIER_ALWAYS_INLINE void executePythonScript(const jsonifier::string& script
 template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper;
 
 template<test_type type, typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper {
-	static test_results run(const jsonifier::string& jsonDataNew) {
+	static test_results run(const std::string& jsonDataNew) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
@@ -2305,7 +2298,7 @@ template<test_type type, typename test_data_type, bool minified, uint64_t iterat
 #endif
 		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew, true));
 
-		jsonifier::string table{};
+		std::string table{};
 		const auto n = resultsNew.size();
 		table += table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
@@ -2321,17 +2314,17 @@ template<test_type type, typename test_data_type, bool minified, uint64_t iterat
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, jsonifier::string, false, iterations, testName> {
-	static test_results run(const jsonifier::string& jsonDataNew) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
 #if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 #endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 
-		jsonifier::string table{};
+		std::string table{};
 		const auto n = resultsNew.size();
 		table += write_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
@@ -2347,18 +2340,18 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, jsonifier::string, false, iterations, testName> {
-	static test_results run(const jsonifier::string& jsonDataNew) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
 #if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 #endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew, true));
 
-		jsonifier::string table{};
+		std::string table{};
 		const auto n = resultsNew.size();
 		table += write_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
@@ -2374,17 +2367,17 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 	}
 };
 
-template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, jsonifier::string, false, iterations, testName> {
-	static test_results run(const jsonifier::string& jsonDataNew) {
+template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, iterations, testName> {
+	static test_results run(const std::string& jsonDataNew) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
 #if !defined(ASAN)
-		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::validate, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
 #endif
-		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, jsonifier::string, false, iterations, testName>::run(jsonDataNew, true));
+		resultsNew.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew, true));
 
-		jsonifier::string table{};
+		std::string table{};
 		const auto n = resultsNew.size();
 		table += read_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
@@ -2405,18 +2398,18 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 int32_t main() {
 	try {
 		test_generator<test_struct> testJsonData{};
-		jsonifier::string jsonDataNew{};
+		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};
 		bnch_swt::file_loader fileLoader01{ README_PATH };
 		bnch_swt::file_loader fileLoader02{ basePath + "/JsonData-Prettified.json" };
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
 		fileLoader02.saveFile(jsonDataNew);
 		bnch_swt::file_loader fileLoader03{ basePath + "/JsonData-Minified.json" };
-		jsonifier::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
+		std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
 		fileLoader03.saveFile(jsonMinifiedData);
 		bnch_swt::file_loader fileLoader04{ basePath + "/Results.json" };
 		bnch_swt::file_loader fileLoader05{ basePath + "/DiscordData-Prettified.json" };
-		jsonifier::string discordData{ fileLoader05.operator jsonifier::string&() };
+		std::string discordData{ fileLoader05.operator jsonifier::string&() };
 		discord_message discordMessage{};
 		parser.parseJson(discordMessage, discordData);
 		for (auto& value: parser.getErrors()) {
@@ -2425,11 +2418,11 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(discordMessage, discordData);
 		fileLoader05.saveFile(discordData);
 		bnch_swt::file_loader fileLoader06{ basePath + "/DiscordData-Minified.json" };
-		jsonifier::string discordMinifiedData{ fileLoader06.operator jsonifier::string&() };
+		std::string discordMinifiedData{ fileLoader06.operator jsonifier::string&() };
 		discordMinifiedData = parser.minifyJson(discordData);
 		fileLoader06.saveFile(discordMinifiedData);
 		bnch_swt::file_loader fileLoader07{ basePath + "/CanadaData-Prettified.json" };
-		jsonifier::string canadaData{ fileLoader07.operator jsonifier::string&() };
+		std::string canadaData{ fileLoader07.operator jsonifier::string&() };
 		canada_message canadaMessage{};
 		parser.parseJson(canadaMessage, canadaData);
 		for (auto& value: parser.getErrors()) {
@@ -2438,11 +2431,11 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(canadaMessage, canadaData);
 		fileLoader07.saveFile(canadaData);
 		bnch_swt::file_loader fileLoader08{ basePath + "/CanadaData-Minified.json" };
-		jsonifier::string canadaMinifiedData{ fileLoader08.operator jsonifier::string&() };
+		std::string canadaMinifiedData{ fileLoader08.operator jsonifier::string&() };
 		canadaMinifiedData = parser.minifyJson(canadaData);
 		fileLoader08.saveFile(canadaMinifiedData);
 		bnch_swt::file_loader fileLoader09{ basePath + "/TwitterData-Prettified.json" };
-		jsonifier::string twitterData{ fileLoader09.operator jsonifier::string&() };
+		std::string twitterData{ fileLoader09.operator jsonifier::string&() };
 		twitter_message twitterMessage{};
 		parser.parseJson(twitterMessage, twitterData);
 		for (auto& value: parser.getErrors()) {
@@ -2451,13 +2444,13 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(twitterMessage, twitterData);
 		fileLoader09.saveFile(twitterData);
 		bnch_swt::file_loader fileLoader10{ basePath + "/TwitterData-Minified.json" };
-		jsonifier::string twitterMinifiedData{ fileLoader10.operator jsonifier::string&() };
+		std::string twitterMinifiedData{ fileLoader10.operator jsonifier::string&() };
 		twitterMinifiedData = parser.minifyJson(twitterData);
 		fileLoader10.saveFile(twitterMinifiedData);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "PARSER ERROR: " << value << std::endl;
 		}
-		jsonifier::string newTimeString{};
+		std::string newTimeString{};
 		newTimeString.resize(1024);
 		std::tm resultTwo{};
 		std::time_t result = std::time(nullptr);
@@ -2504,19 +2497,19 @@ int32_t main() {
 		newerString += static_cast<jsonifier::string>(section10);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::minify, jsonifier::string, false, iterationsVal, "Minify Test">::run(discordData);
+		testResults = json_tests_helper<test_type::minify, std::string, false, iterationsVal, "Minify Test">::run(discordData);
 		newerString += static_cast<jsonifier::string>(section11);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::prettify, jsonifier::string, false, iterationsVal, "Prettify Test">::run(jsonMinifiedData);
+		testResults = json_tests_helper<test_type::prettify, std::string, false, iterationsVal, "Prettify Test">::run(jsonMinifiedData);
 		newerString += static_cast<jsonifier::string>(section12);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::validate, jsonifier::string, false, iterationsVal, "Validate Test">::run(discordData);
+		testResults = json_tests_helper<test_type::validate, std::string, false, iterationsVal, "Validate Test">::run(discordData);
 		newerString += static_cast<jsonifier::string>(section13);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		jsonifier::string resultsStringJson{};
+		std::string resultsStringJson{};
 		test_results_final resultsData{};
 		for (auto& value: benchmark_data) {
 			test_elements_final testElement{};
@@ -2545,7 +2538,7 @@ int32_t main() {
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 		fileLoader04.saveFile(resultsStringJson);
 		fileLoader01.saveFile(newerString);
-		executePythonScript(static_cast<jsonifier::string>(BASE_PATH) + "/GenerateGraphs.py", basePath + "/Results.json", static_cast<jsonifier::string>(GRAPHS_PATH));
+		executePythonScript(static_cast<std::string>(BASE_PATH) + "/GenerateGraphs.py", basePath + "/Results.json", static_cast<std::string>(GRAPHS_PATH));
 	} catch (std::runtime_error& e) {
 		std::cout << e.what() << std::endl;
 	} catch (std::out_of_range& e) {
