@@ -299,7 +299,7 @@ namespace jsonifier_internal {
 
 	template<typename key_type_new, typename value_type, size_t subTupleIndexNew, size_t maxSizeIndexNew> struct sub_tuple_construction_data {
 		using simd_type = tuple_simd_t<hashTupleMaxSizes[maxSizeIndexNew]>;
-		JSONIFIER_ALIGN std::array<uint8_t, hashTupleMaxSizes[maxSizeIndexNew]> controlBytes{};
+		JSONIFIER_ALIGN std::array<uint8_t, hashTupleMaxSizes[maxSizeIndexNew] + 1> controlBytes{};
 		JSONIFIER_ALIGN std::array<size_t, hashTupleMaxSizes[maxSizeIndexNew] + 1> indices{};
 		size_t bucketSize{ setSimdWidth<hashTupleMaxSizes[maxSizeIndexNew]>() };
 		size_t storageSize{ hashTupleMaxSizes[maxSizeIndexNew] };
@@ -448,8 +448,10 @@ namespace jsonifier_internal {
 
 		if constexpr (tupleSize == 0) {
 			return nullptr;
-		} else {
+		} else if constexpr (tupleSize < 16) {
 			return collectMinimalCharSubTupleData<jsonifier::string_view, value_type, subTupleIndex>({ getKey<value_type, subTupleIndex, I>()... });
+		} else {
+			return collectSimdSubTupleData<jsonifier::string_view, value_type, subTupleIndex>({ getKey<value_type, subTupleIndex, I>()... });
 		}
 	}
 
@@ -469,25 +471,24 @@ namespace jsonifier_internal {
 		using size_type	   = size_t;
 		using control_type = uint8_t;
 
-		JSONIFIER_ALIGN size_t uniqueIndex{ constructionData.uniqueIndex };
-		JSONIFIER_ALIGN size_t storageSize{ constructionData.storageSize };
 		JSONIFIER_ALIGN std::array<control_type, constructionData.storageSize + 1> controlBytes{ constructionData.controlBytes };
-		JSONIFIER_ALIGN size_t bucketSize{ constructionData.bucketSize };
-		JSONIFIER_ALIGN size_t numGroups{ constructionData.numGroups };
-		JSONIFIER_ALIGN std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
-		JSONIFIER_ALIGN size_t seed{ constructionData.seed };
+		std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
+		size_t uniqueIndex{ constructionData.uniqueIndex };
+		size_t storageSize{ constructionData.storageSize };
+		size_t bucketSize{ constructionData.bucketSize };
+		size_t numGroups{ constructionData.numGroups };
+		size_t seed{ constructionData.seed };
 
-		JSONIFIER_ALIGN static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
+		static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
 			std::make_index_sequence<constructionData.storageSize + 1>{}) };
 
 		JSONIFIER_ALWAYS_INLINE constexpr simd_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
 			jsonifierPrefetchInternal(controlBytes.data());
-			jsonifierPrefetchInternal(indices.data());
-			JSONIFIER_ALIGN const auto hash		   = (seed ^ iter[uniqueIndex]);
-			JSONIFIER_ALIGN const auto resultIndex = ((hash) % numGroups) * bucketSize;
-			JSONIFIER_ALIGN const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
+			const auto hash		   = (seed ^ iter[uniqueIndex]);
+			const auto resultIndex = ((hash) % numGroups) * bucketSize;
+			const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<control_type>(hash)),
 														  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
 				 resultIndex);
 			if (stringCompareFunctions[indices[finalIndex]](iter)) {
@@ -526,20 +527,19 @@ namespace jsonifier_internal {
 		using size_type	   = size_t;
 		using control_type = uint8_t;
 
-		JSONIFIER_ALIGN size_t uniqueIndex{ constructionData.uniqueIndex };
-		JSONIFIER_ALIGN size_t storageSize{ constructionData.storageSize };
-		JSONIFIER_ALIGN std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
-		JSONIFIER_ALIGN size_t seed{ constructionData.seed };
+		std::array<size_type, constructionData.storageSize + 1> indices{ constructionData.indices };
+		size_t uniqueIndex{ constructionData.uniqueIndex };
+		size_t storageSize{ constructionData.storageSize };
+		size_t seed{ constructionData.seed };
 
-		JSONIFIER_ALIGN static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
+		static constexpr auto stringCompareFunctions{ generateArrayOfFunctionPtrs<string_compare_wrapper_non_const, value_type, subTupleIndexNew>(
 			std::make_index_sequence<constructionData.storageSize + 1>{}) };
 
 		JSONIFIER_ALWAYS_INLINE constexpr minimal_char_sub_tuple() noexcept = default;
 
 		template<const auto& functionPtrs, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr auto find(const char* iter, arg_types&&... args) const noexcept {
-			jsonifierPrefetchInternal(indices.data());
-			JSONIFIER_ALIGN const auto hash		  = (seed ^ iter[uniqueIndex]);
-			JSONIFIER_ALIGN const auto finalIndex = hash % storageSize;
+			const auto hash		  = (seed ^ iter[uniqueIndex]);
+			const auto finalIndex = hash % storageSize;
 			if (stringCompareFunctions[indices[finalIndex]](iter)) {
 				functionPtrs[indices[finalIndex]](std::forward<arg_types>(args)...);
 				return true;

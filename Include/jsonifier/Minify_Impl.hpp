@@ -50,6 +50,7 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
 								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
+							index = std::numeric_limits<uint64_t>::max();
 							return;
 						}
 						break;
@@ -67,12 +68,13 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
 								static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
+							index = std::numeric_limits<uint64_t>::max();
 							return;
 						}
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon:
-						writeCharacter<0x3A, false>(out, index);
+						writeCharacter<':', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Array_Start:
 						writeCharacter<'[', false>(out, index);
@@ -81,15 +83,15 @@ namespace jsonifier_internal {
 						writeCharacter<']', false>(out, index);
 						break;
 					[[unlikely]] case json_structural_type::Null: {
-						writeCharacters<false>(out, nullString.data(), nullString.size(), index);
+						writeCharacters<"null", false>(out, index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (*previousPtr == 't') {
-							writeCharacters<false>(out, trueString.data(), trueString.size(), index);
+							writeCharacters<"true", false>(out, index);
 							break;
 						} else {
-							writeCharacters<false>(out, falseString.data(), falseString.size(), index);
+							writeCharacters<"false", false>(out, index);
 							break;
 						}
 					}
@@ -107,6 +109,7 @@ namespace jsonifier_internal {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(iter - iter.getRootPtr()), static_cast<int64_t>(iter.getEndPtr() - iter.getRootPtr()), iter.getRootPtr()));
+						index = std::numeric_limits<uint64_t>::max();
 						return;
 					}
 				}

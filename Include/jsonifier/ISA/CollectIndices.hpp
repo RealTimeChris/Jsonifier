@@ -85,64 +85,66 @@ namespace simd_internal {
 		return returnValues;
 	}() };
 
-	template<typename simd_type> const simd_type simdBackslashes{ simd_internal::gatherValue<simd_type>('\\') };
-	template<typename simd_type> const simd_type simdQuotes{ simd_internal::gatherValue<simd_type>('"') };
-	template<typename simd_type> const simd_type opTable{ simd_internal::gatherValues<simd_type>(simd_internal::opArray<bytesPerStep>.data()) };
-	template<typename simd_type> const simd_type simdChars{ simd_internal::gatherValue<simd_type>(0x20) };
-	template<typename simd_type> const simd_type whitespaceTable{ simd_internal::gatherValues<simd_type>(simd_internal::whitespaceArray<bytesPerStep>.data()) };
-	template<typename simd_type> const simd_type oddBitsVal{ simd_internal::gatherValue<simd_type>(0xAA) };
-	template<typename simd_type> const simd_type escapeableTable00{ simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data()) };
-	template<typename simd_type> const simd_type escapeableTable01{ simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray01<bytesPerStep>.data()) };
+	template<auto value, typename simd_type> const simd_type simdValue{ simd_internal::gatherValue<simd_type>(value) };
+	template<const auto& values, typename simd_type> const simd_type simdValues{ simd_internal::gatherValues<simd_type>(values.data()) };
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralsAsSimdBase(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
-		valuesNew[0] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[0]), opOr(simdChars<jsonifier_simd_int_t>, values[0]));
-		valuesNew[1] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[1]), opOr(simdChars<jsonifier_simd_int_t>, values[1]));
-		valuesNew[2] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[2]), opOr(simdChars<jsonifier_simd_int_t>, values[2]));
-		valuesNew[3] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[3]), opOr(simdChars<jsonifier_simd_int_t>, values[3]));
-		valuesNew[4] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[4]), opOr(simdChars<jsonifier_simd_int_t>, values[4]));
-		valuesNew[5] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[5]), opOr(simdChars<jsonifier_simd_int_t>, values[5]));
-		valuesNew[6] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[6]), opOr(simdChars<jsonifier_simd_int_t>, values[6]));
-		valuesNew[7] = opCmpEq(opShuffle(opTable<jsonifier_simd_int_t>, values[7]), opOr(simdChars<jsonifier_simd_int_t>, values[7]));
+		valuesNew[0] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[0]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[0]));
+		valuesNew[1] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[1]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[1]));
+		valuesNew[2] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[2]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[2]));
+		valuesNew[3] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[3]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[3]));
+		valuesNew[4] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[4]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[4]));
+		valuesNew[5] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[5]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[5]));
+		valuesNew[6] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[6]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[6]));
+		valuesNew[7] =
+			opCmpEq(opShuffle(simdValues<simd_internal::opArray<bytesPerStep>, jsonifier_simd_int_t>, values[7]), opOr(simdValue<0x20, jsonifier_simd_int_t>, values[7]));
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectWhitespaceAsSimdBase(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
-		valuesNew[0] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[0]), values[0]);
-		valuesNew[1] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[1]), values[1]);
-		valuesNew[2] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[2]), values[2]);
-		valuesNew[3] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[3]), values[3]);
-		valuesNew[4] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[4]), values[4]);
-		valuesNew[5] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[5]), values[5]);
-		valuesNew[6] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[6]), values[6]);
-		valuesNew[7] = opCmpEq(opShuffle(whitespaceTable<jsonifier_simd_int_t>, values[7]), values[7]);
+		valuesNew[0] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[0]), values[0]);
+		valuesNew[1] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[1]), values[1]);
+		valuesNew[2] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[2]), values[2]);
+		valuesNew[3] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[3]), values[3]);
+		valuesNew[4] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[4]), values[4]);
+		valuesNew[5] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[5]), values[5]);
+		valuesNew[6] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[6]), values[6]);
+		valuesNew[7] = opCmpEq(opShuffle(simdValues<simd_internal::whitespaceArray<bytesPerStep>, jsonifier_simd_int_t>, values[7]), values[7]);
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectBackslashes(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
-		valuesNew[0] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[0]);
-		valuesNew[1] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[1]);
-		valuesNew[2] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[2]);
-		valuesNew[3] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[3]);
-		valuesNew[4] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[4]);
-		valuesNew[5] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[5]);
-		valuesNew[6] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[6]);
-		valuesNew[7] = opCmpEq(simdBackslashes<jsonifier_simd_int_t>, values[7]);
+		valuesNew[0] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[0]);
+		valuesNew[1] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[1]);
+		valuesNew[2] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[2]);
+		valuesNew[3] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[3]);
+		valuesNew[4] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[4]);
+		valuesNew[5] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[5]);
+		valuesNew[6] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[6]);
+		valuesNew[7] = opCmpEq(simdValue<'\\', jsonifier_simd_int_t>, values[7]);
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectQuotes(const jsonifier_simd_int_t* values) {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
-		valuesNew[0] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[0]);
-		valuesNew[1] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[1]);
-		valuesNew[2] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[2]);
-		valuesNew[3] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[3]);
-		valuesNew[4] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[4]);
-		valuesNew[5] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[5]);
-		valuesNew[6] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[6]);
-		valuesNew[7] = opCmpEq(simdQuotes<jsonifier_simd_int_t>, values[7]);
+		valuesNew[0] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[0]);
+		valuesNew[1] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[1]);
+		valuesNew[2] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[2]);
+		valuesNew[3] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[3]);
+		valuesNew[4] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[4]);
+		valuesNew[5] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[5]);
+		valuesNew[6] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[6]);
+		valuesNew[7] = opCmpEq(simdValue<'"', jsonifier_simd_int_t>, values[7]);
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 

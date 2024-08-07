@@ -1299,7 +1299,7 @@ namespace jsonifier_fast_float {
 		// At this point in time q is in [powers::smallest_power_of_five, powers::largest_power_of_five].
 
 		// We want the most significant bit of i to be 1. Shift if needed.
-		int32_t lz = leading_zeroes(w);
+		uint64_t lz = leading_zeroes(w);
 		w <<= lz;
 
 		// The required precision is binary::mantissa_explicit_bits() + 3 because
@@ -1464,7 +1464,7 @@ namespace jsonifier_fast_float {
 		}
 		// append item to vector, returning if item was added
 		constexpr bool try_push(limb value) noexcept {
-			if (len() < capacity()) {
+			if (length < capacity()) {
 				push_unchecked(value);
 				return true;
 			} else {
@@ -1474,12 +1474,12 @@ namespace jsonifier_fast_float {
 		// add items to the vector, from a span, without bounds checking
 		constexpr void extend_unchecked(limb_span s) noexcept {
 			limb* ptr = data + length;
-			std::copy_n(s.ptr, s.len(), ptr);
-			set_len(len() + s.len());
+			std::copy_n(s.ptr, s.length, ptr);
+			set_len(length + s.length);
 		}
 		// try to add items to the vector, returning if items were added
 		constexpr bool try_extend(limb_span s) noexcept {
-			if (len() + s.len() <= capacity()) {
+			if (length + s.length <= capacity()) {
 				extend_unchecked(s);
 				return true;
 			} else {
@@ -1491,9 +1491,9 @@ namespace jsonifier_fast_float {
 		// appended item.
 		constexpr
 		void resize_unchecked(size_t new_len, limb value) noexcept {
-			if (new_len > len()) {
-				size_t count = new_len - len();
-				limb* first	 = data + len();
+			if (new_len > length) {
+				size_t count = new_len - length;
+				limb* first	 = data + length;
 				limb* last	 = first + count;
 				::std::fill(first, last, value);
 				set_len(new_len);
@@ -1514,7 +1514,7 @@ namespace jsonifier_fast_float {
 		// this needs to be done in reverse order, since the index
 		// is relative to the most significant limbs.
 		constexpr bool nonzero(size_t index) const noexcept {
-			while (index < len()) {
+			while (index < length) {
 				if (rindex(index) != 0) {
 					return true;
 				}
@@ -1524,7 +1524,7 @@ namespace jsonifier_fast_float {
 		}
 		// normalize the big integer, so most-significant zero limbs are removed.
 		constexpr void normalize() noexcept {
-			while (len() > 0 && rindex(0) == 0) {
+			while (length > 0 && rindex(0) == 0) {
 				length--;
 			}
 		}
@@ -1887,9 +1887,9 @@ namespace jsonifier_fast_float {
 		}
 
 		// get the number of leading zeros in the bigint.
-		constexpr int32_t ctlz() const noexcept {
+		constexpr uint64_t ctlz() const noexcept {
 			if (vec.is_empty()) {
-				return 0;
+				return 0ull;
 			} else {
 				return leading_zeroes(vec.rindex(0));
 			}

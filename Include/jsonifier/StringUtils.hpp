@@ -163,7 +163,7 @@ namespace jsonifier_internal {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(
-			simd_internal::opCmpEq(simdValue, simd_internal::simdBackslashes<simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdQuotes<simd_type>)));
+			simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'\\', simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'"', simd_type>)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -182,7 +182,7 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type findParse(const void* string1, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		return simd_internal::tzcnt(static_cast<integer_type>(
-			simd_internal::opCmpEq(simdValue, simd_internal::simdBackslashes<simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdQuotes<simd_type>)));
+			simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'\\', simd_type>) | simd_internal::opCmpEq(simdValue, simd_internal::simdValue<'"', simd_type>)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -200,8 +200,8 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const void* string1, void* string2, simd_type& simdValue) {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::escapeableTable00<simd_type>, simdValue), simdValue) |
-			simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::escapeableTable01<simd_type>, simdValue), simdValue)));
+		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::simdValues<simd_internal::escapeableArray00<bytesPerStep>, simd_type>, simdValue), simdValue) |
+			simd_internal::opCmpEq(simd_internal::opShuffle(simd_internal::simdValues<simd_internal::escapeableArray01<bytesPerStep>, simd_type>, simdValue), simdValue)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -844,7 +844,7 @@ namespace jsonifier_internal {
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator>
 	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) {
 		auto newPtr = static_cast<const char*>(iter);
-		if (*newPtr == 0x22u) [[likely]] {
+		if (*newPtr == '"') [[likely]] {
 			++iter;
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
@@ -866,7 +866,9 @@ namespace jsonifier_internal {
 				if (value.size() != newSize) {
 					value.resize(newSize);
 				}
-				std::copy(newString.data(), newString.data() + newSize, value.data());
+				if (!compare(newString.data(), value.data(), newSize)) {
+					std::copy(newString.data(), newString.data() + newSize, value.data());
+				}
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
@@ -899,7 +901,9 @@ namespace jsonifier_internal {
 			if (value.size() != static_cast<uint64_t>(newSize)) {
 				value.resize(static_cast<uint64_t>(newSize));
 			}
-			std::copy(newString.data(), newString.data() + newSize, value.data());
+			if (!compare(newString.data(), value.data(), newSize)) {
+				std::copy(newString.data(), newString.data() + newSize, value.data());
+			}
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,

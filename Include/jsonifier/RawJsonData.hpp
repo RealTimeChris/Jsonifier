@@ -272,7 +272,7 @@ namespace jsonifier_internal {
 				newIter01	= skipWs(newIter01);
 				auto newKey = collectKey();
 				newIter01	= skipWs(newIter01);
-				collectCharacter(0x3A);
+				collectCharacter(':');
 				newIter01 = skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);

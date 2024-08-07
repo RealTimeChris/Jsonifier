@@ -32,9 +32,9 @@
 
 namespace jsonifier_internal {
 
-	template<typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
 		using value_type = unwrap_t<value_type_new>;
-		template<const serialize_options_internal& options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
+		template<jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			static constexpr auto numMembers = std::tuple_size_v<unwrap_t<decltype(final_tuple_static_data<value_type>)>>;
@@ -60,7 +60,7 @@ namespace jsonifier_internal {
 					static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
 					writeCharacters<quotedKey>(bufferNewer, indexNewer);
 					using member_type = unwrap_t<decltype(valueNewer.*memberPtr)>;
-					serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(valueNewer.*memberPtr), std::forward<buffer_type>(bufferNewer),
+					serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(valueNewer.*memberPtr), std::forward<buffer_type>(bufferNewer),
 						std::forward<index_type>(indexNewer));
 					if constexpr (!isItLast || currentIndexNewer > 0) {
 						if constexpr (options.optionsReal.prettify) {
@@ -84,8 +84,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
@@ -93,13 +93,13 @@ namespace jsonifier_internal {
 				static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
 				auto& newMember				 = getMember<newPtr>(value);
 				using member_type			 = unwrap_t<decltype(newMember)>;
-				serialize_impl<derived_type, member_type>::template impl<options>(newMember, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+				serialize_impl<options, derived_type, member_type>::impl(newMember, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			}
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::map_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::map_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			using member_type = unwrap_t<decltype(value[std::declval<typename unwrap_t<value_type_new>::key_type>()])>;
@@ -108,22 +108,22 @@ namespace jsonifier_internal {
 
 				if (value.size() > 0) [[likely]] {
 					auto iter = value.begin();
-					serialize_impl<derived_type, member_type>::template impl<options>(iter->first, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+					serialize_impl<options, derived_type, member_type>::impl(iter->first, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					writeCharacter<':'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					if constexpr (options.optionsReal.prettify) {
 						writeCharacter<0x20u>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					}
-					serialize_impl<derived_type, member_type>::template impl<options>(iter->second, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+					serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					++iter;
 					auto endIter = value.end();
 					for (; iter != endIter; ++iter) {
 						writeEntrySeparator<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
-						serialize_impl<derived_type, member_type>::template impl<options>(iter->first, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+						serialize_impl<options, derived_type, member_type>::impl(iter->first, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 						writeCharacter<':'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 						if constexpr (options.optionsReal.prettify) {
 							writeCharacter<0x20u>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 						}
-						serialize_impl<derived_type, member_type>::template impl<options>(iter->second, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+						serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 					}
 				}
 				writeObjectExit<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<value_type>(value).size());
@@ -133,25 +133,25 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::variant_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::variant_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::variant_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::variant_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			static constexpr auto lambda = [&](auto&& valueNew, auto&& value, auto&& buffer, auto&& index) {
 				using member_type = decltype(valueNew);
-				serialize_impl<derived_type, member_type>::template impl<options>(valueNew, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
+				serialize_impl<options, derived_type, member_type>::impl(valueNew, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			};
 			visit<lambda>(std::forward<value_type>(value), std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::optional_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::optional_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if (value) [[likely]] {
 				using member_type = typename unwrap_t<value_type_new>::value_type;
-				serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
+				serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
 					std::forward<index_type>(index));
 			} else {
 				writeCharacters<"null">(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -159,8 +159,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::array_tuple_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::array_tuple_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			static constexpr auto size = std::tuple_size_v<unwrap_t<value_type>>;
@@ -173,7 +173,7 @@ namespace jsonifier_internal {
 				}
 
 				using member_type = unwrap_t<decltype(item)>;
-				serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(item), std::forward<buffer_type>(bufferNew),
+				serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(item), std::forward<buffer_type>(bufferNew),
 					std::forward<index_type>(indexNew));
 			};
 			forEach<size, lambda>(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -181,8 +181,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::vector_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::vector_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			const auto maxIndex = value.size();
@@ -190,12 +190,12 @@ namespace jsonifier_internal {
 				writeArrayEntry<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 				using member_type = typename unwrap_t<value_type_new>::value_type;
 				auto iter		  = std::begin(value);
-				serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
+				serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
 					std::forward<index_type>(index));
 				++iter;
 				for (const auto end = std::end(value); iter != end; ++iter) {
 					writeEntrySeparator<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
-					serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
+					serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
 						std::forward<index_type>(index));
 				}
 				writeArrayExit<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -205,18 +205,18 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::pointer_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::pointer_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			using member_type = unwrap_t<decltype(*value)>;
-			serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
+			serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
 				std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::raw_array_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::raw_array_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			const auto maxIndex = value.size();
@@ -225,12 +225,12 @@ namespace jsonifier_internal {
 
 				using member_type = typename unwrap_t<value_type_new>::value_type;
 				auto iter		  = std::begin(value);
-				serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
+				serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
 					std::forward<index_type>(index));
 				++iter;
 				for (const auto end = std::end(value); iter != end; ++iter) {
 					writeEntrySeparator<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
-					serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
+					serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*iter), std::forward<buffer_type>(buffer),
 						std::forward<index_type>(index));
 				}
 				writeArrayExit<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -240,18 +240,18 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::raw_json_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::raw_json_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			using member_type = jsonifier::string;
-			serialize_impl<derived_type, member_type>::template impl<options>(static_cast<const jsonifier::string>(value), std::forward<buffer_type>(buffer),
+			serialize_impl<options, derived_type, member_type>::impl(static_cast<const jsonifier::string>(value), std::forward<buffer_type>(buffer),
 				std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::string_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::string_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			const auto valueSize  = value.size();
@@ -263,13 +263,13 @@ namespace jsonifier_internal {
 			writeCharacter<'"'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			auto newPtr = buffer.data() + index;
 			serializeStringImpl(value.data(), newPtr, valueSize);
-			index = newPtr - buffer.data();
+			index = static_cast<size_t>(newPtr - buffer.data());
 			writeCharacter<'"'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::char_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::char_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			writeCharacter<'"'>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -308,18 +308,18 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::unique_ptr_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::unique_ptr_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			using member_type = unwrap_t<decltype(*value)>;
-			serialize_impl<derived_type, member_type>::template impl<options>(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
+			serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(*value), std::forward<buffer_type>(buffer),
 				std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::enum_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::enum_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			const auto k		  = index + 32;
@@ -332,16 +332,16 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::always_null_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::always_null_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&&, buffer_type&& buffer, index_type&& index) {
 			writeCharacters<"null">(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::bool_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::bool_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			if (value) {
@@ -352,8 +352,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type, jsonifier::concepts::num_t value_type_new> struct serialize_impl<derived_type, value_type_new> {
-		template<const serialize_options_internal& options, jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type,
+	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::num_t value_type_new> struct serialize_impl<options, derived_type, value_type_new> {
+		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type,
 			jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
 			const auto bufferSize = buffer.size();

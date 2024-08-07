@@ -54,17 +54,16 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.reset(in.data(), in.size());
-			rootIter = in.data();
 			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
+					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(iter - in.data(), iter.getEndPtr() - in.data(), in.data()));
 				return unwrap_t<string_type>{};
 			}
 			unwrap_t<string_type> newString{};
 			minify_impl<derived_type>::impl(iter, derivedRef.stringBuffer, derivedRef.index, *this);
-			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
+			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
 				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
 				return newString;
@@ -81,20 +80,21 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			derivedRef.section.reset(in.data(), in.size());
-			rootIter = in.data();
 			json_structural_iterator iter{ derivedRef.section.begin(), derivedRef.section.end() };
 			if (!iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(iter - rootIter, iter.getEndPtr() - rootIter, rootIter));
+					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(iter - in.data(), iter.getEndPtr() - in.data(), in.data()));
 				return false;
 			}
 			minify_impl<derived_type>::impl(iter, derivedRef.stringBuffer, derivedRef.index, *this);
-			if (derivedRef.index < std::numeric_limits<uint32_t>::max()) {
-				if (buffer.size() != derivedRef.index) {
-					buffer.resize(derivedRef.index);
+			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
+				if (!compare(derivedRef.stringBuffer.data(), buffer.data(), derivedRef.index)) {
+					if (buffer.size() != derivedRef.index) {
+						buffer.resize(derivedRef.index);
+					}
+					std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
 				}
-				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
 				return true;
 			} else {
 				return false;
@@ -103,7 +103,6 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		mutable const char* rootIter{};
 
 		JSONIFIER_ALWAYS_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 

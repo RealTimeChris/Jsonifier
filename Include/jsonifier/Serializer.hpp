@@ -48,14 +48,14 @@ namespace jsonifier_internal {
 		mutable uint64_t indent{};
 	};
 
-	template<typename derived_type, typename value_type> struct serialize_impl;
+	template<const auto& options, typename derived_type, typename value_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<typename derived_type_new, typename value_type> friend struct serialize_impl;
+		template<const auto& options, typename derived_type_new, typename value_type> friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
@@ -63,11 +63,13 @@ namespace jsonifier_internal {
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
-			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index);
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), derivedRef.stringBuffer, derivedRef.index);
 			if (buffer.size() != derivedRef.index) {
 				buffer.resize(derivedRef.index);
 			}
-			std::copy_n(derivedRef.stringBuffer.data(), derivedRef.index, buffer.data());
+			if (!compare(derivedRef.stringBuffer.data(), buffer.data(), derivedRef.index)) {
+				std::copy_n(derivedRef.stringBuffer.data(), derivedRef.index, buffer.data());
+			}
 			return true;
 		}
 
@@ -77,7 +79,7 @@ namespace jsonifier_internal {
 			derivedRef.index = 0;
 			jsonifier::string newString{};
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
-			serialize_impl<derived_type, value_type>::template impl<optionsFinal>(std::forward<value_type>(object), newString, derivedRef.index);
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, derivedRef.index);
 			newString.resize(derivedRef.index);
 			return newString;
 		}

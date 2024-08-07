@@ -112,7 +112,7 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE string_base& operator=(string_base&& other) noexcept {
 			if (this != &other) [[likely]] {
 				string_base newValue{ other };
-				this->swap(newValue);
+				swap(newValue);
 			}
 			return *this;
 		}
@@ -124,7 +124,7 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE string_base& operator=(const string_base& other) {
 			if (this != &other) [[likely]] {
 				string_base newValue{ other };
-				this->swap(newValue);
+				swap(newValue);
 			}
 			return *this;
 		}
@@ -141,7 +141,7 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE string_base& operator=(value_type_newer&& other) {
 			string_base newValue{ other };
-			this->swap(newValue);
+			swap(newValue);
 			return *this;
 		}
 
@@ -157,7 +157,7 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_ALWAYS_INLINE string_base& operator=(value_type_newer other) {
 			string_base newValue{ std::forward<value_type_newer>(other) };
-			this->swap(newValue);
+			swap(newValue);
 			return *this;
 		}
 
@@ -411,7 +411,7 @@ namespace jsonifier {
 			sizeVal = 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
+		JSONIFIER_INLINE void resize(size_type newSize) {
 			if (static_cast<int64_t>(newSize) > 0) [[likely]] {
 				if (newSize > capacityVal) [[likely]] {
 					pointer newPtr = allocator::allocate(newSize + 1);

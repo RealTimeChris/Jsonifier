@@ -164,7 +164,7 @@ namespace jsonifier_internal {
 		constexpr bool isFloat			= std::is_same_v<float, value_type>;
 		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
 		bool sign						= (rawVal >> (sizeof(value_type) * 8 - 1));
-		int32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
+		uint32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buf, "null", 4);

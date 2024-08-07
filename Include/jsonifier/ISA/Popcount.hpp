@@ -30,11 +30,11 @@ namespace simd_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
-		return _mm_popcnt_u32(value);
+		return static_cast<value_type>(_mm_popcnt_u32(value));
 	}
 
 	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
-		return _mm_popcnt_u64(value);
+		return static_cast<value_type>(_mm_popcnt_u64(value));
 	}
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)

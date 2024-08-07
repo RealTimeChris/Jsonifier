@@ -152,7 +152,7 @@ namespace jsonifier {
 		}
 
 		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr size_type rfind(arg_types&&... args) const {
-			return operator std::basic_string_view<value_type>().rfind(std::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().rfind(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr size_type find(arg_types&&... args) const {
