@@ -863,10 +863,10 @@ namespace jsonifier_internal {
 			newPtr = parseStringImpl(newPtr, newString.data(), newSize);
 			if (newPtr) [[likely]] {
 				newSize = static_cast<uint64_t>(newPtr - newString.data());
-				if (value.size() != newSize) {
+				if (value.size() != newSize) [[likely]] {
 					value.resize(newSize);
+					std::copy(newString.data(), newString.data() + newSize, value.data());
 				}
-				std::copy(newString.data(), newString.data() + newSize, value.data());
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
@@ -896,10 +896,10 @@ namespace jsonifier_internal {
 		if (newerPtr) [[likely]] {
 			++iter;
 			newSize = newerPtr - newString.data();
-			if (value.size() != static_cast<uint64_t>(newSize)) {
+			if (value.size() != static_cast<uint64_t>(newSize)) [[likely]] {
 				value.resize(static_cast<uint64_t>(newSize));
+				std::copy(newString.data(), newString.data() + newSize, value.data());
 			}
-			std::copy(newString.data(), newString.data() + newSize, value.data());
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,

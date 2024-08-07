@@ -29,10 +29,6 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type blsr(value_type value) {
-		return _blsr_u32(value);
-	}
-
 	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type blsr(value_type value) {
 		return _blsr_u64(value);
 	}

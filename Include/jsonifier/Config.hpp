@@ -81,13 +81,16 @@
 #endif
 
 #if defined(JSONIFIER_MSVC)
+	#define JSONIFIER_FLATTEN [[msvc::flatten]]
 	#define JSONIFIER_ALWAYS_INLINE __forceinline
 	#define JSONIFIER_INLINE inline
 #elif defined(JSONIFIER_CLANG)
-	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((flatten))
+	#define JSONIFIER_FLATTEN __attribute__((flatten))
+	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
 	#define JSONIFIER_INLINE inline
 #elif defined(JSONIFIER_GNUCXX)
-	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((flatten))
+	#define JSONIFIER_FLATTEN __attribute__((flatten))
+	#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
 	#define JSONIFIER_INLINE inline
 #else
 	#define JSONIFIER_ALWAYS_INLINE inline
