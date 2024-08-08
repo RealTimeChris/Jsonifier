@@ -931,7 +931,7 @@ struct test_element_final {
 	double resultSpeed{};
 	double iterationCount{};
 	std::string color{};
-	bool operator>(const test_element_final& other) const {
+	bool operator>(const test_element_final& other) const noexcept {
 		return resultSpeed > other.resultSpeed;
 	}
 };
@@ -939,7 +939,7 @@ struct test_element_final {
 struct test_element_pair {
 	test_element_final writeData{};
 	test_element_final readData{};
-	bool operator>(const test_element_pair& other) const {
+	bool operator>(const test_element_pair& other) const noexcept {
 		return writeData > other.writeData && readData > other.readData;
 	}
 };
@@ -1061,11 +1061,11 @@ template<result_type type> struct result {
 		color = colorNew;
 	}
 
-	operator bool() const {
+	operator bool() const noexcept {
 		return jsonSpeed.has_value();
 	}
 
-	bool operator>(const result& other) const {
+	bool operator>(const result& other) const noexcept {
 		if (jsonSpeed.has_value() && other.jsonSpeed.has_value()) {
 			return jsonSpeed.value() > other.jsonSpeed.value();
 		} else if (!jsonSpeed.has_value()) {
@@ -1086,7 +1086,7 @@ struct results_data {
 	jsonifier::string url{};
 	uint64_t iterations{};
 
-	bool operator>(const results_data& other) const {
+	bool operator>(const results_data& other) const noexcept {
 		if (readResult && other.readResult) {
 			return readResult > other.readResult;
 		} else if (writeResult && other.writeResult) {
@@ -1118,7 +1118,7 @@ struct results_data {
 		}
 	}
 
-	void print() const {
+	void print() const noexcept {
 		std::cout << jsonifier::string{ "| " } + name + " " + test + ": " + url + "\n" +
 				"| ------------------------------------------------------------ "
 				"|\n";
@@ -1137,7 +1137,7 @@ struct results_data {
 		std::cout << "\n---" << std::endl;
 	}
 
-	std::string jsonStats() const {
+	std::string jsonStats() const noexcept {
 		std::string writeLength{};
 		std::string writeTime{};
 		std::string writeIterationCount{};

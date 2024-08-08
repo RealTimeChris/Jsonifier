@@ -119,7 +119,8 @@ namespace jsonifier_internal {
 		index += n;
 	}
 
-	template<auto& options, bool checked = true, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, bool checked = true, jsonifier::concepts::buffer_like buffer_type>
+	JSONIFIER_ALWAYS_INLINE void writeNewLine(buffer_type& buffer, uint64_t& index) noexcept {
 		auto indent				  = options.indent;
 		constexpr auto indentSize = options.optionsReal.indentSize;
 		auto indentTotal		  = indent * indentSize;
@@ -182,7 +183,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
+	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type>
+	JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			++options.indent;
 			auto indent				  = options.indent;
@@ -207,7 +209,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
+	template<uint64_t objectSize, auto& options, jsonifier::concepts::buffer_like buffer_type>
+	JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify && objectSize > 0) {
 			--options.indent;
 			auto indent				  = options.indent;
@@ -230,7 +233,7 @@ namespace jsonifier_internal {
 		++index;
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectEntry(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
 			auto indent				  = options.indent;
@@ -255,7 +258,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeObjectExit(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
 			auto indent				  = options.indent;
@@ -280,7 +283,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayEntry(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify) {
 			++options.indent;
 			auto indent				  = options.indent;
@@ -305,7 +308,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index) {
+	template<auto& options, jsonifier::concepts::buffer_like buffer_type> JSONIFIER_ALWAYS_INLINE void writeArrayExit(buffer_type& buffer, uint64_t& index) noexcept {
 		if constexpr (options.optionsReal.prettify) {
 			--options.indent;
 			auto indent				  = options.indent;
@@ -336,7 +339,7 @@ namespace jsonifier_internal {
 
 	template<string_literal Str> constexpr jsonifier::string_view chars = chars_impl<Str>::value;
 
-	template<const jsonifier::string_view&... Strs> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view join() {
+	template<const jsonifier::string_view&... Strs> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view join() noexcept {
 		constexpr auto joined_arr = []() {
 			constexpr size_t len = (Strs.size() + ... + 0);
 			std::array<char, len + 1> arr{};

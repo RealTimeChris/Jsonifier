@@ -76,25 +76,25 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE json_structural_iterator(structural_index* startPtr, structural_index* endPtr) noexcept
 			: currentIndex{ startPtr }, rootIndex{ startPtr }, endIndex{ endPtr } {};
 
-		JSONIFIER_ALWAYS_INLINE value_type operator*() const {
+		JSONIFIER_ALWAYS_INLINE value_type operator*() const noexcept {
 			return *currentIndex ? **currentIndex : defaultValue;
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto operator->() const {
+		JSONIFIER_ALWAYS_INLINE auto operator->() const noexcept {
 			return *currentIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_structural_iterator& operator++() {
+		JSONIFIER_ALWAYS_INLINE json_structural_iterator& operator++() noexcept {
 			++currentIndex;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_structural_iterator& operator--() {
+		JSONIFIER_ALWAYS_INLINE json_structural_iterator& operator--() noexcept {
 			--currentIndex;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_structural_iterator operator+(uint64_t valueNew) {
+		JSONIFIER_ALWAYS_INLINE json_structural_iterator operator+(uint64_t valueNew) noexcept {
 			json_structural_iterator temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				++temp;
@@ -102,11 +102,11 @@ namespace jsonifier_internal {
 			return temp;
 		}
 
-		JSONIFIER_ALWAYS_INLINE operator const char*() const {
+		JSONIFIER_ALWAYS_INLINE operator const char*() const noexcept {
 			return *currentIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_structural_iterator sub(uint64_t valueNew) {
+		JSONIFIER_ALWAYS_INLINE json_structural_iterator sub(uint64_t valueNew) noexcept {
 			json_structural_iterator temp{ *this };
 			for (uint64_t x = 0; x < valueNew; ++x) {
 				--temp;
@@ -114,33 +114,33 @@ namespace jsonifier_internal {
 			return temp;
 		}
 
-		JSONIFIER_ALWAYS_INLINE int64_t operator-(const char* valueNew) {
+		JSONIFIER_ALWAYS_INLINE int64_t operator-(const char* valueNew) noexcept {
 			return *currentIndex - valueNew;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_structural_iterator operator++(int32_t) {
+		JSONIFIER_ALWAYS_INLINE json_structural_iterator operator++(int32_t) noexcept {
 			json_structural_iterator temp{ *this };
 			++(*this);
 			return temp;
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto getEndPtr() const {
+		JSONIFIER_ALWAYS_INLINE auto getEndPtr() const noexcept {
 			return *endIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto getRootPtr() const {
+		JSONIFIER_ALWAYS_INLINE auto getRootPtr() const noexcept {
 			return *rootIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool operator==(const json_structural_iterator&) const {
+		JSONIFIER_ALWAYS_INLINE bool operator==(const json_structural_iterator&) const noexcept {
 			return *currentIndex == nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE operator bool() const {
+		JSONIFIER_ALWAYS_INLINE operator bool() const noexcept {
 			return *currentIndex != nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void swap(json_structural_iterator& other) {
+		JSONIFIER_ALWAYS_INLINE void swap(json_structural_iterator& other) noexcept {
 			std::swap(currentIndex, other.currentIndex);
 			std::swap(rootIndex, other.rootIndex);
 			std::swap(endIndex, other.endIndex);

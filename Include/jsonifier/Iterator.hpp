@@ -55,11 +55,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		constexpr operator pointer&() {
+		constexpr operator pointer&() noexcept {
 			return const_cast<pointer&>(ptr);
 		}
 
-		constexpr operator const void*() const {
+		constexpr operator const void*() const noexcept {
 			return static_cast<const void*>(ptr);
 		}
 
@@ -173,11 +173,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		constexpr operator pointer&() {
+		constexpr operator pointer&() noexcept {
 			return const_cast<pointer&>(ptr);
 		}
 
-		constexpr operator const void*() const {
+		constexpr operator const void*() const noexcept {
 			return static_cast<const void*>(ptr);
 		}
 
@@ -263,19 +263,19 @@ namespace jsonifier_internal {
 		pointer ptr;
 	};
 
-	template<typename value_type> iterator<value_type> begin(value_type* ptrNew) {
+	template<typename value_type> iterator<value_type> begin(value_type* ptrNew) noexcept {
 		return { ptrNew };
 	}
 
-	template<typename value_type> iterator<value_type> end(value_type* ptrNew) {
+	template<typename value_type> iterator<value_type> end(value_type* ptrNew) noexcept {
 		return { ptrNew };
 	}
 
-	template<typename value_type> const_iterator<value_type> cbegin(value_type* ptrNew) {
+	template<typename value_type> const_iterator<value_type> cbegin(value_type* ptrNew) noexcept {
 		return { ptrNew };
 	}
 
-	template<typename value_type> const_iterator<value_type> cend(value_type* ptrNew) {
+	template<typename value_type> const_iterator<value_type> cend(value_type* ptrNew) noexcept {
 		return { ptrNew };
 	}
 

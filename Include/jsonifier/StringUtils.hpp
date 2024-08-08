@@ -101,11 +101,11 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu };
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(iterator string1) {
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(iterator string1) noexcept {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t codePointToUtf8(uint32_t codePoint, iterator c) {
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t codePointToUtf8(uint32_t codePoint, iterator c) noexcept {
 		static constexpr uint8_t utf8Table[4][4] = { { 0x00 }, { 0xC0, 0x80 }, { 0xE0, 0x80, 0x80 }, { 0xF0, 0x80, 0x80, 0x80 } };
 
 		if (codePoint <= 0x7F) {
@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 		return numBytes;
 	}
 
-	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) {
+	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
 		using char_type01 = uint8_t;
 		static constexpr char_type01 quotesValue{ static_cast<char_type01>('\\' << 8) };
 		static constexpr char_type01 uValue{ static_cast<char_type01>(0x75u) };
@@ -154,20 +154,20 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	template<typename return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type isLess32(return_type value) noexcept {
+	template<typename return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type isLess32(return_type value) {
 		constexpr return_type newBytes{ repeatByte<0b11100000u, return_type>() };
 		return hasZero(value & newBytes);
 	}
 
-	template<typename simd_type, typename integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, void* string2, simd_type& simdValue, const simd_type& simdValue01, const simd_type& simdValue02) {
+	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, void* string2, simd_type& simdValue,
+		const simd_type& simdValue01, const simd_type& simdValue02) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, simdValue01) | simd_internal::opCmpEq(simdValue, simdValue02)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, void* string2, simd_type& simdValue) {
+	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, void* string2, simd_type& simdValue) noexcept {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		std::memcpy(string2, string1, sizeof(simd_type));
 		static constexpr uint64_t mask = repeatByte<0b01111111, integer_type>();
@@ -180,13 +180,13 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue, const simd_type& simdValue01, const simd_type& simdValue02) {
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue, const simd_type& simdValue01, const simd_type& simdValue02) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, simdValue01) | simd_internal::opCmpEq(simdValue, simdValue02)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue) {
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue) noexcept {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		static constexpr uint64_t mask = repeatByte<0b01111111, integer_type>();
 		const uint64_t lo7			   = simdValue & mask;
@@ -198,7 +198,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, void* string2, simd_type& simdValue,
-		const simd_type& simdValues00, const simd_type& simdValues01) {
+		const simd_type& simdValues00, const simd_type& simdValues01) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues00, simdValue), simdValue) |
@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, void* string2, simd_type& simdValue) {
+	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, void* string2, simd_type& simdValue) noexcept {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		std::memcpy(string2, string1, sizeof(simd_type));
 		static constexpr uint64_t mask = repeatByte<0b01111111, integer_type>();
@@ -219,7 +219,7 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipShortStringImpl(iterator_type01& string1, uint64_t& lengthNew) {
+	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipShortStringImpl(iterator_type01& string1, uint64_t& lengthNew) noexcept {
 		static constexpr char quotesValue{ static_cast<char>('"') };
 		while (static_cast<int64_t>(lengthNew) > 0) {
 			if (*string1 == quotesValue || *string1 == '\\') {
@@ -238,7 +238,7 @@ namespace jsonifier_internal {
 		return;
 	}
 
-	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipStringImpl(iterator_type01& string1, uint64_t& lengthNew) {
+	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE void skipStringImpl(iterator_type01& string1, uint64_t& lengthNew) noexcept {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
@@ -369,7 +369,7 @@ namespace jsonifier_internal {
 	}() };
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE iterator_type02 parseShortStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) {
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseShortStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) noexcept {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		using char_type02 =
@@ -410,7 +410,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) {
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(iterator_type01& string1, iterator_type02 string2, uint64_t lengthNew) noexcept {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		using char_type02 =
@@ -633,7 +633,7 @@ namespace jsonifier_internal {
 	}() };
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE void serializeShortStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) {
+	JSONIFIER_ALWAYS_INLINE void serializeShortStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) noexcept {
 		auto* end = string1 + lengthNew;
 		for (; string1 < end; ++string1) {
 			if (auto escapeChar = escapeTable[static_cast<uint8_t>(*string1)]; escapeChar) [[likely]] {
@@ -647,7 +647,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) {
+	JSONIFIER_ALWAYS_INLINE void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, uint64_t lengthNew) noexcept {
 		uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
@@ -792,7 +792,7 @@ namespace jsonifier_internal {
 
 	template<uint64_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
 
-	template<string_literal string> JSONIFIER_ALWAYS_INLINE constexpr convert_length_to_int_t<string.size()> getStringAsInt() {
+	template<string_literal string> JSONIFIER_ALWAYS_INLINE constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
 		const char* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (uint64_t x = 0; x < string.size(); ++x) {
@@ -860,7 +860,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, jsonifier::concepts::json_structural_iterator_t iterator>
-	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
 		auto newPtr = static_cast<const char*>(iter);
 		if (*newPtr == 0x22u) [[likely]] {
 			++iter;
@@ -896,7 +896,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, typename iterator>
-	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) {
+	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
 		if (*iter == '"') [[unlikely]] {
 			++iter;
 		} else {

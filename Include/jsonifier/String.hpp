@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 		using const_pointer = const value_type*;
 		using size_type		= uint64_t;
 
-		static constexpr void move(pointer firstNew, pointer first2, size_type count) {
+		static constexpr void move(pointer firstNew, pointer first2, size_type count) noexcept {
 			if (std::is_constant_evaluated()) {
 				bool loopForward = true;
 
@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 			std::memmove(firstNew, first2, count * sizeof(value_type_new));
 		}
 
-		static constexpr size_type length(const_pointer first) {
+		static constexpr size_type length(const_pointer first) noexcept {
 			const_pointer newPtr = first;
 			size_type count		 = 0;
 			while (newPtr && *newPtr != static_cast<uint8_t>(0x00u)) {
@@ -121,7 +121,7 @@ namespace jsonifier {
 			swap(other);
 		};
 
-		JSONIFIER_ALWAYS_INLINE string_base& operator=(const string_base& other) noexcept { 
+		JSONIFIER_ALWAYS_INLINE string_base& operator=(const string_base& other) noexcept {
 			if (this != &other) [[likely]] {
 				string_base newValue{ other };
 				swap(newValue);
@@ -411,7 +411,7 @@ namespace jsonifier {
 			sizeVal = 0;
 		}
 
-		JSONIFIER_INLINE void resize(size_type newSize) noexcept {
+		JSONIFIER_INLINE void resize(size_type newSize) {
 			if (static_cast<int64_t>(newSize) > 0) [[likely]] {
 				if (newSize > capacityVal) [[likely]] {
 					pointer newPtr = allocator::allocate(newSize + 1);
@@ -446,7 +446,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
 			if (capacityNew > capacityVal) [[likely]] {
 				pointer newPtr = allocator::allocate(capacityNew + 1);
 				try {
@@ -587,7 +587,7 @@ namespace jsonifier {
 
 		virtual JSONIFIER_ALWAYS_INLINE ~string_base() noexcept {
 			reset();
-		} 
+		}
 
 	  protected:
 		size_type capacityVal{};
@@ -609,7 +609,7 @@ namespace jsonifier {
 
 	using string = string_base<char>;
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const string_base<value_type>& string) {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const string_base<value_type>& string) noexcept {
 		os << string.operator typename std::string();
 		return os;
 	}

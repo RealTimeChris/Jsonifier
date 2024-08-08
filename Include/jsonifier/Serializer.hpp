@@ -58,7 +58,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
+		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
 			derivedRef.errors.clear();
@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) {
+		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) noexcept {
 			static_assert(jsonifier::concepts::printErrorFunction<unwrap_t<value_type>>(), "No specialization of core exists for the type named above - please specialize it!");
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 

@@ -160,7 +160,7 @@ namespace jsonifier_jkj {
 				static constexpr std::size_t value = std::numeric_limits<typename std::enable_if<std::is_integral<T>::value, T>::type>::digits;
 			};
 
-			template<typename To, typename From> JSONIFIER_CONSTEXPR20 To bit_cast(const From& from) {
+			template<typename To, typename From> JSONIFIER_CONSTEXPR20 To bit_cast(const From& from) noexcept {
 #if JSONIFIER_HAS_BIT_CAST
 				return std::bit_cast<To>(from);
 #else

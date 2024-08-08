@@ -51,7 +51,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
 
-	JSONIFIER_ALWAYS_INLINE static uint64_t prefixXor(uint64_t prevInString) {
+	JSONIFIER_ALWAYS_INLINE static uint64_t prefixXor(uint64_t prevInString) noexcept {
 		prevInString ^= prevInString << 1;
 		prevInString ^= prevInString << 2;
 		prevInString ^= prevInString << 4;
@@ -61,7 +61,7 @@ namespace simd_internal {
 		return prevInString;
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) {
+	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opClMul(simd_int_t01&& value, int64_t& prevInString) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep];
 		store(value, values);
 		values[0]	 = prefixXor(values[0]) ^ prevInString;
@@ -87,7 +87,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) {
+	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + sixtyFourBitsPerStep);
@@ -115,7 +115,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-	template<uint64_t amount, typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opShl(simd_int_t01&& value) {
+	template<uint64_t amount, typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opShl(simd_int_t01&& value) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		static constexpr uint64_t shiftAmount{ 64 - amount };
@@ -134,7 +134,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opFollows(simd_int_t01&& value, bool& overflow) {
+	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opFollows(simd_int_t01&& value, bool& overflow) noexcept {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
 		return opSetLSB(opShl<1>(value), oldOverflow);

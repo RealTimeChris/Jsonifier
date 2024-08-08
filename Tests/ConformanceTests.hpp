@@ -380,13 +380,13 @@ class conformance_test {
 	std::string testName{};
 };
 
-bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) {
+bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) noexcept {
 	try {
 		for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH)) {
 			if (entry.is_regular_file()) {
 				const std::string fileName = entry.path().filename().string();
 
-				if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == ".json") {
+				if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == ".json") noexcept {
 					std::ifstream file(entry.path());
 					if (file.is_open()) {
 						std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -400,7 +400,7 @@ bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& res
 				}
 			}
 		}
-	} catch (const std::exception& e) {
+	} catch (const std::exception& e) noexcept {
 		std::cerr << "Error while processing files: " << e.what() << std::endl;
 		return false;
 	}
@@ -408,12 +408,12 @@ bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& res
 	return true;
 }
 
-template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) {
+template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 	std::cout << "Running Test: " << testName << std::endl;
 	auto result = parser.parseJson<jsonifier::parse_options{ .validateJson = true, .minified = false }>(test_type{}, parser.minifyJson(dataToParse));
-	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
+	if ((parser.getErrors().size() == 0 && result) && !doWeFail) noexcept {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
-	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
+	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) noexcept {
 		std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
 	} else {
 		std::cout << "Test: " << testName << " = Failed" << std::endl;
@@ -423,7 +423,7 @@ template<typename test_type> void runTest(const std::string& testName, std::stri
 	}
 }
 
-bool conformanceTests() {
+bool conformanceTests() noexcept {
 	jsonifier::jsonifier_core parser{};
 	std::unordered_map<std::string, conformance_test> jsonTests{};
 	processFilesInFolder(jsonTests);

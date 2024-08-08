@@ -29,23 +29,23 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
 		return static_cast<value_type>(_mm_popcnt_u32(value));
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
 		return static_cast<value_type>(_mm_popcnt_u64(value));
 	}
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
 		return vaddv_u8(vcnt_u8(vcreate_u8(value)));
 	}
 
 #else
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
 		value_type count{};
 
 		while (value > 0) {

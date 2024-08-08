@@ -57,7 +57,7 @@ namespace jsonifier {
 		return returnstring;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = reinterpret_cast<const char*>(string.data());
@@ -67,7 +67,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> JSONIFIER_ALWAYS_INLINE double strToDouble<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE double strToDouble<16>(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
 			newValue = std::strtod(string.data(), nullptr);
@@ -75,7 +75,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto newPtr = string.data();
@@ -84,7 +84,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> JSONIFIER_ALWAYS_INLINE int64_t strToInt64<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			newValue = std::strtoll(string.data(), nullptr, 16);
@@ -92,7 +92,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) {
+	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			auto newPtr = string.data();
@@ -101,7 +101,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) {
+	template<> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
 		if (string.size() > 0) [[likely]] {
 			newValue = std::strtoull(string.data(), nullptr, 16);
@@ -113,7 +113,7 @@ namespace jsonifier {
 namespace jsonifier_internal {
 
 	template<typename value_type_new, jsonifier::concepts::json_structural_iterator_t iterator>
-	JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) {
+	JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = unwrap_t<value_type_new>;
 		auto newPtr		 = iter.operator const char*();
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
@@ -196,7 +196,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) {
+	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = unwrap_t<value_type_new>;
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());

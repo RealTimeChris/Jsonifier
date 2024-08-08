@@ -62,7 +62,7 @@ namespace jsonifier {
 			*this = std::move(other);
 		};
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
 			if (this != &other) [[likely]] {
 				stringBuffer = other.stringBuffer;
 				section		 = other.section;
@@ -71,11 +71,11 @@ namespace jsonifier {
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core(const jsonifier_core& other) : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_ALWAYS_INLINE jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = other;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() noexcept {
 			return errors;
 		}
 

@@ -132,7 +132,7 @@ namespace jsonifier_fast_float {
 	using from_chars_result = from_chars_result_t<char>;
 
 	template<typename UC> struct parse_options_t {
-		constexpr explicit parse_options_t(chars_format fmt = chars_format::json, UC dot = UC('.')) : format(fmt), decimal_point(dot) {};
+		constexpr explicit parse_options_t(chars_format fmt = chars_format::json, UC dot = UC('.')) noexcept : format(fmt), decimal_point(dot) {};
 
 		/** Which number formats are accepted */
 		chars_format format;
@@ -267,9 +267,9 @@ namespace jsonifier_fast_float {
 	template<typename T> struct span {
 		const T* ptr;
 		size_t length;
-		constexpr span(const T* _ptr, size_t _length) : ptr(_ptr), length(_length) {
+		constexpr span(const T* _ptr, size_t _length) noexcept : ptr(_ptr), length(_length) {
 		}
-		constexpr span() : ptr(nullptr), length(0) {
+		constexpr span() noexcept : ptr(nullptr), length(0) {
 		}
 
 		constexpr size_t len() const noexcept {
@@ -284,9 +284,9 @@ namespace jsonifier_fast_float {
 	struct value128 {
 		uint64_t low;
 		uint64_t high;
-		constexpr value128(uint64_t _low, uint64_t _high) : low(_low), high(_high) {
+		constexpr value128(uint64_t _low, uint64_t _high) noexcept : low(_low), high(_high) {
 		}
-		constexpr value128() : low(0), high(0) {
+		constexpr value128() noexcept : low(0), high(0) {
 		}
 	};
 
@@ -402,10 +402,10 @@ namespace jsonifier_fast_float {
 		uint64_t mantissa{ 0 };
 		int32_t power2{ 0 };// a negative value indicates an invalid result
 		adjusted_mantissa() = default;
-		constexpr bool operator==(const adjusted_mantissa& o) const {
+		constexpr bool operator==(const adjusted_mantissa& o) const noexcept {
 			return mantissa == o.mantissa && power2 == o.power2;
 		}
-		constexpr bool operator!=(const adjusted_mantissa& o) const {
+		constexpr bool operator!=(const adjusted_mantissa& o) const noexcept {
 			return mantissa != o.mantissa || power2 != o.power2;
 		}
 	};
@@ -1763,14 +1763,14 @@ namespace jsonifier_fast_float {
 		// storage of the limbs, in little-endian order.
 		stackvec<bigint_limbs> vec;
 
-		constexpr bigint() : vec() {
+		constexpr bigint() noexcept : vec() {
 		}
 		bigint(const bigint&)			  = delete;
 		bigint& operator=(const bigint&)  = delete;
 		bigint(bigint&&)				  = delete;
 		bigint& operator=(bigint&& other) = delete;
 
-		constexpr bigint(uint64_t value) : vec() {
+		constexpr bigint(uint64_t value) noexcept : vec() {
 			vec.push_unchecked(value);
 			vec.normalize();
 		}
