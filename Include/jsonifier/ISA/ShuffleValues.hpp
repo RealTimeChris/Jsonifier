@@ -30,36 +30,27 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE static jsonifier_simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		static uint8x16_t mask{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F };
-		return vqtbl1q_u8(std::forward<simd_int_t01>(value), vandq_u8(std::forward<simd_int_t02>(other), mask));
-	}
+	#define opShuffle(value, other) \
+		([](auto v, auto o) { \
+			static uint8x16_t mask{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }; \
+			return vqtbl1q_u8(v, vandq_u8(o, mask)); \
+		})(value, other)
 
-#elif JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE static jsonifier_simd_int_128 opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
-	}
-
-	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
-
-	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE static jsonifier_simd_int_256 opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
-	}
-
-		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
-
-	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE static jsonifier_simd_int_512 opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm512_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
-	}
-
-		#endif
-
-	#endif
+	#define opShuffle(value, other) \
+		([](auto v, auto o) { \
+			if constexpr (sizeof(decltype(v)) == 16) { \
+				return _mm_shuffle_epi8(v, o); \
+			} else if constexpr (sizeof(decltype(v)) == 32) { \
+				return _mm256_shuffle_epi8(v, o); \
+			} else if constexpr (sizeof(decltype(v)) == 64) { \
+				return _mm512_shuffle_epi8(v, o); \
+			} else { \
+				static_assert(sizeof(decltype(v)) == 16 || sizeof(decltype(v)) == 32 || sizeof(decltype(v)) == 64, "Unsupported type size"); \
+				return uint64_t(0); \
+			} \
+		})(value, other)
 
 #else
 

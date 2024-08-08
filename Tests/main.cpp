@@ -1042,6 +1042,7 @@ template<result_type type> struct result {
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
 	std::optional<double> iterationCount{};
+	std::optional<double> cv{};
 	std::string color{};
 
 	result& operator=(result&&) noexcept	  = default;
@@ -1051,10 +1052,11 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
-	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_results& results) {
-		byteLength.emplace(byteLengthNew);
-		jsonTime.emplace(results.resultValue);
+	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_result_final_parse& results) {
 		iterationCount.emplace(results.iterationCount);
+		byteLength.emplace(byteLengthNew);
+		jsonTime.emplace(results.median);
+		cv.emplace(results.cv);
 		auto mbWrittenCount	  = static_cast<double>(byteLength.value()) / 1e+6l;
 		auto writeSecondCount = jsonTime.value() / 1e+9l;
 		jsonSpeed.emplace(mbWrittenCount / writeSecondCount);
@@ -1127,12 +1129,14 @@ struct results_data {
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Runtime (ns): " << std::setprecision(6) << readResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Iteration Count: " << std::setprecision(4) << readResult.iterationCount.value() << std::endl;
+			std::cout << enumToString<result_type::read>() + " Coefficient of Variance (%): " << std::setprecision(4) << readResult.cv.value() << std::endl;
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Length (Bytes): " << writeResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Runtime (ns): " << std::setprecision(6) << writeResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Iteration Count: " << std::setprecision(4) << writeResult.iterationCount.value() << std::endl;
+			std::cout << enumToString<result_type::write>() + " Coefficient of Variance (%): " << std::setprecision(4) << writeResult.cv.value() << std::endl;
 		}
 		std::cout << "\n---" << std::endl;
 	}
@@ -1141,10 +1145,12 @@ struct results_data {
 		std::string writeLength{};
 		std::string writeTime{};
 		std::string writeIterationCount{};
+		std::string writeCv{};
 		std::string write{};
 		std::string readLength{};
 		std::string readTime{};
 		std::string readIterationCount{};
+		std::string readCv{};
 		std::string read{};
 		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
@@ -1160,12 +1166,16 @@ struct results_data {
 			std::stringstream stream04{};
 			stream04 << std::setprecision(4) << readResult.iterationCount.value();
 			readIterationCount = stream04.str();
-			finalString += read + " | " + readLength + " | " + readTime + " | " + readIterationCount + " | ";
+			std::stringstream stream05{};
+			stream05 << std::setprecision(4) << readResult.cv.value();
+			readCv = stream04.str();
+			finalString += read + " | " + readLength + " | " + readTime + " | " + readIterationCount + " | " + readCv + " | ";
 		} else {
 			readLength		   = "N/A";
 			readTime		   = "N/A";
 			read			   = "N/A";
 			readIterationCount = "N/A";
+			readCv			   = "N/A";
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
 			std::stringstream stream01{};
@@ -1180,12 +1190,16 @@ struct results_data {
 			std::stringstream stream04{};
 			stream04 << std::setprecision(4) << writeResult.iterationCount.value();
 			writeIterationCount = stream04.str();
-			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeIterationCount + " |";
+			std::stringstream stream05{};
+			stream05 << std::setprecision(4) << writeResult.cv.value();
+			writeCv = stream04.str();
+			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeIterationCount + " | " + writeCv + " | ";
 		} else {
 			writeLength			= "N/A";
 			writeTime			= "N/A";
 			write				= "N/A";
 			writeIterationCount = "N/A";
+			writeCv				= "N/A";
 		}
 		return finalString;
 	}
@@ -1236,24 +1250,23 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
 		test_data_type testData{};
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "teal", iterations>([&]() {
-				parser.parseJson<jsonifier::parse_options{ .minified = minified }>(testData, buffer);
-				auto* newPtr = &testData;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
+		auto readResult = stage.runBenchmark<testName, jsonifierLibraryName, "teal">([&]() {
+			parser.parseJson<jsonifier::parse_options{ .minified = minified }>(testData, buffer);
+			auto* newPtr = &testData;
+			bnch_swt::doNotOptimizeAway(newPtr);
+		});
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
 		std::string newerBuffer{};
 		auto readSize = buffer.size();
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
-				auto* newPtr = &newerBuffer;
-				bnch_swt::doNotOptimizeAway(newPtr);
-			});
+		auto writeResult = stage.runBenchmark<testName, jsonifierLibraryName, "steelblue">([&]() {
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+			auto* newPtr = &newerBuffer;
+			bnch_swt::doNotOptimizeAway(newPtr);
+		});
 
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
@@ -1279,11 +1292,12 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
 		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.prettifyJson(buffer, newerBuffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto writeResult = stage.runBenchmark<testName, jsonifierLibraryName, "steelblue">([&]() {
+			parser.prettifyJson(buffer, newerBuffer);
+			bnch_swt::doNotOptimizeAway(newerBuffer);
+		});
+
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
@@ -1294,7 +1308,7 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 		if (doWePrint) {
 			r.print();
-		}
+	          	}
 
 		return r;
 	}
@@ -1306,11 +1320,11 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		std::string newerBuffer{};
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.minifyJson(buffer, newerBuffer);
-				bnch_swt::doNotOptimizeAway(newerBuffer);
-			});
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto writeResult = stage.runBenchmark<testName, jsonifierLibraryName, "steelblue">([&]() {
+			parser.minifyJson(buffer, newerBuffer);
+			bnch_swt::doNotOptimizeAway(newerBuffer);
+		});
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
@@ -1333,12 +1347,11 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 		results_data r{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(jsonifierCommitUrl), iterations };
 		jsonifier::jsonifier_core parser{};
-
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
-				parser.validateJson(buffer);
-				bnch_swt::doNotOptimizeAway(buffer);
-			});
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto readResult = stage.runBenchmark<testName, jsonifierLibraryName, "steelblue">([&](){
+			parser.validateJson(buffer);
+			bnch_swt::doNotOptimizeAway(buffer);
+		});
 
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
@@ -1363,8 +1376,8 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
 		test_data_type testData{};
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto readResult = stage.runBenchmark<testName, glazeLibraryName, "dodgerblue">([&]() {
 				if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = minified }>(testData, buffer); error) {
 					std::cout << "Glaze Error: " << glz::format_error(error, buffer) << std::endl;
 				}
@@ -1373,8 +1386,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 			});
 		std::string newerBuffer{};
 		auto readSize = buffer.size();
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
+		auto writeResult = stage.runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
 				bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer));
 				auto* newPtr = &newerBuffer;
 				bnch_swt::doNotOptimizeAway(newPtr);
@@ -1399,8 +1411,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
 		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto writeResult = stage.runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
 				glz::prettify_json(buffer, newerBuffer);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 			});
@@ -1422,8 +1434,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
 		std::string newerBuffer{};
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto writeResult = stage.runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
 				newerBuffer = glz::minify_json(buffer);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 			});
@@ -1444,15 +1456,15 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		std::string buffer{ newBuffer };
 
 		results_data r{ static_cast<jsonifier::string>(glazeLibraryName), static_cast<jsonifier::string>(testName), static_cast<jsonifier::string>(glazeCommitUrl), iterations };
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), jsonifierLibraryName, "steelblue", iterations>([&]() {
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto readResult = stage.runBenchmark<testName, glazeLibraryName, "skyblue">([&]() {
 				auto result = glz::validate_json(buffer);
 				bnch_swt::doNotOptimizeAway(result);
 			});
 
 		bnch_swt::file_loader fileLoader{ basePath + "/" + static_cast<jsonifier::string>(testName) + "-glaze.json" };
 		fileLoader.saveFile(buffer);
-		r.readResult = result<result_type::read>{ "skyblue", buffer.size(), writeResult };
+		r.readResult = result<result_type::read>{ "skyblue", buffer.size(), readResult };
 		if (doWePrint) {
 			r.print();
 		}
@@ -2029,8 +2041,8 @@ struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, 
 		simdjson::ondemand::parser parser{};
 		test_data_type testData{};
 		auto readSize = buffer.size();
-		auto readResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), simdjsonLibraryName, "cornflowerblue", iterations>(
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto readResult = stage.runBenchmark<testName, glazeLibraryName, "cadetblue">(
 				[&]() {
 					try {
 						getValue(testData, parser.iterate(buffer).value());
@@ -2060,8 +2072,8 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 		simdjson::dom::parser parser{};
 		std::string newerBuffer{};
 
-		auto writeResult =
-			bnch_swt::benchmark_suite<"Json-Tests">::benchmark<bnch_swt::stringLiteralFromView<testName.size()>(testName), simdjsonLibraryName, "cornflowerblue", iterations>(
+		bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = bnch_swt::result_type::time }> stage{};
+		auto writeResult = stage.runBenchmark<testName, glazeLibraryName, "cornflowerblue">(
 				[&]() {
 					try {
 						newerBuffer = simdjson::minify(parser.parse(buffer));
@@ -2085,21 +2097,21 @@ template<uint64_t iterations, bnch_swt::string_literal testName> struct json_tes
 };
 
 std::string table_header = R"(
-| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- |)";
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Read Coefficient of Variance (%) | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count | Write Coefficient of Variance (%) |
+| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- | ---------- | ---------- | ---------- | ---------- |)";
 
 std::string read_table_header = R"(
-| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
+| Library | Read (MB/s) | Read Length (Bytes) | Read Time (ns) | Read Iteration Count | Read Coefficient of Variance (%) |
+| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- |)";
 
 std::string write_table_header = R"(
-| Library | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count |
-| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- |)";
+| Library | Write (MB/s) | Write Length (Bytes) | Write Time (ns) | Write Iteration Count | Write Coefficient of Variance (%) |
+| ------------------------------------------------- | ---------- | ----------- | ---------- | ----------- | ---------- |)";
 
 static const std::string section001{ R"(
  > At least )" +
 	jsonifier::toString(30) +
-	R"( iterations on a 6 core (Intel i7 8700k), until coefficient of variance is at or below 3%.
+	R"( iterations on a 6 core (Intel i7 8700k), until coefficient of variance is at or below 1%.
 )" };
 
 static constexpr auto newString02{ bnch_swt::combineLiterals<R"(#### Using the following commits:

@@ -180,7 +180,7 @@ namespace jsonifier {
 			std::swap(sizeVal, other.sizeVal);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr string_view_base substr(const size_type offsetNew = 0, size_type countNew = npos) const noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr string_view_base substr(const size_type offsetNew = 0, size_type countNew = npos) const {
 			if (offsetNew > sizeVal) [[unlikely]] {
 				throw std::out_of_range("Substring position is out of range.");
 			}

@@ -180,17 +180,14 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept map_subscriptable = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			{
-				value[typename jsonifier_internal::unwrap_t<value_type>::key_type{}]
-			} -> std::same_as<const typename jsonifier_internal::unwrap_t<value_type>::mapped_type&>;
+			{ value[typename jsonifier_internal::unwrap_t<value_type>::key_type{}] } -> std::same_as<const typename jsonifier_internal::unwrap_t<value_type>::mapped_type&>;
 		} || requires(jsonifier_internal::unwrap_t<value_type> value) {
 			{ value[typename jsonifier_internal::unwrap_t<value_type>::key_type{}] } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::mapped_type&>;
 		};
 
 		template<typename value_type>
 		concept vector_subscriptable = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			{ value[typename jsonifier_internal::unwrap_t<value_type>::size_type{}]
-			} -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::const_reference>;
+			{ value[typename jsonifier_internal::unwrap_t<value_type>::size_type{}] } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::const_reference>;
 		} || requires(jsonifier_internal::unwrap_t<value_type> value) {
 			{ value[typename jsonifier_internal::unwrap_t<value_type>::size_type{}] } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::reference>;
 		};

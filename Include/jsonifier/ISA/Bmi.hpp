@@ -29,9 +29,7 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type blsr(value_type value) noexcept {
-		return _blsr_u64(value);
-	}
+	#define blsr(value) _blsr_u64(value)
 
 	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_LINUX)
@@ -51,9 +49,7 @@ namespace simd_internal {
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type blsr(value_type value) noexcept {
-		return value & (value - 1);
-	}
+	#define blsr(value) (value & (value - 1))
 
 	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
@@ -81,13 +77,7 @@ namespace simd_internal {
 
 #else
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type blsr(value_type value) noexcept {
-		if (value == 0) {
-			return 0;
-		}
-
-		return value & (value - 1);
-	}
+	#define blsr(value) (value & (value - 1))
 
 	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 		if (value == 0) {

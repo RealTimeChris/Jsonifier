@@ -201,8 +201,8 @@ namespace jsonifier_internal {
 		const simd_type& simdValues00, const simd_type& simdValues01) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues00, simdValue), simdValue) |
-			simd_internal::opCmpEq(simd_internal::opShuffle(simdValues01, simdValue), simdValue)));
+		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(opShuffle(simdValues00, simdValue), simdValue) |
+			simd_internal::opCmpEq(opShuffle(simdValues01, simdValue), simdValue)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>

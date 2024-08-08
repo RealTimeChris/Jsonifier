@@ -40,29 +40,24 @@ namespace jsonifier_internal {
 			static constexpr auto numMembers = std::tuple_size_v<unwrap_t<decltype(final_tuple_static_data<value_type>)>>;
 			writeObjectEntry<numMembers, options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 			static constexpr auto serializeLambda = [](const auto currentIndex, auto&& valueNew, auto&& bufferNew, auto&& indexNew) {
-				static constexpr auto subTuple{ std::get<currentIndex>(final_tuple_static_data<value_type>) };
+				static constexpr auto& subTuple{ std::get<currentIndex>(final_tuple_static_data<value_type>) };
 				static constexpr auto subTupleSize{ std::tuple_size_v<unwrap_t<decltype(subTuple)>> };
-				static constexpr auto isItLast{ (currentIndex == 0) };
+				static constexpr auto isItFirst{ (currentIndex == 0) };
 				static constexpr auto serializeLambdaNew = [](const auto currentIndexNewer, auto&& valueNewer, auto&& bufferNewer, auto&& indexNewer) {
 					static constexpr auto key = std::get<currentIndexNewer>(subTuple).view();
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						auto& keys = valueNewer.jsonifierExcludedKeys;
 						if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) [[unlikely]] {
-							if constexpr (currentIndexNewer > 1) {
-								serializeSubObjects<options, subTuple, isItLast, currentIndexNewer - 1>(std::forward<value_type>(valueNewer),
-									std::forward<buffer_type>(bufferNewer), std::forward<index_type>(indexNewer));
-							} else {
-								return;
-							}
+							return;
 						}
 					}
-					static constexpr auto memberPtr = std::get<currentIndexNewer>(subTuple).ptr();
+					static constexpr auto& memberPtr = std::get<currentIndexNewer>(subTuple).ptr();
 					static constexpr auto quotedKey = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
 					writeCharacters<quotedKey>(bufferNewer, indexNewer);
 					using member_type = unwrap_t<decltype(valueNewer.*memberPtr)>;
 					serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(valueNewer.*memberPtr), std::forward<buffer_type>(bufferNewer),
 						std::forward<index_type>(indexNewer));
-					if constexpr (!isItLast || currentIndexNewer > 0) {
+					if constexpr (!isItFirst || currentIndexNewer > 0) {
 						if constexpr (options.optionsReal.prettify) {
 							if constexpr (jsonifier::concepts::buffer_like<buffer_type>) {
 								if (auto k = indexNewer + options.indent + 256; k > bufferNewer.size()) [[unlikely]] {
@@ -90,7 +85,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) noexcept {
 			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
 			if constexpr (size > 0) {
-				static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
+				static constexpr auto& newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
 				auto& newMember				 = getMember<newPtr>(value);
 				using member_type			 = unwrap_t<decltype(newMember)>;
 				serialize_impl<options, derived_type, member_type>::impl(newMember, std::forward<buffer_type>(buffer), std::forward<index_type>(index));
@@ -214,7 +209,7 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index) noexcept {
-			const auto maxIndex = value.size();
+			static constexpr auto maxIndex = value.size();
 			if (maxIndex > 0) [[likely]] {
 				writeArrayEntry<options>(std::forward<buffer_type>(buffer), std::forward<index_type>(index));
 
@@ -353,7 +348,14 @@ namespace jsonifier_internal {
 			if (newIndex > bufferSize) [[unlikely]] {
 				buffer.resize(bufferSize * 2 > newIndex ? bufferSize * 2 : newIndex);
 			}
-			index = static_cast<size_t>(toChars(buffer.data() + index, std::forward<value_type>(value)) - buffer.data());
+			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
+				index = static_cast<size_t>(toChars(buffer.data() + index, static_cast<uint64_t>(value)) - buffer.data());
+			} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
+				index = static_cast<size_t>(toChars(buffer.data() + index, static_cast<int64_t>(value)) - buffer.data());
+			} else {
+				index = static_cast<size_t>(toChars(buffer.data() + index, static_cast<double>(value)) - buffer.data());
+			}
+			
 		}
 	};
 
