@@ -53,9 +53,6 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class parser {
 	  public:
-		template<const jsonifier::parse_options& options, size_t subTupleIndex, size_t index, typename derived_type_mew, typename value_type, typename iterator,
-			jsonifier::concepts::uint64_type size_type>
-		friend void invokeParse(value_type& value, iterator& iter, iterator& end, size_type keySize) noexcept;
 		template<const auto&, typename value_type, typename iterator> friend struct parse_impl;
 
 		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
@@ -77,6 +74,7 @@ namespace jsonifier_internal {
 			optionsReal.parserPtr = this;
 			auto readIter		  = reinterpret_cast<const char*>(in.data());
 			auto endIter		  = reinterpret_cast<const char*>(in.data() + in.size());
+			optionsReal.rootIter  = readIter;
 			if (!readIter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,

@@ -98,11 +98,12 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			using member_type = unwrap_t<decltype(value[std::declval<typename unwrap_t<value_type_new>::key_type>()])>;
 			if (value.size() > 0) [[likely]] {
-				writer<options>::template writeObjectEntry<options>(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+				writer<options>::writeObjectEntry(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 
 				if (value.size() > 0) [[likely]] {
 					auto iter = value.begin();
-					serialize_impl<options, derived_type, member_type>::impl(iter->first, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+					serialize_impl<options, derived_type, typename unwrap_t<value_type_new>::key_type>::impl(iter->first, std::forward<buffer_type>(buffer),
+						std::forward<serialize_pair_t>(serializePair));
 					writer<options>::template writeCharacter<':'>(std::forward<buffer_type>(buffer), serializePair.index);
 					if constexpr (options.optionsReal.prettify) {
 						writer<options>::template writeCharacter<0x20u>(std::forward<buffer_type>(buffer), serializePair.index);
@@ -112,7 +113,8 @@ namespace jsonifier_internal {
 					auto endIter = value.end();
 					for (; iter != endIter; ++iter) {
 						writer<options>::writeEntrySeparator(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
-						serialize_impl<options, derived_type, member_type>::impl(iter->first, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+						serialize_impl<options, derived_type, typename unwrap_t<value_type_new>::key_type>::impl(iter->first, std::forward<buffer_type>(buffer),
+							std::forward<serialize_pair_t>(serializePair));
 						writer<options>::template writeCharacter<':'>(std::forward<buffer_type>(buffer), serializePair.index);
 						if constexpr (options.optionsReal.prettify) {
 							writer<options>::template writeCharacter<0x20u>(std::forward<buffer_type>(buffer), serializePair.index);
@@ -120,7 +122,7 @@ namespace jsonifier_internal {
 						serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 					}
 				}
-				writer<options>::template writeObjectExit<options>(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+				writer<options>::writeObjectExit(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 			} else {
 				writer<options>::template writeCharacters<"{}">(std::forward<buffer_type>(buffer), serializePair.index);
 			}
@@ -296,7 +298,9 @@ namespace jsonifier_internal {
 					writer<options>::writeCharacters(std::forward<buffer_type>(buffer), serializePair.index, R"(\\)");
 					break;
 				}
-				[[likely]] default: { writer<options>::writeCharacter(std::forward<buffer_type>(buffer), serializePair.index, std::forward<value_type>(value)); }
+					[[likely]] default : {
+						writer<options>::writeCharacter(std::forward<buffer_type>(buffer), serializePair.index, std::forward<value_type>(value));
+					}
 			}
 			writer<options>::template writeCharacter<'"'>(std::forward<buffer_type>(buffer), serializePair.index);
 		}

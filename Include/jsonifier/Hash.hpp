@@ -138,9 +138,6 @@ namespace jsonifier_internal {
 		 * @return The hashed value.
 		 */
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr uint64_t hashKeyRt(const char_type* value, size_t length) const {
-			uint64_t returnValue64;
-			uint32_t returnValue32;
-			uint16_t returnValue16;
 			uint64_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, sizeof(uint64_t));
@@ -180,5 +177,10 @@ namespace jsonifier_internal {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr uint64_t hashKeyCt(const char_type* value, uint64_t length) const {
 			return hashxBytesCt(value, seed, length);
 		}
+
+	  protected:
+		mutable uint64_t returnValue64{};
+		mutable uint32_t returnValue32{};
+		mutable uint16_t returnValue16{};
 	};
 }

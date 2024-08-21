@@ -31,8 +31,11 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::concepts::is_double_ptr iterator> JSONIFIER_ALWAYS_INLINE void skipNumber(iterator& iter, iterator&) noexcept {
-		++iter;
+#define JSONIFIER_SKIP_WS() \
+	if constexpr (!options.optionsReal.minified) { \
+		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
+			++iter; \
+		} \
 	}
 
 	template<typename iterator> JSONIFIER_ALWAYS_INLINE iterator skipWs(iterator iter) noexcept {
@@ -40,145 +43,6 @@ namespace jsonifier_internal {
 			++iter;
 		}
 		return iter;
-	}
-
-	template<jsonifier::concepts::is_double_ptr iterator> JSONIFIER_ALWAYS_INLINE void skipToEndOfValue(iterator& iter, iterator& end) noexcept {
-		uint64_t currentDepth{ 1 };
-		auto skipToEnd = [&]() {
-			while (iter != end && currentDepth > 0) {
-				switch (*iter) {
-					[[unlikely]] case '[':
-					[[unlikely]] case '{': {
-						++currentDepth;
-						++iter;
-						break;
-					}
-					[[unlikely]] case ']':
-					[[unlikely]] case '}': {
-						--currentDepth;
-						++iter;
-						break;
-					}
-					default: {
-						++iter;
-						break;
-					}
-				}
-			}
-		};
-		switch (**iter) {
-			[[unlikely]] case '[':
-			[[unlikely]] case '{': {
-				++iter;
-				skipToEnd();
-				break;
-			}
-			case '"': {
-				++iter;
-				break;
-			}
-			case ':': {
-				++iter;
-				skipToEndOfValue(iter, end);
-				break;
-			}
-			case 't': {
-				++iter;
-				break;
-			}
-			case 'f': {
-				++iter;
-				break;
-			}
-			case 'n': {
-				++iter;
-				break;
-			}
-			case '-':
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9': {
-				skipNumber(iter, end);
-				break;
-			}
-			[[likely]] default: {
-				++iter;
-				break;
-			}
-		}
-	}
-
-	template<jsonifier::concepts::is_double_ptr iterator> JSONIFIER_ALWAYS_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept {
-		uint64_t currentDepth{ 1 };
-		while (iter != end && currentDepth > 0) {
-			switch (**iter) {
-				[[unlikely]] case '{':
-				[[unlikely]] case '[': {
-					++currentDepth;
-					++iter;
-					break;
-				}
-				[[unlikely]] case '}':
-				[[unlikely]] case ']': {
-					--currentDepth;
-					++iter;
-					break;
-				}
-				[[unlikely]] case ':': {
-					++iter;
-					break;
-				}
-				[[unlikely]] case ',': {
-					if (currentDepth <= 1) [[unlikely]] {
-						return;
-					}
-					++iter;
-					++iter;
-					break;
-				}
-				[[unlikely]] case '\\': {
-					++iter;
-					break;
-				}
-				[[unlikely]] case 't': {
-					++iter;
-					break;
-				}
-				[[unlikely]] case 'f': {
-					++iter;
-					break;
-				}
-				[[unlikely]] case 'n': {
-					++iter;
-					break;
-				}
-				[[unlikely]] case '0':
-				[[unlikely]] case '1':
-				[[unlikely]] case '2':
-				[[unlikely]] case '3':
-				[[unlikely]] case '4':
-				[[unlikely]] case '5':
-				[[unlikely]] case '6':
-				[[unlikely]] case '7':
-				[[unlikely]] case '8':
-				[[unlikely]] case '9':
-				[[unlikely]] case '-': {
-					++iter;
-					break;
-				}
-				[[likely]] default: {
-					++iter;
-					break;
-				}
-			}
-		}
 	}
 
 	template<typename iterator> JSONIFIER_ALWAYS_INLINE void skipNumber(iterator& iter, iterator& end) noexcept {
@@ -232,8 +96,7 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept;
-	template<jsonifier::concepts::is_double_ptr iterator> JSONIFIER_ALWAYS_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept;
+	template<const auto& options, typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept;
 
 	const char* getUnderlyingPtr(const char** ptr) {
 		return *ptr;
@@ -1030,22 +893,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::is_double_ptr iterator, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, iterator& iter) {
-		if (compareStringAsInt<"true">(*iter)) {
-			value = true;
-			++iter;
-			return true;
-		} else {
-			if (compareStringAsInt<"false">(*iter)) [[likely]] {
-				value = false;
-				++iter;
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-
 	template<typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNull(iterator& iter) {
 		if (compareStringAsInt<"null">(iter)) [[likely]] {
 			iter += 4;
@@ -1055,77 +902,32 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::is_double_ptr iterator> JSONIFIER_ALWAYS_INLINE bool parseNull(iterator& iter) {
-		if (compareStringAsInt<"null">(*iter)) [[likely]] {
+	template<const auto& options, typename value_type, typename iterator>
+	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end) noexcept {
+		if (*iter == '"') [[likely]] {
 			++iter;
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	template<const auto& options, typename value_type, jsonifier::concepts::is_double_ptr iterator>
-	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
-		auto newPtr = *iter;
-		if (*newPtr == 0x22u) [[likely]] {
-			++iter;
-		} else {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(getUnderlyingPtr(iter) - options.rootIter,
-				getUnderlyingPtr(end) - options.rootIter, options.rootIter));
-			skipToNextValue(iter, end);
-			return;
-		}
-		auto newSize = static_cast<uint64_t>((*iter) - newPtr);
-		if (static_cast<int64_t>(newSize) > 1) [[likely]] {
 			static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
-			if (newSize > newString.size()) [[unlikely]] {
-				newString.resize(newSize);
+			auto newSize = end - iter;
+			if (static_cast<uint64_t>(newSize) > newString.size()) [[unlikely]] {
+				newString.resize(static_cast<uint64_t>(newSize));
 			}
-			++newPtr;
-			newPtr = parseStringImpl(newPtr, newString.data(), newSize);
-			if (newPtr) [[likely]] {
-				newSize = static_cast<uint64_t>(newPtr - newString.data());
-				if (value.size() != newSize) {
-					value.resize(newSize);
+			auto newerPtr = parseStringImpl(iter, newString.data(), static_cast<uint64_t>(newSize));
+			if (newerPtr) [[likely]] {
+				++iter;
+				newSize = newerPtr - newString.data();
+				if (value.size() != static_cast<uint64_t>(newSize)) {
+					value.resize(static_cast<uint64_t>(newSize));
 				}
 				std::copy(newString.data(), newString.data() + newSize, value.data());
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
-					getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
-				skipToNextValue(iter, end);
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				return;
 			}
-		}
-	}
-
-	template<const auto& options, typename value_type, typename iterator>
-	JSONIFIER_ALWAYS_INLINE void parseString(value_type&& value, iterator& iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
-		if (*iter == '"') [[likely]] {
-			++iter;
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter, end - options.rootIter,
-				options.rootIter));
-			return;
-		}
-		static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
-		auto newSize = end - iter;
-		if (static_cast<uint64_t>(newSize) > newString.size()) [[unlikely]] {
-			newString.resize(static_cast<uint64_t>(newSize));
-		}
-		auto newerPtr = parseStringImpl(iter, newString.data(), static_cast<uint64_t>(newSize));
-		if (newerPtr) [[likely]] {
-			++iter;
-			newSize = newerPtr - newString.data();
-			if (value.size() != static_cast<uint64_t>(newSize)) {
-				value.resize(static_cast<uint64_t>(newSize));
-			}
-			std::copy(newString.data(), newString.data() + newSize, value.data());
-		} else {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(iter - options.rootIter,
+			options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter,
 				end - options.rootIter, options.rootIter));
 			return;
 		}
@@ -1137,10 +939,12 @@ namespace jsonifier_internal {
 		skipStringImpl(iter, newLength);
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE void skipToEndOfValue(iterator& iter, iterator& end) noexcept {
+	template<const auto& options, typename iterator> JSONIFIER_ALWAYS_INLINE void skipToEndOfValue(iterator& iter, iterator& end) noexcept {
 		uint64_t currentDepth{ 1 };
+		JSONIFIER_SKIP_WS();
 		auto skipToEnd = [&]() {
 			while (iter != end && currentDepth > 0) {
+				JSONIFIER_SKIP_WS();
 				switch (*iter) {
 					[[unlikely]] case '[':
 					[[unlikely]] case '{': {
@@ -1178,7 +982,7 @@ namespace jsonifier_internal {
 			}
 			case ':': {
 				++iter;
-				skipToEndOfValue(iter, end);
+				skipToEndOfValue<options>(iter, end);
 				break;
 			}
 			case 't': {
@@ -1214,7 +1018,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator> JSONIFIER_INLINE void skipObject(iterator& iter, iterator& end) noexcept {
+	template<const auto& options, typename iterator> JSONIFIER_INLINE void skipObject(iterator& iter, iterator& end) noexcept {
 		++iter;
 		if (*iter == '}') {
 			++iter;
@@ -1225,7 +1029,7 @@ namespace jsonifier_internal {
 				return;
 			}
 			skipString(iter, end);
-			skipToNextValue(iter, end);
+			skipToNextValue<options>(iter, end);
 			if (*iter != ',') {
 				break;
 			}
@@ -1234,14 +1038,14 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator> JSONIFIER_INLINE void skipArray(iterator& iter, iterator& end) noexcept {
+	template<const auto& options, typename iterator> JSONIFIER_INLINE void skipArray(iterator& iter, iterator& end) noexcept {
 		++iter;
 		if (*iter == ']') {
 			++iter;
 			return;
 		}
 		while (true) {
-			skipToNextValue(iter, end);
+			skipToNextValue<options>(iter, end);
 			if (*iter != ',') {
 				break;
 			}
@@ -1250,27 +1054,28 @@ namespace jsonifier_internal {
 		++iter;
 	}
 
-	template<typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept {
+	template<const auto& options, typename iterator> JSONIFIER_INLINE void skipToNextValue(iterator& iter, iterator& end) noexcept {
+		JSONIFIER_SKIP_WS();
 		switch (*iter) {
 			case '{': {
-				skipObject(iter, end);
+				skipObject<options>(iter, end);
 				break;
 			}
 			case '[': {
-				skipArray(iter, end);
+				skipArray<options>(iter, end);
 				break;
 			}
 			case '"': {
 				skipString(iter, end);
 				if (*iter == ':') {
 					++iter;
-					skipToNextValue(iter, end);
+					skipToNextValue<options>(iter, end);
 				}
 				break;
 			}
 			case ':': {
 				++iter;
-				skipToNextValue(iter, end);
+				skipToNextValue<options>(iter, end);
 				break;
 			}
 			case 'n': {
@@ -1294,7 +1099,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<char startChar, char endChar, typename iterator> JSONIFIER_ALWAYS_INLINE uint64_t countValueElements(iterator iter, iterator end) noexcept {
+	template<const auto& options, char startChar, char endChar, typename iterator> JSONIFIER_ALWAYS_INLINE uint64_t countValueElements(iterator iter, iterator end) noexcept {
 		auto newValue = *iter;
 		if (newValue == ']' || newValue == '}') [[unlikely]] {
 			return 0;
@@ -1309,7 +1114,7 @@ namespace jsonifier_internal {
 				}
 				[[unlikely]] case '{':
 				[[unlikely]] case '[': {
-					skipToEndOfValue(iter, end);
+					skipToEndOfValue<options>(iter, end);
 					break;
 				}
 				[[unlikely]] case endChar: { return currentCount; }
@@ -1396,46 +1201,19 @@ namespace jsonifier_internal {
 		return keyStatsImpl<value_type, N, 0>(key_stats_t{});
 	}
 
-	template<const auto& options, typename value_type, typename iterator>
-	JSONIFIER_ALWAYS_INLINE uint64_t getKeyLength(iterator iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
+	template<const auto& options, typename iterator>
+	JSONIFIER_ALWAYS_INLINE uint64_t getKeyLength(iterator iter, iterator& end) noexcept {
 		if (*iter == '"') [[likely]] {
 			++iter;
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(
+			options.parserPtr->getErrors().emplace_back(
 				error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter, end - iter, options.rootIter));
 			return {};
 		}
-		static constexpr auto N{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
-		static constexpr auto keyStatsVal{ keyStats<value_type>() };
-		static constexpr auto minLength{ keyStatsVal.minLength };
-		static constexpr auto maxLength{ keyStatsVal.maxLength };
-
-		if constexpr (N == 1) {
-			static constexpr jsonifier::string_view key{ std::get<0>(jsonifier::concepts::coreV<value_type>).view() };
-			return key.size();
-		} else {
-			auto start = iter;
-			iter += minLength;
-			memchar<'"'>(iter, static_cast<uint64_t>((iter + maxLength) - iter));
-			return size_t(iter - start);
-		}
-	}
-
-	template<const auto& options, typename value_type, jsonifier::concepts::is_double_ptr iterator>
-	JSONIFIER_ALWAYS_INLINE uint64_t getKeyLength(iterator iter, iterator& end, jsonifier::vector<error>& errors) noexcept {
-		const auto start{ *iter };
-
-		if (*iter == '"') [[likely]] {
-			++iter;
-		} else {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			errors.emplace_back(
-				error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter, end - iter, options.rootIter));
-			return {};
-		}
-
-		return static_cast<uint64_t>((*iter) - (start + 2));
+		auto start = iter;
+		memchar<'"'>(iter, static_cast<uint64_t>(end - iter));
+		return size_t(iter - start);
 	}
 
 }// namespace jsonifier_internal

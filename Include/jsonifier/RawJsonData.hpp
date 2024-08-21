@@ -208,6 +208,8 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
+	static constexpr parse_options_internal<jsonifier::jsonifier_core<true>> options{};
+
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) noexcept {
 		jsonifier::raw_json_data::object_type results{};
@@ -229,7 +231,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				skipToNextValue(newIter02, endIter01);
+				skipToNextValue<options>(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -265,7 +267,7 @@ namespace jsonifier_internal {
 			};
 
 			newIter01	  = skipWs(newIter01);
-			auto newCount = countValueElements<'{', '}'>(newIter02, endIter01);
+			auto newCount = countValueElements<options, '{', '}'>(newIter02, endIter01);
 			collectCharacter('{');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
 				newIter01	= skipWs(newIter01);
@@ -303,7 +305,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				skipToNextValue(newIter02, endIter01);
+				skipToNextValue<options>(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -316,7 +318,7 @@ namespace jsonifier_internal {
 			};
 
 			newIter01	  = skipWs(newIter01);
-			auto newCount = countValueElements<'[', ']'>(newIter02, endIter01);
+			auto newCount = countValueElements<options, '[', ']'>(newIter02, endIter01);
 			collectCharacter('[');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
 				newIter01 = skipWs(newIter01);

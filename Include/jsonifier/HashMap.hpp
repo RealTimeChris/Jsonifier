@@ -112,7 +112,7 @@ namespace jsonifier_internal {
 		return false;
 	}
 
-	constexpr std::array<size_t, 6> hashMapMaxSizes{ 16, 32, 64, 128, 256, 512 };
+	constexpr std::array<size_t, 7> hashMapMaxSizes{ 16, 32, 64, 128, 256, 512, 1024 };
 
 	template<size_t length> struct map_simd {
 		using type = std::conditional_t<length >= 64 && bytesPerStep >= 64, jsonifier_simd_int_512,
@@ -127,8 +127,9 @@ namespace jsonifier_internal {
 		double_element		= 2,
 		triple_element		= 3,
 		single_byte			= 4,
-		simd_partial_length = 5,
-		simd_full_length	= 6,
+		unique_single_byte	= 5,
+		simd_partial_length = 6,
+		simd_full_length	= 7,
 	};
 
 	JSONIFIER_ALWAYS_INLINE constexpr size_t setSimdWidth(size_t length) noexcept {
@@ -188,7 +189,8 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t maxSizeIndexNew, template<typename, size_t> typename hash_map_construction_data_type> using hash_map_construction_data_variant =
 		std::variant<hash_map_construction_data_type<value_type, 0>, hash_map_construction_data_type<value_type, 1>, hash_map_construction_data_type<value_type, 2>,
-			hash_map_construction_data_type<value_type, 3>, hash_map_construction_data_type<value_type, 4>, hash_map_construction_data_type<value_type, 5>>;
+			hash_map_construction_data_type<value_type, 3>, hash_map_construction_data_type<value_type, 4>, hash_map_construction_data_type<value_type, 5>,
+			hash_map_construction_data_type<value_type, 6>>;
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
 		constexpr auto keyStatsVal		   = keyStats<value_type>();
@@ -299,8 +301,7 @@ namespace jsonifier_internal {
 		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{}, constructForGivenStringLength);
 	}
 
-	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
-		xoshiro256 prng{};
+	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectUniqueSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		constexpr auto keyStatsVal		   = keyStats<value_type>();
 		auto constructForGivenStringLength = [&](const auto maxSizeIndex, auto&& constructForGivenStringLength) mutable {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
@@ -313,7 +314,7 @@ namespace jsonifier_internal {
 					returnValues.hasher.updateSeed();
 					collided = false;
 					for (size_t y = 0; y < pairsNew.count; ++y) {
-						const auto slot = pairsNew.rootPtr[y].key.data()[returnValues.uniqueIndex];
+						const auto slot = returnValues.hasher.hashKeyCt(pairsNew.rootPtr[y].key.data(), returnValues.uniqueIndex) % returnValues.storageSize;
 						if (returnValues.indices[slot] != returnValues.indices.size() - 1) {
 							collided = true;
 							break;
@@ -335,18 +336,40 @@ namespace jsonifier_internal {
 						std::integral_constant<size_t, maxSizeIndex + 1>{}, constructForGivenStringLength) };
 				} else {
 					return hash_map_construction_data_variant<value_type, maxSizeIndex, jsonifier_internal::hash_map_construction_data>{
-						collectSimdPartialLengthHashMapData<value_type, 0>(pairsNew)
+						collectSimdPartialLengthHashMapData<value_type, maxSizeIndexNew>(pairsNew)
 					};
 				}
 			} else {
-				returnValues.type = hash_map_type::single_byte;
+				++returnValues.uniqueIndex;
+				returnValues.type = hash_map_type::unique_single_byte;
 				return hash_map_construction_data_variant<value_type, maxSizeIndexNew, jsonifier_internal::hash_map_construction_data>{ returnValues };
 			}
 		};
 		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{}, constructForGivenStringLength);
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
+		constexpr auto keyStatsVal = keyStats<value_type>();
+		hash_map_construction_data<value_type, getMaxSizeIndex(256)> returnValues{};
+		returnValues.keyStatsVal = keyStatsVal;
+		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal);
+		if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
+			std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
+			for (size_t y = 0; y < pairsNew.count; ++y) {
+				const auto slot			   = pairsNew.rootPtr[y].key.data()[returnValues.uniqueIndex];
+				returnValues.indices[slot] = y;
+			}
+			++returnValues.uniqueIndex;
+			returnValues.type = hash_map_type::single_byte;
+			return hash_map_construction_data_variant<value_type, getMaxSizeIndex(256), jsonifier_internal::hash_map_construction_data>{ returnValues };
+		} else {
+			return hash_map_construction_data_variant<value_type, maxSizeIndexNew, jsonifier_internal::hash_map_construction_data>{
+				collectUniqueSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew)
+			};
+		}
+	}
+
+	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		constexpr auto keyStatsVal		   = keyStats<value_type>();
 		auto constructForGivenStringLength = [&](const auto maxSizeIndex) mutable {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
@@ -373,17 +396,17 @@ namespace jsonifier_internal {
 				returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal, returnValues.uniqueIndex + 1);
 			}
 			if (collided) {
-				return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{
-					collectSingleByteHashMapData<value_type, getMaxSizeIndex(256)>(pairsNew)
-				};
+				return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{ collectSingleByteHashMapData<value_type, maxSizeIndexNew>(
+					pairsNew) };
 			}
+			++returnValues.uniqueIndex;
 			returnValues.type = hash_map_type::triple_element;
 			return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{ returnValues };
 		};
-		return constructForGivenStringLength(std::integral_constant<size_t, 0>{});
+		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{});
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		constexpr auto keyStatsVal		   = keyStats<value_type>();
 		auto constructForGivenStringLength = [&](const auto maxSizeIndex) mutable {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
@@ -398,14 +421,14 @@ namespace jsonifier_internal {
 				returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal, returnValues.uniqueIndex + 1);
 			}
 			if (collided) {
-				return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{
-					collectSingleByteHashMapData<value_type, getMaxSizeIndex(256)>(pairsNew)
-				};
+				return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{ collectSingleByteHashMapData<value_type, maxSizeIndexNew>(
+					pairsNew) };
 			}
+			++returnValues.uniqueIndex;
 			returnValues.type = hash_map_type::double_element;
 			return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{ returnValues };
 		};
-		return constructForGivenStringLength(std::integral_constant<size_t, 0>{});
+		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{});
 	}
 
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectSingleElementHashMapData() noexcept {
@@ -418,12 +441,12 @@ namespace jsonifier_internal {
 		if constexpr (tupleReferences<value_type>.count == 1) {
 			return collectSingleElementHashMapData<value_type>();
 		} else if constexpr (tupleReferences<value_type>.count == 2) {
-			return collectDoubleElementHashMapData<value_type>(tupleReferences<value_type>);
+			return collectDoubleElementHashMapData<value_type, getMaxSizeIndex(tupleReferences<value_type>.count)>(tupleReferences<value_type>);
 		} else if constexpr (tupleReferences<value_type>.count == 3) {
-			return collectTripleElementHashMapData<value_type>(tupleReferences<value_type>);
+			return collectTripleElementHashMapData<value_type, getMaxSizeIndex(tupleReferences<value_type>.count)>(tupleReferences<value_type>);
 		} else {
 			return hash_map_construction_data_variant<value_type, 0, jsonifier_internal::hash_map_construction_data>{
-				jsonifier_internal::collectSingleByteHashMapData<value_type, getMaxSizeIndex(256)>(tupleReferences<value_type>)
+				jsonifier_internal::collectSingleByteHashMapData<value_type, getMaxSizeIndex(tupleReferences<value_type>.count)>(tupleReferences<value_type>)
 			};
 		}
 	}
@@ -437,23 +460,24 @@ namespace jsonifier_internal {
 	template<typename value_type> static constexpr auto hashData{ collectMapConstructionData<value_type>() };
 
 	template<typename value_type, typename iterator_newer> JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) {
-		static constexpr auto hashData					   = collectMapConstructionData<value_type>();
-		static constexpr auto uniqueIndex				   = hashData.uniqueIndex;
+		static constexpr auto hashData{ collectMapConstructionData<value_type>() };
 		JSONIFIER_ALIGN static constexpr auto controlBytes = hashData.controlBytes;
 		JSONIFIER_ALIGN static constexpr auto indices	   = hashData.indices;
-		static constexpr auto hasher					   = hashData.hasher;
+		static constexpr auto uniqueIndex				   = hashData.uniqueIndex;
 		if constexpr (hashData.type == hash_map_type::single_element) {
 			return 0;
 		} else if constexpr (hashData.type == hash_map_type::double_element) {
-			return iter[uniqueIndex + 1] & 1;
+			return iter[uniqueIndex] & 1;
 		} else if constexpr (hashData.type == hash_map_type::triple_element) {
 			static constexpr auto firstChar = std::get<0>(finalTupleStaticData<value_type>).view()[uniqueIndex];
-			return (uint8_t(iter[uniqueIndex + 1] ^ firstChar) * hasher.seed) & 3;
+			return (uint8_t(iter[uniqueIndex] ^ firstChar) * hashData.hasher.seed) & 3;
 		} else if constexpr (hashData.type == hash_map_type::single_byte) {
-			return indices[iter[uniqueIndex + 1]];
+			return indices[iter[uniqueIndex]];
+		} else if constexpr (hashData.type == hash_map_type::unique_single_byte) {
+			return indices[hashData.hasher.hashKeyCt(iter, uniqueIndex) % hashData.storageSize];
 		} else if constexpr (hashData.type == hash_map_type::simd_partial_length) {
 			using simd_type		   = typename unwrap_t<decltype(hashData)>::simd_type;
-			const auto hash		   = hasher.hashKeyRt(iter + 1, uniqueIndex);
+			const auto hash		   = hashData.hasher.hashKeyRt(iter + 1, uniqueIndex);
 			const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
 			const auto finalIndex  = (tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
 										  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
@@ -465,7 +489,7 @@ namespace jsonifier_internal {
 			memchar<'"'>(newPtr, static_cast<size_t>(end - (iter)));
 			size_t length		   = static_cast<size_t>(newPtr - (iter + 1));
 			length				   = uniqueIndex > length ? length : uniqueIndex;
-			const auto hash		   = hasher.hashKeyRt(iter + 1, length);
+			const auto hash		   = hashData.hasher.hashKeyRt(iter + 1, length);
 			const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
 			const auto finalIndex  = (tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
 										  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
