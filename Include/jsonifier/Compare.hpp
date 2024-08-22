@@ -39,133 +39,130 @@ namespace jsonifier_internal {
 		return 0x0101010101010101ull * repeat;
 	}
 
-	template<auto value, typename char_type> JSONIFIER_ALWAYS_INLINE void memchar(const char_type*& data, size_t lengthNew) noexcept {
+	template<auto value, typename char_type> JSONIFIER_ALWAYS_INLINE const char_type* memchar(const char_type* data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
-			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value				 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)), chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
-				if (mask != 0) {
+				if (mask != 0) [[unlikely]] {
 					data += tzcnt(mask);
-					return;
-				};
+					return data;
+				}
 				lengthNew -= vectorSize;
 				data += vectorSize;
 			}
 		}
 #endif
 
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) 
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
-			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value				 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)), chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
-				if (mask != 0) {
+				if (mask != 0) [[unlikely]] {
 					data += tzcnt(mask);
-					return;
-				};
+					return data;
+				}
 				lengthNew -= vectorSize;
 				data += vectorSize;
 			}
 		}
 #endif
 
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON) 
 		{
 			using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 			static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-			simd_type search_value{ simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)) }, chunk;
+			simd_type search_value				 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value)), chunk;
 			while (lengthNew >= vectorSize) {
 				chunk	  = simd_internal::gatherValuesU<simd_type>(data);
 				auto mask = simd_internal::opCmpEq(chunk, search_value);
-				if (mask != 0) {
+				if (mask != 0) [[unlikely]] {
 					data += tzcnt(mask);
-					return;
-				};
+					return data;
+				}
 				lengthNew -= vectorSize;
 				data += vectorSize;
 			}
 		}
 #endif
-		{
-			static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
-			static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
-			static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
-			uint64_t simdValue, lo7, quote, t0, next;
-			while (lengthNew >= 8) {
-				std::memcpy(&simdValue, data, sizeof(uint64_t));
 
-				lo7	  = simdValue & mask64;
-				quote = (lo7 ^ value64) + mask64;
-				t0	  = ~(quote | simdValue);
-				next  = tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
+		static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
+		static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
+		static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
+		uint64_t simdValue, lo7, quote, t0, next;
 
-				if (next != 8) {
-					data += next;
-					return;
-				} else {
-					data += 8;
-					lengthNew -= 8;
-				}
+		while (lengthNew >= 8) {
+			std::memcpy(&simdValue, data, sizeof(uint64_t));
+
+			lo7	  = simdValue & mask64;
+			quote = (lo7 ^ value64) + mask64;
+			t0	  = ~(quote | simdValue);
+			next  = tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
+
+			if (next != 8) [[unlikely]] {
+				data += next;
+				return data;
 			}
+			data += 8;
+			lengthNew -= 8;
 		}
-		{
+
+		if (lengthNew >= 4) {
 			static constexpr uint32_t mask32  = repeatByte<0b01111111, uint32_t>();
 			static constexpr uint32_t value32 = repeatByte<value, uint32_t>();
 			static constexpr uint32_t hiBit	  = repeatByte<0b10000000, uint32_t>();
 			uint32_t simdValue, lo7, quote, t0, next;
-			if (lengthNew >= 4) {
-				std::memcpy(&simdValue, data, sizeof(uint32_t));
+			std::memcpy(&simdValue, data, sizeof(uint32_t));
 
-				lo7	  = simdValue & mask32;
-				quote = (lo7 ^ value32) + mask32;
-				t0	  = ~(quote | simdValue);
-				next  = tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
+			lo7	  = simdValue & mask32;
+			quote = (lo7 ^ value32) + mask32;
+			t0	  = ~(quote | simdValue);
+			next  = tzcnt(static_cast<uint32_t>(t0 & hiBit)) >> 3u;
 
-				if (next != 4) {
-					data += next;
-					return;
-				} else {
-					data += 4;
-					lengthNew -= 4;
-				}
+			if (next != 4) [[unlikely]] {
+				data += next;
+				return data;
 			}
+			data += 4;
+			lengthNew -= 4;
 		}
-		{
+
+		if (lengthNew >= 2) {
 			static constexpr uint16_t mask16  = repeatByte<0b01111111, uint16_t>();
 			static constexpr uint16_t value16 = repeatByte<value, uint16_t>();
 			static constexpr uint16_t hiBit	  = repeatByte<0b10000000, uint16_t>();
 			uint16_t simdValue, lo7, quote, t0, next;
-			if (lengthNew >= 2) {
-				std::memcpy(&simdValue, data, sizeof(uint16_t));
+			std::memcpy(&simdValue, data, sizeof(uint16_t));
 
-				lo7	  = static_cast<uint16_t>(simdValue & mask16);
-				quote = static_cast<uint16_t>((lo7 ^ value16) + mask16);
-				t0	  = static_cast<uint16_t>(~(quote | simdValue));
-				next  = static_cast<uint16_t>(tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u);
+			lo7	  = simdValue & mask16;
+			quote = (lo7 ^ value16) + mask16;
+			t0	  = ~(quote | simdValue);
+			next  = tzcnt(static_cast<uint16_t>(t0 & hiBit)) >> 3u;
 
-				if (next != 2) {
-					data += next;
-					return;
-				} else {
-					data += 2;
-					lengthNew -= 2;
-				}
+			if (next != 2) [[unlikely]] {
+				data += next;
+				return data;
 			}
+			data += 2;
+			lengthNew -= 2;
 		}
 
 		if (lengthNew > 0 && *data == value) {
-			return;
+			++data;
+			return data;
 		}
 
-		data = nullptr;
+		return static_cast<const char_type*>(nullptr);
 	}
+
 
 	template<typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)

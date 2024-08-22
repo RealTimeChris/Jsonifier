@@ -33,9 +33,9 @@ namespace jsonifier_internal {
 
 	template<size_t index, const auto& options, typename value_type, typename iterator>
 	JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type&& value, iterator&& iter, iterator&& end) noexcept {
-		if constexpr (index < std::tuple_size_v<unwrap_t<decltype(finalTupleStaticData<value_type>)>>) {
-			static constexpr auto& ptr		 = std::get<index>(finalTupleStaticData<value_type>).ptr();
-			static constexpr auto& key		 = std::get<index>(finalTupleStaticData<value_type>).view();
+		if constexpr (index < std::tuple_size_v<core_tuple_t<value_type>>) {
+			static constexpr auto& ptr		 = std::get<index>(coreTupleV<value_type>).ptr();
+			static constexpr auto& key		 = std::get<index>(coreTupleV<value_type>).view();
 			static constexpr auto keySize	 = key.size();
 			static constexpr auto keySizeNew = keySize + 2;
 			if (compare<keySize>(key.data(), iter + 1)) [[likely]] {
@@ -67,13 +67,13 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options, typename value_type, typename iterator> JSONIFIER_ALWAYS_INLINE constexpr auto generateFunctionPtrs() {
-		constexpr auto tupleSize = std::tuple_size_v<unwrap_t<decltype(finalTupleStaticData<value_type>)>>;
+		constexpr auto tupleSize = std::tuple_size_v<core_tuple_t<value_type>>;
 		return generateFunctionPtrsImpl<options, value_type, iterator>(std::make_index_sequence<tupleSize>{});
 	}
 
 	template<const auto& options, typename value_type, typename iterator>
 	JSONIFIER_ALWAYS_INLINE bool processAndExecute(value_type&& value, iterator&& iter, iterator&& end) noexcept {
-		static constexpr auto N = std::tuple_size_v<unwrap_t<decltype(finalTupleStaticData<value_type>)>>;
+		static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
 		const auto index		= findIndex<value_type, iterator>(std::forward<iterator>(iter), std::forward<iterator>(end));
 		if (index < N) [[likely]] {
 			static constexpr auto arrayOfPtrs = generateFunctionPtrs<options, value_type, iterator>();
@@ -99,7 +99,7 @@ namespace jsonifier_internal {
 				}
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_Start>(
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Object_Start>(
 					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				skipToNextValue<options>(iter, end);
 				return;
