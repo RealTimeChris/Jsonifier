@@ -30,8 +30,6 @@ namespace jsonifier_internal {
 	template<const prettify_options_internal& options, typename derived_type> struct prettify_impl : public writer<options> {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
-			jsonifier::vector<json_structural_type> state{};
-			state.resize(64);
 
 			while (*iter) {
 				for (uint64_t x = 0; x < 8; ++x) {
@@ -52,7 +50,7 @@ namespace jsonifier_internal {
 						if constexpr (options.optionsReal.newLinesInArray) {
 							writer<options>::template writeNewLine<false>(out, prettifyPair);
 						} else {
-							if (state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
+							if (prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
 								writer<options>::template writeNewLine<false>(out, prettifyPair);
 							} else {
 								writer<options>::template writeCharacter<options.optionsReal.indentChar, false>(out, prettifyPair.index);
@@ -77,10 +75,10 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'[', false>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if (size_t(prettifyPair.indent) >= state.size()) [[unlikely]] {
-							state.resize(state.size() * 2);
+						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
+							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
-						state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
+						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.optionsReal.newLinesInArray) {
 							if (**iter != ']') [[unlikely]] {
 								writer<options>::template writeNewLine<false>(out, prettifyPair);
@@ -125,10 +123,10 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'{', false>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if (size_t(prettifyPair.indent) >= state.size()) [[unlikely]] {
-							state.resize(state.size() * 2);
+						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
+							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
-						state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;
+						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
 							writer<options>::template writeNewLine<false>(out, prettifyPair);
 						}

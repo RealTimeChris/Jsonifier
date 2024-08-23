@@ -126,13 +126,16 @@ namespace jsonifier_internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 		struct prettify_pair {
+			jsonifier::vector<json_structural_type> state{};
 			size_t indent{};
 			size_t index{};
 		} prettifyPair;
 		const char* rootIter{};
 		const char* endIter{};
 
-		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
+			prettifyPair.state.resize(64);
+		};
 
 		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);

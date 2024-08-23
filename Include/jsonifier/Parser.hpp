@@ -72,9 +72,9 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
 			optionsReal.parserPtr = this;
+			optionsReal.rootIter  = in.data();
 			auto readIter		  = reinterpret_cast<const char*>(in.data());
 			auto endIter		  = reinterpret_cast<const char*>(in.data() + in.size());
-			optionsReal.rootIter  = readIter;
 			if (!readIter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
@@ -111,7 +111,7 @@ namespace jsonifier_internal {
 			unwrap_t<value_type> object{};
 			auto readIter = reinterpret_cast<const char*>(in.data());
 			auto endIter  = reinterpret_cast<const char*>(in.data() + in.size());
-			if (!readIter || (*readIter != '{' && *readIter != '[')) {
+			if (!readIter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
 					endIter - optionsReal.rootIter, optionsReal.rootIter));

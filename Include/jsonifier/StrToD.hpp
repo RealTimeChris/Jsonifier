@@ -2229,7 +2229,7 @@ namespace jsonifier_fast_float {
  * strings a null-free and fixed.
  **/
 		template<typename T, typename UC> JSONIFIER_ALWAYS_INLINE from_chars_result_t<UC> constexpr parse_infnan(UC const* first, UC const* last, T& value) noexcept {
-			from_chars_result_t<UC> answer{};
+			from_chars_result_t<UC> answer;
 			answer.ptr	   = first;
 			answer.ec	   = std::errc();// be optimistic
 			bool minusSign = false;

@@ -247,10 +247,5 @@ namespace jsonifier_internal {
 			}
 			return seed64;
 		}
-
-	  protected:
-		mutable size_t returnValue64{};
-		mutable uint32_t returnValue32{};
-		mutable uint16_t returnValue16{};
 	};
 }
