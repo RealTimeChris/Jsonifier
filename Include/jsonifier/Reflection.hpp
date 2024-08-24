@@ -37,29 +37,73 @@ namespace jsonifier_internal {
 
 	using string_view = jsonifier::string_view_base<char>;
 
-	template<uint64_t sizeVal> struct string_literal {
-		static constexpr auto length{ sizeVal > 0 ? sizeVal - 1 : 0 };
+	template<size_t sizeVal> struct string_literal {
+		using value_type	  = char;
+		using const_reference = const value_type&;
+		using reference		  = value_type&;
+		using const_pointer	  = const value_type*;
+		using pointer		  = value_type*;
+		using size_type		  = size_t;
+
+		static constexpr size_type length{ sizeVal > 0 ? sizeVal - 1 : 0 };
 
 		JSONIFIER_ALWAYS_INLINE constexpr string_literal() noexcept = default;
 
-		JSONIFIER_ALWAYS_INLINE constexpr string_literal(const char (&str)[sizeVal]) noexcept {
-			std::copy(str, str + sizeVal, values);
+		JSONIFIER_ALWAYS_INLINE constexpr string_literal(const value_type (&str)[sizeVal]) {
+			std::copy(str, str + length, values);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr uint64_t size() const noexcept {
-			return length;
-		}
-
-		JSONIFIER_ALWAYS_INLINE constexpr const char* data() const noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const {
 			return values;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view view() const noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr pointer data() {
+			return values;
+		}
+
+		template<size_t sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+(const string_literal<sizeNew>& str) {
+			string_literal<sizeNew + sizeVal + 1> newLiteral{};
+			std::copy(values, values + sizeVal, newLiteral.data());
+			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + sizeVal);
+			return newLiteral;
+		}
+
+		template<size_t sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+(const value_type (&str)[sizeNew]) {
+			string_literal<sizeNew + sizeVal + 1> newLiteral{};
+			std::copy(values, values + sizeVal, newLiteral.data());
+			std::copy(str, str + sizeNew, newLiteral.data() + sizeVal);
+			return newLiteral;
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) {
+			return values[index];
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr const_reference operator[](size_type index) const {
+			return values[index];
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const {
+			return length;
+		}
+
+		JSONIFIER_ALWAYS_INLINE operator jsonifier::string() const {
 			return { values, length };
 		}
 
-		char values[sizeVal]{};
+		JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view view() const {
+			return { values, length };
+		}
+
+		value_type values[sizeVal]{};
 	};
+
+	template<size_t N> JSONIFIER_ALWAYS_INLINE constexpr auto stringLiteralFromView(const jsonifier::string_view& str) {
+		string_literal<N + 1> stringLiteral{};
+		std::copy_n(str.data(), str.size(), stringLiteral.values);
+		stringLiteral[N] = '\0';
+		return stringLiteral;
+	}
 
 	template<typename member_type, typename class_type> struct member_pointer {
 		member_type class_type::*ptr{};

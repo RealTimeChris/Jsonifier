@@ -5,7 +5,7 @@ include(GetCommitHash.cmake)
 
 FetchContent_Declare(
   glaze
-  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+  GIT_REPOSITORY https://github.com/stephenberry/glaze
   GIT_TAG main
   GIT_SHALLOW TRUE
 )

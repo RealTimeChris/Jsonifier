@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 		}
 
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) {
+		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) {
 			if constexpr (currentIndex < maxIndex) {
 				static constexpr auto& subTuple{ std::get<currentIndex>(coreTupleV<value_type>) };
 				static constexpr auto key = subTuple.view();
@@ -298,9 +298,7 @@ namespace jsonifier_internal {
 					writer<options>::writeCharacters(std::forward<buffer_type>(buffer), serializePair.index, R"(\\)");
 					break;
 				}
-					[[likely]] default : {
-						writer<options>::writeCharacter(std::forward<buffer_type>(buffer), serializePair.index, std::forward<value_type>(value));
-					}
+				[[likely]] default: { writer<options>::writeCharacter(std::forward<buffer_type>(buffer), serializePair.index, std::forward<value_type>(value)); }
 			}
 			writer<options>::template writeCharacter<'"'>(std::forward<buffer_type>(buffer), serializePair.index);
 		}

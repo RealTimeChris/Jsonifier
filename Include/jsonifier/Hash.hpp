@@ -136,19 +136,22 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char* value, size_t length) const {
 			size_t seed64{ seed };
 			while (length >= 8) {
-				seed64 ^= *reinterpret_cast<const uint64_t*>(value);
+				std::memcpy(&returnValue64, value, 8);
+				seed64 ^= returnValue64;
 				value += 8;
 				length -= 8;
 			}
 
 			if (length >= 4) {
-				seed64 ^= *reinterpret_cast<const uint32_t*>(value);
+				std::memcpy(&returnValue32, value, 4);
+				seed64 ^= returnValue32;
 				value += 4;
 				length -= 4;
 			}
 
 			if (length >= 2) {
-				seed64 ^= *reinterpret_cast<const uint16_t*>(value);
+				std::memcpy(&returnValue16, value, 2);
+				seed64 ^= returnValue16;
 				value += 2;
 				length -= 2;
 			}
@@ -164,20 +167,23 @@ namespace jsonifier_internal {
 			constexpr size_t lengthNewer01{ length % 8 };
 			if constexpr (length >= 8) {
 				for (size_t lengthNew = length; lengthNew >= 8; lengthNew -= 8) {
-					seed64 ^= *reinterpret_cast<const uint64_t*>(value);
+					std::memcpy(&returnValue64, value, 8);
+					seed64 ^= returnValue64;
 					value += 8;
 				}
 			}
 
 			constexpr size_t lengthNewer02{ lengthNewer01 >= 4 ? lengthNewer01 - 4 : lengthNewer01 };
 			if constexpr (lengthNewer01 >= 4) {
-				seed64 ^= *reinterpret_cast<const uint32_t*>(value);
+				std::memcpy(&returnValue32, value, 4);
+				seed64 ^= returnValue32;
 				value += 4;
 			}
 
 			constexpr size_t lengthNewer03{ lengthNewer02 >= 2 ? lengthNewer02 - 2 : lengthNewer02 };
 			if constexpr (lengthNewer02 >= 2) {
-				seed64 ^= *reinterpret_cast<const uint16_t*>(value);
+				std::memcpy(&returnValue16, value, 2);
+				seed64 ^= returnValue16;
 				value += 2;
 			}
 
@@ -247,5 +253,12 @@ namespace jsonifier_internal {
 			}
 			return seed64;
 		}
+
+	  protected:
+		mutable uint64_t returnValue64{};
+		mutable uint32_t returnValue32{};
+		mutable uint16_t returnValue16{};
 	};
+
+
 }

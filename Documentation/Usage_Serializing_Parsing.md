@@ -120,7 +120,7 @@ jsonifier::string buffer{ json_data };
 
 // Parse JSON data and obtain the parsed object directly.
 jsonifier::parse_options options;
-options.minified = true; // Set parse options if needed.
+options.optionsReal.minified = true; // Set parse options if needed.
 obj_t parsedObject = jsonifier::parseJson<obj_t, options>(buffer);
 ```
 

@@ -121,7 +121,7 @@ namespace jsonifier_internal {
 
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
-		if constexpr (currentIndex < std::variant_size_v<jsonifier_internal::unwrap_t<variant_type>>) {
+		if constexpr (currentIndex < std::variant_size_v<unwrap_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
 			if (variantNew.index() == currentIndex) [[unlikely]] {
 				function(std::get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
