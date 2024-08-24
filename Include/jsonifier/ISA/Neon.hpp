@@ -31,7 +31,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		static constexpr uint8x16_t mask{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F };
+		uint8x16_t mask{ vdupq_n_u8(0x0f) };
 		return vqtbl1q_u8(value, vandq_u8(other, mask));
 	}
 
@@ -92,7 +92,8 @@ namespace simd_internal {
 	#define opNot(x) vmvnq_u8(x)
 
 	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_type&& value, bool valueNew) {
-		static constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+		JSONIFIER_ALIGN uint8_t values[bytesPerStep]{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+		uint8x16_t mask{ vld1q_u8(values) };
 		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
 	}
 

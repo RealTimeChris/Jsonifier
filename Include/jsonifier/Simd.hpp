@@ -136,13 +136,14 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void generateJsonIndices() noexcept {
+			simd_internal::simd_int_t_holder rawStructurals{};
 			jsonifier_simd_int_t nextIsEscaped{};
 			jsonifier_simd_int_t escaped{};
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals<false>(stringBlockReader.fullBlock(), escaped, nextIsEscaped);
+				generateStructurals<false>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
 			}
 			if (stringBlockReader.getRemainder(block) > 0) [[likely]] {
-				generateStructurals<true>(block, escaped, nextIsEscaped);
+				generateStructurals<true>(block, escaped, nextIsEscaped, rawStructurals);
 			}
 		}
 
@@ -168,15 +169,13 @@ namespace jsonifier_internal {
 		}
 
 		template<size_type currentIndex = 0> void prefetchStringValues(string_view_ptr values) noexcept {
-			if constexpr (currentIndex < 4) {
-				jsonifierPrefetchImpl(values + (64 * currentIndex));
+			if constexpr (currentIndex < sixtyFourBitsPerStep) {
+				jsonifierPrefetchImpl(values + (currentIndex * 64));
 				prefetchStringValues<currentIndex + 1>(values);
 			}
 		}
 
-		template<bool collectAligned>
-		JSONIFIER_ALWAYS_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
-			jsonifier_simd_int_t newPtr[stridesPerStep];
+		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void collectStringValues(string_view_ptr values, jsonifier_simd_int_t (&newPtr)[stridesPerStep]) noexcept {
 			if constexpr (collectAligned) {
 				newPtr[0] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 0));
 				newPtr[1] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 1));
@@ -196,12 +195,18 @@ namespace jsonifier_internal {
 				newPtr[6] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 6));
 				newPtr[7] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 7));
 			}
-			prefetchStringValues(values + (bytesPerStep * 7));
+			prefetchStringValues(values + bitsPerStep);
+		}
+
+		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
+			jsonifier_simd_int_t newPtr[stridesPerStep];
+			collectStringValues<collectAligned>(values, newPtr);
 			return simd_internal::collectIndices(newPtr);
 		}
 
-		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) {
-			simd_internal::simd_int_t_holder rawStructurals = getRawIndices<collectAligned>(values);
+		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+			simd_internal::simd_int_t_holder& rawStructurals) {
+			rawStructurals = getRawIndices<collectAligned>(values);
 			collectStructurals(escaped, nextIsEscaped, rawStructurals);
 			simd_internal::store(rawStructurals.op, newBits);
 			addTapeValues();

@@ -30,12 +30,12 @@ namespace simd_internal {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return _mm_shuffle_epi8(value, other);
 	}
 
@@ -103,12 +103,12 @@ namespace simd_internal {
 	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return _mm256_shuffle_epi8(value, other);
 	}
 
@@ -176,12 +176,12 @@ namespace simd_internal {
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other)));
 	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return _mm512_shuffle_epi8(value, other);
 	}
 

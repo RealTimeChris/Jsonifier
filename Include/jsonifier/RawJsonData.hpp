@@ -208,7 +208,7 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr parse_options_internal<jsonifier::jsonifier_core<true>> options{};
+	static constexpr parse_options_internal<jsonifier::jsonifier_core<true>> optionsNew{};
 
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) noexcept {
@@ -231,7 +231,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				skipToNextValue<options>(newIter02, endIter01);
+				derailleur<optionsNew>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -266,18 +266,18 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			newIter01	  = skipWs(newIter01);
-			auto newCount = countValueElements<options, '{', '}'>(newIter02, endIter01);
+			newIter01	  = derailleur<optionsNew>::skipWs(newIter01);
+			auto newCount = derailleur<optionsNew>::countValueElements<'{', '}'>(newIter02, endIter01);
 			collectCharacter('{');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				newIter01	= skipWs(newIter01);
+				newIter01	= derailleur<optionsNew>::skipWs(newIter01);
 				auto newKey = collectKey();
-				newIter01	= skipWs(newIter01);
+				newIter01	= derailleur<optionsNew>::skipWs(newIter01);
 				collectCharacter(0x3A);
-				newIter01 = skipWs(newIter01);
+				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
-				newIter01		= skipWs(newIter01);
+				newIter01		= derailleur<optionsNew>::skipWs(newIter01);
 				collectCharacter(',');
 			}
 		}
@@ -305,7 +305,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				skipToNextValue<options>(newIter02, endIter01);
+				derailleur<optionsNew>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -317,14 +317,14 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			newIter01	  = skipWs(newIter01);
-			auto newCount = countValueElements<options, '[', ']'>(newIter02, endIter01);
+			newIter01	  = derailleur<optionsNew>::skipWs(newIter01);
+			auto newCount = derailleur<optionsNew>::countValueElements<'[', ']'>(newIter02, endIter01);
 			collectCharacter('[');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				newIter01 = skipWs(newIter01);
+				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results.emplace_back(collectValue(endValue));
-				newIter01 = skipWs(newIter01);
+				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
 				collectCharacter(',');
 			}
 		}
