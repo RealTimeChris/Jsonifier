@@ -39,6 +39,13 @@ namespace jsonifier_internal {
 	}
 
 #define JSONIFIER_SKIP_WS_PRESET(amountToSkip) \
+	if (iter + amountToSkip >= end) { \
+		static constexpr auto sourceLocation{ std::source_location::current() }; \
+		options.parserPtr->getErrors().emplace_back( \
+			error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(iter - options.rootIter, end - options.rootIter, options.rootIter)); \
+		derailleur<options>::skipToNextValue(iter, end); \
+		return; \
+	} \
 	iter += amountToSkip; \
 	if constexpr (!options.optionsReal.minified) { \
 		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
@@ -128,23 +135,28 @@ namespace jsonifier_internal {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t codePointToUtf8(uint32_t codePoint, iterator c) noexcept {
-		static constexpr uint8_t utf8Table[4][4] = { { 0x00 }, { 0xC0, 0x80 }, { 0xE0, 0x80, 0x80 }, { 0xF0, 0x80, 0x80, 0x80 } };
-
-		if (codePoint <= 0x7F) {
-			c[0] = static_cast<char>(codePoint);
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, iterator c) {
+		if (cp <= 0x7F) {
+			c[0] = uint8_t(cp);
 			return 1;
 		}
-		uint32_t leadingZeros = simd_internal::lzcnt(codePoint);
-		uint32_t numBytes	  = (31u - leadingZeros) / 5u + 1u;
-		uint32_t highBitsMask = (1u << (6u * numBytes)) - 1u;
-		uint32_t utf8HighBits = simd_internal::pdep(codePoint, highBitsMask);
-		std::memcpy(c, utf8Table[numBytes - 1], numBytes);
-		for (uint32_t i = 0; i < numBytes; ++i) {
-			c[i] |= uint8_t(utf8HighBits & 0xFF);
-			utf8HighBits >>= 8;
+		if (cp <= 0x7FF) {
+			c[0] = uint8_t((cp >> 6) + 192);
+			c[1] = uint8_t((cp & 63) + 128);
+			return 2;
+		} else if (cp <= 0xFFFF) {
+			c[0] = uint8_t((cp >> 12) + 224);
+			c[1] = uint8_t(((cp >> 6) & 63) + 128);
+			c[2] = uint8_t((cp & 63) + 128);
+			return 3;
+		} else if (cp <= 0x10FFFF) {
+			c[0] = uint8_t((cp >> 18) + 240);
+			c[1] = uint8_t(((cp >> 12) & 63) + 128);
+			c[2] = uint8_t(((cp >> 6) & 63) + 128);
+			c[3] = uint8_t((cp & 63) + 128);
+			return 4;
 		}
-		return numBytes;
+		return 0;
 	}
 
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
@@ -175,11 +187,6 @@ namespace jsonifier_internal {
 		uint32_t offset = codePointToUtf8(codePoint, dstPtr);
 		dstPtr += offset;
 		return offset > 0;
-	}
-
-	template<typename return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type isLess32(return_type value) {
-		constexpr return_type newBytes{ repeatByte<0b11100000u, return_type>() };
-		return hasZero(value & newBytes);
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2, simd_type& simdValue,

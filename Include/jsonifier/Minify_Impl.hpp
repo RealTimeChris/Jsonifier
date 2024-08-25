@@ -37,8 +37,8 @@ namespace jsonifier_internal {
 			++iter;
 
 			while (*iter) {
-				for (uint64_t x = 0; x < 8; ++x) {
-					jsonifierPrefetchImpl(*iter + bitsPerStep + (bytesPerStep * x));
+				for (uint64_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+					jsonifierPrefetchImpl(*iter + bitsPerStep + (64 * x));
 				}
 
 				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {

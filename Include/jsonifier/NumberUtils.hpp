@@ -60,8 +60,8 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if (string.size() > 0) [[likely]] {
-			auto currentIter = reinterpret_cast<const char*>(string.data());
-			auto endIter	 = reinterpret_cast<const char*>(string.data()) + string.size();
+			auto currentIter = static_cast<const char*>(string.data());
+			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
 			jsonifier_fast_float::fromCharsAdvanced(currentIter, endIter, newValue);
 		}
 		return newValue;

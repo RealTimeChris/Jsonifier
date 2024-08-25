@@ -102,26 +102,27 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
+		{
+			static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
+			static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
+			static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
+			uint64_t simdValue, lo7, quote, t0, next;
 
-		static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
-		static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
-		static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();
-		uint64_t simdValue, lo7, quote, t0, next;
+			while (lengthNew >= 8) {
+				std::memcpy(&simdValue, data, 8);
 
-		while (lengthNew >= 8) {
-			std::memcpy(&simdValue, data, 8);
+				lo7	  = simdValue & mask64;
+				quote = (lo7 ^ value64) + mask64;
+				t0	  = ~(quote | simdValue);
+				next  = simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
 
-			lo7	  = simdValue & mask64;
-			quote = (lo7 ^ value64) + mask64;
-			t0	  = ~(quote | simdValue);
-			next  = simd_internal::tzcnt(static_cast<uint64_t>(t0 & hiBit)) >> 3u;
-
-			if (next != 8) [[unlikely]] {
-				data += next;
-				return data;
+				if (next != 8) [[unlikely]] {
+					data += next;
+					return data;
+				}
+				data += 8;
+				lengthNew -= 8;
 			}
-			data += 8;
-			lengthNew -= 8;
 		}
 
 		if (lengthNew >= 4) {

@@ -59,6 +59,7 @@ namespace jsonifier_internal {
 		Invalid_Bool_Value				 = 13,
 		Invalid_String_Characters		 = 14,
 		No_Input						 = 15,
+		Unexpected_String_End			 = 16,
 	};
 
 	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, jsonifier::string_view>> errorMap{
@@ -66,8 +67,8 @@ namespace jsonifier_internal {
 			std::unordered_map<uint64_t, jsonifier::string_view>{
 				{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Missing_Object_End" }, { 3ull, "Missing_Array_Start" }, { 4ull, "Missing_Array_End" },
 					{ 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Comma_Or_Object_End" }, { 8ull, "Missing_Comma_Or_Array_End" },
-					{ 9ull, "Missing_Closing_Bracket_Or_Brace" }, { 10ull, "Missing_Comma" }, { 10ull, "Invalid_Number_Value" }, { 11ull, "Invalid_Null_Value" },
-					{ 12ull, "Invalid_Bool_Value" }, { 13ull, "Invalid_String_Characters" }, { 14ull, "No_Input" } } } },
+					{ 9ull, "Missing_Closing_Bracket_Or_Brace" }, { 10ull, "Missing_Comma" }, { 11ull, "Invalid_Number_Value" }, { 12ull, "Invalid_Null_Value" },
+					{ 13ull, "Invalid_Bool_Value" }, { 14ull, "Invalid_String_Characters" }, { 15ull, "No_Input" }, { 16ull, "Unexpected_String_end" } } } },
 		{ error_classes::Serializing, std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" } } } },
 		{ error_classes::Minifying,
 			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },
