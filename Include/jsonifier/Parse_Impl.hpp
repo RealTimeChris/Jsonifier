@@ -100,7 +100,7 @@ namespace jsonifier_internal {
 					JSONIFIER_SKIP_WS();
 				}
 
-				static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+				static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 				if constexpr (memberCount > 0) {
 					parseObjects(std::forward<value_type_new>(value), iter, end, wsSize);
 				} else {
@@ -177,9 +177,9 @@ template<const auto& options, jsonifier::concepts::jsonifier_scalar_value_t valu
 		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
 			jsonifierPrefetchImpl(iter + (x * 64));
 		}
-		static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type>> };
+		static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
 		if constexpr (size > 0) {
-			static constexpr auto newPtr = std::get<0>(jsonifier::concepts::coreV<value_type>);
+			static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
 			auto& newMember				 = getMember<newPtr>(value);
 			using member_type			 = unwrap_t<decltype(newMember)>;
 			parse_impl<options, member_type, iterator>::impl(newMember, iter, end);
@@ -264,6 +264,9 @@ template<const auto& options, jsonifier::concepts::map_t value_type, typename it
 
 	template<bool first, jsonifier::concepts::map_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end) {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		if (*iter != '}') [[likely]] {
 			if constexpr (!first) {
 				if (*iter == ',') [[likely]] {
@@ -409,6 +412,9 @@ template<const auto& options, jsonifier::concepts::vector_t value_type, typename
 template<const auto& options, jsonifier::concepts::raw_array_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::raw_array_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		if (*iter == '[') [[likely]] {
 			++iter;
@@ -455,6 +461,9 @@ template<const auto& options, jsonifier::concepts::raw_array_t value_type, typen
 template<const auto& options, jsonifier::concepts::string_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::string_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		parseString<options>(std::forward<value_type_new>(value), iter, end);
 		JSONIFIER_SKIP_WS();
@@ -464,6 +473,9 @@ template<const auto& options, jsonifier::concepts::string_t value_type, typename
 template<const auto& options, jsonifier::concepts::char_type value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::char_type value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		value = static_cast<value_type>(*(static_cast<const char*>(iter) + 1));
 		++iter;
@@ -474,6 +486,9 @@ template<const auto& options, jsonifier::concepts::char_type value_type, typenam
 template<const auto& options, jsonifier::concepts::raw_json_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::raw_json_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		auto newPtr = static_cast<const char*>(iter);
 		derailleur<options>::skipToNextValue(iter, end);
 		int64_t newSize = static_cast<const char*>(iter) - newPtr;
@@ -490,6 +505,9 @@ template<const auto& options, jsonifier::concepts::raw_json_t value_type, typena
 template<const auto& options, jsonifier::concepts::unique_ptr_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::unique_ptr_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		if (!value) {
 			value = std::make_unique<unwrap_t<value_type>>();
 		}
@@ -500,6 +518,9 @@ template<const auto& options, jsonifier::concepts::unique_ptr_t value_type, type
 template<const auto& options, jsonifier::concepts::always_null_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::always_null_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		if (parseNull(iter)) [[likely]] {
 			JSONIFIER_SKIP_WS();
@@ -516,6 +537,9 @@ template<const auto& options, jsonifier::concepts::always_null_t value_type, typ
 template<const auto& options, jsonifier::concepts::enum_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::enum_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		size_t newValue{};
 		JSONIFIER_SKIP_WS();
 		if (parseNumber(newValue, iter, end)) [[likely]] {
@@ -534,6 +558,9 @@ template<const auto& options, jsonifier::concepts::enum_t value_type, typename i
 template<const auto& options, jsonifier::concepts::num_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::num_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		if (parseNumber(std::forward<value_type_new>(value), iter, end)) [[likely]] {
 			JSONIFIER_SKIP_WS();
@@ -550,6 +577,9 @@ template<const auto& options, jsonifier::concepts::num_t value_type, typename it
 template<const auto& options, jsonifier::concepts::bool_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 	template<jsonifier::concepts::bool_t value_type_new, typename iterator_new>
 	JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+		for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+			jsonifierPrefetchImpl(iter + (x * 64));
+		}
 		JSONIFIER_SKIP_WS();
 		if (parseBool(value, iter)) [[likely]] {
 			JSONIFIER_SKIP_WS();

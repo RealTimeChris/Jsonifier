@@ -168,18 +168,21 @@ namespace jsonifier_internal {
 
 	JSONIFIER_ALWAYS_INLINE constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, const key_stats_t& keyStats, size_t startingIndex = 0) noexcept {
 		constexpr size_t alphabetSize = 256;
-
+		jsonifier::string_view key{};
 		for (size_t index = startingIndex; index < keyStats.minLength; ++index) {
-			bool allDifferent = true;
 			std::array<bool, alphabetSize> seen{};
+			bool allDifferent = true;
 
 			for (size_t x = 0; x < tupleRefs.count; ++x) {
-				char c = tupleRefs.rootPtr[x].key[index % tupleRefs.rootPtr[x].key.size()];
-				if (seen[static_cast<unsigned char>(c)]) {
+				key				 = tupleRefs.rootPtr[x].key;
+				const char c	 = key[index % key.size()];
+				size_t charIndex = static_cast<const unsigned char>(c);
+
+				if (seen[charIndex]) {
 					allDifferent = false;
 					break;
 				}
-				seen[static_cast<unsigned char>(c)] = true;
+				seen[charIndex] = true;
 			}
 
 			if (allDifferent) {

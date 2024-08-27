@@ -82,9 +82,9 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
 		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
-			static constexpr auto size{ std::tuple_size_v<jsonifier::concepts::core_t<value_type_new>> };
+			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type_new>> };
 			if constexpr (size > 0) {
-				static constexpr auto& newPtr = std::get<0>(jsonifier::concepts::coreV<value_type_new>);
+				static constexpr auto& newPtr = std::get<0>(coreTupleV<value_type_new>);
 				auto& newMember				  = getMember<newPtr>(value);
 				using member_type			  = unwrap_t<decltype(newMember)>;
 				serialize_impl<options, derived_type, member_type>::impl(newMember, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
