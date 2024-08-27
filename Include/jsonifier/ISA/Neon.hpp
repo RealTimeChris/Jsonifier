@@ -29,9 +29,10 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
+	static uint8x16_t mask{ vdupq_n_u8(0x0f) };
+
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		uint8x16_t mask{ vdupq_n_u8(0x0f) };
 		return vqtbl1q_u8(value, vandq_u8(other, mask));
 	}
 
@@ -66,10 +67,11 @@ namespace simd_internal {
 	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
 		vst1q_u8(storageLocation, value);
 	}
+	
+	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> uint16_t toBitMask(simd_int_t01&& value) noexcept {
-		static constexpr uint8x16_t bit_mask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
-		auto minput	   = value & bit_mask;
+		auto minput	   = value & bitMask;
 		uint8x16_t tmp = vpaddq_u8(minput, minput);
 		tmp			   = vpaddq_u8(tmp, tmp);
 		tmp			   = vpaddq_u8(tmp, tmp);
@@ -93,8 +95,8 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_type&& value, bool valueNew) {
 		JSONIFIER_ALIGN uint8_t values[bytesPerStep]{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-		uint8x16_t mask{ vld1q_u8(values) };
-		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
+		uint8x16_t mask02{ vld1q_u8(values) };
+		return valueNew ? vorrq_u8(value, mask02) : vbicq_u8(value, mask02);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_type&& value) {

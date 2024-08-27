@@ -33,7 +33,7 @@
 namespace jsonifier_internal {
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::jsonifier_value_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		using value_type = unwrap_t<value_type_new>;
 		template<jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
@@ -46,8 +46,8 @@ namespace jsonifier_internal {
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) {
 			if constexpr (currentIndex < maxIndex) {
-				static constexpr auto& subTuple{ std::get<currentIndex>(coreTupleV<value_type>) };
-				static constexpr auto key = subTuple.view();
+				static constexpr auto& subTuple = std::get<currentIndex>(coreTupleV<value_type>);
+				static constexpr auto key		= subTuple.view();
 				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 					auto& keys = value.jsonifierExcludedKeys;
 					if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) [[likely]] {
@@ -56,8 +56,17 @@ namespace jsonifier_internal {
 					}
 				}
 				static constexpr auto& memberPtr = subTuple.ptr();
-				static constexpr auto quotedKey	 = joinV < chars<"\"">, key, options.optionsReal.prettify ? chars<"\": "> : chars < "\":" >> ;
-				writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
+				if constexpr (options.optionsReal.prettify) {
+					static constexpr string_literal literal{ "\": " };
+					static constexpr auto quotedKey = combineLiterals<string_literal{ "\"" }, stringLiteralFromView<key.size()>(key), literal>();
+					writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
+
+				} else {
+					static constexpr string_literal literal{ "\":" };
+					static constexpr auto quotedKey = combineLiterals<string_literal{ "\"" }, stringLiteralFromView<key.size()>(key), literal>();
+					writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
+				}
+				
 				using member_type = unwrap_t<decltype(value.*memberPtr)>;
 				serialize_impl<options, derived_type, member_type>::impl(value.*memberPtr, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 				if constexpr (currentIndex < maxIndex - 1) {
@@ -79,7 +88,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::jsonifier_scalar_value_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type_new>> };
@@ -93,7 +102,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::map_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			using member_type = unwrap_t<decltype(value[std::declval<typename unwrap_t<value_type_new>::key_type>()])>;
@@ -130,7 +139,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::variant_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::variant_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			static constexpr auto lambda = [&](auto&& valueNew, auto&& valueNewer, auto&& bufferNew, auto&& indexNew) {
@@ -142,7 +151,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::optional_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if (value) [[likely]] {
@@ -156,7 +165,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::array_tuple_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			static constexpr auto size = std::tuple_size_v<unwrap_t<value_type>>;
@@ -178,7 +187,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::vector_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			const auto maxIndex = value.size();
@@ -202,7 +211,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::pointer_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			using member_type = unwrap_t<decltype(*value)>;
@@ -212,7 +221,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::raw_array_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			static constexpr auto maxIndex = value.size();
@@ -237,7 +246,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::raw_json_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			using member_type = jsonifier::string;
@@ -247,7 +256,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::string_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			const auto valueSize  = value.size();
@@ -265,7 +274,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::char_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			writer<options>::template writeCharacter<'"'>(std::forward<buffer_type>(buffer), serializePair.index);
@@ -305,7 +314,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::unique_ptr_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			using member_type = unwrap_t<decltype(*value)>;
@@ -315,7 +324,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::enum_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			const auto k		  = serializePair.index + 32;
@@ -329,7 +338,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::always_null_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&&, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			writer<options>::template writeCharacters<"null">(std::forward<buffer_type>(buffer), serializePair.index);
@@ -337,7 +346,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::bool_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if (value) [[likely]] {
@@ -349,7 +358,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const serialize_options_internal& options, typename derived_type, jsonifier::concepts::num_t value_type_new>
-	struct serialize_impl<options, derived_type, value_type_new> : public writer<options> {
+	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			const auto bufferSize = buffer.size();

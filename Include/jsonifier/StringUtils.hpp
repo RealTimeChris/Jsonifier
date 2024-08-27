@@ -41,8 +41,8 @@ namespace jsonifier_internal {
 #define JSONIFIER_SKIP_WS_PRESET(amountToSkip) \
 	if (iter + amountToSkip >= end) { \
 		static constexpr auto sourceLocation{ std::source_location::current() }; \
-		options.parserPtr->getErrors().emplace_back( \
-			error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(iter - options.rootIter, end - options.rootIter, options.rootIter)); \
+		options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(iter - options.rootIter, \
+			end - options.rootIter, options.rootIter)); \
 		derailleur<options>::skipToNextValue(iter, end); \
 		return; \
 	} \

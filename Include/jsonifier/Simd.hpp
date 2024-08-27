@@ -20,6 +20,7 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
+/// Credit to simdjson for the core of the below algorithm: https://github.com/simdjson/simdjson
 /// Feb 3, 2023
 #pragma once
 

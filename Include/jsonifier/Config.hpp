@@ -29,6 +29,8 @@
 	#define JSONIFIER_CLANG 1
 #elif defined(_MSC_VER)
 	#define JSONIFIER_MSVC 1
+	#pragma warning(disable : 4820)
+	#pragma warning(disable : 4324)
 #elif defined(__GNUC__) && !defined(__clang__)
 	#define JSONIFIER_GNUCXX 1
 #endif

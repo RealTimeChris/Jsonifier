@@ -366,28 +366,4 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<string_literal Str> struct chars_impl {
-		static constexpr jsonifier::string_view value{ Str.values, Str.size() };
-	};
-
-	template<string_literal Str> constexpr jsonifier::string_view chars = chars_impl<Str>::value;
-
-	template<const jsonifier::string_view&... Strs> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view join() noexcept {
-		constexpr auto joined_arr = []() {
-			constexpr uint64_t len = (Strs.size() + ... + 0);
-			std::array<char, len + 1> arr{};
-			auto append = [i = 0ull, &arr](auto& s) mutable {
-				for (char c: s)
-					arr[i++] = c;
-			};
-			(append(Strs), ...);
-			arr[len] = 0;
-			return arr;
-		}();
-		constexpr auto& static_arr = make_static<joined_arr>::value;
-		return { static_arr.data(), static_arr.size() - 1 };
-	}
-
-	template<const jsonifier::string_view&... Strs> constexpr auto joinV = join<Strs...>();
-
 }// namespace jsonifier_internal

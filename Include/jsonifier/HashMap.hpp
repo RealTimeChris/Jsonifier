@@ -57,10 +57,16 @@ namespace jsonifier_internal {
 		size_t count{};
 	};
 
+	template<typename value_type>
+	concept has_view = requires(unwrap_t<value_type> value) { value.view(); };
+
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, std::array<tuple_reference, maxIndex>& tupleRefs) {
 		if constexpr (currentIndex < maxIndex) {
-			tupleRefs[currentIndex].key		 = std::get<currentIndex>(tuple).view();
+			auto potentialKey = std::get<currentIndex>(tuple);
+			if constexpr (has_view<decltype(potentialKey)>) {
+				tupleRefs[currentIndex].key = potentialKey.view();
+			}
 			tupleRefs[currentIndex].oldIndex = currentIndex;
 			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefs);
 		}
@@ -166,16 +172,17 @@ namespace jsonifier_internal {
 		size_t maxLength{};
 	};
 
-	JSONIFIER_ALWAYS_INLINE constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, const key_stats_t& keyStats, size_t startingIndex = 0) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, size_t maxIndex,
+		size_t startingIndex = 0) noexcept {
 		constexpr size_t alphabetSize = 256;
 		jsonifier::string_view key{};
-		for (size_t index = startingIndex; index < keyStats.minLength; ++index) {
+		for (size_t index = startingIndex; index < maxIndex; ++index) {
 			std::array<bool, alphabetSize> seen{};
 			bool allDifferent = true;
 
 			for (size_t x = 0; x < tupleRefs.count; ++x) {
 				key				 = tupleRefs.rootPtr[x].key;
-				const char c	 = key[index % key.size()];
+				const char c	 = key[index];
 				size_t charIndex = static_cast<const unsigned char>(c);
 
 				if (seen[charIndex]) {
@@ -202,44 +209,13 @@ namespace jsonifier_internal {
 		size_t numGroups{ hashMapMaxSizes[maxSizeIndexNew] / bucketSize };
 		size_t storageSize{ hashMapMaxSizes[maxSizeIndexNew] };
 		std::array<uint8_t, 256> uniqueIndices{};
-		size_t maxSizeIndex{ maxSizeIndexNew };
 		key_stats_t keyStatsVal{};
-		size_t uniqueIndex02{};
 		hash_map_type type{};
 		size_t uniqueIndex{};
 		key_hasher hasher{};
-		size_t xorValue{};
 
 		JSONIFIER_ALWAYS_INLINE constexpr hash_map_construction_data() noexcept = default;
 	};
-
-	template<typename value_type, size_t I> JSONIFIER_ALWAYS_INLINE constexpr const jsonifier::string_view& getKey() noexcept {
-		return std::get<I>(coreTupleV<value_type>).view();
-	}
-
-	template<typename value_type, size_t maxIndex, size_t index> JSONIFIER_ALWAYS_INLINE constexpr auto keyStatsImpl(key_stats_t stats) noexcept {
-		if constexpr (index < maxIndex) {
-			constexpr const jsonifier::string_view& key{ getKey<value_type, index>() };
-			constexpr auto n{ key.size() };
-			if (n > stats.maxLength) {
-				stats.maxLength = n;
-			} else if (n < stats.minLength) {
-				stats.minLength = n;
-			}
-			return keyStatsImpl<value_type, maxIndex, index + 1>(stats);
-		} else {
-			if constexpr (maxIndex > 0) {
-				stats.lengthRange = stats.maxLength - stats.minLength;
-			}
-			return stats;
-		}
-	}
-
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto keyStats() noexcept {
-		constexpr auto N{ std::tuple_size_v<core_tuple_t<value_type>> };
-
-		return keyStatsImpl<value_type, N, 0>(key_stats_t{});
-	}
 
 	struct string_lengths {
 		tuple_references tupleRefs{};
@@ -370,13 +346,19 @@ namespace jsonifier_internal {
 		constexpr auto uniqueStringLengthCount = countUniqueStringLengths(tupleReferencesByStringLength<value_type>);
 		constexpr auto results				   = collectLengths<uniqueStringLengthCount>(tupleReferencesByStringLength<value_type>);
 		constexpr auto keyStatsVal			   = keyStatsImpl(tupleReferences<value_type>);
+		constexpr auto keyStatsValNew		   = keyStats(results);
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
 		returnValues.keyStatsVal = keyStatsVal;
 		returnValues.uniqueIndices.fill(255);
 		if (keyStatsVal.maxLength < 256) {
-			for (size_t x = 0; x < uniqueStringLengthCount; ++x) {
-				auto keyStatsValNew = keyStats(results);
-				size_t uniqueIndex	= findUniqueColumnIndex(results[x].tupleRefs, keyStatsValNew[x]);
+			size_t uniqueIndex = findUniqueColumnIndex(results[0].tupleRefs, keyStatsValNew[0].minLength);
+			if (uniqueIndex == std::numeric_limits<size_t>::max()) {
+				return collectSimdFullLengthHashMapData<value_type, maxSizeIndexNew>(pairsNew);
+			} else {
+				returnValues.uniqueIndices[results[0].length] = static_cast<uint8_t>(uniqueIndex);
+			}
+			for (size_t x = 1; x < uniqueStringLengthCount; ++x) {
+				uniqueIndex			= findUniqueColumnIndex(results[x].tupleRefs, keyStatsValNew[x].minLength, uniqueIndex + 1);
 				if (uniqueIndex == std::numeric_limits<size_t>::max()) {
 					return collectSimdFullLengthHashMapData<value_type, maxSizeIndexNew>(pairsNew);
 				} else {
@@ -431,10 +413,9 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
-		constexpr auto keyStatsVal = keyStatsImpl(tupleReferences<value_type>);
 		hash_map_construction_data<value_type, getMaxSizeIndex(256)> returnValues{};
-		returnValues.keyStatsVal = keyStatsVal;
-		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal);
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferences<value_type>);
+		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
 			std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
 			for (size_t y = 0; y < pairsNew.count; ++y) {
@@ -449,61 +430,54 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
-		constexpr auto keyStatsVal		   = keyStatsImpl(tupleReferences<value_type>);
-		auto constructForGivenStringLength = [&](const auto maxSizeIndex) mutable {
-			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
-			returnValues.keyStatsVal = keyStatsVal;
-			bool collided{ true };
-			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal);
-			const auto first		 = static_cast<uint8_t>(pairsNew.rootPtr[0].key[returnValues.uniqueIndex]);
-			const auto mix1			 = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ first;
-			const auto mix2			 = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ first;
-			while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-				for (size_t x = 0; x < 10; ++x) {
-					uint8_t hash1 = (mix1 * returnValues.hasher.seed) % 4;
-					uint8_t hash2 = (mix2 * returnValues.hasher.seed) % 4;
-					returnValues.hasher.updateSeed();
+		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferences<value_type>);
+		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
+		bool collided{ true };
+		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
+			const auto first = static_cast<uint8_t>(pairsNew.rootPtr[0].key[returnValues.uniqueIndex]);
+			const auto mix1	 = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ first;
+			const auto mix2	 = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ first;
+			for (size_t x = 0; x < 10; ++x) {
+				uint8_t hash1 = (mix1 * returnValues.hasher.seed) & 3;
+				uint8_t hash2 = (mix2 * returnValues.hasher.seed) & 3;
 
-					if (hash1 == 1 && hash2 == 2) {
-						collided = false;
-						break;
-					}
-				}
-				if (!collided) {
+				if (hash1 == 1 && hash2 == 2) {
+					collided = false;
 					break;
+				} else {
+					returnValues.hasher.updateSeed();
 				}
-				returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal, returnValues.uniqueIndex + 1);
 			}
-			if (collided) {
-				return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
+			if (!collided) {
+				break;
 			}
-			returnValues.type = hash_map_type::triple_element;
-			return hash_map_construction_data_variant<value_type, 0, hash_map_construction_data>{ returnValues };
-		};
-		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{});
+			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength, returnValues.uniqueIndex + 1);
+		}
+		if (collided) {
+			return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
+		}
+		returnValues.type = hash_map_type::triple_element;
+		return hash_map_construction_data_variant<value_type, 0, hash_map_construction_data>{ returnValues };
 	}
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
-		constexpr auto keyStatsVal		   = keyStatsImpl(tupleReferences<value_type>);
-		auto constructForGivenStringLength = [&](const auto maxSizeIndex) mutable {
-			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
-			returnValues.keyStatsVal = keyStatsVal;
-			bool collided{ true };
-			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal);
-			while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-				if (pairsNew.rootPtr[0].key[returnValues.uniqueIndex] % 2 == 0 && pairsNew.rootPtr[1].key[returnValues.uniqueIndex] % 2 == 1) {
-					collided = false;
-					break;
-				}
-				returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal, returnValues.uniqueIndex + 1);
+		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferences<value_type>);
+		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
+		bool collided{ true };
+		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
+			if ((pairsNew.rootPtr[0].key[returnValues.uniqueIndex] & 1) == 0 && (pairsNew.rootPtr[1].key[returnValues.uniqueIndex] & 1) == 1) {
+				collided = false;
+				break;
 			}
-			if (collided) {
-				return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
-			}
-			returnValues.type = hash_map_type::double_element;
-			return hash_map_construction_data_variant<value_type, 0, hash_map_construction_data>{ returnValues };
-		};
-		return constructForGivenStringLength(std::integral_constant<size_t, maxSizeIndexNew>{});
+			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength, returnValues.uniqueIndex + 1);
+		}
+		if (collided) {
+			return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
+		}
+		returnValues.type = hash_map_type::double_element;
+		return hash_map_construction_data_variant<value_type, 0, hash_map_construction_data>{ returnValues };
 	}
 
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectMapConstructionDataImpl() noexcept {
@@ -537,8 +511,6 @@ namespace jsonifier_internal {
 
 		for (size_t i = 0; i < keys.count; ++i) {
 			const auto& key = keys.rootPtr[i].key;
-			if (key.empty())
-				continue;
 
 			uint8_t uniqueIndex = uniqueIndices[key.size()];
 
@@ -554,106 +526,98 @@ namespace jsonifier_internal {
 
 	template<typename value_type> static constexpr auto hashDataNew{ collectMapConstructionData<value_type>() };
 
-	template<typename value_type, typename iterator_newer> JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
-		static constexpr auto hashData{ collectMapConstructionData<value_type>() };
+	template<typename value_type, typename iterator_newer> struct indexer {
+		static constexpr auto hashData					   = collectMapConstructionData<value_type>();
 		JSONIFIER_ALIGN static constexpr auto controlBytes = hashData.controlBytes;
 		JSONIFIER_ALIGN static constexpr auto indices	   = hashData.indices;
 		static constexpr auto uniqueIndex				   = hashData.uniqueIndex;
-		static constexpr auto subAmount01{ hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength + 2 };
-		static constexpr auto subAmount02{ hashData.keyStatsVal.maxLength + 2 };
-		if constexpr (hashData.type == hash_map_type::single_element) {
-			return 0;
-		} else if constexpr (hashData.type == hash_map_type::double_element) {
-			return iter[uniqueIndex] & 1;
-		} else if constexpr (hashData.type == hash_map_type::triple_element) {
-			static constexpr auto firstChar = std::get<0>(coreTupleV<value_type>).view()[uniqueIndex];
-			return (uint8_t(iter[uniqueIndex] ^ firstChar) * hashData.hasher.seed) & 3;
-		} else if constexpr (hashData.type == hash_map_type::single_byte) {
-			return indices[iter[uniqueIndex]];
-		} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
-			if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
-				auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
-				if (newPtr) [[likely]] {
-					size_t length	= static_cast<size_t>(newPtr - (iter));
-					const auto hash = iter[uniqueIndex] ^ length;
-					const auto slot = hash % hashData.storageSize;
-					return indices[slot];
-				}
-			} else {
-				auto newPtr = memchar<'"'>(iter, subAmount02);
-				if (newPtr) [[likely]] {
-					size_t length	= static_cast<size_t>(newPtr - (iter));
-					const auto hash = iter[uniqueIndex] ^ length;
-					const auto slot = hash % hashData.storageSize;
-					return indices[slot];
-				}
-			}
-			return hashData.storageSize;
-		} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
-			static constexpr auto mappings = generateMappings<hashData.keyStatsVal.maxLength>(tupleReferences<value_type>, hashData.uniqueIndices);
-			if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
-				auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
-				if (newPtr) [[likely]] {
-					size_t length		= static_cast<size_t>(newPtr - (iter));
-					uint8_t uniqueIndex = hashData.uniqueIndices[length];
-					if (uniqueIndex == 255) {
-						return hashData.storageSize;
-					}
+		static constexpr auto subAmount01				   = hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength + 2;
+		static constexpr auto subAmount02				   = hashData.keyStatsVal.maxLength + 2;
 
-					uint8_t uniqueChar = iter[uniqueIndex];
-					size_t flatIndex   = length * 256 + uniqueChar;
-					return mappings[flatIndex];
-				}
-			} else {
-				auto newPtr = memchar<'"'>(iter, subAmount02);
-				if (newPtr) [[likely]] {
-					size_t length		= static_cast<size_t>(newPtr - (iter));
-					uint8_t uniqueIndex = hashData.uniqueIndices[length];
-					if (uniqueIndex == 255) {
-						return hashData.storageSize;
+		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
+			if constexpr (hashData.type == hash_map_type::single_element) {
+				return 0;
+			} else if constexpr (hashData.type == hash_map_type::double_element) {
+				return iter[uniqueIndex] & 1;
+			} else if constexpr (hashData.type == hash_map_type::triple_element) {
+				static constexpr auto firstChar = std::get<0>(coreTupleV<value_type>).view()[uniqueIndex];
+				return (uint8_t(iter[uniqueIndex] ^ firstChar) * hashData.hasher.seed) & 3;
+			} else if constexpr (hashData.type == hash_map_type::single_byte) {
+				return indices[iter[uniqueIndex]];
+			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
+				if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
+					auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
+					if (newPtr) [[likely]] {
+						return indices[(iter[uniqueIndex] ^ static_cast<size_t>(newPtr - (iter))) & (hashData.storageSize - 1)];
 					}
+				} else {
+					auto newPtr = memchar<'"'>(iter, subAmount02);
+					if (newPtr) [[likely]] {
+						return indices[(iter[uniqueIndex] ^ static_cast<size_t>(newPtr - (iter))) & (hashData.storageSize - 1)];
+					}
+				}
+				return hashData.storageSize;
+			} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
+				static constexpr auto mappings = generateMappings<hashData.keyStatsVal.maxLength>(tupleReferences<value_type>, hashData.uniqueIndices);
+				if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
+					auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
+					if (newPtr) [[likely]] {
+						const auto length			= static_cast<size_t>(newPtr - (iter));
+						const auto localUniqueIndex = hashData.uniqueIndices[length];
+						if (localUniqueIndex == 255) {
+							return hashData.storageSize;
+						}
 
-					uint8_t uniqueChar = iter[uniqueIndex];
-					size_t flatIndex   = length * 256 + uniqueChar;
-					return mappings[flatIndex];
+						return mappings[(length * 256) + iter[localUniqueIndex]];
+					}
+				} else {
+					auto newPtr = memchar<'"'>(iter, subAmount02);
+					if (newPtr) [[likely]] {
+						const auto length			   = static_cast<size_t>(newPtr - (iter));
+						const auto localUniqueIndex = hashData.uniqueIndices[length];
+						if (localUniqueIndex == 255) {
+							return hashData.storageSize;
+						}
+
+						return mappings[(length * 256) + iter[localUniqueIndex]];
+					}
 				}
-			}
-			return hashData.storageSize;
-		} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
-			using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
-			if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
-				auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
-				if (newPtr) [[likely]] {
-					size_t length		   = static_cast<size_t>(newPtr - (iter));
-					length				   = uniqueIndex > length ? length : uniqueIndex;
-					const auto hash		   = hashData.hasher.hashKeyRt(iter, length);
-					const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
-					const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-												  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
-						 resultIndex);
-					return indices[finalIndex];
+				return hashData.storageSize;
+			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
+				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
+				if constexpr (hashData.keyStatsVal.maxLength - hashData.keyStatsVal.minLength >= bytesPerStep) {
+					auto newPtr = memchar<'"'>(iter + hashData.keyStatsVal.minLength, subAmount01);
+					if (newPtr) [[likely]] {
+						size_t length		   = static_cast<size_t>(newPtr - (iter));
+						length				   = uniqueIndex > length ? length : uniqueIndex;
+						const auto hash		   = hashData.hasher.hashKeyRt(iter, length);
+						const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
+						return indices[(simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
+											simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
+							resultIndex)];
+					}
+				} else {
+					auto newPtr = memchar<'"'>(iter, subAmount02);
+					if (newPtr) [[likely]] {
+						size_t length		   = static_cast<size_t>(newPtr - (iter));
+						length				   = uniqueIndex > length ? length : uniqueIndex;
+						const auto hash		   = hashData.hasher.hashKeyRt(iter, length);
+						const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
+						const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
+													  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
+							 resultIndex);
+						return indices[finalIndex];
+					}
 				}
+				return hashData.storageSize;
+			} else if constexpr (hashData.type == hash_map_type::empty) {
+				return 0;
 			} else {
-				auto newPtr = memchar<'"'>(iter, subAmount02);
-				if (newPtr) [[likely]] {
-					size_t length		   = static_cast<size_t>(newPtr - (iter));
-					length				   = uniqueIndex > length ? length : uniqueIndex;
-					const auto hash		   = hashData.hasher.hashKeyRt(iter, length);
-					const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
-					const auto finalIndex  = (simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-												  simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +
-						 resultIndex);
-					return indices[finalIndex];
-				}
+				static_assert(hashData.type != hash_map_type::unset, "Sorry, but we failed to construct this hash-map!");
+				return false;
 			}
-			return hashData.storageSize;
-		} else if constexpr (hashData.type == hash_map_type::empty) {
-			return 0;
-		} else {
-			static_assert(hashData.type != hash_map_type::unset, "Sorry, but we failed to construct this hash-map!");
-			return false;
 		}
-	}
 
+	};
 
 }

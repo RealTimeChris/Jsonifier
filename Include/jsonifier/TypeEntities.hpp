@@ -145,6 +145,11 @@ namespace jsonifier {
 
 	template<typename value_type> struct core {};
 
+	template<bool value, typename value_type> struct falseV {
+		static_assert(value, "Sorry, but the static assert failed.");
+		static constexpr bool boolVal{ value };
+	};
+
 	template<typename value_type> struct value {
 		value_type val{};
 	};
@@ -413,17 +418,28 @@ namespace jsonifier {
 		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type>;
 
 		struct empty {
-			static constexpr std::tuple<> parseValue{};
+			static constexpr std::tuple<> val{};
 		};
 
-		template<typename value_type> constexpr auto coreV = jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue.val;
+		template<typename value_type> constexpr decltype(auto) coreWrapperV = [] {
+			if constexpr (jsonifier_t<value_type>) {
+				return jsonifier::core<value_type>::parseValue;
+			} else {
+				return empty{};
+			}
+		}();
+
+		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
+
+		template<typename value_type> using core_t = decay_keep_volatile_t<decltype(coreV<value_type>)>;
+
+		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
 
 		template<typename value_type>
-		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<scalar_value<value_type>, scalar_value> &&
-			!jsonifier_internal::is_specialization_v<value<value_type>, value>;
+		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
 
 		template<typename value_type>
-		concept jsonifier_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<value<value_type>, value>;
+		concept jsonifier_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;
 
 		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<jsonifier_internal::unwrap_t<value_type>> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> ) ||
