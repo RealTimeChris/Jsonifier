@@ -34,9 +34,9 @@
 
 namespace jsonifier_internal {
 
-	constexpr uint64_t digitCountTable[]{ 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184, 17179868184, 21474826480,
-		21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368, 34349738368, 34349738368,
-		38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
+	static constexpr uint64_t digitCountTable[]{ 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184, 17179868184,
+		21474826480, 21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368, 34349738368,
+		34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
 	JSONIFIER_ALWAYS_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
@@ -161,10 +161,10 @@ namespace jsonifier_internal {
 		raw rawVal;
 		std::memcpy(&rawVal, &val, sizeof(value_type));
 
-		constexpr bool isFloat			= std::is_same_v<float, value_type>;
-		constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-		bool sign						= (rawVal >> (sizeof(value_type) * 8 - 1));
-		uint32_t expRaw					= rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
+		constexpr bool isFloat				   = std::is_same_v<float, value_type>;
+		static constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		bool sign							   = (rawVal >> (sizeof(value_type) * 8 - 1));
+		uint32_t expRaw						   = rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
 		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
 			std::memcpy(buf, "null", 4);

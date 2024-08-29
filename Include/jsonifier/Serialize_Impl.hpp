@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 					static constexpr auto quotedKey = combineLiterals<string_literal{ "\"" }, stringLiteralFromView<key.size()>(key), literal>();
 					writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
 				}
-				
+
 				using member_type = unwrap_t<decltype(value.*memberPtr)>;
 				serialize_impl<options, derived_type, member_type>::impl(value.*memberPtr, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 				if constexpr (currentIndex < maxIndex - 1) {

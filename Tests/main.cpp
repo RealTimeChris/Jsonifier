@@ -981,7 +981,7 @@ template<typename value_type> struct test_generator {
 
 	std::string generateString() {
 		auto length{ randomizeNumberUniform(32, 64) };
-		static constexpr size_t charsetSize = charset.size();
+		constexpr size_t charsetSize = charset.size();
 		auto unicodeCount					= randomizeNumberUniform(1, length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
@@ -2041,21 +2041,21 @@ static const std::string section001{ R"(
 	jsonifier::toString(30) + R"( iterations on a ()" + getCPUInfo() + R"(), until coefficient of variance is at or below 1%.
 )" };
 
-static constexpr auto newString02{ jsonifier_internal::combineLiterals<R"(#### Using the following commits:
+constexpr auto newString02{ jsonifier_internal::combineLiterals<R"(#### Using the following commits:
 ----
 | Jsonifier: [)",
 	JSONIFIER_COMMIT, R"(](https://github.com/RealTimeChris/Jsonifier/commit/)", JSONIFIER_COMMIT, ")  \n", R"(| Glaze: [)", GLAZE_COMMIT,
 	R"(](https://github.com/stephenberry/glaze/commit/)", GLAZE_COMMIT, ")  \n", R"(| Simdjson: [)", SIMDJSON_COMMIT, R"(](https://github.com/simdjson/simdjson/commit/)",
 	SIMDJSON_COMMIT, ")  \n">() };
 
-static constexpr jsonifier::string_view section002{ newString02.view() };
+constexpr jsonifier::string_view section002{ newString02.view() };
 
-static constexpr jsonifier::string_view section00{ R"(# Json-Performance
+constexpr jsonifier::string_view section00{ R"(# Json-Performance
 Performance profiling of JSON libraries (Compiled and run on Ubuntu-22.04 using the Clang++19 compiler)
 
 Latest Results: ()" };
 
-static constexpr jsonifier::string_view section01{
+constexpr jsonifier::string_view section01{
 	R"(
 
 ### Json Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2067,7 +2067,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr jsonifier::string_view section02{
+constexpr jsonifier::string_view section02{
 	R"(
 
 ### Json Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
@@ -2079,7 +2079,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr jsonifier::string_view section03{
+constexpr jsonifier::string_view section03{
 	R"(
 
 ### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Prettified.json):
@@ -2096,7 +2096,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 )"
 };
 
-static constexpr jsonifier::string_view section04{ R"(
+constexpr jsonifier::string_view section04{ R"(
 
 ### ABC Test (Out of Sequence Performance - Minified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/JsonData-Minified.json):
 
@@ -2106,7 +2106,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section05{ R"(
+constexpr jsonifier::string_view section05{ R"(
 
 ### Discord Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -2116,7 +2116,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section06{ R"(
+constexpr jsonifier::string_view section06{ R"(
 
 ### Discord Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
 
@@ -2126,7 +2126,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section07{ R"(
+constexpr jsonifier::string_view section07{ R"(
 
 ### Canada Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Prettified.json):
 
@@ -2136,7 +2136,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section08{ R"(
+constexpr jsonifier::string_view section08{ R"(
 
 ### Canada Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Minified.json):
 
@@ -2146,7 +2146,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section09{ R"(
+constexpr jsonifier::string_view section09{ R"(
 
 ### CitmCatalog Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CitmCatalogData-Prettified.json):
 
@@ -2156,7 +2156,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section10{ R"(
+constexpr jsonifier::string_view section10{ R"(
 
 ### CitmCatalog Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CitmCatalogData-Minified.json):
 
@@ -2166,7 +2166,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section11{ R"(
+constexpr jsonifier::string_view section11{ R"(
 
 ### Twitter Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Prettified.json):
 
@@ -2176,7 +2176,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section12{ R"(
+constexpr jsonifier::string_view section12{ R"(
 
 ### Twitter Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Minified.json):
 
@@ -2186,7 +2186,7 @@ alt="" width="400"/></p>
 
 )" };
 
-static constexpr jsonifier::string_view section13{
+constexpr jsonifier::string_view section13{
 	R"(
 
 ### Minify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -2198,7 +2198,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr jsonifier::string_view section14{
+constexpr jsonifier::string_view section14{
 	R"(
 
 ### Prettify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
@@ -2210,7 +2210,7 @@ alt="" width="400"/></p>
 )"
 };
 
-static constexpr jsonifier::string_view section15{
+constexpr jsonifier::string_view section15{
 	R"(
 
 ### Validation Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -2233,9 +2233,9 @@ std::string getCurrentWorkingDirectory() {
 
 void executePythonScript(const jsonifier::string& scriptPath, const jsonifier::string& argument01, const jsonifier::string& argument02) {
 #if defined(JSONIFIER_WIN)
-	static constexpr std::string_view pythonName{ "python " };
+	constexpr std::string_view pythonName{ "python " };
 #else
-	static constexpr std::string_view pythonName{ "python3 " };
+	constexpr std::string_view pythonName{ "python3 " };
 #endif
 	jsonifier::string command = static_cast<jsonifier::string>(pythonName) + scriptPath + " " + argument01 + " " + argument02;
 	int32_t result			  = system(command.data());

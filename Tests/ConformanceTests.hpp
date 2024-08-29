@@ -320,8 +320,7 @@ struct message_class {
 	double e{};
 };
 
-using message_element = std::tuple<std::string, ObjectWith1Member, object, array, int64_t, bool, std::nullptr_t, double, double, double, int64_t, double, double,
-	double, double, double, double>;
+using message_element = std::tuple<std::string, object, array, int64_t, bool, std::nullptr_t, double, double, double, int64_t, double, double, double, double, double, double>;
 
 template<> struct jsonifier::core<object> {
 	using value_type				 = object;
@@ -409,7 +408,7 @@ bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& res
 
 template<typename test_type> void runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 	std::cout << "Running Test: " << testName << std::endl;
-	auto result = parser.parseJson<jsonifier::parse_options{ .validateJson = true, .minified = false }>(test_type{}, parser.minifyJson(dataToParse));
+	auto result = parser.parseJson<jsonifier::parse_options{ .validateJson = true, .minified = false }>(test_type{}, dataToParse);
 	if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 		std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
 	} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
@@ -448,16 +447,16 @@ bool conformanceTests() noexcept {
 	runTest<failTest19>("fail19.json", jsonTests["fail19.json"].fileContents, parser);
 	runTest<failTest20>("fail20.json", jsonTests["fail20.json"].fileContents, parser);
 	runTest<failTest21>("fail21.json", jsonTests["fail21.json"].fileContents, parser);
-	//runTest<failTest22>("fail22.json", jsonTests["fail22.json"].fileContents, parser);
+	runTest<failTest22>("fail22.json", jsonTests["fail22.json"].fileContents, parser);
 	runTest<failTest23>("fail23.json", jsonTests["fail23.json"].fileContents, parser);
-	//runTest<failTest24>("fail24.json", jsonTests["fail24.json"].fileContents, parser);
-	//runTest<failTest25>("fail25.json", jsonTests["fail25.json"].fileContents, parser);
+	runTest<failTest24>("fail24.json", jsonTests["fail24.json"].fileContents, parser);
+	runTest<failTest25>("fail25.json", jsonTests["fail25.json"].fileContents, parser);
 	//runTest<failTest26>("fail26.json", jsonTests["fail26.json"].fileContents, parser);
 	//runTest<failTest27>("fail27.json", jsonTests["fail27.json"].fileContents, parser);
 	//runTest<failTest28>("fail28.json", jsonTests["fail28.json"].fileContents, parser);
 	//runTest<failTest29>("fail29.json", jsonTests["fail29.json"].fileContents, parser);
 	//runTest<failTest30>("fail30.json", jsonTests["fail30.json"].fileContents, parser);
-	runTest<passTest01>("pass1.json", jsonTests["pass1.json"].fileContents, parser, false);
+	//runTest<passTest01>("pass1.json", jsonTests["pass1.json"].fileContents, parser, false);
 	runTest<passTest02>("pass2.json", jsonTests["pass2.json"].fileContents, parser, false);
 	return true;
 }

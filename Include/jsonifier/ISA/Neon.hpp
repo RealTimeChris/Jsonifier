@@ -67,7 +67,7 @@ namespace simd_internal {
 	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
 		vst1q_u8(storageLocation, value);
 	}
-	
+
 	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> uint16_t toBitMask(simd_int_t01&& value) noexcept {

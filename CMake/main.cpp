@@ -22,15 +22,15 @@ enum instruction_set {
 };
 
 namespace {
-	constexpr uint32_t cpuidAvx2Bit		= 1ul << 5;
-	constexpr uint32_t cpuidBmi1Bit		= 1ul << 3;
-	constexpr uint32_t cpuidBmi2Bit		= 1ul << 8;
-	constexpr uint32_t cpuidAvx512Bit	= 1ul << 16;
-	constexpr uint64_t cpuidAvx256Saved = 1ull << 2;
-	constexpr uint64_t cpuidAvx512Saved = 7ull << 5;
-	constexpr uint32_t cpuidOsxSave		= (1ul << 26) | (1ul << 27);
-	constexpr uint32_t cpuidLzcntBit	= 1ul << 5;
-	constexpr uint32_t cpuidPopcntBit	= 1ul << 23;
+	static constexpr uint32_t cpuidAvx2Bit		= 1ul << 5;
+	static constexpr uint32_t cpuidBmi1Bit		= 1ul << 3;
+	static constexpr uint32_t cpuidBmi2Bit		= 1ul << 8;
+	static constexpr uint32_t cpuidAvx512Bit	= 1ul << 16;
+	static constexpr uint64_t cpuidAvx256Saved = 1ull << 2;
+	static constexpr uint64_t cpuidAvx512Saved = 7ull << 5;
+	static constexpr uint32_t cpuidOsxSave		= (1ul << 26) | (1ul << 27);
+	static constexpr uint32_t cpuidLzcntBit	= 1ul << 5;
+	static constexpr uint32_t cpuidPopcntBit	= 1ul << 23;
 }
 
 #if defined(__x86_64__) || defined(_M_AMD64)

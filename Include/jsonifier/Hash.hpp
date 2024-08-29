@@ -35,7 +35,7 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_ALWAYS_INLINE constexpr size_t rotrCt(size_t x, size_t r) {
+	JSONIFIER_ALWAYS_INLINE static constexpr size_t rotrCt(size_t x, size_t r) {
 		return (((x) >> (r)) | ((x) << (64 - (r))));
 	}
 
