@@ -35,18 +35,6 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_ALWAYS_INLINE static constexpr size_t rotrCt(size_t x, size_t r) {
-		return (((x) >> (r)) | ((x) << (64 - (r))));
-	}
-
-#if JSONIFIER_HAS_BUILTIN(__builtin_rotateright64)
-	#define rotrRt __builtin_rotateright64
-#elif defined(_MSC_VER)
-	#define rotrRt(x, r) _rotr64(x, r)
-#else
-	#define rotrRt(x, r) rotrCt(x, r)
-#endif
-
 	struct xoshiro256 {
 		size_t state[4]{};
 
@@ -114,16 +102,6 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_ALWAYS_INLINE constexpr void updateSeed() {
 			seed = xoshiro256::operator()();
-		}
-
-		JSONIFIER_ALWAYS_INLINE size_t mixBitsRt(size_t inputValue) const {
-			inputValue *= seed;
-			return inputValue ^ rotrRt(inputValue, 49);
-		}
-
-		JSONIFIER_ALWAYS_INLINE constexpr size_t mixBitsCt(size_t inputValue) const {
-			inputValue *= seed;
-			return inputValue ^ rotrCt(inputValue, 49);
 		}
 
 		/**
@@ -221,34 +199,6 @@ namespace jsonifier_internal {
 			}
 
 			if (length == 1) {
-				seed64 ^= *value;
-			}
-			return seed64;
-		}
-
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt02(const char_type* value, size_t length) const {
-			size_t seed64{ seed };
-			size_t lengthNewer01{ length % 8 };
-			if (length >= 8) {
-				for (size_t lengthNew = length; lengthNew >= 8; lengthNew -= 8) {
-					seed64 ^= readBitsCt<size_t>(value);
-					value += 8;
-				}
-			}
-
-			size_t lengthNewer02{ lengthNewer01 >= 4 ? lengthNewer01 - 4 : lengthNewer01 };
-			if (lengthNewer01 >= 4) {
-				seed64 ^= readBitsCt<uint32_t>(value);
-				value += 4;
-			}
-
-			size_t lengthNewer03{ lengthNewer02 >= 2 ? lengthNewer02 - 2 : lengthNewer02 };
-			if (lengthNewer02 >= 2) {
-				seed64 ^= readBitsCt<uint16_t>(value);
-				value += 2;
-			}
-
-			if (lengthNewer03 == 1) {
 				seed64 ^= *value;
 			}
 			return seed64;

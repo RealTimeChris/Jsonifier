@@ -96,7 +96,7 @@ namespace jsonifier {
 	/*
 	* Function to create a reflected value from member pointers
 	*/
-	template<auto... values> constexpr decltype(auto) createValue() noexcept {
+	template<auto... values> constexpr auto createValue() noexcept {
 		// Check if there are member pointers specified
 		if constexpr (sizeof...(values) > 0) {
 			// Create a tuple with the specified member pointers

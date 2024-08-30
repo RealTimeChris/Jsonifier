@@ -45,6 +45,8 @@ namespace jsonifier_internal {
 	template<typename derived_type> struct parse_options_internal {
 		mutable parser<derived_type>* parserPtr{};
 		jsonifier::parse_options optionsReal{};
+		mutable int64_t currentObjectDepth{};
+		mutable int64_t currentArrayDepth{};
 		mutable const char* rootIter{};
 		bool validatingJson{ false };
 	};
@@ -75,20 +77,23 @@ namespace jsonifier_internal {
 			auto readIter		  = static_cast<const char*>(in.data());
 			auto endIter		  = static_cast<const char*>(in.data() + in.size());
 			optionsReal.rootIter  = readIter;
-			if (!readIter) {
+			if (!readIter || (*readIter != '{' && *readIter != '[')) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
 					endIter - optionsReal.rootIter, optionsReal.rootIter));
 				return false;
 			}
 			parse_impl<optionsReal, value_type, decltype(readIter)>::impl(std::forward<value_type>(object), readIter, endIter);
-			if constexpr (!options.minified) {
-				if (readIter != endIter) {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
-						endIter - optionsReal.rootIter, optionsReal.rootIter));
-					return false;
-				}
+			if (optionsReal.currentObjectDepth != 0) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(readIter - optionsReal.rootIter,
+					endIter - optionsReal.rootIter, optionsReal.rootIter));
+				return false;
+			} else if (optionsReal.currentArrayDepth != 0) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(readIter - optionsReal.rootIter,
+					endIter - optionsReal.rootIter, optionsReal.rootIter));
+				return false;
 			}
 			return true;
 		}
@@ -118,13 +123,16 @@ namespace jsonifier_internal {
 				return object;
 			}
 			parse_impl<optionsReal, value_type, decltype(readIter)>::impl(std::forward<value_type>(object), readIter, endIter);
-			if constexpr (!options.minified) {
-				if (readIter != endIter) {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(readIter - optionsReal.rootIter,
-						endIter - optionsReal.rootIter, optionsReal.rootIter));
-					return object;
-				}
+			if (optionsReal.currentObjectDepth != 0) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(readIter - optionsReal.rootIter,
+					endIter - optionsReal.rootIter, optionsReal.rootIter));
+				return false;
+			} else if (optionsReal.currentArrayDepth != 0) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(readIter - optionsReal.rootIter,
+					endIter - optionsReal.rootIter, optionsReal.rootIter));
+				return false;
 			}
 			return object;
 		}

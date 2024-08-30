@@ -27,15 +27,15 @@
 
 namespace jsonifier_internal {
 
-	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x0101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x01010101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x0101010101010101ull * repeat;
 	}
 

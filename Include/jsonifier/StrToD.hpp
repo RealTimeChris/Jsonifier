@@ -1,4 +1,4 @@
-// jsonifier_fast_float version 6.1.3, https://github.com/fastfloat/jsonifier_fast_float
+// jsonifier_fast_float version 6.1.3, https://github.com/fastfloat/fast_float
 
 // jsonifier_fast_float by Daniel Lemire
 // jsonifier_fast_float by João Paulo Magalhaes

@@ -33,9 +33,9 @@ namespace jsonifier_internal {
 	enum class validate_errors {
 		Success						   = 0,
 		Missing_Object_Start		   = 1,
-		Missing_Object_End			   = 2,
+		Imbalanced_Object_Braces	   = 2,
 		Missing_Array_Start			   = 3,
-		Missing_Array_End			   = 4,
+		Imbalanced_Array_Brackets	   = 4,
 		Missing_String_Start		   = 5,
 		Missing_Colon				   = 6,
 		Missing_Comma				   = 7,

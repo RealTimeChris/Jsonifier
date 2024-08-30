@@ -32,7 +32,7 @@ namespace simd_internal {
 	static uint8x16_t mask{ vdupq_n_u8(0x0f) };
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return vqtbl1q_u8(value, vandq_u8(other, mask));
 	}
 
@@ -70,7 +70,7 @@ namespace simd_internal {
 
 	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> uint16_t toBitMask(simd_int_t01&& value) noexcept {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t toBitMask(simd_int_t01&& value) noexcept {
 		auto minput	   = value & bitMask;
 		uint8x16_t tmp = vpaddq_u8(minput, minput);
 		tmp			   = vpaddq_u8(tmp, tmp);
@@ -79,7 +79,7 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+	JSONIFIER_ALWAYS_INLINE uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return toBitMask(vceqq_u8(value, other));
 	}
 

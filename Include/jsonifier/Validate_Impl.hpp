@@ -277,7 +277,9 @@ namespace jsonifier_internal {
 				return false;
 			};
 
-			consumeSign();
+			if (!consumeSign()) {
+				return false;
+			}
 
 			consumeDigits(1);
 

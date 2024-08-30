@@ -95,30 +95,6 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<template<uint64_t, typename...> typename function_wrapper, typename... value_types, std::size_t... indices>
-	static constexpr auto generateArrayOfFunctionPtrs(std::index_sequence<indices...>) {
-		using function_type = decltype(&function_wrapper<0, value_types...>::op);
-		return std::array<function_type, sizeof...(indices)>{ { &function_wrapper<indices, value_types...>::op... } };
-	}
-
-	template<std::size_t... indices> struct reverse_index_sequence {};
-
-	template<std::size_t N, std::size_t... indices> struct make_reverse_index_sequence_impl {
-		using type = typename make_reverse_index_sequence_impl<N - 1, indices..., N - 1>::type;
-	};
-
-	template<std::size_t... indices> struct make_reverse_index_sequence_impl<0, indices...> {
-		using type = reverse_index_sequence<indices...>;
-	};
-
-	template<std::size_t N> using make_reverse_index_sequence = typename make_reverse_index_sequence_impl<N>::type;
-
-	template<std::size_t N, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEach(arg_types&&... args) {
-		[&]<std::size_t... I>(std::index_sequence<I...>) constexpr {
-			(function(std::integral_constant<std::size_t, I>{}, std::forward<arg_types>(args)...), ...);
-		}(std::make_index_sequence<N>{});
-	}
-
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
 		if constexpr (currentIndex < std::variant_size_v<unwrap_t<variant_type>>) {
@@ -421,7 +397,7 @@ namespace jsonifier {
 			static constexpr std::tuple<> val{};
 		};
 
-		template<typename value_type> constexpr decltype(auto) coreWrapperV = [] {
+		template<typename value_type> constexpr auto coreWrapperV = [] {
 			if constexpr (jsonifier_t<value_type>) {
 				return jsonifier::core<value_type>::parseValue;
 			} else {

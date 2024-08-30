@@ -34,7 +34,10 @@ jobs:
     - name: Commit and push the changes to the repo.
       working-directory: ./Jsonifier-Code-Only
       run: |
+           sudo git checkout --orphan newBranch
            sudo git add . 
            sudo git commit -m "Updates."
+           sudo git branch -D main
+           sudo git branch -m main
            sudo git push origin main -f
 
