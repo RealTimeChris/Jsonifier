@@ -407,7 +407,7 @@ class conformance_test {
 
 bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) noexcept {
 	try {
-		for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH)) {
+		for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH + std::string{ "/ConformanceTests" })) {
 			if (entry.is_regular_file()) {
 				const std::string fileName = entry.path().filename().string();
 

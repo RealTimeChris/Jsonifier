@@ -431,9 +431,8 @@ namespace jsonifier_internal {
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
 		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
-		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		bool collided{ true };
-		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
+		while (returnValues.uniqueIndex < returnValues.keyStatsVal.minLength) {
 			const auto first = static_cast<uint8_t>(pairsNew.rootPtr[0].key[returnValues.uniqueIndex]);
 			const auto mix1	 = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ first;
 			const auto mix2	 = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ first;
@@ -451,7 +450,7 @@ namespace jsonifier_internal {
 			if (!collided) {
 				break;
 			}
-			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength, returnValues.uniqueIndex + 1);
+			++returnValues.uniqueIndex;
 		}
 		if (collided) {
 			return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
@@ -463,14 +462,13 @@ namespace jsonifier_internal {
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
 		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
-		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		bool collided{ true };
-		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
+		while (returnValues.uniqueIndex < returnValues.keyStatsVal.minLength) {
 			if ((pairsNew.rootPtr[0].key[returnValues.uniqueIndex] & 1) == 0 && (pairsNew.rootPtr[1].key[returnValues.uniqueIndex] & 1) == 1) {
 				collided = false;
 				break;
 			}
-			returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength, returnValues.uniqueIndex + 1);
+			++returnValues.uniqueIndex;
 		}
 		if (collided) {
 			return collectSingleByteHashMapData<value_type, maxSizeIndexNew>(pairsNew);
@@ -523,10 +521,8 @@ namespace jsonifier_internal {
 		return mappings;
 	}
 
-	template<typename value_type> constexpr auto hashDataNew{ collectMapConstructionData<unwrap_t<value_type>>() };
-
-	template<typename value_type, typename iterator_newer> struct indexer {
-		static constexpr auto& hashData					   = hashDataNew<value_type>;
+	template<typename value_type, typename iterator_newer> struct hash_map {
+		static constexpr auto hashData					   = collectMapConstructionData<unwrap_t<value_type>>();
 		JSONIFIER_ALIGN static constexpr auto controlBytes = hashData.controlBytes;
 		JSONIFIER_ALIGN static constexpr auto indices	   = hashData.indices;
 		static constexpr auto uniqueIndex				   = hashData.uniqueIndex;

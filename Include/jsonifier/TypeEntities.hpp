@@ -132,22 +132,16 @@ namespace jsonifier {
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
-	template<typename value_type> struct scalar_value {
-		value_type val{};
-	};
-
-	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
-
 	namespace concepts {
 
 		template<typename value_type>
-		concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, std::remove_cvref_t<value_type>>;
+		concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, jsonifier_internal::unwrap_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, std::remove_cvref_t<value_type>>;
+		concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, jsonifier_internal::unwrap_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
+		concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, jsonifier_internal::unwrap_t<value_type>>;
 		template<typename value_type>
-		concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
+		concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
 		concept range = requires(jsonifier_internal::unwrap_t<value_type> value) {
@@ -393,6 +387,12 @@ namespace jsonifier {
 		template<typename value_type>
 		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type>;
 
+		template<typename value_type>
+		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };
+
+		template<typename value_type>
+		concept convertible_to_string_view = std::convertible_to<jsonifier_internal::unwrap_t<value_type>, std::string_view>;
+
 		struct empty {
 			static constexpr std::tuple<> val{};
 		};
@@ -410,9 +410,6 @@ namespace jsonifier {
 		template<typename value_type> using core_t = decay_keep_volatile_t<decltype(coreV<value_type>)>;
 
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
-
-		template<typename value_type>
-		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
 
 		template<typename value_type>
 		concept jsonifier_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;

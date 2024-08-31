@@ -27,9 +27,6 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type>
-	concept convertible_to_string_view = std::convertible_to<std::remove_cvref_t<value_type>, std::string_view>;
-
 	template<uint64_t currentIndex, uint64_t maxIndex, typename tuple_type, typename arg_type01, typename arg_type02, typename... arg_types>
 	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) noexcept {
 		if constexpr (std::tuple_size_v<tuple_type> > 0) {
@@ -82,12 +79,12 @@ namespace jsonifier {
 
 	template<typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
 		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
-			return value{ jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), args...) };
+			return value{ jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...) };
 		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
 			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
 		} else if constexpr (sizeof...(arg_types) == 1) {
 			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
-			return scalar_value{ std::make_tuple(std::forward<arg_types>(args)...) };
+			return value{ std::make_tuple(jsonifier_internal::makeDataMemberAuto("", std::forward<arg_types>(args)...)) };
 		} else {
 			return value{ concepts::empty{} };
 		}

@@ -203,28 +203,28 @@ namespace jsonifier_internal {
 			if constexpr (std::is_unsigned_v<value_type>) {
 				if constexpr (std::same_as<value_type, uint64_t>) {
 					if (*iter == '-') [[unlikely]] {
-						return true;
+						return false;
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
 					auto s = parseInt(value, iter);
 					if (!s) [[unlikely]] {
-						return true;
+						return false;
 					}
 				} else {
 					uint64_t i;
 					if (*iter == '-') [[unlikely]] {
-						return true;
+						return false;
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
 					auto s = parseInt<unwrap_t<decltype(i)>>(i, iter);
 					if (!s) [[unlikely]] {
-						return true;
+						return false;
 					}
 
 					if (i > maximum) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(i);
 				}
@@ -239,18 +239,18 @@ namespace jsonifier_internal {
 				static_assert(sizeof(*iter) == sizeof(char));
 				auto s = parseInt(i, iter);
 				if (!s) [[unlikely]] {
-					return true;
+					return false;
 				}
 
 				if (sign == -1) {
 					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
 					if (i > min_abs) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(sign * i);
 				} else {
 					if (i > maximum) [[unlikely]] {
-						return true;
+						return false;
 					}
 					value = static_cast<value_type>(i);
 				}
@@ -258,15 +258,15 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, temp);
-				if (!ptr) [[unlikely]] {
+				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, temp);
+				if (!ptr) {
 					return false;
 				}
+				iter = ptr;
 				value = temp;
-				iter  = ptr;
 			} else {
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);
-				if (!ptr) [[unlikely]] {
+				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);
+				if (!ptr) {
 					return false;
 				}
 				iter = ptr;

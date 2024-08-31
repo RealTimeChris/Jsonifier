@@ -185,7 +185,7 @@ namespace simd_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralsAsSimdBase(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 
 		jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArray<bytesPerStep>.data()) };
@@ -201,7 +201,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectWhitespaceAsSimdBase(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(whitespaceArray<bytesPerStep>.data()) };
 		valuesNew[0] = simd_internal::opCmpEq(opShuffle(simdValues, values[0]), values[0]);
@@ -231,9 +231,9 @@ namespace simd_internal {
 
 	JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		simd_int_t_holder returnValues;
-		returnValues.op			 = collectStructuralsAsSimdBase(values);
+		returnValues.op			 = collectStructuralIndices(values);
 		returnValues.quotes		 = collectValues<'"'>(values);
-		returnValues.whitespace	 = collectWhitespaceAsSimdBase(values);
+		returnValues.whitespace	 = collectWhitespaceIndices(values);
 		returnValues.backslashes = collectValues<'\\'>(values);
 		return returnValues;
 	}

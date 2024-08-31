@@ -159,7 +159,7 @@ namespace jsonifier_internal {
 					JSONIFIER_SKIP_WS();
 
 					static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
-					const auto index		= indexer<value_type, iterator>::findIndex(iter, end);
+					const auto index		= hash_map<value_type, iterator>::findIndex(iter, end);
 					if (index < N) [[likely]] {
 						static constexpr auto arrayOfPtrs = generateFunctionPtrs<options, value_type, iterator>();
 						if (arrayOfPtrs[index](std::forward<value_type>(value), std::forward<iterator>(iter), std::forward<iterator>(end))) [[likely]] {
@@ -182,22 +182,6 @@ namespace jsonifier_internal {
 				++iter;
 				--options.currentObjectDepth;
 				JSONIFIER_SKIP_WS();
-			}
-		}
-	};
-
-	template<const auto& options, jsonifier::concepts::jsonifier_scalar_value_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
-		template<jsonifier::concepts::jsonifier_scalar_value_t value_type_new, typename iterator_new>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(iter + (x * 64));
-			}
-			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
-			if constexpr (size > 0) {
-				static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
-				auto& newMember				 = getMember<newPtr>(value);
-				using member_type			 = unwrap_t<decltype(newMember)>;
-				parse_impl<options, member_type, iterator>::impl(newMember, iter, end);
 			}
 		}
 	};
@@ -248,6 +232,7 @@ namespace jsonifier_internal {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(iter - options.rootIter,
 						end - options.rootIter, options.rootIter));
+					derailleur<options>::skipToNextValue(iter, end);
 					return;
 				}
 			}
@@ -388,6 +373,7 @@ namespace jsonifier_internal {
 								static constexpr auto sourceLocation{ std::source_location::current() };
 								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
 									iter - options.rootIter, end - options.rootIter, options.rootIter));
+								derailleur<options>::skipToNextValue(iter, end);
 							}
 							return;
 						}
@@ -407,6 +393,7 @@ namespace jsonifier_internal {
 								static constexpr auto sourceLocation{ std::source_location::current() };
 								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
 									iter - options.rootIter, end - options.rootIter, options.rootIter));
+								derailleur<options>::skipToNextValue(iter, end);
 							}
 							return;
 						}
@@ -455,6 +442,7 @@ namespace jsonifier_internal {
 								static constexpr auto sourceLocation{ std::source_location::current() };
 								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
 									iter - options.rootIter, end - options.rootIter, options.rootIter));
+								derailleur<options>::skipToNextValue(iter, end);
 							}
 							return;
 						}
@@ -534,6 +522,7 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Null_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
+				derailleur<options>::skipToNextValue(iter, end);
 				return;
 			}
 		}
@@ -552,6 +541,7 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(
 					iter - options.rootIter, end - options.rootIter, options.rootIter));
+				derailleur<options>::skipToNextValue(iter, end);
 				return;
 			}
 		}
@@ -568,6 +558,7 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Number_Value>(
 					iter - options.rootIter, end - options.rootIter, options.rootIter));
+				derailleur<options>::skipToNextValue(iter, end);
 				return;
 			}
 		}
@@ -584,6 +575,7 @@ namespace jsonifier_internal {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_Bool_Value>(iter - options.rootIter,
 					end - options.rootIter, options.rootIter));
+				derailleur<options>::skipToNextValue(iter, end);
 				return;
 			}
 		}
