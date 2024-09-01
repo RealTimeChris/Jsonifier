@@ -93,13 +93,13 @@ namespace simd_internal {
 
 	#define opNot(x) vmvnq_u8(x)
 
-	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_type&& value, bool valueNew) {
+	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_type&& value, bool valueNew) noexcept {
 		JSONIFIER_ALIGN uint8_t values[bytesPerStep]{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		uint8x16_t mask02{ vld1q_u8(values) };
 		return valueNew ? vorrq_u8(value, mask02) : vbicq_u8(value, mask02);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_type&& value) {
+	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_type&& value) noexcept {
 		return (vgetq_lane_u8(value, 15) & 0x80) != 0;
 	}
 

@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 		}
 
 		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
-			simd_internal::simd_int_t_holder& rawStructurals) {
+			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			rawStructurals = getRawIndices<collectAligned>(values);
 			collectStructurals(escaped, nextIsEscaped, rawStructurals);
 			simd_internal::store(rawStructurals.op, newBits);

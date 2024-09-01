@@ -1,7 +1,7 @@
-// jsonifier_fast_float version 6.1.3, https://github.com/fastfloat/fast_float
+// fast_float  version 6.1.3, https://github.com/fastfloat/fast_float
 
-// jsonifier_fast_float by Daniel Lemire
-// jsonifier_fast_float by João Paulo Magalhaes
+// fast_float  by Daniel Lemire
+// fast_float  by João Paulo Magalhaes
 //
 //
 // with contributions from Eugene Golushkov
@@ -24,7 +24,7 @@
 //
 //    MIT License
 //
-//    Copyright (c) 2021 The jsonifier_fast_float authors
+//    Copyright (c) 2021 The fast_float  authors
 //
 //    Permission is hereby granted, free of charge, to any
 //    person obtaining a copy of this software and associated
@@ -52,7 +52,7 @@
 //
 // Apache License (Version 2.0) Notice
 //
-//    Copyright 2021 The jsonifier_fast_float authors
+//    Copyright 2021 The fast_float  authors
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at

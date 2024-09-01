@@ -52,21 +52,21 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename member_type, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(member_type& member_ptr, value_type&& value) {
+	template<typename member_type, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(member_type&& member_ptr, value_type&& value) {
 		using value_type02 = unwrap_t<member_type>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return value.*member_ptr;
+			return std::forward<value_type>(value).*std::forward<member_type>(member_ptr);
 		} else if constexpr (std::is_pointer_v<value_type02>) {
-			return *member_ptr;
+			return *std::forward<member_type>(member_ptr);
 		} else {
-			return member_ptr;
+			return std::forward<member_type>(member_ptr);
 		}
 	}
 
-	template<const auto& member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) {
+	template<auto member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) {
 		using value_type02 = unwrap_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return value.*member_ptr;
+			return std::forward<value_type>(value).*member_ptr;
 		} else if constexpr (std::is_pointer_v<value_type02>) {
 			return *member_ptr;
 		} else {
@@ -84,7 +84,7 @@ namespace jsonifier {
 			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
 		} else if constexpr (sizeof...(arg_types) == 1) {
 			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
-			return value{ std::make_tuple(jsonifier_internal::makeDataMemberAuto("", std::forward<arg_types>(args)...)) };
+			return scalar_value{ std::make_tuple(std::forward<arg_types>(args)...) };
 		} else {
 			return value{ concepts::empty{} };
 		}

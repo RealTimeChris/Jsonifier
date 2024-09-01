@@ -102,12 +102,12 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE raw_json_data() = default;
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const jsonifier::string& value) {
+		JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const jsonifier::string& value) noexcept {
 			jsonData = value;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data(const jsonifier::string& value) {
+		JSONIFIER_ALWAYS_INLINE raw_json_data(const jsonifier::string& value) noexcept {
 			*this = value;
 		}
 

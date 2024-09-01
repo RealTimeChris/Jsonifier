@@ -286,21 +286,86 @@ namespace jsonifier_internal {
 	}
 
 	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE constexpr bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
+		size_t lengthNew{ count };
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+		if constexpr (count >= 64) {
+			{
+				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
+				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+				simd_type value01, value02;
+				while (lengthNew >= vectorSize) {
+					value01 = simd_internal::gatherValuesU<simd_type>(lhs);
+					value02 = simd_internal::gatherValuesU<simd_type>(rhs);
+					if (!simd_internal::opCmpEq(value01, value02)) {
+						return false;
+					};
+					lengthNew -= vectorSize;
+					lhs += vectorSize;
+					rhs += vectorSize;
+				}
+			}
+			constexpr size_t newCount01{ count % 64 };
+			return compare<newCount01>(lhs, rhs);
+		}
+#endif
+
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+		if constexpr (count >= 32) {
+			{
+				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
+				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+				simd_type value01, value02;
+				while (lengthNew >= vectorSize) {
+					value01 = simd_internal::gatherValuesU<simd_type>(lhs);
+					value02 = simd_internal::gatherValuesU<simd_type>(rhs);
+					if (!simd_internal::opCmpEq(value01, value02)) {
+						return false;
+					};
+					lengthNew -= vectorSize;
+					lhs += vectorSize;
+					rhs += vectorSize;
+				}
+			}
+			constexpr size_t newCount01{ count % 32 };
+			return compare<newCount01>(lhs, rhs);
+		}
+#endif
+
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+		if constexpr (count >= 16) {
+			{
+				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
+				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+				simd_type value01, value02;
+				while (lengthNew >= vectorSize) {
+					value01 = simd_internal::gatherValuesU<simd_type>(lhs);
+					value02 = simd_internal::gatherValuesU<simd_type>(rhs);
+					if (!simd_internal::opCmpEq(value01, value02)) {
+						return false;
+					};
+					lengthNew -= vectorSize;
+					lhs += vectorSize;
+					rhs += vectorSize;
+				}
+			}
+			constexpr size_t newCount01{ count % 16 };
+			return compare<newCount01>(lhs, rhs);
+		}
+#endif
 		if constexpr (count > 8) {
-			uint64_t countNew{ count };
 			uint64_t v[2];
-			while (countNew > 8) {
+			while (lengthNew > 8) {
 				std::memcpy(v, lhs, sizeof(uint64_t));
 				std::memcpy(v + 1, rhs, sizeof(uint64_t));
 				if (v[0] != v[1]) {
 					return false;
 				}
-				countNew -= 8;
+				lengthNew -= 8;
 				lhs += 8;
 				rhs += 8;
 			}
 
-			const auto shift = 8 - countNew;
+			const auto shift = 8 - lengthNew;
 			lhs -= shift;
 			rhs -= shift;
 			std::memcpy(v, lhs, sizeof(uint64_t));

@@ -132,6 +132,12 @@ namespace jsonifier {
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
+	template<typename value_type> struct scalar_value {
+		value_type val{};
+	};
+
+	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
+
 	namespace concepts {
 
 		template<typename value_type>
@@ -412,6 +418,9 @@ namespace jsonifier {
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
 
 		template<typename value_type>
+		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
+
+		template<typename value_type>
 		concept jsonifier_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;
 
 		template<typename value_type>
@@ -421,12 +430,12 @@ namespace jsonifier {
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
 
-		template<typename value_type> constexpr bool printErrorFunction() {
+		template<typename value_type> constexpr bool printErrorFunction() noexcept {
 			using fail_type = typename value_type::fail_type;
 			return false;
 		}
 
-		template<is_core_type value_type> constexpr bool printErrorFunction() {
+		template<is_core_type value_type> constexpr bool printErrorFunction() noexcept {
 			return true;
 		}
 
@@ -463,13 +472,13 @@ namespace jsonifier_internal {
 		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
-	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) {
+	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) noexcept {
 		std::cout << valuesTitle;
 		std::cout << std::bitset<sizeof(value_type) * 8>{ values };
 		std::cout << std::endl;
 	}
 
-	template<jsonifier::concepts::simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) {
+	template<jsonifier::concepts::simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
 		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
@@ -483,13 +492,13 @@ namespace jsonifier_internal {
 		return value;
 	}
 
-	JSONIFIER_ALWAYS_INLINE std::string printBits(bool value) {
+	JSONIFIER_ALWAYS_INLINE std::string printBits(bool value) noexcept {
 		std::stringstream theStream{};
 		theStream << std::boolalpha << value << std::endl;
 		return theStream.str();
 	}
 
-	template<typename simd_type> JSONIFIER_ALWAYS_INLINE std::string printBits(const simd_type& value) {
+	template<typename simd_type> JSONIFIER_ALWAYS_INLINE std::string printBits(const simd_type& value) noexcept {
 		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
@@ -506,15 +515,15 @@ namespace jsonifier_internal {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
-		JSONIFIER_ALWAYS_INLINE stop_watch(uint64_t newTime) {
+		JSONIFIER_ALWAYS_INLINE stop_watch(uint64_t newTime) noexcept {
 			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
 		}
 
-		JSONIFIER_ALWAYS_INLINE stop_watch(value_type newTime) {
+		JSONIFIER_ALWAYS_INLINE stop_watch(value_type newTime) noexcept {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(stop_watch&& other) {
+		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(stop_watch&& other) noexcept {
 			if (this != &other) [[likely]] {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
@@ -522,11 +531,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE stop_watch(stop_watch&& other) {
+		JSONIFIER_ALWAYS_INLINE stop_watch(stop_watch&& other) noexcept {
 			*this = std::move(other);
 		}
 
-		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(const stop_watch& other) {
+		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(const stop_watch& other) noexcept {
 			if (this != &other) [[likely]] {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
@@ -534,11 +543,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE stop_watch(const stop_watch& other) {
+		JSONIFIER_ALWAYS_INLINE stop_watch(const stop_watch& other) noexcept {
 			*this = other;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool hasTimeElapsed() {
+		JSONIFIER_ALWAYS_INLINE bool hasTimeElapsed() noexcept {
 			if (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) [[likely]] {
 				return true;
@@ -547,7 +556,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE void reset(value_type newTimeValue = value_type{}) {
+		JSONIFIER_ALWAYS_INLINE void reset(value_type newTimeValue = value_type{}) noexcept {
 			if (newTimeValue != value_type{}) [[likely]] {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
@@ -560,7 +569,7 @@ namespace jsonifier_internal {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		JSONIFIER_ALWAYS_INLINE value_type totalTimeElapsed() {
+		JSONIFIER_ALWAYS_INLINE value_type totalTimeElapsed() noexcept {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 

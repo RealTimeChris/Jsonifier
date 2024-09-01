@@ -53,15 +53,15 @@ namespace jsonifier_internal {
 		} \
 	}
 
-	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) {
+	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) noexcept {
 		return *ptr;
 	}
 
-	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char* ptr) {
+	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char* ptr) noexcept {
 		return ptr;
 	}
 
-	constexpr std::array<uint32_t, 886> digitToVal32{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+	constexpr std::array<uint32_t, 886> digitToVal32{ { 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
@@ -129,13 +129,15 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu };
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu } };
 
+	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(iterator string1) noexcept {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, iterator c) {
+	// Taken from simdjson: https://github.com/simdjson/simdjson
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, iterator c) noexcept {
 		if (cp <= 0x7F) {
 			c[0] = uint8_t(cp);
 			return 1;
@@ -159,6 +161,7 @@ namespace jsonifier_internal {
 		return 0;
 	}
 
+	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
 		using char_type01 = uint8_t;
 		static constexpr char_type01 quotesValue{ static_cast<char_type01>('\\' << 8) };
@@ -834,9 +837,15 @@ namespace jsonifier_internal {
 
 	template<string_literal string, typename char_type> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char_type* iter) {
 		static constexpr auto newString{ getStringAsInt<char_type, string>() };
-		convert_length_to_int_t<string.size()> newerString{};
-		std::memcpy(&newerString, iter, string.size());
-		return newString == newerString;
+		if constexpr (string.size() % 2 == 0) {
+			convert_length_to_int_t<string.size()> newerString;
+			std::memcpy(&newerString, iter, string.size());
+			return newString == newerString;
+		} else {
+			convert_length_to_int_t<string.size()> newerString{};
+			std::memcpy(&newerString, iter, string.size());
+			return newString == newerString;
+		}
 	}
 
 	template<typename iterator, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, iterator& iter) {

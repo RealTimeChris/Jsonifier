@@ -42,33 +42,38 @@ namespace jsonifier_internal {
 		Validating	= 5,
 	};
 
-	enum class parse_errors {
-		Success						= 0,
-		Missing_Object_Start		= 1,
-		Imbalanced_Object_Braces	= 2,
-		Missing_Array_Start			= 3,
-		Imbalanced_Array_Brackets	= 4,
-		Missing_String_Start		= 5,
-		Missing_Colon				= 6,
-		Missing_Comma_Or_Object_End = 7,
-		Missing_Comma_Or_Array_End	= 8,
-		Missing_Comma				= 9,
-		Invalid_Number_Value		= 10,
-		Invalid_Null_Value			= 11,
-		Invalid_Bool_Value			= 12,
-		Invalid_String_Characters	= 13,
-		No_Input					= 14,
-		Unfinished_Input			= 15,
-		Unexpected_String_End		= 16,
+	enum class parse_errors : uint32_t {
+		Success						= 1 << 0,
+		Missing_Object_Start		= 1 << 1,
+		Imbalanced_Object_Braces	= 1 << 2,
+		Missing_Array_Start			= 1 << 3,
+		Imbalanced_Array_Brackets	= 1 << 4,
+		Missing_String_Start		= 1 << 5,
+		Missing_Colon				= 1 << 6,
+		Missing_Comma_Or_Object_End = 1 << 7,
+		Missing_Comma_Or_Array_End	= 1 << 8,
+		Missing_Comma				= 1 << 9,
+		Invalid_Number_Value		= 1 << 10,
+		Invalid_Null_Value			= 1 << 11,
+		Invalid_Bool_Value			= 1 << 12,
+		Invalid_String_Characters	= 1 << 13,
+		No_Input					= 1 << 14,
+		Unfinished_Input			= 1 << 15,
+		Unexpected_String_End		= 1 << 16,
 	};
+
+	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, parse_errors error) {
+		os << simd_internal::tzcnt(static_cast<uint64_t>(error));
+		return os;
+	}
 
 	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, jsonifier::string_view>> errorMap{
 		{ error_classes::Parsing,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" },
-				{ 3ull, "Missing_Array_Start" }, { 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" },
-				{ 7ull, "Missing_Comma_Or_Object_End" }, { 8ull, "Missing_Comma_Or_Array_End" }, { 9ull, "Missing_Comma" }, { 10ull, "Invalid_Number_Value" },
-				{ 11ull, "Invalid_Null_Value" }, { 12ull, "Invalid_Bool_Value" }, { 13ull, "Invalid_String_Characters" }, { 14ull, "No_Input" }, { 15ull, "Unfinished_Input" },
-				{ 16ull, "Unexpected_String_end" } } } },
+			std::unordered_map<uint64_t, jsonifier::string_view>{ { { 1 << 0ull, "Success" }, { 1 << 1ull, "Missing_Object_Start" }, { 1 << 2ull, "Imbalanced_Object_Braces" },
+				{ 1 << 3ull, "Missing_Array_Start" }, { 1 << 4ull, "Imbalanced_Array_Brackets" }, { 1 << 5ull, "Missing_String_Start" }, { 1 << 6ull, "Missing_Colon" },
+				{ 1 << 7ull, "Missing_Comma_Or_Object_End" }, { 1 << 8ull, "Missing_Comma_Or_Array_End" }, { 1 << 9ull, "Missing_Comma" }, { 1 << 10ull, "Invalid_Number_Value" },
+				{ 1 << 11ull, "Invalid_Null_Value" }, { 1 << 12ull, "Invalid_Bool_Value" }, { 1 << 13ull, "Invalid_String_Characters" }, { 1 << 14ull, "No_Input" },
+				{ 1 << 15ull, "Unfinished_Input" }, { 1 << 16ull, "Unexpected_String_end" } } } },
 		{ error_classes::Serializing, std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" } } } },
 		{ error_classes::Minifying,
 			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },
@@ -148,6 +153,10 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE operator uint64_t() const noexcept {
 			return errorType;
+		}
+
+		JSONIFIER_ALWAYS_INLINE operator parse_errors() const noexcept {
+			return static_cast<parse_errors>(errorType);
 		}
 
 		JSONIFIER_ALWAYS_INLINE operator bool() const noexcept {

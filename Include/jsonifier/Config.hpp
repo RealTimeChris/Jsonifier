@@ -25,11 +25,12 @@
 
 #include <cstdint>
 
-#if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__)) || (defined(__APPLE__) && defined(__clang__))
+#if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
 #elif defined(_MSC_VER)
 	#define JSONIFIER_MSVC 1
 	#pragma warning(disable : 4820)
+	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4324)
 #elif defined(__GNUC__) && !defined(__clang__)
 	#define JSONIFIER_GNUCXX 1

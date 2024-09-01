@@ -35,50 +35,13 @@
 
 namespace jsonifier_internal {
 
-	struct xoshiro256 {
-		size_t state[4]{};
+	constexpr std::array<uint64_t, 32> primeSeeds{ 0x9E3779B97F4A7C15ull, 0xBB67AE8584CAA73Bull, 0xC6EF372FE94F82BEull, 0x3243F6A8885A308Dull, 0x3C6EF372FE94F82Aull,
+		0x41C6D48ED781DADBull, 0x607F38003DE7B62Cull, 0x4A7484AA03ED3DA8ull, 0x789B0FBD5FEFCA10ull, 0x6A09E667F3BCC908ull, 0x510E527FADE682D1ull, 0x1F83D9ABFB41BD6Bull,
+		0x5BE0CD19137E2179ull, 0xC6BC279692B5CC83ull, 0x142C8D844E02E21Cull, 0x3A84E481C3382C15ull, 0xB5C0FBCFEC4D3B2Full, 0x563CBC5B5E7E7CFAull, 0x6374618B44433E23ull,
+		0x3916A2E04642E281ull, 0x487C1FEBC93E7521ull, 0xDAA66B36681D81A1ull, 0x923F82A4AF193BEBull, 0x8C4751B1F6C6226Dull, 0xAB1C5ED5DA0B09E1ull, 0xD807AA98A3030242ull,
+		0x12835B01C4576ACDull, 0x243185BE4EE4B28Cull, 0x550C7DC3D5FFB4E2ull, 0x72BE5D74F27B896Full, 0x80DEB1FE3B1696B1ull, 0x9BDC06A725C71235ull };
 
-		constexpr xoshiro256() noexcept {
-			constexpr auto x   = 0x9E3779B185EBCA87ull >> 12ull;
-			constexpr auto x01 = x ^ x << 25ull;
-			constexpr auto x02 = x01 ^ x01 >> 27ull;
-			size_t s		   = x02 * 0x2545F4914F6CDD1Dull;
-			for (size_t y = 0; y < 4; ++y) {
-				state[y] = splitmix64(s);
-			}
-		}
-
-		constexpr size_t operator()() noexcept {
-			const size_t result = rotl(state[1ull] * 5ull, 7ull) * 9ull;
-
-			const size_t t = state[1ull] << 17ull;
-
-			state[2ull] ^= state[0ull];
-			state[3ull] ^= state[1ull];
-			state[1ull] ^= state[2ull];
-			state[0ull] ^= state[3ull];
-
-			state[2ull] ^= t;
-
-			state[3ull] = rotl(state[3ull], 45ull);
-
-			return result;
-		}
-
-	  protected:
-		constexpr size_t rotl(const size_t x, size_t k) const noexcept {
-			return (x << k) | (x >> (64ull - k));
-		}
-
-		constexpr size_t splitmix64(size_t& seed64) const noexcept {
-			size_t result = seed64 += 0x9E3779B97F4A7C15ull;
-			result		  = (result ^ (result >> 30ull)) * 0xBF58476D1CE4E5B9ull;
-			result		  = (result ^ (result >> 27ull)) * 0x94D049BB133111EBull;
-			return result ^ (result >> 31ull);
-		}
-	};
-
-	template<typename value_type, typename char_type> constexpr value_type readBitsCt(const char_type* ptr) {
+	template<typename value_type, typename char_type> constexpr value_type readBitsCt(const char_type* ptr) noexcept {
 		value_type returnValue{};
 		for (size_t x = 0; x < sizeof(value_type); ++x) {
 			returnValue |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
@@ -86,12 +49,13 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	struct key_hasher : public xoshiro256 {
+	struct key_hasher {
+		size_t seedIndex{};///< Seed value for the hashing algorithm.
 		size_t seed{};///< Seed value for the hashing algorithm.
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
-		constexpr key_hasher() {
+		constexpr key_hasher() noexcept {
 			updateSeed();
 		}
 
@@ -100,8 +64,8 @@ namespace jsonifier_internal {
 		 *
 		 * @param seedNew The new seed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE constexpr void updateSeed() {
-			seed = xoshiro256::operator()();
+		JSONIFIER_ALWAYS_INLINE constexpr void updateSeed() noexcept {
+			seed = primeSeeds[(seedIndex++) % 32];
 		}
 
 		/**
@@ -111,7 +75,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char* value, size_t length) const {
+		JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);
@@ -140,37 +104,6 @@ namespace jsonifier_internal {
 			return seed64;
 		}
 
-		template<size_t length, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char_type* value) const {
-			size_t seed64{ seed };
-			constexpr size_t lengthNewer01{ length % 8 };
-			if constexpr (length >= 8) {
-				for (size_t lengthNew = length; lengthNew >= 8; lengthNew -= 8) {
-					std::memcpy(&returnValue64, value, 8);
-					seed64 ^= returnValue64;
-					value += 8;
-				}
-			}
-
-			constexpr size_t lengthNewer02{ lengthNewer01 >= 4 ? lengthNewer01 - 4 : lengthNewer01 };
-			if constexpr (lengthNewer01 >= 4) {
-				std::memcpy(&returnValue32, value, 4);
-				seed64 ^= returnValue32;
-				value += 4;
-			}
-
-			constexpr size_t lengthNewer03{ lengthNewer02 >= 2 ? lengthNewer02 - 2 : lengthNewer02 };
-			if constexpr (lengthNewer02 >= 2) {
-				std::memcpy(&returnValue16, value, 2);
-				seed64 ^= returnValue16;
-				value += 2;
-			}
-
-			if constexpr (lengthNewer03 == 1) {
-				seed64 ^= *value;
-			}
-			return seed64;
-		}
-
 		/**
 		 * @brief Hashes a key at compile-time.
 		 *
@@ -178,7 +111,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				seed64 ^= readBitsCt<size_t>(value);

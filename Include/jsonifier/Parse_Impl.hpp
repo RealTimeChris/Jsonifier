@@ -157,7 +157,6 @@ namespace jsonifier_internal {
 				if (*iter == '"') [[likely]] {
 					++iter;
 					JSONIFIER_SKIP_WS();
-
 					static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
 					const auto index		= hash_map<value_type, iterator>::findIndex(iter, end);
 					if (index < N) [[likely]] {
@@ -182,6 +181,21 @@ namespace jsonifier_internal {
 				++iter;
 				--options.currentObjectDepth;
 				JSONIFIER_SKIP_WS();
+			}
+		}
+	};
+
+	template<const auto& options, jsonifier::concepts::jsonifier_scalar_value_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
+		template<jsonifier::concepts::jsonifier_scalar_value_t value_type_new, typename iterator_new>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(iter + (x * 64));
+			}
+			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
+			if constexpr (size == 1) {
+				static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
+				using member_type			 = unwrap_t<decltype(getMember<newPtr>(value))>;
+				parse_impl<options, member_type, iterator>::impl(getMember<newPtr>(value), iter, end);
 			}
 		}
 	};
@@ -266,7 +280,7 @@ namespace jsonifier_internal {
 		}
 
 		template<bool first, jsonifier::concepts::map_t value_type_new, typename iterator_new>
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end) {
+		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
 			if (*iter != '}') [[likely]] {
 				if constexpr (!first) {
 					if (*iter == ',') [[likely]] {
