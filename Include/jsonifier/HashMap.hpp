@@ -524,6 +524,213 @@ namespace jsonifier_internal {
 		return mappings;
 	}
 
+	template<typename tuple_type, size_t currentIndex = 0>
+	constexpr decltype(auto) generateKeyArrayImpl(const tuple_type& tuple, std::array<jsonifier::string_view, std::tuple_size_v<tuple_type>> keys) {
+		if constexpr (currentIndex < std::tuple_size_v<tuple_type>) {
+			keys[currentIndex] = std::get<currentIndex>(tuple).view();
+			return jsonifier_internal::generateKeyArrayImpl<tuple_type, currentIndex + 1>(tuple, keys);
+		} else {
+			return keys;
+		}
+	}
+
+	JSONIFIER_ALWAYS_INLINE static constexpr size_t findLastUniqueColumnIndex(const jsonifier_internal::tuple_references& tupleRefs, size_t maxIndex,
+		size_t startingIndex = 0) noexcept {
+		constexpr size_t alphabetSize = 256;
+		size_t lastUniqueIndex{ 0 };
+		jsonifier::string_view key{};
+		for (size_t index = maxIndex; index > 0; --index) {
+			std::array<bool, alphabetSize> seen{};
+			bool allDifferent = true;
+
+			for (size_t x = 0; x < tupleRefs.count; ++x) {
+				key = tupleRefs.rootPtr[x].key;
+				if (index >= key.size()) {
+					break;
+				}
+				const char c	 = key[index];
+				size_t charIndex = static_cast<const unsigned char>(c);
+
+				if (seen[charIndex]) {
+					allDifferent = false;
+					break;
+				}
+				seen[charIndex] = true;
+			}
+
+			if (allDifferent) {
+				lastUniqueIndex = index;
+			}
+		}
+
+		return lastUniqueIndex - 1;
+	}
+
+	template<typename tuple_type> constexpr decltype(auto) generateKeyArray(const tuple_type& tuple) {
+		std::array<jsonifier::string_view, std::tuple_size_v<tuple_type>> keys{};
+		return jsonifier_internal::generateKeyArrayImpl(tuple, keys);
+	}
+
+	template<typename value_type> constexpr auto keyArray{ jsonifier_internal::generateKeyArray(jsonifier_internal::coreTupleV<value_type>) };
+
+	template<typename value_type> constexpr auto keyStatsVal{ jsonifier_internal::keyStatsImpl(jsonifier_internal::tupleReferencesByLength<value_type>) };
+
+	template<typename value_type>
+	constexpr auto lastUniqueIndex{ findLastUniqueColumnIndex(jsonifier_internal::tupleReferencesByLength<value_type>, keyStatsVal<value_type>.minLength) };
+
+	template<const auto&, typename value_type, typename iterator> struct parse_impl;
+
+	template<typename value_type> struct trie_node_base {
+		virtual bool processIndex(value_type& value, const char*& iter, const char*& end) const = 0;
+	};
+
+	template<const auto& options, typename value_type, size_t currentIndex = 0> struct trie_node_derived;
+
+	template<const auto& options, typename value_type> struct trie_node_derived<options, value_type, 0> : public trie_node_base<value_type> {
+		static constexpr trie_node_derived<options, value_type, 1> next{};
+		static constexpr auto currentIndex{ 0 };
+		static constexpr auto nextPtr{ &next };
+
+		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
+			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
+				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
+				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
+				static constexpr auto keySize	 = key.size();
+				static constexpr auto keySizeNew = keySize + 1;
+				iter += keySizeNew;
+				JSONIFIER_SKIP_WS();
+				if (*iter == ':') [[likely]] {
+					++iter;
+					JSONIFIER_SKIP_WS();
+					using member_type = unwrap_t<decltype(value.*ptr)>;
+					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
+					return true;
+				} else {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
+						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
+					derailleur<options>::skipToNextValue(iter, end);
+					return false;
+				}
+			}
+			return false;
+		}
+	};
+
+	template<const auto& options, typename value_type> struct trie_node_derived<options, value_type, 128> : public trie_node_base<value_type> {
+		static constexpr auto currentIndex{ 0 };
+		static constexpr auto nextPtr{ nullptr };
+
+		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
+			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
+				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
+				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
+				static constexpr auto keySize	 = key.size();
+				static constexpr auto keySizeNew = keySize + 1;
+				iter += keySizeNew;
+				JSONIFIER_SKIP_WS();
+				if (*iter == ':') [[likely]] {
+					++iter;
+					JSONIFIER_SKIP_WS();
+					using member_type = unwrap_t<decltype(value.*ptr)>;
+					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
+					return true;
+				} else {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
+						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
+					derailleur<options>::skipToNextValue(iter, end);
+					return false;
+				}
+			}
+			return false;
+		}
+	};
+
+	template<const auto& options, typename value_type, size_t currentIndexNew> struct trie_node_derived : public trie_node_base<value_type> {
+		static constexpr trie_node_derived<options, value_type, currentIndexNew + 1> next{};
+		static constexpr auto currentIndex{ currentIndexNew - 1 };
+		static constexpr auto nextPtr{ &next };
+
+		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
+			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
+				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
+				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
+				static constexpr auto keySize	 = key.size();
+				static constexpr auto keySizeNew = keySize + 1;
+				iter += keySizeNew;
+				JSONIFIER_SKIP_WS();
+				if (*iter == ':') [[likely]] {
+					++iter;
+					JSONIFIER_SKIP_WS();
+					using member_type = unwrap_t<decltype(value.*ptr)>;
+					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
+					return true;
+				} else {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
+						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
+					derailleur<options>::skipToNextValue(iter, end);
+					return false;
+				}
+			}
+			return false;
+		}
+	};
+
+	template<typename value_type> struct trie_node {
+		std::array<int32_t, 2048> children{};
+		const trie_node_base<value_type>* indexVal{};
+
+		constexpr trie_node() : indexVal(nullptr) {
+			children.fill(-1);
+		}
+	};
+
+	template<const auto& options, typename value_type, const auto& keys, size_t currentIndex = 0>
+	constexpr auto buildTrieImpl(std::array<trie_node<value_type>, 2048>& nodes, size_t currentNodeCount = 0) {
+		if constexpr (currentIndex < keys.size()) {
+			int32_t currentNodeIndex = 0;
+
+			for (size_t x = jsonifier_internal::lastUniqueIndex<value_type>; x < keys[currentIndex].size(); ++x) {
+				int32_t charIndex = keys[currentIndex][x];
+				if (nodes[currentNodeIndex].children[charIndex] == -1) {
+					nodes[currentNodeIndex].children[charIndex] = currentNodeCount++;
+				}
+				currentNodeIndex = nodes[currentNodeIndex].children[charIndex];
+			}
+			nodes[currentNodeIndex].indexVal = trie_node_derived<options, value_type, currentIndex>::nextPtr;
+			return buildTrieImpl<options, value_type, keys, currentIndex + 1>(nodes, currentNodeCount);
+		} else {
+			return nodes;
+		}
+	}
+
+	template<const auto& options, typename value_type> constexpr auto buildTrie() {
+		constexpr auto& keys = jsonifier_internal::keyArray<value_type>;
+		std::array<trie_node<value_type>, 2048> returnValues{};
+		return buildTrieImpl<options, value_type, keys>(returnValues);
+	}
+
+	template<const auto& options, typename value_type> struct trie {
+		static constexpr auto nodes{ buildTrie<options, value_type>() };
+
+		JSONIFIER_ALWAYS_INLINE const auto* searchWord(const char* word) const {
+			int32_t currentNodeIndex = 0;
+
+			for (size_t x = jsonifier_internal::lastUniqueIndex<value_type>; x < jsonifier_internal::keyStatsVal<value_type>.maxLength + 1; ++x) {
+				int32_t charIndex = word[x];
+				if (nodes[currentNodeIndex].indexVal) {
+					return nodes[currentNodeIndex].indexVal;
+				} else if (nodes[currentNodeIndex].children[charIndex] == -1) {
+					return static_cast<const trie_node_base<value_type>*>(nullptr);
+				}
+				currentNodeIndex = nodes[currentNodeIndex].children[charIndex];
+			}
+			return static_cast<const trie_node_base<value_type>*>(nullptr);
+		}
+	};
+
 	template<typename value_type, typename iterator_newer> struct hash_map {
 		static constexpr auto hashData					   = collectMapConstructionData<unwrap_t<value_type>>();
 		JSONIFIER_ALIGN static constexpr auto controlBytes = hashData.controlBytes;

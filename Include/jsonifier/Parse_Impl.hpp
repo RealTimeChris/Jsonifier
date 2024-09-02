@@ -156,17 +156,15 @@ namespace jsonifier_internal {
 
 				if (*iter == '"') [[likely]] {
 					++iter;
-					JSONIFIER_SKIP_WS();
-					static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
-					const auto index		= hash_map<value_type, iterator>::findIndex(iter, end);
-					if (index < N) [[likely]] {
-						static constexpr auto arrayOfPtrs = generateFunctionPtrs<options, value_type, iterator>();
-						if (arrayOfPtrs[index](std::forward<value_type>(value), std::forward<iterator>(iter), std::forward<iterator>(end))) [[likely]] {
+					static constexpr auto keyArrayVal{ keyArray<value_type> };
+					static constexpr auto lastUniqueIndexVal{ lastUniqueIndex<value_type> };
+					static constexpr trie<options, value_type> trie{};
+					if (auto newPtr = trie.searchWord(iter); newPtr != nullptr) {
+						if (newPtr->processIndex(value, iter, end)) [[likely]] {
 							return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsSize);
 						} else {
 							derailleur<options>::skipToNextValue(iter, end);
 						}
-						return;
 					} else {
 						derailleur<options>::skipToNextValue(iter, end);
 					}
