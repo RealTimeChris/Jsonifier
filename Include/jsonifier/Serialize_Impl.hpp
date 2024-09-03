@@ -57,13 +57,11 @@ namespace jsonifier_internal {
 				}
 				static constexpr auto& memberPtr = subTuple.ptr();
 				if constexpr (options.optionsReal.prettify) {
-					static constexpr string_literal literal{ "\": " };
-					static constexpr auto quotedKey = combineLiterals<string_literal{ "\"" }, stringLiteralFromView<key.size()>(key), literal>();
+					static constexpr auto quotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) + string_literal{ "\": " };
 					writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
 
 				} else {
-					static constexpr string_literal literal{ "\":" };
-					static constexpr auto quotedKey = combineLiterals<string_literal{ "\"" }, stringLiteralFromView<key.size()>(key), literal>();
+					static constexpr auto quotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) + string_literal{ "\":" };
 					writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
 				}
 
@@ -167,8 +165,31 @@ namespace jsonifier_internal {
 				serialize_impl<options, derived_type, member_type>::impl(std::forward<member_type>(item), std::forward<buffer_type>(bufferNew),
 					std::forward<serialize_pair_t>(indexNew));
 			};
-			forEach<size, lambda>(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+			serializeObjects<0, size>(std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 			writer<options>::writeArrayExit(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+		}
+		
+		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
+			if constexpr (currentIndex < maxIndex) {
+				auto& subTuple = std::get<currentIndex>(value);
+				using member_type = unwrap_t<decltype(subTuple)>;
+				serialize_impl<options, derived_type, member_type>::impl(subTuple, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+				if constexpr (currentIndex < maxIndex - 1) {
+					if constexpr (options.optionsReal.prettify) {
+						auto k = serializePair.index + serializePair.indent + 256;
+						if (k > buffer.size()) [[unlikely]] {
+							buffer.resize(max(buffer.size() * 2, k));
+						}
+						writer<options>::template writeCharacters<",\n", false>(buffer, serializePair.index);
+						writer<options>::template writeCharacters<' ', false>(serializePair.indent * options.optionsReal.indentSize, buffer, serializePair.index);
+					} else {
+						writer<options>::template writeCharacter<','>(buffer, serializePair.index);
+					}
+				}
+				return serializeObjects<currentIndex + 1, maxIndex>(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+					std::forward<serialize_pair_t>(serializePair));
+			}
 		}
 	};
 

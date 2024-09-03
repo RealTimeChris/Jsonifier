@@ -391,7 +391,7 @@ namespace jsonifier {
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type>;
+		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || array_tuple_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };

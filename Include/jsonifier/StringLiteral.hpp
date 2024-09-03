@@ -103,7 +103,7 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t size> JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size>& input) noexcept {
-		os << input.operator jsonifier::string_view();
+		os << input.view();
 		return os;
 	}
 

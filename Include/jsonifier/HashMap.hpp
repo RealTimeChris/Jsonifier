@@ -104,8 +104,6 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> inline constexpr auto tupleRefs{ collectTupleRefs(jsonifier::concepts::coreV<value_type>) };
-	template<typename value_type> inline constexpr auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefs<value_type>) };
-	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> inline constexpr auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
 
@@ -288,7 +286,7 @@ namespace jsonifier_internal {
 			hash_map_construction_data_type<value_type, 6>>;
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
-		constexpr auto keyStatsVal	 = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		constexpr auto keyStatsVal	 = keyStatsImpl(tupleReferencesByLength<value_type>);
 		auto constructForGivenLength = [&](const auto maxSizeIndex, auto&& constructForGivenLength) mutable {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
 			returnValues.keyStatsVal = keyStatsVal;
@@ -345,7 +343,7 @@ namespace jsonifier_internal {
 	template<typename value_type, size_t maxSizeIndexNew> constexpr auto collectUniquePerLengthHashMapData(const tuple_references& pairsNew) {
 		constexpr auto uniqueLengthCount = countUniqueLengths(tupleReferencesByLength<value_type>);
 		constexpr auto results			 = collectLengths<uniqueLengthCount>(tupleReferencesByLength<value_type>);
-		constexpr auto keyStatsVal		 = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		constexpr auto keyStatsVal		 = keyStatsImpl(tupleReferencesByLength<value_type>);
 		constexpr auto keyStatsValNew	 = keyStats(results);
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
 		returnValues.keyStatsVal = keyStatsVal;
@@ -373,7 +371,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectUniqueByteAndLengthHashMapData(const tuple_references& pairsNew) noexcept {
-		constexpr auto keyStatsVal	 = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		constexpr auto keyStatsVal	 = keyStatsImpl(tupleReferencesByLength<value_type>);
 		auto constructForGivenLength = [&](const auto maxSizeIndex, auto&& constructForGivenLength) mutable {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
 			returnValues.keyStatsVal = keyStatsVal;
@@ -414,7 +412,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type, getMaxSizeIndex(256)> returnValues{};
-		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByLength<value_type>);
 		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
 			std::fill(returnValues.indices.begin(), returnValues.indices.end(), returnValues.indices.size() - 1);
@@ -431,7 +429,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
-		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByLength<value_type>);
 		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		bool collided{ true };
 		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
@@ -463,7 +461,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t maxSizeIndexNew> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type, maxSizeIndexNew> returnValues{};
-		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		returnValues.keyStatsVal = keyStatsImpl(tupleReferencesByLength<value_type>);
 		returnValues.uniqueIndex = findUniqueColumnIndex(pairsNew, returnValues.keyStatsVal.minLength);
 		bool collided{ true };
 		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
@@ -523,213 +521,6 @@ namespace jsonifier_internal {
 
 		return mappings;
 	}
-
-	template<typename tuple_type, size_t currentIndex = 0>
-	constexpr decltype(auto) generateKeyArrayImpl(const tuple_type& tuple, std::array<jsonifier::string_view, std::tuple_size_v<tuple_type>> keys) {
-		if constexpr (currentIndex < std::tuple_size_v<tuple_type>) {
-			keys[currentIndex] = std::get<currentIndex>(tuple).view();
-			return jsonifier_internal::generateKeyArrayImpl<tuple_type, currentIndex + 1>(tuple, keys);
-		} else {
-			return keys;
-		}
-	}
-
-	JSONIFIER_ALWAYS_INLINE static constexpr size_t findLastUniqueColumnIndex(const jsonifier_internal::tuple_references& tupleRefs, size_t maxIndex,
-		size_t startingIndex = 0) noexcept {
-		constexpr size_t alphabetSize = 256;
-		size_t lastUniqueIndex{ 0 };
-		jsonifier::string_view key{};
-		for (size_t index = maxIndex; index > 0; --index) {
-			std::array<bool, alphabetSize> seen{};
-			bool allDifferent = true;
-
-			for (size_t x = 0; x < tupleRefs.count; ++x) {
-				key = tupleRefs.rootPtr[x].key;
-				if (index >= key.size()) {
-					break;
-				}
-				const char c	 = key[index];
-				size_t charIndex = static_cast<const unsigned char>(c);
-
-				if (seen[charIndex]) {
-					allDifferent = false;
-					break;
-				}
-				seen[charIndex] = true;
-			}
-
-			if (allDifferent) {
-				lastUniqueIndex = index;
-			}
-		}
-
-		return lastUniqueIndex - 1;
-	}
-
-	template<typename tuple_type> constexpr decltype(auto) generateKeyArray(const tuple_type& tuple) {
-		std::array<jsonifier::string_view, std::tuple_size_v<tuple_type>> keys{};
-		return jsonifier_internal::generateKeyArrayImpl(tuple, keys);
-	}
-
-	template<typename value_type> constexpr auto keyArray{ jsonifier_internal::generateKeyArray(jsonifier_internal::coreTupleV<value_type>) };
-
-	template<typename value_type> constexpr auto keyStatsVal{ jsonifier_internal::keyStatsImpl(jsonifier_internal::tupleReferencesByLength<value_type>) };
-
-	template<typename value_type>
-	constexpr auto lastUniqueIndex{ findLastUniqueColumnIndex(jsonifier_internal::tupleReferencesByLength<value_type>, keyStatsVal<value_type>.minLength) };
-
-	template<const auto&, typename value_type, typename iterator> struct parse_impl;
-
-	template<typename value_type> struct trie_node_base {
-		virtual bool processIndex(value_type& value, const char*& iter, const char*& end) const = 0;
-	};
-
-	template<const auto& options, typename value_type, size_t currentIndex = 0> struct trie_node_derived;
-
-	template<const auto& options, typename value_type> struct trie_node_derived<options, value_type, 0> : public trie_node_base<value_type> {
-		static constexpr trie_node_derived<options, value_type, 1> next{};
-		static constexpr auto currentIndex{ 0 };
-		static constexpr auto nextPtr{ &next };
-
-		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
-			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
-				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
-				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
-				static constexpr auto keySize	 = key.size();
-				static constexpr auto keySizeNew = keySize + 1;
-				iter += keySizeNew;
-				JSONIFIER_SKIP_WS();
-				if (*iter == ':') [[likely]] {
-					++iter;
-					JSONIFIER_SKIP_WS();
-					using member_type = unwrap_t<decltype(value.*ptr)>;
-					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
-					return true;
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return false;
-				}
-			}
-			return false;
-		}
-	};
-
-	template<const auto& options, typename value_type> struct trie_node_derived<options, value_type, 128> : public trie_node_base<value_type> {
-		static constexpr auto currentIndex{ 0 };
-		static constexpr auto nextPtr{ nullptr };
-
-		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
-			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
-				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
-				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
-				static constexpr auto keySize	 = key.size();
-				static constexpr auto keySizeNew = keySize + 1;
-				iter += keySizeNew;
-				JSONIFIER_SKIP_WS();
-				if (*iter == ':') [[likely]] {
-					++iter;
-					JSONIFIER_SKIP_WS();
-					using member_type = unwrap_t<decltype(value.*ptr)>;
-					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
-					return true;
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return false;
-				}
-			}
-			return false;
-		}
-	};
-
-	template<const auto& options, typename value_type, size_t currentIndexNew> struct trie_node_derived : public trie_node_base<value_type> {
-		static constexpr trie_node_derived<options, value_type, currentIndexNew + 1> next{};
-		static constexpr auto currentIndex{ currentIndexNew - 1 };
-		static constexpr auto nextPtr{ &next };
-
-		bool processIndex(value_type& value, const char*& iter, const char*& end) const {
-			if constexpr (currentIndex < std::tuple_size_v<core_tuple_t<value_type>>) {
-				static constexpr auto& ptr		 = std::get<currentIndex>(coreTupleV<value_type>).ptr();
-				static constexpr auto& key		 = std::get<currentIndex>(coreTupleV<value_type>).view();
-				static constexpr auto keySize	 = key.size();
-				static constexpr auto keySizeNew = keySize + 1;
-				iter += keySizeNew;
-				JSONIFIER_SKIP_WS();
-				if (*iter == ':') [[likely]] {
-					++iter;
-					JSONIFIER_SKIP_WS();
-					using member_type = unwrap_t<decltype(value.*ptr)>;
-					parse_impl<options, member_type, decltype(iter)>::impl(value.*ptr, iter, end);
-					return true;
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Colon>(
-						getUnderlyingPtr(iter) - options.rootIter, getUnderlyingPtr(end) - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return false;
-				}
-			}
-			return false;
-		}
-	};
-
-	template<typename value_type> struct trie_node {
-		std::array<int32_t, 2048> children{};
-		const trie_node_base<value_type>* indexVal{};
-
-		constexpr trie_node() : indexVal(nullptr) {
-			children.fill(-1);
-		}
-	};
-
-	template<const auto& options, typename value_type, const auto& keys, size_t currentIndex = 0>
-	constexpr auto buildTrieImpl(std::array<trie_node<value_type>, 2048>& nodes, size_t currentNodeCount = 0) {
-		if constexpr (currentIndex < keys.size()) {
-			int32_t currentNodeIndex = 0;
-
-			for (size_t x = jsonifier_internal::lastUniqueIndex<value_type>; x < keys[currentIndex].size(); ++x) {
-				int32_t charIndex = keys[currentIndex][x];
-				if (nodes[currentNodeIndex].children[charIndex] == -1) {
-					nodes[currentNodeIndex].children[charIndex] = currentNodeCount++;
-				}
-				currentNodeIndex = nodes[currentNodeIndex].children[charIndex];
-			}
-			nodes[currentNodeIndex].indexVal = trie_node_derived<options, value_type, currentIndex>::nextPtr;
-			return buildTrieImpl<options, value_type, keys, currentIndex + 1>(nodes, currentNodeCount);
-		} else {
-			return nodes;
-		}
-	}
-
-	template<const auto& options, typename value_type> constexpr auto buildTrie() {
-		constexpr auto& keys = jsonifier_internal::keyArray<value_type>;
-		std::array<trie_node<value_type>, 2048> returnValues{};
-		return buildTrieImpl<options, value_type, keys>(returnValues);
-	}
-
-	template<const auto& options, typename value_type> struct trie {
-		static constexpr auto nodes{ buildTrie<options, value_type>() };
-
-		JSONIFIER_ALWAYS_INLINE const auto* searchWord(const char* word) const {
-			int32_t currentNodeIndex = 0;
-
-			for (size_t x = jsonifier_internal::lastUniqueIndex<value_type>; x < jsonifier_internal::keyStatsVal<value_type>.maxLength + 1; ++x) {
-				int32_t charIndex = word[x];
-				if (nodes[currentNodeIndex].indexVal) {
-					return nodes[currentNodeIndex].indexVal;
-				} else if (nodes[currentNodeIndex].children[charIndex] == -1) {
-					return static_cast<const trie_node_base<value_type>*>(nullptr);
-				}
-				currentNodeIndex = nodes[currentNodeIndex].children[charIndex];
-			}
-			return static_cast<const trie_node_base<value_type>*>(nullptr);
-		}
-	};
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
 		static constexpr auto hashData					   = collectMapConstructionData<unwrap_t<value_type>>();
