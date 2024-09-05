@@ -25,5 +25,5 @@
 #pragma once
 
 #if !defined(JSONIFIER_CPU_INSTRUCTIONS)
-	#define JSONIFIER_CPU_INSTRUCTIONS 78
+	#define JSONIFIER_CPU_INSTRUCTIONS 79
 #endif

@@ -437,8 +437,8 @@ namespace jsonifier_internal {
 			const auto mix1	 = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ first;
 			const auto mix2	 = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ first;
 			for (size_t x = 0; x < 4; ++x) {
-				uint8_t hash1 = (mix1 * returnValues.hasher.seed) & 3;
-				uint8_t hash2 = (mix2 * returnValues.hasher.seed) & 3;
+				uint8_t hash1 = (mix1 ^ returnValues.hasher.seed) & 3;
+				uint8_t hash2 = (mix2 ^ returnValues.hasher.seed) & 3;
 
 				if (hash1 == 1 && hash2 == 2) {
 					collided = false;
@@ -543,7 +543,7 @@ namespace jsonifier_internal {
 				return iter[uniqueIndex] & 1;
 			} else if constexpr (hashData.type == hash_map_type::triple_element) {
 				static constexpr auto firstChar = std::get<0>(coreTupleV<value_type>).view()[uniqueIndex];
-				return (uint8_t(iter[uniqueIndex] ^ firstChar) * hashData.hasher.seed) & 3;
+				return (uint8_t(iter[uniqueIndex] ^ firstChar) ^ hashData.hasher.seed) & 3;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
 				return indices[iter[uniqueIndex]];
 			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {

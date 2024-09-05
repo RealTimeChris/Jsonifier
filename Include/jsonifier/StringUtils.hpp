@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 		options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(iter - options.rootIter, \
 			end - options.rootIter, options.rootIter)); \
 		derailleur<options>::skipToNextValue(iter, end); \
-		return ; \
+		return; \
 	} \
 	iter += amountToSkip; \
 	if constexpr (!options.optionsReal.minified) { \
@@ -249,7 +249,7 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		const size_t lo7	   = simdValue & mask;
 		const size_t midMasked = simdValue & midBitsMask;
-		const size_t next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & (midMasked + mask)) | simdValue) & lowBitsMask;
+		const size_t next	   = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & (midMasked + mask)) | simdValue) & lowBitsMask;
 		return static_cast<integer_type>(simd_internal::tzcnt(next)) >> 3u;
 	}
 
@@ -992,10 +992,10 @@ namespace jsonifier_internal {
 					skipNumber(iter, end);
 					break;
 				}
-					[[likely]] default : {
-						++iter;
-						break;
-					}
+				[[likely]] default: {
+					++iter;
+					break;
+				}
 			}
 		}
 
@@ -1148,10 +1148,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, end);
 						break;
 					}
-						[[likely]] default : {
-							++iter;
-							break;
-						}
+					[[likely]] default: {
+						++iter;
+						break;
+					}
 				}
 			}
 			return currentCount;

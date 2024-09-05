@@ -357,7 +357,7 @@ namespace jsonifier {
 		concept array_tuple_t = requires(jsonifier_internal::unwrap_t<value_type> value) {
 			std::tuple_size<jsonifier_internal::unwrap_t<value_type>>::value;
 			std::get<0>(value);
-		};
+		} && jsonifier_internal::is_specialization_v<jsonifier_internal::unwrap_t<value_type>, jsonifier_internal::array_tuple>;
 
 		template<typename value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
@@ -392,7 +392,7 @@ namespace jsonifier {
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || array_tuple_t<value_type> || map_t<value_type>;
+		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || array_tuple_t<value_type> || map_t<value_type> || tuple_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };
