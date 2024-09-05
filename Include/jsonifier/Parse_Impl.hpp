@@ -517,10 +517,21 @@ namespace jsonifier_internal {
 	template<const auto& options, jsonifier::concepts::unique_ptr_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 		template<jsonifier::concepts::unique_ptr_t value_type_new, typename iterator_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+			using member_type = decltype(*value);
 			if (!value) {
-				value = std::make_unique<unwrap_t<value_type>>();
+				value = std::make_unique<std::remove_pointer_t<unwrap_t<member_type>>>();
 			}
 			parse_impl<options, decltype(*value), iterator>::impl(*std::forward<value_type_new>(value), iter, end);
+		}
+	};
+
+	template<const auto& options, jsonifier::concepts::pointer_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
+		template<jsonifier::concepts::pointer_t value_type_new, typename iterator_new>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
+			if (!value) {
+				value = new std::remove_pointer_t<unwrap_t<value_type>>{};
+			}
+			parse_impl<options, decltype(*value), iterator>::impl(*value, iter, end);
 		}
 	};
 
