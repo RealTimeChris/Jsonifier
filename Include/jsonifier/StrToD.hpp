@@ -2340,7 +2340,7 @@ namespace jsonifier_fast_float {
 
 	}// Assuming that you use no more than 19 digits, this will
 	// parse an ASCII string.
-	template<class UC> JSONIFIER_ALWAYS_INLINE constexpr jsonifier_fast_float::parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend) noexcept {
+	template<class UC> JSONIFIER_ALWAYS_INLINE jsonifier_fast_float::parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend) noexcept {
 		using namespace jsonifier_fast_float;
 		static constexpr UC decimal_point = '.';
 

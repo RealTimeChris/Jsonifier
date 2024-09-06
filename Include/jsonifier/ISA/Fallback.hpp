@@ -22,7 +22,6 @@
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
-
 #include <jsonifier/ISA/CTimeSimdTypes.hpp>
 
 namespace simd_internal {

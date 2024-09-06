@@ -285,7 +285,7 @@ namespace jsonifier_internal {
 		return true;
 	}
 
-	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE constexpr bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
+	template<uint64_t count, typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
 		size_t lengthNew{ count };
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		if constexpr (count >= 64) {

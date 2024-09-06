@@ -66,8 +66,8 @@ endif()
  
  target_link_options(
      "${PROJECT_NAME}" INTERFACE
-     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
      "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
+     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
      "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
      "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
  )
@@ -97,7 +97,6 @@ target_compile_options(
 
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
-	"JSONIFIER_CPU_INSTRUCTIONS=${JSONIFIER_CPU_INSTRUCTIONS}"
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN_ENABLED>"
 )
 

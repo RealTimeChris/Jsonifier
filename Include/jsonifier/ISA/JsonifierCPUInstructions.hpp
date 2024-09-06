@@ -1,4 +1,3 @@
-
 /*
 	MIT License
 
@@ -24,6 +23,5 @@
 /// Updated: Sep 3, 2024
 #pragma once
 
-#if !defined(JSONIFIER_CPU_INSTRUCTIONS)
-	#define JSONIFIER_CPU_INSTRUCTIONS 78
-#endif
+#undef JSONIFIER_CPU_INSTRUCTIONS
+#define JSONIFIER_CPU_INSTRUCTIONS 78

@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 		options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(iter - options.rootIter, \
 			end - options.rootIter, options.rootIter)); \
 		derailleur<options>::skipToNextValue(iter, end); \
-		return; \
+		return ; \
 	} \
 	iter += amountToSkip; \
 	if constexpr (!options.optionsReal.minified) { \
@@ -209,7 +209,7 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		const size_t lo7  = simdValue & mask;
 		const size_t next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next)) >> 3u;
+		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
 	template<typename simd_type, typename integer_type>
@@ -227,7 +227,7 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		const size_t lo7  = simdValue & mask;
 		const size_t next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next)) >> 3u;
+		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, char* string2, simd_type& simdValue,
@@ -247,10 +247,9 @@ namespace jsonifier_internal {
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
 		std::memcpy(string2, string1, sizeof(simd_type));
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
-		const size_t lo7	   = simdValue & mask;
-		const size_t midMasked = simdValue & midBitsMask;
-		const size_t next	   = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & (midMasked + mask)) | simdValue) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next)) >> 3u;
+		const size_t lo7  = simdValue & mask;
+		const size_t next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & midBitsMask) + mask)) | simdValue) & lowBitsMask;
+		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
 	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipShortStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
@@ -920,89 +919,14 @@ namespace jsonifier_internal {
 			skipStringImpl(iter, newLength);
 		}
 
-		template<typename iterator> JSONIFIER_INLINE static void skipToEndOfValue(iterator& iter, iterator& end) noexcept {
-			size_t currentDepth{ 1 };
-			JSONIFIER_SKIP_WS();
-			auto skipToEnd = [&]() {
-				while (iter != end && currentDepth > 0) {
-					JSONIFIER_SKIP_WS();
-					switch (*iter) {
-						[[unlikely]] case '[':
-						[[unlikely]] case '{': {
-							++currentDepth;
-							++iter;
-							break;
-						}
-						[[unlikely]] case ']':
-						[[unlikely]] case '}': {
-							--currentDepth;
-							++iter;
-							break;
-						}
-						case '"': {
-							skipString(iter, end);
-							break;
-						}
-						default: {
-							++iter;
-							break;
-						}
-					}
-				}
-			};
-			switch (*iter) {
-				[[unlikely]] case '[':
-				[[unlikely]] case '{': {
-					++iter;
-					skipToEnd();
-					break;
-				}
-				case '"': {
-					skipString(iter, end);
-					break;
-				}
-				case ':': {
-					++iter;
-					skipToEndOfValue(iter, end);
-					break;
-				}
-				case 't': {
-					iter += 4;
-					break;
-				}
-				case 'f': {
-					iter += 5;
-					break;
-				}
-				case 'n': {
-					iter += 4;
-					break;
-				}
-				case '-':
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9': {
-					skipNumber(iter, end);
-					break;
-				}
-				[[likely]] default: {
-					++iter;
-					break;
-				}
-			}
+		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipKey(iterator& iter, iterator& end) noexcept {
+			auto newLength = static_cast<size_t>(end - iter);
+			iter		   = memchar<'"'>(iter, newLength);
 		}
 
 		template<typename iterator> JSONIFIER_INLINE static void skipObject(iterator& iter, iterator& end) noexcept {
 			++iter;
 			if (*iter == '}') {
-				++iter;
 				return;
 			}
 			while (true) {
@@ -1016,13 +940,11 @@ namespace jsonifier_internal {
 				}
 				++iter;
 			}
-			++iter;
 		}
 
 		template<typename iterator> JSONIFIER_INLINE static void skipArray(iterator& iter, iterator& end) noexcept {
 			++iter;
 			if (*iter == ']') {
-				++iter;
 				return;
 			}
 			while (true) {
@@ -1032,7 +954,6 @@ namespace jsonifier_internal {
 				}
 				++iter;
 			}
-			++iter;
 		}
 
 		template<typename iterator> JSONIFIER_INLINE static void skipToNextValue(iterator& iter, iterator& end) noexcept {
@@ -1105,7 +1026,7 @@ namespace jsonifier_internal {
 					}
 					[[unlikely]] case '{':
 					[[unlikely]] case '[': {
-						skipToEndOfValue(iter, end);
+						skipToNextValue(iter, end);
 						break;
 					}
 					[[unlikely]] case endChar: { return currentCount; }
@@ -1148,10 +1069,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, end);
 						break;
 					}
-					[[likely]] default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 			return currentCount;

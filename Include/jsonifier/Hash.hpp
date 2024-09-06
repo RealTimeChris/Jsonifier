@@ -86,9 +86,8 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<typename value_type>
 	struct key_hasher : public xoshiro256 {
-		value_type seed{};///< Seed value for the hashing algorithm.
+		size_t seed{};///< Seed value for the hashing algorithm.
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
@@ -105,7 +104,7 @@ namespace jsonifier_internal {
 			seed = xoshiro256::operator()();
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr value_type mixBits(value_type value) const {
+		template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr size_t mixBits(value_type value) const {
 			return seed ^ value;
 		}
 
@@ -116,13 +115,27 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE constexpr value_type hashKeyRt(const char* value, value_type length) const noexcept {
-			value_type seed64{ seed };
-			while (length >= sizeof(value_type)) {
-				std::memcpy(&returnValue64, value, sizeof(value_type));
+		JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char* value, size_t length) const noexcept {
+			size_t seed64{ seed };
+			while (length >= 8) {
+				std::memcpy(&returnValue64, value, 8);
 				seed64 ^= returnValue64;
-				value += sizeof(value_type);
-				length -= sizeof(value_type);
+				value += 8;
+				length -= 8;
+			}
+
+			if (length >= 4) {
+				std::memcpy(&returnValue32, value, 4);
+				seed64 ^= returnValue32;
+				value += 4;
+				length -= 4;
+			}
+
+			if (length >= 2) {
+				std::memcpy(&returnValue16, value, 2);
+				seed64 ^= returnValue16;
+				value += 2;
+				length -= 2;
 			}
 
 			if (length == 1) {
@@ -131,18 +144,32 @@ namespace jsonifier_internal {
 			return seed64;
 		}
 
-		template<value_type length, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr value_type hashKeyRt(const char_type* value) const {
-			value_type seed64{ seed };
-			constexpr value_type lengthNewer01{ length % 8 };
+		template<size_t length, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char_type* value) const {
+			size_t seed64{ seed };
+			constexpr size_t lengthNewer01{ length % 8 };
 			if constexpr (length >= 8) {
-				for (value_type lengthNew = length; lengthNew >= 8; lengthNew -= 8) {
+				for (size_t lengthNew = length; lengthNew >= 8; lengthNew -= 8) {
 					std::memcpy(&returnValue64, value, 8);
 					seed64 ^= returnValue64;
 					value += 8;
 				}
 			}
 
-			if constexpr (lengthNewer01 == 1) {
+			constexpr size_t lengthNewer02{ lengthNewer01 >= 4 ? lengthNewer01 - 4 : lengthNewer01 };
+			if constexpr (lengthNewer01 >= 4) {
+				std::memcpy(&returnValue32, value, 4);
+				seed64 ^= returnValue32;
+				value += 4;
+			}
+
+			constexpr size_t lengthNewer03{ lengthNewer02 >= 2 ? lengthNewer02 - 2 : lengthNewer02 };
+			if constexpr (lengthNewer02 >= 2) {
+				std::memcpy(&returnValue16, value, 2);
+				seed64 ^= returnValue16;
+				value += 2;
+			}
+
+			if constexpr (lengthNewer03 == 1) {
 				seed64 ^= *value;
 			}
 			return seed64;
@@ -155,12 +182,24 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr value_type hashKeyCt(const char_type* value, value_type length) const noexcept {
-			value_type seed64{ seed };
-			while (length >= sizeof(value_type)) {
-				seed64 ^= readBitsCt<value_type>(value);
-				value += sizeof(value_type);
-				length -= sizeof(value_type);
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
+			size_t seed64{ seed };
+			while (length >= 8) {
+				seed64 ^= readBitsCt<size_t>(value);
+				value += 8;
+				length -= 8;
+			}
+
+			if (length >= 4) {
+				seed64 ^= readBitsCt<uint32_t>(value);
+				value += 4;
+				length -= 4;
+			}
+
+			if (length >= 2) {
+				seed64 ^= readBitsCt<uint16_t>(value);
+				value += 2;
+				length -= 2;
 			}
 
 			if (length == 1) {
@@ -170,7 +209,9 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		mutable value_type returnValue64{};
+		mutable uint64_t returnValue64{};
+		mutable uint32_t returnValue32{};
+		mutable uint16_t returnValue16{};
 	};
 
 

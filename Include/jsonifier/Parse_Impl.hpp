@@ -35,8 +35,8 @@ namespace jsonifier_internal {
 		template<size_t index, typename value_type, typename iterator>
 		JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type&& value, iterator&& iter, iterator&& end) noexcept {
 			if constexpr (index < std::tuple_size_v<core_tuple_t<value_type>>) {
-				static constexpr auto& ptr			= std::get<index>(coreTupleV<value_type>).ptr();
-				static constexpr auto& key			= std::get<index>(coreTupleV<value_type>).view();
+				static constexpr auto ptr			= std::get<index>(coreTupleV<value_type>).ptr();
+				static constexpr auto key			= std::get<index>(coreTupleV<value_type>).view();
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
@@ -167,7 +167,10 @@ namespace jsonifier_internal {
 						}
 						return;
 					} else {
+						derailleur<options>::skipKey(iter, end);
+						++iter;
 						derailleur<options>::skipToNextValue(iter, end);
+						return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsSize);
 					}
 				} else {
 					static constexpr auto sourceLocation{ std::source_location::current() };

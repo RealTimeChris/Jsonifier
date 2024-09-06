@@ -104,8 +104,7 @@ set(AVX_FLAG "${AVX_FLAG}" CACHE STRING "AVX flags" FORCE)
 set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE STRING "CPU Instruction Sets" FORCE)
 
 # Generate JsonifierCPUInstructions.hpp
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/ISA/JsonifierCPUInstructions.hpp" "
-/*
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/ISA/JsonifierCPUInstructions.hpp" "/*
 	MIT License
 
 	Copyright (c) 2023 RealTimeChris
@@ -130,6 +129,5 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/ISA/JsonifierCPUInstru
 /// Updated: Sep 3, 2024
 #pragma once
 
-#if !defined(JSONIFIER_CPU_INSTRUCTIONS)
-	#define JSONIFIER_CPU_INSTRUCTIONS ${JSONIFIER_CPU_INSTRUCTIONS}
-#endif")
+#undef JSONIFIER_CPU_INSTRUCTIONS
+#define JSONIFIER_CPU_INSTRUCTIONS ${JSONIFIER_CPU_INSTRUCTIONS}")
