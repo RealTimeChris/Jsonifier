@@ -873,46 +873,45 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<const auto& options, typename value_type, typename iterator>
-	JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, iterator& iter, iterator& end) noexcept {
-		if (*iter == '"') [[likely]] {
-			++iter;
-			static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
-			auto newSize = end - iter;
-			if (static_cast<size_t>(newSize) > newString.size()) [[unlikely]] {
-				newString.resize(static_cast<size_t>(newSize));
-			}
-			auto newerPtr = parseStringImpl(iter, newString.data(), static_cast<size_t>(newSize));
-			if (newerPtr) [[likely]] {
-				if (*iter == '"') [[likely]] {
-					++iter;
-					newSize = newerPtr - newString.data();
-					if (value.size() != static_cast<size_t>(newSize)) {
-						value.resize(static_cast<size_t>(newSize));
+	template<const auto& options> struct derailleur {
+		template<typename value_type, typename iterator> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, iterator& iter, iterator& end) noexcept {
+			if (*iter == '"') [[likely]] {
+				++iter;
+				static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
+				auto newSize = end - iter;
+				if (static_cast<size_t>(newSize) > newString.size()) [[unlikely]] {
+					newString.resize(static_cast<size_t>(newSize));
+				}
+				auto newerPtr = parseStringImpl(iter, newString.data(), static_cast<size_t>(newSize));
+				if (newerPtr) [[likely]] {
+					if (*iter == '"') [[likely]] {
+						++iter;
+						newSize = newerPtr - newString.data();
+						if (value.size() != static_cast<size_t>(newSize)) {
+							value.resize(static_cast<size_t>(newSize));
+						}
+						std::copy(newString.data(), newString.data() + newSize, value.data());
+					} else {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(
+							iter - options.rootIter, end - options.rootIter, options.rootIter));
+						return false;
 					}
-					std::copy(newString.data(), newString.data() + newSize, value.data());
 				} else {
 					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(
+					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
 						iter - options.rootIter, end - options.rootIter, options.rootIter));
 					return false;
 				}
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(
 					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				return false;
 			}
-		} else {
-			static constexpr auto sourceLocation{ std::source_location::current() };
-			options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter,
-				end - options.rootIter, options.rootIter));
-			return false;
+			return true;
 		}
-		return true;
-	}
 
-	template<const auto& options> struct derailleur {
 		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipString(iterator& iter, iterator& end) noexcept {
 			++iter;
 			auto newLength = static_cast<size_t>(end - iter);
@@ -921,7 +920,7 @@ namespace jsonifier_internal {
 
 		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipKey(iterator& iter, iterator& end) noexcept {
 			auto newLength = static_cast<size_t>(end - iter);
-			iter		   = memchar<'"'>(iter, newLength);
+			iter		   = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter, newLength);
 		}
 
 		template<typename iterator> JSONIFIER_INLINE static void skipObject(iterator& iter, iterator& end) noexcept {
@@ -1147,7 +1146,7 @@ namespace jsonifier_internal {
 			return {};
 		}
 		auto start = iter;
-		memchar<'"'>(iter, static_cast<size_t>(end - iter));
+		iter	   = char_comparison<'"', decltype(*iter)>::memchar(iter, static_cast<size_t>(end - iter));
 		return size_t(iter - start);
 	}
 

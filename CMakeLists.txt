@@ -81,7 +81,6 @@ endif()
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps 2097152>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wno-ignored-attributes>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-march=native>"

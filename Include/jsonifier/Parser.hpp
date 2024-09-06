@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 			optionsReal.parserPtr = this;
 			optionsReal.rootIter  = in;
 			auto iter			  = optionsReal.rootIter;
-			auto end			  = memchar<'\0'>(in, std::numeric_limits<size_t>::max());
+			auto end			  = char_comparison<'\0', unwrap_t<decltype(*in)>>::memchar(in, std::numeric_limits<size_t>::max());
 			if (!in|| *in == '\0') {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,

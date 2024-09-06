@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if (compare<keySize>(stringLiteral.data(), iter)) [[likely]] {
+				if (comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*iter)>>::compare(stringLiteral.data(), iter)) [[likely]] {
 					iter += keySizeNew;
 					JSONIFIER_SKIP_WS();
 					if (*iter == ':') [[likely]] {
@@ -177,7 +177,7 @@ namespace jsonifier_internal {
 					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
 						iter - options.rootIter, end - options.rootIter, options.rootIter));
 					derailleur<options>::skipToNextValue(iter, end);
-					return;
+					return; 
 				}
 			} else {
 				++iter;
@@ -544,7 +544,7 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::string_t value_type_new, typename iterator_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
 			JSONIFIER_SKIP_WS();
-			parseString<options>(std::forward<value_type_new>(value), iter, end);
+			derailleur<options>::parseString(std::forward<value_type_new>(value), iter, end);
 			JSONIFIER_SKIP_WS();
 		}
 	};
