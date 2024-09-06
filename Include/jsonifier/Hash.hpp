@@ -86,12 +86,12 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	struct key_hasher : public xoshiro256 {
+	struct ct_key_hasher : public xoshiro256 {
 		size_t seed{};///< Seed value for the hashing algorithm.
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
-		constexpr key_hasher() {
+		constexpr ct_key_hasher() {
 			updateSeed();
 		}
 
@@ -104,9 +104,41 @@ namespace jsonifier_internal {
 			seed = xoshiro256::operator()();
 		}
 
-		template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr size_t mixBits(value_type value) const {
-			return seed ^ value;
+		/**
+		 * @brief Hashes a key at compile-time.
+		 *
+		 * @param value The value to be hashed.
+		 * @param length The length of the value.
+		 * @return The hashed value.
+		 */
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
+			size_t seed64{ seed };
+			while (length >= 8) {
+				seed64 ^= readBitsCt<size_t>(value);
+				value += 8;
+				length -= 8;
+			}
+
+			if (length >= 4) {
+				seed64 ^= readBitsCt<uint32_t>(value);
+				value += 4;
+				length -= 4;
+			}
+
+			if (length >= 2) {
+				seed64 ^= readBitsCt<uint16_t>(value);
+				value += 2;
+				length -= 2;
+			}
+
+			if (length == 1) {
+				seed64 ^= *value;
+			}
+			return seed64;
 		}
+	};
+
+	template<size_t seed> struct rt_key_hasher {
 
 		/**
 		 * @brief Hashes a key at runtime.
@@ -175,41 +207,8 @@ namespace jsonifier_internal {
 			return seed64;
 		}
 
-		/**
-		 * @brief Hashes a key at compile-time.
-		 *
-		 * @param value The value to be hashed.
-		 * @param length The length of the value.
-		 * @return The hashed value.
-		 */
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
-			size_t seed64{ seed };
-			while (length >= 8) {
-				seed64 ^= readBitsCt<size_t>(value);
-				value += 8;
-				length -= 8;
-			}
-
-			if (length >= 4) {
-				seed64 ^= readBitsCt<uint32_t>(value);
-				value += 4;
-				length -= 4;
-			}
-
-			if (length >= 2) {
-				seed64 ^= readBitsCt<uint16_t>(value);
-				value += 2;
-				length -= 2;
-			}
-
-			if (length == 1) {
-				seed64 ^= *value;
-			}
-			return seed64;
-		}
-
 	  protected:
-		mutable uint64_t returnValue64{};
+		mutable size_t returnValue64{};
 		mutable uint32_t returnValue32{};
 		mutable uint16_t returnValue16{};
 	};

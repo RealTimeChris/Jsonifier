@@ -437,18 +437,16 @@ namespace jsonifier_internal {
 						if (*iter == ',') [[likely]] {
 							++iter;
 							JSONIFIER_SKIP_WS_PRESET(wsSize);
+						} else if (*iter == ']') [[unlikely]] {
+							++iter;
+							JSONIFIER_SKIP_WS();
+							--options.currentArrayDepth;
+							return value.size() == (i + 1) ? noop() : value.resize(i + 1);
 						} else {
-							if (*iter == ']') [[likely]] {
-								++iter;
-								JSONIFIER_SKIP_WS();
-								--options.currentArrayDepth;
-								return value.size() == (i + 1) ? noop() : value.resize(i + 1);
-							} else {
-								static constexpr auto sourceLocation{ std::source_location::current() };
-								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
-									iter - options.rootIter, end - options.rootIter, options.rootIter));
-								derailleur<options>::skipToNextValue(iter, end);
-							}
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
+								iter - options.rootIter, end - options.rootIter, options.rootIter));
+							derailleur<options>::skipToNextValue(iter, end);
 							return;
 						}
 					}
@@ -458,17 +456,15 @@ namespace jsonifier_internal {
 						if (*iter == ',') [[likely]] {
 							++iter;
 							JSONIFIER_SKIP_WS_PRESET(wsSize);
+						} else if (*iter == ']') [[unlikely]] {
+							++iter;
+							JSONIFIER_SKIP_WS();
+							--options.currentArrayDepth;
 						} else {
-							if (*iter == ']') [[likely]] {
-								++iter;
-								JSONIFIER_SKIP_WS();
-								--options.currentArrayDepth;
-							} else {
-								static constexpr auto sourceLocation{ std::source_location::current() };
-								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
-									iter - options.rootIter, end - options.rootIter, options.rootIter));
-								derailleur<options>::skipToNextValue(iter, end);
-							}
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
+								iter - options.rootIter, end - options.rootIter, options.rootIter));
+							derailleur<options>::skipToNextValue(iter, end);
 							return;
 						}
 					}
