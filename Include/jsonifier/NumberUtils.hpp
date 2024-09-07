@@ -262,7 +262,7 @@ namespace jsonifier_internal {
 				if (!ptr) {
 					return false;
 				}
-				iter = ptr;
+				iter  = ptr;
 				value = temp;
 			} else {
 				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);

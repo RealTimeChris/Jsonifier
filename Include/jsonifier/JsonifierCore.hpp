@@ -88,7 +88,7 @@ namespace jsonifier {
 		using minifier	 = jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		jsonifier_internal::simd_string_reader<doWeUseInitialBuffer> section{};
+		jsonifier_internal::simd_string_reader<false> section{};
 		vector<jsonifier_internal::error> errors{};
 		string_base<char> stringBuffer{};
 		uint64_t index{};

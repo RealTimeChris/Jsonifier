@@ -2479,6 +2479,8 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 
 int32_t main() {
 	try {
+		std::bitset<2048> bits{};
+		bits.operator[](2034);
 		conformanceTests();
 		failTests();
 		test_generator<test_struct> testJsonData{};

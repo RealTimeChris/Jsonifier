@@ -174,7 +174,7 @@ namespace jsonifier_internal {
 			return static_cast<const char_type*>(nullptr);
 		}
 	};
-	
+
 	template<typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(char_type01* lhs, char_type02* rhs, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{

@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if constexpr (currentIndex < maxIndex) {
-				static constexpr auto& subTuple = std::get<currentIndex>(coreTupleV<value_type>);
+				static constexpr auto subTuple = std::get<currentIndex>(coreTupleV<value_type>);
 				static constexpr auto key		= subTuple.view();
 				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 					auto& keys = value.jsonifierExcludedKeys;
@@ -54,7 +54,7 @@ namespace jsonifier_internal {
 							std::forward<serialize_pair_t>(serializePair));
 					}
 				}
-				static constexpr auto& memberPtr = subTuple.ptr();
+				static constexpr auto memberPtr = subTuple.ptr();
 				static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
 				if constexpr (options.optionsReal.prettify) {
 					static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
@@ -159,7 +159,7 @@ namespace jsonifier_internal {
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if constexpr (currentIndex < maxIndex) {
-				auto& subTuple	  = std::get<currentIndex>(value);
+				auto subTuple	  = std::get<currentIndex>(value);
 				using member_type = std::remove_reference_t<decltype(subTuple)>;
 				serialize_impl<options, derived_type, member_type>::impl(subTuple, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 				if constexpr (currentIndex < maxIndex - 1) {
@@ -193,7 +193,7 @@ namespace jsonifier_internal {
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::array_tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if constexpr (currentIndex < maxIndex) {
-				auto& subTuple	  = std::get<currentIndex>(value);
+				auto subTuple	  = std::get<currentIndex>(value);
 				using member_type = std::remove_reference_t<decltype(subTuple)>;
 				serialize_impl<options, derived_type, member_type>::impl(subTuple, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 				if constexpr (currentIndex < maxIndex - 1) {
