@@ -30,24 +30,6 @@
          {
             "id": "",
             "icon": null,
-            "name": "Soundbort",
-            "tags": {
-               "bot_id": "",
-               "premium_subscriber": null
-            },
-            "color": 0,
-            "flags": 0,
-            "hoist": false,
-            "version": 1714096150329,
-            "managed": true,
-            "position": 27,
-            "permissions": "3197952",
-            "mentionable": false,
-            "unicode_emoji": null
-         },
-         {
-            "id": "",
-            "icon": null,
             "name": "🐓",
             "tags": {
                "bot_id": null,
@@ -690,45 +672,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
-               ""
-            ],
-            "flags": 0,
-            "avatar": null,
-            "pending": false,
-            "guild_id": "",
-            "joined_at": "2023-11-02T01:42:01.119000+00:00",
-            "permissions": "",
-            "premium_since": null,
-            "communication_disabled_until": null
-         },
-         {
-            "nick": null,
-            "user": {
-               "id": "",
-               "bot": true,
-               "email": "",
-               "flags": 0,
-               "avatar": "a_88118de015213963d91a1cfeadb3390a",
-               "banner": null,
-               "locale": null,
-               "system": false,
-               "verified": false,
-               "user_name": "",
-               "global_name": null,
-               "mfa_enabled": false,
-               "display_name": null,
-               "accent_color": 0,
-               "premium_type": 0,
-               "public_flags": 65536,
-               "discriminator": "9555",
-               "avatar_decoration_data": null
-            },
-            "deaf": false,
-            "mute": false,
-            "roles": [
-               "",
-               "",
                ""
             ],
             "flags": 0,
@@ -766,7 +709,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -803,7 +745,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -842,7 +783,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -879,7 +819,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -917,7 +856,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -954,7 +892,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -992,7 +929,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1029,7 +965,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1067,7 +1002,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1104,7 +1038,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1145,7 +1078,6 @@
                "",
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1183,7 +1115,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1220,7 +1151,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1258,7 +1188,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1295,7 +1224,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1332,7 +1260,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1371,7 +1298,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1408,7 +1334,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1445,7 +1370,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1484,7 +1408,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1521,7 +1444,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1558,7 +1480,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1598,7 +1519,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1635,7 +1555,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -1673,7 +1592,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1710,7 +1628,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1785,7 +1702,6 @@
                "",
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1823,7 +1739,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1860,7 +1775,6 @@
             "deaf": true,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1900,7 +1814,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -1937,7 +1850,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -1976,7 +1888,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2013,7 +1924,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -2055,7 +1965,6 @@
                "",
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2092,7 +2001,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2130,7 +2038,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2167,7 +2074,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2205,7 +2111,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2242,7 +2147,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2279,7 +2183,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -2318,7 +2221,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2356,7 +2258,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2393,7 +2294,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2430,7 +2330,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2467,7 +2366,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -2507,7 +2405,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2544,7 +2441,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2581,7 +2477,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                "",
                ""
@@ -2621,7 +2516,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2659,7 +2553,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2696,7 +2589,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -2736,7 +2628,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2774,7 +2665,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2811,7 +2701,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2849,7 +2738,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 32,
@@ -2886,7 +2774,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -2924,7 +2811,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -2961,7 +2847,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3000,7 +2885,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3037,7 +2921,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3074,7 +2957,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                "",
                ""
@@ -3114,7 +2996,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3153,7 +3034,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3190,7 +3070,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3227,7 +3106,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -3266,7 +3144,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3304,7 +3181,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3341,7 +3217,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3380,7 +3255,6 @@
             "roles": [
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3417,7 +3291,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3454,7 +3327,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3492,7 +3364,6 @@
             "mute": false,
             "roles": [
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3529,7 +3400,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3566,7 +3436,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3603,7 +3472,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                "",
                ""
             ],
@@ -3644,7 +3512,6 @@
                "",
                "",
                "",
-               "",
                ""
             ],
             "flags": 0,
@@ -3681,7 +3548,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3718,7 +3584,6 @@
             "deaf": false,
             "mute": false,
             "roles": [
-               "",
                ""
             ],
             "flags": 0,
@@ -3773,12 +3638,6 @@
                },
                {
                   "id": "",
-                  "deny": "33554432",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "0",
                   "type": 0,
                   "allow": "1024"
@@ -3826,73 +3685,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "33554432",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
-                  "deny": "33554432",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               }
-            ],
-            "default_auto_archive_duration": 0,
-            "default_thread_rate_limit_per_user": 0
-         },
-         {
-            "id": "",
-            "name": "",
-            "icon": "",
-            "type": 0,
-            "nsfw": false,
-            "topic": null,
-            "flags": 0,
-            "status": null,
-            "version": 0,
-            "bitrate": 0,
-            "managed": false,
-            "owner_id": "",
-            "guild_id": "",
-            "position": 0,
-            "parent_id": "",
-            "recipients": [],
-            "icon_emoji": {
-               "id": null,
-               "name": null
-            },
-            "user_limit": 0,
-            "permissions": "",
-            "applied_tags": [],
-            "member_count": 0,
-            "message_count": 0,
-            "application_id": "",
-            "last_message_id": null,
-            "last_pin_timestamp": "",
-            "total_message_sent": 0,
-            "video_quality_mode": 0,
-            "rate_limit_per_user": 0,
-            "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
                {
                   "id": "",
                   "deny": "1024",
@@ -3944,12 +3736,6 @@
                },
                {
                   "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "634334457821184",
                   "type": 0,
                   "allow": "68719477760"
@@ -3991,12 +3777,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
                {
                   "id": "",
                   "deny": "0",
@@ -4060,12 +3840,6 @@
                },
                {
                   "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "33554432",
                   "type": 0,
                   "allow": "0"
@@ -4113,12 +3887,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "33554432",
-                  "type": 0,
-                  "allow": "0"
-               },
                {
                   "id": "",
                   "deny": "33554432",
@@ -4179,12 +3947,6 @@
                   "deny": "1024",
                   "type": 0,
                   "allow": "0"
-               },
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
                }
             ],
             "default_auto_archive_duration": 0,
@@ -4223,12 +3985,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
                {
                   "id": "",
                   "deny": "0",
@@ -4292,12 +4048,6 @@
                },
                {
                   "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "0",
                   "type": 0,
                   "allow": "1024"
@@ -4345,12 +4095,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
                {
                   "id": "",
                   "deny": "1024",
@@ -4414,12 +4158,6 @@
                },
                {
                   "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
-               {
-                  "id": "",
                   "deny": "1024",
                   "type": 0,
                   "allow": "0"
@@ -4467,12 +4205,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
                {
                   "id": "",
                   "deny": "1024",
@@ -4572,12 +4304,6 @@
                },
                {
                   "id": "",
-                  "deny": "3072",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "0",
                   "type": 0,
                   "allow": "3072"
@@ -4627,12 +4353,6 @@
                },
                {
                   "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "0",
                   "type": 0,
                   "allow": "1024"
@@ -4674,67 +4394,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               }
-            ],
-            "default_auto_archive_duration": 0,
-            "default_thread_rate_limit_per_user": 0
-         },
-         {
-            "id": "",
-            "name": "",
-            "icon": "",
-            "type": 0,
-            "nsfw": false,
-            "topic": null,
-            "flags": 0,
-            "status": null,
-            "version": 0,
-            "bitrate": 0,
-            "managed": false,
-            "owner_id": "",
-            "guild_id": "",
-            "position": 0,
-            "parent_id": "",
-            "recipients": [],
-            "icon_emoji": {
-               "id": null,
-               "name": null
-            },
-            "user_limit": 0,
-            "permissions": "",
-            "applied_tags": [],
-            "member_count": 0,
-            "message_count": 0,
-            "application_id": "",
-            "last_message_id": null,
-            "last_pin_timestamp": "",
-            "total_message_sent": 0,
-            "video_quality_mode": 0,
-            "rate_limit_per_user": 0,
-            "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "0",
-                  "type": 0,
-                  "allow": "1024"
-               },
                {
                   "id": "",
                   "deny": "0",
@@ -4786,21 +4445,15 @@
             "permission_overwrites": [
                {
                   "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
-               {
-                  "id": "",
                   "deny": "0",
                   "type": 0,
                   "allow": "1024"
+               },
+               {
+                  "id": "",
+                  "deny": "1024",
+                  "type": 0,
+                  "allow": "0"
                }
             ],
             "default_auto_archive_duration": 0,
@@ -4839,12 +4492,6 @@
             "video_quality_mode": 0,
             "rate_limit_per_user": 0,
             "permission_overwrites": [
-               {
-                  "id": "",
-                  "deny": "1024",
-                  "type": 0,
-                  "allow": "0"
-               },
                {
                   "id": "",
                   "deny": "1024",
@@ -4900,6 +4547,49 @@
                   "type": 0,
                   "allow": "0"
                },
+               {
+                  "id": "",
+                  "deny": "0",
+                  "type": 0,
+                  "allow": "1024"
+               }
+            ],
+            "default_auto_archive_duration": 0,
+            "default_thread_rate_limit_per_user": 0
+         },
+         {
+            "id": "",
+            "name": "",
+            "icon": "",
+            "type": 0,
+            "nsfw": false,
+            "topic": null,
+            "flags": 0,
+            "status": null,
+            "version": 0,
+            "bitrate": 0,
+            "managed": false,
+            "owner_id": "",
+            "guild_id": "",
+            "position": 0,
+            "parent_id": "",
+            "recipients": [],
+            "icon_emoji": {
+               "id": null,
+               "name": null
+            },
+            "user_limit": 0,
+            "permissions": "",
+            "applied_tags": [],
+            "member_count": 0,
+            "message_count": 0,
+            "application_id": "",
+            "last_message_id": null,
+            "last_pin_timestamp": "",
+            "total_message_sent": 0,
+            "video_quality_mode": 0,
+            "rate_limit_per_user": 0,
+            "permission_overwrites": [
                {
                   "id": "",
                   "deny": "1024",
@@ -4920,7 +4610,6 @@
       "owner_id": "",
       "features": [
          "SOUNDBOARD",
-         "SOUNDBOARD",
          "COMMUNITY",
          "CHANNEL_ICON_EMOJIS_GENERATED",
          "NEWS",
@@ -4929,7 +4618,6 @@
          "GUESTS_ENABLED"
       ],
       "stickers": [
-         "",
          "",
          "",
          ""

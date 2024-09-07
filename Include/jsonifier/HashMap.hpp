@@ -146,15 +146,15 @@ namespace jsonifier_internal {
 	template<size_t length> using map_integer_t = map_integer<length>::type;
 
 	enum class hash_map_type {
-		unset				   = 0,
-		empty				   = 1,
-		single_element		   = 2,
-		double_element		   = 3,
-		triple_element		   = 4,
-		single_byte			   = 5,
-		simd_minimal_byte	   = 6,
-		unique_per_length	   = 7,
-		simd_full_length	   = 8,
+		unset			  = 0,
+		empty			  = 1,
+		single_element	  = 2,
+		double_element	  = 3,
+		triple_element	  = 4,
+		single_byte		  = 5,
+		simd_minimal_byte = 6,
+		unique_per_length = 7,
+		simd_full_length  = 8,
 	};
 
 	JSONIFIER_ALWAYS_INLINE static constexpr size_t setSimdWidth(size_t length) noexcept {
@@ -213,6 +213,7 @@ namespace jsonifier_internal {
 		size_t numGroups{ hashMapMaxSizes[maxSizeIndexNew] / bucketSize };
 		size_t storageSize{ hashMapMaxSizes[maxSizeIndexNew] };
 		std::array<uint8_t, 256> uniqueIndices{};
+		size_t ctrlBytesUniqueIndex{};
 		key_stats_t keyStatsVal{};
 		ct_key_hasher hasher{};
 		size_t uniqueIndex{};
@@ -378,7 +379,7 @@ namespace jsonifier_internal {
 			hash_map_construction_data<value_type, maxSizeIndex> returnValues{};
 			returnValues.keyStatsVal = keyStatsVal;
 			bool collided{};
-			for (size_t w = 0; w < returnValues.keyStatsVal.minLength; ++w) {
+			for (size_t w = 0; w < returnValues.keyStatsVal.minLength && w <= 16; ++w) {
 				returnValues.uniqueIndex = w;
 				for (size_t x = 0; x < 2; ++x) {
 					std::fill(returnValues.controlBytes.begin(), returnValues.controlBytes.end(), std::numeric_limits<uint8_t>::max());
@@ -386,7 +387,7 @@ namespace jsonifier_internal {
 					returnValues.hasher.updateSeed();
 					collided = false;
 					for (size_t y = 0; y < pairsNew.count; ++y) {
-						const auto hash			 = returnValues.hasher.hashKeyCt(pairsNew.rootPtr[y].key.data(), returnValues.uniqueIndex);
+						const auto hash			 = bit_mixer<0, 0>::mixBits(pairsNew.rootPtr[y].key.data(), returnValues.hasher.seed, returnValues.uniqueIndex);
 						const auto groupPos		 = (hash >> 8) % returnValues.numGroups;
 						const auto ctrlByte		 = static_cast<uint8_t>(hash);
 						const auto bucketSizeNew = returnValues.bucketSizes[groupPos]++;
@@ -565,7 +566,7 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::simd_minimal_byte) {
 				static constexpr rt_key_hasher<hashData.hasher.seed> hasher{};
 				using simd_type		   = typename unwrap_t<decltype(hashData)>::simd_type;
-				const auto hash		   = hasher.template hashKeyRt<uniqueIndex>(iter);
+				const auto hash		   = bit_mixer<uniqueIndex, hashData.hasher.seed>(iter);
 				const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
 				return indices[(simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
 									simd_internal::gatherValues<simd_type>(controlBytes.data() + resultIndex))) +

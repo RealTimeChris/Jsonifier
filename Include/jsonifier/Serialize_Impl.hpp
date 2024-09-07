@@ -92,8 +92,18 @@ namespace jsonifier_internal {
 			if (value.size() > 0) [[likely]] {
 				writer<options>::writeObjectEntry(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 
-				if (value.size() > 0) [[likely]] {
-					auto iter = value.begin();
+				auto iter = value.begin();
+				serialize_impl<options, derived_type, typename std::remove_reference_t<value_type>::key_type>::impl(iter->first, std::forward<buffer_type>(buffer),
+					std::forward<serialize_pair_t>(serializePair));
+				writer<options>::template writeCharacter<':'>(std::forward<buffer_type>(buffer), serializePair.index);
+				if constexpr (options.optionsReal.prettify) {
+					writer<options>::template writeCharacter<0x20u>(std::forward<buffer_type>(buffer), serializePair.index);
+				}
+				serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
+				++iter;
+				auto endIter = value.end();
+				for (; iter != endIter; ++iter) {
+					writer<options>::writeEntrySeparator(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 					serialize_impl<options, derived_type, typename std::remove_reference_t<value_type>::key_type>::impl(iter->first, std::forward<buffer_type>(buffer),
 						std::forward<serialize_pair_t>(serializePair));
 					writer<options>::template writeCharacter<':'>(std::forward<buffer_type>(buffer), serializePair.index);
@@ -101,18 +111,6 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<0x20u>(std::forward<buffer_type>(buffer), serializePair.index);
 					}
 					serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
-					++iter;
-					auto endIter = value.end();
-					for (; iter != endIter; ++iter) {
-						writer<options>::writeEntrySeparator(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
-						serialize_impl<options, derived_type, typename std::remove_reference_t<value_type>::key_type>::impl(iter->first, std::forward<buffer_type>(buffer),
-							std::forward<serialize_pair_t>(serializePair));
-						writer<options>::template writeCharacter<':'>(std::forward<buffer_type>(buffer), serializePair.index);
-						if constexpr (options.optionsReal.prettify) {
-							writer<options>::template writeCharacter<0x20u>(std::forward<buffer_type>(buffer), serializePair.index);
-						}
-						serialize_impl<options, derived_type, member_type>::impl(iter->second, std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
-					}
 				}
 				writer<options>::writeObjectExit(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 			} else {

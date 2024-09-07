@@ -43,7 +43,17 @@
 
 namespace jsonifier_internal {
 
-	template<typename derived_type> class parser;
+	template<typename derived_type> class parser;	
+
+	template<typename derived_type> struct parse_context {
+		parse_context(parser<derived_type>& parserNew) : parserRef{ parserNew } {};
+		parser<derived_type>& parserRef{};
+		int64_t currentObjectDepth{};
+		int64_t currentArrayDepth{};
+		const char* currentIter{};
+		const char* rootIter{};
+		const char* endIter{};
+	};
 
 	class json_structural_iterator;
 
