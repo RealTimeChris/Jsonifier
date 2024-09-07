@@ -552,7 +552,7 @@ template<> struct glz::meta<citm_catalog_message> {
 
 template<> struct jsonifier::core<geometry_data> {
 	using value_type				 = geometry_data;
-	static constexpr auto parseValue = createValue("coordinates", &value_type::coordinates, "type", &value_type::type);
+	static constexpr auto parseValue = createValue<&value_type::coordinates, &value_type::type>();
 };
 
 template<> struct jsonifier::core<properties_data> {

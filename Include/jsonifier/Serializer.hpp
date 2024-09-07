@@ -62,12 +62,12 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), derivedRef.stringBuffer, serializePair);
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			if (!compare(derivedRef.stringBuffer.data(), buffer.data(), serializePair.index)) [[unlikely]] {
-				std::copy_n(derivedRef.stringBuffer.data(), serializePair.index, buffer.data());
+			if (!compare(stringBuffer.data(), buffer.data(), serializePair.index)) [[unlikely]] {
+				std::copy_n(stringBuffer.data(), serializePair.index, buffer.data());
 			}
 			return true;
 		}

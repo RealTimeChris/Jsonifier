@@ -208,7 +208,7 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr jsonifier::parse_options optionsNew{};
+	static constexpr parse_options_internal<jsonifier::jsonifier_core<true>> optionsNew{};
 
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) noexcept {

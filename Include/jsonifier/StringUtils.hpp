@@ -32,33 +32,23 @@
 namespace jsonifier_internal {
 
 #define JSONIFIER_SKIP_WS() \
-	if constexpr (!options.minified) { \
-		while (whitespaceTable[static_cast<uint8_t>(*context.currentIter)]) { \
-			++context.currentIter; \
-		} \
-	}
-
-#define JSONIFIER_SKIP_WS_INTERNAL() \
-	if constexpr (!options.minified) { \
+	if constexpr (!options.optionsReal.minified) { \
 		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
 			++iter; \
 		} \
 	}
 
-#define JSONIFIER_SKIP_WS_PRESET(amountToSkip) \
-	if (context.currentIter + (amountToSkip) >= context.endIter) { \
-		static constexpr auto sourceLocation{ std::source_location::current() }; \
-		context.parserRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>( \
-			context.currentIter - context.rootIter, \
-			context.endIter- context.rootIter, context.rootIter)); \
-		derailleur<options>::skipToNextValue(context.currentIter, context.endIter); \
-		return; \
-	} \
-	context.currentIter += (amountToSkip); \
-	if constexpr (!options.minified) { \
-		while (whitespaceTable[static_cast<uint8_t>(*context.currentIter)]) { \
-			++context.currentIter; \
+#define JSONIFIER_SKIP_WS_SIZED(wsSize) \
+	if constexpr (!options.optionsReal.minified) { \
+		if (iter + wsSize >= end) [[unlikely]] { \
+			static constexpr auto sourceLocation{ std::source_location::current() }; \
+			options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>( \
+				iter - options.rootIter, end - options.rootIter, options.rootIter)); \
+			derailleur<options>::skipToNextValue(iter, end); \
+			return; \
 		} \
+		iter += wsSize; \
+		JSONIFIER_SKIP_WS(); \
 	}
 
 	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) noexcept {
@@ -885,27 +875,35 @@ namespace jsonifier_internal {
 		template<typename value_type, typename iterator> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, iterator& iter, iterator& end) noexcept {
 			if (*iter == '"') [[likely]] {
 				++iter;
-				static thread_local jsonifier::string_base<char, 1024 * 1024> newString{};
 				auto newSize = end - iter;
-				if (static_cast<size_t>(newSize) > newString.size()) [[unlikely]] {
-					newString.resize(static_cast<size_t>(newSize));
+				if (static_cast<size_t>(newSize) > options.parserPtr->getStringBuffer().size()) [[unlikely]] {
+					options.parserPtr->getStringBuffer().resize(static_cast<size_t>(newSize));
 				}
-				auto newerPtr = parseStringImpl(iter, newString.data(), static_cast<size_t>(newSize));
+				auto newerPtr = parseStringImpl(iter, options.parserPtr->getStringBuffer().data(), static_cast<size_t>(newSize));
 				if (newerPtr) [[likely]] {
 					if (*iter == '"') [[likely]] {
 						++iter;
-						newSize = newerPtr - newString.data();
+						newSize = newerPtr - options.parserPtr->getStringBuffer().data();
 						if (value.size() != static_cast<size_t>(newSize)) {
 							value.resize(static_cast<size_t>(newSize));
 						}
-						std::copy(newString.data(), newString.data() + newSize, value.data());
+						std::copy(options.parserPtr->getStringBuffer().data(), options.parserPtr->getStringBuffer().data() + newSize, value.data());
 					} else {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(
+							iter - options.rootIter, end - options.rootIter, options.rootIter));
 						return false;
 					}
 				} else {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+						iter - options.rootIter, end - options.rootIter, options.rootIter));
 					return false;
 				}
 			} else {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(
+					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				return false;
 			}
 			return true;
@@ -955,7 +953,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename iterator> JSONIFIER_INLINE static void skipToNextValue(iterator& iter, iterator& end) noexcept {
-			JSONIFIER_SKIP_WS_INTERNAL();
+			JSONIFIER_SKIP_WS();
 			switch (*iter) {
 				case '{': {
 					skipObject(iter, end);

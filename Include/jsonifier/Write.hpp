@@ -152,7 +152,7 @@ namespace jsonifier_internal {
 			++serializePair.index;
 			std::fill_n(buffer.data() + serializePair.index, indentTotal, options.optionsReal.indentChar);
 			serializePair.index += indentTotal;
-		};
+		}
 
 		template<const jsonifier::string_view& str, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {

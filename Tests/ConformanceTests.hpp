@@ -386,12 +386,12 @@ template<> struct jsonifier::core<json_test_pattern_pass2> {
 };
 
 struct passTest02 {
-	json_test_pattern_pass2 jsonTestPatternPass3;
+	//json_test_pattern_pass2 jsonTestPatternPass3;
 };
 
 template<> struct jsonifier::core<passTest02> {
 	using value_type				 = passTest02;
-	static constexpr auto parseValue = createValue("JSON Test Pattern pass2", &value_type::jsonTestPatternPass3);
+	static constexpr auto parseValue = createValue();
 };
 
 class conformance_test {

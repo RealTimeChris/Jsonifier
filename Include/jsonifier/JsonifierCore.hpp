@@ -43,16 +43,10 @@ namespace jsonifier {
 		friend class jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core() noexcept {
-			if constexpr (doWeUseInitialBuffer) {
-				stringBuffer.resize(1024 * 1024 * 4);
-			}
-		}
+		JSONIFIER_ALWAYS_INLINE jsonifier_core() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if (this != &other) [[likely]] {
-				stringBuffer = std::move(other.stringBuffer);
-				section		 = std::move(other.section);
 				errors		 = std::move(other.errors);
 			}
 			return *this;
@@ -64,8 +58,6 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
 			if (this != &other) [[likely]] {
-				stringBuffer = other.stringBuffer;
-				section		 = other.section;
 				errors		 = other.errors;
 			}
 			return *this;
@@ -88,10 +80,9 @@ namespace jsonifier {
 		using minifier	 = jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		jsonifier_internal::simd_string_reader<false> section{};
 		vector<jsonifier_internal::error> errors{};
-		string_base<char> stringBuffer{};
 		uint64_t index{};
 	};
 
 }
+

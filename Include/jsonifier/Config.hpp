@@ -25,6 +25,7 @@
 
 #include <jsonifier/ISA/JsonifierCPUInstructions.hpp>
 #include <cstdint>
+#include <atomic>
 
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
@@ -78,53 +79,8 @@
 	#define JSONIFIER_INLINE
 #endif
 
-#if !defined(JSONIFIER_CPU_INSTRUCTIONS)
-	#define JSONIFIER_CPU_INSTRUCTIONS 0
-#endif
-
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
-#endif
-
-#if !defined(JSONIFIER_CHECK_FOR_INSTRUCTION)
-	#define JSONIFIER_CHECK_FOR_INSTRUCTION(x) (JSONIFIER_CPU_INSTRUCTIONS & x)
-#endif
-
-#if !defined(JSONIFIER_CHECK_FOR_AVX)
-	#define JSONIFIER_CHECK_FOR_AVX(x) (JSONIFIER_CPU_INSTRUCTIONS >= x)
-#endif
-
-#if !defined(JSONIFIER_POPCNT)
-	#define JSONIFIER_POPCNT (1 << 0)
-#endif
-#if !defined(JSONIFIER_LZCNT)
-	#define JSONIFIER_LZCNT (1 << 1)
-#endif
-#if !defined(JSONIFIER_BMI)
-	#define JSONIFIER_BMI (1 << 2)
-#endif
-#if !defined(JSONIFIER_BMI2)
-	#define JSONIFIER_BMI2 (1 << 3)
-#endif
-#if !defined(JSONIFIER_NEON)
-	#define JSONIFIER_NEON (1 << 4)
-#endif
-#if !defined(JSONIFIER_AVX)
-	#define JSONIFIER_AVX (1 << 5)
-#endif
-#if !defined(JSONIFIER_AVX2)
-	#define JSONIFIER_AVX2 (1 << 6)
-#endif
-#if !defined(JSONIFIER_AVX512)
-	#define JSONIFIER_AVX512 (1 << 7)
-#endif
-
-#if !defined(JSONIFIER_ANY)
-	#define JSONIFIER_ANY (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512 | JSONIFIER_POPCNT | JSONIFIER_BMI | JSONIFIER_BMI2 | JSONIFIER_LZCNT)
-#endif
-
-#if !defined(JSONIFIER_ANY_AVX)
-	#define JSONIFIER_ANY_AVX (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512)
 #endif
 
 #if defined(JSONIFIER_MSVC)
@@ -137,8 +93,7 @@
 #endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY)
-
-	#include <immintrin.h>
+#include <immintrin.h>
 
 #endif
 
@@ -216,3 +171,6 @@ using string_buffer_ptr = char*;
 JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
 	JSONIFIER_PREFETCH(ptr)
 }
+
+std::atomic_uint64_t sectionInstanceCount{};
+std::atomic_uint64_t coreInstanceCount{};

@@ -46,15 +46,15 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE minifier(const minifier& other)			   = delete;
 
 		template<jsonifier ::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE auto minifyJson(string_type&& in) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size()) [[unlikely]] {
-				derivedRef.stringBuffer.resize(in.size());
+			if (stringBuffer.size() < in.size()) [[unlikely]] {
+				stringBuffer.resize(in.size());
 			}
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			derivedRef.section.reset(in.data(), in.size());
-			const char** iter{ derivedRef.section.begin() };
+			section.reset(in.data(), in.size());
+			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
@@ -62,10 +62,10 @@ namespace jsonifier_internal {
 				return unwrap_t<string_type>{};
 			}
 			unwrap_t<string_type> newString{};
-			minify_impl<derived_type>::impl(iter, derivedRef.stringBuffer, derivedRef.index, *this);
+			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
-				std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, newString.data());
+				std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, newString.data());
 				return newString;
 			} else {
 				return unwrap_t<string_type>{};
@@ -74,28 +74,28 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
 		JSONIFIER_ALWAYS_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
-			if (derivedRef.stringBuffer.size() < in.size()) [[unlikely]] {
-				derivedRef.stringBuffer.resize(in.size());
+			if (stringBuffer.size() < in.size()) [[unlikely]] {
+				stringBuffer.resize(in.size());
 			}
 			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			derivedRef.section.reset(in.data(), in.size());
-			const char** iter{ derivedRef.section.begin() };
+			section.reset(in.data(), in.size());
+			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
 					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
 				return false;
 			}
-			minify_impl<derived_type>::impl(iter, derivedRef.stringBuffer, derivedRef.index, *this);
+			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) [[likely]] {
-				if (!compare(derivedRef.stringBuffer.data(), buffer.data(), derivedRef.index)) [[likely]] {
+				if (!compare(stringBuffer.data(), buffer.data(), derivedRef.index)) [[likely]] {
 					if (buffer.size() != derivedRef.index) [[likely]] {
 						buffer.resize(derivedRef.index);
 					}
-					std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + derivedRef.index, buffer.data());
+					std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, buffer.data());
 				}
 				return true;
 			} else {

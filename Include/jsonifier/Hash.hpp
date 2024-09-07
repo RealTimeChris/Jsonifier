@@ -87,7 +87,7 @@ namespace jsonifier_internal {
 	}
 
 	struct ct_key_hasher : public xoshiro256 {
-		size_t seed{};///< Seed value for the hashing algorithm.
+		size_t seed{};///< seed value for the hashing algorithm.
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
@@ -219,174 +219,565 @@ namespace jsonifier_internal {
 			size_t result = seed;
 			switch (length) {
 				case 1:
-					return result ^ (str[0]);
+					return result ^ (static_cast<size_t>(str[0]));
 				case 2:
-					return result ^ (str[0] | (str[1] << 8));
+					return result ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8));
 				case 3:
-					return result ^ (str[0] | (str[1] << 8) | (str[2] << 16));
+					return result ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16));
 				case 4:
-					return result ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24));
+					return result ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24));
 				case 5:
-					return result ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32));
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32));
 				case 6:
-					return result ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40));
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40));
 				case 7:
-					return result ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48));
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48));
 				case 8:
 					return result ^
-						(str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) |
-							(size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56));
 				case 9:
 					return result ^
-						(str[0] ^ str[8] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) |
-							(size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8])));
 				case 10:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) |
-							(size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							((static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8))));
 				case 11:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) |
-							(size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16)));
 				case 12:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) |
-							(size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24)));
 				case 13:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-							(size_t(str[5]) << 40) | (size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32)));
 				case 14:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-							((size_t(str[5]) ^ size_t(str[13])) << 40) | (size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40)));
 				case 15:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-							((size_t(str[5]) ^ size_t(str[13])) << 40) | ((size_t(str[6]) ^ size_t(str[14])) << 48) | (size_t(str[7]) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48)));
 				case 16:
 					return result ^
-						(str[0] ^ str[8] | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-							((size_t(str[5]) ^ size_t(str[13])) << 40) | ((size_t(str[6]) ^ size_t(str[14])) << 48) | ((size_t(str[7]) ^ size_t(str[15])) << 56));
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56)));
+				case 17:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16]))));
+				case 18:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8)));
+				case 19:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) |
+								(static_cast<size_t>(str[18]) << 16)));
+				case 20:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24)));
+				case 21:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32)));
+				case 22:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40)));
+				case 23:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48)));
+				case 24:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56)));
+				case 25:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) | (static_cast<size_t>(str[24]))));
+				case 26:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8))));
+				case 27:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16))));
+				case 28:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) |
+									(static_cast<size_t>(str[27]) << 24))));
+				case 29:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+									(static_cast<size_t>(str[28]) << 32))));
+				case 30:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+									(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40))));
+				case 31:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+									(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40) | (static_cast<size_t>(str[30]) << 48))));
+				case 32:
+					return result ^
+						(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+							(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+							(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+								(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) |
+								(static_cast<size_t>(str[15]) << 56) | (static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) |
+								(static_cast<size_t>(str[19]) << 24) | (static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) |
+								(static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+								(static_cast<size_t>(str[24]) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+									(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40) | (static_cast<size_t>(str[30]) << 48) |
+									(static_cast<size_t>(str[31]) << 56))));
 				default:
 					return result;
 			}
 		}
 	};
 
+	template<size_t seed> struct bit_mixer<0, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed;
+		}
+	};
+
 	template<size_t seed> struct bit_mixer<1, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ str[0];
+			return seed ^ (static_cast<size_t>(str[0]));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<2, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8));
+			return seed ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<3, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8) | (str[2] << 16));
+			return seed ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<4, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24));
+			return seed ^ (static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<5, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32));
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<6, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40));
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<7, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
-			return seed ^ (str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48));
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<8, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56));
 		}
 	};
 
-	// For lengths greater than 8, wrap additional bytes around and XOR them with the earlier bits
 	template<size_t seed> struct bit_mixer<9, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | (str[1] << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) |
-					(size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8])));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<10, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | (str[2] << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) | (size_t(str[6]) << 48) |
-					(size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<11, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | (str[3] << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) |
-					(size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<12, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | (size_t(str[4]) << 32) | (size_t(str[5]) << 40) |
-					(size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<13, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-					(size_t(str[5]) << 40) | (size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<14, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-					((size_t(str[5]) ^ size_t(str[13])) << 40) | (size_t(str[6]) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<15, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-					((size_t(str[5]) ^ size_t(str[13])) << 40) | ((size_t(str[6]) ^ size_t(str[14])) << 48) | (size_t(str[7]) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48)));
 		}
 	};
 
 	template<size_t seed> struct bit_mixer<16, seed> {
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
 			return seed ^
-				(str[0] ^ (str[8]) | ((str[1] ^ str[9]) << 8) | ((str[2] ^ str[10]) << 16) | ((str[3] ^ str[11]) << 24) | ((size_t(str[4]) ^ size_t(str[12])) << 32) |
-					((size_t(str[5]) ^ size_t(str[13])) << 40) | ((size_t(str[6]) ^ size_t(str[14])) << 48) | ((size_t(str[7]) ^ size_t(str[15])) << 56));
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56)));
 		}
 	};
 
+	template<size_t seed> struct bit_mixer<17, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16]))));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<18, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<19, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<20, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<21, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<22, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<23, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<24, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<25, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24]))));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<26, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<27, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<28, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<29, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+						(static_cast<size_t>(str[28]) << 32)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<30, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+						(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<31, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+						(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40) | (static_cast<size_t>(str[30]) << 48)));
+		}
+	};
+
+	template<size_t seed> struct bit_mixer<32, seed> {
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static constexpr size_t mixBits(char_type* str) {
+			return seed ^
+				(static_cast<size_t>(str[0]) | (static_cast<size_t>(str[1]) << 8) | (static_cast<size_t>(str[2]) << 16) | (static_cast<size_t>(str[3]) << 24) |
+					(static_cast<size_t>(str[4]) << 32) | (static_cast<size_t>(str[5]) << 40) | (static_cast<size_t>(str[6]) << 48) | (static_cast<size_t>(str[7]) << 56) |
+					(static_cast<size_t>(str[8]) | (static_cast<size_t>(str[9]) << 8) | (static_cast<size_t>(str[10]) << 16) | (static_cast<size_t>(str[11]) << 24) |
+						(static_cast<size_t>(str[12]) << 32) | (static_cast<size_t>(str[13]) << 40) | (static_cast<size_t>(str[14]) << 48) | (static_cast<size_t>(str[15]) << 56) |
+						(static_cast<size_t>(str[16])) | (static_cast<size_t>(str[17]) << 8) | (static_cast<size_t>(str[18]) << 16) | (static_cast<size_t>(str[19]) << 24) |
+						(static_cast<size_t>(str[20]) << 32) | (static_cast<size_t>(str[21]) << 40) | (static_cast<size_t>(str[22]) << 48) | (static_cast<size_t>(str[23]) << 56) |
+						(static_cast<size_t>(str[24])) | (static_cast<size_t>(str[25]) << 8) | (static_cast<size_t>(str[26]) << 16) | (static_cast<size_t>(str[27]) << 24) |
+						(static_cast<size_t>(str[28]) << 32) | (static_cast<size_t>(str[29]) << 40) | (static_cast<size_t>(str[30]) << 48) | (static_cast<size_t>(str[31]) << 56)));
+		}
+	};
 
 }
