@@ -104,6 +104,11 @@ namespace jsonifier_internal {
 			seed = xoshiro256::operator()();
 		}
 
+		JSONIFIER_ALWAYS_INLINE constexpr size_t mixBits(size_t value) const {
+			value *= seed;
+			return value ^ std::rotr(value, 49);
+		}
+
 		/**
 		 * @brief Hashes a key at compile-time.
 		 *
@@ -139,7 +144,6 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t seed> struct rt_key_hasher {
-
 		/**
 		 * @brief Hashes a key at runtime.
 		 *
