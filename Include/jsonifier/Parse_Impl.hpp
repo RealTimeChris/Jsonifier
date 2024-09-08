@@ -430,6 +430,7 @@ namespace jsonifier_internal {
 								++iter;
 								JSONIFIER_SKIP_WS();
 								--options.currentArrayDepth;
+								return;
 							} else {
 								static constexpr auto sourceLocation{ std::source_location::current() };
 								options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
@@ -441,6 +442,7 @@ namespace jsonifier_internal {
 					}
 					++iter;
 					JSONIFIER_SKIP_WS();
+					--options.currentArrayDepth;
 				} else {
 					++iter;
 					JSONIFIER_SKIP_WS();

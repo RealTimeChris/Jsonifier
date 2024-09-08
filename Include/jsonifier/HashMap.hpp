@@ -690,8 +690,7 @@ namespace jsonifier_internal {
 		return flattenedMappings;
 	}
 
-
-	template<typename value_type> static constexpr auto hashData = collectMapConstructionData<unwrap_t<value_type>>();
+	std::unordered_map<std::string, int32_t> types{};
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
 		static constexpr auto hashData						= collectMapConstructionData<unwrap_t<value_type>>();
@@ -709,6 +708,9 @@ namespace jsonifier_internal {
 		}() };
 
 		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
+			if (!types.contains(typeid(value_type).name())) {
+				types[typeid(value_type).name()] = ( int32_t )hashData.type;
+			}
 			if constexpr (hashData.type == hash_map_type::single_element) {
 				return 0;
 			} else if constexpr (hashData.type == hash_map_type::double_element) {
@@ -740,11 +742,11 @@ namespace jsonifier_internal {
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
-				static constexpr auto mappings = generateMappings<hashData.keyStatsVal.maxLength>(tupleReferencesByLength<value_type>, hashData.uniqueIndices);
+				static constexpr auto mappings = generateMappings<hashData.keyStatsVal.maxLength>(tupleReferencesByLength<value_type>, uniqueIndices);
 				const auto newPtr			   = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					const auto length			= static_cast<size_t>(newPtr - (iter));
-					const auto localUniqueIndex = hashData.uniqueIndices[length];
+					const auto localUniqueIndex = uniqueIndices[length];
 					if (localUniqueIndex == 255) {
 						return hashData.storageSize;
 					}

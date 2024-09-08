@@ -3976,6 +3976,9 @@ int32_t main() {
 		fileLoader01.saveFile(newerString);
 		std::cout << "Md Data: " << newerString << std::endl;
 		executePythonScript(static_cast<std::string>(BASE_PATH) + "/GenerateGraphs.py", basePath + "/Results.json", static_cast<std::string>(GRAPHS_PATH));
+		for (auto& [key, value]: jsonifier_internal::types) {
+			std::cout << "TYPE: " << key << ", HASH TYPE: " << value << std::endl;
+		}
 	} catch (std::runtime_error& e) {
 		std::cout << e.what() << std::endl;
 	} catch (std::out_of_range& e) {
