@@ -409,6 +409,7 @@ namespace jsonifier_internal {
 							if (*iter == ']') [[likely]] {
 								++iter;
 								JSONIFIER_SKIP_WS();
+								--options.currentArrayDepth;
 								return value.size() == (i + 1) ? noop() : value.resize(i + 1);
 							} else {
 								static constexpr auto sourceLocation{ std::source_location::current() };
@@ -496,6 +497,7 @@ namespace jsonifier_internal {
 					}
 					++iter;
 					JSONIFIER_SKIP_WS();
+					--options.currentArrayDepth;
 				} else {
 					++iter;
 					JSONIFIER_SKIP_WS();
