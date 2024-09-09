@@ -31,25 +31,63 @@
 
 namespace jsonifier_internal {
 
-#define JSONIFIER_SKIP_WS() \
-	if constexpr (!options.optionsReal.minified) { \
-		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
-			++iter; \
-		} \
+#define JSONIFIER_SKIP_WS()										\
+	if constexpr (!options.optionsReal.minified) {				\
+		while (whitespaceTable[static_cast<uint8_t>(*iter)]) {	\
+			++iter;												\
+		}														\
 	}
 
-#define JSONIFIER_SKIP_WS_SIZED(wsSize) \
-	if constexpr (!options.optionsReal.minified) { \
-		if (iter + wsSize >= end) [[unlikely]] { \
-			static constexpr auto sourceLocation{ std::source_location::current() }; \
-			options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>( \
-				iter - options.rootIter, end - options.rootIter, options.rootIter)); \
-			derailleur<options>::skipToNextValue(iter, end); \
-			return; \
-		} \
-		iter += wsSize; \
-		JSONIFIER_SKIP_WS(); \
+	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& iter, size_t wsSize) {
+		if (wsSize > 7) {
+			uint64_t v[2];
+			while (wsSize > 8) {
+				std::memcpy(v, wsStart, 8);
+				std::memcpy(v + 1, iter, 8);
+				if (v[0] != v[1]) {
+					return;
+				}
+				wsSize -= 8;
+				wsStart += 8;
+				iter += 8;
+			}
+			const auto shift = 8 - wsSize;
+			wsStart -= shift;
+			iter -= shift;
+		}
+		{
+			constexpr uint64_t n{ sizeof(uint32_t) };
+			if (wsSize >= n) {
+				uint32_t v[2];
+				std::memcpy(v, wsStart, n);
+				std::memcpy(v + 1, iter, n);
+				if (v[0] != v[1]) {
+					return;
+				}
+				wsSize -= n;
+				wsStart += n;
+				iter += n;
+			}
+		}
+		{
+			constexpr uint64_t n{ sizeof(uint16_t) };
+			if (wsSize >= n) {
+				uint16_t v[2];
+				std::memcpy(v, wsStart, n);
+				std::memcpy(v + 1, iter, n);
+				if (v[0] != v[1]) {
+					return;
+				}
+				iter += n;
+			}
+		}		
 	}
+
+#define JSONIFIER_SKIP_MATCHING_WS()			\
+if constexpr (!options.optionsReal.minified) {	\
+	skipMatchingWs(wsStart,iter, wsSize);		\
+	JSONIFIER_SKIP_WS();						\
+}
 
 	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) noexcept {
 		return *ptr;

@@ -85,7 +85,7 @@ namespace jsonifier_internal {
 						const auto wsStart = iter;
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ size_t(iter - wsStart) };
-						parseObjects(std::forward<value_type_new>(value), iter, end, wsSize);
+						parseObjects(std::forward<value_type_new>(value), iter, end, wsStart, wsSize);
 					} else {
 						JSONIFIER_SKIP_WS();
 						parseObjects(std::forward<value_type_new>(value), iter, end);
@@ -106,13 +106,14 @@ namespace jsonifier_internal {
 
 		template<bool first = true, jsonifier::concepts::jsonifier_value_t value_type_new, typename iterator_new>
 #if defined(JSONIFIER_GNUCXX)
-		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, size_t wsSize = 0) {
+		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
+			size_t wsSize = 0) {
 
 			if (*iter != '}') [[likely]] {
 				if constexpr (!first) {
 					if (*iter == ',') [[likely]] {
 						++iter;
-						JSONIFIER_SKIP_WS_SIZED(wsSize);
+						JSONIFIER_SKIP_MATCHING_WS();
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
@@ -123,12 +124,14 @@ namespace jsonifier_internal {
 				}
 
 #else
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, size_t wsSize = 0) {
+		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
+			size_t wsSize = 0) {
 			if (*iter != '}') [[likely]] {
 				if constexpr (!first) {
 					if (*iter == ',') [[likely]] {
 						++iter;
-						JSONIFIER_SKIP_WS_SIZED(wsSize);
+
+						JSONIFIER_SKIP_MATCHING_WS();
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
@@ -145,7 +148,7 @@ namespace jsonifier_internal {
 					auto& keys = value.jsonifierExcludedKeys;
 					if (keys.find(static_cast<typename unwrap_t<decltype(keys)>::key_type>(key)) != keys.end()) [[likely]] {
 						derailleur<options>::skipToNextValue(iter, end);
-						return parseObjects<false>(std::forward<value_type_new>(value), iter, end, wsSize);
+						return parseObjects<false>(std::forward<value_type_new>(value), iter, end, wsStart, wsSize);
 					}
 				}
 
@@ -156,7 +159,7 @@ namespace jsonifier_internal {
 					if (index < N) [[likely]] {
 						static constexpr auto arrayOfPtrs = generateFunctionPtrs<options, value_type, iterator>();
 						if (arrayOfPtrs[index](std::forward<value_type>(value), std::forward<iterator>(iter), std::forward<iterator>(end))) [[likely]] {
-							return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsSize);
+							return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsStart, wsSize);
 						} else {
 							derailleur<options>::skipToNextValue(iter, end);
 						}
@@ -165,7 +168,7 @@ namespace jsonifier_internal {
 						derailleur<options>::skipKey(iter, end);
 						++iter;
 						derailleur<options>::skipToNextValue(iter, end);
-						return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsSize);
+						return parseObjects<false>(std::forward<value_type_new>(value), std::forward<iterator>(iter), std::forward<iterator>(end), wsStart, wsSize);
 					}
 				} else {
 					static constexpr auto sourceLocation{ std::source_location::current() };
@@ -309,8 +312,8 @@ namespace jsonifier_internal {
 				++iter;
 				++options.currentObjectDepth;
 				size_t wsSize{};
+				auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
-					const auto wsStart = iter;
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);
 				}
@@ -319,7 +322,7 @@ namespace jsonifier_internal {
 					if (!first) [[likely]] {
 						if (*iter == ',') [[likely]] {
 							++iter;
-							JSONIFIER_SKIP_WS_SIZED(wsSize);
+							JSONIFIER_SKIP_MATCHING_WS();
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
@@ -392,8 +395,8 @@ namespace jsonifier_internal {
 				++options.currentArrayDepth;
 				++iter;
 				size_t wsSize{};
+				auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
-					const auto wsStart = iter;
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);
 				}
@@ -404,7 +407,7 @@ namespace jsonifier_internal {
 						parse_impl<options, typename unwrap_t<value_type>::value_type, iterator>::impl(*(iterNew++), iter, end);
 						if (*iter == ',') [[likely]] {
 							++iter;
-							JSONIFIER_SKIP_WS_SIZED(wsSize);
+							JSONIFIER_SKIP_MATCHING_WS();
 						} else {
 							if (*iter == ']') [[likely]] {
 								++iter;
@@ -425,7 +428,7 @@ namespace jsonifier_internal {
 
 						if (*iter == ',') [[likely]] {
 							++iter;
-							JSONIFIER_SKIP_WS_SIZED(wsSize);
+							JSONIFIER_SKIP_MATCHING_WS();
 						} else {
 							if (*iter == ']') [[likely]] {
 								++iter;
@@ -468,8 +471,8 @@ namespace jsonifier_internal {
 				++options.currentArrayDepth;
 				++iter;
 				size_t wsSize{};
+				auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
-					const auto wsStart = iter;
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);
 				}
@@ -480,7 +483,7 @@ namespace jsonifier_internal {
 						parse_impl<options, decltype(value[0]), iterator>::impl(*(iterNew++), iter, end);
 						if (*iter == ',') [[likely]] {
 							++iter;
-							JSONIFIER_SKIP_WS_SIZED(wsSize);
+							JSONIFIER_SKIP_MATCHING_WS();
 						} else {
 							if (*iter == ']') [[likely]] {
 								++iter;

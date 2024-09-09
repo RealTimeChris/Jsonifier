@@ -386,7 +386,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !array_tuple_t<value_type> &&
-			!std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>>;
+			!std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> && !tuple_t<value_type>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
@@ -426,7 +426,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<jsonifier_internal::unwrap_t<value_type>> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> ) ||
-			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !array_tuple_t<value_type>);
+			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !array_tuple_t<value_type> && !tuple_t<value_type>);
 
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
