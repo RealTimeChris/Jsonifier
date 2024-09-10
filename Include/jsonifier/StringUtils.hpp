@@ -39,48 +39,31 @@ namespace jsonifier_internal {
 	}
 
 	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& iter, size_t wsSize) {
-		if (wsSize > 7) {
-			uint64_t v[2];
-			while (wsSize > 8) {
-				std::memcpy(v, wsStart, 8);
-				std::memcpy(v + 1, iter, 8);
-				if (v[0] != v[1]) {
-					return;
-				}
+		while (wsSize >= 8) {
+			uint64_t wsValue, iterValue;
+			std::memcpy(&wsValue, wsStart, sizeof(wsValue));
+			std::memcpy(&iterValue, iter, sizeof(iterValue));
+
+			if (wsValue == iterValue) [[likely]] {
 				wsSize -= 8;
 				wsStart += 8;
 				iter += 8;
-			}
-			const auto shift = 8 - wsSize;
-			wsStart -= shift;
-			iter -= shift;
-		}
-		{
-			constexpr uint64_t n{ sizeof(uint32_t) };
-			if (wsSize >= n) {
-				uint32_t v[2];
-				std::memcpy(v, wsStart, n);
-				std::memcpy(v + 1, iter, n);
-				if (v[0] != v[1]) {
-					return;
-				}
-				wsSize -= n;
-				wsStart += n;
-				iter += n;
+			} else {
+				return;
 			}
 		}
-		{
-			constexpr uint64_t n{ sizeof(uint16_t) };
-			if (wsSize >= n) {
-				uint16_t v[2];
-				std::memcpy(v, wsStart, n);
-				std::memcpy(v + 1, iter, n);
-				if (v[0] != v[1]) {
-					return;
-				}
-				iter += n;
+
+		if (wsSize > 0) {
+			uint64_t wsValue   = 0;
+			uint64_t iterValue = 0;
+
+			std::memcpy(&wsValue, wsStart, wsSize);
+			std::memcpy(&iterValue, iter, wsSize);
+
+			if (wsValue == iterValue) [[likely]] {
+				iter += wsSize;
 			}
-		}		
+		}
 	}
 
 #define JSONIFIER_SKIP_MATCHING_WS()			\
