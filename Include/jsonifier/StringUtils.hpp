@@ -31,46 +31,80 @@
 
 namespace jsonifier_internal {
 
-#define JSONIFIER_SKIP_WS()										\
-	if constexpr (!options.optionsReal.minified) {				\
-		while (whitespaceTable[static_cast<uint8_t>(*iter)]) {	\
-			++iter;												\
-		}														\
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE void skipWs(iterator& iter) {
+		while (whitespaceTable[static_cast<uint8_t>(*iter)]) {
+			++iter;
+		} 
 	}
 
-	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& iter, size_t wsSize) {
-		while (wsSize >= 8) {
-			uint64_t wsValue, iterValue;
-			std::memcpy(&wsValue, wsStart, sizeof(wsValue));
-			std::memcpy(&iterValue, iter, sizeof(iterValue));
-
-			if (wsValue == iterValue) [[likely]] {
-				wsSize -= 8;
-				wsStart += 8;
-				iter += 8;
-			} else {
-				return;
-			}
+#define JSONIFIER_SKIP_WS() \
+	if constexpr (!options.optionsReal.minified) { \
+		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
+			++iter; \
+		} \
 		}
 
-		if (wsSize > 0) {
-			uint64_t wsValue   = 0;
-			uint64_t iterValue = 0;
-
-			std::memcpy(&wsValue, wsStart, wsSize);
-			std::memcpy(&iterValue, iter, wsSize);
-
-			if (wsValue == iterValue) [[likely]] {
-				iter += wsSize;
+	JSONIFIER_ALWAYS_INLINE void skipMatchingWs(const auto* wsStart, auto&& iter, uint64_t length) noexcept {
+		if (length > 7) {
+			uint64_t v[2];
+			while (length >= 8) {
+				std::memcpy(v, wsStart, 8);
+				std::memcpy(v + 1, iter, 8);
+				if (v[0] == v[1]) [[likely]] {
+					length -= 8;
+					wsStart += 8;
+					iter += 8;
+				} else {
+					return;
+				}
 			}
+
+			const auto shift = 8 - length;
+			iter -= shift;
+			return;
+		}
+		{
+			constexpr uint64_t n{ sizeof(uint32_t) };
+			if (length >= n) {
+				uint32_t v[2];
+				std::memcpy(v, wsStart, n);
+				std::memcpy(v + 1, iter, n);
+				if (v[0] == v[1]) [[likely]] {
+					wsStart += n;
+					length -= n;
+					iter += n;
+				} else {
+					return;
+				}
+			}
+		}
+		{
+			constexpr uint64_t n{ sizeof(uint16_t) };
+			if (length >= n) {
+				uint16_t v[2];
+				std::memcpy(v, wsStart, n);
+				std::memcpy(v + 1, iter, n);
+				if (v[0] == v[1]) [[likely]] {
+					iter += n;
+				} else {
+					return;
+				}
+			}
+		}
+		if (length > 0) {
+			++iter;
 		}
 	}
 
-#define JSONIFIER_SKIP_MATCHING_WS()			\
-if constexpr (!options.optionsReal.minified) {	\
-	skipMatchingWs(wsStart,iter, wsSize);		\
-	JSONIFIER_SKIP_WS();						\
-}
+	template<typename iterator> JSONIFIER_ALWAYS_INLINE void addIterDistance(iterator& iter, size_t distance) {
+		iter += distance;
+	}
+
+#define JSONIFIER_SKIP_MATCHING_WS() \
+	if constexpr (!options.optionsReal.minified) { \
+		iter += wsSize; \
+		JSONIFIER_SKIP_WS() \
+	}
 
 	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) noexcept {
 		return *ptr;
@@ -94,7 +128,7 @@ if constexpr (!options.optionsReal.minified) {	\
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,

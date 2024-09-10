@@ -47,8 +47,6 @@ namespace jsonifier_internal {
 
 	class json_structural_iterator;
 
-	template<typename... value_types> class array_tuple : public std::tuple<value_types...> {};
-
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
@@ -354,12 +352,6 @@ namespace jsonifier {
 		concept is_double_ptr = std::same_as<const char**, jsonifier_internal::unwrap_t<value_type>> || std::same_as<char**, jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept array_tuple_t = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			std::tuple_size<jsonifier_internal::unwrap_t<value_type>>::value;
-			std::get<0>(value);
-		} && jsonifier_internal::is_specialization_v<jsonifier_internal::unwrap_t<value_type>, jsonifier_internal::array_tuple>;
-
-		template<typename value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
 
 		template<typename value_type>
@@ -385,14 +377,14 @@ namespace jsonifier {
 		concept enum_t = std::is_enum_v<jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !array_tuple_t<value_type> &&
-			!std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> && !tuple_t<value_type>;
+		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> &&
+			!tuple_t<value_type>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || array_tuple_t<value_type> || map_t<value_type> || tuple_t<value_type>;
+		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };
@@ -426,7 +418,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<jsonifier_internal::unwrap_t<value_type>> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> ) ||
-			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !array_tuple_t<value_type> && !tuple_t<value_type>);
+			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !tuple_t<value_type>);
 
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
@@ -454,17 +446,9 @@ namespace jsonifier {
 
 namespace std {
 
-	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
-
-	template<typename... value_types> struct variant_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
-
-	template<typename... value_types> struct variant_size<std::tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
-
 	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 
 	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
-
-	template<typename... value_types> struct tuple_size<jsonifier_internal::array_tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 }
 
 namespace jsonifier_internal {

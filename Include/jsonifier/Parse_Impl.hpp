@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 
 		template<bool first = true, jsonifier::concepts::jsonifier_value_t value_type_new, typename iterator_new>
 #if defined(JSONIFIER_GNUCXX)
-		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
+		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, const unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
 			size_t wsSize = 0) {
 
 			if (*iter != '}') [[likely]] {
@@ -124,13 +124,12 @@ namespace jsonifier_internal {
 				}
 
 #else
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
-			size_t wsSize = 0) {
+		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end,
+			const unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{}, size_t wsSize = 0) {
 			if (*iter != '}') [[likely]] {
 				if constexpr (!first) {
 					if (*iter == ',') [[likely]] {
 						++iter;
-
 						JSONIFIER_SKIP_MATCHING_WS();
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -200,107 +199,78 @@ namespace jsonifier_internal {
 	template<const auto& options, jsonifier::concepts::tuple_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
 		template<jsonifier::concepts::tuple_t value_type_new, typename iterator_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			if (*iter == '[') [[likely]] {
-				++options.currentArrayDepth;
+			static constexpr auto memberCount = std::tuple_size_v<jsonifier::concepts::core_t<value_type>>;
+			if (*iter == '{') [[likely]] {
+				++options.currentObjectDepth;
 				++iter;
-				JSONIFIER_SKIP_WS();
-
-				static constexpr auto n = std::tuple_size_v<unwrap_t<value_type>>;
-				parseObjects<n, 0, true>(std::forward<value_type_new>(value), iter, end);
-				if (*iter == ']') [[likely]] {
-					--options.currentArrayDepth;
-					++iter;
-					JSONIFIER_SKIP_WS();
+				if constexpr (memberCount > 0) {
+					if constexpr (!options.optionsReal.minified) {
+						const auto wsStart = iter;
+						JSONIFIER_SKIP_WS();
+						size_t wsSize{ size_t(iter - wsStart) };
+						parseObjects<memberCount>(std::forward<value_type_new>(value), iter, end, wsStart, wsSize);
+					} else {
+						JSONIFIER_SKIP_WS();
+						parseObjects<memberCount>(std::forward<value_type_new>(value), iter, end);
+					}
 				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
-						iter - options.rootIter, end - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return;
+					++iter;
+					--options.currentObjectDepth;
+					JSONIFIER_SKIP_WS();
 				}
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_Start>(
+				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Object_Start>(
 					iter - options.rootIter, end - options.rootIter, options.rootIter));
 				derailleur<options>::skipToNextValue(iter, end);
 				return;
 			}
 		}
 
-		template<size_t n, size_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::tuple_t value_type_new, typename iterator_new>
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			auto& item = std::get<indexNew>(value);
+		template<size_t n, size_t indexNew = 0, bool first = true, jsonifier::concepts::tuple_t value_type_new, typename iterator_new>
+#if defined(JSONIFIER_GNUCXX)
+		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, const unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
+			size_t wsSize = 0) {
 
-			if constexpr (!isItFirst) {
-				if (*iter == ',') [[likely]] {
-					++iter;
-					JSONIFIER_SKIP_WS();
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(iter - options.rootIter,
-						end - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return;
+			if (*iter != '}') [[likely]] {
+				if constexpr (!first) {
+					if (*iter == ',') [[likely]] {
+						++iter;
+						JSONIFIER_SKIP_MATCHING_WS();
+					} else {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
+							iter - options.rootIter, end - options.rootIter, options.rootIter));
+						derailleur<options>::skipToNextValue(iter, end);
+						return;
+					}
 				}
-			}
+#else
+		JSONIFIER_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end, const unwrap_t<iterator_new> wsStart = unwrap_t<iterator_new>{},
+			size_t wsSize = 0) {
+			if (*iter != '}') [[likely]] {
+				if constexpr (!first) {
+					if (*iter == ',') [[likely]] {
+						++iter;
 
-			parse_impl<options, decltype(item), iterator>::impl(item, iter, end);
-			if constexpr (indexNew < n - 1) {
-				parseObjects<n, indexNew + 1, false>(std::forward<value_type_new>(value), iter, end);
-			}
-		}
-	};
-
-	template<const auto& options, jsonifier::concepts::array_tuple_t value_type, typename iterator> struct parse_impl<options, value_type, iterator> {
-		template<jsonifier::concepts::array_tuple_t value_type_new, typename iterator_new>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			if (*iter == '[') [[likely]] {
-				++options.currentArrayDepth;
-				++iter;
-				JSONIFIER_SKIP_WS();
-
-				static constexpr auto n = std::tuple_size_v<unwrap_t<value_type>>;
-				parseObjects<n, 0, true>(std::forward<value_type_new>(value), iter, end);
-				if (*iter == ']') [[likely]] {
-					--options.currentArrayDepth;
-					++iter;
-					JSONIFIER_SKIP_WS();
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(
-						iter - options.rootIter, end - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return;
+						JSONIFIER_SKIP_MATCHING_WS();
+					} else {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma_Or_Object_End>(
+							iter - options.rootIter, end - options.rootIter, options.rootIter));
+						derailleur<options>::skipToNextValue(iter, end);
+						return;
+					}
 				}
+#endif
+				static constexpr auto newPtr = std::get<indexNew>(jsonifier::concepts::coreV<value_type>);
+				using member_type			 = unwrap_t<decltype(getMember<newPtr>(value))>;
+				parse_impl<options, member_type, iterator>::impl(getMember<newPtr>(value), iter, end);
+				parseObjects<n, indexNew + 1, false>(std::forward<value_type_new>(value), iter, end, wsStart, wsSize);
 			} else {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Array_Start>(
-					iter - options.rootIter, end - options.rootIter, options.rootIter));
-				derailleur<options>::skipToNextValue(iter, end);
-				return;
-			}
-		}
-
-		template<size_t n, size_t indexNew = 0, bool isItFirst = true, jsonifier::concepts::array_tuple_t value_type_new, typename iterator_new>
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			auto& item = std::get<indexNew>(value);
-
-			if constexpr (!isItFirst) {
-				if (*iter == ',') [[likely]] {
-					++iter;
-					JSONIFIER_SKIP_WS();
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_Comma>(iter - options.rootIter,
-						end - options.rootIter, options.rootIter));
-					derailleur<options>::skipToNextValue(iter, end);
-					return;
-				}
-			}
-
-			parse_impl<options, decltype(item), iterator>::impl(item, iter, end);
-			if constexpr (indexNew < n - 1) {
-				parseObjects<n, indexNew + 1, false>(std::forward<value_type_new>(value), iter, end);
+				++iter;
+				--options.currentObjectDepth;
+				JSONIFIER_SKIP_WS();
 			}
 		}
 	};
@@ -312,7 +282,7 @@ namespace jsonifier_internal {
 				++iter;
 				++options.currentObjectDepth;
 				size_t wsSize{};
-				auto wsStart = iter;
+				const auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);
@@ -395,7 +365,7 @@ namespace jsonifier_internal {
 				++options.currentArrayDepth;
 				++iter;
 				size_t wsSize{};
-				auto wsStart = iter;
+				const auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);
@@ -471,7 +441,7 @@ namespace jsonifier_internal {
 				++options.currentArrayDepth;
 				++iter;
 				size_t wsSize{};
-				auto wsStart = iter;
+				const auto wsStart = iter;
 				if constexpr (!options.optionsReal.minified) {
 					JSONIFIER_SKIP_WS();
 					wsSize = size_t(iter - wsStart);

@@ -33,7 +33,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return vqtbl1q_u8(value, vandq_u8(other, mask));
+		return vqtbl1q_u8(std::forward<simd_int_t01>(value), vandq_u8(std::forward<simd_int_t02>(other), mask));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint16_type char_type>
@@ -44,6 +44,19 @@ namespace simd_internal {
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) noexcept {
 		return vreinterpretq_u8_u64(vld1q_u64(str));
+	}
+
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		uint8x16_t andResult = vandq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		uint8x16_t zeroVec = vdupq_n_u8(0);
+		uint8x16_t cmpResult = vceqq_u8(andResult, zeroVec);
+		return vmaxvq_u8(cmpResult) == 0;
+	}
+
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return vceqq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
@@ -59,18 +72,18 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
-	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
-		vst1q_u64(storageLocation, vreinterpretq_u64_u8(value));
+	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
+		vst1q_u64(storageLocation, vreinterpretq_u64_u8(std::forward<simd_int_type_new>(value)));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint8_type char_type>
-	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
-		vst1q_u8(storageLocation, value);
+	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
+		vst1q_u8(storageLocation, std::forward<simd_int_type_new>(value));
 	}
 
 	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t toBitMask(simd_int_t01&& value) noexcept {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t opBitMask(simd_int_t01&& value) noexcept {
 		auto minput	   = value & bitMask;
 		uint8x16_t tmp = vpaddq_u8(minput, minput);
 		tmp			   = vpaddq_u8(tmp, tmp);
@@ -80,7 +93,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return toBitMask(vceqq_u8(value, other));
+		return opBitMask(vceqq_u8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other)));
 	}
 
 	#define opAndNot(x, y) vbicq_u8(x, y)
