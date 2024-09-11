@@ -102,7 +102,11 @@ namespace jsonifier_internal {
 
 #define JSONIFIER_SKIP_MATCHING_WS() \
 	if constexpr (!options.optionsReal.minified) { \
-		iter += wsSize; \
+		if constexpr (newLines) { \
+			skipMatchingWs(wsStart, iter, wsSize); \
+		} else { \
+			iter += wsSize; \
+		} \
 		JSONIFIER_SKIP_WS() \
 	}
 
