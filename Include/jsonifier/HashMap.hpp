@@ -106,8 +106,6 @@ namespace jsonifier_internal {
 	template<typename value_type> inline constexpr auto tupleRefs{ collectTupleRefs(jsonifier::concepts::coreV<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> inline constexpr auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
-	template<typename value_type> inline constexpr auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefs<value_type>) };
-	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 	template<typename value_type, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr auto createNewTupleImpl(std::index_sequence<indices...>) noexcept {
 		return std::make_tuple(std::get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
@@ -119,6 +117,10 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> inline constexpr auto coreTupleV{ createNewTuple<unwrap_t<value_type>>() };
+	
+	template<typename value_type> inline constexpr auto tupleRefsByLength{ collectTupleRefs(coreTupleV<value_type>) };
+	template<typename value_type> inline constexpr auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
+	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 	template<typename value_type> using core_tuple_t = decltype(coreTupleV<value_type>);
 
@@ -349,7 +351,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					returnValues.controlBytes[slot] = ctrlByte;
-					returnValues.indices[slot]		= pairsNew.rootPtr[y].oldIndex;
+					returnValues.indices[slot]		= y;
 				}
 				if (!collided) {
 					break;
@@ -405,7 +407,7 @@ namespace jsonifier_internal {
 					collided = true;
 					break;
 				}
-				returnValues.indices[slot] = pairsNew.rootPtr[x].oldIndex;
+				returnValues.indices[slot] = x;
 			}
 			if (!collided) {
 				break;
@@ -454,7 +456,7 @@ namespace jsonifier_internal {
 			returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
 			for (size_t x = 0; x < pairsNew.count; ++x) {
 				const auto slot					 = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
-				returnValues.uniqueIndices[slot] = pairsNew.rootPtr[x].oldIndex;
+				returnValues.uniqueIndices[slot] = x;
 			}
 			returnValues.keyStatsVal = keyStatsVal;
 			returnValues.type		 = hash_map_type::single_byte;
@@ -475,11 +477,11 @@ namespace jsonifier_internal {
 			const auto mix1	 = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ first;
 			const auto mix2	 = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ first;
 			for (size_t x = 0; x < 4; ++x) {
-				uint8_t hash0 = first & 3;
+				uint8_t hash0 = 0 & 3;
 				uint8_t hash1 = (mix1 * returnValues.hasher.seed) & 3;
 				uint8_t hash2 = (mix2 * returnValues.hasher.seed) & 3;
 
-				if (hash0 == pairsNew.rootPtr[0].oldIndex && hash1 == pairsNew.rootPtr[1].oldIndex && hash2 == pairsNew.rootPtr[2].oldIndex) {
+				if (hash0 == 0 && hash1 == 1 && hash2 == 2) {
 					collided = false;
 					break;
 				} else {
@@ -505,8 +507,7 @@ namespace jsonifier_internal {
 		returnValues.uniqueIndex = keyStatsVal.uniqueIndex;
 		bool collided{ true };
 		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-			if ((pairsNew.rootPtr[0].key[returnValues.uniqueIndex] & 1) == pairsNew.rootPtr[0].oldIndex &&
-				(pairsNew.rootPtr[1].key[returnValues.uniqueIndex] & 1) == pairsNew.rootPtr[1].oldIndex) {
+			if ((pairsNew.rootPtr[0].key[returnValues.uniqueIndex] & 1) == 0 && (pairsNew.rootPtr[1].key[returnValues.uniqueIndex] & 1) == 1) {
 				collided = false;
 				break;
 			}
@@ -558,7 +559,7 @@ namespace jsonifier_internal {
 			if (uniqueIndex != 255 && uniqueIndex < key.size()) {
 				uint8_t keyChar		= static_cast<uint8_t>(key[uniqueIndex]);
 				size_t flatIndex	= key.size() * 256 + keyChar;
-				mappings[flatIndex] = keys.rootPtr[x].oldIndex;
+				mappings[flatIndex] = x;
 			}
 		}
 
@@ -618,7 +619,7 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::double_element) {
 				return iter[hashData.uniqueIndex] & 1;
 			} else if constexpr (hashData.type == hash_map_type::triple_element) {
-				static constexpr auto firstChar = std::get<0>(jsonifier::concepts::coreV<value_type>).view()[hashData.uniqueIndex];
+				static constexpr auto firstChar = std::get<0>(coreTupleV<value_type>).view()[hashData.uniqueIndex];
 				return (uint8_t(iter[hashData.uniqueIndex] ^ firstChar) * hashData.hasher.seed) & 3;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
 				return hashData.uniqueIndices[iter[hashData.uniqueIndex]];

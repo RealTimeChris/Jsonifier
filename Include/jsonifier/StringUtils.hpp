@@ -42,7 +42,7 @@ namespace jsonifier_internal {
 		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
 			++iter; \
 		} \
-		}
+	}
 
 	JSONIFIER_ALWAYS_INLINE void skipMatchingWs(const auto* wsStart, auto&& iter, uint64_t length) noexcept {
 		if (length > 7) {
@@ -100,12 +100,18 @@ namespace jsonifier_internal {
 		iter += distance;
 	}
 
-#define JSONIFIER_SKIP_MATCHING_WS() \
+#define JSONIFIER_SKIP_MATCHING_WS_OLD() \
+	if constexpr (!options.optionsReal.minified) { \
+		iter += wsSize; \
+		JSONIFIER_SKIP_WS() \
+	}
+
+#define JSONIFIER_SKIP_MATCHING_WS_NEW() \
 	if constexpr (!options.optionsReal.minified) { \
 		if constexpr (newLines) { \
-			skipMatchingWs(wsStart, iter, wsSize); \
-		} else { \
 			iter += wsSize; \
+		} else { \
+			skipMatchingWs(wsStart, iter, wsSize); \
 		} \
 		JSONIFIER_SKIP_WS() \
 	}

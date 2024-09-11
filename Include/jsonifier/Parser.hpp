@@ -51,11 +51,11 @@ namespace jsonifier_internal {
 		bool validatingJson{ false };
 	};
 
-	template<const auto&, typename value_type, typename iterator> struct parse_impl;
+	template<bool minified, const auto&, typename value_type, typename iterator> struct parse_impl;
 
 	template<typename derived_type> class parser {
 	  public:
-		template<const auto&, typename value_type, typename iterator> friend struct parse_impl;
+		template<bool minified, const auto&, typename value_type, typename iterator> friend struct parse_impl;
 
 		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			   = delete;
@@ -85,7 +85,7 @@ namespace jsonifier_internal {
 					iter - optionsReal.rootIter, optionsReal.rootIter));
 				return false;
 			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
+			parse_impl<options.minified, optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
 			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,
@@ -113,7 +113,7 @@ namespace jsonifier_internal {
 			optionsReal.rootIter  = static_cast<const char*>(in.data());
 			auto iter			  = optionsReal.rootIter;
 			auto end			  = static_cast<const char*>(in.data() + in.size());
-			if (in.size() == 0) {
+			if (in.size() == 0) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
 					end - optionsReal.rootIter, optionsReal.rootIter));
@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 					end - optionsReal.rootIter, optionsReal.rootIter));
 				return false;
 			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
+			parse_impl<options.minified, optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
 			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,
@@ -178,7 +178,7 @@ namespace jsonifier_internal {
 					end - optionsReal.rootIter, optionsReal.rootIter));
 				return object;
 			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
+			parse_impl<options.minified, optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
 			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,

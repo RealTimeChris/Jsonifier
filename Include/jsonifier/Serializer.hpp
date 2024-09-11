@@ -66,9 +66,7 @@ namespace jsonifier_internal {
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			if (!compare(stringBuffer.data(), buffer.data(), serializePair.index)) [[unlikely]] {
-				std::copy_n(stringBuffer.data(), serializePair.index, buffer.data());
-			}
+			std::copy_n(stringBuffer.data(), serializePair.index, buffer.data());
 			return true;
 		}
 
@@ -79,8 +77,11 @@ namespace jsonifier_internal {
 			serializePair.indent = 0;
 			jsonifier::string newString{};
 			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, serializePair);
-			newString.resize(serializePair.index);
+			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			if (newString.size() != serializePair.index) [[unlikely]] {
+				newString.resize(serializePair.index);
+			}
+			std::copy_n(stringBuffer.data(), serializePair.index, newString.data());
 			return newString;
 		}
 

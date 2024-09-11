@@ -214,8 +214,8 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, derived_type, value_type_new> {
 		template<jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
-			static constexpr auto maxIndex = std::size(value);
-			if constexpr (maxIndex > 0) {
+			auto maxIndex = std::size(value);
+			if (maxIndex > 0) {
 				writer<options>::writeArrayEntry(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
 
 				using member_type = typename std::remove_reference_t<value_type>::value_type;

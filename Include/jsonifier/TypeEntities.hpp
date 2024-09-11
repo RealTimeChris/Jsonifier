@@ -366,7 +366,7 @@ namespace jsonifier {
 		concept tuple_t = requires(jsonifier_internal::unwrap_t<value_type> t) {
 			std::tuple_size<jsonifier_internal::unwrap_t<value_type>>::value;
 			std::get<0>(t);
-		};
+		} && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 
@@ -378,7 +378,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> &&
-			!tuple_t<value_type>;
+			!tuple_t<value_type> && has_resize<value_type>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
