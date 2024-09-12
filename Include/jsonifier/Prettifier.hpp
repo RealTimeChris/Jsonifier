@@ -111,12 +111,10 @@ namespace jsonifier_internal {
 			}
 			prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, prettifyPair, *this);
 			if (prettifyPair.index != std::numeric_limits<uint32_t>::max()) [[likely]] {
-				if (!compare(stringBuffer.data(), buffer.data(), prettifyPair.index)) [[likely]] {
-					if (buffer.size() != prettifyPair.index) [[likely]] {
-						buffer.resize(prettifyPair.index);
-					}
-					std::copy(stringBuffer.data(), stringBuffer.data() + prettifyPair.index, buffer.data());
+				if (buffer.size() != prettifyPair.index) [[likely]] {
+					buffer.resize(prettifyPair.index);
 				}
+				std::copy(stringBuffer.data(), stringBuffer.data() + prettifyPair.index, buffer.data());
 				return true;
 			} else {
 				return false;

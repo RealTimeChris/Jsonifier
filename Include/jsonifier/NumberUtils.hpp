@@ -112,90 +112,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, jsonifier::concepts::is_double_ptr iterator>
-	JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
-		using value_type = unwrap_t<value_type_new>;
-		auto newPtr		 = *iter;
-		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-			if constexpr (std::is_unsigned_v<value_type>) {
-				if constexpr (std::same_as<value_type, uint64_t>) {
-					if (*newPtr == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(value, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						return false;
-					}
-				} else {
-					uint64_t i;
-					if (*newPtr == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(i, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						return false;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
-				}
-			} else {
-				uint64_t i;
-				int32_t sign = 1;
-				if (*newPtr == '-') {
-					sign = -1;
-					++newPtr;
-				}
-
-				static_assert(sizeof(*newPtr) == sizeof(char));
-				auto s = parseInt(i, newPtr);
-				++iter;
-				if (!s) [[unlikely]] {
-					return false;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(sign * i);
-				} else {
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
-				}
-			}
-		} else {
-			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
-				value_type temp;
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(newPtr, *end, temp);
-				if (!ptr) [[unlikely]] {
-					return false;
-				}
-				value = temp;
-				++iter;
-			} else {
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(newPtr, *end, value);
-				if (!ptr) [[unlikely]] {
-					return false;
-				}
-				++iter;
-			}
-		}
-		return true;
-	}
-
 	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = unwrap_t<value_type_new>;
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
@@ -207,10 +123,7 @@ namespace jsonifier_internal {
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt(value, iter);
-					if (!s) [[unlikely]] {
-						return false;
-					}
+					return parseInt(value, iter) ? true : false;
 				} else {
 					uint64_t i;
 					if (*iter == '-') [[unlikely]] {
@@ -218,15 +131,7 @@ namespace jsonifier_internal {
 					}
 
 					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<unwrap_t<decltype(i)>>(i, iter);
-					if (!s) [[unlikely]] {
-						return false;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
+					return (parseInt<unwrap_t<decltype(i)>>(i, iter) && i <= maximum) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
 				uint64_t i;
@@ -237,39 +142,20 @@ namespace jsonifier_internal {
 				}
 
 				static_assert(sizeof(*iter) == sizeof(char));
+				static constexpr auto minAbs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
 				auto s = parseInt(i, iter);
-				if (!s) [[unlikely]] {
-					return false;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(sign * i);
-				} else {
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
-				}
+				return s ? (sign == -1) ? (((i <= minAbs) ? (value = static_cast<value_type>(sign * i), true) : false))
+										: (((i <= maximum) ? (value = static_cast<value_type>(i), true) : false))
+						 : false;
 			}
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
 				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, temp);
-				if (!ptr) {
-					return false;
-				}
-				iter  = ptr;
-				value = temp;
+				return ptr ? (iter = ptr, value = temp, true) : false;
 			} else {
 				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);
-				if (!ptr) {
-					return false;
-				}
-				iter = ptr;
+				return ptr ? (iter = ptr, true) : false;
 			}
 		}
 		return true;

@@ -38,13 +38,11 @@ namespace jsonifier_internal {
 	}
 
 #define JSONIFIER_SKIP_WS() \
-	if constexpr (!options.optionsReal.minified) { \
-		while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
-			++iter; \
-		} \
-	}
+	while (whitespaceTable[static_cast<uint8_t>(*iter)]) { \
+		++iter; \
+	} \
 
-	JSONIFIER_ALWAYS_INLINE void skipMatchingWs(const auto* wsStart, auto&& iter, uint64_t length) noexcept {
+	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& iter, uint64_t length) noexcept {
 		if (length > 7) {
 			uint64_t v[2];
 			while (length >= 8) {
@@ -96,25 +94,13 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE void addIterDistance(iterator& iter, size_t distance) {
-		iter += distance;
-	}
-
-#define JSONIFIER_SKIP_MATCHING_WS_OLD() \
-	if constexpr (!options.optionsReal.minified) { \
+#define JSONIFIER_SKIP_MATCHING_WS() \
+	if constexpr (newLines) { \
 		iter += wsSize; \
-		JSONIFIER_SKIP_WS() \
-	}
-
-#define JSONIFIER_SKIP_MATCHING_WS_NEW() \
-	if constexpr (!options.optionsReal.minified) { \
-		if constexpr (newLines) { \
-			iter += wsSize; \
-		} else { \
-			skipMatchingWs(wsStart, iter, wsSize); \
-		} \
-		JSONIFIER_SKIP_WS() \
-	}
+	} else { \
+		skipMatchingWs(wsStart, iter, wsSize); \
+	} \
+	JSONIFIER_SKIP_WS() \
 
 	JSONIFIER_ALWAYS_INLINE const char* getUnderlyingPtr(const char** ptr) noexcept {
 		return *ptr;

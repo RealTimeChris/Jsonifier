@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 		}
 
 		template<size_t currentIndex, size_t maxIndex, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
+		JSONIFIER_ALWAYS_INLINE static void serializeObjects(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			if constexpr (currentIndex < maxIndex) {
 				static constexpr auto subTuple = std::get<currentIndex>(coreTupleV<value_type>);
 				static constexpr auto key	   = subTuple.view();
