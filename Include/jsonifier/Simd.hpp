@@ -143,7 +143,9 @@ namespace jsonifier_internal {
 			while (stringBlockReader.hasFullBlock()) {
 				generateStructurals<false>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
 			}
-			(stringBlockReader.getRemainder(block) > 0) ? generateStructurals<true>(block, escaped, nextIsEscaped, rawStructurals) : noop();
+			if (stringBlockReader.getRemainder(block) > 0) [[likely]] {
+				generateStructurals<true>(block, escaped, nextIsEscaped, rawStructurals);
+			}
 		}
 
 		template<size_type index> JSONIFIER_ALWAYS_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) noexcept {

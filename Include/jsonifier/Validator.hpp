@@ -73,7 +73,10 @@ namespace jsonifier_internal {
 				return false;
 			}
 			auto result = impl(iter, derivedRef.index, *this);
-			(derivedRef.index > 0 || *iter || derivedRef.errors.size() > 0) ? false : result;
+			if (derivedRef.index > 0 || *iter || derivedRef.errors.size() > 0) {
+				result = false;
+			}
+			return result;
 		}
 
 	  protected:

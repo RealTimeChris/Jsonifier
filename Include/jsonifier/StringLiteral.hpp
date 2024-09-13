@@ -157,17 +157,4 @@ namespace jsonifier_internal {
 		return jsonifier::string_view(lit.value.data(), lit.value.size() - 1);
 	}
 
-	template<string_literal... strings> JSONIFIER_ALWAYS_INLINE constexpr auto combineLiterals() noexcept {
-		constexpr size_t newSize = { (strings.size() + ...) };
-		char returnValue[newSize + 1]{};
-		returnValue[newSize] = '\0';
-		auto copyLambda		 = [&](const char* ptr, size_t newSize, size_t& currentOffset) {
-			 std::copy(ptr, ptr + newSize, returnValue + currentOffset);
-			 currentOffset += newSize;
-		};
-		size_t currentOffset{};
-		(copyLambda(strings.data(), strings.size(), currentOffset), ...);
-		return string_literal{ returnValue };
-	}
-
 }
