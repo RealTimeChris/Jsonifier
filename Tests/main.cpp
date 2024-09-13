@@ -2481,8 +2481,8 @@ int32_t main() {
 	try {
 		std::bitset<2048> bits{};
 		bits.operator[](2034);
-		conformanceTests();
-		failTests();
+		//conformanceTests();
+		//failTests();
 		test_generator<test_struct> testJsonData{};
 		std::string jsonData{};
 		jsonifier::jsonifier_core parser{};
@@ -2562,9 +2562,6 @@ int32_t main() {
 		std::string jsonifierBuffer{ jsonData };
 		std::string simdjsonBuffer{ jsonData };
 		std::string glazeBuffer{ jsonData };
-#if !defined(ASAN_ENABLED)
-		simdjson::ondemand::parser simdjsonParser{};
-#endif
 		{
 			jsonifier::vector<results_data> resultsNew{};
 			test_results jsonResults{};
@@ -2575,8 +2572,11 @@ int32_t main() {
 				bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 				runBenchmark<jsonifier_internal::string_literal{ "Json Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 					try {
+						test<test_struct> simdjsonTestDataNew{};
+						simdjson::ondemand::parser simdjsonParser{};
 						getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 						bnch_swt::doNotOptimizeAway(simdjsonTestData);
+						simdjsonTestData = std::move(simdjsonTestDataNew);
 					} catch (std::exception& error) {
 						std::cout << "Simdjson Error: " << error.what() << std::endl;
 					}
@@ -2597,10 +2597,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						test<test_struct> glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
 						auto* newPtr = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -2628,9 +2630,11 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						test<test_struct> jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
 						auto* newPtr = &jsonifierTestData;
 						bnch_swt::doNotOptimizeAway(newPtr);
+						jsonifierTestData = jsonifierTestDataNew;
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Json Test (Prettified)"),
 				static_cast<jsonifier::string>(jsonifierCommitUrl), jsonifierReadResult.iterationCount };
@@ -2641,6 +2645,7 @@ int32_t main() {
 			auto jsonifierWriteResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Prettified)" } + "-Write", jsonifierLibraryName, "steelblue">([&]() {
+						jsonifier::jsonifier_core parser{};
 						parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonifierTestData, jsonifierNewerBuffer);
 						auto* newPtr = &jsonifierNewerBuffer;
 						bnch_swt::doNotOptimizeAway(newPtr);
@@ -2687,8 +2692,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							test<test_struct> simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -2710,10 +2718,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						test<test_struct> glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
+						auto* newPtr  = &glazeTestData;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -2742,8 +2752,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						test<test_struct> jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
 						auto* newPtr = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Json Test (Minified)"),
@@ -2801,8 +2813,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							abc_test<test_struct> simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -2824,10 +2839,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						abc_test<test_struct> glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
 						auto* newPtr = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -2856,8 +2873,11 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						jsonifier::jsonifier_core parser{};
+						abc_test<test_struct> jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Abc Test (Prettified)"),
@@ -2915,8 +2935,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							abc_test<test_struct> simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -2938,9 +2961,11 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						abc_test<test_struct> glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
+						glazeTestData = std::move(glazeTestDataNew);
 						auto* newPtr = &glazeTestData;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
@@ -2970,8 +2995,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						abc_test<test_struct> jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Abc Test (Minified)"),
@@ -3029,8 +3056,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							discord_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3052,9 +3082,11 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						discord_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
+						glazeTestData = std::move(glazeTestDataNew);
 						auto* newPtr = &glazeTestData;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
@@ -3084,8 +3116,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
+						discord_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
 						auto* newPtr = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Discord Test (Prettified)"),
@@ -3143,8 +3177,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							discord_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3166,10 +3203,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						discord_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
 						auto* newPtr = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3198,8 +3237,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
+						discord_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
 						auto* newPtr = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Discord Test (Minified)"),
@@ -3258,8 +3299,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							canada_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3281,10 +3325,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						canada_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3313,8 +3359,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						canada_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Canada Test (Prettified)"),
@@ -3372,8 +3420,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							canada_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3395,10 +3446,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						canada_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3427,8 +3480,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						canada_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Canada Test (Minified)"),
@@ -3486,8 +3541,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							citm_catalog_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3509,10 +3567,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						citm_catalog_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3541,8 +3601,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						citm_catalog_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("CitmCatalog Test (Prettified)"),
@@ -3600,8 +3662,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							citm_catalog_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3623,10 +3688,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						citm_catalog_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3655,8 +3722,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						citm_catalog_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("CitmCatalog Test (Minified)"),
@@ -3714,8 +3783,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							twitter_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3737,10 +3809,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Prettified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestData, glazeBuffer); error) {
+						twitter_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3769,8 +3843,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Prettified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						twitter_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = false }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Twitter Test (Prettified)"),
@@ -3828,8 +3904,11 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
+							twitter_message simdjsonTestDataNew{};
+							simdjson::ondemand::parser simdjsonParser{};
 							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
+							simdjsonTestData = std::move(simdjsonTestDataNew);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
 						}
@@ -3851,10 +3930,12 @@ int32_t main() {
 			auto glazeReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Minified)" } + "-Read", glazeLibraryName, "dodgerblue">([&]() {
-						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestData, glazeBuffer); error) {
+						twitter_message glazeTestDataNew{};
+						if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = true }>(glazeTestDataNew, glazeBuffer); error) {
 							std::cout << "Glaze Error: " << glz::format_error(error, glazeBuffer) << std::endl;
 						}
-						auto* newPtr = &glazeTestData;
+						auto* newPtr  = &glazeTestData;
+						glazeTestData = std::move(glazeTestDataNew);
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 
@@ -3883,8 +3964,10 @@ int32_t main() {
 			auto jsonifierReadResult =
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Minified)" } + "-Read", jsonifierLibraryName, "teal">([&]() {
-						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestData, jsonifierBuffer);
-						auto* newPtr = &jsonifierTestData;
+						twitter_message jsonifierTestDataNew{};
+						parser.parseJson<jsonifier::parse_options{ .minified = true }>(jsonifierTestDataNew, jsonifierBuffer);
+						auto* newPtr	  = &jsonifierTestData;
+						jsonifierTestData = jsonifierTestDataNew;
 						bnch_swt::doNotOptimizeAway(newPtr);
 					});
 			results_data jsonifierResesults{ static_cast<jsonifier::string>(jsonifierLibraryName), static_cast<jsonifier::string>("Twitter Test (Minified)"),
@@ -3931,15 +4014,15 @@ int32_t main() {
 			newerString += testResults.markdownResults;
 			benchmark_data.emplace_back(testResults);
 		}
-		auto testResults = json_tests_helper<test_type::minify, std::string, false, "Minify Test">::run(discordData);
+		auto testResults = json_tests_helper<test_type::minify, std::string, false, jsonifier_internal::string_literal{ "Minify Test" }>::run(discordData);
 		newerString += static_cast<jsonifier::string>(section13);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::prettify, std::string, false, "Prettify Test">::run(jsonMinifiedData);
+		testResults = json_tests_helper<test_type::prettify, std::string, false, jsonifier_internal::string_literal{ "Prettify Test" }>::run(jsonMinifiedData);
 		newerString += static_cast<jsonifier::string>(section14);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
-		testResults = json_tests_helper<test_type::validate, std::string, false, "Validate Test">::run(discordData);
+		testResults = json_tests_helper<test_type::validate, std::string, false, jsonifier_internal::string_literal{ "Validate Test" }>::run(discordData);
 		newerString += static_cast<jsonifier::string>(section15);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);

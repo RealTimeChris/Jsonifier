@@ -741,7 +741,7 @@ namespace jsonifier_internal {
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
 				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
-				static constexpr rt_key_hasher<hashData.hasher.seed> hasher{};
+				static constexpr rt_key_hasher<hashData.seed> hasher{};
 				const auto newPtr = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					size_t length		   = static_cast<size_t>(newPtr - (iter));

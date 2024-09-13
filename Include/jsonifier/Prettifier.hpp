@@ -47,15 +47,11 @@ namespace jsonifier_internal {
 		Incorrect_Structural_Index = 3,
 	};
 
-	struct prettify_options_internal {
-		jsonifier::prettify_options optionsReal{};
-	};
-
-	template<const prettify_options_internal&, typename derived_type> struct prettify_impl;
+	template<const jsonifier::prettify_options&, typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
 	  public:
-		template<const prettify_options_internal&, typename derived_type_new> friend struct prettify_impl;
+		template<const jsonifier::prettify_options&, typename derived_type_new> friend struct prettify_impl;
 
 		JSONIFIER_ALWAYS_INLINE prettifier& operator=(const prettifier& other) = delete;
 		JSONIFIER_ALWAYS_INLINE prettifier(const prettifier& other)			   = delete;
@@ -65,7 +61,7 @@ namespace jsonifier_internal {
 			if (stringBuffer.size() < in.size() * 5) [[unlikely]] {
 				stringBuffer.resize(in.size() * 5);
 			}
-			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
+			static constexpr jsonifier::prettify_options optionsFinal{ options };
 			prettifyPair.index	= 0;
 			prettifyPair.indent = 0;
 			derivedRef.errors.clear();
@@ -83,7 +79,7 @@ namespace jsonifier_internal {
 			prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, prettifyPair, *this);
 			if (prettifyPair.index != std::numeric_limits<uint32_t>::max()) [[likely]] {
 				newString.resize(prettifyPair.index);
-				std::copy(stringBuffer.data(), stringBuffer.data() + prettifyPair.index, newString.data());
+				std::memcpy(newString.data(), stringBuffer.data(), prettifyPair.index);
 				return newString;
 			} else {
 				return unwrap_t<string_type>{};
@@ -95,7 +91,7 @@ namespace jsonifier_internal {
 			if (stringBuffer.size() < in.size() * 5) [[unlikely]] {
 				stringBuffer.resize(in.size() * 5);
 			}
-			static constexpr prettify_options_internal optionsFinal{ .optionsReal = options };
+			static constexpr jsonifier::prettify_options optionsFinal{ options };
 			prettifyPair.index	= 0;
 			prettifyPair.indent = 0;
 			derivedRef.errors.clear();
@@ -114,7 +110,7 @@ namespace jsonifier_internal {
 				if (buffer.size() != prettifyPair.index) [[likely]] {
 					buffer.resize(prettifyPair.index);
 				}
-				std::copy(stringBuffer.data(), stringBuffer.data() + prettifyPair.index, buffer.data());
+				std::memcpy(buffer.data(), stringBuffer.data(), prettifyPair.index);
 				return true;
 			} else {
 				return false;

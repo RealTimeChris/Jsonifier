@@ -23,7 +23,7 @@ jobs:
       working-directory: Tests
       run:  |
             sudo apt-get install build-essential
-            sudo apt-get install g++-13
+            sudo apt-get install g++-14
 
     - name: Install Seaborn
       run: |

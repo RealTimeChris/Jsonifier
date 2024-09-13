@@ -43,10 +43,6 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	struct serialize_options_internal {
-		jsonifier::serialize_options optionsReal{};
-	};
-
 	template<const auto& options, typename derived_type, typename value_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
@@ -58,7 +54,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
@@ -66,7 +62,7 @@ namespace jsonifier_internal {
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			std::copy_n(stringBuffer.data(), serializePair.index, buffer.data());
+			std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			return true;
 		}
 
@@ -76,12 +72,12 @@ namespace jsonifier_internal {
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
 			jsonifier::string newString{};
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (newString.size() != serializePair.index) [[unlikely]] {
 				newString.resize(serializePair.index);
 			}
-			std::copy_n(stringBuffer.data(), serializePair.index, newString.data());
+			std::memcpy(newString.data(), stringBuffer.data(), serializePair.index);
 			return newString;
 		}
 

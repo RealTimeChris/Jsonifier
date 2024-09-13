@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<const prettify_options_internal& options, typename derived_type> struct prettify_impl : public writer<options> {
+	template<const jsonifier::prettify_options& options, typename derived_type> struct prettify_impl : public writer<options> {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			while (*iter) {
@@ -46,13 +46,13 @@ namespace jsonifier_internal {
 					[[unlikely]] case json_structural_type::Comma: {
 						writer<options>::template writeCharacter<',', false>(out, prettifyPair.index);
 						++iter;
-						if constexpr (options.optionsReal.newLinesInArray) {
+						if constexpr (options.newLinesInArray) {
 							writer<options>::template writeNewLine<false>(out, prettifyPair);
 						} else {
 							if (prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
 								writer<options>::template writeNewLine<false>(out, prettifyPair);
 							} else {
-								writer<options>::template writeCharacter<options.optionsReal.indentChar, false>(out, prettifyPair.index);
+								writer<options>::template writeCharacter<options.indentChar, false>(out, prettifyPair.index);
 							}
 						}
 						break;
@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 					}
 					[[unlikely]] case json_structural_type::Colon: {
 						writer<options>::template writeCharacter<':', false>(out, prettifyPair.index);
-						writer<options>::template writeCharacter<options.optionsReal.indentChar, false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<options.indentChar, false>(out, prettifyPair.index);
 						++iter;
 						break;
 					}
@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
-						if constexpr (options.optionsReal.newLinesInArray) {
+						if constexpr (options.newLinesInArray) {
 							if (**iter != ']') [[unlikely]] {
 								writer<options>::template writeNewLine<false>(out, prettifyPair);
 							}
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
 							return;
 						}
-						if constexpr (options.optionsReal.newLinesInArray) {
+						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
 								writer<options>::template writeNewLine<false>(out, prettifyPair);
 							}

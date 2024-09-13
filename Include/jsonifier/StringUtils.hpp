@@ -98,7 +98,9 @@ namespace jsonifier_internal {
 	if constexpr (newLines) { \
 		iter += wsSize; \
 	} else { \
-		skipMatchingWs(wsStart, iter, wsSize); \
+		if (wsSize) { \
+			skipMatchingWs(wsStart, iter, wsSize); \
+		} \
 	} \
 	JSONIFIER_SKIP_WS() \
 
@@ -491,8 +493,8 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
-	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
+	template<typename iterator_type01, typename iterator_type02, typename string_type>
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(string_type& string, iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		using char_type02 =
@@ -509,6 +511,12 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				auto newSize = string2 - string.data() + bytesProcessed;
+				if (newSize >= string.size()) {
+					auto oldSize = string2 - string.data();
+					string.resize(newSize * 2);
+					string2 = string.data() + oldSize;
+				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -560,6 +568,12 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				auto newSize = string2 - string.data() + bytesProcessed;
+				if (newSize >= string.size()) {
+					auto oldSize = string2 - string.data();
+					string.resize(newSize * 2);
+					string2 = string.data() + oldSize;
+				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -611,6 +625,12 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				auto newSize = string2 - string.data() + bytesProcessed;
+				if (newSize >= string.size()) {
+					auto oldSize = string2 - string.data();
+					string.resize(newSize * 2);
+					string2 = string.data() + oldSize;
+				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -659,6 +679,12 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				auto newSize = string2 - string.data() + bytesProcessed;
+				if (newSize >= string.size()) {
+					auto oldSize = string2 - string.data();
+					string.resize(newSize * 2);
+					string2 = string.data() + oldSize;
+				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -922,42 +948,273 @@ namespace jsonifier_internal {
 		}
 	}
 
+	JSONIFIER_ALWAYS_INLINE constexpr auto hasZero(const uint64_t chunk) noexcept {
+		return (((chunk - 0x0101010101010101u) & ~chunk) & 0x8080808080808080u);
+	}
+
+	JSONIFIER_ALWAYS_INLINE constexpr auto hasQuote(const uint64_t chunk) noexcept {
+		return hasZero(chunk ^ repeatByte<'"', uint64_t>());
+	}
+
+	template<typename simd_type> JSONIFIER_ALWAYS_INLINE simd_type hasZero(const simd_type chunk) noexcept {
+		const simd_type oneBits		 = simd_internal::gatherValue<simd_type>(0x0101010101010101ull);
+		const simd_type highBitsMask = simd_internal::gatherValue<simd_type>(0x8080808080808080ull);
+		return simd_internal::opAnd(simd_internal::opAndNot(chunk, simd_internal::opSub64(chunk, oneBits)), highBitsMask);
+	}
+
+	template<typename simd_type> JSONIFIER_ALWAYS_INLINE simd_type hasQuote(const simd_type chunk) noexcept {
+		const simd_type quote = simd_internal::gatherValue<simd_type>('"');
+		return hasZero(simd_internal::opXor(quote, chunk));
+	}
+
 	template<const auto& options> struct derailleur {
 		template<typename value_type, typename iterator> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, iterator& iter, iterator& end) noexcept {
 			if (*iter == '"') [[likely]] {
 				++iter;
-				auto newSize = end - iter;
-				if (static_cast<size_t>(newSize) > options.parserPtr->getStringBuffer().size()) [[unlikely]] {
-					options.parserPtr->getStringBuffer().resize(static_cast<size_t>(newSize));
-				}
-				auto newerPtr = parseStringImpl(iter, options.parserPtr->getStringBuffer().data(), static_cast<size_t>(newSize));
-				if (newerPtr) [[likely]] {
-					if (*iter == '"') [[likely]] {
-						++iter;
-						newSize = newerPtr - options.parserPtr->getStringBuffer().data();
-						if (value.size() != static_cast<size_t>(newSize)) {
-							value.resize(static_cast<size_t>(newSize));
+				auto start = iter;
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+				{
+					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
+					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
+					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
+					while (end - iter >= bytesProcessed) {
+						simd_type chunk		= simd_internal::gatherValuesU<simd_type>(iter);
+						simd_type testChars = hasQuote(chunk);
+						if (!simd_internal::opTest(testChars, testChars)) {
+							integer_type mask		= simd_internal::opBitMask(testChars);
+							integer_type firstMatch = simd_internal::tzcnt(mask);
+
+							iter += firstMatch;
+
+							auto* prev = iter - 1;
+							while (*prev == '\\') {
+								--prev;
+							}
+
+							if (size_t(iter - prev) % 2) {
+								break;
+							}
+							++iter;
+						} else {
+							iter += bytesProcessed;
 						}
-						std::copy(options.parserPtr->getStringBuffer().data(), options.parserPtr->getStringBuffer().data() + newSize, value.data());
+					}
+				}
+#endif
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+				{
+					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
+					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
+					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
+					while (end - iter >= bytesProcessed) {
+						simd_type chunk		= simd_internal::gatherValuesU<simd_type>(iter);
+						simd_type testChars = hasQuote(chunk);
+						if (!simd_internal::opTest(testChars, testChars)) {
+							integer_type mask		= simd_internal::opBitMask(testChars);
+							integer_type firstMatch = simd_internal::tzcnt(mask);
+
+							iter += firstMatch;
+
+							auto* prev = iter - 1;
+							while (*prev == '\\') {
+								--prev;
+							}
+
+							if (size_t(iter - prev) % 2) {
+								break;
+							}
+							++iter;
+						} else {
+							iter += bytesProcessed;
+						}
+					}
+				}
+#endif
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+				{
+					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
+					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
+					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
+					while (end - iter >= bytesProcessed) {
+						simd_type chunk		= simd_internal::gatherValuesU<simd_type>(iter);
+						simd_type testChars = hasQuote(chunk);
+						if (!simd_internal::opTest(testChars, testChars)) {
+							integer_type mask		= simd_internal::opBitMask(testChars);
+							integer_type firstMatch = simd_internal::tzcnt(mask);
+
+							iter += firstMatch;
+
+							auto* prev = iter - 1;
+							while (*prev == '\\') {
+								--prev;
+							}
+
+							if (size_t(iter - prev) % 2) {
+								break;
+							}
+							++iter;
+						} else {
+							iter += bytesProcessed;
+						}
+					}
+				}
+#endif
+
+				while (iter < end) {
+					uint64_t chunk;
+					std::memcpy(&chunk, iter, 8);
+					const uint64_t testChars = hasQuote(chunk);
+					if (testChars) {
+						iter += (simd_internal::tzcnt(testChars) >> 3);
+
+						auto* prev = iter - 1;
+						while (*prev == '\\') {
+							--prev;
+						}
+
+
+						if (size_t(iter - prev) % 2) {
+							break;
+						}
+						++iter;
 					} else {
+						iter += 8;
+					}
+				}
+
+				auto n = size_t(iter - start);
+				value.resize(n + bytesPerStep);
+
+				auto* p = value.data();
+
+				while (start - iter >= bytesPerStep) {
+					if (start >= iter) {
+						break;
+					}
+
+					__m256i chunk							  = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(start));
+					static constexpr uint64_t lo7_mask_scalar = repeatByte<0b01111111, uint64_t>();
+					__m256i lo7_mask						  = _mm256_set1_epi64x(lo7_mask_scalar);
+					__m256i lo7								  = _mm256_and_si256(chunk, lo7_mask);
+
+					__m256i backslash_mask = _mm256_set1_epi64x(repeatByte<'\\', uint64_t>() + lo7_mask_scalar);
+					__m256i backslash	   = _mm256_xor_si256(lo7, backslash_mask);
+
+					__m256i less_32_mask = _mm256_set1_epi64x(repeatByte<0b01100000, uint64_t>());
+					__m256i less_32		 = _mm256_add_epi64(_mm256_and_si256(chunk, less_32_mask), lo7_mask);
+
+					__m256i next = _mm256_andnot_si256(_mm256_or_si256(backslash, less_32), chunk);
+					next		 = _mm256_and_si256(next, _mm256_set1_epi64x(repeatByte<0b10000000, uint64_t>()));
+
+					if (_mm256_testz_si256(next, next)) {
+						start += 32;
+						p += 32;
+						continue;
+					}
+					uint32_t next_mask = _mm256_movemask_epi8(next);
+					int byte_pos	   = simd_internal::tzcnt(next_mask) >> 3;
+					start += byte_pos;
+					if (start >= iter) {
+						break;
+					}
+
+					if ((*start & 0b11100000) == 0) [[unlikely]] {
 						static constexpr auto sourceLocation{ std::source_location::current() };
-						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unexpected_String_End>(
-							iter - options.rootIter, end - options.rootIter, options.rootIter));
+						options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+							iter - options.rootIter, end - iter, options.rootIter));
 						return false;
 					}
-				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
-						iter - options.rootIter, end - options.rootIter, options.rootIter));
-					return false;
+					++start;
+					if (*start == 'u') {
+						++start;
+						p += byte_pos;
+						const auto mark	  = start;
+						const auto offset = handleUnicodeCodePoint(start, p);
+						if (offset == 0) [[unlikely]] {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+								iter - options.rootIter, end - iter, options.rootIter));
+							return false;
+						}
+						n += offset;
+						n -= 2 + uint32_t(start - mark);
+					} else {
+						p += byte_pos;
+						*p = escapeTable[uint8_t(*start)];
+						if (*p == 0) [[unlikely]] {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Invalid_String_Characters>(
+								iter - options.rootIter, end - iter, options.rootIter));
+							return false;
+						}
+						++p;
+						++start;
+						--n;
+					}
 				}
+				while (true) {
+					if (start >= iter) {
+						break;
+					}
+
+					std::memcpy(p, start, 8);
+					uint64_t swar;
+					std::memcpy(&swar, p, 8);
+
+					static constexpr uint64_t lo7_mask = repeatByte<0b01111111, uint64_t>();
+					const uint64_t lo7				   = swar & lo7_mask;
+					const uint64_t backslash		   = (lo7 ^ repeatByte<'\\', uint64_t>() + lo7_mask);
+					const uint64_t less_32			   = (swar & repeatByte<0b01100000, uint64_t>()) + lo7_mask;
+					uint64_t next					   = ~((backslash & less_32) | swar);
+
+					next &= repeatByte<0b10000000, uint64_t>();
+					if (next == 0) {
+						start += 8;
+						p += 8;
+						continue;
+					}
+
+					next = simd_internal::tzcnt(next) >> 3;
+					start += next;
+					if (start >= iter) {
+						break;
+					}
+
+					if ((*start & 0b11100000) == 0) [[unlikely]] {
+						return false;
+					}
+					++start;
+					if (*start == 'u') {
+						++start;
+						p += next;
+						const auto mark	  = start;
+						const auto offset = handleUnicodeCodePoint(start, p);
+						if (offset == 0) [[unlikely]] {
+							return false;
+						}
+						n += offset;
+						n -= 2 + uint32_t(start - mark);
+					} else {
+						p += next;
+						*p = escapeTable[uint8_t(*start)];
+						if (*p == 0) [[unlikely]] {
+							return false;
+						}
+						++p;
+						++start;
+						--n;
+					}
+				}
+
+				value.resize(n);
+				++iter;
+				return true;
 			} else {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				options.parserPtr->getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(
-					iter - options.rootIter, end - options.rootIter, options.rootIter));
-				return false;
+				options.parserPtr->getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter, end - iter, options.rootIter));
+				return {};
 			}
-			return true;
 		}
 
 		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipString(iterator& iter, iterator& end) noexcept {
@@ -1187,15 +1444,15 @@ namespace jsonifier_internal {
 	template<const auto& options, typename iterator> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(iterator iter, iterator& end) noexcept {
 		if (*iter == '"') [[likely]] {
 			++iter;
+			auto start = iter;
+			iter	   = char_comparison<'"', decltype(*iter)>::memchar(iter, static_cast<size_t>(end - iter));
+			return size_t(iter - start);
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			options.parserPtr->getErrors().emplace_back(
 				error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Missing_String_Start>(iter - options.rootIter, end - iter, options.rootIter));
 			return {};
 		}
-		auto start = iter;
-		iter	   = char_comparison<'"', decltype(*iter)>::memchar(iter, static_cast<size_t>(end - iter));
-		return size_t(iter - start);
 	}
 
 }// namespace jsonifier_internal

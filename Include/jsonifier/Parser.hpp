@@ -164,10 +164,6 @@ namespace jsonifier_internal {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto& getStringBuffer() {
-			return stringBuffer;
-		}
-
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 

@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_ALWAYS_INLINE size_type maxSize() noexcept {
+		JSONIFIER_ALWAYS_INLINE static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 

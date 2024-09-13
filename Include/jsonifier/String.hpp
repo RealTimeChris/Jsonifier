@@ -216,7 +216,7 @@ namespace jsonifier {
 			return result;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type maxSize() noexcept {
+		JSONIFIER_ALWAYS_INLINE static constexpr size_type maxSize() noexcept {
 			const size_type allocMax   = allocator::maxSize();
 			const size_type storageMax = jsonifier_internal::max(allocMax, static_cast<size_type>(bufSize));
 			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
@@ -617,6 +617,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static thread_local jsonifier::string_base<char, 1024 * 1024 * 4> stringBuffer{};
+	inline static thread_local jsonifier::string_base<char> stringBuffer{};
 
 }

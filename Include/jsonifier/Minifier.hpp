@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
-				std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, newString.data());
+				std::memcpy(newString.data(), stringBuffer.data(), derivedRef.index);
 				return newString;
 			} else {
 				return unwrap_t<string_type>{};
@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 				if (buffer.size() != derivedRef.index) [[likely]] {
 					buffer.resize(derivedRef.index);
 				}
-				std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, buffer.data());
+				std::memcpy(buffer.data(), stringBuffer.data(), derivedRef.index);
 				return true;
 			} else {
 				return false;

@@ -69,6 +69,7 @@ endif()
      "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
      "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
      "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+	 "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
      "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
  )
  
@@ -95,6 +96,7 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
 	"${AVX_FLAG}"
 )

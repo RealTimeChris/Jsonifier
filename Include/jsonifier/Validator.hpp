@@ -30,7 +30,7 @@
 
 namespace jsonifier_internal {
 
-	static thread_local jsonifier_internal::simd_string_reader<true> section{};
+	inline static thread_local jsonifier_internal::simd_string_reader<false> section{};
 
 	enum class validate_errors {
 		Success						   = 0,
