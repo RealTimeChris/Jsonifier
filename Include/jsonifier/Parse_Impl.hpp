@@ -615,7 +615,7 @@ namespace jsonifier_internal {
 	template<bool minified, const auto& options, jsonifier::concepts::variant_t value_type, typename iterator> struct parse_impl<minified, options, value_type, iterator> {
 		template<jsonifier::concepts::variant_t value_type_new, typename iterator_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {
-			static constexpr auto lambda = [&](auto& valueNew, auto& value, auto& buffer, auto& index) {
+			static constexpr auto lambda = [](auto&& valueNew, auto&& value, auto&& iter, auto&& end) {
 				using member_type = decltype(valueNew);
 				return parse_impl<minified, options, member_type, iterator>::impl(std::forward<value_type_new>(value), iter, end);
 			};
