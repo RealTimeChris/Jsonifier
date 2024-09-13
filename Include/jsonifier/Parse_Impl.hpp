@@ -648,8 +648,6 @@ namespace jsonifier_internal {
 		}
 	};
 
-	JSONIFIER_ALWAYS_INLINE void noop() noexcept {};
-
 	template<const auto& options, jsonifier::concepts::vector_t value_type, typename iterator> struct parse_impl<false, options, value_type, iterator> {
 		template<jsonifier::concepts::vector_t value_type_new, typename iterator_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, iterator_new&& iter, iterator_new&& end) noexcept {

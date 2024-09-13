@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_pair_t&& serializePair) noexcept {
 			static constexpr auto numMembers = std::tuple_size_v<core_tuple_t<value_type>>;
 			writer<options>::template writeObjectEntry<numMembers>(std::forward<buffer_type>(buffer), std::forward<serialize_pair_t>(serializePair));
-			static constexpr auto serializeLambda = []<size_t currentIndex, size_t maxIndex>(auto&& value, auto&& buffer, auto&& serializePair) {
+			static constexpr auto serializeLambda = [](const auto currentIndex, const auto maxIndex, auto&& value, auto&& buffer, auto&& serializePair) {
 				if constexpr (currentIndex < maxIndex) {
 					static constexpr auto subTuple = std::get<currentIndex>(coreTupleV<value_type>);
 					static constexpr auto key	   = subTuple.view();
