@@ -50,56 +50,61 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
 	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
-		_mm_store_si128(reinterpret_cast<__m128i*>(storageLocation), std::forward<simd_int_type_new>(value));
+		_mm_store_si128(reinterpret_cast<__m128i*>(storageLocation), value);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
+		return static_cast<uint16_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(value, other)));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opBitMask(simd_int_t01&& value) noexcept {
-		return static_cast<uint16_t>(_mm_movemask_epi8(std::forward<simd_int_t01>(value)));
+		return static_cast<uint16_t>(_mm_movemask_epi8(value));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm_cmpeq_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm_shuffle_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opXor(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_xor_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm_xor_si128(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opSub64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_sub_epi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm_sub_epi64(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opAdd64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_add_epi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	JSONIFIER_ALWAYS_INLINE auto opAdd8(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm_add_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opAnd(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_and_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm_and_si128(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opOr(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm_or_si128(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opAndNot(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_andnot_si128(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
+		return _mm_andnot_si128(other, value);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opTest(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_testc_si128(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return !_mm_testz_si128(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_type&& value, bool valueNew) noexcept {
@@ -116,20 +121,10 @@ namespace simd_internal {
 		return !_mm_testz_si128(result, result);
 	}
 
-	#if defined(opOr)
-		#undef opOr
-	#endif
-	#define opOr(x, y) _mm_or_si128(x, y)
-
 	#if defined(opNot)
 		#undef opNot
 	#endif
 	#define opNot(x) _mm_xor_si128(x, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
-
-	#if defined(opBool)
-		#undef opBool
-	#endif
-	#define opBool(value) !_mm_testz_si128(value, value)
 
 	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
@@ -154,56 +149,61 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type>
 	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
-		_mm256_store_si256(reinterpret_cast<__m256i*>(storageLocation), std::forward<simd_int_type_new>(value));
+		_mm256_store_si256(reinterpret_cast<__m256i*>(storageLocation), value);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other))));
+		return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(value, other)));
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opBitMask(simd_int_t01&& value) noexcept {
-		return static_cast<uint32_t>(_mm256_movemask_epi8(std::forward<simd_int_t01>(value)));
+		return static_cast<uint32_t>(_mm256_movemask_epi8(value));
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_cmpeq_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm256_cmpeq_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_shuffle_epi8(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm256_shuffle_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opXor(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_xor_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm256_xor_si256(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opSub64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_sub_epi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm256_sub_epi64(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opAdd64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_add_epi64(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+	JSONIFIER_ALWAYS_INLINE auto opAdd8(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm256_add_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opAnd(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_and_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return _mm256_and_si256(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opOr(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm256_or_si256(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opAndNot(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_andnot_si256(std::forward<simd_int_t02>(other), std::forward<simd_int_t01>(value));
+		return _mm256_andnot_si256(other, value);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opTest(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_testc_si256(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other));
+		return !_mm256_testz_si256(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_256 opSetLSB(simd_type&& value, bool valueNew) noexcept {
@@ -220,35 +220,15 @@ namespace simd_internal {
 		return !_mm256_testz_si256(result, result);
 	}
 
-		#if defined(opOr)
-			#undef opOr
-		#endif
-		#define opOr(x, y) _mm256_or_si256(x, y)
-
 		#if defined(opNot)
 			#undef opNot
 		#endif
 		#define opNot(x) _mm256_xor_si256(x, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
 
-		#if defined(opBool)
-			#undef opBool
-		#endif
-		#define opBool(value) !_mm256_testz_si256(value, value)
-
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 
-	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(std::forward<simd_int_t01>(value), std::forward<simd_int_t02>(other)));
-	}
-
-	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm512_shuffle_epi8(value, other);
-	}
-
 	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) noexcept {
-		return _mm512_load_si512(str);
+		return _mm512_load_si512(reinterpret_cast<const __m512i*>(str));
 	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(char_type* str) noexcept {
@@ -257,7 +237,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
-		return _mm512_set1_epi64(str);
+		return _mm512_set1_epi64x(str);
 	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type>
@@ -268,58 +248,81 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_type_new, typename char_type>
 	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
-		_mm512_store_si512(storageLocation, std::forward<simd_int_type_new>(value));
+		_mm512_store_si512(reinterpret_cast<__m512i*>(storageLocation), value);
 	}
 
-			#if defined(opAndNot)
-				#undef opAndNot
-			#endif
-			#define opAndNot(x, y) _mm512_andnot_si512(y, x)
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return static_cast<uint16_t>(_mm512_movemask_epi8(_mm512_cmpeq_epi8(value, other)));
+	}
 
-			#if defined(opAnd)
-				#undef opAnd
-			#endif
-			#define opAnd(x, y) _mm512_and_si512(x, y)
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opBitMask(simd_int_t01&& value) noexcept {
+		return static_cast<uint16_t>(_mm512_movemask_epi8(value));
+	}
 
-			#if defined(opOr)
-				#undef opOr
-			#endif
-			#define opOr(x, y) _mm512_or_si512(x, y)
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_cmpeq_epi8(value, other);
+	}
 
-			#if defined(opSub64)
-				#undef opSub64
-			#endif
-			#define opSub64(x, y) _mm512_sub_epi64(x, y)
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_shuffle_epi8(value, other);
+	}
 
-			#if defined(opXor)
-				#undef opXor
-			#endif
-			#define opXor(x, y) _mm512_xor_si512(x, y)
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opXor(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_xor_si512(value, other);
+	}
 
-			#if defined(opNot)
-				#undef opNot
-			#endif
-			#define opNot(x) _mm512_xor_si512(x, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opSub64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_sub_epi64(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opAdd8(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_add_epi8(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opAnd(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_and_si512(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opOr(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512512_or_si512(value, other);
+	}
+
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opAndNot(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return _mm512_andnot_si512(other, value);
+	}
+
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
+	JSONIFIER_ALWAYS_INLINE auto opTest(simd_int_t01&& value, simd_int_t02&& other) noexcept {
+		return !_mm512_testz_si512(value, other);
+	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_512 opSetLSB(simd_type&& value, bool valueNew) noexcept {
 			#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
-		jsonifier_simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+		jsonifier_simd_int_512 mask{ 0x01u, '\0' };
 			#else
-		jsonifier_simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-			'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+		jsonifier_simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 			#endif
 		return valueNew ? _mm512_or_si512(value, mask) : _mm512_andnot_si512(mask, value);
 	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_type> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_type&& value) noexcept {
-		auto result = _mm512_and_si512(value, _mm512_set_epi64(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll));
-		return !_mm512_test_epi64_mask(result, result);
+		auto result = _mm512_and_si512(value, _mm512_set_epi64x(0x8000000000000000ll, 0x00ll));
+		return !_mm512_testz_si512(result, result);
 	}
 
-			#if defined(opBool)
-				#undef opBool
+			#if defined(opNot)
+				#undef opNot
 			#endif
-			#define opBool(value) !_mm512_test_epi64_mask(value, value)
+			#define opNot(x) _mm512_xor_si512(x, _mm512_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
 
 		#endif
 

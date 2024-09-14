@@ -45,19 +45,21 @@ namespace jsonifier_internal {
 			{
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
-				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-				const simd_type searchValue		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
-				integer_type mask;
-				simd_type chunk;
-				while (lengthNew >= vectorSize) {
-					chunk = simd_internal::gatherValuesU<simd_type>(data);
-					mask  = simd_internal::opCmpEq(chunk, searchValue);
-					if (mask != 0) [[unlikely]] {
-						data += simd_internal::tzcnt(mask);
-						return data;
+				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+				if (lengthNew >= vectorSize)) {
+					const simd_type searchValue			 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+					integer_type mask;
+					simd_type chunk;
+					while (lengthNew >= vectorSize) {
+						chunk = simd_internal::gatherValuesU<simd_type>(data);
+						mask  = simd_internal::opCmpEq(chunk, searchValue);
+						if (mask != 0) [[unlikely]] {
+							data += simd_internal::tzcnt(mask);
+							return data;
+						}
+						lengthNew -= vectorSize;
+						data += vectorSize;
 					}
-					lengthNew -= vectorSize;
-					data += vectorSize;
 				}
 			}
 #endif
@@ -67,18 +69,20 @@ namespace jsonifier_internal {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
-				const simd_type searchValue		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
-				integer_type mask;
-				simd_type chunk;
-				while (lengthNew >= vectorSize) {
-					chunk = simd_internal::gatherValuesU<simd_type>(data);
-					mask  = simd_internal::opCmpEq(chunk, searchValue);
-					if (mask != 0) [[unlikely]] {
-						data += simd_internal::tzcnt(mask);
-						return data;
+				if (lengthNew >= vectorSize) {
+					const simd_type searchValue = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+					integer_type mask;
+					simd_type chunk;
+					while (lengthNew >= vectorSize) {
+						chunk = simd_internal::gatherValuesU<simd_type>(data);
+						mask  = simd_internal::opCmpEq(chunk, searchValue);
+						if (mask != 0) [[unlikely]] {
+							data += simd_internal::tzcnt(mask);
+							return data;
+						}
+						lengthNew -= vectorSize;
+						data += vectorSize;
 					}
-					lengthNew -= vectorSize;
-					data += vectorSize;
 				}
 			}
 #endif
@@ -88,22 +92,24 @@ namespace jsonifier_internal {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-				const simd_type searchValue		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
-				integer_type mask;
-				simd_type chunk;
-				while (lengthNew >= vectorSize) {
-					chunk = simd_internal::gatherValuesU<simd_type>(data);
-					mask  = simd_internal::opCmpEq(chunk, searchValue);
-					if (mask != 0) [[unlikely]] {
-						data += simd_internal::tzcnt(mask);
-						return data;
+				if (lengthNew >= vectorSize) {
+					const simd_type searchValue = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+					integer_type mask;
+					simd_type chunk;
+					while (lengthNew >= vectorSize) {
+						chunk = simd_internal::gatherValuesU<simd_type>(data);
+						mask  = simd_internal::opCmpEq(chunk, searchValue);
+						if (mask != 0) [[unlikely]] {
+							data += simd_internal::tzcnt(mask);
+							return data;
+						}
+						lengthNew -= vectorSize;
+						data += vectorSize;
 					}
-					lengthNew -= vectorSize;
-					data += vectorSize;
 				}
 			}
 #endif
-			{
+			if (lengthNew >= 8) {
 				static constexpr uint64_t mask64  = repeatByte<0b01111111, uint64_t>();
 				static constexpr uint64_t value64 = repeatByte<value, uint64_t>();
 				static constexpr uint64_t hiBit	  = repeatByte<0b10000000, uint64_t>();

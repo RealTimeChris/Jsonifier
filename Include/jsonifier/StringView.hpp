@@ -41,7 +41,8 @@ namespace jsonifier {
 
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-		JSONIFIER_ALWAYS_INLINE constexpr string_view_base() noexcept : dataVal{}, sizeVal{ 0 } {};
+		JSONIFIER_ALWAYS_INLINE constexpr string_view_base() noexcept : dataVal(), sizeVal(0) {
+		}
 
 		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE constexpr string_view_base& operator=(const string_base<value_type_newer>& stringNew) noexcept {
 			dataVal = stringNew.data();

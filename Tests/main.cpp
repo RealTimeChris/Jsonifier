@@ -2481,8 +2481,8 @@ int32_t main() {
 	try {
 		std::bitset<2048> bits{};
 		bits.operator[](2034);
-		//conformanceTests();
-		//failTests();
+		conformanceTests();
+		failTests();
 		test_generator<test_struct> testJsonData{};
 		std::string jsonData{};
 		jsonifier::jsonifier_core parser{};

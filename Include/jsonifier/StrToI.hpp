@@ -45,16 +45,16 @@ namespace jsonifier_internal {
 	constexpr uint8_t digiTypeDot	  = 1 << 4;
 	constexpr uint8_t digiTypeExp	  = 1 << 5;
 
-	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsType(uint8_t d, uint8_t type) noexcept {
-		return (digiTable<uint8_t>[static_cast<uint64_t>(d)] & type) != 0;
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsType(uint_type d, uint_type type) noexcept {
+		return (digiTable<uint_type>[static_cast<uint64_t>(d)] & type) != 0;
 	}
 
-	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsFp(uint8_t d) noexcept {
-		return digiIsType(d, uint8_t(digiTypeDot | digiTypeExp));
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsFp(uint_type d) noexcept {
+		return digiIsType(d, uint_type(digiTypeDot | digiTypeExp));
 	}
 
-	template<typename uint8_t> JSONIFIER_ALWAYS_INLINE bool digiIsDigitOrFp(uint8_t d) noexcept {
-		return digiIsType(d, uint8_t(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsDigitOrFp(uint_type d) noexcept {
+		return digiIsType(d, uint_type(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
 	constexpr uint8_t zero{ '0' };

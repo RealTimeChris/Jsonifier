@@ -187,6 +187,7 @@ namespace simd_internal {
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
+
 		jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArray<bytesPerStep>.data()) };
 		jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20)) };
 		valuesNew[0] = simd_internal::opCmpEq(opShuffle(simdValues, values[0]), opOr(simdValue, values[0]));
