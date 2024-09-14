@@ -42,7 +42,7 @@ namespace jsonifier {
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
-		using size_type				 = uint64_t;
+		using size_type				 = size_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
 		JSONIFIER_ALWAYS_INLINE vector() noexcept {

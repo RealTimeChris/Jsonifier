@@ -112,8 +112,9 @@ namespace simd_internal {
 
 	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t opBitMask(simd_int_t01&& value) noexcept {
-		uint16x8_t high_bits = vreinterpretq_u16_u8(vshrq_n_u8(value, 7));
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint64_t opBitMask(simd_int_t01&& value) noexcept {
+		uint8x16_t input	 = value;
+		uint16x8_t high_bits = vreinterpretq_u16_u8(vshrq_n_u8(input, 7));
 		uint32x4_t paired16	 = vreinterpretq_u32_u16(vsraq_n_u16(high_bits, high_bits, 7));
 		uint64x2_t paired32	 = vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
 		uint8x16_t paired64	 = vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));

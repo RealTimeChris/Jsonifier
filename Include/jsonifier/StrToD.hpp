@@ -2357,7 +2357,7 @@ namespace jsonifier_fast_float {
 		}
 		UC const* const start_digits = p;
 
-		size_t i = 0;// an unsigned int avoids signed overflows (which are bad)
+		size_t i = 0;// an unsigned size_t avoids signed overflows (which are bad)
 
 		while (is_integer(*p)) {
 			// a multiplication by 10 is cheaper than an arbitrary integer

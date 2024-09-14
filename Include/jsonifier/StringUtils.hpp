@@ -285,7 +285,7 @@ namespace jsonifier_internal {
 		const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues01, simdValue), simdValue) |
+		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues01, simdValue), simdValue) | 
 			simd_internal::opCmpEq(simd_internal::opShuffle(simdValues02, simdValue), simdValue)));
 	}
 
@@ -493,12 +493,10 @@ namespace jsonifier_internal {
 		return string2;
 	}
 
-	template<typename iterator_type01, typename iterator_type02, typename string_type>
-	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(string_type& string, iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
+	template<typename iterator_type01, typename iterator_type02>
+	JSONIFIER_ALWAYS_INLINE iterator_type02 parseStringImpl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
-		using char_type02 =
-			typename std::conditional_t<std::is_pointer_v<iterator_type02>, std::remove_pointer_t<iterator_type02>, typename std::iterator_traits<iterator_type02>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
@@ -511,12 +509,6 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				auto newSize = string2 - string.data() + bytesProcessed;
-				if (newSize >= string.size()) {
-					auto oldSize = string2 - string.data();
-					string.resize(newSize * 2);
-					string2 = string.data() + oldSize;
-				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -568,12 +560,6 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				auto newSize = string2 - string.data() + bytesProcessed;
-				if (newSize >= string.size()) {
-					auto oldSize = string2 - string.data();
-					string.resize(newSize * 2);
-					string2 = string.data() + oldSize;
-				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -596,7 +582,7 @@ namespace jsonifier_internal {
 							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							string2[nextBackslashOrQuote] = static_cast<char_type01>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
 							string2 += nextBackslashOrQuote + 1ull;
 							string1 += nextBackslashOrQuote + 2ull;
@@ -625,12 +611,6 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				auto newSize = string2 - string.data() + bytesProcessed;
-				if (newSize >= string.size()) {
-					auto oldSize = string2 - string.data();
-					string.resize(newSize * 2);
-					string2 = string.data() + oldSize;
-				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -653,7 +633,7 @@ namespace jsonifier_internal {
 							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							string2[nextBackslashOrQuote] = static_cast<char_type01>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
 							string2 += nextBackslashOrQuote + 1ull;
 							string1 += nextBackslashOrQuote + 2ull;
@@ -679,12 +659,6 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				auto newSize = string2 - string.data() + bytesProcessed;
-				if (newSize >= string.size()) {
-					auto oldSize = string2 - string.data();
-					string.resize(newSize * 2);
-					string2 = string.data() + oldSize;
-				}
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -707,7 +681,7 @@ namespace jsonifier_internal {
 							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							string2[nextBackslashOrQuote] = static_cast<char_type01>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
 							string2 += nextBackslashOrQuote + 1ull;
 							string1 += nextBackslashOrQuote + 2ull;
@@ -948,25 +922,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	JSONIFIER_ALWAYS_INLINE constexpr auto hasZero(const uint64_t chunk) noexcept {
-		return (((chunk - 0x0101010101010101u) & ~chunk) & 0x8080808080808080u);
-	}
-
-	template<auto value> JSONIFIER_ALWAYS_INLINE constexpr auto hasValue(const uint64_t chunk) noexcept {
-		return hasZero(chunk ^ repeatByte<value, uint64_t>());
-	}
-
-	template<typename simd_type> JSONIFIER_ALWAYS_INLINE simd_type hasZeroSimd(const simd_type chunk) noexcept {
-		auto newBits01 = simd_internal::gatherValue<simd_type>(0x0101010101010101ull);
-		auto newBits02 = simd_internal::gatherValue<simd_type>(0x8080808080808080ull);
-		return (simd_internal::opAnd(simd_internal::opAndNot(simd_internal::opSub64(chunk, newBits01), chunk), newBits02));
-	}
-
-	template<typename simd_type> JSONIFIER_ALWAYS_INLINE simd_type hasQuoteSimd(const simd_type chunk) noexcept {
-		auto newBits01 = simd_internal::gatherValue<simd_type>('"');
-		return hasZeroSimd(simd_internal::opXor(chunk, newBits01));
-	}
-
 	inline static thread_local uint64_t stringLengthAverage{};
 	inline static thread_local uint64_t stringLengthTotal{};
 	inline static thread_local uint64_t stringCount{};
@@ -976,394 +931,13 @@ namespace jsonifier_internal {
 			if (*iter == '"') [[likely]] {
 				++stringCount;
 				++iter;
-				auto start = iter;
-				bool doWeBreak{ false };
-				while (iter < end && !doWeBreak) {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
-					{
-						using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-						using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-						static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-						if (stringLengthAverage >= bytesProcessed) {
-							while ((iter + bytesProcessed) < end) {
-								simd_type chunk = simd_internal::gatherValuesU<simd_type>(iter);
-
-								simd_type quoteMask = hasQuoteSimd(chunk);
-								bool testChars		= simd_internal::opTest(quoteMask, quoteMask);
-
-								if (testChars) {
-									integer_type quoteMaskBits = simd_internal::opBitMask(quoteMask);
-									integer_type count		   = simd_internal::tzcnt(quoteMaskBits);
-
-									iter += (count);
-
-									auto* prev = iter - 1;
-									while (prev >= start && *prev == '\\') {
-										--prev;
-									}
-
-									if (size_t(iter - prev) % 2) {
-										doWeBreak = true;
-										break;
-									}
-									++iter;
-								} else {
-									iter += bytesProcessed;
-								}
-							}
-						}
-					}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
-					{
-						using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-						using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-						static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-						if (stringLengthAverage >= bytesProcessed) {
-							while ((iter + bytesProcessed) < end) {
-								simd_type chunk = simd_internal::gatherValuesU<simd_type>(iter);
-
-								simd_type quoteMask = hasQuoteSimd(chunk);
-								bool testChars		= simd_internal::opTest(quoteMask, quoteMask);
-
-								if (testChars) {
-									integer_type quoteMaskBits = simd_internal::opBitMask(quoteMask);
-									integer_type count		   = simd_internal::tzcnt(quoteMaskBits);
-
-									iter += (count);
-
-									auto* prev = iter - 1;
-									while (prev >= start && *prev == '\\') {
-										--prev;
-									}
-
-									if (size_t(iter - prev) % 2) {
-										doWeBreak = true;
-										break;
-									}
-									++iter;
-								} else {
-									iter += bytesProcessed;
-								}
-							}
-						}
-					}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-
-					{
-						using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-						using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-						static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-						if (stringLengthAverage >= bytesProcessed) {
-							while ((iter + bytesProcessed) < end) {
-								simd_type chunk = simd_internal::gatherValuesU<simd_type>(iter);
-
-								simd_type quoteMask = hasQuoteSimd(chunk);
-								bool testChars		= simd_internal::opTest(quoteMask, quoteMask);
-
-								if (testChars) {
-									integer_type quoteMaskBits = simd_internal::opBitMask(quoteMask);
-									integer_type count		   = simd_internal::tzcnt(quoteMaskBits);
-
-									iter += (count);
-
-									auto* prev = iter - 1;
-									while (prev >= start && *prev == '\\') {
-										--prev;
-									}
-
-									if (size_t(iter - prev) % 2) {
-										doWeBreak = true;
-										break;
-									}
-									++iter;
-								} else {
-									iter += bytesProcessed;
-								}
-							}
-						}
-					}
-#endif
-					while (iter < end) {
-						uint64_t chunk;
-						std::memcpy(&chunk, iter, 8);
-						const uint64_t testChars = hasValue<'"'>(chunk);
-						if (testChars) {
-							iter += (simd_internal::tzcnt(testChars) >> 3);
-
-							auto* prev = iter - 1;
-							while (*prev == '\\') {
-								--prev;
-							}
-
-
-							if (size_t(iter - prev) % 2) {
-								doWeBreak = true;
-								break;
-							}
-							++iter;
-						} else {
-							iter += 8;
-						}
-					}
+				auto start	= iter;
+				auto newPtr	 = parseStringImpl(iter, stringBuffer.data(), end - iter);
+				auto newSize = newPtr - stringBuffer.data();
+				if (value.size() != newSize) {
+					value.resize(newSize);
 				}
-				auto n = size_t(iter - start);
-				value.resize(n + bytesPerStep);
-
-				auto* p = value.data();
-
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
-				{
-					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-					if (iter + bytesProcessed < start) {
-						static constexpr uint64_t lo7Mask		= repeatByte<0b01111111, uint64_t>();
-						static constexpr uint64_t backslashMask = repeatByte<'\\', uint64_t>() + lo7Mask;
-						static constexpr uint64_t less32Mask	= repeatByte<0b01100000, uint64_t>() + lo7Mask;
-						static constexpr uint64_t highBitMask	= repeatByte<0b10000000, uint64_t>();
-
-						const simd_type lo7MaskAvx		 = simd_internal::gatherValue<simd_type>(lo7Mask);
-						const simd_type backslashMaskAvx = simd_internal::gatherValue<simd_type>(backslashMask);
-						const simd_type less32MaskAvx	 = simd_internal::gatherValue<simd_type>(less32Mask);
-						const simd_type highBitMaskAvx	 = simd_internal::gatherValue<simd_type>(highBitMask);
-						while (start < iter - bytesProcessed) {
-							simd_type data		= _mm256_loadu_si256(reinterpret_cast<const simd_type*>(start));
-							k simd_type lo7		= simd_internal::opAnd(data, lo7MaskAvx);
-							simd_type backslash = simd_internal::opXor(lo7, backslashMaskAvx);
-							simd_type less32	= simd_internal::opAdd8(simd_internal::opAnd(data, less32MaskAvx), lo7MaskAvx);
-							simd_type next		= simd_internal::opAndNot(simd_internal::opOr(backslash, less32), data);
-							next				= simd_internal::opAnd(next, highBitMaskAvx);
-
-							if (simd_internal::opTest(next, next)) {
-								start += bytesProcessed;
-								p += bytesProcessed;
-								continue;
-							}
-
-							integer_type mask		= simd_internal::opBitMask(next);
-							integer_type nextOffset = simd_internal::tzcnt(mask);
-
-							start += nextOffset;
-							if (start >= iter) {
-								break;
-							}
-
-							if ((*start & 0b11100000) == 0) [[unlikely]] {
-								return false;
-							}
-							++start;
-							if (*start == 'u') {
-								++start;
-								p += nextOffset;
-								const auto mark	  = start;
-								const auto offset = handleUnicodeCodePoint(start, p);
-								if (offset == 0) [[unlikely]] {
-									return false;
-								}
-								n += offset;
-								n -= 2 + uint32_t(start - mark);
-							} else {
-								p += nextOffset;
-								*p = escapeTable[uint8_t(*start)];
-								if (*p == 0) [[unlikely]] {
-									return false;
-								}
-								++p;
-								++start;
-								--n;
-							}
-						}
-					}
-				}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
-				{
-					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-					if (iter + bytesProcessed < start) {
-						static constexpr uint64_t lo7Mask		= repeatByte<0b01111111, uint64_t>();
-						static constexpr uint64_t backslashMask = repeatByte<'\\', uint64_t>() + lo7Mask;
-						static constexpr uint64_t less32Mask	= repeatByte<0b01100000, uint64_t>() + lo7Mask;
-						static constexpr uint64_t highBitMask	= repeatByte<0b10000000, uint64_t>();
-
-						const simd_type lo7MaskAvx		 = simd_internal::gatherValue<simd_type>(lo7Mask);
-						const simd_type backslashMaskAvx = simd_internal::gatherValue<simd_type>(backslashMask);
-						const simd_type less32MaskAvx	 = simd_internal::gatherValue<simd_type>(less32Mask);
-						const simd_type highBitMaskAvx	 = simd_internal::gatherValue<simd_type>(highBitMask);
-						while (start < iter - bytesProcessed) {
-							simd_type data		= simd_internal::gatherValuesU<simd_type>(start);
-							simd_type lo7		= simd_internal::opAnd(data, lo7MaskAvx);
-							simd_type backslash = simd_internal::opXor(lo7, backslashMaskAvx);
-							simd_type less32	= simd_internal::opAdd8(simd_internal::opAnd(data, less32MaskAvx), lo7MaskAvx);
-							simd_type next		= simd_internal::opAndNot(simd_internal::opOr(backslash, less32), data);
-							next				= simd_internal::opAnd(next, highBitMaskAvx);
-
-							if (simd_internal::opTest(next, next)) {
-								start += bytesProcessed;
-								p += bytesProcessed;
-								continue;
-							}
-
-							integer_type mask		= simd_internal::opBitMask(next);
-							integer_type nextOffset = simd_internal::tzcnt(mask);
-
-							start += nextOffset;
-							if (start >= iter) {
-								break;
-							}
-
-							if ((*start & 0b11100000) == 0) [[unlikely]] {
-								return false;
-							}
-							++start;
-							if (*start == 'u') {
-								++start;
-								p += nextOffset;
-								const auto mark	  = start;
-								const auto offset = handleUnicodeCodePoint(start, p);
-								if (offset == 0) [[unlikely]] {
-									return false;
-								}
-								n += offset;
-								n -= 2 + uint32_t(start - mark);
-							} else {
-								p += nextOffset;
-								*p = escapeTable[uint8_t(*start)];
-								if (*p == 0) [[unlikely]] {
-									return false;
-								}
-								++p;
-								++start;
-								--n;
-							}
-						}
-					}
-				}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-				{
-					using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-					using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-					static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-					if (iter + bytesProcessed < start) {
-						static constexpr uint64_t lo7Mask		= repeatByte<0b01111111, uint64_t>();
-						static constexpr uint64_t backslashMask = repeatByte<'\\', uint64_t>() + lo7Mask;
-						static constexpr uint64_t less32Mask	= repeatByte<0b01100000, uint64_t>() + lo7Mask;
-						static constexpr uint64_t highBitMask	= repeatByte<0b10000000, uint64_t>();
-
-						const simd_type lo7MaskAvx		 = simd_internal::gatherValue<simd_type>(lo7Mask);
-						const simd_type backslashMaskAvx = simd_internal::gatherValue<simd_type>(backslashMask);
-						const simd_type less32MaskAvx	 = simd_internal::gatherValue<simd_type>(less32Mask);
-						const simd_type highBitMaskAvx	 = simd_internal::gatherValue<simd_type>(highBitMask);
-						while (start < iter - bytesProcessed) {
-							simd_type data		= simd_internal::gatherValuesU<simd_type>(start);
-							simd_type lo7		= simd_internal::opAnd(data, lo7MaskAvx);
-							simd_type backslash = simd_internal::opXor(lo7, backslashMaskAvx);
-							simd_type less32	= simd_internal::opAdd8(simd_internal::opAnd(data, less32MaskAvx), lo7MaskAvx);
-							simd_type next		= simd_internal::opAndNot(simd_internal::opOr(backslash, less32), data);
-							next				= simd_internal::opAnd(next, highBitMaskAvx);
-
-							if (simd_internal::opTest(next, next)) {
-								start += bytesProcessed;
-								p += bytesProcessed;
-								continue;
-							}
-
-							integer_type mask		= simd_internal::opBitMask(next);
-							integer_type nextOffset = simd_internal::tzcnt(mask);
-
-							start += nextOffset;
-							if (start >= iter) {
-								break;
-							}
-
-							if ((*start & 0b11100000) == 0) [[unlikely]] {
-								return false;
-							}
-							++start;
-							if (*start == 'u') {
-								++start;
-								p += nextOffset;
-								const auto mark	  = start;
-								const auto offset = handleUnicodeCodePoint(start, p);
-								if (offset == 0) [[unlikely]] {
-									return false;
-								}
-								n += offset;
-								n -= 2 + uint32_t(start - mark);
-							} else {
-								p += nextOffset;
-								*p = escapeTable[uint8_t(*start)];
-								if (*p == 0) [[unlikely]] {
-									return false;
-								}
-								++p;
-								++start;
-								--n;
-							}
-						}
-					}
-				}
-#endif
-				while (true) {
-					if (start >= iter) {
-						break;
-					}
-
-					std::memcpy(p, start, 8);
-					uint64_t swar;
-					std::memcpy(&swar, p, 8);
-
-					static constexpr uint64_t lo7Mask = repeatByte<0b01111111, uint64_t>();
-					const uint64_t lo7				  = swar & lo7Mask;
-					const uint64_t backslash		  = (lo7 ^ repeatByte<'\\', uint64_t>() + lo7Mask);
-					const uint64_t less32			  = (swar & repeatByte<0b01100000, uint64_t>()) + lo7Mask;
-					uint64_t next					  = ~((backslash & less32) | swar);
-
-					next &= repeatByte<0b10000000, uint64_t>();
-					if (next == 0) {
-						start += 8;
-						p += 8;
-						continue;
-					}
-
-					next = simd_internal::tzcnt(next) >> 3;
-					start += next;
-					if (start >= iter) {
-						break;
-					}
-
-					if ((*start & 0b11100000) == 0) [[unlikely]] {
-						return false;
-					}
-					++start;
-					if (*start == 'u') {
-						++start;
-						p += next;
-						const auto mark	  = start;
-						const auto offset = handleUnicodeCodePoint(start, p);
-						if (offset == 0) [[unlikely]] {
-							return false;
-						}
-						n += offset;
-						n -= 2 + uint32_t(start - mark);
-					} else {
-						p += next;
-						*p = escapeTable[uint8_t(*start)];
-						if (*p == 0) [[unlikely]] {
-							return false;
-						}
-						++p;
-						++start;
-						--n;
-					}
-				}
-				stringLengthTotal += n;
-				stringLengthAverage = stringLengthTotal / stringCount;
-				value.resize(n);
+				std::memcpy(value.data(), stringBuffer.data(), newSize);
 				++iter;
 				return true;
 			} else {

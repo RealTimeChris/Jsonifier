@@ -95,7 +95,7 @@ namespace jsonifier_internal {
 
 	template<const auto& function, typename... arg_types, size_t... indices>
 	JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(arg_types&&... args, std::index_sequence<indices...>) {
-		(function.template operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
+		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
 	}
 
 	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEach(arg_types&&... args) {

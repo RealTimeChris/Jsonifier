@@ -86,7 +86,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<typename iterator, typename validator_type> JSONIFIER_ALWAYS_INLINE static bool impl(iterator& iter, size_t& depth, validator_type& validator) noexcept {
+		template<typename iterator, typename validator_type> JSONIFIER_ALWAYS_INLINE static bool impl(iterator& iter, uint64_t& depth, validator_type& validator) noexcept {
 			if (*iter && **iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth, validator);
 			} else {

@@ -114,8 +114,12 @@ namespace jsonifier_internal {
 		return sl;
 	}
 
-	JSONIFIER_ALWAYS_INLINE constexpr size_t countDigits(size_t number) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr size_t countDigits(int64_t number) noexcept {
 		size_t count = 0;
+		if (number < 0) {
+			number *= -1;
+			++count;
+		}
 		do {
 			++count;
 			number /= 10;
@@ -123,11 +127,17 @@ namespace jsonifier_internal {
 		return count;
 	}
 
-	template<size_t number, size_t numDigits = countDigits(number)> JSONIFIER_ALWAYS_INLINE constexpr string_literal<numDigits + 1> toStringLiteral() noexcept {
+	template<int64_t number, size_t numDigits = countDigits(number)> JSONIFIER_ALWAYS_INLINE constexpr string_literal<numDigits + 1> toStringLiteral() noexcept {
 		char buffer[numDigits + 1]{};
-		char* ptr	  = buffer + numDigits;
-		*ptr		  = '\0';
-		size_t temp = number;
+		char* ptr = buffer + numDigits;
+		*ptr	  = '\0';
+		int64_t temp{};
+		if constexpr (number < 0) {
+			temp			   = number * -1;
+			*(ptr - numDigits) = '-';
+		} else {
+			temp = number;
+		}
 		do {
 			*--ptr = '0' + (temp % 10);
 			temp /= 10;
@@ -151,9 +161,9 @@ namespace jsonifier_internal {
 		return output;
 	}
 
-	template<size_t number> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view toStringView() noexcept {
+	template<int64_t number> JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view toStringView() noexcept {
 		constexpr auto& lit = jsonifier_internal::make_static<toStringLiteral<number>()>::value;
-		return jsonifier::string_view{ lit.value.data(), lit.value.size() - 1 };
+		return jsonifier::string_view{ lit.data(), lit.size() };
 	}
 
 }

@@ -43,11 +43,11 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<const auto& options, typename derived_type, typename value_type> struct serialize_impl;
+	template<const auto& options, typename value_type> struct serialize_impl;
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<const auto& options, typename derived_type_new, typename value_type> friend struct serialize_impl;
+		template<const auto& options, typename value_type> friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
@@ -58,7 +58,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize_impl<optionsFinal, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 			serializePair.indent = 0;
 			jsonifier::string newString{};
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize_impl<optionsFinal, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (newString.size() != serializePair.index) [[unlikely]] {
 				newString.resize(serializePair.index);
 			}

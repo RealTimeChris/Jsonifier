@@ -63,11 +63,6 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm_cmpeq_epi8(value, other);
-	}
-
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return _mm_shuffle_epi8(value, other);
 	}
@@ -159,11 +154,6 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opBitMask(simd_int_t01&& value) noexcept {
 		return static_cast<uint32_t>(_mm256_movemask_epi8(value));
-	}
-
-	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm256_cmpeq_epi8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
@@ -261,11 +251,6 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE auto opCmpEqRaw(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		return _mm512_cmpeq_epi8(value, other);
-	}
-
-	template<jsonifier::concepts::simd_int_512_type simd_int_t01, jsonifier::concepts::simd_int_512_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return _mm512_shuffle_epi8(value, other);
 	}
@@ -307,9 +292,10 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_512_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_512 opSetLSB(simd_type&& value, bool valueNew) noexcept {
 			#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
-		jsonifier_simd_int_512 mask{ 0x01u, '\0' };
-			#else
 		jsonifier_simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
+			#else
+		jsonifier_simd_int_512 mask{ 0x01u, '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+			'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' };
 			#endif
 		return valueNew ? _mm512_or_si512(value, mask) : _mm512_andnot_si512(mask, value);
 	}
