@@ -33,7 +33,7 @@ namespace jsonifier {
 
 	struct serialize_options {
 		bool newLinesInArray{ true };
-		uint64_t indentSize{ 3 };
+		size_t indentSize{ 3 };
 		char indentChar{ ' ' };
 		bool prettify{ false };
 	};

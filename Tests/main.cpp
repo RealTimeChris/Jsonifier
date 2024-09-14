@@ -988,7 +988,7 @@ template<typename value_type> struct test_generator {
 
 	std::string generateString() {
 		auto length{ randomizeNumberUniform(32, 64) };
-		constexpr size_t charsetSize = charset.size();
+		constexpr uint64_t charsetSize = charset.size();
 		auto unicodeCount			 = randomizeNumberUniform(1, length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
@@ -1008,8 +1008,8 @@ template<typename value_type> struct test_generator {
 		return static_cast<bool>(randomizeNumberUniform(0, 100) >= 50);
 	};
 
-	size_t generateUint() {
-		return randomizeNumberUniform(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max());
+	uint64_t generateUint() {
+		return randomizeNumberUniform(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 	};
 
 	int64_t generateInt() {
@@ -1020,28 +1020,28 @@ template<typename value_type> struct test_generator {
 		auto fill = [&](auto& v) {
 			auto arraySize01 = randomizeNumberUniform(5ull, 25ull);
 			v.resize(arraySize01);
-			for (size_t x = 0; x < arraySize01; ++x) {
+			for (uint64_t x = 0; x < arraySize01; ++x) {
 				auto arraySize02 = randomizeNumberUniform(5ull, 35ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
 					v[x].testStrings.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testUints.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testInts.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
 					v[x].testBools.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testDoubles.emplace_back(generateDouble());
 				}
 			}
@@ -1177,9 +1177,9 @@ template<> struct glz::meta<abc_test<test_struct>> {
 #endif
 
 #if defined(NDEBUG)
-constexpr size_t totalIterationCountCap{ 500 };
+constexpr uint64_t totalIterationCountCap{ 500 };
 #else
-constexpr size_t totalIterationCountCap{ 101 };
+constexpr uint64_t totalIterationCountCap{ 101 };
 #endif
 
 enum class result_type { read = 0, write = 1 };
@@ -1189,7 +1189,7 @@ template<result_type type> std::string enumToString() {
 }
 
 template<result_type type> struct result {
-	std::optional<size_t> byteLength{};
+	std::optional<uint64_t> byteLength{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
 	std::optional<double> iterationCount{};
@@ -1203,7 +1203,7 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
-	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::benchmark_result_final& results) {
+	result(const std::string& colorNew, uint64_t byteLengthNew, const bnch_swt::benchmark_result_final& results) {
 		iterationCount.emplace(results.iterationCount);
 		byteLength.emplace(byteLengthNew);
 		const auto cpuFrequency = bnch_swt::getCpuFrequency();
@@ -1238,7 +1238,7 @@ struct results_data {
 	jsonifier::string name{};
 	jsonifier::string test{};
 	jsonifier::string url{};
-	size_t iterations{};
+	uint64_t iterations{};
 
 	bool operator>(const results_data& other) const noexcept {
 		if (readResult && other.readResult) {
@@ -1257,7 +1257,7 @@ struct results_data {
 
 	results_data() noexcept = default;
 
-	results_data(const jsonifier::string& nameNew, const jsonifier::string& testNew, const jsonifier::string& urlNew, size_t iterationsNew) {
+	results_data(const jsonifier::string& nameNew, const jsonifier::string& testNew, const jsonifier::string& urlNew, uint64_t iterationsNew) {
 		iterations = iterationsNew;
 		name	   = nameNew;
 		test	   = testNew;
@@ -1384,7 +1384,7 @@ enum class json_library {
 
 const jsonifier::string basePath{ JSON_PATH };
 
-template<json_library lib, test_type type, typename test_data_type, bool minified, size_t iterations, jsonifier_internal::string_literal testName> struct json_test_helper {};
+template<json_library lib, test_type type, typename test_data_type, bool minified, uint64_t iterations, jsonifier_internal::string_literal testName> struct json_test_helper {};
 
 #include "simdjson.h"
 
@@ -1404,7 +1404,7 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& val
 	auto oldSize = valueNew.size();
 	if (auto resultCode = value.get(result); !resultCode) {
 		auto iter = result.begin();
-		for (size_t x = 0; x < oldSize && iter != result.end(); ++x, ++iter) {
+		for (uint64_t x = 0; x < oldSize && iter != result.end(); ++x, ++iter) {
 			getValue(valueNew[x], iter.operator*().value());
 		}
 		for (; iter != result.end(); ++iter) {
@@ -1451,7 +1451,7 @@ template<jsonifier::concepts::vector_t value_type> void getValue(value_type& ret
 	if (auto resultCode = value[key].get(result); !resultCode) {
 		auto oldSize = returnValues.size();
 		auto iter	 = result.begin();
-		for (size_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
+		for (uint64_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
 			getValue(returnValues[x], iter.operator*().value());
 		}
 		for (; iter != result.end(); ++iter) {
@@ -1466,7 +1466,7 @@ template<jsonifier::concepts::map_t value_type> void getValue(value_type& return
 	if (auto resultCode = value[key].get(result); !resultCode) {
 		auto oldSize = returnValues.size();
 		auto iter	 = result.begin();
-		for (size_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
+		for (uint64_t x = 0; iter != result.end() && x < oldSize; ++x, ++iter) {
 			typename value_type::mapped_type returnValue{};
 			getValue(returnValue, iter.operator*().value());
 			returnValues[static_cast<typename value_type::key_type>(iter.operator*().key().raw())] = std::move(returnValue);
@@ -2311,7 +2311,7 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 		const auto n = resultsNew.size();
 		table += write_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (size_t x = 0; x < n; ++x) {
+		for (uint64_t x = 0; x < n; ++x) {
 			jsonResults.results.emplace_back(resultsNew[x]);
 			table += resultsNew[x].jsonStats();
 			if (x != n - 1) {
@@ -2400,7 +2400,7 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 		const auto n = resultsNew.size();
 		table += write_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (size_t x = 0; x < n; ++x) {
+		for (uint64_t x = 0; x < n; ++x) {
 			jsonResults.results.emplace_back(resultsNew[x]);
 			table += resultsNew[x].jsonStats();
 			if (x != n - 1) {
@@ -2462,7 +2462,7 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 		const auto n = resultsNew.size();
 		table += read_table_header + "\n";
 		std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-		for (size_t x = 0; x < n; ++x) {
+		for (uint64_t x = 0; x < n; ++x) {
 			jsonResults.results.emplace_back(resultsNew[x]);
 			table += resultsNew[x].jsonStats();
 			if (x != n - 1) {
@@ -2668,7 +2668,7 @@ int32_t main() {
 			auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -2789,7 +2789,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -2911,7 +2911,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3032,7 +3032,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3153,7 +3153,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3274,7 +3274,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3396,7 +3396,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3517,7 +3517,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3638,7 +3638,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3759,7 +3759,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -3880,7 +3880,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {
@@ -4001,7 +4001,7 @@ int32_t main() {
 			const auto n = resultsNew.size();
 			table += table_header + "\n";
 			std::sort(resultsNew.begin(), resultsNew.end(), std::greater<results_data>());
-			for (size_t x = 0; x < n; ++x) {
+			for (uint64_t x = 0; x < n; ++x) {
 				jsonResults.results.emplace_back(resultsNew[x]);
 				table += resultsNew[x].jsonStats();
 				if (x != n - 1) {

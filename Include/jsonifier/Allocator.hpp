@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
-		using size_type		   = uint64_t;
+		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
 		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
