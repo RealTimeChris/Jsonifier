@@ -34,27 +34,27 @@ namespace simd_internal {
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return vqtbl1q_u8(value, vandq_u8(other, mask));
-	}	
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
 		return vbicq_u8(value, other);
-	}	
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128  opAnd(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAnd(simd_int_t01&& value, simd_int_t02&& other) {
 		return vandq_u8(value, other);
-	}	
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128  opOr(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opOr(simd_int_t01&& value, simd_int_t02&& other) {
 		return vorrq_u8(value, other);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128  opXor(simd_int_t01&& value, simd_int_t02&& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opXor(simd_int_t01&& value, simd_int_t02&& other) {
 		return veorq_u8(value, other);
-	}	
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value, simd_int_t02&&) {
@@ -126,12 +126,12 @@ namespace simd_internal {
 		return opBitMask(vceqq_u8(value, other));
 	}
 
-	#define opNot(x) vmvnq_u8(x)	
+	#define opNot(x) vmvnq_u8(x)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128  opSetLSB(simd_int_t01&& value, bool valueNew) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
 		constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
-	}	
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_int_t01&& value) {
 		return (vgetq_lane_u8(value, 15) & 0x80) != 0;

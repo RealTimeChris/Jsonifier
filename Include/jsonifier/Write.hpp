@@ -183,7 +183,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeEntrySeparator(buffer_type&& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_ALWAYS_INLINE static void writeEntrySeparator(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				auto k = serializePair.index + serializePair.indent + 256;
@@ -208,7 +208,7 @@ namespace jsonifier_internal {
 		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
-			if constexpr (options.prettify && objectSize > 0) {
+			if constexpr (options.prettify & objectSize > 0) {
 				++serializePair.indent;
 				auto indent				  = serializePair.indent;
 				constexpr auto indentSize = options.indentSize;
@@ -235,7 +235,7 @@ namespace jsonifier_internal {
 		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
-			if constexpr (options.prettify && objectSize > 0) {
+			if constexpr (options.prettify & objectSize > 0) {
 				--serializePair.indent;
 				auto indent				  = serializePair.indent;
 				constexpr auto indentSize = options.indentSize;

@@ -219,7 +219,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct double_element_data {
-		JSONIFIER_ALWAYS_INLINE constexpr double_element_data(const hash_map_construction_data<value_type>& newData) noexcept : uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
+		JSONIFIER_ALWAYS_INLINE constexpr double_element_data(const hash_map_construction_data<value_type>& newData) noexcept
+			: uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -398,8 +399,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> constexpr auto keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
 
-	template<typename value_type>
-	JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		bool collided{};
 		for (size_t w = 0; w < keyStatsVal<value_type>.maxLength; ++w) {
@@ -464,8 +464,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	template<typename value_type>
-	JSONIFIER_ALWAYS_INLINE constexpr auto collectUniqueByteAndLengthHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectUniqueByteAndLengthHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		bool collided{ true };
 		while (returnValues.uniqueIndex < keyStatsVal<value_type>.minLength) {
@@ -495,7 +494,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type> constexpr auto collectFirstByteAndUniqueIndexHashMapData(const tuple_references& pairsNew) {
-		constexpr auto keyStatsValNewer			= keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+		constexpr auto keyStatsValNewer		= keyStatsImpl(tupleReferencesByFirstByte<value_type>);
 		constexpr auto uniqueFirstByteCount = countFirstBytes(tupleReferencesByFirstByte<value_type>);
 		constexpr auto results				= collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>);
 		constexpr auto keyStatsValNew		= keyStats(results);
@@ -535,8 +534,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type>
-	JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 		bool collided{ true };
@@ -564,12 +562,11 @@ namespace jsonifier_internal {
 		if (collided) {
 			return collectSingleByteHashMapData<value_type>(pairsNew);
 		}
-		returnValues.type		 = hash_map_type::triple_element;
+		returnValues.type = hash_map_type::triple_element;
 		return returnValues;
 	}
 
-	template<typename value_type>
-	JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr auto collectDoubleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 		bool collided{ true };
@@ -583,7 +580,7 @@ namespace jsonifier_internal {
 		if (collided) {
 			return collectSingleByteHashMapData<value_type>(pairsNew);
 		}
-		returnValues.type		 = hash_map_type::double_element;
+		returnValues.type = hash_map_type::double_element;
 		return returnValues;
 	}
 
@@ -721,14 +718,14 @@ namespace jsonifier_internal {
 				const size_t flattenedIdx = static_cast<size_t>(firstByte) * 256ull + static_cast<size_t>(keyChar);
 				return mappings[flattenedIdx];
 			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
-				const auto newPtr = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					return hashData.indices[(iter[hashData.uniqueIndex] ^ static_cast<size_t>(newPtr - (iter))) & (hashData.storageSize - 1)];
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
 				static constexpr auto mappings = generateMappingsForLengths<keyStatsVal<value_type>.maxLength>(tupleReferencesByLength<value_type>, hashData.uniqueIndices);
-				const auto newPtr			   = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr			   = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					const auto length			= static_cast<size_t>(newPtr - (iter));
 					const auto localUniqueIndex = hashData.uniqueIndices[length];
@@ -742,7 +739,7 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
 				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
 				static constexpr rt_key_hasher<hashData.seed> hasher{};
-				const auto newPtr = char_comparison<'"', unwrap_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					size_t length		   = static_cast<size_t>(newPtr - (iter));
 					length				   = hashData.uniqueIndex > length ? length : hashData.uniqueIndex;

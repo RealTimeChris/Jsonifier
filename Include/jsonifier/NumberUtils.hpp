@@ -143,7 +143,7 @@ namespace jsonifier_internal {
 
 				static_assert(sizeof(*iter) == sizeof(char));
 				static constexpr auto minAbs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-				auto s = parseInt(i, iter);
+				auto s						 = parseInt(i, iter);
 				return s ? (sign == -1) ? (((i <= minAbs) ? (value = static_cast<value_type>(sign * i), true) : false))
 										: (((i <= maximum) ? (value = static_cast<value_type>(i), true) : false))
 						 : false;
