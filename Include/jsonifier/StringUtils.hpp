@@ -263,24 +263,6 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue, const simd_type& quotes, const simd_type& backslashes) noexcept {
-		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, quotes) | simd_internal::opCmpEq(simdValue, backslashes)));
-	}
-
-	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type findParse(const char* string1, simd_type& simdValue) noexcept {
-		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
-		static constexpr integer_type lowBitsMask{ repeatByte<0b10000000, integer_type>() };
-		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
-		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		std::memcpy(&simdValue, string1, sizeof(simd_type));
-		const size_t lo7  = simdValue & mask;
-		const size_t next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
-	}
-
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
@@ -303,140 +285,25 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipShortStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
-		static constexpr char quotesValue{ static_cast<char>('"') };
-		while (static_cast<int64_t>(lengthNew) > 0) {
-			if (*string1 == quotesValue || *string1 == '\\') {
-				auto escapeChar = *string1;
-				if (escapeChar == quotesValue) {
-					return;
-				} else {
-					string1 += 2;
-					lengthNew -= 2;
-				}
-			} else {
-				++string1;
-				--lengthNew;
-			}
-		}
-		return;
-	}
-
 	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
-		using char_type01 =
-			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
-		std::remove_const_t<char_type01> escapeChar;
-		constexpr char quotesValue{ static_cast<char>('"') };
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
-		{
-			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
-			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
-			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
-			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
-			const simd_type quotes				   = simd_internal::gatherValue<simd_type>('\\');
-			const simd_type backslashes			   = simd_internal::gatherValue<simd_type>('"');
-			simd_type simdValue;
-			integer_type nextBackslashOrQuote;
-			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				nextBackslashOrQuote = findParse<simd_type, integer_type>(string1, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
-					escapeChar = string1[nextBackslashOrQuote];
-					if (escapeChar == quotesValue) {
-						string1 += nextBackslashOrQuote + 1;
-						return;
-					} else {
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string1 += nextBackslashOrQuote + 2ull;
-					}
-				} else {
-					lengthNew -= bytesProcessed;
-					string1 += bytesProcessed;
-				}
-			}
-		}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
-		{
-			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
-			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
-			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
-			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
-			const simd_type quotes				   = simd_internal::gatherValue<simd_type>('\\');
-			const simd_type backslashes			   = simd_internal::gatherValue<simd_type>('"');
-			simd_type simdValue;
-			integer_type nextBackslashOrQuote;
-			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				nextBackslashOrQuote = findParse<simd_type, integer_type>(string1, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
-					escapeChar = string1[nextBackslashOrQuote];
-					if (escapeChar == quotesValue) {
-						string1 += nextBackslashOrQuote + 1;
-						return;
-					} else {
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string1 += static_cast<int64_t>(nextBackslashOrQuote) + 2ll;
-					}
-				} else {
-					lengthNew -= bytesProcessed;
-					string1 += static_cast<int64_t>(bytesProcessed);
-				}
-			}
-		}
-#endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-		{
-			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
-			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
-			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
-			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
-			const simd_type quotes				   = simd_internal::gatherValue<simd_type>('\\');
-			const simd_type backslashes			   = simd_internal::gatherValue<simd_type>('"');
-			simd_type simdValue;
-			integer_type nextBackslashOrQuote;
-			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				nextBackslashOrQuote = findParse<simd_type, integer_type>(string1, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
-					escapeChar = string1[nextBackslashOrQuote];
-					if (escapeChar == quotesValue) {
-						string1 += nextBackslashOrQuote + 1;
-						return;
-					} else {
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string1 += static_cast<int64_t>(nextBackslashOrQuote) + 2ll;
-					}
-				} else {
-					lengthNew -= bytesProcessed;
-					string1 += bytesProcessed;
-				}
-			}
-		}
-#endif
-		{
-			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
-			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
-			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 0>::type::bytesProcessed;
-			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 0>::type::mask;
-			simd_type simdValue;
-			integer_type nextBackslashOrQuote;
-			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				nextBackslashOrQuote = findParse<simd_type, integer_type>(string1, simdValue);
-				if (nextBackslashOrQuote < mask) [[likely]] {
-					escapeChar = string1[static_cast<int64_t>(nextBackslashOrQuote)];
-					if (escapeChar == quotesValue) {
-						string1 += static_cast<int64_t>(nextBackslashOrQuote) + 1ll;
-						return;
-					} else {
-						lengthNew -= nextBackslashOrQuote + 2ull;
-						string1 += static_cast<int64_t>(nextBackslashOrQuote) + 2ll;
-					}
-				} else {
-					lengthNew -= bytesProcessed;
-					string1 += bytesProcessed;
-				}
-			}
-		}
+		auto endIter = string1 + lengthNew;
+		while (string1 < endIter) {
+			auto* newIter = jsonifier_internal::char_comparison<'"'>::memchar(string1, lengthNew);
+			if (newIter) {
+				string1 = newIter;
 
-		return skipShortStringImpl(string1, lengthNew);
+				auto* prev = string1 - 1;
+				while (*prev == '\\') {
+					--prev;
+				}
+				if (size_t(string1 - prev) % 2) {
+					break;
+				}
+				++string1;
+			} else {
+				break;
+			}
+		}
 	}
 
 	constexpr std::array<char, 256> escapeMap{ [] {

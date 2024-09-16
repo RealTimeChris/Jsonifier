@@ -46,11 +46,11 @@ namespace jsonifier_internal {
 	template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl;
 
-	struct serialize {
-		template<const auto& options, typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+	template<const auto& options> struct serialize {
+		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
-			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, unwrap_t<serialize_context_type>>::impl(std::forward<value_type>(value),
-				std::forward<buffer_type>(buffer), std::forward<serialize_context_type>(iter));
+			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+				std::forward<serialize_context_type>(iter));
 		}
 	};
 
@@ -68,7 +68,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize::impl<optionsFinal>(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
@@ -83,7 +83,7 @@ namespace jsonifier_internal {
 			serializePair.indent = 0;
 			jsonifier::string newString{};
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
-			serialize::impl<optionsFinal>(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (newString.size() != serializePair.index) [[unlikely]] {
 				newString.resize(serializePair.index);
 			}

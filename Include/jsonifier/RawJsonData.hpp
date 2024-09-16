@@ -37,7 +37,15 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t { Unset = 0, Object = '{', Array = '[', String = '"', Number = '-', Bool = 't', Null = 'n' };
+	enum class json_type : uint8_t {
+		Unset  = 0,
+		Object = '{',
+		Array  = '[',
+		String = '"',
+		Number = '-',
+		Bool   = 't',
+		Null   = 'n',
+	};
 
 	class raw_json_data;
 }

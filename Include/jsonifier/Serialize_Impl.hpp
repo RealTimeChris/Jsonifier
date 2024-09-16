@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 			writer<options>::template writeObjectEntry<numMembers>(buffer, serializePair);
 			static constexpr auto serializeLambda = [](const auto currentIndex, const auto maxIndex, auto&& value, auto&& buffer, auto&& serializePair) {
 				if constexpr (currentIndex < maxIndex) {
-					static constexpr auto subTuple = std::get<currentIndex>(coreTupleV<value_type>);
+					static constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 					static constexpr auto key	   = subTuple.view();
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						auto& keys = value.jsonifierExcludedKeys;
@@ -58,7 +58,7 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
 					}
 
-					serialize::impl<options>(value.*memberPtr, buffer, serializePair);
+					serialize<options>::impl(value.*memberPtr, buffer, serializePair);
 					if constexpr (currentIndex < maxIndex - 1) {
 						if constexpr (options.prettify) {
 							auto k = serializePair.index + serializePair.indent + 256;
@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 					return;
 				}
 			};
-			forEach<numMembers, serializeLambda>(value, buffer, serializePair);
+			forEach<serializeLambda>(std::make_index_sequence<numMembers>{}, value, buffer, serializePair);
 			writer<options>::template writeObjectExit<numMembers>(buffer, serializePair);
 		}
 	};
@@ -87,22 +87,22 @@ namespace jsonifier_internal {
 				writer<options>::writeObjectEntry(buffer, serializePair);
 
 				auto iter = value.begin();
-				serialize::impl<options>(iter->first, buffer, serializePair);
+				serialize<options>::impl(iter->first, buffer, serializePair);
 				writer<options>::template writeCharacter<':'>(buffer, serializePair.index);
 				if constexpr (options.prettify) {
 					writer<options>::template writeCharacter<0x20u>(buffer, serializePair.index);
 				}
-				serialize::impl<options>(iter->second, buffer, serializePair);
+				serialize<options>::impl(iter->second, buffer, serializePair);
 				++iter;
 				auto endIter = value.end();
 				for (; iter != endIter; ++iter) {
 					writer<options>::writeEntrySeparator(buffer, serializePair);
-					serialize::impl<options>(iter->first, buffer, serializePair);
+					serialize<options>::impl(iter->first, buffer, serializePair);
 					writer<options>::template writeCharacter<':'>(buffer, serializePair.index);
 					if constexpr (options.prettify) {
 						writer<options>::template writeCharacter<0x20u>(buffer, serializePair.index);
 					}
-					serialize::impl<options>(iter->second, buffer, serializePair);
+					serialize<options>::impl(iter->second, buffer, serializePair);
 				}
 				writer<options>::writeObjectExit(buffer, serializePair);
 			} else {
@@ -116,7 +116,7 @@ namespace jsonifier_internal {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			static constexpr auto lambda = [](auto&& valueNew, auto&& valueNewer, auto&& bufferNew, auto&& indexNew) {
-				serialize::impl<options>(valueNewer, bufferNew, indexNew);
+				serialize<options>::impl(valueNewer, bufferNew, indexNew);
 			};
 			visit<lambda>(value, value, buffer, serializePair);
 		}
@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if (value) [[likely]] {
-				serialize::impl<options>(*value, buffer, serializePair);
+				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
 				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
 			}
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (currentIndex < maxIndex) {
 				auto subTuple	  = std::get<currentIndex>(value);
-				serialize::impl<options>(subTuple, buffer, serializePair);
+				serialize<options>::impl(subTuple, buffer, serializePair);
 				if constexpr (currentIndex < maxIndex - 1) {
 					if constexpr (options.prettify) {
 						auto k = serializePair.index + serializePair.indent + 256;
@@ -174,11 +174,11 @@ namespace jsonifier_internal {
 			if (maxIndex > 0) [[likely]] {
 				writer<options>::writeArrayEntry(buffer, serializePair);
 				auto iter		  = value.begin();
-				serialize::impl<options>(*iter, buffer, serializePair);
+				serialize<options>::impl(*iter, buffer, serializePair);
 				++iter;
 				for (const auto end = value.end(); iter != end; ++iter) {
 					writer<options>::writeEntrySeparator(buffer, serializePair);
-					serialize::impl<options>(*iter, buffer, serializePair);
+					serialize<options>::impl(*iter, buffer, serializePair);
 				}
 				writer<options>::writeArrayExit(buffer, serializePair);
 			} else {
@@ -191,7 +191,7 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			serialize::impl<options>(*value, buffer, serializePair);
+			serialize<options>::impl(*value, buffer, serializePair);
 		}
 	};
 
@@ -203,11 +203,11 @@ namespace jsonifier_internal {
 			if (maxIndex > 0) {
 				writer<options>::writeArrayEntry(buffer, serializePair);
 				auto iter		  = std::begin(value);
-				serialize::impl<options>(*iter, buffer, serializePair);
+				serialize<options>::impl(*iter, buffer, serializePair);
 				++iter;
 				for (const auto end = std::end(value); iter != end; ++iter) {
 					writer<options>::writeEntrySeparator(buffer, serializePair);
-					serialize::impl<options>(*iter, buffer, serializePair);
+					serialize<options>::impl(*iter, buffer, serializePair);
 				}
 				writer<options>::writeArrayExit(buffer, serializePair);
 			} else {
@@ -220,7 +220,7 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			serialize::impl<options>(static_cast<const jsonifier::string>(value), buffer, serializePair);
+			serialize<options>::impl(static_cast<const jsonifier::string>(value), buffer, serializePair);
 		}
 	};
 
@@ -286,7 +286,7 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			serialize::impl<options>(*value, buffer, serializePair);
+			serialize<options>::impl(*value, buffer, serializePair);
 		}
 	};
 

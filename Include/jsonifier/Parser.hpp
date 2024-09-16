@@ -61,8 +61,8 @@ namespace jsonifier_internal {
 
 	template<bool minified, const jsonifier::parse_options&, typename value_type, typename parse_context_type> struct parse_impl;
 
-	struct parse {
-		template<bool minified, const jsonifier::parse_options& options, typename value_type, typename parse_context_type>
+	template<bool minified, const jsonifier::parse_options& options> struct parse {
+		template<typename value_type, typename parse_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) {
 			parse_impl<minified, options, unwrap_t<value_type>, parse_context_type>::impl(value, iter);
 		}
@@ -103,7 +103,7 @@ namespace jsonifier_internal {
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return false;
 			}
-			parse::impl<options.minified, optionsNew>(object, optionsReal);
+			parse<options.minified, optionsNew>::impl(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), false)
 				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), false)
@@ -140,7 +140,7 @@ namespace jsonifier_internal {
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return object;
 			}
-			parse::impl<options.minified, optionsNew>(object, optionsReal);
+			parse<options.minified, optionsNew>::impl<options.minified, optionsNew>(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), unwrap_t<value_type>{})
 				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), unwrap_t<value_type>{})

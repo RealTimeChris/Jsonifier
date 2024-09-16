@@ -177,9 +177,9 @@ namespace jsonifier_internal {
 			const auto start	   = std::begin(errorString) + static_cast<int64_t>(errorIndex);
 			line				   = static_cast<uint64_t>(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1ll);
 			const auto rstart	   = std::rbegin(errorString) + static_cast<int64_t>(errorString.size()) - static_cast<int64_t>(errorIndex) - 1ll;
-			const auto prevNewLine = std::find(std::min(rstart, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
+			const auto prevNewLine = std::find(jsonifier_internal::min(rstart, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
 			localIndex			   = std::distance(rstart, prevNewLine);
-			const auto nextNewLine = std::find(std::min(start + 1, std::end(errorString)), std::end(errorString), static_cast<V>('\n'));
+			const auto nextNewLine = std::find(jsonifier_internal::min(start + 1, std::end(errorString)), std::end(errorString), static_cast<V>('\n'));
 
 			const auto offset = (prevNewLine == std::rend(errorString) ? 0ll : static_cast<int64_t>(errorIndex) - static_cast<int64_t>(localIndex) + 1ll);
 			auto contextBegin = std::begin(errorString) + offset;

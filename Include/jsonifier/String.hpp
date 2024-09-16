@@ -206,7 +206,7 @@ namespace jsonifier {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
-			count = std::min(count, sizeVal - position);
+			count = jsonifier_internal::min(count, sizeVal - position);
 
 			string_base result{};
 			if (count > 0) [[likely]] {
@@ -219,7 +219,7 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE static constexpr size_type maxSize() noexcept {
 			const size_type allocMax   = allocator::maxSize();
 			const size_type storageMax = jsonifier_internal::max(allocMax, static_cast<size_type>(bufSize));
-			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
+			return jsonifier_internal::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {

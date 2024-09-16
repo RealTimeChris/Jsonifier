@@ -129,7 +129,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr size_type maxSize() const noexcept {
-			return std::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
+			return jsonifier_internal::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr const_reference at(const size_type offsetNew) const noexcept {
@@ -185,7 +185,7 @@ namespace jsonifier {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
-			countNew = std::min(countNew, sizeVal - offsetNew);
+			countNew = jsonifier_internal::min(countNew, sizeVal - offsetNew);
 			return string_view_base(dataVal + offsetNew, countNew);
 		}
 

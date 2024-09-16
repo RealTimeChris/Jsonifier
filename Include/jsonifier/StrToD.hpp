@@ -1923,7 +1923,7 @@ namespace jsonifier_fast_float {
 		if (-am.power2 >= mantissa_shift) {
 			// have a denormal float
 			int32_t shift = -am.power2 + 1;
-			cb(am, std::min<int32_t>(shift, 64));
+			cb(am, jsonifier_internal::min<int32_t>(shift, 64));
 			// check for round-up: if rounding-nearest carried us to the hidden bit.
 			am.power2 = (am.mantissa < (size_t(1) << binary_format<T>::mantissa_explicit_bits())) ? 0 : 1;
 			return;

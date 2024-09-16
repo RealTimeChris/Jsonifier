@@ -679,7 +679,7 @@ namespace jsonifier_internal {
 	}
 
 #if !defined(NDEBUG)
-	std::unordered_map<std::string, int32_t> types{};
+	std::unordered_map<std::string, uint32_t> types{};
 #endif
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
@@ -697,7 +697,7 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
 #if !defined(NDEBUG)
 			if (!types.contains(typeid(value_type).name())) {
-				types[typeid(value_type).name()] = ( int32_t )hashData.type;
+				types[typeid(value_type).name()] = static_cast<uint32_t>(hashData.type);
 			}
 #endif
 			if constexpr (hashData.type == hash_map_type::single_element) {

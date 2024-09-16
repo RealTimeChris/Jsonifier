@@ -386,7 +386,7 @@ namespace jsonifier {
 		}
 
 		constexpr size_type maxSize() noexcept {
-			return (std::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
+			return (jsonifier_internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
 		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
