@@ -23,23 +23,23 @@ constexpr jsonifier_internal::string_literal glazeCommitUrl{ jsonifier_internal:
 constexpr jsonifier_internal::string_literal simdjsonCommitUrl{ jsonifier_internal::string_literal{ "https://github.com/simdjson/simdjson/commit/" } + SIMDJSON_COMMIT };
 
 struct geometry_data {
-	std::vector<std::vector<std::vector<double>>> coordinates{};
-	std::string type{};
+	std::string type;
+	std::vector<std::vector<std::vector<double>>> coordinates;
 };
 
 struct properties_data {
-	std::string name{};
+	std::string name;
 };
 
 struct feature {
-	properties_data properties{};
-	geometry_data geometry{};
-	std::string type{};
+	std::string type;
+	properties_data properties;
+	geometry_data geometry;
 };
 
 struct canada_message {
-	std::vector<feature> features{};
-	std::string type{};
+	std::string type;
+	std::vector<feature> features;
 };
 
 struct search_metadata_data {
@@ -69,26 +69,26 @@ struct sizes_data {
 	large_data medium;
 	large_data small;
 	large_data thumb;
-	large_data large_data;
+	large_data large;
 };
 
 struct media_data {
-	double id;
+	uint64_t id;
 	std::string id_str;
 	std::vector<int64_t> indices;
 	std::string media_url;
 	std::string media_url_https;
-	std::string url_data;
+	std::string url;
 	std::string display_url;
 	std::string expanded_url;
 	std::string type;
-	sizes_data sizes_data;
-	std::optional<double> source_status_id;
+	sizes_data sizes;
+	std::optional<uint64_t> source_status_id;
 	std::optional<std::string> source_status_id_str;
 };
 
 struct url_data {
-	std::string url_data;
+	std::string url;
 	std::string expanded_url;
 	std::string display_url;
 	std::vector<int64_t> indices;
@@ -107,7 +107,7 @@ struct status_entities {
 	std::vector<std::nullptr_t> symbols;
 	std::vector<url_data> urls;
 	std::vector<user_mention> user_mentions;
-	std::optional<std::vector<media_data>> media_data;
+	std::optional<std::vector<media_data>> media;
 };
 
 struct metadata_data {
@@ -121,7 +121,7 @@ struct description_data {
 
 struct user_entities {
 	description_data description;
-	std::optional<description_data> url_data;
+	std::optional<description_data> url;
 };
 
 struct twitter_user {
@@ -131,7 +131,7 @@ struct twitter_user {
 	std::string screen_name;
 	std::string location;
 	std::string description;
-	std::optional<std::string> url_data;
+	std::optional<std::string> url;
 	user_entities entities;
 	bool user_protected;
 	int64_t followers_count;
@@ -168,19 +168,19 @@ struct twitter_user {
 };
 
 struct status_data {
-	metadata_data metadata_data;
+	metadata_data metadata;
 	std::string created_at;
-	double id;
+	uint64_t id;
 	std::string id_str;
 	std::string text;
 	std::string source;
 	bool truncated;
-	std::optional<double> in_reply_to_status_id;
+	std::optional<uint64_t> in_reply_to_status_id;
 	std::optional<std::string> in_reply_to_status_id_str;
 	std::optional<int64_t> in_reply_to_user_id;
 	std::optional<std::string> in_reply_to_user_id_str;
 	std::optional<std::string> in_reply_to_screen_name;
-	twitter_user twitter_user;
+	twitter_user user;
 	std::nullptr_t geo;
 	std::nullptr_t coordinates;
 	std::nullptr_t place;
@@ -191,13 +191,13 @@ struct status_data {
 	bool favorited;
 	bool retweeted;
 	std::string lang;
-	std::shared_ptr<status_data> retweeted_status_data;
+	std::shared_ptr<status_data> retweeted_status;
 	std::optional<bool> possibly_sensitive;
 };
 
 struct twitter_message {
 	std::vector<status_data> statuses;
-	search_metadata_data search_metadata_data;
+	search_metadata_data search_metadata;
 };
 
 struct icon_emoji_data {
@@ -219,7 +219,7 @@ struct channel_data {
 	std::vector<std::nullptr_t> applied_tags{};
 	std::vector<std::nullptr_t> recipients{};
 	int64_t default_auto_archive_duration{};
-	std::nullptr_t status_data{ nullptr };
+	std::nullptr_t status{ nullptr };
 	std::string last_pin_timestamp{};
 	std::nullptr_t topic{ nullptr };
 	int64_t rate_limit_per_user{};
@@ -276,7 +276,7 @@ struct member_data {
 	std::string permissions{};
 	std::string joined_at{};
 	std::string guild_id{};
-	user_data twitter_user{};
+	user_data user{};
 	int64_t flags{};
 	bool pending{};
 	bool deaf{};
@@ -357,7 +357,7 @@ struct guild_data {
 	bool unavailable{};
 	std::string id{};
 	int64_t flags{};
-	bool large_data{};
+	bool large{};
 	bool owner{};
 	bool nsfw{};
 	bool lazy{};
@@ -523,7 +523,7 @@ template<> struct glz::meta<citm_catalog_message> {
 
 template<> struct jsonifier::core<geometry_data> {
 	using value_type				 = geometry_data;
-	static constexpr auto parseValue = createValue<&value_type::coordinates, &value_type::type>();
+	static constexpr auto parseValue = createValue<&value_type::type, &value_type::coordinates>();
 };
 
 template<> struct jsonifier::core<properties_data> {
@@ -533,12 +533,12 @@ template<> struct jsonifier::core<properties_data> {
 
 template<> struct jsonifier::core<feature> {
 	using value_type				 = feature;
-	static constexpr auto parseValue = createValue<&value_type::properties, &value_type::geometry, &value_type::type>();
+	static constexpr auto parseValue = createValue<&value_type::type, &value_type::properties, &value_type::geometry>();
 };
 
 template<> struct jsonifier::core<canada_message> {
 	using value_type				 = canada_message;
-	static constexpr auto parseValue = createValue<&value_type::features, &value_type::type>();
+	static constexpr auto parseValue = createValue<&value_type::type, &value_type::features>();
 };
 
 #if !defined(ASAN_ENABLED)
@@ -583,19 +583,19 @@ template<> struct jsonifier::core<large_data> {
 
 template<> struct jsonifier::core<sizes_data> {
 	using value_type				 = sizes_data;
-	static constexpr auto parseValue = createValue<&value_type::medium, &value_type::small, &value_type::thumb, &value_type::large_data>();
+	static constexpr auto parseValue = createValue<&value_type::medium, &value_type::small, &value_type::thumb, &value_type::large>();
 };
 
 template<> struct jsonifier::core<media_data> {
 	using value_type = media_data;
 	static constexpr auto parseValue =
-		createValue<&value_type::id, &value_type::id_str, &value_type::indices, &value_type::media_url, &value_type::media_url_https, &value_type::url_data, &value_type::display_url,
-			&value_type::expanded_url, &value_type::type, &value_type::sizes_data, &value_type::source_status_id, &value_type::source_status_id_str>();
+		createValue<&value_type::id, &value_type::id_str, &value_type::indices, &value_type::media_url, &value_type::media_url_https, &value_type::url, &value_type::display_url,
+			&value_type::expanded_url, &value_type::type, &value_type::sizes, &value_type::source_status_id, &value_type::source_status_id_str>();
 };
 
 template<> struct jsonifier::core<url_data> {
 	using value_type				 = url_data;
-	static constexpr auto parseValue = createValue<&value_type::url_data, &value_type::expanded_url, &value_type::display_url, &value_type::indices>();
+	static constexpr auto parseValue = createValue<&value_type::url, &value_type::expanded_url, &value_type::display_url, &value_type::indices>();
 };
 
 template<> struct jsonifier::core<user_mention> {
@@ -605,7 +605,7 @@ template<> struct jsonifier::core<user_mention> {
 
 template<> struct jsonifier::core<status_entities> {
 	using value_type				 = status_entities;
-	static constexpr auto parseValue = createValue<&value_type::hashtags, &value_type::symbols, &value_type::urls, &value_type::user_mentions, &value_type::media_data>();
+	static constexpr auto parseValue = createValue<&value_type::hashtags, &value_type::symbols, &value_type::urls, &value_type::user_mentions, &value_type::media>();
 };
 
 template<> struct jsonifier::core<metadata_data> {
@@ -620,33 +620,34 @@ template<> struct jsonifier::core<description_data> {
 
 template<> struct jsonifier::core<user_entities> {
 	using value_type				 = user_entities;
-	static constexpr auto parseValue = createValue<&value_type::description, &value_type::url_data>();
+	static constexpr auto parseValue = createValue<&value_type::description, &value_type::url>();
 };
 
 template<> struct jsonifier::core<twitter_user> {
 	using value_type				 = twitter_user;
-	static constexpr auto parseValue = createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location,
-		&value_type::description, &value_type::url_data, &value_type::entities, &value_type::user_protected, &value_type::followers_count, &value_type::friends_count,
-		&value_type::listed_count, &value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled,
-		&value_type::verified, &value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
-		&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,
-		&value_type::profile_image_url, &value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color,
-		&value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image,
-		&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
+	static constexpr auto parseValue =
+		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
+			&value_type::entities, &value_type::user_protected, &value_type::followers_count, &value_type::friends_count, &value_type::listed_count, &value_type::created_at,
+			&value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified, &value_type::statuses_count,
+			&value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled, &value_type::profile_background_color,
+			&value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile, &value_type::profile_image_url,
+			&value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color, &value_type::profile_sidebar_border_color,
+			&value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image, 
+			&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
 };
 
 template<> struct jsonifier::core<status_data> {
 	using value_type				 = status_data;
-	static constexpr auto parseValue = createValue<&value_type::metadata_data, &value_type::created_at, &value_type::id, &value_type::id_str, &value_type::text,
+	static constexpr auto parseValue = createValue<&value_type::metadata, &value_type::created_at, &value_type::id, &value_type::id_str, &value_type::text,
 		&value_type::source, &value_type::truncated, &value_type::in_reply_to_status_id, &value_type::in_reply_to_status_id_str, &value_type::in_reply_to_user_id,
-		&value_type::in_reply_to_user_id_str, &value_type::in_reply_to_screen_name, &value_type::twitter_user, &value_type::geo, &value_type::coordinates, &value_type::place,
+		&value_type::in_reply_to_user_id_str, &value_type::in_reply_to_screen_name, &value_type::user, &value_type::geo, &value_type::coordinates, &value_type::place,
 		&value_type::contributors, &value_type::retweet_count, &value_type::favorite_count, &value_type::entities, &value_type::favorited, &value_type::retweeted,
-		&value_type::lang, &value_type::possibly_sensitive>();
+		&value_type::lang, &value_type::retweeted_status, &value_type::possibly_sensitive>();
 };
 
 template<> struct jsonifier::core<twitter_message> {
 	using value_type				 = twitter_message;
-	static constexpr auto parseValue = createValue<&value_type::statuses, &value_type::search_metadata_data>();
+	static constexpr auto parseValue = createValue<&value_type::statuses, &value_type::search_metadata>();
 };
 
 
@@ -671,20 +672,20 @@ template<> struct glz::meta<large_data> {
 
 template<> struct glz::meta<sizes_data> {
 	using value_type			= sizes_data;
-	static constexpr auto value = object("medium", &value_type::medium, "small", &value_type::small, "thumb", &value_type::thumb, "large_data", &value_type::large_data);
+	static constexpr auto value = object("medium", &value_type::medium, "small", &value_type::small, "thumb", &value_type::thumb, "large", &value_type::large);
 };
 
 template<> struct glz::meta<media_data> {
 	using value_type			= media_data;
 	static constexpr auto value = object("source_status_id_str", &value_type::source_status_id_str, "source_status_id", &value_type::source_status_id, "indices",
 		&value_type::indices, "media_url_https", &value_type::media_url_https, "expanded_url", &value_type::expanded_url, "display_url", &value_type::display_url, "media_url",
-		&value_type::media_url, "id_str", &value_type::id_str, "type", &value_type::type, "sizes_data", &value_type::sizes_data, "url_data", &value_type::url_data, "id", &value_type::id);
+		&value_type::media_url, "id_str", &value_type::id_str, "type", &value_type::type, "sizes", &value_type::sizes, "url", &value_type::url, "id", &value_type::id);
 };
 
 template<> struct glz::meta<url_data> {
 	using value_type = url_data;
 	static constexpr auto value =
-		object("indices", &value_type::indices, "expanded_url", &value_type::expanded_url, "display_url", &value_type::display_url, "url_data", &value_type::url_data);
+		object("indices", &value_type::indices, "expanded_url", &value_type::expanded_url, "display_url", &value_type::display_url, "url", &value_type::url);
 };
 
 template<> struct glz::meta<user_mention> {
@@ -695,7 +696,7 @@ template<> struct glz::meta<user_mention> {
 
 template<> struct glz::meta<status_entities> {
 	using value_type			= status_entities;
-	static constexpr auto value = object("media_data", &value_type::media_data, "user_mentions", &value_type::user_mentions, "symbols", &value_type::symbols, "hashtags",
+	static constexpr auto value = object("media", &value_type::media, "user_mentions", &value_type::user_mentions, "symbols", &value_type::symbols, "hashtags",
 		&value_type::hashtags, "urls", &value_type::urls);
 };
 
@@ -711,7 +712,7 @@ template<> struct glz::meta<description_data> {
 
 template<> struct glz::meta<user_entities> {
 	using value_type			= user_entities;
-	static constexpr auto value = object("url_data", &value_type::url_data, "description", &value_type::description);
+	static constexpr auto value = object("url", &value_type::url, "description", &value_type::description);
 };
 
 template<> struct glz::meta<twitter_user> {
@@ -720,7 +721,7 @@ template<> struct glz::meta<twitter_user> {
 		&value_type::profile_banner_url, "profile_background_image_url", &value_type::profile_background_image_url, "profile_sidebar_border_color",
 		&value_type::profile_sidebar_border_color, "profile_sidebar_fill_color", &value_type::profile_sidebar_fill_color, "time_zone", &value_type::time_zone,
 		"profile_background_color", &value_type::profile_background_color, "profile_image_url_https", &value_type::profile_image_url_https, "utc_offset", &value_type::utc_offset,
-		"profile_use_background_image", &value_type::profile_use_background_image, "url_data", &value_type::url_data, "profile_text_color", &value_type::profile_text_color,
+		"profile_use_background_image", &value_type::profile_use_background_image, "url", &value_type::url, "profile_text_color", &value_type::profile_text_color,
 		"profile_link_color", &value_type::profile_link_color, "profile_image_url", &value_type::profile_image_url, "profile_background_tile", &value_type::profile_background_tile,
 		"is_translation_enabled", &value_type::is_translation_enabled, "default_profile_image", &value_type::default_profile_image, "contributors_enabled",
 		&value_type::contributors_enabled, "follow_request_sent", &value_type::follow_request_sent, "favourites_count", &value_type::favourites_count, "description",
@@ -736,15 +737,15 @@ template<> struct glz::meta<status_data> {
 	static constexpr auto value = object("in_reply_to_status_id_str", &value_type::in_reply_to_status_id_str, "in_reply_to_user_id_str", &value_type::in_reply_to_user_id_str,
 		"in_reply_to_screen_name", &value_type::in_reply_to_screen_name, "in_reply_to_status_id", &value_type::in_reply_to_status_id, "in_reply_to_user_id",
 		&value_type::in_reply_to_user_id, "possibly_sensitive", &value_type::possibly_sensitive, "contributors", &value_type::contributors, "coordinates", &value_type::coordinates,
-		"place", &value_type::place, "geo", &value_type::geo, "entities", &value_type::entities, "favorite_count", &value_type::favorite_count, "metadata_data", &value_type::metadata_data,
-		"created_at", &value_type::created_at, "retweeted_status_data", &value_type::retweeted_status_data, "retweet_count", &value_type::retweet_count, "source", &value_type::source,
-		"id_str", &value_type::id_str, "twitter_user", &value_type::twitter_user, "lang", &value_type::lang, "text", &value_type::text, "truncated", &value_type::truncated, "favorited",
-		&value_type::favorited, "retweeted", &value_type::retweeted, "id", &value_type::id);
+		"place", &value_type::place, "geo", &value_type::geo, "entities", &value_type::entities, "favorite_count", &value_type::favorite_count, "metadata", &value_type::metadata,
+		"created_at", &value_type::created_at, "retweeted_status", &value_type::retweeted_status, "retweet_count", &value_type::retweet_count, "source", &value_type::source,
+		"id_str", &value_type::id_str, "twitter_user", &value_type::user, "lang", &value_type::lang, "text", &value_type::text, "truncated", &value_type::truncated,
+		"favorited", &value_type::favorited, "retweeted", &value_type::retweeted, "id", &value_type::id);
 };
 
 template<> struct glz::meta<twitter_message> {
 	using value_type			= twitter_message;
-	static constexpr auto value = object("search_metadata_data", &value_type::search_metadata_data, "statuses", &value_type::statuses);
+	static constexpr auto value = object("search_metadata", &value_type::search_metadata, "statuses", &value_type::statuses);
 };
 
 #endif
@@ -762,7 +763,7 @@ template<> struct jsonifier::core<permission_overwrite> {
 template<> struct jsonifier::core<channel_data> {
 	using value_type				 = channel_data;
 	static constexpr auto parseValue = createValue<&value_type::permission_overwrites, &value_type::last_message_id, &value_type::default_thread_rate_limit_per_user,
-		&value_type::applied_tags, &value_type::recipients, &value_type::default_auto_archive_duration, &value_type::status_data, &value_type::last_pin_timestamp, &value_type::topic,
+		&value_type::applied_tags, &value_type::recipients, &value_type::default_auto_archive_duration, &value_type::status, &value_type::last_pin_timestamp, &value_type::topic,
 		&value_type::rate_limit_per_user, &value_type::icon_emoji, &value_type::total_message_sent, &value_type::video_quality_mode, &value_type::application_id,
 		&value_type::permissions, &value_type::message_count, &value_type::parent_id, &value_type::member_count, &value_type::owner_id, &value_type::guild_id,
 		&value_type::user_limit, &value_type::position, &value_type::name, &value_type::icon, &value_type::version, &value_type::bitrate, &value_type::id, &value_type::flags,
@@ -781,7 +782,7 @@ template<> struct jsonifier::core<member_data> {
 	using value_type = member_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::communication_disabled_until, &value_type::premium_since, &value_type::nick, &value_type::avatar, &value_type::roles, &value_type::permissions,
-			&value_type::joined_at, &value_type::guild_id, &value_type::twitter_user, &value_type::flags, &value_type::pending, &value_type::deaf, &value_type::mute>();
+			&value_type::joined_at, &value_type::guild_id, &value_type::user, &value_type::flags, &value_type::pending, &value_type::deaf, &value_type::mute>();
 };
 
 template<> struct jsonifier::core<tags_data> {
@@ -806,7 +807,7 @@ template<> struct jsonifier::core<guild_data> {
 		&value_type::widget_channel_id, &value_type::preferred_locale, &value_type::system_channel_flags, &value_type::rules_channel_id, &value_type::roles,
 		&value_type::verification_level, &value_type::permissions, &value_type::max_presences, &value_type::discovery, &value_type::joined_at, &value_type::member_count,
 		&value_type::premium_tier, &value_type::owner_id, &value_type::max_members, &value_type::afk_timeout, &value_type::widget_enabled, &value_type::region,
-		&value_type::nsfw_level, &value_type::mfa_level, &value_type::name, &value_type::icon, &value_type::unavailable, &value_type::id, &value_type::flags, &value_type::large_data,
+		&value_type::nsfw_level, &value_type::mfa_level, &value_type::name, &value_type::icon, &value_type::unavailable, &value_type::id, &value_type::flags, &value_type::large,
 		&value_type::owner, &value_type::nsfw, &value_type::lazy>();
 };
 
@@ -831,21 +832,21 @@ template<> struct glz::meta<channel_data> {
 	using value_type			= channel_data;
 	static constexpr auto value = object("permission_overwrites", &value_type::permission_overwrites, "last_message_id", &value_type::last_message_id,
 		"default_thread_rate_limit_per_user", &value_type::default_thread_rate_limit_per_user, "applied_tags", &value_type::applied_tags, "recipients", &value_type::recipients,
-		"default_auto_archive_duration", &value_type::default_auto_archive_duration, "status_data", &value_type::status_data, "last_pin_timestamp", &value_type::last_pin_timestamp, "topic",
-		&value_type::topic, "rate_limit_per_user", &value_type::rate_limit_per_user, "icon_emoji", &value_type::icon_emoji, "total_message_sent", &value_type::total_message_sent,
-		"video_quality_mode", &value_type::video_quality_mode, "application_id", &value_type::application_id, "permissions", &value_type::permissions, "message_count",
-		&value_type::message_count, "parent_id", &value_type::parent_id, "member_count", &value_type::member_count, "owner_id", &value_type::owner_id, "guild_id",
-		&value_type::guild_id, "user_limit", &value_type::user_limit, "position", &value_type::position, "name", &value_type::name, "icon", &value_type::icon, "version",
-		&value_type::version, "bitrate", &value_type::bitrate, "id", &value_type::id, "flags", &value_type::flags, "type", &value_type::type, "managed", &value_type::managed,
-		"nsfw", &value_type::nsfw);
+		"default_auto_archive_duration", &value_type::default_auto_archive_duration, "status", &value_type::status, "last_pin_timestamp", &value_type::last_pin_timestamp,
+		"topic", &value_type::topic, "rate_limit_per_user", &value_type::rate_limit_per_user, "icon_emoji", &value_type::icon_emoji, "total_message_sent",
+		&value_type::total_message_sent, "video_quality_mode", &value_type::video_quality_mode, "application_id", &value_type::application_id, "permissions",
+		&value_type::permissions, "message_count", &value_type::message_count, "parent_id", &value_type::parent_id, "member_count", &value_type::member_count, "owner_id",
+		&value_type::owner_id, "guild_id", &value_type::guild_id, "user_limit", &value_type::user_limit, "position", &value_type::position, "name", &value_type::name, "icon",
+		&value_type::icon, "version", &value_type::version, "bitrate", &value_type::bitrate, "id", &value_type::id, "flags", &value_type::flags, "type", &value_type::type,
+		"managed", &value_type::managed, "nsfw", &value_type::nsfw);
 };
 
 template<> struct glz::meta<user_data> {
 	using value_type			= user_data;
-	static constexpr auto value = object("avatar_decoration_data", &value_type::avatar_decoration_data, "display_name", &value_type::display_name, "global_name",
-		&value_type::global_name, "avatar", &value_type::avatar, "banner", &value_type::banner, "locale", &value_type::locale, "discriminator", &value_type::discriminator,
-		"user_name", &value_type::user_name, "accent_color", &value_type::accent_color, "premium_type", &value_type::premium_type, "public_flags", &value_type::public_flags,
-		"email", &value_type::email, "mfa_enabled", &value_type::mfa_enabled, "id", &value_type::id, "flags", &value_type::flags, "verified", &value_type::verified, "system",
+	static constexpr auto value = object("avatar_decoration_data", &value_type::avatar_decoration_data, "display_name", &value_type::display_name, "global_name", &value_type::global_name,
+		"avatar", &value_type::avatar, "banner", &value_type::banner, "locale", &value_type::locale, "discriminator", &value_type::discriminator, "user_name",
+		&value_type::user_name, "accent_color", &value_type::accent_color, "premium_type", &value_type::premium_type, "public_flags", &value_type::public_flags, "email",
+		&value_type::email, "mfa_enabled", &value_type::mfa_enabled, "id", &value_type::id, "flags", &value_type::flags, "verified", &value_type::verified, "system",
 		&value_type::system, "bot", &value_type::bot);
 };
 
@@ -853,7 +854,7 @@ template<> struct glz::meta<member_data> {
 	using value_type			= member_data;
 	static constexpr auto value = object("communication_disabled_until", &value_type::communication_disabled_until, "premium_since", &value_type::premium_since, "nick",
 		&value_type::nick, "avatar", &value_type::avatar, "roles", &value_type::roles, "permissions", &value_type::permissions, "joined_at", &value_type::joined_at, "guild_id",
-		&value_type::guild_id, "twitter_user", &value_type::twitter_user, "flags", &value_type::flags, "pending", &value_type::pending, "deaf", &value_type::deaf, "mute", &value_type::mute);
+		&value_type::guild_id, "user", &value_type::user, "flags", &value_type::flags, "pending", &value_type::pending, "deaf", &value_type::deaf, "mute", &value_type::mute);
 };
 
 template<> struct glz::meta<tags_data> {
@@ -885,7 +886,7 @@ template<> struct glz::meta<guild_data> {
 		"discovery", &value_type::discovery, "joined_at", &value_type::joined_at, "member_count", &value_type::member_count, "premium_tier", &value_type::premium_tier, "owner_id",
 		&value_type::owner_id, "max_members", &value_type::max_members, "afk_timeout", &value_type::afk_timeout, "widget_enabled", &value_type::widget_enabled, "region",
 		&value_type::region, "nsfw_level", &value_type::nsfw_level, "mfa_level", &value_type::mfa_level, "name", &value_type::name, "icon", &value_type::icon, "unavailable",
-		&value_type::unavailable, "id", &value_type::id, "flags", &value_type::flags, "large_data", &value_type::large_data, "owner", &value_type::owner, "nsfw", &value_type::nsfw, "lazy",
+		&value_type::unavailable, "id", &value_type::id, "flags", &value_type::flags, "large", &value_type::large, "owner", &value_type::owner, "nsfw", &value_type::nsfw, "lazy",
 		&value_type::lazy);
 };
 
@@ -1182,7 +1183,7 @@ struct results_data {
 	result<result_type::read> readResult{};
 	jsonifier::string name{};
 	jsonifier::string test{};
-	jsonifier::string url_data{};
+	jsonifier::string url{};
 	size_t iterations{};
 
 	bool operator>(const results_data& other) const noexcept {
@@ -1206,7 +1207,7 @@ struct results_data {
 		iterations = iterationsNew;
 		name	   = nameNew;
 		test	   = testNew;
-		url_data		   = urlNew;
+		url		   = urlNew;
 	}
 
 	void checkForMissingKeys() {
@@ -1218,7 +1219,7 @@ struct results_data {
 	}
 
 	void print() const noexcept {
-		std::cout << jsonifier::string{ "| " } + name + " " + test + ": " + url_data + "\n" +
+		std::cout << jsonifier::string{ "| " } + name + " " + test + ": " + url + "\n" +
 				"| ------------------------------------------------------------ "
 				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {
@@ -1249,7 +1250,7 @@ struct results_data {
 		std::string readIterationCount{};
 		std::string readCv{};
 		std::string read{};
-		std::string finalString{ "| [" + name + "](" + url_data + ") | " };
+		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
 			std::stringstream stream01{};
 			stream01 << std::setprecision(6) << readResult.jsonSpeed.value();
@@ -1306,7 +1307,7 @@ template<result_type type> struct jsonifier::core<result<type>> {
 
 template<> struct jsonifier::core<results_data> {
 	using value_type				 = results_data;
-	static constexpr auto parseValue = createValue<&value_type::name, &value_type::readResult, &value_type::writeResult, &value_type::test, &value_type::url_data>();
+	static constexpr auto parseValue = createValue<&value_type::name, &value_type::readResult, &value_type::writeResult, &value_type::test, &value_type::url>();
 };
 
 template<> struct jsonifier::core<test_results> {
@@ -1569,7 +1570,7 @@ template<> void getValue(sizes_data& returnValue, simdjson::ondemand::value json
 	getValue(returnValue.medium, jsonData, "medium");
 	getValue(returnValue.small, jsonData, "small");
 	getValue(returnValue.thumb, jsonData, "thumb");
-	getValue(returnValue.large_data, jsonData, "large_data");
+	getValue(returnValue.large, jsonData, "large");
 }
 
 template<> void getValue(media_data& returnValue, simdjson::ondemand::value jsonData) {
@@ -1582,8 +1583,8 @@ template<> void getValue(media_data& returnValue, simdjson::ondemand::value json
 	getValue(returnValue.media_url, jsonData, "media_url");
 	getValue(returnValue.id_str, jsonData, "id_str");
 	getValue(returnValue.type, jsonData, "type");
-	getValue(returnValue.sizes_data, jsonData, "sizes_data");
-	getValue(returnValue.url_data, jsonData, "url_data");
+	getValue(returnValue.sizes, jsonData, "sizes");
+	getValue(returnValue.url, jsonData, "url");
 	getValue(returnValue.id, jsonData, "id");
 }
 
@@ -1591,7 +1592,7 @@ template<> void getValue(url_data& returnValue, simdjson::ondemand::value jsonDa
 	getValue(returnValue.indices, jsonData, "indices");
 	getValue(returnValue.expanded_url, jsonData, "expanded_url");
 	getValue(returnValue.display_url, jsonData, "display_url");
-	getValue(returnValue.url_data, jsonData, "url_data");
+	getValue(returnValue.url, jsonData, "url");
 }
 
 template<> void getValue(user_mention& returnValue, simdjson::ondemand::value jsonData) {
@@ -1603,7 +1604,7 @@ template<> void getValue(user_mention& returnValue, simdjson::ondemand::value js
 }
 
 template<> void getValue(status_entities& returnValue, simdjson::ondemand::value jsonData) {
-	getValue(returnValue.media_data, jsonData, "media_data");
+	getValue(returnValue.media, jsonData, "media");
 	getValue(returnValue.user_mentions, jsonData, "user_mentions");
 	getValue(returnValue.symbols, jsonData, "symbols");
 	getValue(returnValue.hashtags, jsonData, "hashtags");
@@ -1620,7 +1621,7 @@ template<> void getValue(description_data& returnValue, simdjson::ondemand::valu
 }
 
 template<> void getValue(user_entities& returnValue, simdjson::ondemand::value jsonData) {
-	getValue(returnValue.url_data, jsonData, "url_data");
+	getValue(returnValue.url, jsonData, "url");
 	getValue(returnValue.description, jsonData, "description");
 }
 
@@ -1634,7 +1635,7 @@ template<> void getValue(twitter_user& returnValue, simdjson::ondemand::value js
 	getValue(returnValue.profile_image_url_https, jsonData, "profile_image_url_https");
 	getValue(returnValue.utc_offset, jsonData, "utc_offset");
 	getValue(returnValue.profile_use_background_image, jsonData, "profile_use_background_image");
-	getValue(returnValue.url_data, jsonData, "url_data");
+	getValue(returnValue.url, jsonData, "url");
 	getValue(returnValue.profile_text_color, jsonData, "profile_text_color");
 	getValue(returnValue.profile_link_color, jsonData, "profile_link_color");
 	getValue(returnValue.profile_image_url, jsonData, "profile_image_url");
@@ -1668,7 +1669,7 @@ template<> void getValue(twitter_user& returnValue, simdjson::ondemand::value js
 
 template<> void getValue(std::shared_ptr<status_data>& returnValue, simdjson::ondemand::value jsonData) {
 	returnValue = std::make_shared<status_data>();
-	getValue(*returnValue, jsonData, "retweeted_status_data");
+	getValue(*returnValue, jsonData, "retweeted_status");
 }
 
 template<> void getValue(status_data& returnValue, simdjson::ondemand::value jsonData) {
@@ -1684,23 +1685,23 @@ template<> void getValue(status_data& returnValue, simdjson::ondemand::value jso
 	getValue(returnValue.geo, jsonData, "geo");
 	getValue(returnValue.entities, jsonData, "entities");
 	getValue(returnValue.favorite_count, jsonData, "favorite_count");
-	getValue(returnValue.metadata_data, jsonData, "metadata_data");
+	getValue(returnValue.metadata, jsonData, "metadata");
 	getValue(returnValue.created_at, jsonData, "created_at");
 	getValue(returnValue.retweet_count, jsonData, "retweet_count");
 	getValue(returnValue.source, jsonData, "source");
 	getValue(returnValue.id_str, jsonData, "id_str");
-	getValue(returnValue.twitter_user, jsonData, "twitter_user");
+	getValue(returnValue.user, jsonData, "user");
 	getValue(returnValue.lang, jsonData, "lang");
 	getValue(returnValue.text, jsonData, "text");
 	getValue(returnValue.truncated, jsonData, "truncated");
 	getValue(returnValue.favorited, jsonData, "favorited");
 	getValue(returnValue.retweeted, jsonData, "retweeted");
-	getValue(returnValue.retweeted_status_data, jsonData, "retweeted_status_data");
+	getValue(returnValue.retweeted_status, jsonData, "retweeted_status");
 	getValue(returnValue.id, jsonData, "id");
 }
 
 template<> void getValue(twitter_message& returnValue, simdjson::ondemand::value jsonData) {
-	getValue(returnValue.search_metadata_data, jsonData, "search_metadata_data");
+	getValue(returnValue.search_metadata, jsonData, "search_metadata");
 	getValue(returnValue.statuses, jsonData, "statuses");
 }
 
@@ -1723,7 +1724,7 @@ template<> void getValue(channel_data& returnValue, simdjson::ondemand::value js
 	getValue(returnValue.applied_tags, jsonData, "applied_tags");
 	getValue(returnValue.recipients, jsonData, "recipients");
 	getValue(returnValue.default_auto_archive_duration, jsonData, "default_auto_archive_duration");
-	getValue(returnValue.status_data, jsonData, "status_data");
+	getValue(returnValue.status, jsonData, "status");
 	getValue(returnValue.last_pin_timestamp, jsonData, "last_pin_timestamp");
 	getValue(returnValue.topic, jsonData, "topic");
 	getValue(returnValue.rate_limit_per_user, jsonData, "rate_limit_per_user");
@@ -1780,7 +1781,7 @@ template<> void getValue(member_data& returnValue, simdjson::ondemand::value jso
 	getValue(returnValue.permissions, jsonData, "permissions");
 	getValue(returnValue.joined_at, jsonData, "joined_at");
 	getValue(returnValue.guild_id, jsonData, "guild_id");
-	getValue(returnValue.twitter_user, jsonData, "twitter_user");
+	getValue(returnValue.user, jsonData, "user");
 	getValue(returnValue.flags, jsonData, "flags");
 	getValue(returnValue.pending, jsonData, "pending");
 	getValue(returnValue.deaf, jsonData, "deaf");
@@ -1861,7 +1862,7 @@ template<> void getValue(guild_data& returnValue, simdjson::ondemand::value json
 	getValue(returnValue.unavailable, jsonData, "unavailable");
 	getValue(returnValue.id, jsonData, "id");
 	getValue(returnValue.flags, jsonData, "flags");
-	getValue(returnValue.large_data, jsonData, "large_data");
+	getValue(returnValue.large, jsonData, "large");
 	getValue(returnValue.owner, jsonData, "owner");
 	getValue(returnValue.nsfw, jsonData, "nsfw");
 	getValue(returnValue.lazy, jsonData, "lazy");

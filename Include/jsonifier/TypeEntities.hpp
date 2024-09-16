@@ -326,6 +326,11 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
+		concept has_get = requires(jsonifier_internal::unwrap_t<value_type> value) {
+			{ value.get() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::element_type*>;
+		};
+
+		template<typename value_type>
 		concept copyable = std::copyable<jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
@@ -335,10 +340,7 @@ namespace jsonifier {
 		} && has_release<value_type>;
 
 		template<typename value_type>
-		concept shared_ptr_t = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			typename jsonifier_internal::unwrap_t<value_type>::element_type;
-			typename jsonifier_internal::unwrap_t<value_type>::deleter_type;
-		} && has_release<value_type> && copyable<value_type>;
+		concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
 
 		template<typename value_type>
 		concept has_find = requires(jsonifier_internal::unwrap_t<value_type> value) {
@@ -392,7 +394,7 @@ namespace jsonifier {
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type>;
+		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type> || shared_ptr_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };

@@ -171,18 +171,40 @@ namespace jsonifier_internal {
 
 								if (*context.iter == '"') [[likely]] {
 									++context.iter;
-									static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
-									if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < N) [[likely]] {
-										static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
-										if (arrayOfPtrs[index](value, context)) [[likely]] {
+									static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
+									static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
+									static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
+									static constexpr auto keySize		= key.size();
+									static constexpr auto keySizeNew	= keySize + 1;
+									if (comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(),
+											context.iter)) [[likely]] {
+										context.iter += keySizeNew;
+										JSONIFIER_SKIP_WS();
+										if (*context.iter == ':') [[likely]] {
+											++context.iter;
+											JSONIFIER_SKIP_WS();
+											using member_type = unwrap_t<decltype(value.*ptr)>;
+											parse<false, options>::impl(value.*ptr, context);
 											return false;
 										} else [[unlikely]] {
+											static constexpr auto sourceLocation{ std::source_location::current() };
+											context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
 											derailleur<options>::skipToNextValue(context);
 										}
 									} else {
-										derailleur<options>::skipKey(context);
-										++context.iter;
-										derailleur<options>::skipToNextValue(context);
+										static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
+										if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < N) [[likely]] {
+											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
+											if (arrayOfPtrs[index](value, context)) [[likely]] {
+												return false;
+											} else [[unlikely]] {
+												derailleur<options>::skipToNextValue(context);
+											}
+										} else {
+											derailleur<options>::skipKey(context);
+											++context.iter;
+											derailleur<options>::skipToNextValue(context);
+										}
 									}
 								} else [[unlikely]] {
 									static constexpr auto sourceLocation{ std::source_location::current() };
