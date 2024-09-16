@@ -31,7 +31,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE void skipWs(iterator& context) {
+	template<typename context_type> JSONIFIER_ALWAYS_INLINE void skipWs(context_type& context) {
 		while (whitespaceTable[static_cast<uint8_t>(*context.iter)]) {
 			++context.iter;
 		}
@@ -183,12 +183,12 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu } };
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(iterator string1) noexcept {
+	template<typename context_type> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(context_type string1) noexcept {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, iterator c) noexcept {
+	template<typename context_type> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, context_type c) noexcept {
 		if (cp <= 0x7F) {
 			c[0] = uint8_t(cp);
 			return 1;
@@ -764,7 +764,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, iterator& context) {
+	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, context_type& context) {
 		if (compareStringAsInt<"true">(context)) {
 			value = true;
 			context += 4;
@@ -780,7 +780,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNull(iterator& context) {
+	template<typename context_type> JSONIFIER_ALWAYS_INLINE bool parseNull(context_type& context) {
 		if (compareStringAsInt<"null">(context)) [[likely]] {
 			context += 4;
 			return true;
@@ -790,7 +790,7 @@ namespace jsonifier_internal {
 	}
 
 	template<const auto& options> struct derailleur {
-		template<typename value_type, typename iterator> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, iterator& context) noexcept {
+		template<typename value_type, typename context_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, context_type& context) noexcept {
 			if (*context.iter == '"') [[likely]] {
 				++context.iter;
 				auto start	= context.iter;
@@ -811,19 +811,23 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipString(iterator& context) noexcept {
+		template<typename context_type> JSONIFIER_ALWAYS_INLINE static void skipString(context_type& context) noexcept {
 			++context.iter;
 			auto newLength = static_cast<size_t>(context.endIter - context.iter);
 			skipStringImpl(context.iter, newLength);
+			++context.iter;
 		}
 
-		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipKey(iterator& context) noexcept {
+		template<typename context_type> JSONIFIER_ALWAYS_INLINE static void skipKey(context_type& context) noexcept {
 			auto newLength = static_cast<size_t>(context.endIter - context.iter);
 			context.iter   = char_comparison<'"'>::memchar(context.iter, newLength);
 		}
 
-		template<typename iterator> JSONIFIER_INLINE static void skipObject(iterator& context) noexcept {
+		template<typename context_type> JSONIFIER_INLINE static void skipObject(context_type& context) noexcept {
 			++context.iter;
+			if constexpr (!options.minified) {
+				JSONIFIER_SKIP_WS();
+			}
 			if (*context.iter == '}') {
 				return;
 			}
@@ -837,11 +841,17 @@ namespace jsonifier_internal {
 					break;
 				}
 				++context.iter;
+				if constexpr (!options.minified) {
+					JSONIFIER_SKIP_WS();
+				}
 			}
 		}
 
-		template<typename iterator> JSONIFIER_INLINE static void skipArray(iterator& context) noexcept {
+		template<typename context_type> JSONIFIER_INLINE static void skipArray(context_type& context) noexcept {
 			++context.iter;
+			if constexpr (!options.minified) {
+				JSONIFIER_SKIP_WS();
+			}
 			if (*context.iter == ']') {
 				return;
 			}
@@ -851,43 +861,73 @@ namespace jsonifier_internal {
 					break;
 				}
 				++context.iter;
+				if constexpr (!options.minified) {
+					JSONIFIER_SKIP_WS();
+				}
 			}
 		}
 
-		template<typename iterator> JSONIFIER_INLINE static void skipToNextValue(iterator& context) noexcept {
-			JSONIFIER_SKIP_WS();
+		template<typename context_type>
+		JSONIFIER_INLINE static void skipToNextValue(context_type& context, std::source_location location = std::source_location::current()) noexcept {
+			if constexpr (!options.minified) {
+				JSONIFIER_SKIP_WS();
+			}
 			switch (*context.iter) {
 				case '{': {
 					skipObject(context);
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					break;
 				}
 				case '[': {
 					skipArray(context);
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					break;
 				}
 				case '"': {
 					skipString(context);
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					if (*context.iter == ':') {
 						++context.iter;
+						if constexpr (!options.minified) {
+							JSONIFIER_SKIP_WS();
+						}
 						skipToNextValue(context);
 					}
 					break;
 				}
 				case ':': {
 					++context.iter;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					skipToNextValue(context);
 					break;
 				}
 				case 'n': {
 					context.iter += 4;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					break;
 				}
 				case 'f': {
 					context.iter += 5;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					break;
 				}
 				case 't': {
 					context.iter += 4;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS();
+					}
 					break;
 				}
 				case '0':
@@ -909,7 +949,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<char startChar, char endChar, typename iterator> JSONIFIER_ALWAYS_INLINE static size_t countValueElements(iterator context) noexcept {
+		template<char startChar, char endChar, typename context_type> JSONIFIER_ALWAYS_INLINE static size_t countValueElements(context_type context) noexcept {
 			auto newValue = *context.iter;
 			if (newValue == ']' || newValue == '}') [[unlikely]] {
 				return 0;
@@ -976,14 +1016,14 @@ namespace jsonifier_internal {
 			return currentCount;
 		}
 
-		template<typename iterator> JSONIFIER_ALWAYS_INLINE static iterator skipWs(iterator context) noexcept {
+		template<typename context_type> JSONIFIER_ALWAYS_INLINE static context_type skipWs(context_type context) noexcept {
 			while (whitespaceTable[static_cast<uint8_t>(*context)]) {
 				++context;
 			}
 			return context;
 		}
 
-		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipNumber(iterator& context) noexcept {
+		template<typename context_type> JSONIFIER_ALWAYS_INLINE static void skipNumber(context_type& context) noexcept {
 			context.iter += *context.iter == '-';
 			auto sig_start_it  = context.iter;
 			auto frac_start_it = context.endIter;
@@ -1035,7 +1075,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<const auto& options, typename iterator> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(iterator context) noexcept {
+	template<const auto& options, typename context_type> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(context_type context) noexcept {
 		if (*context.iter == '"') [[likely]] {
 			++context.iter;
 			auto start	 = context.iter;

@@ -93,12 +93,22 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<const auto& function, typename... arg_types, std::size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuit(std::index_sequence<indices...>, arg_types&&... args) {
-		(function(std::integral_constant<std::size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
+	template<const auto& function, typename... arg_types, size_t... indices>
+	JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuitImpl(std::index_sequence<indices...>, arg_types&&... args) {
+		[[maybe_unused]] bool result = (function(std::integral_constant<size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
 	}
 
-	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEach(std::index_sequence<indices...>, arg_types&&... args) {
+	template<size_t limit, const auto& function, typename... arg_types>
+	JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuit(arg_types&&... args) {
+		forEachShortCircuitImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
+	}
+
+	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
+	}
+
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEach(arg_types&&... args) {
+		forEachImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
 	}
 
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>

@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 					return;
 				}
 			};
-			forEach<serializeLambda>(std::make_index_sequence<numMembers>{}, value, buffer, serializePair);
+			forEach<numMembers, serializeLambda>(value, buffer, serializePair);
 			writer<options>::template writeObjectExit<numMembers>(buffer, serializePair);
 		}
 	};

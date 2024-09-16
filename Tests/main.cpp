@@ -201,232 +201,241 @@ struct twitter_message {
 };
 
 struct icon_emoji_data {
-	std::optional<std::string> name{};
-	std::nullptr_t id{ nullptr };
+	std::optional<std::string> name;
+	std::nullptr_t id;
 };
 
 struct permission_overwrite {
-	std::string allow{};
-	std::string deny{};
-	std::string id{};
-	int64_t type{};
+	std::string allow;
+	int64_t type;
+	std::string deny;
+	std::string id;
 };
 
 struct channel_data {
-	std::vector<permission_overwrite> permission_overwrites{};
-	std::optional<std::string> last_message_id{};
-	int64_t default_thread_rate_limit_per_user{};
-	std::vector<std::nullptr_t> applied_tags{};
-	std::vector<std::nullptr_t> recipients{};
-	int64_t default_auto_archive_duration{};
-	std::nullptr_t status{ nullptr };
-	std::string last_pin_timestamp{};
-	std::nullptr_t topic{ nullptr };
-	int64_t rate_limit_per_user{};
-	icon_emoji_data icon_emoji{};
-	int64_t total_message_sent{};
-	int64_t video_quality_mode{};
-	std::string application_id{};
-	std::string permissions{};
-	int64_t message_count{};
-	std::string parent_id{};
-	int64_t member_count{};
-	std::string owner_id{};
-	std::string guild_id{};
-	int64_t user_limit{};
-	int64_t position{};
-	std::string name{};
-	std::string icon{};
-	int64_t version{};
-	int64_t bitrate{};
-	std::string id{};
-	int64_t flags{};
-	int64_t type{};
-	bool managed{};
-	bool nsfw{};
+	int64_t default_thread_rate_limit_per_user;
+	int64_t default_auto_archive_duration;
+	std::vector<permission_overwrite> permission_overwrites;
+	int64_t rate_limit_per_user;
+	int64_t video_quality_mode;
+	int64_t total_message_sent;
+	std::string last_pin_timestamp;
+	std::optional<std::string> last_message_id;
+	std::string application_id;
+	int64_t message_count;
+	int64_t member_count;
+	std::vector<std::nullptr_t> applied_tags;
+	std::string permissions;
+	int64_t user_limit;
+	icon_emoji_data icon_emoji;
+	std::vector<std::nullptr_t> recipients;
+	std::string parent_id;
+	int64_t position;
+	std::string guild_id;
+	std::string owner_id;
+	bool managed;
+	int64_t bitrate;
+	int64_t version;
+	std::nullptr_t status;
+	int64_t flags;
+	std::nullptr_t topic;
+	bool nsfw;
+	int64_t type;
+	std::string icon;
+	std::string name;
+	std::string id;
 };
 
 struct user_data {
-	std::nullptr_t avatar_decoration_data{ nullptr };
-	std::optional<std::string> display_name{};
-	std::optional<std::string> global_name{};
-	std::optional<std::string> avatar{};
-	std::nullptr_t banner{ nullptr };
-	std::nullptr_t locale{ nullptr };
-	std::string discriminator{};
-	std::string user_name{};
-	int64_t accent_color{};
-	int64_t premium_type{};
-	int64_t public_flags{};
-	std::string email{};
-	bool mfa_enabled{};
-	std::string id{};
-	int64_t flags{};
-	bool verified{};
-	bool system{};
-	bool bot{};
+	std::nullptr_t avatar_decoration_data;
+	std::string discriminator;
+	int64_t public_flags;
+	int64_t premium_type;
+	int64_t accent_color;
+	std::optional<std::string> display_name;
+	bool mfa_enabled;
+	std::optional<std::string> global_name;
+	std::string user_name;
+	bool verified;
+	bool system;
+	std::nullptr_t locale;
+	std::nullptr_t banner;
+	std::optional<std::string> avatar;
+	int64_t flags;
+	std::string email;
+	bool bot;
+	std::string id;
 };
 
 struct member_data {
-	std::nullptr_t communication_disabled_until{ nullptr };
-	std::nullptr_t premium_since{ nullptr };
-	std::optional<std::string> nick{};
-	std::nullptr_t avatar{ nullptr };
-	std::vector<std::string> roles{};
-	std::string permissions{};
-	std::string joined_at{};
-	std::string guild_id{};
-	user_data user{};
-	int64_t flags{};
-	bool pending{};
-	bool deaf{};
-	bool mute{};
+	std::nullptr_t communication_disabled_until;
+	std::nullptr_t premium_since;
+	std::string permissions;
+	std::string joined_at;
+	std::string guild_id;
+	bool pending;
+	std::nullptr_t avatar;
+	int64_t flags;
+	std::vector<std::string> roles;
+	bool mute;
+	bool deaf;
+	user_data user;
+	std::optional<std::string> nick;
 };
 
 struct tags_data {
-	std::nullptr_t premium_subscriber{ nullptr };
-	std::optional<std::string> bot_id{};
+	std::nullptr_t premium_subscriber;
+	std::optional<std::string> bot_id;
 };
 
 struct role_data {
-	std::nullptr_t unicode_emoji{ nullptr };
-	std::nullptr_t icon{ nullptr };
-	std::string permissions{};
-	int64_t position{};
-	std::string name{};
-	bool mentionable{};
-	int64_t version{};
-	std::string id{};
-	tags_data tags{};
-	int64_t color{};
-	int64_t flags{};
-	bool managed{};
-	bool hoist{};
+	std::nullptr_t unicode_emoji;
+	bool mentionable;
+	std::string permissions;
+	int64_t position;
+	bool managed;
+	int64_t version;
+	bool hoist;
+	int64_t flags;
+	int64_t color;
+	tags_data tags;
+	std::string name;
+	std::nullptr_t icon;
+	std::string id;
 };
 
 struct guild_data {
-	std::nullptr_t latest_on_boarding_question_id{ nullptr };
-	std::vector<std::nullptr_t> guild_scheduled_events{};
-	std::nullptr_t safety_alerts_channel_id{ nullptr };
-	std::nullptr_t inventory_settings{ nullptr };
-	std::vector<std::nullptr_t> voice_states{};
-	std::nullptr_t discovery_splash{ nullptr };
-	std::nullptr_t vanity_url_code{ nullptr };
-	std::nullptr_t application_id{ nullptr };
-	std::nullptr_t afk_channel_id{ nullptr };
-	int64_t default_message_notifications{};
-	int64_t max_stage_video_channel_users{};
-	std::string public_updates_channel_id{};
-	std::nullptr_t description{ nullptr };
-	std::vector<std::nullptr_t> threads{};
-	std::vector<channel_data> channels{};
-	int64_t premium_subscription_count{};
-	int64_t approximate_presence_count{};
-	std::vector<std::string> features{};
-	std::vector<std::string> stickers{};
-	bool premium_progress_bar_enabled{};
-	std::vector<member_data> members{};
-	std::nullptr_t hub_type{ nullptr };
-	int64_t approximate_member_count{};
-	int64_t explicit_content_filter{};
-	int64_t max_video_channel_users{};
-	std::nullptr_t splash{ nullptr };
-	std::nullptr_t banner{ nullptr };
-	std::string system_channel_id{};
-	std::string widget_channel_id{};
-	std::string preferred_locale{};
-	int64_t system_channel_flags{};
-	std::string rules_channel_id{};
-	std::vector<role_data> roles{};
-	int64_t verification_level{};
-	std::string permissions{};
-	int64_t max_presences{};
-	std::string discovery{};
-	std::string joined_at{};
-	int64_t member_count{};
-	int64_t premium_tier{};
-	std::string owner_id{};
-	int64_t max_members{};
-	int64_t afk_timeout{};
-	bool widget_enabled{};
-	std::string region{};
-	int64_t nsfw_level{};
-	int64_t mfa_level{};
-	std::string name{};
-	std::string icon{};
-	bool unavailable{};
-	std::string id{};
-	int64_t flags{};
-	bool large{};
-	bool owner{};
-	bool nsfw{};
-	bool lazy{};
+	std::nullptr_t latest_on_boarding_question_id;
+	int64_t max_stage_video_channel_users;
+	int64_t default_message_notifications;
+	bool premium_progress_bar_enabled;
+	int64_t approximate_presence_count;
+	int64_t premium_subscription_count;
+	std::string public_updates_channel_id;
+	int64_t approximate_member_count;
+	std::nullptr_t safety_alerts_channel_id;
+	int64_t max_video_channel_users;
+	int64_t explicit_content_filter;
+	std::vector<std::nullptr_t> guild_scheduled_events;
+	int64_t system_channel_flags;
+	int64_t verification_level;
+	std::nullptr_t inventory_settings;
+	std::string widget_channel_id;
+	std::string system_channel_id;
+	std::string rules_channel_id;
+	std::string preferred_locale;
+	std::nullptr_t discovery_splash;
+	std::nullptr_t vanity_url_code;
+	bool widget_enabled;
+	std::nullptr_t afk_channel_id;
+	std::nullptr_t application_id;
+	int64_t max_presences;
+	int64_t premium_tier;
+	int64_t member_count;
+	std::vector<std::nullptr_t> voice_states;
+	bool unavailable;
+	int64_t afk_timeout;
+	int64_t max_members;
+	std::string permissions;
+	std::nullptr_t description;
+	int64_t nsfw_level;
+	int64_t mfa_level;
+	std::string joined_at;
+	std::string discovery;
+	std::string owner_id;
+	std::nullptr_t hub_type;
+	std::vector<std::string> stickers;
+	std::vector<std::string> features;
+	std::vector<channel_data> channels;
+	std::vector<member_data> members;
+	std::vector<std::nullptr_t> threads;
+	std::string region;
+	std::nullptr_t banner;
+	std::nullptr_t splash;
+	bool owner;
+	bool large;
+	int64_t flags;
+	std::vector<role_data> roles;
+	bool lazy;
+	bool nsfw;
+	std::string icon;
+	std::string name;
+	std::string id;
 };
 
 struct discord_message {
-	std::string t{};
-	guild_data d{};
-	int64_t op{};
-	int64_t s{};
+	int64_t op;
+	int64_t s;
+	guild_data d;
+	std::string t;
+};
+
+ struct audience_sub_category_names {
+	std::string the337100890;
 };
 
 struct names {};
 
 struct event {
-	std::optional<std::string> description{};
-	std::vector<int64_t> subTopicIds{};
-	std::optional<std::string> logo{};
-	std::vector<int64_t> topicIds{};
-	std::nullptr_t subjectCode{};
-	std::nullptr_t subtitle{};
-	std::string name{};
-	int64_t id{};
+	std::nullptr_t description;
+	int64_t id;
+	std::optional<std::string> logo;
+	std::string name;
+	std::vector<int64_t> subTopicIds;
+	std::nullptr_t subjectCode;
+	std::nullptr_t subtitle;
+	std::vector<int64_t> topicIds;
 };
 
 struct price {
-	int64_t audienceSubCategoryId{};
-	int64_t seatCategoryId{};
-	int64_t amount{};
+	int64_t amount;
+	int64_t audienceSubCategoryId;
+	int64_t seatCategoryId;
 };
 
 struct area {
-	std::vector<std::nullptr_t> blockIds{};
-	int64_t areaId{};
+	int64_t areaId;
+	std::vector<std::nullptr_t> blockIds;
 };
 
 struct seat_category {
-	std::vector<area> areas{};
-	int64_t seatCategoryId{};
+	std::vector<area> areas;
+	int64_t seatCategoryId;
 };
 
 struct performance {
-	std::vector<seat_category> seatCategories{};
-	std::optional<std::string> logo{};
-	std::nullptr_t seatMapImage{};
-	std::vector<price> prices{};
-	std::string venueCode{};
-	std::nullptr_t name{};
-	uint64_t eventId{};
-	int64_t start{};
-	uint64_t id{};
+	int64_t eventId;
+	int64_t id;
+	std::optional<std::string> logo;
+	std::nullptr_t name;
+	std::vector<price> prices;
+	std::vector<seat_category> seatCategories;
+	std::nullptr_t seatMapImage;
+	int64_t start;
+	std::string venueCode;
 };
 
 struct venue_names {
-	std::string PLEYEL_PLEYEL{};
+	std::string PLEYEL_PLEYEL;
 };
 
 struct citm_catalog_message {
-	std::map<std::string, std::string> audienceSubCategoryNames{};
-	std::map<std::string, std::vector<uint64_t>> topicSubTopics{};
-	std::map<std::string, std::string> seatCategoryNames{};
-	std::map<std::string, std::string> subTopicNames{};
-	std::map<std::string, std::string> areaNames{};
-	std::map<std::string, std::string> topicNames{};
-	std::vector<performance> performances{};
-	std::map<std::string, event> events{};
-	venue_names venueNames{};
-	names subjectNames{};
-	names blockNames{};
+	std::unordered_map<std::string, std::string> areaNames;
+	audience_sub_category_names audienceSubCategoryNames;
+	names blockNames;
+	std::unordered_map<std::string, event> events;
+	std::vector<performance> performances;
+	std::unordered_map<std::string, std::string> seatCategoryNames;
+	std::unordered_map<std::string, std::string> subTopicNames;
+	names subjectNames;
+	std::unordered_map<std::string, std::string> topicNames;
+	std::unordered_map<std::string, std::vector<int64_t>> topicSubTopics;
+	venue_names venueNames;
+};
+
+template<> struct jsonifier::core<audience_sub_category_names> {
+	using value_type				 = audience_sub_category_names;
+	static constexpr auto parseValue = createValue("337100890", &value_type::the337100890);
 };
 
 template<> struct jsonifier::core<names> {
@@ -436,18 +445,18 @@ template<> struct jsonifier::core<names> {
 
 template<> struct jsonifier::core<event> {
 	using value_type				 = event;
-	static constexpr auto parseValue = createValue<&value_type::description, &value_type::subTopicIds, &value_type::logo, &value_type::topicIds, &value_type::subjectCode,
-		&value_type::subtitle, &value_type::name, &value_type::id>();
+	static constexpr auto parseValue = createValue<&value_type::description, &value_type::id, &value_type::logo, &value_type::name, &value_type::subTopicIds,
+		&value_type::subjectCode, &value_type::subtitle, &value_type::topicIds>();
 };
 
 template<> struct jsonifier::core<price> {
 	using value_type				 = price;
-	static constexpr auto parseValue = createValue<&value_type::audienceSubCategoryId, &value_type::seatCategoryId, &value_type::amount>();
+	static constexpr auto parseValue = createValue<&value_type::amount, &value_type::audienceSubCategoryId, &value_type::seatCategoryId>();
 };
 
 template<> struct jsonifier::core<area> {
 	using value_type				 = area;
-	static constexpr auto parseValue = createValue<&value_type::blockIds, &value_type::areaId>();
+	static constexpr auto parseValue = createValue<&value_type::areaId, &value_type::blockIds>();
 };
 
 template<> struct jsonifier::core<seat_category> {
@@ -457,8 +466,8 @@ template<> struct jsonifier::core<seat_category> {
 
 template<> struct jsonifier::core<performance> {
 	using value_type				 = performance;
-	static constexpr auto parseValue = createValue<&value_type::seatCategories, &value_type::logo, &value_type::seatMapImage, &value_type::prices, &value_type::venueCode,
-		&value_type::name, &value_type::eventId, &value_type::start, &value_type::id>();
+	static constexpr auto parseValue = createValue<&value_type::eventId, &value_type::id, &value_type::logo, &value_type::name, &value_type::prices, &value_type::seatCategories,
+		&value_type::seatMapImage, &value_type::start, &value_type::venueCode>();
 };
 
 template<> struct jsonifier::core<venue_names> {
@@ -469,11 +478,16 @@ template<> struct jsonifier::core<venue_names> {
 template<> struct jsonifier::core<citm_catalog_message> {
 	using value_type = citm_catalog_message;
 	static constexpr auto parseValue =
-		createValue<&value_type::audienceSubCategoryNames, &value_type::topicSubTopics, &value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::areaNames,
-			&value_type::topicNames, &value_type::performances, &value_type::events, &value_type::venueNames, &value_type::subjectNames, &value_type::blockNames>();
+		createValue<&value_type::areaNames, &value_type::audienceSubCategoryNames, &value_type::blockNames, &value_type::events, &value_type::performances,
+			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
 };
 
 #if !defined(ASAN_ENABLED)
+
+template<> struct glz::meta<audience_sub_category_names> {
+	using value_type				 = audience_sub_category_names;
+	static constexpr auto value = object("337100890", &value_type::the337100890);
+};
 
 template<> struct glz::meta<names> {
 	using value_type			= names;
@@ -624,16 +638,20 @@ template<> struct jsonifier::core<user_entities> {
 };
 
 template<> struct jsonifier::core<twitter_user> {
-	using value_type				 = twitter_user;
-	static constexpr auto parseValue =
-		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
-			&value_type::entities, &value_type::user_protected, &value_type::followers_count, &value_type::friends_count, &value_type::listed_count, &value_type::created_at,
-			&value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified, &value_type::statuses_count,
-			&value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled, &value_type::profile_background_color,
-			&value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile, &value_type::profile_image_url,
-			&value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color, &value_type::profile_sidebar_border_color,
-			&value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image, 
-			&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
+	using value_type			= twitter_user;
+	static constexpr auto parseValue = createValue("profile_background_image_url_https", &value_type::profile_background_image_url_https, "profile_banner_url",
+		&value_type::profile_banner_url, "profile_background_image_url", &value_type::profile_background_image_url, "profile_sidebar_border_color",
+		&value_type::profile_sidebar_border_color, "profile_sidebar_fill_color", &value_type::profile_sidebar_fill_color, "time_zone", &value_type::time_zone,
+		"profile_background_color", &value_type::profile_background_color, "profile_image_url_https", &value_type::profile_image_url_https, "utc_offset", &value_type::utc_offset,
+		"profile_use_background_image", &value_type::profile_use_background_image, "url", &value_type::url, "profile_text_color", &value_type::profile_text_color,
+		"profile_link_color", &value_type::profile_link_color, "profile_image_url", &value_type::profile_image_url, "profile_background_tile", &value_type::profile_background_tile,
+		"is_translation_enabled", &value_type::is_translation_enabled, "default_profile_image", &value_type::default_profile_image, "contributors_enabled",
+		&value_type::contributors_enabled, "follow_request_sent", &value_type::follow_request_sent, "favourites_count", &value_type::favourites_count, "description",
+		&value_type::description, "screen_name", &value_type::screen_name, "followers_count", &value_type::followers_count, "statuses_count", &value_type::statuses_count,
+		"created_at", &value_type::created_at, "entities", &value_type::entities, "friends_count", &value_type::friends_count, "default_profile", &value_type::default_profile,
+		"listed_count", &value_type::listed_count, "location", &value_type::location, "protected", &value_type::user_protected, "is_translator", &value_type::is_translator,
+		"id_str", &value_type::id_str, "notifications", &value_type::notifications, "name", &value_type::name, "geo_enabled", &value_type::geo_enabled, "lang", &value_type::lang,
+		"following", &value_type::following, "verified", &value_type::verified, "id", &value_type::id);
 };
 
 template<> struct jsonifier::core<status_data> {
@@ -727,7 +745,7 @@ template<> struct glz::meta<twitter_user> {
 		&value_type::contributors_enabled, "follow_request_sent", &value_type::follow_request_sent, "favourites_count", &value_type::favourites_count, "description",
 		&value_type::description, "screen_name", &value_type::screen_name, "followers_count", &value_type::followers_count, "statuses_count", &value_type::statuses_count,
 		"created_at", &value_type::created_at, "entities", &value_type::entities, "friends_count", &value_type::friends_count, "default_profile", &value_type::default_profile,
-		"listed_count", &value_type::listed_count, "location", &value_type::location, "user_protected", &value_type::user_protected, "is_translator", &value_type::is_translator,
+		"listed_count", &value_type::listed_count, "location", &value_type::location, "protected", &value_type::user_protected, "is_translator", &value_type::is_translator,
 		"id_str", &value_type::id_str, "notifications", &value_type::notifications, "name", &value_type::name, "geo_enabled", &value_type::geo_enabled, "lang", &value_type::lang,
 		"following", &value_type::following, "verified", &value_type::verified, "id", &value_type::id);
 };
@@ -739,7 +757,7 @@ template<> struct glz::meta<status_data> {
 		&value_type::in_reply_to_user_id, "possibly_sensitive", &value_type::possibly_sensitive, "contributors", &value_type::contributors, "coordinates", &value_type::coordinates,
 		"place", &value_type::place, "geo", &value_type::geo, "entities", &value_type::entities, "favorite_count", &value_type::favorite_count, "metadata", &value_type::metadata,
 		"created_at", &value_type::created_at, "retweeted_status", &value_type::retweeted_status, "retweet_count", &value_type::retweet_count, "source", &value_type::source,
-		"id_str", &value_type::id_str, "twitter_user", &value_type::user, "lang", &value_type::lang, "text", &value_type::text, "truncated", &value_type::truncated,
+		"id_str", &value_type::id_str, "user", &value_type::user, "lang", &value_type::lang, "text", &value_type::text, "truncated", &value_type::truncated,
 		"favorited", &value_type::favorited, "retweeted", &value_type::retweeted, "id", &value_type::id);
 };
 
@@ -757,32 +775,31 @@ template<> struct jsonifier::core<icon_emoji_data> {
 
 template<> struct jsonifier::core<permission_overwrite> {
 	using value_type				 = permission_overwrite;
-	static constexpr auto parseValue = createValue<&value_type::allow, &value_type::deny, &value_type::id, &value_type::type>();
+	static constexpr auto parseValue = createValue<&value_type::allow, &value_type::type, &value_type::deny, &value_type::id>();
 };
 
 template<> struct jsonifier::core<channel_data> {
 	using value_type				 = channel_data;
-	static constexpr auto parseValue = createValue<&value_type::permission_overwrites, &value_type::last_message_id, &value_type::default_thread_rate_limit_per_user,
-		&value_type::applied_tags, &value_type::recipients, &value_type::default_auto_archive_duration, &value_type::status, &value_type::last_pin_timestamp, &value_type::topic,
-		&value_type::rate_limit_per_user, &value_type::icon_emoji, &value_type::total_message_sent, &value_type::video_quality_mode, &value_type::application_id,
-		&value_type::permissions, &value_type::message_count, &value_type::parent_id, &value_type::member_count, &value_type::owner_id, &value_type::guild_id,
-		&value_type::user_limit, &value_type::position, &value_type::name, &value_type::icon, &value_type::version, &value_type::bitrate, &value_type::id, &value_type::flags,
-		&value_type::type, &value_type::managed, &value_type::nsfw>();
+	static constexpr auto parseValue = createValue<&value_type::default_thread_rate_limit_per_user, &value_type::default_auto_archive_duration, &value_type::permission_overwrites,
+		&value_type::rate_limit_per_user, &value_type::video_quality_mode, &value_type::total_message_sent, &value_type::last_pin_timestamp, &value_type::last_message_id,
+		&value_type::application_id, &value_type::message_count, &value_type::member_count, &value_type::applied_tags, &value_type::permissions, &value_type::user_limit,
+		&value_type::icon_emoji, &value_type::recipients, &value_type::parent_id, &value_type::position, &value_type::guild_id, &value_type::owner_id, &value_type::managed,
+		&value_type::bitrate, &value_type::version, &value_type::status, &value_type::flags, &value_type::topic, &value_type::nsfw, &value_type::type, &value_type::icon,
+		&value_type::name, &value_type::id>();
 };
 
 template<> struct jsonifier::core<user_data> {
-	using value_type = user_data;
-	static constexpr auto parseValue =
-		createValue<&value_type::avatar_decoration_data, &value_type::display_name, &value_type::global_name, &value_type::avatar, &value_type::banner, &value_type::locale,
-			&value_type::discriminator, &value_type::user_name, &value_type::accent_color, &value_type::premium_type, &value_type::public_flags, &value_type::email,
-			&value_type::mfa_enabled, &value_type::id, &value_type::flags, &value_type::verified, &value_type::system, &value_type::bot>();
+	using value_type				 = user_data;
+	static constexpr auto parseValue = createValue<&value_type::avatar_decoration_data, &value_type::discriminator, &value_type::public_flags, &value_type::premium_type,
+		&value_type::accent_color, &value_type::display_name, &value_type::mfa_enabled, &value_type::global_name, &value_type::user_name, &value_type::verified,
+		&value_type::system, &value_type::locale, &value_type::banner, &value_type::avatar, &value_type::flags, &value_type::email, &value_type::bot, &value_type::id>();
 };
 
 template<> struct jsonifier::core<member_data> {
 	using value_type = member_data;
 	static constexpr auto parseValue =
-		createValue<&value_type::communication_disabled_until, &value_type::premium_since, &value_type::nick, &value_type::avatar, &value_type::roles, &value_type::permissions,
-			&value_type::joined_at, &value_type::guild_id, &value_type::user, &value_type::flags, &value_type::pending, &value_type::deaf, &value_type::mute>();
+		createValue<&value_type::communication_disabled_until, &value_type::premium_since, &value_type::permissions, &value_type::joined_at, &value_type::guild_id,
+			&value_type::pending, &value_type::avatar, &value_type::flags, &value_type::roles, &value_type::mute, &value_type::deaf, &value_type::user, &value_type::nick>();
 };
 
 template<> struct jsonifier::core<tags_data> {
@@ -792,29 +809,30 @@ template<> struct jsonifier::core<tags_data> {
 
 template<> struct jsonifier::core<role_data> {
 	using value_type				 = role_data;
-	static constexpr auto parseValue = createValue<&value_type::unicode_emoji, &value_type::icon, &value_type::permissions, &value_type::position, &value_type::name,
-		&value_type::mentionable, &value_type::version, &value_type::id, &value_type::tags, &value_type::color, &value_type::flags, &value_type::managed, &value_type::hoist>();
+	static constexpr auto parseValue = createValue<&value_type::unicode_emoji, &value_type::mentionable, &value_type::permissions, &value_type::position, &value_type::managed,
+		&value_type::version, &value_type::hoist, &value_type::flags, &value_type::color, &value_type::tags, &value_type::name, &value_type::icon, &value_type::id>();
 };
 
 template<> struct jsonifier::core<guild_data> {
 	using value_type				 = guild_data;
-	static constexpr auto parseValue = createValue<&value_type::latest_on_boarding_question_id, &value_type::guild_scheduled_events, &value_type::safety_alerts_channel_id,
-		&value_type::inventory_settings, &value_type::voice_states, &value_type::discovery_splash, &value_type::vanity_url_code, &value_type::application_id,
-		&value_type::afk_channel_id, &value_type::default_message_notifications, &value_type::max_stage_video_channel_users, &value_type::public_updates_channel_id,
-		&value_type::description, &value_type::threads, &value_type::channels, &value_type::premium_subscription_count, &value_type::approximate_presence_count,
-		&value_type::features, &value_type::stickers, &value_type::premium_progress_bar_enabled, &value_type::members, &value_type::hub_type, &value_type::approximate_member_count,
-		&value_type::explicit_content_filter, &value_type::max_video_channel_users, &value_type::splash, &value_type::banner, &value_type::system_channel_id,
-		&value_type::widget_channel_id, &value_type::preferred_locale, &value_type::system_channel_flags, &value_type::rules_channel_id, &value_type::roles,
-		&value_type::verification_level, &value_type::permissions, &value_type::max_presences, &value_type::discovery, &value_type::joined_at, &value_type::member_count,
-		&value_type::premium_tier, &value_type::owner_id, &value_type::max_members, &value_type::afk_timeout, &value_type::widget_enabled, &value_type::region,
-		&value_type::nsfw_level, &value_type::mfa_level, &value_type::name, &value_type::icon, &value_type::unavailable, &value_type::id, &value_type::flags, &value_type::large,
-		&value_type::owner, &value_type::nsfw, &value_type::lazy>();
+	static constexpr auto parseValue = createValue<&value_type::latest_on_boarding_question_id, &value_type::max_stage_video_channel_users,
+		&value_type::default_message_notifications, &value_type::premium_progress_bar_enabled, &value_type::approximate_presence_count, &value_type::premium_subscription_count,
+		&value_type::public_updates_channel_id, &value_type::approximate_member_count, &value_type::safety_alerts_channel_id, &value_type::max_video_channel_users,
+		&value_type::explicit_content_filter, &value_type::guild_scheduled_events, &value_type::system_channel_flags, &value_type::verification_level,
+		&value_type::inventory_settings, &value_type::widget_channel_id, &value_type::system_channel_id, &value_type::rules_channel_id, &value_type::preferred_locale,
+		&value_type::discovery_splash, &value_type::vanity_url_code, &value_type::widget_enabled, &value_type::afk_channel_id, &value_type::application_id,
+		&value_type::max_presences, &value_type::premium_tier, &value_type::member_count, &value_type::voice_states, &value_type::unavailable, &value_type::afk_timeout,
+		&value_type::max_members, &value_type::permissions, &value_type::description, &value_type::nsfw_level, &value_type::mfa_level, &value_type::joined_at,
+		&value_type::discovery, &value_type::owner_id, &value_type::hub_type, &value_type::stickers, &value_type::features, &value_type::channels, &value_type::members,
+		&value_type::threads, &value_type::region, &value_type::banner, &value_type::splash, &value_type::owner, &value_type::large, &value_type::flags, &value_type::roles,
+		&value_type::lazy, &value_type::nsfw, &value_type::icon, &value_type::name, &value_type::id>();
 };
 
 template<> struct jsonifier::core<discord_message> {
 	using value_type				 = discord_message;
-	static constexpr auto parseValue = createValue<&value_type::t, &value_type::d, &value_type::op, &value_type::s>();
+	static constexpr auto parseValue = createValue<&value_type::op, &value_type::s, &value_type::d, &value_type::t>();
 };
+
 
 #if !defined(ASAN_ENABLED)
 
@@ -1427,6 +1445,10 @@ template<jsonifier::concepts::map_t value_type> void getValue(value_type& return
 }
 
 template<> void getValue(names& returnValue, simdjson::ondemand::value jsonData) {
+}
+
+template<> void getValue(audience_sub_category_names& returnValue, simdjson::ondemand::value jsonData) {
+	getValue(returnValue.the337100890, jsonData, "337100890");
 }
 
 template<> void getValue(event& returnValue, simdjson::ondemand::value jsonData) {
