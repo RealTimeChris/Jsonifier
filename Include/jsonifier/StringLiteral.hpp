@@ -43,12 +43,36 @@ namespace jsonifier_internal {
 			std::copy(str, str + length, values);
 		}
 
+		template<size_t sizeNew> JSONIFIER_ALWAYS_INLINE constexpr string_literal(const value_type (&str)[sizeNew]) noexcept {
+			static_assert(sizeNew < sizeVal, "Sorry, but the additional string_literal is too large.");
+			std::copy(str, str + sizeNew, values);
+		}
+
+		template<size_t sizeNew> JSONIFIER_ALWAYS_INLINE constexpr string_literal(const string_literal<sizeNew>& str) noexcept {
+			static_assert(sizeNew < sizeVal, "Sorry, but the additional string_literal is too large.");
+			std::copy(str.data(), str.data() + str.size(), values);
+		}
+
 		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
 			return values;
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr pointer data() noexcept {
 			return values;
+		}
+
+		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const string_literal<sizeNew>& str) const noexcept {
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
+			std::copy(values, values + size(), newLiteral.data());
+			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
+			return newLiteral;
+		}
+
+		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const value_type (&str)[sizeNew]) const noexcept {
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
+			std::copy(values, values + size(), newLiteral.data());
+			std::copy(str, str + sizeNew, newLiteral.data() + size());
+			return newLiteral;
 		}
 
 		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+(const string_literal<sizeNew>& str) const noexcept {
@@ -65,18 +89,8 @@ namespace jsonifier_internal {
 			return newLiteral;
 		}
 
-		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const string_literal<sizeNew>& str) const noexcept {
-			string_literal<sizeNew + sizeVal - 1> newLiteral{};
-			std::copy(values, values + size(), newLiteral.data());
-			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
-			return newLiteral;
-		}
-
-		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const value_type (&str)[sizeNew]) const noexcept {
-			string_literal<sizeNew + sizeVal - 1> newLiteral{};
-			std::copy(values, values + size(), newLiteral.data());
-			std::copy(str, str + sizeNew, newLiteral.data() + size());
-			return newLiteral;
+		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr friend auto operator+(const value_type (&lhs)[sizeNew], const string_literal<sizeVal>& rhs) noexcept {
+			return string_literal<sizeNew>{ lhs } + rhs;
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) noexcept {

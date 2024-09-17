@@ -1,6 +1,6 @@
 # JsonifierDetectArchitecture.cmake - Script for detecting the CPU architecture.
 # MIT License
-# Copyright (c) 2023 RealTimeChris
+# Copyright (c) 2024 RealTimeChris
 # https://discordcoreapi.com
 
 if (UNIX OR APPLE)
@@ -107,7 +107,7 @@ set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE STRING "CPU
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/ISA/JsonifierCPUInstructions.hpp" "/*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the \"Software\"), to deal in the Software

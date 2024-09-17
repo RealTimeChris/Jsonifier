@@ -1,6 +1,10 @@
 ## Serialization/Parsing with Jsonifier
 ----
 - Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
+- 
+#### IMPORTANT NOTE:
+In order to maximize performance, try to order the members inside the call to `createValue` as they are ordered in the json-data.
+
 ----
 ```cpp
 namespace TestNS {

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -94,20 +94,19 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices>
-	JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuitImpl(std::index_sequence<indices...>, arg_types&&... args) {
+	JSONIFIER_INLINE constexpr void forEachShortCircuitImpl(std::index_sequence<indices...>, arg_types&&... args) {
 		[[maybe_unused]] bool result = (function(std::integral_constant<size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types>
-	JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuit(arg_types&&... args) {
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEachShortCircuit(arg_types&&... args) {
 		forEachShortCircuitImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
 	}
 
-	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
+	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEach(arg_types&&... args) {
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(arg_types&&... args) {
 		forEachImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
 	}
 
