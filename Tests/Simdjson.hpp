@@ -22,8 +22,9 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include "Common.hpp"
+#include <BnchSwt/BenchmarkSuite.hpp>
 #include "simdjson.h"
+#include "Common.hpp"
 
 #if !defined(ASAN_ENABLED)
 

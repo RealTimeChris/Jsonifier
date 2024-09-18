@@ -103,8 +103,12 @@ namespace jsonifier_internal {
 
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE  static void impl(value_type& value, parse_context_type& context) noexcept {
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
+
 			if (*context.iter == '{') [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
@@ -148,8 +152,8 @@ namespace jsonifier_internal {
 								}
 							} else [[unlikely]] {
 								antihash				= false;
-								
-								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
+								static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
+								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < N) [[likely]] {
 									static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 									if (arrayOfPtrs[index](value, context)) [[likely]] {
 									} else [[unlikely]] {
@@ -166,8 +170,8 @@ namespace jsonifier_internal {
 							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
 							derailleur<options>::skipToNextValue(context);
 						}
-						static constexpr auto parseLambda = []<bool antiHashNew>(const auto index, const auto newLines, value_type& value, parse_context_type& context,
-																const auto wsStart = {}, size_t wsSize = {}) {
+						static constexpr auto parseLambda = [](const auto index, const auto newLines, const auto antiHashNew, auto&& parseLambda, value_type& value,
+																parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 							if constexpr (index < memberCount) {
 								if (*context.iter != '}') [[likely]] {
 									if (*context.iter == ',') [[likely]] {
@@ -208,23 +212,23 @@ namespace jsonifier_internal {
 													JSONIFIER_SKIP_WS();
 													using member_type = unwrap_t<decltype(value.*ptr)>;
 													parse<false, options>::impl(value.*ptr, context);
-													return false;
+													return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, newLines>{},
+														std::integral_constant<bool, true>{}, parseLambda, value, context, wsStart, wsSize);
 												} else [[unlikely]] {
 													static constexpr auto sourceLocation{ std::source_location::current() };
 													context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
 													derailleur<options>::skipToNextValue(context);
 													return false;
 												}
-											} else {
-												return true;
 											}
 										}
-										
-										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < memberCount)
+										static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
+										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < N)
 											[[likely]] {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 											if (arrayOfPtrs[indexNew](value, context)) [[likely]] {
-												return false;
+												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, newLines>{},
+													std::integral_constant<bool, false>{}, parseLambda, value, context, wsStart, wsSize);
 											} else [[unlikely]] {
 												derailleur<options>::skipToNextValue(context);
 												return false;
@@ -242,13 +246,26 @@ namespace jsonifier_internal {
 										return false;
 									}
 								}
+								return true;
 							}
 							return true;
 						};
 						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-							forEachShortCircuit<memberCount, parseLambda>(std::integral_constant<bool, true>{}, value, context, wsStart, wsSize);
+							if (antihash) {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, parseLambda, value,
+									context, wsStart, wsSize);
+							} else {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, parseLambda, value,
+									context, wsStart, wsSize);
+							}
 						} else {
-							forEachShortCircuit<memberCount, parseLambda>(std::integral_constant<bool, true>{}, value, context, wsStart, wsSize);
+							if (antihash) {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, parseLambda, value,
+									context, wsStart, wsSize);
+							} else {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, false>{}, parseLambda, value,
+									context, wsStart, wsSize);
+							}
 						}
 					}
 				}
@@ -267,7 +284,11 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
+
 			if (*context.iter == '{') [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
@@ -306,8 +327,8 @@ namespace jsonifier_internal {
 								}
 							} else [[unlikely]] {
 								antihash				= false;
-								
-								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
+								static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
+								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < N) [[likely]] {
 									static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 									if (arrayOfPtrs[index](value, context)) [[likely]] {
 									} else [[unlikely]] {
@@ -324,7 +345,8 @@ namespace jsonifier_internal {
 							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
 							derailleur<options>::skipToNextValue(context);
 						}
-						static constexpr auto parseLambda = []<bool antiHashNew>(const auto index, value_type& value, parse_context_type& context) {
+
+						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda, value_type& value, parse_context_type& context) {
 							if constexpr (index < memberCount) {
 								if (*context.iter != '}') [[likely]] {
 									if (*context.iter == ',') [[likely]] {
@@ -362,23 +384,22 @@ namespace jsonifier_internal {
 													++context.iter;
 													using member_type = unwrap_t<decltype(value.*ptr)>;
 													parse<true, options>::impl(value.*ptr, context);
-													return false;
+													return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, true>{}, parseLambda, value,
+														context);
 												} else [[unlikely]] {
 													static constexpr auto sourceLocation{ std::source_location::current() };
 													context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
 													derailleur<options>::skipToNextValue(context);
 													return false;
 												}
-											} else {
-												return true;
 											}
 										}
-										
-										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < memberCount)
+										static constexpr auto N = std::tuple_size_v<core_tuple_t<value_type>>;
+										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < N)
 											[[likely]] {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 											if (arrayOfPtrs[indexNew](value, context)) [[likely]] {
-												return false;
+												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
 											} else [[unlikely]] {
 												derailleur<options>::skipToNextValue(context);
 												return false;
@@ -399,10 +420,13 @@ namespace jsonifier_internal {
 							}
 							return true;
 						};
-						forEachShortCircuit<memberCount, parseLambda>(value, context);
+						if (antihash) {
+							parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, parseLambda, value, context);
+						} else {
+							parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
+						}
 					}
 				}
-
 				++context.iter;
 				--context.currentObjectDepth;
 			} else [[unlikely]] {
@@ -429,6 +453,9 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
 			if (*context.iter == '[') [[likely]] {
 				++context.iter;
@@ -493,6 +520,9 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
 			if (*context.iter == '[') [[likely]] {
 				++context.iter;
@@ -635,6 +665,7 @@ namespace jsonifier_internal {
 						derailleur<options>::skipToNextValue(context);
 						return;
 					}
+
 					while (*context.iter != '}') [[likely]] {
 						if (*context.iter == ',') [[likely]] {
 							++context.iter;
@@ -714,6 +745,9 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
 			if (*context.iter == '[') [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -795,7 +829,10 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-						if (*context.iter == '[') [[likely]] {
+			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
+				jsonifierPrefetchImpl(context.iter + (x * 64));
+			}
+			if (*context.iter == '[') [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
 				if (*context.iter != ']') [[likely]] {
@@ -928,7 +965,7 @@ namespace jsonifier_internal {
 						auto iterNew = std::begin(value);
 
 						for (size_t i = 0; i < n; ++i) {
-							parse<true, options>::impl(*(iterNew++), context);
+							parse<false, options>::impl(*(iterNew++), context);
 
 							if (*context.iter == ',') [[likely]] {
 								++context.iter;

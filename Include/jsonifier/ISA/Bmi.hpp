@@ -67,7 +67,7 @@ namespace simd_internal {
 	#endif
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE  value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
 		return _tzcnt_u64(value);
 	#else

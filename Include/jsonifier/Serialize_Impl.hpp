@@ -138,30 +138,31 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto serializeLambda = [](const auto currentIndex, const auto maxIndex, value_type_new&& value, buffer_type& buffer,
-														serialize_context_type& serializePair) noexcept {
-				if constexpr (currentIndex < maxIndex) {
-					auto subTuple = std::get<currentIndex>(value);
-					serialize<options>::impl(subTuple, buffer, serializePair);
-					if constexpr (currentIndex < maxIndex - 1) {
-						if constexpr (options.prettify) {
-							auto k = serializePair.index + serializePair.indent + 256;
-							if (k > buffer.size()) [[unlikely]] {
-								buffer.resize(max(buffer.size() * 2, k));
-							}
-							writer<options>::template writeCharacters<",\n", false>(buffer, serializePair.index);
-							writer<options>::template writeCharacters<' ', false>(serializePair.indent * options.indentSize, buffer, serializePair.index);
-						} else {
-							writer<options>::template writeCharacter<','>(buffer, serializePair.index);
-						}
-					}
-					return serializeObjects<currentIndex + 1, maxIndex>(value, buffer, serializePair);
-				}
-			};
 			static constexpr auto size = std::tuple_size_v<std::remove_reference_t<value_type>>;
 			writer<options>::writeArrayEntry(buffer, serializePair);
-			forEach<size, serializeLambda>(std::integral_constant<size_t, size>{}, value, buffer, serializePair);
+			serializeObjects<0, size>(value, buffer, serializePair);
 			writer<options>::writeArrayExit(buffer, serializePair);
+		}
+
+		template<size_t currentIndex, size_t maxIndex, typename value_type_new>
+		JSONIFIER_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
+			if constexpr (currentIndex < maxIndex) {
+				auto subTuple	  = std::get<currentIndex>(value);
+				serialize<options>::impl(subTuple, buffer, serializePair);
+				if constexpr (currentIndex < maxIndex - 1) {
+					if constexpr (options.prettify) {
+						auto k = serializePair.index + serializePair.indent + 256;
+						if (k > buffer.size()) [[unlikely]] {
+							buffer.resize(max(buffer.size() * 2, k));
+						}
+						writer<options>::template writeCharacters<",\n", false>(buffer, serializePair.index);
+						writer<options>::template writeCharacters<' ', false>(serializePair.indent * options.indentSize, buffer, serializePair.index);
+					} else {
+						writer<options>::template writeCharacter<','>(buffer, serializePair.index);
+					}
+				}
+				return serializeObjects<currentIndex + 1, maxIndex>(value, buffer, serializePair);
+			}
 		}
 	};
 

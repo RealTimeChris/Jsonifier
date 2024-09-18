@@ -94,20 +94,19 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices>
-	JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuitImpl(std::index_sequence<indices...>, arg_types&&... args) {
-		[[maybe_unused]] bool result = (function.template operator()<true>(std::integral_constant<size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
-		result						 = (function.template operator()<false>(std::integral_constant<size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
+	JSONIFIER_INLINE constexpr void forEachShortCircuitImpl(std::index_sequence<indices...>, arg_types&&... args) {
+		[[maybe_unused]] bool result = (function(std::integral_constant<size_t, indices>{}, std::forward<arg_types>(args)...) || ...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEachShortCircuit(arg_types&&... args) {
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEachShortCircuit(arg_types&&... args) {
 		forEachShortCircuitImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
 	}
 
-	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE  constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
+	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE  constexpr void forEach(arg_types&&... args) {
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(arg_types&&... args) {
 		forEachImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
 	}
 
@@ -425,8 +424,6 @@ namespace jsonifier {
 		}();
 
 		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
-
-		template<typename value_type> using core_t = decay_keep_volatile_t<decltype(coreV<value_type>)>;
 
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
 
