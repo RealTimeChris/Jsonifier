@@ -22,9 +22,8 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
-#include <jsonifier/Index.hpp>
 #include "Common.hpp"
+#include <jsonifier/Index.hpp>
 
 template<> struct jsonifier::core<audience_sub_category_names> {
 	using value_type				 = audience_sub_category_names;

@@ -24,8 +24,6 @@
 #pragma once
 
 #include <BnchSwt/BenchmarkSuite.hpp>
-#include <jsonifier/Index.hpp>
-#include <glaze/glaze.hpp>
 
 struct icon_emoji_data {
 	std::optional<std::string> name;

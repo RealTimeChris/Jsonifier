@@ -23,8 +23,6 @@
 #pragma once
 
 #include <BnchSwt/BenchmarkSuite.hpp>
-#include <jsonifier/Index.hpp>
-#include <glaze/glaze.hpp>
 
 struct geometry_data {
 	std::string type;
