@@ -1,0 +1,6 @@
+[submodule "thirdparty/Jsonifier"]
+	path = thirdparty/Jsonifier
+	url = https://github.com/realtimechris/Jsonifier
+[submodule "thirdparty/glaze"]
+	path = thirdparty/glaze
+	url = https://github.com/stephenberry/glaze
