@@ -633,7 +633,9 @@ int32_t main() {
 				bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 				runBenchmark<jsonifier_internal::string_literal{ "Json Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 					try {
-						getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+						if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+							std::cout << "Simdjson Error!" << std::endl;
+						}
 						bnch_swt::doNotOptimizeAway(simdjsonTestData);
 					} catch (std::exception& error) {
 						std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -741,7 +743,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Json Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -852,7 +856,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -864,7 +870,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -896,7 +902,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -931,7 +937,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -963,7 +969,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Abc-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Abc Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -975,7 +983,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1007,7 +1015,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1042,7 +1050,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Abc Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Abc Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1074,7 +1082,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1086,7 +1096,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1118,7 +1128,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1153,7 +1163,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1185,7 +1195,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Discord-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Discord Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1197,7 +1209,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1229,7 +1241,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1264,7 +1276,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Discord Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Discord Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1297,7 +1309,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1309,7 +1323,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1341,7 +1355,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1376,7 +1390,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1408,7 +1422,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Canada Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1420,7 +1436,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1452,7 +1468,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1487,7 +1503,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Canada Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Canada Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1519,7 +1535,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1531,7 +1549,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1563,7 +1581,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1598,7 +1616,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1630,7 +1648,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "CitmCatalog Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1642,7 +1662,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1674,7 +1694,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1709,7 +1729,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "CitmCatalog Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "CitmCatalog Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1741,7 +1761,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Prettified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1753,7 +1775,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Prettified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1785,7 +1807,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Prettified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1820,7 +1842,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Prettified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 
@@ -1852,7 +1874,9 @@ int32_t main() {
 				bnch_swt::benchmark_stage<"Json-Performance", bnch_swt::bench_options{ .type = bnch_swt::result_type::time, .totalIterationCountCap = totalIterationCountCap }>::
 					runBenchmark<jsonifier_internal::string_literal{ "Twitter Test (Minified)" } + "-Read", simdjsonLibraryName, "cadetblue">([&]() {
 						try {
-							getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value());
+							if (!getValue(simdjsonTestData, simdjsonParser.iterate(simdjsonBuffer).value())) {
+								std::cout << "Simdjson Error!" << std::endl;
+							}
 							bnch_swt::doNotOptimizeAway(simdjsonTestData);
 						} catch (std::exception& error) {
 							std::cout << "Simdjson Error: " << error.what() << std::endl;
@@ -1864,7 +1888,7 @@ int32_t main() {
 				static_cast<jsonifier::string>(simdjsonCommitUrl), simdjsonReadResult.iterationCount };
 
 			simdjsonResults.readResult = result<result_type::read>{ "cadetblue", simdjsonReadSize, simdjsonReadResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Minified)" + "-simdjson.json">::saveFile(simdjsonBuffer);
 			simdjsonResults.print();
 			resultsNew.emplace_back(simdjsonResults);
 
@@ -1896,7 +1920,7 @@ int32_t main() {
 			auto glazeWrittenSize	 = glazeNewerBuffer.size();
 			glazeResults.readResult	 = result<result_type::read>{ "dodgerblue", glazeReadSize, glazeReadResult };
 			glazeResults.writeResult = result<result_type::write>{ "skyblue", glazeWrittenSize, glazeWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Minified)" + "-glaze.json">::saveFile(glazeBuffer);
 			glazeResults.print();
 			resultsNew.emplace_back(glazeResults);
 #endif
@@ -1931,7 +1955,7 @@ int32_t main() {
 			auto jsonifierWrittenSize	   = jsonifierNewerBuffer.size();
 			jsonifierResesults.readResult  = result<result_type::read>{ "teal", jsonifierReadSize, jsonifierReadResult };
 			jsonifierResesults.writeResult = result<result_type::write>{ "steelblue", jsonifierWrittenSize, jsonifierWriteResult };
-			bnch_swt::file_loader<basePath + "/"  + "Twitter Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
+			bnch_swt::file_loader<basePath + "/" + "Twitter Test (Minified)" + "-jsonifier.json">::saveFile(jsonifierBuffer);
 			jsonifierResesults.print();
 			resultsNew.emplace_back(jsonifierResesults);
 

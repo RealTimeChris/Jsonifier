@@ -823,7 +823,7 @@ namespace jsonifier_internal {
 			context.iter   = char_comparison<'"'>::memchar(context.iter, newLength);
 		}
 
-		template<typename context_type> JSONIFIER_ALWAYS_INLINE static void skipObject(context_type& context) noexcept {
+		template<typename context_type> JSONIFIER_INLINE static void skipObject(context_type& context) noexcept {
 			++context.iter;
 			if constexpr (!options.minified) {
 				JSONIFIER_SKIP_WS();
@@ -847,7 +847,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename context_type> JSONIFIER_ALWAYS_INLINE static void skipArray(context_type& context) noexcept {
+		template<typename context_type> JSONIFIER_INLINE static void skipArray(context_type& context) noexcept {
 			++context.iter;
 			if constexpr (!options.minified) {
 				JSONIFIER_SKIP_WS();
@@ -868,7 +868,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename context_type>
-		JSONIFIER_ALWAYS_INLINE static void skipToNextValue(context_type& context, std::source_location location = std::source_location::current()) noexcept {
+		JSONIFIER_INLINE static void skipToNextValue(context_type& context, std::source_location location = std::source_location::current()) noexcept {
 			if constexpr (!options.minified) {
 				JSONIFIER_SKIP_WS();
 			}

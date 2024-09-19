@@ -103,7 +103,7 @@ namespace jsonifier_internal {
 
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
 				jsonifierPrefetchImpl(context.iter + (x * 64));
 			}
@@ -283,7 +283,7 @@ namespace jsonifier_internal {
 
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
 				jsonifierPrefetchImpl(context.iter + (x * 64));
 			}
@@ -613,7 +613,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		template<bool newLines> JSONIFIER_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			while (*context.iter != '}') [[likely]] {
 				if (*context.iter == ',') [[likely]] {
 					++context.iter;
@@ -798,7 +798,7 @@ namespace jsonifier_internal {
 				}
 			}
 
-			while (context.iter != context.endIter) {
+			while (context.iter) {
 				parse<false, options>::impl(value.emplace_back(), context);
 
 				if (*context.iter == ',') [[likely]] {
@@ -859,7 +859,7 @@ namespace jsonifier_internal {
 						}
 					}
 
-					while (context.iter != context.endIter) {
+					while (context.iter) {
 						parse<true, options>::impl(value.emplace_back(), context);
 
 						if (*context.iter == ',') [[likely]] {
@@ -965,7 +965,7 @@ namespace jsonifier_internal {
 						auto iterNew = std::begin(value);
 
 						for (size_t i = 0; i < n; ++i) {
-							parse<false, options>::impl(*(iterNew++), context);
+							parse<true, options>::impl(*(iterNew++), context);
 
 							if (*context.iter == ',') [[likely]] {
 								++context.iter;

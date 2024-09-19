@@ -45,15 +45,15 @@ namespace jsonifier_internal {
 	constexpr uint8_t digiTypeDot	  = 1 << 4;
 	constexpr uint8_t digiTypeExp	  = 1 << 5;
 
-	template<typename uint_type> JSONIFIER_INLINE bool digiIsType(uint_type d, uint_type type) noexcept {
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsType(uint_type d, uint_type type) noexcept {
 		return (digiTable<uint_type>[static_cast<uint64_t>(d)] & type) != 0;
 	}
 
-	template<typename uint_type> JSONIFIER_INLINE bool digiIsFp(uint_type d) noexcept {
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsFp(uint_type d) noexcept {
 		return digiIsType(d, uint_type(digiTypeDot | digiTypeExp));
 	}
 
-	template<typename uint_type> JSONIFIER_INLINE bool digiIsDigitOrFp(uint_type d) noexcept {
+	template<typename uint_type> JSONIFIER_ALWAYS_INLINE bool digiIsDigitOrFp(uint_type d) noexcept {
 		return digiIsType(d, uint_type(digiTypeZero | digiTypeNonZero | digiTypeDot | digiTypeExp));
 	}
 
@@ -82,18 +82,18 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
 		return a <= (std::numeric_limits<uint64_t>::max)() - b;
 	}
 
-	JSONIFIER_INLINE constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr bool isSafeMultiplication10(uint64_t a) noexcept {
 		constexpr uint64_t b = (std::numeric_limits<uint64_t>::max)() / 10;
 		return a <= b;
 	}
 
 #define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
-	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_INLINE bool parseInt(value_type_new& value, iterator&& iter) {
+	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(value_type_new& value, iterator&& iter) {
 		using value_type = unwrap_t<value_type_new>;
 		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		uint64_t numTmp;
@@ -138,7 +138,7 @@ namespace jsonifier_internal {
 #undef expr_sepr
 	}
 
-	template<typename value_type, typename char_type> JSONIFIER_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
+	template<typename value_type, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {
 		if (!digitTableBool[static_cast<uint64_t>(*c)]) [[unlikely]] {
 			return false;
 		}
