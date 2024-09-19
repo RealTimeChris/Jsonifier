@@ -694,7 +694,7 @@ namespace jsonifier_internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
+		JSONIFIER_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
 #if !defined(NDEBUG)
 			if (!types.contains(typeid(value_type).name())) {
 				types[typeid(value_type).name()] = static_cast<uint32_t>(hashData.type);
