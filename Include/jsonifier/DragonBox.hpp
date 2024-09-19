@@ -56,7 +56,7 @@
 	#define JSONIFIER_HAS_CONSTEXPR14 0
 #endif
 
-// C++17 JSONIFIER_ALWAYS_INLINE variables
+// C++17 JSONIFIER_INLINE variables
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
 	#define JSONIFIER_HAS_INLINE_VARIABLE 1
 #elif __cplusplus >= 201703L
@@ -557,7 +557,7 @@ namespace jsonifier_jkj {
 					}
 				};
 
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
 #if defined(JSONIFIER_MSVC) && defined(_M_IX86)
 					JSONIFIER_IF_NOT_CONSTEVAL {
 						return __emulu(x, y);
@@ -567,7 +567,7 @@ namespace jsonifier_jkj {
 				}
 
 				// Get 128-bit result of multiplication of two 64-bit unsigned integers.
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul128(std::uint_least64_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul128(std::uint_least64_t x, std::uint_least64_t y) noexcept {
 					const auto generic_impl = [=]() -> uint128 {
 						auto const a = std::uint_least32_t(x >> 32);
 						auto const b = std::uint_least32_t(x);
@@ -610,7 +610,7 @@ namespace jsonifier_jkj {
 
 				// Get high half of the 128-bit result of multiplication of two 64-bit unsigned
 				// integers.
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 std::uint_least64_t umul128_upper64(std::uint_least64_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 std::uint_least64_t umul128_upper64(std::uint_least64_t x, std::uint_least64_t y) noexcept {
 					const auto generic_impl = [=]() -> std::uint_least64_t {
 						auto const a = std::uint_least32_t(x >> 32);
 						auto const b = std::uint_least32_t(x);
@@ -653,7 +653,7 @@ namespace jsonifier_jkj {
 
 				// Get upper 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_upper128(std::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_upper128(std::uint_least64_t x, uint128 y) noexcept {
 					auto r = umul128(x, y.high());
 					r += umul128_upper64(x, y.low());
 					return r;
@@ -661,7 +661,7 @@ namespace jsonifier_jkj {
 
 				// Get upper 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
 #if defined(__SIZEOF_INT128__) || (defined(JSONIFIER_MSVC) && defined(_M_X64))
 					return umul128_upper64(std::uint_least64_t(x) << 32, y);
 #else
@@ -677,7 +677,7 @@ namespace jsonifier_jkj {
 
 				// Get lower 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_lower128(std::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_lower128(std::uint_least64_t x, uint128 y) noexcept {
 					const auto high		= x * y.high();
 					const auto high_low = umul128(x, y.low());
 					return { (high + high_low.high()) & UINT64_C(0xffffffffffffffff), high_low.low() };
@@ -1682,7 +1682,7 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
+					JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
 						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
@@ -1700,7 +1700,7 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
+					JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
 						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_compact_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
@@ -1799,7 +1799,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_even_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_even_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_to_even_t{}, args...);
 					}
@@ -1819,7 +1819,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_odd_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_odd_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_to_odd_t{}, args...);
 					}
@@ -1838,7 +1838,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_plus_infinity_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_plus_infinity_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_plus_infinity_t{}, args...);
 					}
@@ -1857,7 +1857,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_minus_infinity_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_minus_infinity_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_minus_infinity_t{}, args...);
 					}
@@ -1876,7 +1876,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_zero_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_toward_zero_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_toward_zero_t{}, args...);
 					}
@@ -1895,7 +1895,7 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_away_from_zero_t>(), arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_away_from_zero_t>(), arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(nearest_away_from_zero_t{}, args...);
 					}
@@ -1937,7 +1937,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = nearest_to_even_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_closed_t{}, args...) : f(detail::nearest_always_open_t{}, args...);
 					}
@@ -1947,7 +1947,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::nearest_always_closed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.has_even_significand_bits() ? f(detail::nearest_always_open_t{}, args...) : f(detail::nearest_always_closed_t{}, args...);
 					}
@@ -1957,7 +1957,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
 						arg_types... args) noexcept {
 						return s.is_negative() ? f(nearest_toward_zero, args...) : f(nearest_away_from_zero, args...);
 					}
@@ -1967,7 +1967,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(nearest_toward_zero, arg_types{}...)) delegate(SignedSignificandBits s, Func f,
 						arg_types... args) noexcept {
 						return s.is_negative() ? f(nearest_away_from_zero, args...) : f(nearest_toward_zero, args...);
 					}
@@ -1986,7 +1986,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = toward_plus_infinity_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.is_negative() ? f(detail::left_closed_directed_t{}, args...) : f(detail::right_closed_directed_t{}, args...);
 					}
@@ -1996,7 +1996,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = toward_minus_infinity_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits s, Func f, arg_types... args) noexcept {
 						return s.is_negative() ? f(detail::right_closed_directed_t{}, args...) : f(detail::left_closed_directed_t{}, args...);
 					}
@@ -2006,7 +2006,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = toward_zero_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(detail::left_closed_directed_t{}, args...);
 					}
@@ -2016,7 +2016,7 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = away_from_zero_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::right_closed_directed_t{}, arg_types{}...)) delegate(
+					JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::right_closed_directed_t{}, arg_types{}...)) delegate(
 						SignedSignificandBits, Func f, arg_types... args) noexcept {
 						return f(detail::right_closed_directed_t{}, args...);
 					}
@@ -2156,7 +2156,7 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
-			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
@@ -2181,7 +2181,7 @@ namespace jsonifier_jkj {
 		};
 
 		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
-			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
@@ -2212,7 +2212,7 @@ namespace jsonifier_jkj {
 
 		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
-			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
 					const auto r = std::uint_least32_t(significand * UINT32_C(1288490189));
@@ -2228,7 +2228,7 @@ namespace jsonifier_jkj {
 
 		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
-			JSONIFIER_ALWAYS_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
 					const auto r = std::uint_least64_t(significand * UINT64_C(5534023222112865485));
@@ -2618,7 +2618,7 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
 				compute_left_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2735,7 +2735,7 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
 				compute_right_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2990,7 +2990,7 @@ namespace jsonifier_jkj {
 
 			// Policy kind detectors.
 			struct is_sign_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -2998,7 +2998,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_trailing_zero_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3006,7 +3006,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_decimal_to_binary_rounding_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3014,7 +3014,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_binary_to_decimal_rounding_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3022,7 +3022,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_cache_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3030,7 +3030,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_preferred_integer_types_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				JSONIFIER_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3059,7 +3059,7 @@ namespace jsonifier_jkj {
 				using preferred_integer_types_policy	= typename PolicyHolder::preferred_integer_types_policy;
 				using return_type						= typename impl<FormatTraits>::template return_type<sign_policy, trailing_zero_policy, preferred_integer_types_policy>;
 
-				template<typename IntervalTypeProvider> JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
+				template<typename IntervalTypeProvider> JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
 					signed_significand_bits<FormatTraits> s, typename FormatTraits::exponent_int exponent_bits) noexcept {
 					constexpr auto tag = IntervalTypeProvider::tag;
 
@@ -3087,7 +3087,7 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		template<typename FormatTraits, typename ExponentBits, typename... Policies>
-		JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(
+		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(
 			signed_significand_bits<FormatTraits> s, ExponentBits exponent_bits, Policies...) noexcept {
 			// Build policy holder type.
 			using policy_holder = detail::to_decimal_policy_holder<Policies...>;
@@ -3097,7 +3097,7 @@ namespace jsonifier_jkj {
 
 		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>, typename... Policies>
-		JSONIFIER_ALWAYS_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x,
+		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x,
 			Policies... policies) noexcept {
 			const auto br			 = make_float_bits<Float, ConversionTraits, FormatTraits>(x);
 			const auto exponent_bits = br.extract_exponent_bits();

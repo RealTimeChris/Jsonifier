@@ -33,14 +33,14 @@ namespace jsonifier_internal {
 
 	class string_block_reader {
 	  public:
-		JSONIFIER_ALWAYS_INLINE void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
+		JSONIFIER_INLINE void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
 			lengthMinusStep = lengthNew < bitsPerStep ? 0 : lengthNew - bitsPerStep;
 			inString		= stringViewNew;
 			length			= lengthNew;
 			index			= 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
+		JSONIFIER_INLINE uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
 			if (length == index) [[unlikely]] {
 				return 0;
 			}
@@ -49,13 +49,13 @@ namespace jsonifier_internal {
 			return length - index;
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_view_ptr fullBlock() noexcept {
+		JSONIFIER_INLINE string_view_ptr fullBlock() noexcept {
 			string_view_ptr newPtr = inString + index;
 			index += bitsPerStep;
 			return newPtr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool hasFullBlock() const noexcept {
+		JSONIFIER_INLINE bool hasFullBlock() const noexcept {
 			return index < lengthMinusStep;
 		}
 
@@ -72,13 +72,13 @@ namespace jsonifier_internal {
 		using allocator = alloc_wrapper<structural_index>;
 		static constexpr double multiplier{ 4.5f / 5.0f };
 
-		JSONIFIER_ALWAYS_INLINE simd_string_reader() noexcept {
+		JSONIFIER_INLINE simd_string_reader() noexcept {
 			if constexpr (doWeUseInitialBuffer) {
 				resize(1024 * 1024 * 4);
 			}
 		}
 
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE void reset(char_type* stringViewNew, size_type size) noexcept {
+		template<typename char_type> JSONIFIER_INLINE void reset(char_type* stringViewNew, size_type size) noexcept {
 			currentParseBuffer = jsonifier::string_view_base{ static_cast<string_view_ptr>(stringViewNew), size };
 			auto newSize	   = roundUpToMultiple<8ull>(static_cast<size_type>(static_cast<double>(currentParseBuffer.size()) * multiplier));
 			if (structuralIndexCount < newSize) [[unlikely]] {
@@ -87,16 +87,16 @@ namespace jsonifier_internal {
 			resetImpl();
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto end() noexcept {
+		JSONIFIER_INLINE auto end() noexcept {
 			return structuralIndices + tapeIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE auto begin() noexcept {
+		JSONIFIER_INLINE auto begin() noexcept {
 			structuralIndices[tapeIndex] = nullptr;
 			return structuralIndices;
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~simd_string_reader() noexcept {
+		JSONIFIER_INLINE ~simd_string_reader() noexcept {
 			clear();
 		}
 
@@ -112,7 +112,7 @@ namespace jsonifier_internal {
 		size_type tapeIndex{};
 		bool overflow{};
 
-		JSONIFIER_ALWAYS_INLINE void resetImpl() noexcept {
+		JSONIFIER_INLINE void resetImpl() noexcept {
 			stringBlockReader.reset(currentParseBuffer.data(), currentParseBuffer.size());
 			overflow	 = false;
 			prevInString = 0;
@@ -121,14 +121,14 @@ namespace jsonifier_internal {
 			generateJsonIndices();
 		}
 
-		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) noexcept {
+		JSONIFIER_INLINE void resize(size_type newSize) noexcept {
 			clear();
 			structuralIndices	 = allocator::allocate(newSize);
 			structuralIndexCount = newSize;
 			std::uninitialized_fill(structuralIndices, structuralIndices + structuralIndexCount, nullptr);
 		}
 
-		JSONIFIER_ALWAYS_INLINE void clear() noexcept {
+		JSONIFIER_INLINE void clear() noexcept {
 			if (structuralIndices) {
 				allocator::deallocate(structuralIndices);
 				structuralIndices	 = nullptr;
@@ -136,7 +136,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE void generateJsonIndices() noexcept {
+		JSONIFIER_INLINE void generateJsonIndices() noexcept {
 			simd_internal::simd_int_t_holder rawStructurals{};
 			jsonifier_simd_int_t nextIsEscaped{};
 			jsonifier_simd_int_t escaped{};
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<size_type index> JSONIFIER_ALWAYS_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) noexcept {
+		template<size_type index> JSONIFIER_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) noexcept {
 			static constexpr size_type bitTotal{ index * 64ull };
 			structuralIndices[0 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
@@ -176,7 +176,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void collectStringValues(string_view_ptr values, jsonifier_simd_int_t (&newPtr)[stridesPerStep]) noexcept {
+		template<bool collectAligned> JSONIFIER_INLINE void collectStringValues(string_view_ptr values, jsonifier_simd_int_t (&newPtr)[stridesPerStep]) noexcept {
 			if constexpr (collectAligned) {
 				newPtr[0] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 0));
 				newPtr[1] = simd_internal::gatherValues<jsonifier_simd_int_t>(values + (bytesPerStep * 1));
@@ -199,13 +199,13 @@ namespace jsonifier_internal {
 			prefetchStringValues(values + bitsPerStep);
 		}
 
-		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
+		template<bool collectAligned> JSONIFIER_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
 			jsonifier_simd_int_t newPtr[stridesPerStep];
 			collectStringValues<collectAligned>(values, newPtr);
 			return simd_internal::collectIndices(newPtr);
 		}
 
-		template<bool collectAligned> JSONIFIER_ALWAYS_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+		template<bool collectAligned> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			rawStructurals = getRawIndices<collectAligned>(values);
 			collectStructurals(escaped, nextIsEscaped, rawStructurals);
@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 			stringIndex += bitsPerStep;
 		}
 
-		template<size_type index = 0> JSONIFIER_ALWAYS_INLINE void addTapeValues() noexcept {
+		template<size_type index = 0> JSONIFIER_INLINE void addTapeValues() noexcept {
 			if constexpr (index < sixtyFourBitsPerStep) {
 				if (!newBits[index]) [[unlikely]] {
 					return addTapeValues<index + 1>();
@@ -229,7 +229,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
+		JSONIFIER_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA)) };
 			jsonifier_simd_int_t potentialEscape = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			jsonifier_simd_int_t maybeEscaped{};
@@ -241,19 +241,19 @@ namespace jsonifier_internal {
 			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
 		}
 
-		JSONIFIER_ALWAYS_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) noexcept {
+		JSONIFIER_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) noexcept {
 			auto escapedNew = nextIsEscaped;
 			nextIsEscaped	= jsonifier_simd_int_t{};
 			escaped			= escapedNew;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+		JSONIFIER_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			return simd_internal::opTest(rawStructurals.backslashes, rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals)
 																								 : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 
-		JSONIFIER_ALWAYS_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
+		JSONIFIER_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			collectEscapedCharacters(escaped, nextIsEscaped, rawStructurals);
 			rawStructurals.quotes						  = simd_internal::opAndNot(rawStructurals.quotes, escaped);

@@ -27,32 +27,32 @@
 
 namespace jsonifier_internal {
 
-	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint16_type return_type> JSONIFIER_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x0101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint32_type return_type> JSONIFIER_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x01010101ull * repeat;
 	}
 
-	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> JSONIFIER_ALWAYS_INLINE constexpr return_type repeatByte() noexcept {
+	template<const uint8_t repeat, jsonifier::concepts::uint64_type return_type> JSONIFIER_INLINE constexpr return_type repeatByte() noexcept {
 		return 0x0101010101010101ull * repeat;
 	}
 
-	template<jsonifier::concepts::uint16_type integer_type> JSONIFIER_ALWAYS_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
+	template<jsonifier::concepts::uint16_type integer_type> JSONIFIER_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
 		return (((chunk - 0x0101u) & ~chunk) & 0x80808u);
 	}
 
-	template<jsonifier::concepts::uint32_type integer_type> JSONIFIER_ALWAYS_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
+	template<jsonifier::concepts::uint32_type integer_type> JSONIFIER_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
 		return (((chunk - 0x01010101u) & ~chunk) & 0x80808080u);
 	}
 
-	template<jsonifier::concepts::uint64_type integer_type> JSONIFIER_ALWAYS_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
+	template<jsonifier::concepts::uint64_type integer_type> JSONIFIER_INLINE constexpr integer_type hasZero(const integer_type chunk) noexcept {
 		return (((chunk - 0x0101010101010101u) & ~chunk) & 0x8080808080808080u);
 	}
 
 	template<char value> struct char_comparison {
-		JSONIFIER_ALWAYS_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
+		JSONIFIER_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -175,7 +175,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename char_type01, typename char_type02> JSONIFIER_ALWAYS_INLINE bool compare(char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
+	template<typename char_type01, typename char_type02> JSONIFIER_INLINE bool compare(char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		if (lengthNew >= 64) {
 			using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -277,7 +277,7 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t count, typename char_type01, typename char_type02> struct comparison {
-		JSONIFIER_ALWAYS_INLINE static bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
+		JSONIFIER_INLINE static bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
 			size_t lengthNew{ count };
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if constexpr (count >= 64) {

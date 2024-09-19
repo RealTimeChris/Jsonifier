@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 
 	template<const auto& options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
+		JSONIFIER_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
 			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
 				std::forward<serialize_context_type>(iter));
 		}
@@ -59,11 +59,11 @@ namespace jsonifier_internal {
 		template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		friend struct serialize_impl;
 
-		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
+		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
+		JSONIFIER_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_ALWAYS_INLINE jsonifier::string serializeJson(value_type&& object) noexcept {
+		JSONIFIER_INLINE jsonifier::string serializeJson(value_type&& object) noexcept {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
@@ -98,13 +98,13 @@ namespace jsonifier_internal {
 			size_t index{};
 		} serializePair{};
 
-		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~serializer() noexcept = default;
+		JSONIFIER_INLINE ~serializer() noexcept = default;
 	};
 
 }

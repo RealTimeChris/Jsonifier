@@ -67,7 +67,7 @@ namespace jsonifier_internal {
 		}() };
 
 		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacter(const char c, buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (checked) {
 				if (index == bufferSize) [[unlikely]] {
@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 		}
 
 		template<char c, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacter(buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (checked) {
 				if (index == bufferSize) [[unlikely]] {
@@ -91,7 +91,7 @@ namespace jsonifier_internal {
 		}
 
 		template<string_literal str, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize	= buffer.size();
 			static constexpr auto s = str.view();
 			static constexpr auto n = s.size();
@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 		}
 
 		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize = buffer.size();
 			const auto n		  = str.size();
 			if constexpr (checked) {
@@ -119,7 +119,7 @@ namespace jsonifier_internal {
 		}
 
 		template<char c, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacters(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacters(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (checked) {
 				if (index + n > bufferSize) [[unlikely]] {
@@ -131,13 +131,13 @@ namespace jsonifier_internal {
 		}
 
 		template<char c, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacter(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacter(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
 			std::memset(buffer.data() + index, c, n);
 			index += n;
 		}
 
 		template<bool checked = true, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeNewLine(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeNewLine(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize	  = buffer.size();
 			auto indent				  = serializePair.indent;
 			constexpr auto indentSize = options.indentSize;
@@ -155,7 +155,7 @@ namespace jsonifier_internal {
 		}
 
 		template<const jsonifier::string_view& str, bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
 			const auto bufferSize	= buffer.size();
 			static constexpr auto s = str;
 			static constexpr auto n = s.size();
@@ -170,7 +170,7 @@ namespace jsonifier_internal {
 		}
 
 		template<bool checked = true, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, const char* string, uint64_t size, index_type& index) noexcept {
+		JSONIFIER_INLINE static void writeCharacters(buffer_type& buffer, const char* string, uint64_t size, index_type& index) noexcept {
 			const auto bufferSize = buffer.size();
 			const auto n		  = size;
 			if constexpr (checked) {
@@ -183,7 +183,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeEntrySeparator(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeEntrySeparator(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				auto k = serializePair.index + serializePair.indent + 256;
@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 		}
 
 		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify && objectSize > 0) {
 				++serializePair.indent;
@@ -233,7 +233,7 @@ namespace jsonifier_internal {
 		}
 
 		template<uint64_t objectSize, jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify && objectSize > 0) {
 				--serializePair.indent;
@@ -258,7 +258,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeObjectEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				++serializePair.indent;
@@ -285,7 +285,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeObjectExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				--serializePair.indent;
@@ -312,7 +312,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeArrayEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeArrayEntry(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				++serializePair.indent;
@@ -339,7 +339,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void writeArrayExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
+		JSONIFIER_INLINE static void writeArrayExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
 				--serializePair.indent;

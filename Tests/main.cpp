@@ -322,7 +322,7 @@ void executePythonScript(const jsonifier::string& scriptPath, const jsonifier::s
 template<test_type type, typename test_data_type, bool minified, jsonifier_internal::string_literal testName> struct json_tests_helper;
 
 template<jsonifier_internal::string_literal testName> struct json_tests_helper<test_type::prettify, std::string, false, testName> {
-	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+	JSONIFIER_INLINE static test_results run(const std::string& jsonData) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
@@ -387,7 +387,7 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 };
 
 template<jsonifier_internal::string_literal testName> struct json_tests_helper<test_type::minify, std::string, false, testName> {
-	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+	JSONIFIER_INLINE static test_results run(const std::string& jsonData) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
@@ -473,7 +473,7 @@ template<jsonifier_internal::string_literal testName> struct json_tests_helper<t
 };
 
 template<jsonifier_internal::string_literal testName> struct json_tests_helper<test_type::validate, std::string, false, testName> {
-	JSONIFIER_ALWAYS_INLINE static test_results run(const std::string& jsonData) {
+	JSONIFIER_INLINE static test_results run(const std::string& jsonData) {
 		jsonifier::vector<results_data> resultsNew{};
 		test_results jsonResults{};
 		jsonResults.testName = static_cast<jsonifier::string>(testName);
