@@ -62,8 +62,7 @@ namespace jsonifier_internal {
 	template<bool minified, const jsonifier::parse_options&, typename value_type, typename parse_context_type> struct parse_impl;
 
 	template<bool minified, const jsonifier::parse_options& options> struct parse {
-		template<typename value_type, typename parse_context_type>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) {
+		template<typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) {
 			parse_impl<minified, options, unwrap_t<value_type>, parse_context_type>::impl(value, iter);
 		}
 	};

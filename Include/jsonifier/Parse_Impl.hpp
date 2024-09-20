@@ -104,9 +104,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
 			if (*context.iter == '{') [[likely]] {
@@ -284,9 +281,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
 			if (*context.iter == '{') [[likely]] {
@@ -453,9 +447,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
 			if (*context.iter == '[') [[likely]] {
 				++context.iter;
@@ -520,9 +511,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
 			if (*context.iter == '[') [[likely]] {
 				++context.iter;
@@ -745,9 +733,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			if (*context.iter == '[') [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -829,9 +814,6 @@ namespace jsonifier_internal {
 	template<const jsonifier::parse_options& options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			for (size_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-				jsonifierPrefetchImpl(context.iter + (x * 64));
-			}
 			if (*context.iter == '[') [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;

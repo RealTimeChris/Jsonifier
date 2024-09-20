@@ -789,7 +789,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast8_t;
 					static constexpr std::int_fast16_t multiply		 = 77;
 					static constexpr std::int_fast16_t subtract		 = 0;
-					static constexpr size_t shift				 = 8;
+					static constexpr size_t shift					 = 8;
 					static constexpr std::int_least32_t min_exponent = -102;
 					static constexpr std::int_least32_t max_exponent = 102;
 				};
@@ -798,7 +798,7 @@ namespace jsonifier_jkj {
 					// 24-bits are enough in fact.
 					static constexpr std::int_fast32_t multiply = 1233;
 					static constexpr std::int_fast32_t subtract = 0;
-					static constexpr size_t shift			= 12;
+					static constexpr size_t shift				= 12;
 					// Formula itself holds on [-680,680]; [-425,425] is to ensure that the output is
 					// within [-127,127].
 					static constexpr std::int_least32_t min_exponent = -425;
@@ -808,7 +808,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast16_t;
 					static constexpr std::int_fast32_t multiply		 = INT32_C(315653);
 					static constexpr std::int_fast32_t subtract		 = 0;
-					static constexpr size_t shift				 = 20;
+					static constexpr size_t shift					 = 20;
 					static constexpr std::int_least32_t min_exponent = -2620;
 					static constexpr std::int_least32_t max_exponent = 2620;
 				};
@@ -823,7 +823,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast8_t;
 					static constexpr std::int_fast16_t multiply		 = 53;
 					static constexpr std::int_fast16_t subtract		 = 0;
-					static constexpr size_t shift				 = 4;
+					static constexpr size_t shift					 = 4;
 					static constexpr std::int_least32_t min_exponent = -15;
 					static constexpr std::int_least32_t max_exponent = 18;
 				};
@@ -832,7 +832,7 @@ namespace jsonifier_jkj {
 					// 24-bits are enough in fact.
 					static constexpr std::int_fast32_t multiply		 = 1701;
 					static constexpr std::int_fast32_t subtract		 = 0;
-					static constexpr size_t shift				 = 9;
+					static constexpr size_t shift					 = 9;
 					static constexpr std::int_least32_t min_exponent = -58;
 					static constexpr std::int_least32_t max_exponent = 58;
 				};
@@ -840,7 +840,7 @@ namespace jsonifier_jkj {
 					using default_return_type					= std::int_fast16_t;
 					static constexpr std::int_fast32_t multiply = INT32_C(1741647);
 					static constexpr std::int_fast32_t subtract = 0;
-					static constexpr size_t shift			= 19;
+					static constexpr size_t shift				= 19;
 					// Formula itself holds on [-4003,4003]; [-1233,1233] is to ensure no overflow.
 					static constexpr std::int_least32_t min_exponent = -1233;
 					static constexpr std::int_least32_t max_exponent = 1233;
@@ -856,7 +856,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast8_t;
 					static constexpr std::int_fast16_t multiply		 = 77;
 					static constexpr std::int_fast16_t subtract		 = 31;
-					static constexpr size_t shift				 = 8;
+					static constexpr size_t shift					 = 8;
 					static constexpr std::int_least32_t min_exponent = -75;
 					static constexpr std::int_least32_t max_exponent = 129;
 				};
@@ -865,7 +865,7 @@ namespace jsonifier_jkj {
 					// 24-bits are enough in fact.
 					static constexpr std::int_fast32_t multiply = 19728;
 					static constexpr std::int_fast32_t subtract = 8241;
-					static constexpr size_t shift			= 16;
+					static constexpr size_t shift				= 16;
 					// Formula itself holds on [-849,315]; [-424,315] is to ensure that the output is
 					// within [-127,127].
 					static constexpr std::int_least32_t min_exponent = -424;
@@ -875,7 +875,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast16_t;
 					static constexpr std::int_fast32_t multiply		 = INT32_C(631305);
 					static constexpr std::int_fast32_t subtract		 = INT32_C(261663);
-					static constexpr size_t shift				 = 21;
+					static constexpr size_t shift					 = 21;
 					static constexpr std::int_least32_t min_exponent = -2985;
 					static constexpr std::int_least32_t max_exponent = 2936;
 				};
@@ -890,7 +890,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast32_t;
 					static constexpr std::int_fast32_t multiply		 = INT32_C(225799);
 					static constexpr std::int_fast32_t subtract		 = 0;
-					static constexpr size_t shift				 = 19;
+					static constexpr size_t shift					 = 19;
 					static constexpr std::int_least32_t min_exponent = -1831;
 					static constexpr std::int_least32_t max_exponent = 1831;
 				};
@@ -905,7 +905,7 @@ namespace jsonifier_jkj {
 					using default_return_type						 = std::int_fast32_t;
 					static constexpr std::int_fast32_t multiply		 = INT32_C(451597);
 					static constexpr std::int_fast32_t subtract		 = INT32_C(715764);
-					static constexpr size_t shift				 = 20;
+					static constexpr size_t shift					 = 20;
 					static constexpr std::int_least32_t min_exponent = -3543;
 					static constexpr std::int_least32_t max_exponent = 2427;
 				};
@@ -1082,10 +1082,10 @@ namespace jsonifier_jkj {
 		template<typename FloatFormat, typename Dummy = void> struct cache_holder;
 
 		template<typename Dummy> struct cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type																							  = std::uint_least64_t;
-			static constexpr int32_t cache_bits																				  = 64;
-			static constexpr int32_t min_k																					  = -31;
-			static constexpr int32_t max_k																					  = 46;
+			using cache_entry_type																						 = std::uint_least64_t;
+			static constexpr int32_t cache_bits																			 = 64;
+			static constexpr int32_t min_k																				 = -31;
+			static constexpr int32_t max_k																				 = 46;
 			static constexpr std::array<cache_entry_type, size_t(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
 				UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49), UINT64_C(0xc612062576589ddb),
 				UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2), UINT64_C(0x971da05074da7bef),
@@ -1111,10 +1111,10 @@ namespace jsonifier_jkj {
 #endif
 
 		template<typename Dummy> struct cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type																							  = detail::wuint::uint128;
-			static constexpr int32_t cache_bits																				  = 128;
-			static constexpr int32_t min_k																					  = -292;
-			static constexpr int32_t max_k																					  = 326;
+			using cache_entry_type																						 = detail::wuint::uint128;
+			static constexpr int32_t cache_bits																			 = 128;
+			static constexpr int32_t min_k																				 = -292;
+			static constexpr int32_t max_k																				 = 326;
 			static constexpr std::array<cache_entry_type, size_t(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
@@ -1447,13 +1447,13 @@ namespace jsonifier_jkj {
 		};
 
 		template<typename Dummy> struct compressed_cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type							   = cache_holder<ieee754_binary32>::cache_entry_type;
-			static constexpr int32_t cache_bits				   = cache_holder<ieee754_binary32>::cache_bits;
-			static constexpr int32_t min_k					   = cache_holder<ieee754_binary32>::min_k;
-			static constexpr int32_t max_k					   = cache_holder<ieee754_binary32>::max_k;
-			static constexpr int32_t compression_ratio		   = 13;
+			using cache_entry_type						  = cache_holder<ieee754_binary32>::cache_entry_type;
+			static constexpr int32_t cache_bits			  = cache_holder<ieee754_binary32>::cache_bits;
+			static constexpr int32_t min_k				  = cache_holder<ieee754_binary32>::min_k;
+			static constexpr int32_t max_k				  = cache_holder<ieee754_binary32>::max_k;
+			static constexpr int32_t compression_ratio	  = 13;
 			static constexpr size_t compressed_table_size = size_t((max_k - min_k + compression_ratio) / compression_ratio);
-			static constexpr size_t pow5_table_size	   = size_t((compression_ratio + 1) / 2);
+			static constexpr size_t pow5_table_size		  = size_t((compression_ratio + 1) / 2);
 
 			using cache_holder_t												= std::array<cache_entry_type, compressed_table_size>;
 			using pow5_holder_t													= std::array<std::uint_least16_t, pow5_table_size>;
@@ -1510,13 +1510,13 @@ namespace jsonifier_jkj {
 #endif
 
 		template<typename Dummy> struct compressed_cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type							   = cache_holder<ieee754_binary64>::cache_entry_type;
-			static constexpr int32_t cache_bits				   = cache_holder<ieee754_binary64>::cache_bits;
-			static constexpr int32_t min_k					   = cache_holder<ieee754_binary64>::min_k;
-			static constexpr int32_t max_k					   = cache_holder<ieee754_binary64>::max_k;
-			static constexpr int32_t compression_ratio		   = 27;
+			using cache_entry_type						  = cache_holder<ieee754_binary64>::cache_entry_type;
+			static constexpr int32_t cache_bits			  = cache_holder<ieee754_binary64>::cache_bits;
+			static constexpr int32_t min_k				  = cache_holder<ieee754_binary64>::min_k;
+			static constexpr int32_t max_k				  = cache_holder<ieee754_binary64>::max_k;
+			static constexpr int32_t compression_ratio	  = 27;
 			static constexpr size_t compressed_table_size = size_t((max_k - min_k + compression_ratio) / compression_ratio);
-			static constexpr size_t pow5_table_size	   = size_t(compression_ratio);
+			static constexpr size_t pow5_table_size		  = size_t(compression_ratio);
 
 			using cache_holder_t = std::array<cache_entry_type, compressed_table_size>;
 			using pow5_holder_t	 = std::array<std::uint_least64_t, pow5_table_size>;

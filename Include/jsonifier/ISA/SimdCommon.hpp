@@ -243,10 +243,10 @@ namespace jsonifier_internal {
 
 	constexpr std::array<bool, 256> whitespaceTable{ [] {
 		std::array<bool, 256> returnValues{};
-		returnValues['\t']	 = true;
-		returnValues[' '] = true;
-		returnValues['\n']	 = true;
-		returnValues['\r']	 = true;
+		returnValues['\t'] = true;
+		returnValues[' ']  = true;
+		returnValues['\n'] = true;
+		returnValues['\r'] = true;
 		return returnValues;
 	}() };
 

@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& context, uint64_t length) noexcept {
 		if (length > 7) {
 			uint64_t v[2];
-			while (length >= 8) {
+			while (length > 8) {
 				std::memcpy(v, wsStart, 8);
 				std::memcpy(v + 1, context, 8);
 				if (v[0] == v[1]) [[likely]] {
@@ -1007,10 +1007,10 @@ namespace jsonifier_internal {
 						skipNumber(context);
 						break;
 					}
-						[[likely]] default : {
-							++context.iter;
-							break;
-						}
+					[[likely]] default: {
+						++context.iter;
+						break;
+					}
 				}
 			}
 			return currentCount;
