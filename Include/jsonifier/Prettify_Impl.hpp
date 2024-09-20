@@ -47,10 +47,10 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<',', false>(out, prettifyPair.index);
 						++iter;
 						if constexpr (options.newLinesInArray) {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+							writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 						} else {
 							if (prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 							} else {
 								writer<options>::template writeCharacter<options.indentChar, false>(out, prettifyPair.index);
 							}
@@ -80,7 +80,7 @@ namespace jsonifier_internal {
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.newLinesInArray) {
 							if (**iter != ']') [[unlikely]] {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 							}
 						}
 						break;
@@ -95,7 +95,7 @@ namespace jsonifier_internal {
 						}
 						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 							}
 						}
 						writer<options>::template writeCharacter<']', false>(out, prettifyPair.index);
@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+							writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 						}
 						break;
 					}
@@ -140,7 +140,7 @@ namespace jsonifier_internal {
 							return;
 						}
 						if (*iter[-1] != '{') {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+							writer<options>::template writeNewLine<false>(out, prettifyPair, prettifyPair.indent);
 						}
 						writer<options>::template writeCharacter<'}', false>(out, prettifyPair.index);
 						++iter;
