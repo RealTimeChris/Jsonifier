@@ -96,18 +96,16 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	template<const auto& tupleRefs> constexpr auto consolidateTupleRefs() {
+	template<size_t size> constexpr auto consolidateTupleRefs(const std::array<tuple_reference, size>& tupleRefs) {
 		tuple_references returnValues{};
-		if constexpr (tupleRefs.size() > 0) {
-			returnValues.rootPtr = &tupleRefs[0];
-			returnValues.count	 = tupleRefs.size();
-		}
+		returnValues.rootPtr = &tupleRefs[0];
+		returnValues.count	 = size;
 		return returnValues;
 	}
 
 	template<typename value_type> inline constexpr auto tupleRefs{ collectTupleRefs(jsonifier::concepts::coreV<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
-	template<typename value_type> inline constexpr auto tupleReferencesByLength{ consolidateTupleRefs<sortedTupleReferencesByLength<value_type>>() };
+	template<typename value_type> inline constexpr auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
 
 	template<typename value_type, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr auto createNewTupleImpl(std::index_sequence<indices...>) noexcept {
 		return std::make_tuple(std::get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
@@ -122,56 +120,9 @@ namespace jsonifier_internal {
 
 	template<typename value_type> inline constexpr auto tupleRefsByLength{ collectTupleRefs(coreTupleV<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
-	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs<sortedTupleReferencesByFirstByte<value_type>>() };
+	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 	template<typename value_type> using core_tuple_t = decltype(coreTupleV<value_type>);
-		
-	template<const auto& options, typename value_type, size_t indentNew> constexpr size_t collectMinimumStringSize() {
-		constexpr auto tupleSize = std::tuple_size_v<jsonifier_internal::core_tuple_t<value_type>>;
-		size_t currentSize{};
-		const auto indent{ indentNew };
-		const auto indentSize{ options.indentSize };
-		if constexpr (options.prettify && tupleSize > 0) {
-			auto indentTotal = indent * indentSize;
-			currentSize += indentTotal + 2;
-		} else {
-			++currentSize;
-		}
-		const auto tupleReferences{ tupleReferencesByLength<value_type> };
-		for (size_t x = 0; x < tupleReferencesByLength<value_type>.count; ++x) {
-			const auto key = tupleReferencesByLength<value_type>.rootPtr[x].key;
-			if (!key.empty()) {
-				auto unQuotedKeySize{ std::size("\"") + key.size() };
-				if constexpr (options.prettify) {
-					auto quotedKeySize = unQuotedKeySize + std::size("\": ");
-					currentSize += quotedKeySize;
-				} else {
-					auto quotedKeySize = unQuotedKeySize + std::size("\":");
-					currentSize += quotedKeySize;
-				}
-
-				if (x < tupleReferencesByLength<value_type>.count - 1) {
-					if constexpr (options.prettify) {
-						auto k		= currentSize + indent + 256;
-						currentSize = k + std::size(",\n") + 1;
-						++currentSize;
-					} else {
-						++currentSize;
-					}
-				}
-			}
-		}
-
-		if constexpr (options.prettify && tupleSize > 0) {
-			auto indentTotal = indent * indentSize;
-			++currentSize;
-			currentSize += indentTotal;
-		}
-		++currentSize;
-		return currentSize * 2;
-	}
-
-	template<typename value_type, const auto& options, size_t indent> constexpr auto additionalStringLength{ collectMinimumStringSize<options, value_type, indent>() };
 
 	template<typename value_type01, typename value_type02>
 	JSONIFIER_ALWAYS_INLINE constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) noexcept {
