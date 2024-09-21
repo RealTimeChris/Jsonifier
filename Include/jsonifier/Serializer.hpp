@@ -43,29 +43,29 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+	template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type, size_t indent>
 	struct serialize_impl;
 
-	template<const jsonifier::serialize_options& options, typename value_type_new, typename size_collect_context_type> struct size_collect_impl;
+	template<const jsonifier::serialize_options& options, typename value_type_new, typename size_collect_context_type, size_t indent> struct size_collect_impl;
 
-	template<const auto& options> struct serialize {
+	template<const auto& options, size_t indent = 0> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
-			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
-				std::forward<serialize_context_type>(iter));
+			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type, indent>::impl(std::forward<value_type>(value),
+				std::forward<buffer_type>(buffer), std::forward<serialize_context_type>(iter));
 		}
 	};
 
-	template<const auto& options> struct size_collect {
+	template<const auto& options, size_t indent = 0> struct size_collect {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename size_collect_context_type>
 		JSONIFIER_ALWAYS_INLINE static constexpr size_t impl(size_collect_context_type&& iter) {
-			return size_collect_impl<options, unwrap_t<value_type>, size_collect_context_type>::impl(std::forward<size_collect_context_type>(iter));
+			return size_collect_impl<options, unwrap_t<value_type>, size_collect_context_type, indent>::impl(std::forward<size_collect_context_type>(iter));
 		}
 	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type, size_t indent>
 		friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;

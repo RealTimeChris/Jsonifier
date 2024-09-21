@@ -325,6 +325,33 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static constexpr size_t sizeArrayEntry(serialize_pair_t serializePair = serialize_pair_t{}) noexcept {
+			if constexpr (options.prettify) {
+				++serializePair.indent;
+				auto indentTotal		  = serializePair.indent * options.indentSize;
+				++serializePair.index;
+				++serializePair.index;
+				serializePair.index += indentTotal;
+			} else {
+				++serializePair.index;
+			}
+			return serializePair.index;
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
+		JSONIFIER_ALWAYS_INLINE static constexpr size_t sizeArrayExit(serialize_pair_t serializePair = serialize_pair_t{}) noexcept {
+			if constexpr (options.prettify) {
+				auto indentTotal = serializePair.indent * options.indentSize;
+				++serializePair.index;
+				serializePair.index += indentTotal;
+				++serializePair.index;
+			} else {
+				++serializePair.index;
+			}
+			return serializePair.index;
+		}
+
+		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void writeArrayExit(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify) {
