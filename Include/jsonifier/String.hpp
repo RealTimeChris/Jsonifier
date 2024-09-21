@@ -617,6 +617,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	inline static thread_local jsonifier::string_base<char, 1024 * 1024> stringBuffer{};
+	inline static thread_local jsonifier::string_base<char, 1024> stringBuffer{};
 
 }

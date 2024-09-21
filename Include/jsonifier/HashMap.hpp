@@ -702,61 +702,70 @@ namespace jsonifier_internal {
 #endif
 			if constexpr (hashData.type == hash_map_type::single_element) {
 				return 0;
-			} else if constexpr (hashData.type == hash_map_type::double_element) {
+			}
+			if constexpr (hashData.type == hash_map_type::double_element) {
 				return iter[hashData.uniqueIndex] & 1;
-			} else if constexpr (hashData.type == hash_map_type::triple_element) {
-				return (uint8_t(iter[hashData.uniqueIndex] ^ hashData.firstChar) * hashData.seed) & 3;
-			} else if constexpr (hashData.type == hash_map_type::single_byte) {
+			}
+			if constexpr (hashData.type == hash_map_type::triple_element) {
+				return (static_cast<uint8_t>(iter[hashData.uniqueIndex] ^ hashData.firstChar) * hashData.seed) & 3;
+			}
+			if constexpr (hashData.type == hash_map_type::single_byte) {
 				return hashData.uniqueIndices[iter[hashData.uniqueIndex]];
-			} else if constexpr (hashData.type == hash_map_type::first_byte_and_unique_index) {
+			}
+			if constexpr (hashData.type == hash_map_type::first_byte_and_unique_index) {
 				static constexpr auto uniqueFirstByteCount{ countFirstBytes(tupleReferencesByFirstByte<value_type>) };
 				static constexpr auto mappings{ generateMappingsForFirstBytes(collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>),
 					hashData.uniqueIndices) };
+
 				const uint8_t firstByte	  = static_cast<uint8_t>(iter[0]);
-				const uint8_t uniqueIndex = hashData.uniqueIndices[firstByte];
-				const uint8_t keyChar	  = static_cast<uint8_t>(iter[uniqueIndex]);
-				const size_t flattenedIdx = static_cast<size_t>(firstByte) * 256ull + static_cast<size_t>(keyChar);
+				const uint8_t uniqueIdx	  = hashData.uniqueIndices[firstByte];
+				const uint8_t keyChar	  = static_cast<uint8_t>(iter[uniqueIdx]);
+				const size_t flattenedIdx = (static_cast<size_t>(firstByte) << 8) | static_cast<size_t>(keyChar);
 				return mappings[flattenedIdx];
-			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
-				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
+			}
+			if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
+				constexpr size_t storageMask = hashData.storageSize - 1;
+				const auto newPtr			 = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
-					return hashData.indices[(iter[hashData.uniqueIndex] ^ static_cast<size_t>(newPtr - (iter))) & (hashData.storageSize - 1)];
+					const size_t length		 = static_cast<size_t>(newPtr - iter);
+					const size_t combinedKey = iter[hashData.uniqueIndex] ^ length;
+					return hashData.indices[combinedKey & storageMask];
 				}
 				return hashData.storageSize;
-			} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
+			}
+			if constexpr (hashData.type == hash_map_type::unique_per_length) {
 				static constexpr auto mappings = generateMappingsForLengths<keyStatsVal<value_type>.maxLength>(tupleReferencesByLength<value_type>, hashData.uniqueIndices);
 				const auto newPtr			   = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
-					const auto length			= static_cast<size_t>(newPtr - (iter));
-					const auto localUniqueIndex = hashData.uniqueIndices[length];
-					if (localUniqueIndex == 255) {
+					const size_t length			= static_cast<size_t>(newPtr - iter);
+					const size_t localUniqueIdx = hashData.uniqueIndices[length];
+					if (localUniqueIdx == 255) {
 						return hashData.storageSize;
 					}
-
-					return mappings[(length * 256) + iter[localUniqueIndex]];
+					return mappings[(length << 8) | iter[localUniqueIdx]];
 				}
 				return hashData.storageSize;
-			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
+			}
+			if constexpr (hashData.type == hash_map_type::simd_full_length) {
 				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
 				static constexpr rt_key_hasher<hashData.seed> hasher{};
 				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
-					size_t length		   = static_cast<size_t>(newPtr - (iter));
-					length				   = hashData.uniqueIndex > length ? length : hashData.uniqueIndex;
-					const auto hash		   = hasher.hashKeyRt(iter, length);
-					const auto resultIndex = ((hash >> 8) & (hashData.numGroups - 1)) * hashData.bucketSize;
-					return hashData.indices[(simd_internal::tzcnt(simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-												 simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex))) +
-						resultIndex)];
+					size_t length			 = static_cast<size_t>(newPtr - iter);
+					length					 = (hashData.uniqueIndex > length) ? length : hashData.uniqueIndex;
+					const auto hash			 = hasher.hashKeyRt(iter, length);
+					const size_t group		 = (hash >> 8) & (hashData.numGroups - 1);
+					const size_t resultIndex = group * hashData.bucketSize;
+					const auto simdValues	 = simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex);
+					const auto matches		 = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simdValues);
+					const size_t tz			 = simd_internal::tzcnt(simd_internal::opBitMask(matches));
+					return hashData.indices[resultIndex + tz];
 				}
 				return hashData.storageSize;
-			} else if constexpr (hashData.type == hash_map_type::empty) {
+			}
+			if constexpr (hashData.type == hash_map_type::empty) {
 				return 0;
-			} else {
-				static_assert(hashData.type != hash_map_type::unset, "Sorry, but we failed to construct this hash-map!");
-				return false;
 			}
 		}
 	};
-
-}
+};

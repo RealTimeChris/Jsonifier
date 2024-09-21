@@ -62,7 +62,7 @@ namespace jsonifier {
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = static_cast<const char*>(string.data());
 			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
-			jsonifier_fast_float::fromCharsAdvanced(currentIter, endIter, newValue);
+			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
 		}
 		return newValue;
 	}
@@ -151,10 +151,10 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				value_type temp;
-				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, temp);
+				auto ptr = parseFloat(iter, end, temp);
 				return ptr ? (iter = ptr, value = temp, true) : false;
 			} else {
-				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);
+				auto ptr = parseFloat(iter, end, value);
 				return ptr ? (iter = ptr, true) : false;
 			}
 		}

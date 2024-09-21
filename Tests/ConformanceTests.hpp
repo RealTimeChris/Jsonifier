@@ -299,20 +299,9 @@ template<> struct jsonifier::core<failTest33> {
 	static constexpr auto parseValue = createValue(&value_type::value);
 };
 
-struct object {};
+struct empty_type {};
 
-using array = std::vector<std::string>;
-
-struct ObjectWith1Member {
-	std::vector<std::string> value{};
-};
-
-template<> struct jsonifier::core<ObjectWith1Member> {
-	using value_type				 = ObjectWith1Member;
-	static constexpr auto parseValue = createValue("object with 1 member", &value_type::value);
-};
-
-struct message_class {
+struct message_type {
 	std::string uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_{};
 	std::vector<std::string> array{};
 	std::vector<int64_t> compact{};
@@ -334,8 +323,8 @@ struct message_class {
 	std::string ALPHA{};
 	std::string digit{};
 	bool messageFalse{};
+	empty_type object{};
 	bool messageTrue{};
-	object objectVal{};
 	std::string hex{};
 	std::string url{};
 	int64_t integer{};
@@ -347,20 +336,16 @@ struct message_class {
 	double e{};
 };
 
-using message_element = std::tuple<std::string, object, array, int64_t, bool, std::nullptr_t, double, double, double, int64_t, double, double, double, double, double, double>;
+using message_element = std::tuple<std::string, std::map<std::string, std::vector<std::string>>, empty_type, std::vector<int>, int, bool, bool, int*, message_type, double, double, double,
+	int, double, double, double, double, double, double, std::string>;
 
-template<> struct jsonifier::core<object> {
-	using value_type				 = object;
-	static constexpr auto parseValue = createValue<>();
-};
-
-template<> struct jsonifier::core<message_class> {
-	using value_type				 = message_class;
+template<> struct jsonifier::core<message_type> {
+	using value_type				 = message_type;
 	static constexpr auto parseValue = createValue("integer", &value_type::integer, "real", &value_type::real, "E", &value_type::E, "e", &value_type::e, "empty",
 		&value_type::empty, "zero", &value_type::zero, "one", &value_type::one, "space", &value_type::space, "quote", &value_type::quote, "backslash", &value_type::backslash,
 		"controls", &value_type::controls, "slash", &value_type::slash, "alpha", &value_type::alpha, "ALPHA", &value_type::alpha, "digit", &value_type::digit, "0123456789",
-		&value_type::the0123456789, "special", &value_type::special, "hex", &value_type::hex, "true", &value_type::messageTrue, "false", &value_type::messageFalse, "null",
-		&value_type::null, "array", &value_type::array, "object", &value_type::objectVal, "address", &value_type::address, "url", &value_type::url, "comment", &value_type::comment,
+		&value_type::the0123456789, "message", &value_type::message, "hex", &value_type::hex, "true", &value_type::messageTrue, "false", &value_type::messageFalse, "null",
+		&value_type::null, "array", &value_type::array, "object", &value_type::object, "address", &value_type::address, "url", &value_type::url, "comment", &value_type::comment,
 		"# -- --> */", &value_type::message, " s p a c e d ", &value_type::sPACED, "compact", &value_type::compact, "jsontext", &value_type::jsontext, "quotes",
 		&value_type::quotes, "/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?", &value_type::uCafEuBabEuAb98UFcdEubcdauef4Abfnrt1_);
 };

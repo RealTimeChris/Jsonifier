@@ -25,7 +25,7 @@
 
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
-#include <jsonifier/Parser.hpp>
+#include <jsonifier/Parser.hpp> 
 
 #include <memory>
 
@@ -166,8 +166,8 @@ namespace jsonifier_internal {
 							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
 							derailleur<options>::skipToNextValue(context);
 						}
-						static constexpr auto parseLambda = [](const auto index, const auto newLines, const auto antiHashNew, auto&& parseLambda, value_type& value,
-																parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+						static constexpr auto parseLambda = [](const auto index, const auto newLines, const auto antiHashNew,
+																auto&& parseLambda, value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 							if constexpr (index < memberCount) {
 								if (*context.iter != '}') [[likely]] {
 									if (*context.iter == ',') [[likely]] {
@@ -337,7 +337,8 @@ namespace jsonifier_internal {
 							derailleur<options>::skipToNextValue(context);
 						}
 
-						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda, value_type& value, parse_context_type& context) {
+						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda,
+																value_type& value, parse_context_type& context) {
 							if constexpr (index < memberCount) {
 								if (*context.iter != '}') [[likely]] {
 									if (*context.iter == ',') [[likely]] {
@@ -736,11 +737,7 @@ namespace jsonifier_internal {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
 					size_t wsSize{ size_t(context.iter - wsStart) };
-					if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-						parseObjects<true>(value, context, wsStart, wsSize);
-					} else {
-						parseObjects<false>(value, context, wsStart, wsSize);
-					}
+					parseObjects<true>(value, context, wsStart, wsSize);
 				} else {
 					++context.iter;
 					JSONIFIER_SKIP_WS();
