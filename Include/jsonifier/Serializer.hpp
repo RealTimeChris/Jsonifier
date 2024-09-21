@@ -58,9 +58,8 @@ namespace jsonifier_internal {
 
 	template<const auto& options> struct size_collect {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename size_collect_context_type>
-		JSONIFIER_ALWAYS_INLINE static constexpr size_t impl(value_type&& value, size_collect_context_type&& iter) {
-			return size_collect_impl<options, unwrap_t<value_type>, size_collect_context_type>::impl(std::forward<value_type>(value),
-				std::forward<size_collect_context_type>(iter));
+		JSONIFIER_ALWAYS_INLINE static constexpr size_t impl(size_collect_context_type&& iter) {
+			return size_collect_impl<options, unwrap_t<value_type>, size_collect_context_type>::impl(std::forward<size_collect_context_type>(iter));
 		}
 	};
 

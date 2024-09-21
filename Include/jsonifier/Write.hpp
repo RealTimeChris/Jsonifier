@@ -210,13 +210,9 @@ namespace jsonifier_internal {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify && objectSize > 0) {
 				++serializePair.indent;
-				auto indent				  = serializePair.indent;
-				constexpr auto indentSize = options.indentSize;
-				auto indentTotal		  = indent * indentSize;
-				auto n					  = 3 + indentTotal;
-				if (serializePair.index + n >= bufferSize) [[unlikely]] {
-					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
-				}
+				auto indent					= serializePair.indent;
+				constexpr auto indentSize	= options.indentSize;
+				auto indentTotal			= indent * indentSize;
 				buffer[serializePair.index] = '{';
 				++serializePair.index;
 				buffer[serializePair.index] = '\n';
@@ -224,9 +220,6 @@ namespace jsonifier_internal {
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
 			} else {
-				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
-					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
-				}
 				buffer[serializePair.index] = '{';
 				++serializePair.index;
 			}
@@ -237,21 +230,14 @@ namespace jsonifier_internal {
 			const auto bufferSize = buffer.size();
 			if constexpr (options.prettify && objectSize > 0) {
 				--serializePair.indent;
-				auto indent				  = serializePair.indent;
-				constexpr auto indentSize = options.indentSize;
-				auto indentTotal		  = indent * indentSize;
-				auto n					  = 3 + indentTotal;
-				if (serializePair.index + n >= bufferSize) [[unlikely]] {
-					buffer.resize(bufferSize * 2 > serializePair.index + n ? bufferSize * 2 : serializePair.index + n);
-				}
+				auto indent					= serializePair.indent;
+				constexpr auto indentSize	= options.indentSize;
+				auto indentTotal			= indent * indentSize;
 				buffer[serializePair.index] = '\n';
 				++serializePair.index;
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
 			} else {
-				if (serializePair.index + 1 >= bufferSize) [[unlikely]] {
-					buffer.resize(bufferSize * 2 > serializePair.index + 1 ? bufferSize * 2 : serializePair.index + 1);
-				}
 			}
 			buffer[serializePair.index] = '}';
 			++serializePair.index;

@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 									derailleur<options>::skipToNextValue(context);
 								}
 							} else [[unlikely]] {
-								antihash				= false;
+								antihash = false;
 								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
 									static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 									if (arrayOfPtrs[index](value, context)) [[likely]] {
@@ -218,8 +218,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < memberCount)
-											[[likely]] {
+										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+											indexNew < memberCount) [[likely]] {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 											if (arrayOfPtrs[indexNew](value, context)) [[likely]] {
 												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, newLines>{},
@@ -318,7 +318,7 @@ namespace jsonifier_internal {
 									derailleur<options>::skipToNextValue(context);
 								}
 							} else [[unlikely]] {
-								antihash				= false;
+								antihash = false;
 								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
 									static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 									if (arrayOfPtrs[index](value, context)) [[likely]] {
@@ -385,8 +385,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); indexNew < memberCount)
-											[[likely]] {
+										if (auto indexNew = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+											indexNew < memberCount) [[likely]] {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 											if (arrayOfPtrs[indexNew](value, context)) [[likely]] {
 												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
