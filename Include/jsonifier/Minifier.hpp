@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
-				std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, newString.data());
+				std::memcpy(newString.data(), stringBuffer.data(), derivedRef.index);
 				return newString;
 			} else {
 				return unwrap_t<string_type>{};
@@ -91,12 +91,10 @@ namespace jsonifier_internal {
 			}
 			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) [[likely]] {
-				if (!compare(stringBuffer.data(), buffer.data(), derivedRef.index)) [[likely]] {
-					if (buffer.size() != derivedRef.index) [[likely]] {
-						buffer.resize(derivedRef.index);
-					}
-					std::copy(stringBuffer.data(), stringBuffer.data() + derivedRef.index, buffer.data());
+				if (buffer.size() != derivedRef.index) [[likely]] {
+					buffer.resize(derivedRef.index);
 				}
+				std::memcpy(buffer.data(), stringBuffer.data(), derivedRef.index);
 				return true;
 			} else {
 				return false;
@@ -107,6 +105,10 @@ namespace jsonifier_internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 		const char* rootIter{};
 		const char* endIter{};
+
+		JSONIFIER_ALWAYS_INLINE size_t getSize() const {
+			return endIter - rootIter;
+		}
 
 		JSONIFIER_ALWAYS_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -206,7 +206,7 @@ namespace jsonifier {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
-			count = std::min(count, sizeVal - position);
+			count = jsonifier_internal::min(count, sizeVal - position);
 
 			string_base result{};
 			if (count > 0) [[likely]] {
@@ -216,10 +216,10 @@ namespace jsonifier {
 			return result;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type maxSize() noexcept {
+		JSONIFIER_ALWAYS_INLINE static constexpr size_type maxSize() noexcept {
 			const size_type allocMax   = allocator::maxSize();
 			const size_type storageMax = jsonifier_internal::max(allocMax, static_cast<size_type>(bufSize));
-			return std::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
+			return jsonifier_internal::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
@@ -489,13 +489,16 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		JSONIFIER_ALWAYS_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = traits_type::length(rhs);
-			return rhsLength == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs, rhsLength);
+			return rhsLength == lhs.size() &&
+				jsonifier_internal::comparison<0, jsonifier_internal::unwrap_t<decltype(*lhs.data())>, jsonifier_internal::unwrap_t<decltype(*rhs.data())>>::compare(lhs.data(),
+					rhs.data(), rhs.size());
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			if (lhs.size() == rhs.size()) {
 				if (lhs.size() > 0) {
-					return jsonifier_internal::compare(lhs.data(), rhs.data(), rhs.size());
+					return jsonifier_internal::comparison<0, jsonifier_internal::unwrap_t<decltype(*lhs.data())>, jsonifier_internal::unwrap_t<decltype(*rhs.data())>>::compare(
+						lhs.data(), rhs.data(), rhs.size());
 				}
 				return true;
 			} else {
@@ -617,6 +620,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static thread_local jsonifier::string_base<char, 1024 * 1024 * 4> stringBuffer{};
+	inline static thread_local jsonifier::string_base<char, 1024 * 1024> stringBuffer{};
 
 }

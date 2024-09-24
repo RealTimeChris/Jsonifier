@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -230,15 +230,15 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
-			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(0xAA) };
-			jsonifier_simd_int_t potentialEscape = opAndNot(rawStructurals.backslashes, nextIsEscaped);
+			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA)) };
+			jsonifier_simd_int_t potentialEscape = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			jsonifier_simd_int_t maybeEscaped{};
 			opShl(1, potentialEscape, maybeEscaped);
-			jsonifier_simd_int_t maybeEscapedAndOddBits	   = opOr(maybeEscaped, simdValue);
+			jsonifier_simd_int_t maybeEscapedAndOddBits	   = simd_internal::opOr(maybeEscaped, simdValue);
 			jsonifier_simd_int_t evenSeriesCodesAndOddBits = simd_internal::opSub(maybeEscapedAndOddBits, potentialEscape);
-			jsonifier_simd_int_t escapeAndTerminalCode	   = opXor(evenSeriesCodesAndOddBits, simdValue);
-			escaped										   = opXor(escapeAndTerminalCode, opOr(rawStructurals.backslashes, nextIsEscaped));
-			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
+			jsonifier_simd_int_t escapeAndTerminalCode	   = simd_internal::opXor(evenSeriesCodesAndOddBits, simdValue);
+			escaped										   = simd_internal::opXor(escapeAndTerminalCode, simd_internal::opOr(rawStructurals.backslashes, nextIsEscaped));
+			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) noexcept {
@@ -249,21 +249,22 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
-			return opBool(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals) : collectEmptyEscaped(escaped, nextIsEscaped);
+			return simd_internal::opTest(rawStructurals.backslashes, rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals)
+																								 : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			collectEscapedCharacters(escaped, nextIsEscaped, rawStructurals);
-			rawStructurals.quotes						  = opAndNot(rawStructurals.quotes, escaped);
+			rawStructurals.quotes						  = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t inString				  = simd_internal::opClMul(rawStructurals.quotes, prevInString);
-			jsonifier_simd_int_t stringTail				  = opXor(inString, rawStructurals.quotes);
-			jsonifier_simd_int_t scalar					  = opNot(opOr(rawStructurals.op, rawStructurals.whitespace));
-			jsonifier_simd_int_t nonQuoteScalar			  = opAndNot(scalar, rawStructurals.quotes);
+			jsonifier_simd_int_t stringTail				  = simd_internal::opXor(inString, rawStructurals.quotes);
+			jsonifier_simd_int_t scalar					  = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+			jsonifier_simd_int_t nonQuoteScalar			  = simd_internal::opAndNot(scalar, rawStructurals.quotes);
 			jsonifier_simd_int_t followsNonQuoteScalar	  = simd_internal::opFollows(nonQuoteScalar, overflow);
-			jsonifier_simd_int_t potentialScalarStart	  = opAndNot(scalar, followsNonQuoteScalar);
-			jsonifier_simd_int_t porentialStructuralStart = opOr(rawStructurals.op, potentialScalarStart);
-			rawStructurals.op							  = opAndNot(porentialStructuralStart, stringTail);
+			jsonifier_simd_int_t potentialScalarStart	  = simd_internal::opAndNot(scalar, followsNonQuoteScalar);
+			jsonifier_simd_int_t porentialStructuralStart = simd_internal::opOr(rawStructurals.op, potentialScalarStart);
+			rawStructurals.op							  = simd_internal::opAndNot(porentialStructuralStart, stringTail);
 		}
 	};
 

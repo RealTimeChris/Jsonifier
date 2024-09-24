@@ -15,17 +15,15 @@ enum instruction_set {
 	LZCNT	= 0x1,
 	POPCNT	= 0x2,
 	BMI1	= 0x4,
-	BMI2	= 0x8,
-	NEON	= 0x10,
-	AVX		= 0x20,
-	AVX2	= 0x40,
-	AVX512F = 0x80,
+	NEON	= 0x8,
+	AVX		= 0x10,
+	AVX2	= 0x20,
+	AVX512F = 0x40,
 };
 
 namespace {
 	static constexpr uint32_t cpuidAvx2Bit	   = 1ul << 5;
 	static constexpr uint32_t cpuidBmi1Bit	   = 1ul << 3;
-	static constexpr uint32_t cpuidBmi2Bit	   = 1ul << 8;
 	static constexpr uint32_t cpuidAvx512Bit   = 1ul << 16;
 	static constexpr uint64_t cpuidAvx256Saved = 1ull << 2;
 	static constexpr uint64_t cpuidAvx512Saved = 7ull << 5;
@@ -142,10 +140,6 @@ inline static uint32_t detectSupportedArchitectures() {
 
 	if (ebx & cpuidBmi1Bit) {
 		hostIsa |= instruction_set::BMI1;
-	}
-
-	if (ebx & cpuidBmi2Bit) {
-		hostIsa |= instruction_set::BMI2;
 	}
 
 	if (!((xcr0 & cpuidAvx512Saved) == cpuidAvx512Saved)) {

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -30,7 +30,7 @@
 
 namespace jsonifier_internal {
 
-	static thread_local jsonifier_internal::simd_string_reader<true> section{};
+	inline static thread_local jsonifier_internal::simd_string_reader<false> section{};
 
 	enum class validate_errors {
 		Success						   = 0,

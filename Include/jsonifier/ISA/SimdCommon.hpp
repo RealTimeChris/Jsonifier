@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -187,9 +187,8 @@ namespace simd_internal {
 
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
-
 		jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArray<bytesPerStep>.data()) };
-		jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(0x20) };
+		jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20)) };
 		valuesNew[0] = simd_internal::opCmpEq(opShuffle(simdValues, values[0]), opOr(simdValue, values[0]));
 		valuesNew[1] = simd_internal::opCmpEq(opShuffle(simdValues, values[1]), opOr(simdValue, values[1]));
 		valuesNew[2] = simd_internal::opCmpEq(opShuffle(simdValues, values[2]), opOr(simdValue, values[2]));
@@ -244,10 +243,10 @@ namespace jsonifier_internal {
 
 	constexpr std::array<bool, 256> whitespaceTable{ [] {
 		std::array<bool, 256> returnValues{};
-		returnValues['\t']	 = true;
-		returnValues['\x20'] = true;
-		returnValues['\n']	 = true;
-		returnValues['\r']	 = true;
+		returnValues['\t'] = true;
+		returnValues[' ']  = true;
+		returnValues['\n'] = true;
+		returnValues['\r'] = true;
 		return returnValues;
 	}() };
 

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -37,7 +37,15 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t { Unset = 0, Object = '{', Array = '[', String = '"', Number = '-', Bool = 't', Null = 'n' };
+	enum class json_type : uint8_t {
+		Unset  = 0,
+		Object = '{',
+		Array  = '[',
+		String = '"',
+		Number = '-',
+		Bool   = 't',
+		Null   = 'n',
+	};
 
 	class raw_json_data;
 }
@@ -208,10 +216,9 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr parse_options_internal<jsonifier::jsonifier_core<true>> optionsNew{};
-
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) noexcept {
+		static constexpr jsonifier::parse_options optionsNew{};
 		jsonifier::raw_json_data::object_type results{};
 		if (jsonData.size() > 0) {
 			jsonifier::string::const_iterator newIter01 = jsonData.begin();
@@ -231,7 +238,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				derailleur<optionsNew>::skipToNextValue(newIter02, endIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -266,18 +273,18 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			newIter01	  = derailleur<optionsNew>::skipWs(newIter01);
-			auto newCount = derailleur<optionsNew>::countValueElements<'{', '}'>(newIter02, endIter01);
+			derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
+			size_t newCount{ derailleur<optionsNew, parse_context<bool>>::countValueElements<'{', '}'>(newIter02, endIter01) };
 			collectCharacter('{');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				newIter01	= derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				auto newKey = collectKey();
-				newIter01	= derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				collectCharacter(0x3A);
-				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
-				newIter01		= derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				collectCharacter(',');
 			}
 		}
@@ -286,6 +293,7 @@ namespace jsonifier_internal {
 
 	template<> JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(
 		const jsonifier::string& jsonData) noexcept {
+		static constexpr jsonifier::parse_options optionsNew{};
 		jsonifier::raw_json_data::array_type results{};
 		if (jsonData.size() > 0) {
 			jsonifier::string::const_iterator newIter01 = jsonData.begin();
@@ -305,7 +313,7 @@ namespace jsonifier_internal {
 
 			auto collectValue = [&](bool endValue) {
 				newIter02 = newIter01;
-				derailleur<optionsNew>::skipToNextValue(newIter02, endIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
 				if (endValue) {
@@ -317,14 +325,14 @@ namespace jsonifier_internal {
 				return newString;
 			};
 
-			newIter01	  = derailleur<optionsNew>::skipWs(newIter01);
-			auto newCount = derailleur<optionsNew>::countValueElements<'[', ']'>(newIter02, endIter01);
+			derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
+			size_t newCount{ derailleur<optionsNew, parse_context<bool>>::countValueElements<'[', ']'>(newIter02, endIter01) };
 			collectCharacter('[');
 			for (uint64_t x = 0; x < newCount && newIter02 < endIter01 && newIter01 < endIter01; ++x) {
-				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results.emplace_back(collectValue(endValue));
-				newIter01 = derailleur<optionsNew>::skipWs(newIter01);
+				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				collectCharacter(',');
 			}
 		}

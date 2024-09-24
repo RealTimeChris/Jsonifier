@@ -1,6 +1,6 @@
 #	MIT License
 #
-#	Copyright (c) 2023 RealTimeChris
+#	Copyright (c) 2024 RealTimeChris
 #
 #	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
 #	software and associated documentation files (the "Software"), to deal in the Software 
@@ -69,6 +69,7 @@ endif()
      "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
      "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
      "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+	 "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
      "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
  )
  
@@ -89,8 +90,13 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
 	"${AVX_FLAG}"
 )

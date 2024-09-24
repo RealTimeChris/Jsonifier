@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -46,8 +46,6 @@ namespace jsonifier_internal {
 	template<typename derived_type> class parser;
 
 	class json_structural_iterator;
-
-	template<typename... value_types> class array_tuple : public std::tuple<value_types...> {};
 
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -94,6 +92,14 @@ namespace jsonifier_internal {
 	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
+
+	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
+		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
+	}
+
+	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_ALWAYS_INLINE constexpr void forEach(arg_types&&... args) {
+		forEachImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
+	}
 
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
@@ -320,6 +326,11 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
+		concept has_get = requires(jsonifier_internal::unwrap_t<value_type> value) {
+			{ value.get() } -> std::same_as<typename jsonifier_internal::unwrap_t<value_type>::element_type*>;
+		};
+
+		template<typename value_type>
 		concept copyable = std::copyable<jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
@@ -329,10 +340,7 @@ namespace jsonifier {
 		} && has_release<value_type>;
 
 		template<typename value_type>
-		concept shared_ptr_t = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			typename jsonifier_internal::unwrap_t<value_type>::element_type;
-			typename jsonifier_internal::unwrap_t<value_type>::deleter_type;
-		} && has_release<value_type> && copyable<value_type>;
+		concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
 
 		template<typename value_type>
 		concept has_find = requires(jsonifier_internal::unwrap_t<value_type> value) {
@@ -354,12 +362,6 @@ namespace jsonifier {
 		concept is_double_ptr = std::same_as<const char**, jsonifier_internal::unwrap_t<value_type>> || std::same_as<char**, jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept array_tuple_t = requires(jsonifier_internal::unwrap_t<value_type> value) {
-			std::tuple_size<jsonifier_internal::unwrap_t<value_type>>::value;
-			std::get<0>(value);
-		} && jsonifier_internal::is_specialization_v<jsonifier_internal::unwrap_t<value_type>, jsonifier_internal::array_tuple>;
-
-		template<typename value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
 
 		template<typename value_type>
@@ -374,7 +376,7 @@ namespace jsonifier {
 		concept tuple_t = requires(jsonifier_internal::unwrap_t<value_type> t) {
 			std::tuple_size<jsonifier_internal::unwrap_t<value_type>>::value;
 			std::get<0>(t);
-		};
+		} && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 
@@ -385,14 +387,14 @@ namespace jsonifier {
 		concept enum_t = std::is_enum_v<jsonifier_internal::unwrap_t<value_type>>;
 
 		template<typename value_type>
-		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !array_tuple_t<value_type> &&
-			!std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>>;
+		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> &&
+			!tuple_t<value_type> && has_resize<value_type>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<jsonifier_internal::unwrap_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || array_tuple_t<value_type> || map_t<value_type> || tuple_t<value_type>;
+		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type> || shared_ptr_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(jsonifier_internal::unwrap_t<value_type> value) { value.view(); };
@@ -414,8 +416,6 @@ namespace jsonifier {
 
 		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
 
-		template<typename value_type> using core_t = decay_keep_volatile_t<decltype(coreV<value_type>)>;
-
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
 
 		template<typename value_type>
@@ -426,7 +426,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<jsonifier_internal::unwrap_t<value_type>> && !std::is_pointer_v<jsonifier_internal::unwrap_t<value_type>> ) ||
-			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !array_tuple_t<value_type>);
+			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !tuple_t<value_type>);
 
 		template<typename value_type>
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
@@ -454,23 +454,19 @@ namespace jsonifier {
 
 namespace std {
 
-	template<> struct variant_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
-
-	template<typename... value_types> struct variant_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
-
-	template<typename... value_types> struct variant_size<std::tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
-
 	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 
 	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
-
-	template<typename... value_types> struct tuple_size<jsonifier_internal::array_tuple<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
 }
 
 namespace jsonifier_internal {
 
 	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
 		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
+	}
+
+	template<typename value_type01, typename value_type02> constexpr value_type01 min(value_type01 value1, value_type02 value2) {
+		return value1 < static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
 	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) noexcept {
@@ -585,6 +581,5 @@ namespace jsonifier_internal {
 #include <jsonifier/ISA/AVX.hpp>
 #include <jsonifier/ISA/Lzcount.hpp>
 #include <jsonifier/ISA/Popcount.hpp>
-#include <jsonifier/ISA/Bmi2.hpp>
 #include <jsonifier/ISA/Bmi.hpp>
 #include <jsonifier/ISA/Fallback.hpp>

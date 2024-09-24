@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -47,7 +47,7 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if (this != &other) [[likely]] {
-				errors		 = std::move(other.errors);
+				errors = std::move(other.errors);
 			}
 			return *this;
 		}
@@ -58,7 +58,7 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
 			if (this != &other) [[likely]] {
-				errors		 = other.errors;
+				errors = other.errors;
 			}
 			return *this;
 		}
@@ -85,4 +85,3 @@ namespace jsonifier {
 	};
 
 }
-

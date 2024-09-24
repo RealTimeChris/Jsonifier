@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -29,19 +29,27 @@
 namespace jsonifier_internal {
 
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
-		auto remainder = value % multiple;
-		return remainder == 0 ? value : value + (multiple - remainder);
+		if constexpr ((multiple & (multiple - 1)) == 0) {
+			return (value + (multiple - 1)) & ~(multiple - 1);
+		} else {
+			auto remainder = value % multiple;
+			return remainder == 0 ? value : value + (multiple - remainder);
+		}
 	}
 
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
-		return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+		if constexpr ((multiple & (multiple - 1)) == 0) {
+			return value & ~(multiple - 1);
+		} else {
+			return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
+		}
 	}
 
 	template<typename value_type_new> class alloc_wrapper {
 	  public:
 		using value_type	   = value_type_new;
 		using pointer		   = value_type*;
-		using size_type		   = uint64_t;
+		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
 		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
@@ -55,8 +63,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t newSize = 0) noexcept {
-			( void )newSize;
+		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
 			if (ptr) [[likely]] {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
@@ -70,7 +77,7 @@ namespace jsonifier_internal {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_ALWAYS_INLINE size_type maxSize() noexcept {
+		JSONIFIER_ALWAYS_INLINE static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 

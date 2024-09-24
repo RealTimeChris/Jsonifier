@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -33,7 +33,7 @@ namespace jsonifier {
 
 	struct serialize_options {
 		bool newLinesInArray{ true };
-		uint64_t indentSize{ 3 };
+		size_t indentSize{ 3 };
 		char indentChar{ ' ' };
 		bool prettify{ false };
 	};
@@ -43,31 +43,37 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	struct serialize_options_internal {
-		jsonifier::serialize_options optionsReal{};
-	};
+	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+	struct serialize_impl;
 
-	template<const auto& options, typename derived_type, typename value_type> struct serialize_impl;
+	template<const auto options> struct serialize {
+		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
+			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
+				std::forward<serialize_context_type>(iter));
+		}
+	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<const auto& options, typename derived_type_new, typename value_type> friend struct serialize_impl;
+		template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
 		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			if (!compare(stringBuffer.data(), buffer.data(), serializePair.index)) [[unlikely]] {
-				std::copy_n(stringBuffer.data(), serializePair.index, buffer.data());
+			if (!comparison<0, unwrap_t<decltype(*buffer.data())>, unwrap_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
+				std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			}
 			return true;
 		}
@@ -78,9 +84,12 @@ namespace jsonifier_internal {
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
 			jsonifier::string newString{};
-			static constexpr serialize_options_internal optionsFinal{ .optionsReal = options };
-			serialize_impl<optionsFinal, derived_type, value_type>::impl(std::forward<value_type>(object), newString, serializePair);
-			newString.resize(serializePair.index);
+			static constexpr jsonifier::serialize_options optionsFinal{ options };
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			if (newString.size() != serializePair.index) [[unlikely]] {
+				newString.resize(serializePair.index);
+			}
+			std::memcpy(newString.data(), stringBuffer.data(), serializePair.index);
 			return newString;
 		}
 

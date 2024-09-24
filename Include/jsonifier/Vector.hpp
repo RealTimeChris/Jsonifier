@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -42,7 +42,7 @@ namespace jsonifier {
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
-		using size_type				 = uint64_t;
+		using size_type				 = size_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
 		JSONIFIER_ALWAYS_INLINE vector() noexcept {
@@ -386,7 +386,7 @@ namespace jsonifier {
 		}
 
 		constexpr size_type maxSize() noexcept {
-			return (std::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
+			return (jsonifier_internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
 		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
@@ -460,7 +460,7 @@ namespace jsonifier {
 				}
 				return true;
 			} else {
-				return jsonifier_internal::compare(rhs.data(), data(), size());
+				return jsonifier_internal::comparison<0, decltype(*rhs.data()), decltype(*data())>::compare(rhs.data(), data(), size());
 			}
 		}
 

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -27,32 +27,28 @@
 
 namespace jsonifier_internal {
 
-	template<const prettify_options_internal& options, typename derived_type> struct prettify_impl : public writer<options> {
+	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl : public writer<options> {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			while (*iter) {
-				for (uint64_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-					jsonifierPrefetchImpl(*iter + bitsPerStep + (64 * x));
-				}
-
 				switch (asciiClassesMap[uint8_t(**iter)]) {
 					[[likely]] case json_structural_type::String: {
 						const auto newPtr = *iter;
 						++iter;
 						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
-						writer<options>::template writeCharacters<false>(out, newPtr, newSize, prettifyPair.index);
+						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Comma: {
-						writer<options>::template writeCharacter<',', false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<','>(out, prettifyPair.index);
 						++iter;
-						if constexpr (options.optionsReal.newLinesInArray) {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+						if constexpr (options.newLinesInArray) {
+							writer<options>::writeNewLine(out, prettifyPair);
 						} else {
 							if (prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::writeNewLine(out, prettifyPair);
 							} else {
-								writer<options>::template writeCharacter<options.optionsReal.indentChar, false>(out, prettifyPair.index);
+								writer<options>::template writeCharacter<options.indentChar>(out, prettifyPair.index);
 							}
 						}
 						break;
@@ -61,26 +57,26 @@ namespace jsonifier_internal {
 						const auto newPtr = (*iter);
 						++iter;
 						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
-						writer<options>::template writeCharacters<false>(out, newPtr, newSize, prettifyPair.index);
+						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
 					[[unlikely]] case json_structural_type::Colon: {
-						writer<options>::template writeCharacter<':', false>(out, prettifyPair.index);
-						writer<options>::template writeCharacter<options.optionsReal.indentChar, false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<':'>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<options.indentChar>(out, prettifyPair.index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Array_Start: {
-						writer<options>::template writeCharacter<'[', false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<'['>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
 						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
-						if constexpr (options.optionsReal.newLinesInArray) {
+						if constexpr (options.newLinesInArray) {
 							if (**iter != ']') [[unlikely]] {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::writeNewLine(out, prettifyPair);
 							}
 						}
 						break;
@@ -93,33 +89,33 @@ namespace jsonifier_internal {
 								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
 							return;
 						}
-						if constexpr (options.optionsReal.newLinesInArray) {
+						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
-								writer<options>::template writeNewLine<false>(out, prettifyPair);
+								writer<options>::writeNewLine(out, prettifyPair);
 							}
 						}
-						writer<options>::template writeCharacter<']', false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<']'>(out, prettifyPair.index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Null: {
-						writer<options>::template writeCharacters<"null", false>(out, prettifyPair.index);
+						writer<options>::template writeCharacters<"null">(out, prettifyPair.index);
 						++iter;
 						break;
 					}
 					[[unlikely]] case json_structural_type::Bool: {
 						if (**iter == 't') {
-							writer<options>::template writeCharacters<"true", false>(out, prettifyPair.index);
+							writer<options>::template writeCharacters<"true">(out, prettifyPair.index);
 							++iter;
 							break;
 						} else {
-							writer<options>::template writeCharacters<"false", false>(out, prettifyPair.index);
+							writer<options>::template writeCharacters<"false">(out, prettifyPair.index);
 							++iter;
 							break;
 						}
 					}
 					[[unlikely]] case json_structural_type::Object_Start: {
-						writer<options>::template writeCharacter<'{', false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<'{'>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
 						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
@@ -127,7 +123,7 @@ namespace jsonifier_internal {
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+							writer<options>::writeNewLine(out, prettifyPair);
 						}
 						break;
 					}
@@ -140,9 +136,9 @@ namespace jsonifier_internal {
 							return;
 						}
 						if (*iter[-1] != '{') {
-							writer<options>::template writeNewLine<false>(out, prettifyPair);
+							writer<options>::writeNewLine(out, prettifyPair);
 						}
-						writer<options>::template writeCharacter<'}', false>(out, prettifyPair.index);
+						writer<options>::template writeCharacter<'}'>(out, prettifyPair.index);
 						++iter;
 						break;
 					}

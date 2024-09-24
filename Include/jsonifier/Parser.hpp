@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -33,6 +33,7 @@ namespace jsonifier {
 
 	struct parse_options {
 		bool validateJson{ false };
+		bool knownOrder{ false };
 		bool minified{ false };
 	};
 
@@ -42,36 +43,63 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class parser;
 
-	template<typename derived_type> struct parse_options_internal {
-		mutable parser<derived_type>* parserPtr{};
-		jsonifier::parse_options optionsReal{};
-		mutable int64_t currentObjectDepth{};
-		mutable int64_t currentArrayDepth{};
-		mutable const char* rootIter{};
-		bool validatingJson{ false };
+	template<typename derived_type> struct parse_context {
+		constexpr parse_context() noexcept = default;
+		constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
+			rootIter = iterNew;
+			iter	 = iterNew;
+			endIter	 = endNew;
+		}
+		parser<derived_type>* parserPtr{};
+		int64_t currentObjectDepth{};
+		int64_t currentArrayDepth{};
+		const char* rootIter{};
+		const char* endIter{};
+		const char* iter{};
 	};
 
-	template<const auto&, typename value_type, typename iterator> struct parse_impl;
+	template<jsonifier::concepts::pointer_t value_type> const char* getEndIter(value_type value) {
+		return char_comparison<'\0'>::memchar(value, std::numeric_limits<size_t>::max());
+	}
+
+	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) {
+		return value;
+	}
+
+	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) {
+		return value.data() + value.size();
+	}
+
+	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) {
+		return value.data();
+	}
+
+	template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> struct parse_impl;
+
+	template<bool minified, jsonifier::parse_options options> struct parse {
+		template<typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) {
+			parse_impl<minified, options, unwrap_t<value_type>, parse_context_type>::impl(value, iter);
+		}
+	};
 
 	template<typename derived_type> class parser {
 	  public:
-		template<const auto&, typename value_type, typename iterator> friend struct parse_impl;
+		template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> friend struct parse_impl;
 
 		JSONIFIER_ALWAYS_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_ALWAYS_INLINE parser(const parser& other)			   = delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
-			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
+			static constexpr jsonifier::parse_options optionsNew{ options };
+			parse_context<derived_type> optionsReal{};
+			optionsReal.rootIter  = getBeginIter(in);
+			optionsReal.iter	  = optionsReal.rootIter;
+			optionsReal.endIter	  = getEndIter(in);
 			optionsReal.parserPtr = this;
-			optionsReal.rootIter  = in;
-			auto iter			  = optionsReal.rootIter;
-			auto end			  = char_comparison<'\0', unwrap_t<decltype(*in)>>::memchar(in, std::numeric_limits<size_t>::max());
-			if (!in || *in == '\0') {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					iter - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
+			auto newSize		  = static_cast<uint64_t>((optionsReal.endIter - optionsReal.iter) / 2);
+			if (stringBuffer.size() < newSize) {
+				stringBuffer.resize(newSize);
 			}
 			if constexpr (options.validateJson) {
 				if (!derivedRef.validateJson(in)) {
@@ -79,91 +107,31 @@ namespace jsonifier_internal {
 				}
 			}
 			derivedRef.errors.clear();
-			if (!iter || (*iter != '{' && *iter != '[')) [[unlikely]] {
+			if (!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '[')) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					iter - optionsReal.rootIter, optionsReal.rootIter));
+				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return false;
 			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
-			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,
-					iter - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			} else if (optionsReal.currentArrayDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(iter - optionsReal.rootIter,
-					iter - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			if (iter != end) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unfinished_Input>(iter - optionsReal.rootIter,
-					iter - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			return true;
-		}
-
-		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
-			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
-			optionsReal.parserPtr = this;
-			optionsReal.rootIter  = static_cast<const char*>(in.data());
-			auto iter			  = optionsReal.rootIter;
-			auto end			  = static_cast<const char*>(in.data() + in.size());
-			if (in.size() == 0) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			if constexpr (options.validateJson) {
-				if (!derivedRef.validateJson(in)) {
-					return false;
-				}
-			}
-			derivedRef.errors.clear();
-			if (!iter || (*iter != '{' && *iter != '[')) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
-			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			} else if (optionsReal.currentArrayDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			if (iter != end) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unfinished_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return false;
-			}
-			return true;
+			parse<options.minified, optionsNew>::impl(object, optionsReal);
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), false)
+				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), false)
+				: (optionsReal.iter != optionsReal.endIter) ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), false)
+				: derivedRef.errors.size() > 0				? false
+															: true;
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
-			static constexpr parse_options_internal<derived_type> optionsReal{ .optionsReal = options };
+			static constexpr jsonifier::parse_options optionsNew{ options };
+			parse_context<derived_type> optionsReal{};
+			optionsReal.rootIter  = getBeginIter(in);
+			optionsReal.iter	  = optionsReal.rootIter;
+			optionsReal.endIter	  = getEndIter(in);
 			optionsReal.parserPtr = this;
-			optionsReal.rootIter  = static_cast<const char*>(in.data());
-			auto iter			  = optionsReal.rootIter;
-			auto end			  = static_cast<const char*>(in.data() + in.size());
-			if (in.size() == 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return value_type{};
+			auto newSize		  = static_cast<uint64_t>((optionsReal.endIter - optionsReal.iter) / 2);
+			if (stringBuffer.size() < newSize) {
+				stringBuffer.resize(newSize);
 			}
 			if constexpr (options.validateJson) {
 				if (!derivedRef.validateJson(in)) [[unlikely]] {
@@ -172,39 +140,23 @@ namespace jsonifier_internal {
 			}
 			derivedRef.errors.clear();
 			unwrap_t<value_type> object{};
-			if (!iter || (*iter != '{' && *iter != '[')) [[unlikely]] {
+			if (!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '[')) [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::No_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return object;
+				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
+				return std::move(object);
 			}
-			parse_impl<optionsReal, value_type, decltype(iter)>::impl(std::forward<value_type>(object), iter, end);
-			if (optionsReal.currentObjectDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Object_Braces>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return value_type{};
-			} else if (optionsReal.currentArrayDepth != 0) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Imbalanced_Array_Brackets>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return value_type{};
-			}
-			if (iter != end) [[unlikely]] {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Parsing, parse_errors::Unfinished_Input>(iter - optionsReal.rootIter,
-					end - optionsReal.rootIter, optionsReal.rootIter));
-				return value_type{};
-			}
-			return object;
+			parse<options.minified, optionsNew>::impl(object, optionsReal);
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), unwrap_t<value_type>{})
+				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), unwrap_t<value_type>{})
+				: (optionsReal.iter != optionsReal.endIter) ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), unwrap_t<value_type>{})
+				: derivedRef.errors.size() > 0				? unwrap_t<value_type>{}
+															: object;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
-			return derivedRef.errors;
-		}
-
-		JSONIFIER_ALWAYS_INLINE auto& getStringBuffer() {
-			return stringBuffer;
+		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE void reportError(parse_context<derived_type>& context) {
+			derivedRef.errors.emplace_back(
+				error::constructError<sourceLocation, error_classes::Parsing, parseError>(context.iter - context.rootIter, context.endIter - context.rootIter, context.rootIter));
 		}
 
 	  protected:

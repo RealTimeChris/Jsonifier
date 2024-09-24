@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -62,7 +62,7 @@ namespace jsonifier {
 		if (string.size() > 0) [[likely]] {
 			auto currentIter = static_cast<const char*>(string.data());
 			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
-			jsonifier_fast_float::fromCharsAdvanced(currentIter, endIter, newValue);
+			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
 		}
 		return newValue;
 	}
@@ -112,167 +112,41 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, jsonifier::concepts::is_double_ptr iterator>
-	JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
-		using value_type = unwrap_t<value_type_new>;
-		auto newPtr		 = *iter;
-		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-			if constexpr (std::is_unsigned_v<value_type>) {
-				if constexpr (std::same_as<value_type, uint64_t>) {
-					if (*newPtr == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(value, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						return false;
-					}
-				} else {
-					uint64_t i;
-					if (*newPtr == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*newPtr) == sizeof(char));
-					auto s = parseInt(i, newPtr);
-					++iter;
-					if (!s) [[unlikely]] {
-						return false;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
-				}
-			} else {
-				uint64_t i;
-				int32_t sign = 1;
-				if (*newPtr == '-') {
-					sign = -1;
-					++newPtr;
-				}
-
-				static_assert(sizeof(*newPtr) == sizeof(char));
-				auto s = parseInt(i, newPtr);
-				++iter;
-				if (!s) [[unlikely]] {
-					return false;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(sign * i);
-				} else {
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
-				}
-			}
-		} else {
-			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
-				value_type temp;
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(newPtr, *end, temp);
-				if (!ptr) [[unlikely]] {
-					return false;
-				}
-				value = temp;
-				++iter;
-			} else {
-				const char* ptr = jsonifier_fast_float::fromCharsAdvanced(newPtr, *end, value);
-				if (!ptr) [[unlikely]] {
-					return false;
-				}
-				++iter;
-			}
-		}
-		return true;
-	}
-
 	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = unwrap_t<value_type_new>;
+
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr auto maximum = uint64_t((std::numeric_limits<value_type>::max)());
-			if constexpr (std::is_unsigned_v<value_type>) {
-				if constexpr (std::same_as<value_type, uint64_t>) {
-					if (*iter == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt(value, iter);
-					if (!s) [[unlikely]] {
-						return false;
-					}
+			static thread_local integer_parser<value_type, std::remove_reference_t<decltype(*iter)>> integerParser{};
+			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
+				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
+					return integerParser.parseInt(value, iter);
 				} else {
+					static thread_local integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>> integerParserUint{};
 					uint64_t i;
-					if (*iter == '-') [[unlikely]] {
-						return false;
-					}
-
-					static_assert(sizeof(*iter) == sizeof(char));
-					auto s = parseInt<unwrap_t<decltype(i)>>(i, iter);
-					if (!s) [[unlikely]] {
-						return false;
-					}
-
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
+					return integerParserUint.parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
-				uint64_t i;
-				int32_t sign = 1;
-				if (*iter == '-') {
-					sign = -1;
-					++iter;
-				}
-
-				static_assert(sizeof(*iter) == sizeof(char));
-				auto s = parseInt(i, iter);
-				if (!s) [[unlikely]] {
-					return false;
-				}
-
-				if (sign == -1) {
-					static constexpr auto min_abs = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-					if (i > min_abs) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(sign * i);
+				if constexpr (jsonifier::concepts::int64_type<value_type>) {
+					return integerParser.parseInt(value, iter);
 				} else {
-					if (i > maximum) [[unlikely]] {
-						return false;
-					}
-					value = static_cast<value_type>(i);
+					static thread_local integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>> integerParserInt{};
+					int64_t i;
+					return integerParserInt.parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
-				value_type temp;
-				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, temp);
-				if (!ptr) {
-					return false;
-				}
-				iter  = ptr;
-				value = temp;
+				double temp;
+				return parseFloat(iter, end, temp) ? (value = temp, true) : false;
 			} else {
-				auto ptr = jsonifier_fast_float::fromCharsAdvanced(iter, end, value);
-				if (!ptr) {
-					return false;
+				if constexpr (jsonifier::concepts::double_type<value_type>) {
+					return parseFloat(iter, end, value);
+				} else {
+					double i;
+					return parseFloat(iter, end, i) ? (value = i, true) : false;
 				}
-				iter = ptr;
 			}
 		}
 		return true;
 	}
-
 }

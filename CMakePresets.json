@@ -8,7 +8,7 @@
         "rhs": "Windows",
         "type": "equals"
       },
-      "generator": "Ninja Multi-Config",
+      "generator": "Ninja",
       "hidden": true,
       "name": "Jsonifier-Windows-Base"
     },

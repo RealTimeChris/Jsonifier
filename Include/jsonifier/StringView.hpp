@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2023 RealTimeChris
+	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -129,7 +129,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr size_type maxSize() const noexcept {
-			return std::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
+			return jsonifier_internal::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr const_reference at(const size_type offsetNew) const noexcept {
@@ -185,7 +185,7 @@ namespace jsonifier {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
-			countNew = std::min(countNew, sizeVal - offsetNew);
+			countNew = jsonifier_internal::min(countNew, sizeVal - offsetNew);
 			return string_view_base(dataVal + offsetNew, countNew);
 		}
 
@@ -214,7 +214,7 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_ALWAYS_INLINE constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(
 			const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
-			return rhsLength == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs, rhsLength);
+			return rhsLength == lhs.size() && jsonifier_internal::comparison<0, decltype(*lhs.data()), decltype(*rhs)>::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer>
@@ -230,7 +230,7 @@ namespace jsonifier {
 				}();
 				return lhs.size() == rhs.size() && compareValues;
 			} else {
-				return rhs.size() == lhs.size() && jsonifier_internal::compare(lhs.data(), rhs.data(), rhs.size());
+				return rhs.size() == lhs.size() && jsonifier_internal::comparison<0, decltype(*lhs.data()), decltype(*rhs.data())>::compare(lhs.data(), rhs.data(), rhs.size());
 			}
 		}
 
