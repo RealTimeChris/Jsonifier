@@ -40,11 +40,11 @@ template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
 
+std::random_device randomEngine{};
+std::mt19937_64 gen{ randomEngine() };
+
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-
-	std::random_device randomEngine{};
-	std::mt19937_64 gen{ randomEngine() };
 
 	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 

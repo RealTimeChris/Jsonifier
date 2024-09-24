@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2024 RealTimeChris
+	Copyright (c) 2023 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -37,18 +37,14 @@ namespace jsonifier_internal {
 			++iter;
 
 			while (*iter) {
-				for (uint64_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-					jsonifierPrefetchImpl(*iter + bitsPerStep + (64 * x));
-				}
-
 				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {
 					[[likely]] case json_structural_type::String: {
 						currentDistance = *iter - previousPtr;
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
-						auto newSize = static_cast<uint64_t>(currentDistance) + 1;
+						++currentDistance;
 						if (currentDistance > 0) [[likely]] {
-							writeCharacters(out, previousPtr, newSize, index);
+							writeCharacters(out, previousPtr, currentDistance, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
@@ -106,12 +102,12 @@ namespace jsonifier_internal {
 					[[unlikely]] case json_structural_type::Error:
 					[[unlikely]] case json_structural_type::Type_Count:
 						[[fallthrough]];
-					[[unlikely]] default: {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
-							static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
-						return;
-					}
+						[[unlikely]] default : {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
+								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
+							return;
+						}
 				}
 				previousPtr = (*iter);
 				++iter;

@@ -81,7 +81,9 @@ namespace jsonifier_internal {
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
+			if (!compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
+				std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
+			}
 			return true;
 		}
 

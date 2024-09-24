@@ -31,10 +31,6 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			while (*iter) {
-				for (uint64_t x = 0; x < sixtyFourBitsPerStep; ++x) {
-					jsonifierPrefetchImpl(*iter + bitsPerStep + (64 * x));
-				}
-
 				switch (asciiClassesMap[uint8_t(**iter)]) {
 					[[likely]] case json_structural_type::String: {
 						const auto newPtr = *iter;

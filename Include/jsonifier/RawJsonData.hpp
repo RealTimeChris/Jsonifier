@@ -216,10 +216,9 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr parse_context<jsonifier::jsonifier_core<true>> optionsNew{};
-
 	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
 	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& jsonData) noexcept {
+		static constexpr parse_context<jsonifier::jsonifier_core<true>> optionsNew{};
 		jsonifier::raw_json_data::object_type results{};
 		if (jsonData.size() > 0) {
 			jsonifier::string::const_iterator newIter01 = jsonData.begin();
@@ -295,6 +294,7 @@ namespace jsonifier_internal {
 
 	template<> JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(
 		const jsonifier::string& jsonData) noexcept {
+		static constexpr parse_context<jsonifier::jsonifier_core<true>> optionsNew{};
 		jsonifier::raw_json_data::array_type results{};
 		if (jsonData.size() > 0) {
 			jsonifier::string::const_iterator newIter01 = jsonData.begin();

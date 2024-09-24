@@ -123,8 +123,7 @@ Here's an example demonstrating how to use `parseJson` to parse JSON data into a
 jsonifier::string buffer{ json_data };
 
 // Parse JSON data and obtain the parsed object directly.
-jsonifier::parse_options options;
-options.minified = true; // Set parse options if needed.
+static constexpr jsonifier::parse_options options{ .minified = true };
 obj_t parsedObject = jsonifier::parseJson<obj_t, options>(buffer);
 ```
 
@@ -133,12 +132,14 @@ The `parse_options` struct allows customization of parsing behavior. Here's the 
 
 ```cpp
 struct parse_options {
-    bool refreshString{ true };
-    bool minified{ false };
+	bool validateJson{ false };
+	bool knownOrder{ false };
+	bool minified{ false };
 };
 ```
 
-- `refreshString`: Indicates whether to refresh the parsing string before parsing (default: `true`).
+- `validateJson`: Indicates whether to call validateJson to validate the Json in compliance with RFC standards before parsing it.
+- `knownOrder`: Indicates whether or not the registration core-tuple had its members set up in the order that the json data will be coming in as, which will significantly improve performance.
 - `minified`: Indicates whether the input JSON string is minified (default: `false`).
 
 You can customize parsing behavior by setting these options in `parse_options` when calling the `parseJson` function.
@@ -185,9 +186,7 @@ Here's an example demonstrating how to use `serializeJson` to obtain the seriali
 obj_t obj{};
 
 // Serialize and obtain the serialized JSON string directly.
-jsonifier::serialize_options options;
-options.prettify = true; // Enable prettifying
-options.prettifyOptions.indentSize = 2; // Set custom prettifyJson options if needed.
+static constexpr jsonifier::serialize_options options{ .indentSize = 2, .prettify };
 jsonifier::string serializedString = jsonifier::serializeJson<options>(obj);
 ```
 
@@ -196,12 +195,16 @@ The `serialize_options` struct allows customization of serialization behavior. H
 
 ```cpp
 struct serialize_options {
-    prettify_options prettifyOptions{};
-    bool prettify{ false };
+	bool newLinesInArray{ true };
+	size_t indentSize{ 3 };
+	char indentChar{ ' ' };
+	bool prettify{ false };
 };
 ```
 
-- `prettifyOptions`: Specifies prettifyJson options such as `indentSize`, `maxDepth`, etc.
-- `prettifyJson`: Indicates whether to prettifyJson the JSON output (default: `false`).
+- `newLinesInArray`: Specifies whether or not there are newlines appended after each array element.
+- `indentSize`: Specifies the number of indent characters appended for each of the indentations.
+- `indentChar`: Specifies which character to use when indenting prettified json data.
+- `prettify`: Indicates whether to prettify the JSON output (default: `false`).
 
 You can enable prettifying by setting `options.prettifyJson` to `true` and customize prettifyJson options as needed in `options.prettifyOptions`.

@@ -467,7 +467,6 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -517,7 +516,6 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-#endif
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
@@ -582,7 +580,7 @@ namespace jsonifier_internal {
 	}() };
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE static void serializeShortStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
+	JSONIFIER_MAYBE_ALWAYS_INLINE static void serializeShortStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
 		auto* endIter = string1 + lengthNew;
 		for (; string1 < endIter; ++string1) {
 			auto escapeChar = escapeTable[static_cast<uint8_t>(*string1)];
@@ -597,7 +595,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename iterator_type01, typename iterator_type02>
-	JSONIFIER_ALWAYS_INLINE static void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
+	JSONIFIER_MAYBE_ALWAYS_INLINE static void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
 		uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
@@ -667,7 +665,6 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -700,7 +697,6 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-#endif
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 0>::type::type;
@@ -793,21 +789,24 @@ namespace jsonifier_internal {
 		template<typename value_type, typename context_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, context_type& context) noexcept {
 			if (*context.iter == '"') [[likely]] {
 				++context.iter;
-				auto start	= context.iter;
 				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
-				if (newPtr) {
-					auto newSize = newPtr - stringBuffer.data();
+				if (newPtr) [[likely]] {
+					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (value.size() != newSize) {
 						value.resize(newSize);
 					}
 					std::memcpy(value.data(), stringBuffer.data(), newSize);
 					++context.iter;
+				} else [[unlikely]] {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Invalid_String_Characters>(context);
+					return false;
 				}
 				return true;
-			} else {
+			} else [[unlikely]] {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
-				return {};
+				return false;
 			}
 		}
 
@@ -868,7 +867,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename context_type>
-		JSONIFIER_INLINE static void skipToNextValue(context_type& context, std::source_location location = std::source_location::current()) noexcept {
+		JSONIFIER_INLINE static void skipToNextValue(context_type& context) noexcept {
 			if constexpr (!options.minified) {
 				JSONIFIER_SKIP_WS();
 			}

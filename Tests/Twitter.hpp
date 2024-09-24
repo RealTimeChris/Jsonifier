@@ -23,7 +23,9 @@
 /// Sep 17, 2024
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
+#include <optional>
+#include <string>
+#include <vector>
 
 struct search_metadata_data {
 	double completed_in;

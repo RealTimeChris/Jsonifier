@@ -327,14 +327,7 @@ fastfloat_really_inline constexpr bool cpp20_and_in_constexpr() {
 
 template <typename T>
 fastfloat_really_inline constexpr bool is_supported_float_type() {
-  return std::is_same<T, float>::value || std::is_same<T, double>::value
-#if __STDCPP_FLOAT32_T__
-    || std::is_same<T, std::float32_t>::value
-#endif
-#if __STDCPP_FLOAT64_T__
-    || std::is_same<T, std::float64_t>::value
-#endif
-  ;
+  return std::is_same<T, float>::value || std::is_same<T, double>::value;
 }
 
 template <typename UC>
@@ -3517,42 +3510,6 @@ struct from_chars_caller
     return from_chars_advanced(first, last, value, options);
   }
 };
-
-#if __STDCPP_FLOAT32_T__ == 1
-template <>
-struct from_chars_caller<std::float32_t>
-{
-  template <typename UC>
-  FASTFLOAT_CONSTEXPR20
-  static from_chars_result_t<UC> call(UC const * first, UC const * last,
-                                      std::float32_t &value, parse_options_t<UC> options) noexcept{
-    // if std::float32_t is defined, and we are in C++23 mode; macro set for float32;
-    // set value to float due to equivalence between float and float32_t
-    float val;
-    auto ret = from_chars_advanced(first, last, val, options);
-    value = val;
-    return ret;
-  }
-};
-#endif
-
-#if __STDCPP_FLOAT64_T__ == 1
-template <>
-struct from_chars_caller<std::float64_t>
-{
-  template <typename UC>
-  FASTFLOAT_CONSTEXPR20
-  static from_chars_result_t<UC> call(UC const * first, UC const * last,
-                                      std::float64_t &value, parse_options_t<UC> options) noexcept{
-    // if std::float64_t is defined, and we are in C++23 mode; macro set for float64;
-    // set value as double due to equivalence between double and float64_t
-    double val;
-    auto ret = from_chars_advanced(first, last, val, options);
-    value = val;
-    return ret;
-  }
-};
-#endif
 
 /**
  * This function overload takes parsed_number_string_t structure that is created and populated

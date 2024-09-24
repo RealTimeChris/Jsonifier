@@ -48,7 +48,6 @@ namespace jsonifier_internal {
 					if (*context.iter == ':') [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
-						using member_type = unwrap_t<decltype(value.*ptr)>;
 						parse<false, options>::impl(value.*ptr, context);
 						return true;
 					} else [[unlikely]] {
@@ -75,7 +74,6 @@ namespace jsonifier_internal {
 					context.iter += keySizeNew;
 					if (*context.iter == ':') [[likely]] {
 						++context.iter;
-						using member_type = unwrap_t<decltype(value.*ptr)>;
 						parse<true, options>::impl(value.*ptr, context);
 						return true;
 					} else [[unlikely]] {
@@ -125,41 +123,48 @@ namespace jsonifier_internal {
 							}
 						}
 
-						if (*context.iter == '"') [[likely]] {
-							++context.iter;
-							static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-							static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
-							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
-							static constexpr auto keySize		= key.size();
-							static constexpr auto keySizeNew	= keySize + 1;
-							if (*(context.iter + key.size()) == '"' &&
-								comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))
-								[[likely]] {
-								context.iter += keySizeNew;
-								JSONIFIER_SKIP_WS();
-								if (*context.iter == ':') [[likely]] {
-									++context.iter;
-									JSONIFIER_SKIP_WS();
-									using member_type = unwrap_t<decltype(value.*ptr)>;
-									parse<false, options>::impl(value.*ptr, context);
+						static constexpr auto parseLambda01 = [](auto& antihashNew, auto& value, auto& context) {
+							antihashNew = false;
+							if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
+								static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
+								if (arrayOfPtrs[index](value, context)) [[likely]] {
 								} else [[unlikely]] {
-									static constexpr auto sourceLocation{ std::source_location::current() };
-									context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
 									derailleur<options>::skipToNextValue(context);
 								}
-							} else [[unlikely]] {
-								antihash = false;
-								if (auto index = hash_map<value_type, unwrap_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter); index < memberCount) [[likely]] {
-									static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
-									if (arrayOfPtrs[index](value, context)) [[likely]] {
+							} else {
+								derailleur<options>::skipKey(context);
+								++context.iter;
+								derailleur<options>::skipToNextValue(context);
+							}
+						};
+
+						if (*context.iter == '"') [[likely]] {
+							++context.iter;
+							if constexpr (options.knownOrder) {
+								static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+								static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
+								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
+								static constexpr auto keySize		= key.size();
+								static constexpr auto keySizeNew	= keySize + 1;
+								if (*(context.iter + key.size()) == '"' &&
+									comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))
+									[[likely]] {
+									context.iter += keySizeNew;
+									JSONIFIER_SKIP_WS();
+									if (*context.iter == ':') [[likely]] {
+										++context.iter;
+										JSONIFIER_SKIP_WS();
+										parse<false, options>::impl(value.*ptr, context);
 									} else [[unlikely]] {
+										static constexpr auto sourceLocation{ std::source_location::current() };
+										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
 										derailleur<options>::skipToNextValue(context);
 									}
 								} else {
-									derailleur<options>::skipKey(context);
-									++context.iter;
-									derailleur<options>::skipToNextValue(context);
+									parseLambda01(antihash, value, context);
 								}
+							} else {
+								parseLambda01(antihash, value, context);
 							}
 						} else [[unlikely]] {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -192,7 +197,7 @@ namespace jsonifier_internal {
 
 									if (*context.iter == '"') [[likely]] {
 										++context.iter;
-										if constexpr (antiHashNew) {
+										if constexpr (antiHashNew && options.knownOrder) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
 											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
@@ -206,7 +211,6 @@ namespace jsonifier_internal {
 												if (*context.iter == ':') [[likely]] {
 													++context.iter;
 													JSONIFIER_SKIP_WS();
-													using member_type = unwrap_t<decltype(value.*ptr)>;
 													parse<false, options>::impl(value.*ptr, context);
 													return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, newLines>{},
 														std::integral_constant<bool, true>{}, parseLambda, value, context, wsStart, wsSize);
@@ -246,21 +250,21 @@ namespace jsonifier_internal {
 							return;
 						};
 						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-							if (antihash) {
-								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, parseLambda, value,
-									context, wsStart, wsSize);
+							if constexpr (options.knownOrder) {
+								if (antihash) {
+									parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, parseLambda, value,
+										context, wsStart, wsSize);
+								} else {
+									parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, parseLambda,
+										value, context, wsStart, wsSize);
+								}
 							} else {
 								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, parseLambda, value,
 									context, wsStart, wsSize);
 							}
 						} else {
-							if (antihash) {
-								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, parseLambda, value,
-									context, wsStart, wsSize);
-							} else {
-								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, false>{}, parseLambda, value,
-									context, wsStart, wsSize);
-							}
+							parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, false>{}, parseLambda, value,
+								context, wsStart, wsSize);
 						}
 					}
 				}
@@ -310,7 +314,6 @@ namespace jsonifier_internal {
 								context.iter += keySizeNew;
 								if (*context.iter == ':') [[likely]] {
 									++context.iter;
-									using member_type = unwrap_t<decltype(value.*ptr)>;
 									parse<true, options>::impl(value.*ptr, context);
 								} else [[unlikely]] {
 									static constexpr auto sourceLocation{ std::source_location::current() };
@@ -374,7 +377,6 @@ namespace jsonifier_internal {
 												context.iter += keySizeNew;
 												if (*context.iter == ':') [[likely]] {
 													++context.iter;
-													using member_type = unwrap_t<decltype(value.*ptr)>;
 													parse<true, options>::impl(value.*ptr, context);
 													return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, true>{}, parseLambda, value,
 														context);
@@ -435,7 +437,6 @@ namespace jsonifier_internal {
 			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (size == 1) {
 				static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
-				using member_type			 = unwrap_t<decltype(getMember<newPtr>(value))>;
 				parse<minified, options>::impl(getMember<newPtr>(value), context);
 			}
 		}
@@ -454,7 +455,6 @@ namespace jsonifier_internal {
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ size_t(context.iter - wsStart) };
 						auto newPtr		  = std::get<0>(value);
-						using member_type = unwrap_t<decltype(getMember(newPtr, value))>;
 						parse<false, options>::impl(getMember(newPtr, value), context);
 
 						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
@@ -483,7 +483,6 @@ namespace jsonifier_internal {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
 						auto newPtr		  = std::get<currentIndex>(value);
-						using member_type = unwrap_t<decltype(getMember(newPtr, value))>;
 						parse<false, options>::impl(getMember(newPtr, value), context);
 						return parseObjects<n, currentIndex + 1, newLines>(value, context, wsStart, wsSize);
 					} else {
@@ -515,7 +514,6 @@ namespace jsonifier_internal {
 				if (*context.iter != ']') [[likely]] {
 					if constexpr (memberCount > 0) {
 						auto newPtr		  = std::get<0>(value);
-						using member_type = unwrap_t<decltype(getMember(newPtr, value))>;
 						parse<true, options>::impl(getMember(newPtr, value), context);
 						parseObjects<memberCount, 1>(value, context);
 					}
@@ -536,7 +534,6 @@ namespace jsonifier_internal {
 					if (*context.iter == ',') [[likely]] {
 						++context.iter;
 						auto newPtr		  = std::get<currentIndex>(value);
-						using member_type = unwrap_t<decltype(getMember(newPtr, value))>;
 						parse<true, options>::impl(getMember(newPtr, value), context);
 						return parseObjects<n, currentIndex + 1>(value, context);
 					} else {
@@ -572,7 +569,6 @@ namespace jsonifier_internal {
 					if (*context.iter == ':') [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
-						using member_type = unwrap_t<value_type>::mapped_type;
 						parse<false, options>::impl(value[key], context);
 					} else [[unlikely]] {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -609,7 +605,6 @@ namespace jsonifier_internal {
 					if (*context.iter == ':') [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
-						using member_type = unwrap_t<value_type>::mapped_type;
 						parse<false, options>::impl(value[key], context);
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -642,7 +637,6 @@ namespace jsonifier_internal {
 
 					if (*context.iter == ':') [[likely]] {
 						++context.iter;
-						using member_type = unwrap_t<value_type>::mapped_type;
 						parse<true, options>::impl(value[key], context);
 					} else [[unlikely]] {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -659,7 +653,6 @@ namespace jsonifier_internal {
 
 							if (*context.iter == ':') [[likely]] {
 								++context.iter;
-								using member_type = unwrap_t<value_type>::mapped_type;
 								parse<true, options>::impl(value[key], context);
 							} else {
 								static constexpr auto sourceLocation{ std::source_location::current() };
@@ -706,9 +699,15 @@ namespace jsonifier_internal {
 			if (*context.iter != 'n') [[likely]] {
 				parse<false, options>::impl(value.emplace(), context);
 			} else {
-				context.iter += 4;
-				JSONIFIER_SKIP_WS();
-				return;
+				if (parseNull(context.iter)) [[likely]] {
+					JSONIFIER_SKIP_WS();
+					return;
+				} else [[unlikely]] {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Invalid_Null_Value>(context);
+					derailleur<options>::skipToNextValue(context);
+					return;
+				}
 			}
 		}
 	};
@@ -719,8 +718,14 @@ namespace jsonifier_internal {
 			if (*context.iter != 'n') [[likely]] {
 				parse<true, options>::impl(value.emplace(), context);
 			} else {
-				context.iter += 4;
-				return;
+				if (parseNull(context.iter)) [[likely]] {
+					return;
+				} else [[unlikely]] {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Invalid_Null_Value>(context);
+					derailleur<options>::skipToNextValue(context);
+					return;
+				}
 			}
 		}
 	};
@@ -936,25 +941,23 @@ namespace jsonifier_internal {
 				++context.currentArrayDepth;
 				++context.iter;
 				if (*context.iter != ']') [[likely]] {
-					if (const size_t n = std::size(value); n > 0) [[likely]] {
-						auto iterNew = std::begin(value);
+					auto iterNew = std::begin(value);
 
-						for (size_t i = 0; i < n; ++i) {
-							parse<true, options>::impl(*(iterNew++), context);
+					for (size_t i = 0; i < value.size(); ++i) {
+						parse<true, options>::impl(*(iterNew++), context);
 
-							if (*context.iter == ',') [[likely]] {
+						if (*context.iter == ',') [[likely]] {
+							++context.iter;
+						} else [[unlikely]] {
+							if (*context.iter == ']') [[likely]] {
 								++context.iter;
+								--context.currentArrayDepth;
+								return;
 							} else [[unlikely]] {
-								if (*context.iter == ']') [[likely]] {
-									++context.iter;
-									--context.currentArrayDepth;
-									return;
-								} else [[unlikely]] {
-									static constexpr auto sourceLocation{ std::source_location::current() };
-									reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
-									derailleur<options>::skipToNextValue(context);
-									return;
-								}
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+								derailleur<options>::skipToNextValue(context);
+								return;
 							}
 						}
 					}

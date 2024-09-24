@@ -33,6 +33,7 @@ namespace jsonifier {
 
 	struct parse_options {
 		bool validateJson{ false };
+		bool knownOrder{ false };
 		bool minified{ false };
 	};
 
@@ -55,8 +56,16 @@ namespace jsonifier_internal {
 		return char_comparison<'\0'>::memchar(value, std::numeric_limits<size_t>::max());
 	}
 
+	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) {
+		return value;
+	}
+
 	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) {
 		return value.data() + value.size();
+	}
+
+	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) {
+		return value.data();
 	}
 
 	template<bool minified, const jsonifier::parse_options&, typename value_type, typename parse_context_type> struct parse_impl;
@@ -78,11 +87,11 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
 			parse_context<derived_type> optionsReal{};
-			optionsReal.rootIter  = in.data();
-			optionsReal.iter	  = in.data();
+			optionsReal.rootIter  = getBeginIter(in);
+			optionsReal.iter	  = optionsReal.rootIter;
 			optionsReal.endIter	  = getEndIter(in);
 			optionsReal.parserPtr = this;
-			auto newSize		  = (optionsReal.endIter - optionsReal.iter) / 2;
+			auto newSize		  = static_cast<uint64_t>((optionsReal.endIter - optionsReal.iter) / 2);
 			if (stringBuffer.size() < newSize) {
 				stringBuffer.resize(newSize);
 			}
@@ -114,11 +123,11 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
 			parse_context<derived_type> optionsReal{};
-			optionsReal.rootIter  = in.data();
-			optionsReal.iter	  = in.data();
+			optionsReal.rootIter  = getBeginIter(in);
+			optionsReal.iter	  = optionsReal.rootIter;
 			optionsReal.endIter	  = getEndIter(in);
 			optionsReal.parserPtr = this;
-			auto newSize		  = (optionsReal.endIter - optionsReal.iter) / 2;
+			auto newSize		  = static_cast<uint64_t>((optionsReal.endIter - optionsReal.iter) / 2);
 			if (stringBuffer.size() < newSize) {
 				stringBuffer.resize(newSize);
 			}
@@ -139,7 +148,7 @@ namespace jsonifier_internal {
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return object;
 			}
-			parse<options.minified, optionsNew>::impl<options.minified, optionsNew>(object, optionsReal);
+			parse<options.minified, optionsNew>::impl(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), unwrap_t<value_type>{})
 				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), unwrap_t<value_type>{})

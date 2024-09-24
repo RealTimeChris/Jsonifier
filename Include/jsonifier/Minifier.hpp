@@ -106,6 +106,10 @@ namespace jsonifier_internal {
 		const char* rootIter{};
 		const char* endIter{};
 
+		JSONIFIER_ALWAYS_INLINE size_t getSize() const {
+			return endIter - rootIter;
+		}
+
 		JSONIFIER_ALWAYS_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
 		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {

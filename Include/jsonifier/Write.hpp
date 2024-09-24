@@ -181,15 +181,10 @@ namespace jsonifier_internal {
 			if constexpr (options.prettify) {
 				++serializePair.indent;
 				auto indentTotal			= serializePair.indent * options.indentSize;
-				buffer[serializePair.index] = '{';
-				++serializePair.index;
 				buffer[serializePair.index] = '\n';
 				++serializePair.index;
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
-			} else {
-				buffer[serializePair.index] = '{';
-				++serializePair.index;
 			}
 		}
 
@@ -202,11 +197,6 @@ namespace jsonifier_internal {
 				++serializePair.index;
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
-				buffer[serializePair.index] = '}';
-				++serializePair.index;
-			} else {
-				buffer[serializePair.index] = '}';
-				++serializePair.index;
 			}
 		}
 
@@ -215,15 +205,10 @@ namespace jsonifier_internal {
 			if constexpr (options.prettify) {
 				++serializePair.indent;
 				auto indentTotal			= serializePair.indent * options.indentSize;
-				buffer[serializePair.index] = '[';
-				++serializePair.index;
 				buffer[serializePair.index] = '\n';
 				++serializePair.index;
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
-			} else {
-				buffer[serializePair.index] = '[';
-				++serializePair.index;
 			}
 		}
 
@@ -236,11 +221,6 @@ namespace jsonifier_internal {
 				++serializePair.index;
 				std::fill_n(buffer.data() + serializePair.index, indentTotal, options.indentChar);
 				serializePair.index += indentTotal;
-				buffer[serializePair.index] = ']';
-				++serializePair.index;
-			} else {
-				buffer[serializePair.index] = ']';
-				++serializePair.index;
 			}
 		}
 	};

@@ -73,6 +73,32 @@ concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
 };
 
 template<typename value_type>
+concept has_substr = requires(std::remove_cvref_t<value_type> value) {
+	{
+		value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{})
+	} -> std::same_as<std::remove_cvref_t<value_type>>;
+};
+
+template<typename value_type>
+concept has_resize = requires(std::remove_cvref_t<value_type> value) { value.resize(typename std::remove_cvref_t<value_type>::size_type{}); };
+
+template<typename value_type>
+concept has_data = requires(std::remove_cvref_t<value_type> value) {
+	{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_pointer>;
+} || requires(std::remove_cvref_t<value_type> value) {
+	{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::pointer>;
+};
+
+template<typename value_type>
+concept has_size = requires(std::remove_cvref_t<value_type> value) {
+	{ value.size() } -> std::same_as<typename std::remove_cvref_t<value_type>::size_type>;
+};
+
+template<typename value_type>
+concept string_t =
+	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::is_same_v<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
+
+template<typename value_type>
 concept copyable = std::copyable<std::remove_cvref_t<value_type>>;
 
 template<typename value_type>
@@ -95,7 +121,7 @@ template<typename value_type>
 concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
 
 template<typename value_type>
-concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !std::is_pointer_v<std::remove_cvref_t<value_type>>;
+concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !std::is_pointer_v<std::remove_cvref_t<value_type>> && !string_t<value_type>;
 
 void throwError(auto error, std::source_location location = std::source_location::current()) {
 	std::stringstream stream{};
@@ -105,883 +131,612 @@ void throwError(auto error, std::source_location location = std::source_location
 	throw std::runtime_error{ stream.str() };
 }
 
-template<floating_type value_type> bool getValue(value_type& data, simdjson::ondemand::value jsonData) {
+template<typename value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData);
+
+template<floating_type value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	if constexpr (sizeof(value_type) == 8) {
-		auto result = jsonData.get_double().get(data);
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_double().get(data); result) {
+			throwError(result);
 		}
-		return !result;
+		return;
 	} else {
 		double newValue{};
-		auto result = jsonData.get_double().get(newValue); 
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_double().get(newValue); result) {
+			throwError(result);
 		}
 		data = static_cast<value_type>(newValue);
-		return !result;
+		return;
 	}
 }
 
-template<unsigned_type value_type>
-bool getValue(value_type& data, simdjson::ondemand::value jsonData) {
+template<unsigned_type value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	if constexpr (sizeof(value_type) == 8) {
-		auto result = jsonData.get_uint64().get(data);
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_uint64().get(data); result) {
+			throwError(result);
 		}
-		return !result;
+		return;
 	} else {
 		uint64_t newValue{};
-		auto result = jsonData.get_uint64().get(newValue);
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_uint64().get(newValue); result) {
+			throwError(result);
 		}
 		data = static_cast<value_type>(newValue);
-		return !result;
+		return;
 	}
 }
 
-template<signed_type value_type> bool getValue(value_type& data, simdjson::ondemand::value jsonData) {
+template<signed_type value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	if constexpr (sizeof(value_type) == 8) {
-		auto result = jsonData.get_int64().get(data);
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_int64().get(data); result) {
+			throwError(result);
 		}
-		return !result;
+		return;
 	} else {
 		int64_t newValue{};
-		auto result = jsonData.get_int64().get(newValue);
-		if (result) {
-			return false;
+		if (auto result = jsonData.get_int64().get(newValue); result) {
+			throwError(result);
 		}
 		data = static_cast<value_type>(newValue);
-		return !result;
+		return;
 	}
 }
 
-bool getValue(std::nullptr_t& , simdjson::ondemand::value value) {
+template<> void getValue(std::nullptr_t&, simdjson::ondemand::value value) {
 	auto result = value.is_null();
-	if (result.error()) {
-		return false;
+	if (auto resultNew = result.error(); resultNew) {
+		throwError(resultNew);
 	}
-	if (result.value()) {
-		return true;
-	}
-	return false;
 }
 
-bool getValue(std::string& data, simdjson::ondemand::value jsonData) {
+template<string_t value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	std::string_view newValue;
-	auto result = jsonData.get(newValue);
-	if (result) {
-		return false;
+	if (auto result = jsonData.get(newValue); result) {
+		throwError(result);
 	}
-	data = static_cast<std::string>(newValue);
-	return !result;
+	data = static_cast<value_type>(newValue);
 }
 
-template<bool_t value_type> bool getValue(value_type& data, simdjson::ondemand::value jsonData) {
+template<bool_t value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	bool newValue;
 	auto result = jsonData.get(newValue);
 	if (result) {
-		return false;
+		throwError(result);
 	}
 	data = static_cast<value_type>(newValue);
-	return !result;
+	return;
 }
 
-template<vector_t value_type> bool getValue(value_type& value, simdjson::ondemand::value jsonData) {
+simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
 	auto newArr = jsonData.get_array();
 	if (auto result = newArr.error()) {
-		return false;
+		throwError(result);
 	}
-	auto newArray	= newArr.value();
+	return newArr.value();
+}
+
+simdjson::ondemand::object getObject(simdjson::ondemand::value jsonData) {
+	auto newObj = jsonData.get_object();
+	if (auto result = newObj.error()) {
+		throwError(result);
+	}
+	return newObj.value();
+}
+
+template<vector_t value_type> void getValue(value_type& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::array newArray{ getArray(jsonData) };
 	const auto size = value.size();
 	auto iter		= newArray.begin();
 	typename value_type::value_type valueNew;
 	for (size_t x = 0; (x < size) && (iter != newArray.end()); ++x, ++iter) {
-		if (!getValue(valueNew, iter.value().operator*().value())) {
-			return false;
-		}
+		getValue(valueNew, iter.value().operator*().value());
 		value[x] = std::move(valueNew);
 	}
 	for (; iter != newArray.end(); ++iter) {
-		if (!getValue(valueNew, iter.value().operator*().value())) {
-			return false;
-		}
+		getValue(valueNew, iter.value().operator*().value());
 		value.emplace_back(std::move(valueNew));
 	}
-	return true;
 }
 
-template<typename value_type> bool getValue(std::optional<value_type>& vec, simdjson::ondemand::value jsonData) {
+template<typename value_type> void getValue(std::optional<value_type>& vec, simdjson::ondemand::value jsonData) {
 	if (!jsonData.is_null().value()) {
-		if (!getValue(vec.emplace(), jsonData)) {
-			return false;
-		}
+		getValue(vec.emplace(), jsonData);
 	}
-	return true;
 }
 
-template<map_t value_type> bool getValue(value_type& value, simdjson::ondemand::value jsonData) {
-	simdjson::ondemand::object object;
-	auto error = jsonData.get_object().get(object);
-	if (error) {
-		throwError(error);
-	}
+template<map_t value_type> void getValue(value_type& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object object{ getObject(jsonData) };
 	for (auto field: object) {
 		typename std::remove_cvref_t<decltype(value)>::key_type key;
 		auto key_result = field.unescaped_key();
 		if (auto result = key_result.error()) {
-			return false;
+			throwError(result);
 		}
 
 		key = static_cast<typename std::remove_cvref_t<decltype(value)>::key_type>(std::string(key_result.value()));
 
 		simdjson::ondemand::value field_value = field.value();
 		typename std::remove_cvref_t<decltype(value)>::mapped_type newValue;
-		if (!getValue(newValue, field_value)) {
-			return false;
-		}
+		getValue(newValue, field_value);
 		value[key] = std::move(newValue);
 	}
 
-	return true;
+	return;
 }
 
-template<typename value_type> bool getValue(value_type& value, simdjson::ondemand::object jsonData, const std::string_view& key) {
-	simdjson::ondemand::value jsonValue;
-	auto error = jsonData[key].get(jsonValue);
-	if (error == simdjson::SUCCESS) {
-		return getValue(value, jsonValue);
-	}else if (error == simdjson::NO_SUCH_FIELD){
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool getValue(std::string*& value, simdjson::ondemand::value jsonData) {
-	if (!value) {
-		value = new std::string{};
-	}
-	return getValue(*value, jsonData);
-}
-
-bool getValue(hashtag_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	return getValue(value.indices, obj, "indices") && getValue(value.text, obj, "text");
-}
-
-bool getValue(large_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	return getValue(value.w, obj, "w") && getValue(value.h, obj, "h") && getValue(value.resize, obj, "resize");
-}
-
-bool getValue(sizes_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	return getValue(value.medium, obj, "medium") && getValue(value.small, obj, "small") && getValue(value.thumb, obj, "thumb") && getValue(value.large, obj, "large");
-}
-
-bool getValue(media_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.source_status_id, obj, "source_status_id"))
-		return false;
-	if (!getValue(value.source_status_id_str, obj, "source_status_id_str"))
-		return false;
-	if (!getValue(value.id, obj, "id"))
-		return false;
-	if (!getValue(value.id_str, obj, "id_str"))
-		return false;
-	if (!getValue(value.indices, obj, "indices"))
-		return false;
-	if (!getValue(value.media_url, obj, "media_url"))
-		return false;
-	if (!getValue(value.media_url_https, obj, "media_url_https"))
-		return false;
-	if (!getValue(value.url, obj, "url"))
-		return false;
-	if (!getValue(value.display_url, obj, "display_url"))
-		return false;
-	if (!getValue(value.expanded_url, obj, "expanded_url"))
-		return false;
-	if (!getValue(value.type, obj, "type"))
-		return false;
-	if (!getValue(value.sizes, obj, "sizes"))
-		return false;
-	return true;
-}
-
-bool getValue(url_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.url, obj, "url"))
-		return false;
-	if (!getValue(value.expanded_url, obj, "expanded_url"))
-		return false;
-	if (!getValue(value.display_url, obj, "display_url"))
-		return false;
-	if (!getValue(value.indices, obj, "indices"))
-		return false;
-
-	return true;
-}
-
-bool getValue(user_mention& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.screen_name, obj, "screen_name"))
-		return false;
-	if (!getValue(value.name, obj, "name"))
-		return false;
-	if (!getValue(value.id, obj, "id"))
-		return false;
-	if (!getValue(value.id_str, obj, "id_str"))
-		return false;
-
-	return getValue(value.indices, obj, "indices");
-}
-
-bool getValue(status_entities& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(value.media, obj, "media");
-	return getValue(value.hashtags, obj,"hashtags") && getValue(value.symbols, obj,"symbols") && getValue(value.urls, obj, "urls") &&
-		getValue(value.user_mentions, obj, "user_mentions");
-}
-
-bool getValue(metadata_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.result_type, obj, "result_type"))
-		return false;
-	if (!getValue(value.iso_language_code, obj, "iso_language_code"))
-		return false;
-
-	return true;
-}
-
-bool getValue(search_metadata_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.completed_in, obj, "completed_in"))
-		return false;
-	if (!getValue(value.max_id, obj, "max_id"))
-		return false;
-	if (!getValue(value.max_id_str, obj, "max_id_str"))
-		return false;
-	if (!getValue(value.next_results, obj, "next_results"))
-		return false;
-	if (!getValue(value.query, obj, "query"))
-		return false;
-	if (!getValue(value.refresh_url, obj, "refresh_url"))
-		return false;
-	if (!getValue(value.count, obj, "count"))
-		return false;
-	if (!getValue(value.since_id, obj, "since_id"))
-		return false;
-	if (!getValue(value.since_id_str, obj, "since_id_str"))
-		return false;
-
-	return true;
-}
-
-bool getValue(description_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	return getValue(value.urls, obj, "urls");
-}
-
-bool getValue(user_entities& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	if (!getValue(value.url, obj, "url")) {
-		return false;
-	}
-	return getValue(value.description, obj, "description");
-}
-
-bool getValue(twitter_user_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	if (!getValue(value.url, obj, "url")) {
-		return false;
-	}
-	if (!getValue(value.utc_offset, obj, "utc_offset")) {
-		return false;
-	}
-	if (!getValue(value.time_zone, obj, "time_zone")) {
-		return false;
-	}
-	if (!getValue(value.profile_banner_url, obj, "profile_banner_url")) {
-		return false;
-	}
-	if (!getValue(value.id, obj, "id") || !getValue(value.id_str, obj, "id_str") || !getValue(value.name, obj, "name") || !getValue(value.screen_name, obj, "screen_name") ||
-		!getValue(value.location, obj, "location") || !getValue(value.description, obj, "description") || !getValue(value.protectedVal, obj, "protected") ||
-		!getValue(value.followers_count, obj, "followers_count") || !getValue(value.friends_count, obj, "friends_count") || !getValue(value.listed_count, obj, "listed_count") ||
-		!getValue(value.created_at, obj, "created_at") || !getValue(value.favourites_count, obj, "favourites_count") || !getValue(value.geo_enabled, obj, "geo_enabled") ||
-		!getValue(value.verified, obj, "verified") || !getValue(value.statuses_count, obj, "statuses_count") || !getValue(value.lang, obj, "lang") ||
-		!getValue(value.contributors_enabled, obj, "contributors_enabled") || !getValue(value.is_translator, obj, "is_translator") ||
-		!getValue(value.is_translation_enabled, obj, "is_translation_enabled")) {
-		return false;
-	}
-
-	return true;
-}
-
-bool getValue(unique_ptr_t auto& e, simdjson::ondemand::value jsonData) {
+template<unique_ptr_t value_type> void getValue(value_type& e, simdjson::ondemand::value jsonData) {
 	if (!e) {
 		e = std::make_unique<std::remove_cvref_t<decltype(*e)>>();
 	}
 	return getValue(*e, jsonData);
 }
 
-bool getValue(shared_ptr_t auto& e, simdjson::ondemand::value jsonData) {
+template<shared_ptr_t value_type> void getValue(value_type& e, simdjson::ondemand::value jsonData) {
 	if (!e) {
 		e = std::make_shared<std::remove_cvref_t<decltype(*e)>>();
 	}
 	return getValue(*e, jsonData);
 }
 
-bool getValue(status_data& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
+template<> void getValue(std::string*& value, simdjson::ondemand::value jsonData) {
+	if (!value) {
+		value = new std::string{};
 	}
-	auto obj = newObj.value();
-
-	if (!getValue(value.metadata, obj, "metadata")) {
-		return false;
-	}
-	if (!getValue(value.created_at, obj, "created_at")) {
-		return false;
-	}
-	if (!getValue(value.id, obj, "id")) {
-		return false;
-	}
-	if (!getValue(value.id_str, obj, "id_str")) {
-		return false;
-	}
-	if (!getValue(value.text, obj, "text")) {
-		return false;		
-	}
-	if (!getValue(value.source, obj, "source")) {
-		return false;		
-	}
-	if (!getValue(value.truncated, obj, "truncated")) {
-		return false;
-	}
-	if (!getValue(value.in_reply_to_status_id, obj, "in_reply_to_status_id")) {
-		return false;
-	}
-	if (!getValue(value.in_reply_to_status_id_str, obj, "in_reply_to_status_id_str")) {
-		return false;
-	}
-	if (!getValue(value.in_reply_to_user_id, obj, "in_reply_to_user_id")) {
-		return false;
-	}
-	if (!getValue(value.in_reply_to_user_id_str, obj, "in_reply_to_user_id_str")) {
-		return false;
-	}
-	if (!getValue(value.in_reply_to_screen_name, obj, "in_reply_to_screen_name")) {
-		return false;
-	}
-	if (!getValue(value.user, obj, "user")) {
-		return false;
-	}
-	if (!getValue(value.geo, obj, "geo")) {
-		return false;
-	}
-	if (!getValue(value.coordinates, obj, "coordinates")) {
-		return false;
-	}
-	if (!getValue(value.place, obj, "place")) {
-		return false;
-	}
-	if (!getValue(value.contributors, obj, "contributors")) {
-		return false;
-	}
-	if (!getValue(value.retweet_count, obj, "retweet_count")) {
-		return false;
-	}
-	if (!getValue(value.favorite_count, obj, "favorite_count")) {
-		return false;
-	}
-	if (!getValue(value.entities, obj, "entities")) {
-		return false;
-	}
-	if (!getValue(value.favorited, obj, "favorited")) {
-		return false;
-	}
-	if (!getValue(value.retweeted, obj, "retweeted")) {
-		return false;
-	}
-	if (!getValue(value.lang, obj, "lang")) {
-		return false;
-	}
-	if (!getValue(value.retweeted_status, obj, "retweeted_status")) {
-		return false;
-	}
-	if (!getValue(value.possibly_sensitive, obj, "possibly_sensitive")) {
-		return false;
-	}
-	return true;
+	return getValue(*value, jsonData);
 }
 
-bool getValue(twitter_message& value, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
+template<typename value_type> void getValue(value_type& value, simdjson::ondemand::object jsonData, const std::string_view& key) {
+	simdjson::ondemand::value jsonValue;
+	auto error = jsonData[key].get(jsonValue);
+	if (error == simdjson::SUCCESS) {
+		return getValue(value, jsonValue);
+	} else if (error == simdjson::NO_SUCH_FIELD) {
+		return;
+	} else {
+		throwError(error);
 	}
-	auto obj = newObj.value();
-	return getValue(value.statuses, obj, "statuses") && getValue(value.search_metadata, obj, "search_metadata");
 }
 
-bool getValue(audience_sub_category_names& p, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	return getValue(p.the337100890, obj, "337100890");
+template<> void getValue(hashtag_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.indices, obj, "indices");
+	getValue(value.text, obj, "text");
 }
 
-bool getValue(names&, simdjson::ondemand::value) {
-	return true;
+template<> void getValue(large_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.w, obj, "w");
+	getValue(value.h, obj, "h");
+	getValue(value.resize, obj, "resize");
 }
 
-bool getValue(event& e, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(e.description, obj, "description") && getValue(e.id, obj, "id") && getValue(e.logo, obj, "logo") && getValue(e.name, obj, "name") &&
-		getValue(e.topicIds, obj, "subTopicIds") && getValue(e.subjectCode, obj, "subjectCode") && getValue(e.subtitle, obj, "subtitle") &&
-		getValue(e.topicIds, obj, "topicIds");
+template<> void getValue(sizes_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.medium, obj, "medium");
+	getValue(value.small, obj, "small");
+	getValue(value.thumb, obj, "thumb");
+	getValue(value.large, obj, "large");
 }
 
-bool getValue(price& p, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(p.amount, obj, "amount") && getValue(p.audienceSubCategoryId, obj, "audienceSubCategoryId") && getValue(p.seatCategoryId, obj, "seatCategoryId");
+template<> void getValue(media_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.source_status_id, obj, "source_status_id");
+	getValue(value.source_status_id_str, obj, "source_status_id_str");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.indices, obj, "indices");
+	getValue(value.media_url, obj, "media_url");
+	getValue(value.media_url_https, obj, "media_url_https");
+	getValue(value.url, obj, "url");
+	getValue(value.display_url, obj, "display_url");
+	getValue(value.expanded_url, obj, "expanded_url");
+	getValue(value.type, obj, "type");
+	getValue(value.sizes, obj, "sizes");
 }
 
-bool getValue(area& a, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(a.areaId, obj, "areaId") && getValue(a.blockIds, obj, "blockIds");
+template<> void getValue(url_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.url, obj, "url");
+	getValue(value.expanded_url, obj, "expanded_url");
+	getValue(value.display_url, obj, "display_url");
+	getValue(value.indices, obj, "indices");
 }
 
-bool getValue(seat_category& sc, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(sc.areas, obj, "areas") && getValue(sc.seatCategoryId, obj, "seatCategoryId");
+template<> void getValue(user_mention& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.screen_name, obj, "screen_name");
+	getValue(value.name, obj, "name");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.indices, obj, "indices");
 }
 
-bool getValue(venue_names& vn, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(vn.PLEYEL_PLEYEL, obj, "PLEYEL_PLEYEL");
+template<> void getValue(status_entities& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.media, obj, "media");
+	getValue(value.hashtags, obj, "hashtags");
+	getValue(value.symbols, obj, "symbols");
+	getValue(value.urls, obj, "urls");
+	getValue(value.user_mentions, obj, "user_mentions");
 }
 
-bool getValue(performance& p, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(p.eventId, obj, "eventId") && getValue(p.eventId, obj, "id") && getValue(p.logo, obj, "logo") && getValue(p.name, obj, "name") &&
-		getValue(p.prices, obj, "prices") && getValue(p.seatCategories, obj, "seatCategories") && getValue(p.seatMapImage, obj, "seatMapImage") &&
-		getValue(p.start, obj, "start") && getValue(p.venueCode, obj, "venueCode");
+template<> void getValue(metadata_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.result_type, obj, "result_type");
+	getValue(value.iso_language_code, obj, "iso_language_code");
 }
 
-bool getValue(citm_catalog_message& msg, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	if (!getValue(msg.areaNames, obj, "areaNames"))
-		return false;
-	if (!getValue(msg.audienceSubCategoryNames, obj, "audienceSubCategoryNames"))
-		return false;
-	if (!getValue(msg.blockNames, obj, "blockNames"))
-		return false;
-	if (!getValue(msg.events, obj, "events"))
-		return false;
-	if (!getValue(msg.performances, obj, "performances"))
-		return false;
-	if (!getValue(msg.seatCategoryNames, obj, "seatCategoryNames"))
-		return false;
-	if (!getValue(msg.subTopicNames, obj, "subTopicNames"))
-		return false;
-	if (!getValue(msg.subjectNames, obj, "subjectNames"))
-		return false;
-	if (!getValue(msg.topicNames, obj, "topicNames"))
-		return false;
-	if (!getValue(msg.topicSubTopics, obj, "topicSubTopics"))
-		return false;
-	if (!getValue(msg.venueNames, obj, "venueNames"))
-		return false;
-
-	return true;
+template<> void getValue(search_metadata_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.completed_in, obj, "completed_in");
+	getValue(value.max_id, obj, "max_id");
+	getValue(value.max_id_str, obj, "max_id_str");
+	getValue(value.next_results, obj, "next_results");
+	getValue(value.query, obj, "query");
+	getValue(value.refresh_url, obj, "refresh_url");
+	getValue(value.count, obj, "count");
+	getValue(value.since_id, obj, "since_id");
+	getValue(value.since_id_str, obj, "since_id_str");
 }
 
-bool getValue(geometry_data& geometry, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-
-	return getValue(geometry.type, obj, "type") && getValue(geometry.coordinates, obj, "coordinates");
+template<> void getValue(description_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.urls, obj, "urls");
 }
 
-bool getValue(properties_data& properties, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-if (newObj.error()) {
-	return false;
-}
-auto obj = newObj.value();
-
-	return getValue(properties.name, obj, "name");
+template<> void getValue(user_entities& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.url, obj, "url");
+	getValue(value.description, obj, "description");
 }
 
-bool getValue(feature& f, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-if (newObj.error()) {
-	return false;
+template<> void getValue(twitter_user_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.url, obj, "url");
+	getValue(value.utc_offset, obj, "utc_offset");
+	getValue(value.time_zone, obj, "time_zone");
+	getValue(value.profile_banner_url, obj, "profile_banner_url");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.name, obj, "name");
+	getValue(value.screen_name, obj, "screen_name");
+	getValue(value.location, obj, "location");
+	getValue(value.description, obj, "description");
+	getValue(value.protectedVal, obj, "protected");
+	getValue(value.followers_count, obj, "followers_count");
+	getValue(value.friends_count, obj, "friends_count");
+	getValue(value.listed_count, obj, "listed_count");
+	getValue(value.created_at, obj, "created_at");
+	getValue(value.favourites_count, obj, "favourites_count");
+	getValue(value.geo_enabled, obj, "geo_enabled");
+	getValue(value.verified, obj, "verified");
+	getValue(value.statuses_count, obj, "statuses_count");
+	getValue(value.lang, obj, "lang");
+	getValue(value.contributors_enabled, obj, "contributors_enabled");
+	getValue(value.is_translator, obj, "is_translator");
+	getValue(value.is_translation_enabled, obj, "is_translation_enabled");
 }
-auto obj = newObj.value();
 
-	return getValue(f.type, obj, "type") && getValue(f.properties, obj, "properties") && getValue(f.geometry, obj, "geometry");
+template<> void getValue(status_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.metadata, obj, "metadata");
+	getValue(value.created_at, obj, "created_at");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.text, obj, "text");
+	getValue(value.source, obj, "source");
+	getValue(value.truncated, obj, "truncated");
+	getValue(value.in_reply_to_status_id, obj, "in_reply_to_status_id");
+	getValue(value.in_reply_to_status_id_str, obj, "in_reply_to_status_id_str");
+	getValue(value.in_reply_to_user_id, obj, "in_reply_to_user_id");
+	getValue(value.in_reply_to_user_id_str, obj, "in_reply_to_user_id_str");
+	getValue(value.in_reply_to_screen_name, obj, "in_reply_to_screen_name");
+	getValue(value.user, obj, "user");
+	getValue(value.geo, obj, "geo");
+	getValue(value.coordinates, obj, "coordinates");
+	getValue(value.place, obj, "place");
+	getValue(value.contributors, obj, "contributors");
+	getValue(value.retweet_count, obj, "retweet_count");
+	getValue(value.favorite_count, obj, "favorite_count");
+	getValue(value.entities, obj, "entities");
+	getValue(value.favorited, obj, "favorited");
+	getValue(value.retweeted, obj, "retweeted");
+	getValue(value.lang, obj, "lang");
+	getValue(value.retweeted_status, obj, "retweeted_status");
+	getValue(value.possibly_sensitive, obj, "possibly_sensitive");
 }
 
-bool getValue(canada_message& message, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-if (newObj.error()) {
-	return false;
-}
-auto obj = newObj.value();
-
-	return getValue(message.type, obj, "type") && getValue(message.features, obj, "features");
+template<> void getValue(twitter_message& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.statuses, obj, "statuses");
+	getValue(value.search_metadata, obj, "search_metadata");
 }
 
-bool getValue(int*& out_value, simdjson::ondemand::value jsonData) {
+template<> void getValue(audience_sub_category_names& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.the337100890, obj, "337100890");
+}
+
+template<> void getValue(names&, simdjson::ondemand::value) {
+	// No data extraction needed
+}
+
+template<> void getValue(event& e, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(e.description, obj, "description");
+	getValue(e.id, obj, "id");
+	getValue(e.logo, obj, "logo");
+	getValue(e.name, obj, "name");
+	getValue(e.topicIds, obj, "subTopicIds");
+	getValue(e.subjectCode, obj, "subjectCode");
+	getValue(e.subtitle, obj, "subtitle");
+	getValue(e.topicIds, obj, "topicIds");
+}
+
+template<> void getValue(price& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.amount, obj, "amount");
+	getValue(p.audienceSubCategoryId, obj, "audienceSubCategoryId");
+	getValue(p.seatCategoryId, obj, "seatCategoryId");
+}
+
+template<> void getValue(area& a, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(a.areaId, obj, "areaId");
+	getValue(a.blockIds, obj, "blockIds");
+}
+
+template<> void getValue(seat_category& sc, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(sc.areas, obj, "areas");
+	getValue(sc.seatCategoryId, obj, "seatCategoryId");
+}
+
+template<> void getValue(venue_names& vn, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(vn.PLEYEL_PLEYEL, obj, "PLEYEL_PLEYEL");
+}
+
+template<> void getValue(performance& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.eventId, obj, "eventId");
+	getValue(p.eventId, obj, "id");
+	getValue(p.logo, obj, "logo");
+	getValue(p.name, obj, "name");
+	getValue(p.prices, obj, "prices");
+	getValue(p.seatCategories, obj, "seatCategories");
+	getValue(p.seatMapImage, obj, "seatMapImage");
+	getValue(p.start, obj, "start");
+	getValue(p.venueCode, obj, "venueCode");
+}
+
+template<> void getValue(citm_catalog_message& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.areaNames, obj, "areaNames");
+	getValue(msg.audienceSubCategoryNames, obj, "audienceSubCategoryNames");
+	getValue(msg.blockNames, obj, "blockNames");
+	getValue(msg.events, obj, "events");
+	getValue(msg.performances, obj, "performances");
+	getValue(msg.seatCategoryNames, obj, "seatCategoryNames");
+	getValue(msg.subTopicNames, obj, "subTopicNames");
+	getValue(msg.subjectNames, obj, "subjectNames");
+	getValue(msg.topicNames, obj, "topicNames");
+	getValue(msg.topicSubTopics, obj, "topicSubTopics");
+	getValue(msg.venueNames, obj, "venueNames");
+}
+
+template<> void getValue(geometry_data& geometry, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(geometry.type, obj, "type");
+	getValue(geometry.coordinates, obj, "coordinates");
+}
+
+template<> void getValue(properties_data& properties, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(properties.name, obj, "name");
+}
+
+template<> void getValue(feature& f, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(f.type, obj, "type");
+	getValue(f.properties, obj, "properties");
+	getValue(f.geometry, obj, "geometry");
+}
+
+template<> void getValue(canada_message& message, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(message.type, obj, "type");
+	getValue(message.features, obj, "features");
+}
+
+template<> void getValue(int*& out_value, simdjson::ondemand::value jsonData) {
 	int64_t temp{};
-	if (jsonData.get(temp)) {
-		return false;
+	if (auto result = jsonData.get(temp); result) {
+		throwError(result);
 	}
 	out_value = new int(static_cast<int>(temp));
-	return true;
 }
 
-bool getValue(std::unique_ptr<int>& out_value, simdjson::ondemand::value jsonData) {
-	int64_t temp;
-	if (jsonData.get(temp)) {
-		std::cerr << "Error parsing integer value\n";
-		return false;
+template<> void getValue(std::unique_ptr<int>& out_value, simdjson::ondemand::value jsonData) {
+	int64_t temp{};
+	if (auto result = jsonData.get(temp); result) {
+		throwError(result);
 	}
-	out_value = std::make_unique<int>(temp);
-	return true;
+	out_value = std::make_unique<int>(static_cast<int>(temp));
 }
 
-bool getValue(icon_emoji_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.name, obj, "name");
-	getValue(returnValue.id, obj, "name");
-	return true;
+template<> void getValue(icon_emoji_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(permission_overwrite& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.allow, obj, "allow");
-	getValue(returnValue.deny, obj, "deny");
-	getValue(returnValue.id, obj, "id");
-	getValue(returnValue.type, obj, "type");
-	return true;
+template<> void getValue(permission_overwrite& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.allow, obj, "allow");
+	getValue(msg.type, obj, "type");
+	getValue(msg.deny, obj, "deny");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(channel_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.permission_overwrites, obj, "permission_overwrites");
-	getValue(returnValue.last_message_id, obj, "last_message_id");
-	getValue(returnValue.default_thread_rate_limit_per_user, obj, "default_thread_rate_limit_per_user");
-	getValue(returnValue.applied_tags, obj, "applied_tags");
-	getValue(returnValue.recipients, obj, "recipients");
-	getValue(returnValue.default_auto_archive_duration, obj, "default_auto_archive_duration");
-	getValue(returnValue.status, obj, "status");
-	getValue(returnValue.last_pin_timestamp, obj, "last_pin_timestamp");
-	getValue(returnValue.topic, obj, "topic");
-	getValue(returnValue.rate_limit_per_user, obj, "rate_limit_per_user");
-	getValue(returnValue.icon_emoji, obj, "icon_emoji");
-	getValue(returnValue.total_message_sent, obj, "total_message_sent");
-	getValue(returnValue.video_quality_mode, obj, "video_quality_mode");
-	getValue(returnValue.application_id, obj, "application_id");
-	getValue(returnValue.permissions, obj, "permissions");
-	getValue(returnValue.message_count, obj, "message_count");
-	getValue(returnValue.parent_id, obj, "parent_id");
-	getValue(returnValue.member_count, obj, "member_count");
-	getValue(returnValue.owner_id, obj, "owner_id");
-	getValue(returnValue.guild_id, obj, "guild_id");
-	getValue(returnValue.user_limit, obj, "user_limit");
-	getValue(returnValue.position, obj, "position");
-	getValue(returnValue.name, obj, "name");
-	getValue(returnValue.icon, obj, "icon");
-	getValue(returnValue.version, obj, "version");
-	getValue(returnValue.bitrate, obj, "bitrate");
-	getValue(returnValue.id, obj, "id");
-	getValue(returnValue.flags, obj, "flags");
-	getValue(returnValue.type, obj, "type");
-	getValue(returnValue.managed, obj, "managed");
-	getValue(returnValue.nsfw, obj, "nsfw");
-	return true;
+template<> void getValue(channel_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.default_thread_rate_limit_per_user, obj, "default_thread_rate_limit_per_user");
+	getValue(msg.default_auto_archive_duration, obj, "default_auto_archive_duration");
+	getValue(msg.permission_overwrites, obj, "permission_overwrites");
+	getValue(msg.rate_limit_per_user, obj, "rate_limit_per_user");
+	getValue(msg.video_quality_mode, obj, "video_quality_mode");
+	getValue(msg.total_message_sent, obj, "total_message_sent");
+	getValue(msg.last_pin_timestamp, obj, "last_pin_timestamp");
+	getValue(msg.last_message_id, obj, "last_message_id");
+	getValue(msg.application_id, obj, "application_id");
+	getValue(msg.message_count, obj, "message_count");
+	getValue(msg.member_count, obj, "member_count");
+	getValue(msg.applied_tags, obj, "applied_tags");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.user_limit, obj, "user_limit");
+	getValue(msg.icon_emoji, obj, "icon_emoji");
+	getValue(msg.recipients, obj, "recipients");
+	getValue(msg.parent_id, obj, "parent_id");
+	getValue(msg.position, obj, "position");
+	getValue(msg.guild_id, obj, "guild_id");
+	getValue(msg.owner_id, obj, "owner_id");
+	getValue(msg.managed, obj, "managed");
+	getValue(msg.bitrate, obj, "bitrate");
+	getValue(msg.version, obj, "version");
+	getValue(msg.status, obj, "status");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.topic, obj, "topic");
+	getValue(msg.nsfw, obj, "nsfw");
+	getValue(msg.type, obj, "type");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(user_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.avatar_decoration_data, obj, "avatar_decoration_data");
-	getValue(returnValue.display_name, obj, "display_name");
-	getValue(returnValue.global_name, obj, "global_name");
-	getValue(returnValue.avatar, obj, "avatar");
-	getValue(returnValue.banner, obj, "banner");
-	getValue(returnValue.locale, obj, "locale");
-	getValue(returnValue.discriminator, obj, "discriminator");
-	getValue(returnValue.user_name, obj, "user_name");
-	getValue(returnValue.accent_color, obj, "accent_color");
-	getValue(returnValue.premium_type, obj, "premium_type");
-	getValue(returnValue.public_flags, obj, "public_flags");
-	getValue(returnValue.email, obj, "email");
-	getValue(returnValue.mfa_enabled, obj, "mfa_enabled");
-	getValue(returnValue.id, obj, "id");
-	getValue(returnValue.flags, obj, "flags");
-	getValue(returnValue.verified, obj, "verified");
-	getValue(returnValue.system, obj, "system");
-	getValue(returnValue.bot, obj, "bot");
-	return true;
+template<> void getValue(user_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.avatar_decoration_data, obj, "avatar_decoration_data");
+	getValue(msg.discriminator, obj, "discriminator");
+	getValue(msg.public_flags, obj, "public_flags");
+	getValue(msg.premium_type, obj, "premium_type");
+	getValue(msg.accent_color, obj, "accent_color");
+	getValue(msg.display_name, obj, "display_name");
+	getValue(msg.mfa_enabled, obj, "mfa_enabled");
+	getValue(msg.global_name, obj, "global_name");
+	getValue(msg.user_name, obj, "user_name");
+	getValue(msg.verified, obj, "verified");
+	getValue(msg.system, obj, "system");
+	getValue(msg.locale, obj, "locale");
+	getValue(msg.banner, obj, "banner");
+	getValue(msg.avatar, obj, "avatar");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.email, obj, "email");
+	getValue(msg.bot, obj, "bot");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(member_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.communication_disabled_until, obj, "communication_disabled_until");
-	getValue(returnValue.premium_since, obj, "premium_since");
-	getValue(returnValue.nick, obj, "nick");
-	getValue(returnValue.avatar, obj, "avatar");
-	getValue(returnValue.roles, obj, "roles");
-	getValue(returnValue.permissions, obj, "permissions");
-	getValue(returnValue.joined_at, obj, "joined_at");
-	getValue(returnValue.guild_id, obj, "guild_id");
-	getValue(returnValue.user, obj, "user");
-	getValue(returnValue.flags, obj, "flags");
-	getValue(returnValue.pending, obj, "pending");
-	getValue(returnValue.deaf, obj, "deaf");
-	getValue(returnValue.mute, obj, "mute");
-	return true;
+template<> void getValue(member_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.communication_disabled_until, obj, "communication_disabled_until");
+	getValue(msg.premium_since, obj, "premium_since");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.joined_at, obj, "joined_at");
+	getValue(msg.guild_id, obj, "guild_id");
+	getValue(msg.pending, obj, "pending");
+	getValue(msg.avatar, obj, "avatar");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.roles, obj, "roles");
+	getValue(msg.mute, obj, "mute");
+	getValue(msg.deaf, obj, "deaf");
+	getValue(msg.user, obj, "user");
+	getValue(msg.nick, obj, "nick");
 }
 
-bool getValue(tags_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.premium_subscriber, obj, "premium_subscriber");
-	getValue(returnValue.bot_id, obj, "bot_id");
-	return true;
+template<> void getValue(tags_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.premium_subscriber, obj, "premium_subscriber");
+	getValue(msg.bot_id, obj, "bot_id");
 }
 
-bool getValue(role_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.unicode_emoji, obj, "unicode_emoji");
-	getValue(returnValue.icon, obj, "icon");
-	getValue(returnValue.permissions, obj, "permissions");
-	getValue(returnValue.position, obj, "position");
-	getValue(returnValue.name, obj, "name");
-	getValue(returnValue.mentionable, obj, "mentionable");
-	getValue(returnValue.version, obj, "version");
-	getValue(returnValue.id, obj, "id");
-	getValue(returnValue.tags, obj, "tags");
-	getValue(returnValue.color, obj, "color");
-	getValue(returnValue.flags, obj, "flags");
-	getValue(returnValue.managed, obj, "managed");
-	getValue(returnValue.hoist, obj, "hoist");
-	return true;
+template<> void getValue(role_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.unicode_emoji, obj, "unicode_emoji");
+	getValue(msg.mentionable, obj, "mentionable");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.position, obj, "position");
+	getValue(msg.managed, obj, "managed");
+	getValue(msg.version, obj, "version");
+	getValue(msg.hoist, obj, "hoist");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.color, obj, "color");
+	getValue(msg.tags, obj, "tags");
+	getValue(msg.name, obj, "name");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(guild_data& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
-	getValue(returnValue.latest_on_boarding_question_id, obj, "latest_on_boarding_question_id");
-	getValue(returnValue.guild_scheduled_events, obj, "guild_scheduled_events");
-	getValue(returnValue.safety_alerts_channel_id, obj, "safety_alerts_channel_id");
-	getValue(returnValue.inventory_settings, obj, "inventory_settings");
-	getValue(returnValue.voice_states, obj, "voice_states");
-	getValue(returnValue.discovery_splash, obj, "discovery_splash");
-	getValue(returnValue.vanity_url_code, obj, "vanity_url_code");
-	getValue(returnValue.application_id, obj, "application_id");
-	getValue(returnValue.afk_channel_id, obj, "afk_channel_id");
-	getValue(returnValue.default_message_notifications, obj, "default_message_notifications");
-	getValue(returnValue.max_stage_video_channel_users, obj, "max_stage_video_channel_users");
-	getValue(returnValue.public_updates_channel_id, obj, "public_updates_channel_id");
-	getValue(returnValue.description, obj, "description");
-	getValue(returnValue.threads, obj, "threads");
-	getValue(returnValue.channels, obj, "channels");
-	getValue(returnValue.premium_subscription_count, obj, "premium_subscription_count");
-	getValue(returnValue.approximate_presence_count, obj, "approximate_presence_count");
-	getValue(returnValue.features, obj, "features");
-	getValue(returnValue.stickers, obj, "stickers");
-	getValue(returnValue.premium_progress_bar_enabled, obj, "premium_progress_bar_enabled");
-	getValue(returnValue.members, obj, "members");
-	getValue(returnValue.hub_type, obj, "hub_type");
-	getValue(returnValue.approximate_member_count, obj, "approximate_member_count");
-	getValue(returnValue.explicit_content_filter, obj, "explicit_content_filter");
-	getValue(returnValue.max_video_channel_users, obj, "max_video_channel_users");
-	getValue(returnValue.splash, obj, "splash");
-	getValue(returnValue.banner, obj, "banner");
-	getValue(returnValue.system_channel_id, obj, "system_channel_id");
-	getValue(returnValue.widget_channel_id, obj, "widget_channel_id");
-	getValue(returnValue.preferred_locale, obj, "preferred_locale");
-	getValue(returnValue.system_channel_flags, obj, "system_channel_flags");
-	getValue(returnValue.rules_channel_id, obj, "rules_channel_id");
-	getValue(returnValue.roles, obj, "roles");
-	getValue(returnValue.verification_level, obj, "verification_level");
-	getValue(returnValue.permissions, obj, "permissions");
-	getValue(returnValue.max_presences, obj, "max_presences");
-	getValue(returnValue.discovery, obj, "discovery");
-	getValue(returnValue.joined_at, obj, "joined_at");
-	getValue(returnValue.member_count, obj, "member_count");
-	getValue(returnValue.premium_tier, obj, "premium_tier");
-	getValue(returnValue.owner_id, obj, "owner_id");
-	getValue(returnValue.max_members, obj, "max_members");
-	getValue(returnValue.afk_timeout, obj, "afk_timeout");
-	getValue(returnValue.widget_enabled, obj, "widget_enabled");
-	getValue(returnValue.region, obj, "region");
-	getValue(returnValue.nsfw_level, obj, "nsfw_level");
-	getValue(returnValue.mfa_level, obj, "mfa_level");
-	getValue(returnValue.name, obj, "name");
-	getValue(returnValue.icon, obj, "icon");
-	getValue(returnValue.unavailable, obj, "unavailable");
-	getValue(returnValue.id, obj, "id");
-	getValue(returnValue.flags, obj, "flags");
-	getValue(returnValue.large, obj, "large");
-	getValue(returnValue.owner, obj, "owner");
-	getValue(returnValue.nsfw, obj, "nsfw");
-	getValue(returnValue.lazy, obj, "lazy");
-	return true;
+template<> void getValue(guild_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.latest_on_boarding_question_id, obj, "latest_on_boarding_question_id");
+	getValue(msg.max_stage_video_channel_users, obj, "max_stage_video_channel_users");
+	getValue(msg.default_message_notifications, obj, "default_message_notifications");
+	getValue(msg.premium_progress_bar_enabled, obj, "premium_progress_bar_enabled");
+	getValue(msg.approximate_presence_count, obj, "approximate_presence_count");
+	getValue(msg.premium_subscription_count, obj, "premium_subscription_count");
+	getValue(msg.public_updates_channel_id, obj, "public_updates_channel_id");
+	getValue(msg.approximate_member_count, obj, "approximate_member_count");
+	getValue(msg.safety_alerts_channel_id, obj, "safety_alerts_channel_id");
+	getValue(msg.max_video_channel_users, obj, "max_video_channel_users");
+	getValue(msg.explicit_content_filter, obj, "explicit_content_filter");
+	getValue(msg.guild_scheduled_events, obj, "guild_scheduled_events");
+	getValue(msg.system_channel_flags, obj, "system_channel_flags");
+	getValue(msg.verification_level, obj, "verification_level");
+	getValue(msg.inventory_settings, obj, "inventory_settings");
+	getValue(msg.widget_channel_id, obj, "widget_channel_id");
+	getValue(msg.system_channel_id, obj, "system_channel_id");
+	getValue(msg.rules_channel_id, obj, "rules_channel_id");
+	getValue(msg.preferred_locale, obj, "preferred_locale");
+	getValue(msg.discovery_splash, obj, "discovery_splash");
+	getValue(msg.vanity_url_code, obj, "vanity_url_code");
+	getValue(msg.widget_enabled, obj, "widget_enabled");
+	getValue(msg.afk_channel_id, obj, "afk_channel_id");
+	getValue(msg.application_id, obj, "application_id");
+	getValue(msg.max_presences, obj, "max_presences");
+	getValue(msg.premium_tier, obj, "premium_tier");
+	getValue(msg.member_count, obj, "member_count");
+	getValue(msg.voice_states, obj, "voice_states");
+	getValue(msg.unavailable, obj, "unavailable");
+	getValue(msg.afk_timeout, obj, "afk_timeout");
+	getValue(msg.max_members, obj, "max_members");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.description, obj, "description");
+	getValue(msg.nsfw_level, obj, "nsfw_level");
+	getValue(msg.mfa_level, obj, "mfa_level");
+	getValue(msg.joined_at, obj, "joined_at");
+	getValue(msg.discovery, obj, "discovery");
+	getValue(msg.owner_id, obj, "owner_id");
+	getValue(msg.hub_type, obj, "hub_type");
+	getValue(msg.stickers, obj, "stickers");
+	getValue(msg.features, obj, "features");
+	getValue(msg.channels, obj, "channels");
+	getValue(msg.roles, obj, "roles");
+	getValue(msg.splash, obj, "splash");
+	getValue(msg.banner, obj, "banner");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
 }
 
-bool getValue(discord_message& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
+void getValue(discord_message& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.t, obj, "t");
 	getValue(returnValue.d, obj, "d");
 	getValue(returnValue.op, obj, "op");
 	getValue(returnValue.s, obj, "s");
-	return true;
 }
 
-bool getValue(abc_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
+void getValue(abc_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.z, obj, "z");
 	getValue(returnValue.y, obj, "y");
 	getValue(returnValue.x, obj, "x");
@@ -1008,29 +763,19 @@ bool getValue(abc_test<test_struct>& returnValue, simdjson::ondemand::value json
 	getValue(returnValue.c, obj, "c");
 	getValue(returnValue.b, obj, "b");
 	getValue(returnValue.a, obj, "a");
-	return true;
 }
 
-bool getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
+void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.testBools, obj, "testBools");
 	getValue(returnValue.testInts, obj, "testInts");
 	getValue(returnValue.testUints, obj, "testUints");
 	getValue(returnValue.testStrings, obj, "testStrings");
 	getValue(returnValue.testDoubles, obj, "testDoubles");
-	return true;
 }
 
-bool getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (newObj.error()) {
-		return false;
-	}
-	auto obj = newObj.value();
+void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.a, obj, "a");
 	getValue(returnValue.b, obj, "b");
 	getValue(returnValue.c, obj, "c");
@@ -1057,7 +802,6 @@ bool getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData
 	getValue(returnValue.x, obj, "x");
 	getValue(returnValue.y, obj, "y");
 	getValue(returnValue.z, obj, "z");
-	return true;
 }
 
 #endif

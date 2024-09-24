@@ -22,9 +22,8 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
-#include <jsonifier/Index.hpp>
-#include <glaze/glaze.hpp>
+#include <string>
+#include <vector>
 
 struct geometry_data {
 	std::string type;
@@ -36,8 +35,8 @@ struct properties_data {
 };
 
 struct feature {
-	std::string type;
 	properties_data properties;
+	std::string type;
 	geometry_data geometry;
 };
 

@@ -336,7 +336,7 @@ struct message_type {
 	double e{};
 };
 
-using message_element = std::tuple<std::string, std::map<std::string, std::vector<std::string>>, empty_type, std::vector<int>, int, bool, bool, int*, message_type, double, double, double,
+using message_element = std::tuple<std::string, std::unordered_map<std::string, std::vector<std::string>>, empty_type, std::vector<int>, int, bool, bool, int*, message_type, double, double, double,
 	int, double, double, double, double, double, double, std::string>;
 
 template<> struct jsonifier::core<message_type> {

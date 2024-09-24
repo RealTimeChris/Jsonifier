@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 		0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 		0 };
 
-	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
+	template<typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = uint32_t(sig / 100000000);
@@ -151,7 +151,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
+	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
