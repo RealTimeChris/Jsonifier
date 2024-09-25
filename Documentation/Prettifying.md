@@ -46,16 +46,14 @@ The `prettify_options` struct allows customization of prettifying behavior. Here
 
 ```cpp
 struct prettify_options {
-    bool newLinesInArray{ true };
-    uint64_t indentSize{ 4 };
-    uint64_t maxDepth{ 100 };
-    bool tabs{ false };
+	bool newLinesInArray{ true };
+	uint64_t indentSize{ 3 };
+	char indentChar{ ' ' };
 };
 ```
 
 - `newLinesInArray`: Specifies whether new lines are allowed within arrays (default: `true`).
-- `indentSize`: Sets the size of indentation (default: `4`).
-- `maxDepth`: Specifies the maximum depth for nested objects (default: `100`).
-- `tabs`: Indicates whether to use tabs for indentation (default: `false`).
+- `indentSize`: Sets the size of indentation (default: `3`).
+- `indentChar`: Specifies the default character to use for indentation (default: ` `).
 
 You can specify these options when calling the `prettifyJson` function to customize the prettifying behavior.

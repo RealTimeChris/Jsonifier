@@ -47,11 +47,11 @@ namespace jsonifier_internal {
 		Incorrect_Structural_Index = 3,
 	};
 
-	template<const jsonifier::prettify_options&, typename derived_type> struct prettify_impl;
+	template<jsonifier::prettify_options, typename derived_type> struct prettify_impl;
 
 	template<typename derived_type> class prettifier {
 	  public:
-		template<const jsonifier::prettify_options&, typename derived_type_new> friend struct prettify_impl;
+		template<jsonifier::prettify_options, typename derived_type_new> friend struct prettify_impl;
 
 		JSONIFIER_ALWAYS_INLINE prettifier& operator=(const prettifier& other) = delete;
 		JSONIFIER_ALWAYS_INLINE prettifier(const prettifier& other)			   = delete;

@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<const jsonifier::prettify_options& options, typename derived_type> struct prettify_impl : public writer<options> {
+	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl : public writer<options> {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			while (*iter) {

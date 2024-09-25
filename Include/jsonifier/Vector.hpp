@@ -460,7 +460,7 @@ namespace jsonifier {
 				}
 				return true;
 			} else {
-				return jsonifier_internal::compare(rhs.data(), data(), size());
+				return jsonifier_internal::comparison<0, decltype(*rhs.data()), decltype(*data())>::compare(rhs.data(), data(), size());
 			}
 		}
 

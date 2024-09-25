@@ -43,12 +43,10 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl;
 
-	template<const jsonifier::serialize_options& options, typename value_type_new, typename size_collect_context_type> struct size_collect_impl;
-
-	template<const auto& options> struct serialize {
+	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
 			serialize_impl<options, unwrap_t<value_type>, unwrap_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
@@ -56,16 +54,9 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<const auto& options> struct size_collect {
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename size_collect_context_type>
-		JSONIFIER_ALWAYS_INLINE static constexpr size_t impl(size_collect_context_type&& iter) {
-			return size_collect_impl<options, unwrap_t<value_type>, size_collect_context_type>::impl(std::forward<size_collect_context_type>(iter));
-		}
-	};
-
 	template<typename derived_type> class serializer {
 	  public:
-		template<const jsonifier::serialize_options& options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
+		template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
@@ -81,7 +72,7 @@ namespace jsonifier_internal {
 			if (buffer.size() != serializePair.index) [[unlikely]] {
 				buffer.resize(serializePair.index);
 			}
-			if (!compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
+			if (!comparison<0, unwrap_t<decltype(*buffer.data())>, unwrap_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
 				std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			}
 			return true;

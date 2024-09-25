@@ -36,6 +36,12 @@ struct test_struct {
 	std::vector<bool> testBools{};
 };
 
+#if defined(JSONIFIER_MAC)
+constexpr bnch_swt::result_type resultType{ bnch_swt::result_type::time };
+#else
+constexpr bnch_swt::result_type resultType{ bnch_swt::result_type::cycles };
+#endif
+
 template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
@@ -156,8 +162,8 @@ template<typename value_type> struct test_generator {
 struct test_element_final {
 	std::string libraryName{};
 	std::string resultType{};
-	double resultSpeed{};
 	double iterationCount{};
+	double resultSpeed{};
 	std::string color{};
 	bool operator>(const test_element_final& other) const noexcept {
 		return resultSpeed > other.resultSpeed;
@@ -185,15 +191,19 @@ template<typename value_type> struct abc_test {
 
 enum class result_type { read = 0, write = 1 };
 
-template<result_type type> std::string enumToString() {
-	return type == result_type::read ? "Read" : "Write";
+template<result_type type> constexpr auto enumToString() {
+	if constexpr (type == result_type::read) {
+		return jsonifier_internal::string_literal{ "Read" };
+	} else {
+		return jsonifier_internal::string_literal{ "Write" };
+	}
 }
 
 template<result_type type> struct result {
+	std::optional<double> iterationCount{};
 	std::optional<size_t> byteLength{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
-	std::optional<double> iterationCount{};
 	std::optional<double> cv{};
 	std::string color{};
 
@@ -204,15 +214,27 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
+	double getResultValueMbs(double input01, uint64_t input02) const {
+#if !defined(JSONIFIER_MAC)
+		input01 = bnch_swt::cyclesToTime(input01, bnch_swt::getCpuFrequency());
+#endif
+		auto mbWrittenCount	  = static_cast<double>(input02) / 1e+6l;
+		auto writeSecondCount = input01 / 1e+9l;
+		return mbWrittenCount / writeSecondCount;
+	}
+
+	double getResultValueCyclesMb(double input01, uint64_t input02) const {
+		auto mbWrittenCount	  = static_cast<double>(input02) / 1e+6l;
+		auto writeSecondCount = input01 / mbWrittenCount;
+		return writeSecondCount;
+	}
+
 	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::benchmark_result_final& results) {
 		iterationCount.emplace(results.iterationCount);
 		byteLength.emplace(byteLengthNew);
-		const auto cpuFrequency = bnch_swt::getCpuFrequency();
 		jsonTime.emplace(results.median);
 		cv.emplace(results.cv * 100.0f);
-		auto mbWrittenCount	  = static_cast<double>(byteLength.value()) / 1e+6l;
-		auto writeSecondCount = jsonTime.value() / 1e+9l;
-		jsonSpeed.emplace(mbWrittenCount / writeSecondCount);
+		jsonSpeed.emplace(getResultValueMbs(jsonTime.value(), byteLength.value()));
 		color = colorNew;
 	}
 
@@ -279,6 +301,10 @@ struct results_data {
 				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::read>() + " Speed (MB/S): " << std::setprecision(6) << readResult.jsonSpeed.value() << std::endl;
+#if !defined(JSONIFIER_MAC)
+			std::cout << enumToString<result_type::read>() + " Speed (Cycles/MB): " << std::setprecision(6)
+					  << readResult.getResultValueCyclesMb(readResult.jsonTime.value(), readResult.byteLength.value()) << std::endl;
+#endif
 			std::cout << enumToString<result_type::read>() + " Length (Bytes): " << readResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Runtime (ns): " << std::setprecision(6) << readResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::read>() + " Iteration Count: " << std::setprecision(4) << readResult.iterationCount.value() << std::endl;
@@ -286,6 +312,10 @@ struct results_data {
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
+#if !defined(JSONIFIER_MAC) 
+			std::cout << enumToString<result_type::write>() + " Speed (Cycles/MB): " << std::setprecision(6)
+					  << writeResult.getResultValueCyclesMb(writeResult.jsonTime.value(), writeResult.byteLength.value()) << std::endl;
+#endif
 			std::cout << enumToString<result_type::write>() + " Length (Bytes): " << writeResult.byteLength.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Runtime (ns): " << std::setprecision(6) << writeResult.jsonTime.value() << std::endl;
 			std::cout << enumToString<result_type::write>() + " Iteration Count: " << std::setprecision(4) << writeResult.iterationCount.value() << std::endl;
@@ -300,13 +330,20 @@ struct results_data {
 		std::string writeIterationCount{};
 		std::string writeCv{};
 		std::string write{};
+		std::string write02{};
 		std::string readLength{};
 		std::string readTime{};
 		std::string readIterationCount{};
 		std::string readCv{};
 		std::string read{};
+		std::string read02{};
 		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
+#if !defined(JSONIFIER_MAC)
+			std::stringstream stream00{};
+			stream00 << std::setprecision(6) << readResult.getResultValueCyclesMb(readResult.jsonTime.value(), readResult.byteLength.value());
+			read02 = stream00.str();
+#endif
 			std::stringstream stream01{};
 			stream01 << std::setprecision(6) << readResult.jsonSpeed.value();
 			read = stream01.str();
@@ -319,14 +356,18 @@ struct results_data {
 			std::stringstream stream04{};
 			stream04 << std::setprecision(4) << readResult.iterationCount.value();
 			readIterationCount = stream04.str();
-			finalString += read + " | " + readLength + " | " + readTime + " | " + readIterationCount + " | ";
-		} else {
-			readLength		   = "N/A";
-			readTime		   = "N/A";
-			read			   = "N/A";
-			readIterationCount = "N/A";
+			finalString += read + " | ";
+#if !defined(JSONIFIER_MAC)
+			finalString += read02 + " | ";
+#endif
+			finalString += readLength + " | " + readTime + " | " + readIterationCount + " | ";
 		}
-		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
+		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {			
+#if !defined(JSONIFIER_MAC) 
+			std::stringstream stream00{};
+			stream00 << std::setprecision(6) << writeResult.getResultValueCyclesMb(writeResult.jsonTime.value(), writeResult.byteLength.value());
+			write02 = stream00.str();
+#endif
 			std::stringstream stream01{};
 			stream01 << std::setprecision(6) << writeResult.jsonSpeed.value();
 			write = stream01.str();
@@ -339,12 +380,11 @@ struct results_data {
 			std::stringstream stream04{};
 			stream04 << std::setprecision(4) << writeResult.iterationCount.value();
 			writeIterationCount = stream04.str();
-			finalString += write + " | " + writeLength + " | " + writeTime + " | " + writeIterationCount + " | ";
-		} else {
-			writeLength			= "N/A";
-			writeTime			= "N/A";
-			write				= "N/A";
-			writeIterationCount = "N/A";
+			finalString += write + " | ";
+#if !defined(JSONIFIER_MAC)
+			finalString += write02 + " | ";
+#endif
+			finalString += writeLength + " | " + writeTime + " | " + writeIterationCount + " | ";
 		}
 		return finalString;
 	}

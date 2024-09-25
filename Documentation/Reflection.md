@@ -4,7 +4,7 @@
 
 Reflection is a powerful programming feature that enables a program to examine and modify its own structure and behavior at runtime. In the context of C++, reflection is not a built-in feature, but it can be emulated using techniques such as template metaprogramming.
 
-Jsonifier leverages reflection to dynamically parse JSON data into C++ structures without requiring explicit manual parsing code for each structure. This allows for more flexible and maintainable code, as changes to the structure do not necessitate corresponding changes to the parsing logic.
+Jsonifier leverages reflection to dynamically parse JSON data into C++ structures without requiring excessive explicit manual parsing code for each structure. This allows for more flexible and maintainable code, as changes to the structure do not necessitate corresponding changes to the parsing logic.
 
 ### Example
 

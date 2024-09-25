@@ -59,8 +59,8 @@
 		#pragma warning(disable : C4820)
 		#define JSONIFIER_NO_INLINE __declspec(noinline)
 		#define JSONIFIER_FLATTEN inline [[msvc::flatten]]
-		#define JSONIFIER_ALWAYS_INLINE __forceinline
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE __forceinline
+		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_MAYBE_ALWAYS_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
 		#define JSONIFIER_NO_INLINE __attribute__((__noinline__))

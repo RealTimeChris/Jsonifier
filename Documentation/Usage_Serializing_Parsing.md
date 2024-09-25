@@ -1,6 +1,6 @@
 ## Serialization/Parsing with Jsonifier
 ----
-- Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the Jsonifier namespace as follows...
+- Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the jsonifier namespace as follows...
 - 
 #### IMPORTANT NOTE:
 In order to maximize performance, try to order the members inside the call to `createValue` as they are ordered in the json-data.
@@ -186,7 +186,7 @@ Here's an example demonstrating how to use `serializeJson` to obtain the seriali
 obj_t obj{};
 
 // Serialize and obtain the serialized JSON string directly.
-static constexpr jsonifier::serialize_options options{ .indentSize = 2, .prettify };
+static constexpr jsonifier::serialize_options options{ .indentSize = 2, .prettify = true }
 jsonifier::string serializedString = jsonifier::serializeJson<options>(obj);
 ```
 

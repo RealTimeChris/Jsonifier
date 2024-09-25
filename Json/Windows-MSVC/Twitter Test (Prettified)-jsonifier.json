@@ -90,7 +90,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -371,7 +371,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -478,7 +478,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -672,7 +672,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -940,7 +940,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -1024,7 +1024,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -1106,7 +1106,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -1199,7 +1199,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -1392,7 +1392,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -1476,7 +1476,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -1648,7 +1648,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -1822,7 +1822,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -2127,7 +2127,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -2301,7 +2301,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -2507,7 +2507,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -2591,7 +2591,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -2763,7 +2763,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -2979,7 +2979,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -3153,7 +3153,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -3327,7 +3327,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -3501,7 +3501,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -3675,7 +3675,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -3849,7 +3849,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4023,7 +4023,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4197,7 +4197,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4405,7 +4405,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4579,7 +4579,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4753,7 +4753,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -4927,7 +4927,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -5101,7 +5101,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -5204,7 +5204,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -5376,7 +5376,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -5460,7 +5460,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -5632,7 +5632,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -5806,7 +5806,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -5980,7 +5980,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6154,7 +6154,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6344,7 +6344,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6518,7 +6518,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6692,7 +6692,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6866,7 +6866,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -6950,7 +6950,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -7101,7 +7101,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -7273,7 +7273,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -7357,7 +7357,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -7563,7 +7563,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -7737,7 +7737,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -7911,7 +7911,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8085,7 +8085,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8259,7 +8259,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8445,7 +8445,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8619,7 +8619,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8793,7 +8793,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -8877,7 +8877,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -9049,7 +9049,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -9223,7 +9223,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -9397,7 +9397,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -9640,7 +9640,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -9814,7 +9814,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -9908,7 +9908,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "zh",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -10013,7 +10013,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -10185,7 +10185,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -10359,7 +10359,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -10533,7 +10533,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -10666,7 +10666,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -10779,7 +10779,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -10873,7 +10873,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -10955,7 +10955,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -11127,7 +11127,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -11301,7 +11301,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -11475,7 +11475,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -11649,7 +11649,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -11744,7 +11744,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "zh",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -11916,7 +11916,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12090,7 +12090,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12264,7 +12264,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12438,7 +12438,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12612,7 +12612,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12786,7 +12786,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -12960,7 +12960,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -13055,7 +13055,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -13227,7 +13227,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -13322,7 +13322,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -13494,7 +13494,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -13668,7 +13668,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -13842,7 +13842,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -14016,7 +14016,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -14190,7 +14190,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -14364,7 +14364,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -14538,7 +14538,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -14647,7 +14647,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -14739,7 +14739,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "zh",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -14911,7 +14911,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -15085,7 +15085,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -15180,7 +15180,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": null
       },
       {
@@ -15284,7 +15284,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       },
       {
@@ -15456,7 +15456,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": null
          },
          "possibly_sensitive": null
@@ -15662,7 +15662,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "ja",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -15934,7 +15934,7 @@
             "favorited": false,
             "retweeted": false,
             "lang": "zh",
-            "retweeted_status": ,
+            "retweeted_status": null,
             "possibly_sensitive": false
          },
          "possibly_sensitive": false
@@ -16058,7 +16058,7 @@
          "favorited": false,
          "retweeted": false,
          "lang": "ja",
-         "retweeted_status": ,
+         "retweeted_status": null,
          "possibly_sensitive": false
       }
    ],

@@ -56,7 +56,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<const auto&... optionsNew> struct writer {
+	template<const auto... optionsNew> struct writer {
 		static constexpr auto options{ [] {
 			if constexpr (sizeof...(optionsNew) > 0) {
 				std::tuple optionsNewer{ optionsNew... };

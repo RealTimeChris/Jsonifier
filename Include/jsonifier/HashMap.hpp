@@ -199,7 +199,6 @@ namespace jsonifier_internal {
 		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
-		size_t storageSize{ 2048 };
 		ct_key_hasher hasher{};
 		hash_map_type type{};
 		size_t uniqueIndex{};
@@ -214,11 +213,13 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct single_element_data {
+		static constexpr size_t storageSize{ 1 };
 		JSONIFIER_ALWAYS_INLINE constexpr single_element_data(const hash_map_construction_data<value_type>& newData) noexcept : type{ newData.type } {};
 		hash_map_type type{};
 	};
 
 	template<typename value_type> struct double_element_data {
+		static constexpr size_t storageSize{ 2 };
 		JSONIFIER_ALWAYS_INLINE constexpr double_element_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
 		size_t uniqueIndex{};
@@ -226,6 +227,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct triple_element_data {
+		static constexpr size_t storageSize{ 3 };
 		JSONIFIER_ALWAYS_INLINE constexpr triple_element_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, firstChar{ newData.firstChar }, seed{ newData.hasher.seed } {};
 		size_t uniqueIndex{};
@@ -235,6 +237,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct single_byte_data {
+		static constexpr size_t storageSize{ 256 };
 		JSONIFIER_ALWAYS_INLINE constexpr single_byte_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
@@ -243,6 +246,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct first_byte_and_unique_index_data {
+		static constexpr size_t storageSize{ 256 };
 		JSONIFIER_ALWAYS_INLINE constexpr first_byte_and_unique_index_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
@@ -250,23 +254,24 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type> struct unique_byte_and_length_data {
+		static constexpr size_t storageSize{ 2048 };
 		JSONIFIER_ALWAYS_INLINE constexpr unique_byte_and_length_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: indices{ newData.indices }, storageSize{ newData.storageSize }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
+			: indices{ newData.indices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
-		size_t storageSize{ 2048 };
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
 
 	template<typename value_type> struct unique_per_length_data {
+		static constexpr size_t storageSize{ 256 };
 		JSONIFIER_ALWAYS_INLINE constexpr unique_per_length_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: uniqueIndices{ newData.uniqueIndices }, storageSize{ newData.storageSize }, type{ newData.type } {};
+			: uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
-		size_t storageSize{};
 		hash_map_type type{};
 	};
 
 	template<typename value_type> struct simd_full_length_data {
+		static constexpr size_t storageSize{ 2048 };
 		JSONIFIER_ALWAYS_INLINE constexpr simd_full_length_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 2049> controlBytes{};
@@ -440,7 +445,6 @@ namespace jsonifier_internal {
 			return returnValues;
 		} else {
 			returnValues.type		 = hash_map_type::simd_full_length;
-			returnValues.storageSize = 2048;
 			return returnValues;
 		}
 	}
@@ -460,7 +464,6 @@ namespace jsonifier_internal {
 			}
 		}
 		returnValues.type		 = hash_map_type::unique_per_length;
-		returnValues.storageSize = 256;
 		return returnValues;
 	}
 
@@ -488,7 +491,6 @@ namespace jsonifier_internal {
 			return collectUniquePerLengthHashMapData<value_type>(pairsNew);
 		} else {
 			returnValues.type		 = hash_map_type::unique_byte_and_length;
-			returnValues.storageSize = 2048;
 			return returnValues;
 		}
 	}
@@ -513,7 +515,6 @@ namespace jsonifier_internal {
 			return collectUniqueByteAndLengthHashMapData<value_type>(pairsNew);
 		}
 		returnValues.type		 = hash_map_type::first_byte_and_unique_index;
-		returnValues.storageSize = 256;
 		return returnValues;
 	}
 
@@ -527,7 +528,6 @@ namespace jsonifier_internal {
 				returnValues.uniqueIndices[slot] = x;
 			}
 			returnValues.type		 = hash_map_type::single_byte;
-			returnValues.storageSize = 256;
 			return returnValues;
 		} else {
 			return collectFirstByteAndUniqueIndexHashMapData<value_type>(pairsNew);
@@ -709,17 +709,17 @@ namespace jsonifier_internal {
 				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
 					return iter[hashData.uniqueIndex] & 1;
 				}
-				return 2;
+				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::triple_element) {
 				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
 					return (static_cast<uint8_t>(iter[hashData.uniqueIndex] ^ hashData.firstChar) * hashData.seed) & 3;
 				}
-				return 3;
+				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
 				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
 					return hashData.uniqueIndices[iter[hashData.uniqueIndex]];
 				}
-				return 256;
+				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::first_byte_and_unique_index) {
 				static constexpr auto uniqueFirstByteCount{ countFirstBytes(tupleReferencesByFirstByte<value_type>) };
 				static constexpr auto mappings{ generateMappingsForFirstBytes(collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>),
@@ -731,7 +731,7 @@ namespace jsonifier_internal {
 					const size_t flattenedIdx = (static_cast<size_t>(firstByte) << 8) | static_cast<size_t>(keyChar);
 					return mappings[flattenedIdx];
 				}
-				return 256;
+				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
 				static constexpr size_t storageMask = hashData.storageSize - 1;
 				const auto newPtr					= char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
@@ -749,7 +749,7 @@ namespace jsonifier_internal {
 				if (newPtr) [[likely]] {
 					const size_t length			= static_cast<size_t>(newPtr - iter);
 					const size_t localUniqueIdx = hashData.uniqueIndices[length];
-					if (localUniqueIdx == 255 || checkForEnd(iter, end, localUniqueIdx)) [[likely]] {
+					if (localUniqueIdx != 255 && checkForEnd(iter, end, localUniqueIdx)) [[likely]] {
 						return mappings[(length << 8) | iter[localUniqueIdx]];
 					}
 				}
@@ -757,13 +757,14 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
 				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
 				static constexpr rt_key_hasher<hashData.seed> hasher{};
+				static constexpr auto sizeMask{ hashData.numGroups - 1 };
 				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
 				if (newPtr) [[likely]] {
 					size_t length			 = static_cast<size_t>(newPtr - iter);
 					length		  = (hashData.uniqueIndex > length) ? length : hashData.uniqueIndex;
 					if (checkForEnd(iter, end, length)) [[likely]] {
 						const auto hash			 = hasher.hashKeyRt(iter, length);
-						const size_t group		 = (hash >> 8) & (hashData.numGroups - 1);
+						const size_t group		 = (hash >> 8) & (sizeMask);
 						const size_t resultIndex = group * hashData.bucketSize;
 						const auto simdValues	 = simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex);
 						const auto matches		 = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simdValues);
