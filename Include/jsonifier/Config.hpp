@@ -44,6 +44,22 @@
 	#define JSONIFIER_HAS_BUILTIN(x) 0
 #endif
 
+#if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
+#elif __cplusplus >= 201703L
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
+#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1912 && _MSVC_LANG >= 201703L
+	#define JSONIFIER_HAS_INLINE_VARIABLE 1
+#else
+	#define JSONIFIER_HAS_INLINE_VARIABLE 0
+#endif
+
+#if JSONIFIER_HAS_INLINE_VARIABLE
+	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
+#else
+	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
+#endif
+
 #define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 
 #if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))

@@ -41,7 +41,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
-		unsigned long leading_zero = 0;
+		uint64_t leading_zero = 0;
 		if (_BitScanReverse32(&leading_zero, value)) {
 			return 32 - leading_zero;
 		} else {
@@ -54,7 +54,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
-		unsigned long leading_zero = 0;
+		uint64_t leading_zero = 0;
 		if (_BitScanReverse64(&leading_zero, value)) {
 			return 63 - leading_zero;
 		} else {

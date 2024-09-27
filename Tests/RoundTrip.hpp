@@ -1,3 +1,27 @@
+/*
+	MIT License
+
+	Copyright (c) 2024 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+#include "Common.hpp"
+
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -26,52 +50,13 @@ template<> struct jsonifier::core<round_trip_tests::Obj3> {
 
 namespace round_trip_tests {
 
-	class round_trip_test {
-	  public:
-		round_trip_test() noexcept = default;
-
-		round_trip_test(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
-			: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-		std::string fileContents{};
-		bool areWeAFailingTest{};
-		std::string testName{};
-	};
-
-	bool processFilesInFolder(std::unordered_map<std::string, round_trip_test>& resultFileContents) noexcept {
-		try {
-			for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH + std::string{ "RoundTrip" })) {
-				if (entry.is_regular_file()) {
-					const std::string fileName = entry.path().filename().string();
-
-					if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == std::string{ ".json" }) {
-						std::ifstream file(entry.path());
-						if (file.is_open()) {
-							std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-							bool returnValue					= (fileName.find("roundtrip") != std::string::npos);
-							resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
-							file.close();
-						} else {
-							std::cerr << "Error opening file: " << fileName << std::endl;
-							return false;
-						}
-					}
-				}
-			}
-		} catch (const std::exception& e) {
-			std::cerr << "Error while processing files: " << e.what() << std::endl;
-			return false;
-		}
-
-		return true;
-	}
-
 	template<typename test_type>
 	test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 		std::cout << "Running Test: " << testName << std::endl;
 		test_type valueNew{};
 		std::string newString{};
 		if (parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse)) {
-			auto result = parser.serializeJson(valueNew, newString);
+			parser.serializeJson(valueNew, newString);
 			if (parser.getErrors().size() == 0) {
 				std::cout << "Test: " << testName << " = Succeeded - Output: " << newString << std::endl;
 			} else {
@@ -91,8 +76,8 @@ namespace round_trip_tests {
 
 	bool roundTripTests() noexcept {
 		jsonifier::jsonifier_core parser{};
-		std::unordered_map<std::string, round_trip_test> jsonTests{};
-		processFilesInFolder(jsonTests);
+		std::unordered_map<std::string, test_base> jsonTests{};
+		processFilesInFolder(jsonTests, "RoundTrip");
 		std::cout << "RoundTrip Tests: " << std::endl;
 		runTest<std::vector<int32_t*>>("roundtrip01.json", jsonTests["roundtrip01.json"].fileContents, parser);
 		runTest<std::vector<bool>>("roundtrip02.json", jsonTests["roundtrip02.json"].fileContents, parser);
@@ -106,13 +91,13 @@ namespace round_trip_tests {
 		runTest<Obj3>("roundtrip10.json", jsonTests["roundtrip10.json"].fileContents, parser);
 		runTest<std::vector<int32_t>>("roundtrip11.json", jsonTests["roundtrip11.json"].fileContents, parser);
 		runTest<std::vector<int32_t>>("roundtrip12.json", jsonTests["roundtrip12.json"].fileContents, parser);
-		runTest<std::vector<long>>("roundtrip13.json", jsonTests["roundtrip13.json"].fileContents, parser);
-		runTest<std::vector<long>>("roundtrip14.json", jsonTests["roundtrip14.json"].fileContents, parser);
+		runTest<std::vector<int64_t>>("roundtrip13.json", jsonTests["roundtrip13.json"].fileContents, parser);
+		runTest<std::vector<int64_t>>("roundtrip14.json", jsonTests["roundtrip14.json"].fileContents, parser);
 		runTest<std::vector<int32_t>>("roundtrip15.json", jsonTests["roundtrip15.json"].fileContents, parser);
 		runTest<std::vector<int32_t>>("roundtrip16.json", jsonTests["roundtrip16.json"].fileContents, parser);
-		runTest<std::vector<long>>("roundtrip17.json", jsonTests["roundtrip17.json"].fileContents, parser);
-		runTest<std::vector<long>>("roundtrip18.json", jsonTests["roundtrip18.json"].fileContents, parser);
-		runTest<std::vector<long>>("roundtrip19.json", jsonTests["roundtrip19.json"].fileContents, parser);
+		runTest<std::vector<int64_t>>("roundtrip17.json", jsonTests["roundtrip17.json"].fileContents, parser);
+		runTest<std::vector<int64_t>>("roundtrip18.json", jsonTests["roundtrip18.json"].fileContents, parser);
+		runTest<std::vector<int64_t>>("roundtrip19.json", jsonTests["roundtrip19.json"].fileContents, parser);
 		runTest<std::vector<double>>("roundtrip20.json", jsonTests["roundtrip20.json"].fileContents, parser);
 		runTest<std::vector<double>>("roundtrip21.json", jsonTests["roundtrip21.json"].fileContents, parser);
 		runTest<std::vector<double>>("roundtrip22.json", jsonTests["roundtrip22.json"].fileContents, parser);

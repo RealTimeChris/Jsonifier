@@ -23,10 +23,50 @@
 #pragma once
 
 #include <BnchSwt/BenchmarkSuite.hpp>
+#include "UnicodeEmoji.hpp"
 #include "CitmCatalog.hpp"
 #include "Twitter.hpp"
 #include "Discord.hpp"
 #include "Canada.hpp"
+
+class test_base {
+  public:
+	test_base() noexcept = default;
+
+	test_base(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
+		: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
+	std::string fileContents{};
+	bool areWeAFailingTest{};
+	std::string testName{};
+};
+
+bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFileContents, const std::string &testType) noexcept {
+	try {
+		for (const auto& entry: std::filesystem::directory_iterator(std::string{ JSON_TEST_PATH } + testType)) {
+			if (entry.is_regular_file()) {
+				const std::string fileName = entry.path().filename().string();
+
+				if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == std::string{ ".json" }) {
+					std::ifstream file(entry.path());
+					if (file.is_open()) {
+						std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+						bool returnValue					= (fileName.find(".json") != std::string::npos);
+						resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
+						file.close();
+					} else {
+						std::cerr << "Error opening file: " << fileName << std::endl;
+						return false;
+					}
+				}
+			}
+		}
+	} catch (const std::exception& e) {
+		std::cerr << "Error while processing files: " << e.what() << std::endl;
+		return false;
+	}
+
+	return true;
+}
 
 struct test_struct {
 	std::vector<std::string> testStrings{};

@@ -1,47 +1,32 @@
+/*
+	MIT License
+
+	Copyright (c) 2024 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+#include "Common.hpp"
+
 #include <jsonifier/Index.hpp>
 #include <filesystem>
 #include <fstream>
 
 namespace conformance_tests {
-
-	class conformance_test {
-	  public:
-		conformance_test() noexcept = default;
-
-		conformance_test(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
-			: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-		std::string fileContents{};
-		bool areWeAFailingTest{};
-		std::string testName{};
-	};
-
-	bool processFilesInFolder(std::unordered_map<std::string, conformance_test>& resultFileContents) noexcept {
-		try {
-			for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH + std::string{ "/ConformanceTests" })) {
-				if (entry.is_regular_file()) {
-					const std::string fileName = entry.path().filename().string();
-
-					if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == std::string{ ".json" }) {
-						std::ifstream file(entry.path());
-						if (file.is_open()) {
-							std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-							bool returnValue					= (fileName.find("fail") != std::string::npos);
-							resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
-							file.close();
-						} else {
-							std::cerr << "Error opening file: " << fileName << std::endl;
-							return false;
-						}
-					}
-				}
-			}
-		} catch (const std::exception& e) {
-			std::cerr << "Error while processing files: " << e.what() << std::endl;
-			return false;
-		}
-
-		return true;
-	}
 
 	template<typename test_type>
 	test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
@@ -63,8 +48,8 @@ namespace conformance_tests {
 
 	bool conformanceTests() noexcept {
 		jsonifier::jsonifier_core parser{};
-		std::unordered_map<std::string, conformance_test> jsonTests{};
-		processFilesInFolder(jsonTests);
+		std::unordered_map<std::string, test_base> jsonTests{};
+		processFilesInFolder(jsonTests, "ConformanceTests");
 		std::cout << "Conformance Tests: " << std::endl;
 		runTest<std::unordered_map<std::string, std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
 		runTest<std::unordered_map<std::string, std::string>>("fail03.json", jsonTests["fail03.json"].fileContents, parser);

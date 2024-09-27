@@ -1,3 +1,27 @@
+/*
+	MIT License
+
+	Copyright (c) 2024 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+#include "Common.hpp"
+
 #include <jsonifier/Index.hpp>
 #include <filesystem>
 #include <fstream>
@@ -26,45 +50,6 @@ namespace float_validation_tests {
 		{ "test66.json", 5708990770823839207320493820740630171355185151999e-3 }, { "test67.json", 5708990770823839207320493820740630171355185152001e-3 }, { "test68.json", 1e+308 },
 		{ "test69.json", 2.22507e-308 } };
 
-	class float_validation_test {
-	  public:
-		float_validation_test() noexcept = default;
-
-		float_validation_test(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
-			: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-		std::string fileContents{};
-		bool areWeAFailingTest{};
-		std::string testName{};
-	};
-
-	bool processFilesInFolder(std::unordered_map<std::string, float_validation_test>& resultFileContents) noexcept {
-		try {
-			for (const auto& entry: std::filesystem::directory_iterator(JSON_TEST_PATH + std::string{ "FloatValidation" })) {
-				if (entry.is_regular_file()) {
-					const std::string fileName = entry.path().filename().string();
-
-					if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == std::string{ ".json" }) {
-						std::ifstream file(entry.path());
-						if (file.is_open()) {
-							std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-							bool returnValue					= (fileName.find("test") != std::string::npos);
-							resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
-							file.close();
-						} else {
-							std::cerr << "Error opening file: " << fileName << std::endl;
-							return false;
-						}
-					}
-				}
-			}
-		} catch (const std::exception& e) {
-			std::cerr << "Error while processing files: " << e.what() << std::endl;
-			return false;
-		}
-
-		return true;
-	}
-
 	auto runTest(const std::string_view& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<double> data;
@@ -86,8 +71,8 @@ namespace float_validation_tests {
 
 	bool floatTests() noexcept {
 		jsonifier::jsonifier_core parser{};
-		std::unordered_map<std::string, float_validation_test> jsonTests{};
-		processFilesInFolder(jsonTests);
+		std::unordered_map<std::string, test_base> jsonTests{};
+		processFilesInFolder(jsonTests, "FloatValidation");
 		std::cout << "Float Tests: " << std::endl;
 		runTest("test1.json", jsonTests["test1.json"].fileContents, parser);
 		runTest("test2.json", jsonTests["test2.json"].fileContents, parser);

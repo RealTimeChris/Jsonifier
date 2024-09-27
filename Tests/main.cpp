@@ -1,11 +1,30 @@
-#if defined(JSONIFIER_CPU_INSTRUCTIONS)
-//#undef JSONIFIER_CPU_INSTRUCTIONS
-//#define JSONIFIER_CPU_INSTRUCTIONS (JSONIFIER_AVX2 | JSONIFIER_POPCNT)
-#endif
-#include "UnicodeEmoji.hpp"
-#include <BnchSwt/BenchmarkSuite.hpp>
+/*
+	MIT License
+
+	Copyright (c) 2024 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+#include "Conformance.hpp"
 #include "Jsonifier.hpp"
 #include "Simdjson.hpp"
+#include "String.hpp"
+#include "Float.hpp"
 #include "Glaze.hpp"
 #include <unordered_set>
 #include "RoundTrip.hpp"
@@ -773,10 +792,6 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 };
 
 static constexpr auto totalIterationCountCap{ 1000 };
-
-#include "Conformance.hpp"
-#include "String.hpp"
-#include "Float.hpp"
 
 void testFunction() {
 	conformance_tests::conformanceTests();

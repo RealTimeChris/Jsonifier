@@ -56,23 +56,6 @@
 	#define JSONIFIER_HAS_CONSTEXPR14 0
 #endif
 
-// C++17 JSONIFIER_ALWAYS_INLINE variables
-#if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
-	#define JSONIFIER_HAS_INLINE_VARIABLE 1
-#elif __cplusplus >= 201703L
-	#define JSONIFIER_HAS_INLINE_VARIABLE 1
-#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1912 && _MSVC_LANG >= 201703L
-	#define JSONIFIER_HAS_INLINE_VARIABLE 1
-#else
-	#define JSONIFIER_HAS_INLINE_VARIABLE 0
-#endif
-
-#if JSONIFIER_HAS_INLINE_VARIABLE
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
-#else
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
-#endif
-
 // C++17 if constexpr
 #if defined(__cpp_if_constexpr) && __cpp_if_constexpr >= 201606L
 	#define JSONIFIER_HAS_IF_CONSTEXPR 1
@@ -153,11 +136,11 @@ namespace jsonifier_jkj {
 		// Some basic features for encoding/decoding IEEE-754 formats.
 		////////////////////////////////////////////////////////////////////////////////////////
 		namespace detail {
-			template<typename T> struct physical_bits {
-				static constexpr size_t value = sizeof(T) * std::numeric_limits<uint8_t>::digits;
+			template<typename value_type> struct physical_bits {
+				static constexpr size_t value = sizeof(value_type) * std::numeric_limits<uint8_t>::digits;
 			};
-			template<typename T> struct value_bits {
-				static constexpr size_t value = std::numeric_limits<typename std::enable_if<std::is_integral<T>::value, T>::type>::digits;
+			template<typename value_type> struct value_bits {
+				static constexpr size_t value = std::numeric_limits<typename std::enable_if<std::is_integral<value_type>::value, value_type>::type>::digits;
 			};
 
 			template<typename To, typename From> JSONIFIER_CONSTEXPR20 To bit_cast(const From& from) noexcept {
@@ -505,18 +488,18 @@ namespace jsonifier_jkj {
 
 						// See https://github.com/fmtlib/fmt/pull/2985.
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, unsigned long long>::value) {
-							unsigned long long carry{};
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t int64_t>::value) {
+							uint64_t carry{};
 							low_  = std::uint_least64_t(__builtin_addcll(low_, n, 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
 							return *this;
 						}
 #endif
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, unsigned long>::value) {
-							unsigned long carry{};
-							low_  = std::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(low_), static_cast<unsigned long>(n), 0, &carry));
-							high_ = std::uint_least64_t(__builtin_addcl(static_cast<unsigned long>(high_), 0, carry, &carry));
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
+							uint64_t carry{};
+							low_  = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(low_), static_cast<uint64_t>(n), 0, &carry));
+							high_ = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(high_), 0, carry, &carry));
 							return *this;
 						}
 #endif
@@ -531,17 +514,17 @@ namespace jsonifier_jkj {
 
 #if JSONIFIER_HAS_BUILTIN(__builtin_ia32_addcarry_u64)
 						// __builtin_ia32_addcarry_u64 is not documented, but it seems it takes unsigned
-						// long long arguments.
-						unsigned long long result{};
+						// int64_t arguments.
+						uint64_t result{};
 						const auto carry = __builtin_ia32_addcarry_u64(0, low_, n, &result);
 						low_			 = std::uint_least64_t(result);
 						__builtin_ia32_addcarry_u64(carry, high_, 0, &result);
 						high_ = std::uint_least64_t(result);
 #elif defined(JSONIFIER_MSVC) && defined(_M_X64)
-						// On MSVC, uint_least64_t and __int64 must be unsigned long long; see
+						// On MSVC, uint_least64_t and __int64 must be uint64_t int64_t; see
 						// https://learn.microsoft.com/en-us/cpp/c-runtime-library/standard-types
 						// and https://learn.microsoft.com/en-us/cpp/cpp/int8-int16-int32-int64.
-						static_assert(std::is_same<unsigned long long, std::uint_least64_t>::value, "");
+						static_assert(std::is_same<uint64_t, std::uint_least64_t>::value, "");
 						const auto carry = _addcarry_u64(0, low_, n, &low_);
 						_addcarry_u64(carry, high_, 0, &high_);
 #elif defined(__INTEL_COMPILER) && (defined(_M_X64) || defined(__x86_64))
@@ -1618,7 +1601,7 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		namespace detail {
-			template<typename T> struct dummy {};
+			template<typename value_type> struct dummy {};
 		}
 
 		namespace policy {

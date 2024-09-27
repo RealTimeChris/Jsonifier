@@ -91,52 +91,36 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-#define repeat_in_1_18(x) \
-	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
-
-	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(iterator&& iter, value_type_new& value) {
-		using value_type = unwrap_t<value_type_new>;
-		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
-		uint64_t numTmp;
-
-		if (sig > 9) [[unlikely]] {
-			return false;
+	template<size_t currentIndex, size_t maxIndex, typename iterator, typename value_type>
+	JSONIFIER_ALWAYS_INLINE bool exprIntg(iterator& iter, value_type& value, uint64_t sig, uint64_t& numTmp) {
+		if constexpr (currentIndex < maxIndex) {
+			if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[currentIndex])], numTmp <= 9)) [[likely]] {
+				sig = numTmp + sig * 10;
+				return exprIntg<currentIndex + 1, maxIndex>(iter, value, sig, numTmp);
+			}
 		}
-
-#define expr_intg(i) \
-	if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[i])], numTmp <= 9)) [[likely]] \
-		sig = numTmp + sig * 10; \
-	else { \
-		if constexpr (i > 1) { \
-			if (*iter == zero) [[unlikely]] { \
-				return false; \
-			} \
-		} \
-		goto digi_sepr_##i; \
-	}
-		repeat_in_1_18(expr_intg);
-#undef expr_intg
-
-		if (*iter == zero) [[unlikely]] {
-			return false;
+		if constexpr (currentIndex > 1) {
+			if (*iter == zero) [[unlikely]] {
+				return false;
+			}
 		}
-
-		iter += 19;
-		if (!digiIsDigitOrFp(*iter)) [[unlikely]] {
-			value = static_cast<value_type>(sig);
+		if (!digiIsFp(uint8_t(iter[currentIndex]))) [[likely]] {
+			iter += currentIndex;
+			value = sig;
 			return true;
 		}
+		return false;
+	}
 
-#define expr_sepr(i) \
-	digi_sepr_##i : if (!digiIsFp(uint8_t(iter[i]))) [[likely]] { \
-		iter += i; \
-		value = sig; \
-		return true; \
-	} \
-	iter += i; \
-	return false;
-		repeat_in_1_18(expr_sepr)
-#undef expr_sepr
+	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(iterator&& iter, value_type_new& value) {
+		uint64_t numTmp;
+		uint64_t sig = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
+
+		if (sig > 9) {
+			return false;
+		}
+
+		return exprIntg<1, 20>(iter, value, sig, numTmp);
 	}
 
 	template<typename value_type, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {

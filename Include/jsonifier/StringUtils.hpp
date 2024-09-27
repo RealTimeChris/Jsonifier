@@ -234,9 +234,21 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
+	template<char threshold, typename simd_type> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(simd_type values) {
+		simd_type value01 = simd_internal::gatherValue<simd_type>(threshold);
+		return simd_internal::opCmpLt(values, value01) != 0;
+	}
+
+	template<const auto n, typename value_type = uint64_t> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(const char* values) {
+		value_type x;
+		std::memcpy(&x, values, sizeof(value_type));
+		static constexpr value_type factor	 = ~value_type(0) / value_type(255);
+		static constexpr value_type msb_mask = value_type(128);
+		return ((( x )-factor * n) & ~( x )&factor * msb_mask) != 0;
+	}
+
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& quotes, const simd_type& backslashes) noexcept {
-		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, backslashes) | simd_internal::opCmpEq(simdValue, quotes)));
 	}
@@ -342,6 +354,8 @@ namespace jsonifier_internal {
 						string1 += 2;
 					}
 				}
+			} else if (static_cast<uint8_t>(*string2) < 32) [[unlikely]] {
+				return nullptr;
 			} else {
 				--lengthNew;
 				++string2;
@@ -367,6 +381,7 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -389,7 +404,7 @@ namespace jsonifier_internal {
 							if (escapeChar == 0u) {
 								return static_cast<iterator_type02>(nullptr);
 							}
-							string2[nextBackslashOrQuote] = static_cast<char_type02>(escapeChar);
+							string2[nextBackslashOrQuote] = static_cast<char_type01>(escapeChar);
 							lengthNew -= nextBackslashOrQuote + 2ull;
 							string2 += nextBackslashOrQuote + 1ull;
 							string1 += nextBackslashOrQuote + 2ull;
@@ -399,6 +414,8 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
+				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
@@ -418,6 +435,7 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -450,6 +468,8 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
+				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
@@ -468,6 +488,7 @@ namespace jsonifier_internal {
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
+				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
 				if (nextBackslashOrQuote < mask) [[likely]] {
 					escapeChar = string1[nextBackslashOrQuote];
@@ -500,6 +521,8 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
+				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
@@ -547,6 +570,8 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
+				} else if (hasByteLessThanValue<31, simd_type>(string1)) [[unlikely]] {
+					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
@@ -722,7 +747,7 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t length> struct convert_length_to_int {
-		static_assert(length <= 8, "Sorry, but that string is too long!");
+		static_assert(length <= 8, "Sorry, but that string is too int64_t!");
 		using type = std::conditional_t<length == 1, uint8_t,
 			std::conditional_t<length <= 2, uint16_t, std::conditional_t<length <= 4, uint32_t, std::conditional_t<length <= 8, size_t, void>>>>;
 	};
@@ -899,7 +924,7 @@ namespace jsonifier_internal {
 				}
 			}
 		}
-		
+
 		template<typename iterator>
 			requires(!std::same_as<context_type, iterator>)
 		JSONIFIER_INLINE static void skipArray(iterator&& iter, iterator&& endIter) noexcept {
@@ -1146,10 +1171,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, endIter);
 						break;
 					}
-					[[likely]] default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 			return currentCount;
@@ -1168,7 +1193,7 @@ namespace jsonifier_internal {
 			auto frac_start_it = endIter;
 			auto fracStart	   = [&]() -> bool {
 				frac_start_it = iter;
-				iter  = std::find_if_not(iter, endIter, isNumberType);
+				iter		  = std::find_if_not(iter, endIter, isNumberType);
 				if (iter == frac_start_it) {
 					return true;
 				}
@@ -1182,7 +1207,7 @@ namespace jsonifier_internal {
 			auto expStart = [&]() -> bool {
 				iter += *iter == '+' || *iter == '-';
 				auto exp_start_it = iter;
-				iter	  = std::find_if_not(iter, endIter, isNumberType);
+				iter			  = std::find_if_not(iter, endIter, isNumberType);
 				if (iter == exp_start_it) {
 					return true;
 				}
