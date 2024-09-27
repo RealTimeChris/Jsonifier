@@ -4,10 +4,9 @@
 
 namespace string_validation_tests {
 
-	struct test_action {
-		using value_type = std::vector<std::string> ;
-		std::vector<std::string> data{};
-	};
+	std::unordered_map<std::string_view, std::string> testValues = { { "test1.json", "" }, { "test2.json", "Hello" }, { "test3.json", "Hello\nWorld" },
+		{ "test5.json", "Hello\u0000World" }, { "test6.json", "\"\\/\b\f\n\r\t" }, { "test8.json", "\u0024" }, { "test9.json", "\u00A2" }, { "test10.json", "\u20AC" },
+		{ "test11.json", "\U0001D11E" } };
 
 	class string_validation_test {
 	  public:
@@ -48,17 +47,18 @@ namespace string_validation_tests {
 		return true;
 	}
 
-	template<typename test_type> auto runTest(const std::string_view& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
-		std::cout << "Running Test: " << testName << std::endl;
+	auto runTest(const std::string_view& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<std::string> data;
 		if (parser.parseJson(data, dataToParse.data()) && parser.getErrors().size() == 0) {
 			if (data.size() == 1) {
-				std::cout << "Test: " << testName << " = Succeeded - Output: " << data[0] << std::endl;
+				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
+				std::cout << testName << " Succeeded - Expected Output: " << testValues[testName] << std::endl;
 			} else {
-				std::cout << "Test: " << testName << " = Failed." << std::endl;
+				std::cout << testName << " Failed." << std::endl;
 			}
 		} else {
-			std::cout << "Test: " << testName << " = Failed." << std::endl;
+			std::cout << testName << " Failed." << std::endl;
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
@@ -71,17 +71,15 @@ namespace string_validation_tests {
 		std::unordered_map<std::string, string_validation_test> jsonTests{};
 		processFilesInFolder(jsonTests);
 		std::cout << "String Tests: " << std::endl;
-		runTest<test_action>("test1.json", jsonTests["test1.json"].fileContents, parser);
-		runTest<test_action>("test2.json", jsonTests["test2.json"].fileContents, parser);
-		runTest<test_action>("test3.json", jsonTests["test3.json"].fileContents, parser);
-		runTest<test_action>("test4.json", jsonTests["test4.json"].fileContents, parser);
-		runTest<test_action>("test5.json", jsonTests["test5.json"].fileContents, parser);
-		runTest<test_action>("test6.json", jsonTests["test6.json"].fileContents, parser);
-		runTest<test_action>("test7.json", jsonTests["test7.json"].fileContents, parser);
-		runTest<test_action>("test8.json", jsonTests["test8.json"].fileContents, parser);
-		runTest<test_action>("test9.json", jsonTests["test9.json"].fileContents, parser);
-		runTest<test_action>("test10.json", jsonTests["test10.json"].fileContents, parser);
-		runTest<test_action>("test11.json", jsonTests["test11.json"].fileContents, parser);
+		runTest("test1.json", jsonTests["test1.json"].fileContents, parser);
+		runTest("test2.json", jsonTests["test2.json"].fileContents, parser);
+		runTest("test3.json", jsonTests["test3.json"].fileContents, parser);
+		runTest("test5.json", jsonTests["test5.json"].fileContents, parser);
+		runTest("test6.json", jsonTests["test6.json"].fileContents, parser);
+		runTest("test8.json", jsonTests["test8.json"].fileContents, parser);
+		runTest("test9.json", jsonTests["test9.json"].fileContents, parser);
+		runTest("test10.json", jsonTests["test10.json"].fileContents, parser);
+		runTest("test11.json", jsonTests["test11.json"].fileContents, parser);
 		return true;
 	}
 

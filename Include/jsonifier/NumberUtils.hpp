@@ -117,15 +117,15 @@ namespace jsonifier_internal {
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			if constexpr (std::is_unsigned_v<value_type>) {
-				static constexpr auto maximum{ std::numeric_limits<uint64_t>::max() };
 				if (*iter == '-') [[unlikely]] {
 					return false;
 				}
 				if constexpr (sizeof(value_type) == 8) {
-					return parseInt(value, iter) && value <= maximum;
+					return parseInt(iter, value);
 				} else {
+					static constexpr auto maximum{ std::numeric_limits<value_type>::max() };
 					uint64_t i;
-					return parseInt(i, iter) && i <= maximum ? (value = static_cast<value_type>(i), true) : false;
+					return parseInt(iter, i) && i <= maximum ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
 				static constexpr auto maximum{ std::numeric_limits<int64_t>::max() };
@@ -133,18 +133,23 @@ namespace jsonifier_internal {
 				int64_t sign{ (*iter == '-') ? -1ll : 1ll };
 				iter += (*iter == '-');
 				if constexpr (sizeof(value_type) == 8) {
-					return (parseInt(value, iter)) ? (sign == -1ll) ? (value >= minAbs) ? (value *= sign, true) : false : (value <= maximum) ? true : false : false;
+					return (parseInt(iter, value)) ? (sign == -1ll) ? (value >= minAbs) ? (value *= sign, true) : false : (value <= maximum) ? true : false : false;
 				} else {
 					int64_t i;
-					return (parseInt(i, iter)) ? (sign == -1ll) ? (i >= minAbs) ? (value = i * sign, true) : false : (i <= maximum) ? (value = i, true) : false : false;
+					return (parseInt(iter, i)) ? (sign == -1ll) ? (i >= minAbs) ? (value = i * sign, true) : false : (i <= maximum) ? (value = i, true) : false : false;
 				}
 			}
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
-				value_type temp;
-				return parseFloat(iter, end, temp) ? (value = temp, true) : false;
+				double temp;
+				return parseFloat(iter, temp) ? (value = temp, true) : false;
 			} else {
-				return parseFloat(iter, end, value);
+				if constexpr (sizeof(value_type) == 8) {
+					return parseFloat(iter, end, value);
+				} else {
+					double i;
+					return parseFloat(iter, end, value) ? (value = i, true) : false;
+				}
 			}
 		}
 		return true;

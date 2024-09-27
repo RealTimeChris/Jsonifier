@@ -548,20 +548,20 @@ template<> void getValue(canada_message& message, simdjson::ondemand::value json
 	getValue(message.features, obj, "features");
 }
 
-template<> void getValue(int*& out_value, simdjson::ondemand::value jsonData) {
+template<> void getValue(int32_t*& out_value, simdjson::ondemand::value jsonData) {
 	int64_t temp{};
 	if (auto result = jsonData.get(temp); result) {
 		throwError(result);
 	}
-	out_value = new int(static_cast<int>(temp));
+	out_value = new int32_t(static_cast<int32_t>(temp));
 }
 
-template<> void getValue(std::unique_ptr<int>& out_value, simdjson::ondemand::value jsonData) {
+template<> void getValue(std::unique_ptr<int32_t>& out_value, simdjson::ondemand::value jsonData) {
 	int64_t temp{};
 	if (auto result = jsonData.get(temp); result) {
 		throwError(result);
 	}
-	out_value = std::make_unique<int>(static_cast<int>(temp));
+	out_value = std::make_unique<int32_t>(static_cast<int32_t>(temp));
 }
 
 template<> void getValue(icon_emoji_data& msg, simdjson::ondemand::value jsonData) {

@@ -91,9 +91,10 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-#define repeat_in_1_18(x) { x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
+#define repeat_in_1_18(x) \
+	{ x(1) x(2) x(3) x(4) x(5) x(6) x(7) x(8) x(9) x(10) x(11) x(12) x(13) x(14) x(15) x(16) x(17) x(18) }
 
-	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(value_type_new& value, iterator&& iter) {
+	template<jsonifier::concepts::integer_t value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseInt(iterator&& iter, value_type_new& value) {
 		using value_type = unwrap_t<value_type_new>;
 		uint64_t sig	 = uint64_t(numberSubTable[static_cast<uint8_t>(*iter)]);
 		uint64_t numTmp;

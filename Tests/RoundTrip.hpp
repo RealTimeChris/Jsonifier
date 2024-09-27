@@ -9,7 +9,7 @@ namespace round_trip_tests {
 	};
 
 	struct Obj3 {
-		std::unique_ptr<int> a;
+		std::unique_ptr<int32_t> a;
 		std::string* foo;
 	};
 }
@@ -25,11 +25,6 @@ template<> struct jsonifier::core<round_trip_tests::Obj3> {
 };
 
 namespace round_trip_tests {
-
-	template<typename value_type_new> struct test_action {
-		using value_type = value_type_new;
-		value_type data{};
-	};
 
 	class round_trip_test {
 	  public:
@@ -71,14 +66,11 @@ namespace round_trip_tests {
 	}
 
 	template<typename test_type>
-	typename test_type::value_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
+	test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 		std::cout << "Running Test: " << testName << std::endl;
-		typename test_type::value_type valueNew{};
+		test_type valueNew{};
 		std::string newString{};
 		if (parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse)) {
-			if constexpr (std::same_as<typename test_type::value_type, std::vector<double>>) {
-				std::cout << "CURRENT VALUE: " << valueNew[0] << std::endl;
-			}
 			auto result = parser.serializeJson(valueNew, newString);
 			if (parser.getErrors().size() == 0) {
 				std::cout << "Test: " << testName << " = Succeeded - Output: " << newString << std::endl;
@@ -102,33 +94,33 @@ namespace round_trip_tests {
 		std::unordered_map<std::string, round_trip_test> jsonTests{};
 		processFilesInFolder(jsonTests);
 		std::cout << "RoundTrip Tests: " << std::endl;
-		runTest<test_action<std::vector<int*>>>("roundtrip01.json", jsonTests["roundtrip01.json"].fileContents, parser);
-		runTest<test_action<std::vector<bool>>>("roundtrip02.json", jsonTests["roundtrip02.json"].fileContents, parser);
-		runTest<test_action<std::vector<bool>>>("roundtrip03.json", jsonTests["roundtrip03.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip04.json", jsonTests["roundtrip04.json"].fileContents, parser);
-		runTest<test_action<std::vector<std::string>>>("roundtrip05.json", jsonTests["roundtrip05.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip06.json", jsonTests["roundtrip06.json"].fileContents, parser);
-		runTest<test_action<std::unordered_map<std::string, std::string>>>("roundtrip07.json", jsonTests["roundtrip07.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip08.json", jsonTests["roundtrip08.json"].fileContents, parser);
-		runTest<test_action<Obj2>>("roundtrip09.json", jsonTests["roundtrip09.json"].fileContents, parser);
-		runTest<test_action<Obj3>>("roundtrip10.json", jsonTests["roundtrip10.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip11.json", jsonTests["roundtrip11.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip12.json", jsonTests["roundtrip12.json"].fileContents, parser);
-		runTest<test_action<std::vector<long>>>("roundtrip13.json", jsonTests["roundtrip13.json"].fileContents, parser);
-		runTest<test_action<std::vector<long>>>("roundtrip14.json", jsonTests["roundtrip14.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip15.json", jsonTests["roundtrip15.json"].fileContents, parser);
-		runTest<test_action<std::vector<int>>>("roundtrip16.json", jsonTests["roundtrip16.json"].fileContents, parser);
-		runTest<test_action<std::vector<long>>>("roundtrip17.json", jsonTests["roundtrip17.json"].fileContents, parser);
-		runTest<test_action<std::vector<long>>>("roundtrip18.json", jsonTests["roundtrip18.json"].fileContents, parser);
-		runTest<test_action<std::vector<long>>>("roundtrip19.json", jsonTests["roundtrip19.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip20.json", jsonTests["roundtrip20.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip21.json", jsonTests["roundtrip21.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip22.json", jsonTests["roundtrip22.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip23.json", jsonTests["roundtrip23.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip24.json", jsonTests["roundtrip24.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip25.json", jsonTests["roundtrip25.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip26.json", jsonTests["roundtrip26.json"].fileContents, parser);
-		runTest<test_action<std::vector<double>>>("roundtrip27.json", jsonTests["roundtrip27.json"].fileContents, parser);
+		runTest<std::vector<int32_t*>>("roundtrip01.json", jsonTests["roundtrip01.json"].fileContents, parser);
+		runTest<std::vector<bool>>("roundtrip02.json", jsonTests["roundtrip02.json"].fileContents, parser);
+		runTest<std::vector<bool>>("roundtrip03.json", jsonTests["roundtrip03.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip04.json", jsonTests["roundtrip04.json"].fileContents, parser);
+		runTest<std::vector<std::string>>("roundtrip05.json", jsonTests["roundtrip05.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip06.json", jsonTests["roundtrip06.json"].fileContents, parser);
+		runTest<std::unordered_map<std::string, std::string>>("roundtrip07.json", jsonTests["roundtrip07.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip08.json", jsonTests["roundtrip08.json"].fileContents, parser);
+		runTest<Obj2>("roundtrip09.json", jsonTests["roundtrip09.json"].fileContents, parser);
+		runTest<Obj3>("roundtrip10.json", jsonTests["roundtrip10.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip11.json", jsonTests["roundtrip11.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip12.json", jsonTests["roundtrip12.json"].fileContents, parser);
+		runTest<std::vector<long>>("roundtrip13.json", jsonTests["roundtrip13.json"].fileContents, parser);
+		runTest<std::vector<long>>("roundtrip14.json", jsonTests["roundtrip14.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip15.json", jsonTests["roundtrip15.json"].fileContents, parser);
+		runTest<std::vector<int32_t>>("roundtrip16.json", jsonTests["roundtrip16.json"].fileContents, parser);
+		runTest<std::vector<long>>("roundtrip17.json", jsonTests["roundtrip17.json"].fileContents, parser);
+		runTest<std::vector<long>>("roundtrip18.json", jsonTests["roundtrip18.json"].fileContents, parser);
+		runTest<std::vector<long>>("roundtrip19.json", jsonTests["roundtrip19.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip20.json", jsonTests["roundtrip20.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip21.json", jsonTests["roundtrip21.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip22.json", jsonTests["roundtrip22.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip23.json", jsonTests["roundtrip23.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip24.json", jsonTests["roundtrip24.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip25.json", jsonTests["roundtrip25.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip26.json", jsonTests["roundtrip26.json"].fileContents, parser);
+		runTest<std::vector<double>>("roundtrip27.json", jsonTests["roundtrip27.json"].fileContents, parser);
 
 		return true;
 	}

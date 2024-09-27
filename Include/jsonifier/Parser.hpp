@@ -114,9 +114,11 @@ namespace jsonifier_internal {
 			}
 			parse<options.minified, optionsNew>::impl(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
-			return (optionsReal.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), false)
-				: (optionsReal.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), false)
-														 : true;
+			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), false)
+				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), false)
+				: (optionsReal.iter != optionsReal.endIter) ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), false)
+				: derivedRef.errors.size() > 0				? false
+															: true;
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
@@ -145,9 +147,11 @@ namespace jsonifier_internal {
 			}
 			parse<options.minified, optionsNew>::impl(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
-			return (optionsReal.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), unwrap_t<value_type>{})
-				: (optionsReal.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), unwrap_t<value_type>{})
-														 : std::move(object);
+			return (optionsReal.currentObjectDepth != 0)	? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), unwrap_t<value_type>{})
+				: (optionsReal.currentArrayDepth != 0)		? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), unwrap_t<value_type>{})
+				: (optionsReal.iter != optionsReal.endIter) ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), unwrap_t<value_type>{})
+				: derivedRef.errors.size() > 0				? unwrap_t<value_type>{}
+															: object;
 		}
 
 		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE void reportError(parse_context<derived_type>& context) {

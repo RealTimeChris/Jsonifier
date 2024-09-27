@@ -208,31 +208,28 @@ namespace jsonifier_internal {
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
-		using char_type01 = uint8_t;
-		static constexpr char_type01 quotesValue{ static_cast<char_type01>('\\' << 8) };
-		static constexpr char_type01 uValue{ static_cast<char_type01>(0x75u) };
-		uint32_t codePoint = hexToU32NoCheck(srcPtr + 2);
+		using char_type01								  = std::remove_const_t<unwrap_t<decltype(*dstPtr)>>;
+		static constexpr uint32_t substitution_code_point = 0xfffd;
+		uint32_t code_point								  = hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
-		if (codePoint >= 0xd800 && codePoint < 0xdc00) {
-			auto* srcData = static_cast<const char*>(srcPtr);
-			if (((srcData[0] << 8) | srcData[1]) != (quotesValue | uValue)) {
-				codePoint = 0xfffd;
+		if (code_point >= 0xd800 && code_point < 0xdc00) {
+			if (((srcPtr[0] << 8) | srcPtr[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
+				code_point = substitution_code_point;
 			} else {
-				uint32_t codePoint02 = hexToU32NoCheck(srcData + 2);
-				codePoint02			 = codePoint02 - 0xdc00;
-				if (codePoint02 >> 10) {
-					codePoint = 0xfffd;
+				uint32_t code_point_2 = hexToU32NoCheck(srcPtr + 2);
+
+				uint32_t low_bit = code_point_2 - 0xdc00;
+				if (low_bit >> 10) {
+					code_point = substitution_code_point;
 				} else {
-					codePoint = (((codePoint - 0xd800) << 10) | codePoint02) + 0x10000;
+					code_point = (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
 					srcPtr += 6;
 				}
 			}
-		} else {
-			if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
-				codePoint = 0xfffd;
-			}
+		} else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
+			code_point = substitution_code_point;
 		}
-		uint32_t offset = codePointToUtf8(codePoint, dstPtr);
+		size_t offset = codePointToUtf8(code_point, dstPtr);
 		dstPtr += offset;
 		return offset > 0;
 	}
