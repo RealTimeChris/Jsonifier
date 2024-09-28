@@ -95,20 +95,26 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE bool exprIntg(iterator& iter, value_type& value, uint64_t sig, uint64_t& numTmp) {
 		if constexpr (currentIndex < maxIndex) {
 			if ((numTmp = numberSubTable[static_cast<uint8_t>(iter[currentIndex])], numTmp <= 9)) [[likely]] {
+				if (sig > (std::numeric_limits<uint64_t>::max() - numTmp) / 10) [[unlikely]] {
+					return false;
+				}
 				sig = numTmp + sig * 10;
 				return exprIntg<currentIndex + 1, maxIndex>(iter, value, sig, numTmp);
 			}
 		}
+
 		if constexpr (currentIndex > 1) {
 			if (*iter == zero) [[unlikely]] {
 				return false;
 			}
 		}
-		if (!digiIsFp(uint8_t(iter[currentIndex]))) [[likely]] {
+
+		if (!digiIsFp(uint8_t(iter[currentIndex + 1]))) [[likely]] {
 			iter += currentIndex;
 			value = sig;
 			return true;
 		}
+
 		return false;
 	}
 

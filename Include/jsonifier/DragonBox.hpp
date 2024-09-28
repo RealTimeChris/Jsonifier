@@ -488,8 +488,8 @@ namespace jsonifier_jkj {
 
 						// See https://github.com/fmtlib/fmt/pull/2985.
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t int64_t>::value) {
-							uint64_t carry{};
+						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
+							unsigned long long carry{};
 							low_  = std::uint_least64_t(__builtin_addcll(low_, n, 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
 							return *this;
@@ -497,7 +497,7 @@ namespace jsonifier_jkj {
 #endif
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
 						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
-							uint64_t carry{};
+							unsigned long carry{};
 							low_  = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(low_), static_cast<uint64_t>(n), 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(high_), 0, carry, &carry));
 							return *this;
@@ -521,7 +521,7 @@ namespace jsonifier_jkj {
 						__builtin_ia32_addcarry_u64(carry, high_, 0, &result);
 						high_ = std::uint_least64_t(result);
 #elif defined(JSONIFIER_MSVC) && defined(_M_X64)
-						// On MSVC, uint_least64_t and __int64 must be uint64_t int64_t; see
+						// On MSVC, uint_least64_t and __int64 must be uint64_t; see
 						// https://learn.microsoft.com/en-us/cpp/c-runtime-library/standard-types
 						// and https://learn.microsoft.com/en-us/cpp/cpp/int8-int16-int32-int64.
 						static_assert(std::is_same<uint64_t, std::uint_least64_t>::value, "");
