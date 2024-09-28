@@ -113,30 +113,25 @@ namespace jsonifier {
 namespace jsonifier_internal {
 
 	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
-		using value_type			  = unwrap_t<value_type_new>;
+		using value_type = unwrap_t<value_type_new>;
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			if constexpr (std::is_unsigned_v<value_type>) {
 				if (*iter == '-') [[unlikely]] {
 					return false;
 				}
-				if constexpr (sizeof(value_type) == 8) {
-					return parseInt(iter, value);
+				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
+					return parseUint(iter, value);
 				} else {
-					static constexpr auto maximum{ std::numeric_limits<value_type>::max() };
 					uint64_t i;
-					return parseInt(iter, i) && i <= maximum ? (value = static_cast<value_type>(i), true) : false;
+					return parseUint(iter, i) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
-				static constexpr auto maximum{ std::numeric_limits<int64_t>::max() };
-				static constexpr auto minAbs{ std::numeric_limits<int64_t>::min() };
-				int64_t sign{ (*iter == '-') ? -1ll : 1ll };
-				iter += (*iter == '-');
-				if constexpr (sizeof(value_type) == 8) {
-					return (parseInt(iter, value)) ? (sign == -1ll) ? (value >= minAbs) ? (value *= sign, true) : false : (value <= maximum) ? true : false : false;
+				if constexpr (jsonifier::concepts::int64_type<value_type>) {
+					return (parseInt(iter, value));
 				} else {
 					int64_t i;
-					return (parseInt(iter, i)) ? (sign == -1ll) ? (i >= minAbs) ? (value = i * sign, true) : false : (i <= maximum) ? (value = i, true) : false : false;
+					return parseInt(iter, i) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
@@ -144,7 +139,7 @@ namespace jsonifier_internal {
 				double temp;
 				return parseFloat(iter, temp) ? (value = temp, true) : false;
 			} else {
-				if constexpr (sizeof(value_type) == 8) {
+				if constexpr (jsonifier::concepts::double_type<value_type>) {
 					return parseFloat(iter, end, value);
 				} else {
 					double i;

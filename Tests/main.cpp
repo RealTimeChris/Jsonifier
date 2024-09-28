@@ -27,6 +27,7 @@
 #include "Float.hpp"
 #include "Glaze.hpp"
 #include "Uint.hpp"
+#include "Int.hpp"
 #include <unordered_set>
 #include "RoundTrip.hpp"
 #include <unordered_map>
@@ -800,6 +801,7 @@ void testFunction() {
 	string_validation_tests::stringTests();
 	float_validation_tests::floatTests();
 	uint_validation_tests::uintTests();
+	int_validation_tests::intTests();
 	test_generator<test_struct> testJsonData{};
 	std::string jsonDataNew{};
 	jsonifier::jsonifier_core parser{};

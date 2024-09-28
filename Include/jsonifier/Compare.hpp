@@ -100,58 +100,64 @@ namespace jsonifier_internal {
 					data += vectorSize;
 				}
 			}
-
-			if (lengthNew >= 8) {
-				static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint64_t>() };
-				static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint64_t>() };
-				static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint64_t>() };
-				uint64_t simdValue;
-				std::memcpy(&simdValue, data, sizeof(uint64_t));
-				const auto chunk = simdValue ^ valueNew;
-				auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
-				if (next) {
-					next = simd_internal::tzcnt(static_cast<uint64_t>(next)) >> 3u;
-					data += next;
-					return data;
-				} else {
-					lengthNew -= 8;
-					data += 8;
+			{
+				static constexpr size_t n{ sizeof(uint64_t) };
+				if (lengthNew >= n) {
+					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint64_t>() };
+					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint64_t>() };
+					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint64_t>() };
+					uint64_t simdValue;
+					std::memcpy(&simdValue, data, sizeof(uint64_t));
+					const auto chunk = simdValue ^ valueNew;
+					auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
+					if (next) {
+						next = simd_internal::tzcnt(static_cast<uint64_t>(next)) >> 3u;
+						data += next;
+						return data;
+					} else {
+						lengthNew -= n;
+						data += n;
+					}
 				}
 			}
-
-			if (lengthNew >= 4) {
-				static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint32_t>() };
-				static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint32_t>() };
-				static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint32_t>() };
-				uint32_t simdValue;
-				std::memcpy(&simdValue, data, sizeof(uint32_t));
-				const auto chunk = simdValue ^ valueNew;
-				auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
-				if (next) {
-					next = simd_internal::tzcnt(static_cast<uint32_t>(next)) >> 3u;
-					data += next;
-					return data;
-				} else {
-					lengthNew -= 4;
-					data += 4;
+			{
+				static constexpr size_t n{ sizeof(uint32_t) };
+				if (lengthNew >= n) {
+					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint32_t>() };
+					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint32_t>() };
+					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint32_t>() };
+					uint32_t simdValue;
+					std::memcpy(&simdValue, data, sizeof(uint32_t));
+					const auto chunk = simdValue ^ valueNew;
+					auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
+					if (next) {
+						next = simd_internal::tzcnt(static_cast<uint32_t>(next)) >> 3u;
+						data += next;
+						return data;
+					} else {
+						lengthNew -= n;
+						data += n;
+					}
 				}
 			}
-
-			if (lengthNew >= 2) {
-				static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint16_t>() };
-				static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint16_t>() };
-				static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint16_t>() };
-				uint16_t simdValue;
-				std::memcpy(&simdValue, data, sizeof(uint16_t));
-				const auto chunk = simdValue ^ valueNew;
-				auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
-				if (next) {
-					next = simd_internal::tzcnt(static_cast<uint16_t>(next)) >> 3u;
-					data += next;
-					return data;
-				} else {
-					lengthNew -= 2;
-					data += 2;
+			{
+				static constexpr size_t n{ sizeof(uint16_t) };
+				if (lengthNew >= n) {
+					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint16_t>() };
+					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint16_t>() };
+					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint16_t>() };
+					uint16_t simdValue;
+					std::memcpy(&simdValue, data, sizeof(uint16_t));
+					const auto chunk = simdValue ^ valueNew;
+					auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
+					if (next) {
+						next = simd_internal::tzcnt(static_cast<uint16_t>(next)) >> 3u;
+						data += next;
+						return data;
+					} else {
+						lengthNew -= n;
+						data += n;
+					}
 				}
 			}
 

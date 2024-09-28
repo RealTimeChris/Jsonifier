@@ -34,6 +34,7 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, bool minified> struct index_processor;
 
 	template<jsonifier::parse_options options> struct index_processor<options, false> {
+		static constexpr char colon{ ':' };
 		template<size_t index, typename value_type, typename parse_context_type>
 		JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type& value, parse_context_type& context) noexcept {
 			if constexpr (index < std::tuple_size_v<core_tuple_t<value_type>>) {
@@ -45,7 +46,7 @@ namespace jsonifier_internal {
 				if (comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter)) [[likely]] {
 					context.iter += keySizeNew;
 					JSONIFIER_SKIP_WS();
-					if (*context.iter == ':') [[likely]] {
+					if (*context.iter == colon) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
 						parse<false, options>::impl(value.*ptr, context);
@@ -62,6 +63,7 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::parse_options options> struct index_processor<options, true> {
+		static constexpr char colon{ ':' };
 		template<size_t index, typename value_type, typename parse_context_type>
 		JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type& value, parse_context_type& context) noexcept {
 			if constexpr (index < std::tuple_size_v<core_tuple_t<value_type>>) {
@@ -72,7 +74,7 @@ namespace jsonifier_internal {
 				static constexpr auto keySizeNew	= keySize + 1;
 				if (comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter)) [[likely]] {
 					context.iter += keySizeNew;
-					if (*context.iter == ':') [[likely]] {
+					if (*context.iter == colon) [[likely]] {
 						++context.iter;
 						parse<true, options>::impl(value.*ptr, context);
 						return true;
@@ -101,13 +103,18 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char doubleQuote{ '"' };
+		static constexpr char rightBrace{ '}' };
+		static constexpr char leftBrace{ '{' };
+		static constexpr char colon{ ':' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
-			if (*context.iter == '{') [[likely]] {
+			if (*context.iter == leftBrace) [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
-				if (*context.iter != '}') [[likely]] {
+				if (*context.iter != rightBrace) [[likely]] {
 					if constexpr (memberCount > 0) {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
@@ -138,7 +145,7 @@ namespace jsonifier_internal {
 							}
 						};
 
-						if (*context.iter == '"') [[likely]] {
+						if (*context.iter == doubleQuote) [[likely]] {
 							++context.iter;
 							if constexpr (options.knownOrder) {
 								static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
@@ -146,12 +153,12 @@ namespace jsonifier_internal {
 								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 								static constexpr auto keySize		= key.size();
 								static constexpr auto keySizeNew	= keySize + 1;
-								if (*(context.iter + key.size()) == '"' &&
+								if (*(context.iter + key.size()) == doubleQuote &&
 									comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))
 									[[likely]] {
 									context.iter += keySizeNew;
 									JSONIFIER_SKIP_WS();
-									if (*context.iter == ':') [[likely]] {
+									if (*context.iter == colon) [[likely]] {
 										++context.iter;
 										JSONIFIER_SKIP_WS();
 										parse<false, options>::impl(value.*ptr, context);
@@ -174,8 +181,8 @@ namespace jsonifier_internal {
 						static constexpr auto parseLambda = [](const auto index, const auto newLines, const auto antiHashNew,
 																auto&& parseLambda, value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 							if constexpr (index < memberCount) {
-								if (*context.iter != '}') [[likely]] {
-									if (*context.iter == ',') [[likely]] {
+								if (*context.iter != rightBrace) [[likely]] {
+									if (*context.iter == comma) [[likely]] {
 										++context.iter;
 										JSONIFIER_SKIP_MATCHING_WS();
 									} else [[unlikely]] {
@@ -195,7 +202,7 @@ namespace jsonifier_internal {
 										}
 									}
 
-									if (*context.iter == '"') [[likely]] {
+									if (*context.iter == doubleQuote) [[likely]] {
 										++context.iter;
 										if constexpr (antiHashNew && options.knownOrder) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
@@ -203,12 +210,12 @@ namespace jsonifier_internal {
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
-											if (*(context.iter + key.size()) == '"' &&
+											if (*(context.iter + key.size()) == doubleQuote &&
 												comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(),
 													context.iter)) [[likely]] {
 												context.iter += keySizeNew;
 												JSONIFIER_SKIP_WS();
-												if (*context.iter == ':') [[likely]] {
+												if (*context.iter == colon) [[likely]] {
 													++context.iter;
 													JSONIFIER_SKIP_WS();
 													parse<false, options>::impl(value.*ptr, context);
@@ -282,13 +289,18 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char doubleQuote{ '"' };
+		static constexpr char rightBrace{ '}' };
+		static constexpr char leftBrace{ '{' };
+		static constexpr char colon{ ':' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
-			if (*context.iter == '{') [[likely]] {
+			if (*context.iter == leftBrace) [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
-				if (*context.iter != '}') [[likely]] {
+				if (*context.iter != rightBrace) [[likely]] {
 					if constexpr (memberCount > 0) {
 						bool antihash{ true };
 
@@ -301,18 +313,18 @@ namespace jsonifier_internal {
 							}
 						}
 
-						if (*context.iter == '"') [[likely]] {
+						if (*context.iter == doubleQuote) [[likely]] {
 							++context.iter;
 							static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
 							static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
-							if (*(context.iter + key.size()) == '"' &&
+							if (*(context.iter + key.size()) == doubleQuote &&
 								comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))
 								[[likely]] {
 								context.iter += keySizeNew;
-								if (*context.iter == ':') [[likely]] {
+								if (*context.iter == colon) [[likely]] {
 									++context.iter;
 									parse<true, options>::impl(value.*ptr, context);
 								} else [[unlikely]] {
@@ -343,8 +355,8 @@ namespace jsonifier_internal {
 						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda,
 																value_type& value, parse_context_type& context) {
 							if constexpr (index < memberCount) {
-								if (*context.iter != '}') [[likely]] {
-									if (*context.iter == ',') [[likely]] {
+								if (*context.iter != rightBrace) [[likely]] {
+									if (*context.iter == comma) [[likely]] {
 										++context.iter;
 									} else [[unlikely]] {
 										static constexpr auto sourceLocation{ std::source_location::current() };
@@ -363,7 +375,7 @@ namespace jsonifier_internal {
 										}
 									}
 
-									if (*context.iter == '"') [[likely]] {
+									if (*context.iter == doubleQuote) [[likely]] {
 										++context.iter;
 										if constexpr (antiHashNew) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
@@ -371,11 +383,11 @@ namespace jsonifier_internal {
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
-											if (*(context.iter + key.size()) == '"' &&
+											if (*(context.iter + key.size()) == doubleQuote &&
 												comparison<keySize, unwrap_t<decltype(*stringLiteral.data())>, unwrap_t<decltype(*context.iter)>>::compare(stringLiteral.data(),
 													context.iter)) [[likely]] {
 												context.iter += keySizeNew;
-												if (*context.iter == ':') [[likely]] {
+												if (*context.iter == colon) [[likely]] {
 													++context.iter;
 													parse<true, options>::impl(value.*ptr, context);
 													return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, true>{}, parseLambda, value,
@@ -444,12 +456,15 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.iter;
 				++context.currentArrayDepth;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					if constexpr (memberCount > 0) {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
@@ -478,8 +493,8 @@ namespace jsonifier_internal {
 		template<size_t n, size_t currentIndex, bool newLines>
 		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if constexpr (currentIndex < n) {
-				if (*context.iter != ']') [[likely]] {
-					if (*context.iter == ',') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
+					if (*context.iter == comma) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
 						auto newPtr		  = std::get<currentIndex>(value);
@@ -506,12 +521,15 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<unwrap_t<value_type>>;
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.iter;
 				++context.currentArrayDepth;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					if constexpr (memberCount > 0) {
 						auto newPtr		  = std::get<0>(value);
 						parse<true, options>::impl(getMember(newPtr, value), context);
@@ -530,8 +548,8 @@ namespace jsonifier_internal {
 
 		template<size_t n, size_t currentIndex> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context) {
 			if constexpr (currentIndex < n) {
-				if (*context.iter != ']') [[likely]] {
-					if (*context.iter == ',') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
+					if (*context.iter == comma) [[likely]] {
 						++context.iter;
 						auto newPtr		  = std::get<currentIndex>(value);
 						parse<true, options>::impl(getMember(newPtr, value), context);
@@ -555,18 +573,22 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char rightBrace{ '}' };
+		static constexpr char leftBrace{ '{' };
+		static constexpr char colon{ ':' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '{') [[likely]] {
+			if (*context.iter == leftBrace) [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
-				if (*context.iter != '}') [[likely]] {
+				if (*context.iter != rightBrace) [[likely]] {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
 					size_t wsSize{ size_t(context.iter - wsStart) };
 					static thread_local typename unwrap_t<value_type>::key_type key{};
 					parse<false, options>::impl(key, context);
 
-					if (*context.iter == ':') [[likely]] {
+					if (*context.iter == colon) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
 						parse<false, options>::impl(value[key], context);
@@ -595,14 +617,14 @@ namespace jsonifier_internal {
 		}
 
 		template<bool newLines> JSONIFIER_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
-			while (*context.iter != '}') [[likely]] {
-				if (*context.iter == ',') [[likely]] {
+			while (*context.iter != rightBrace) [[likely]] {
+				if (*context.iter == comma) [[likely]] {
 					++context.iter;
 					JSONIFIER_SKIP_MATCHING_WS();
 					static thread_local typename unwrap_t<value_type>::key_type key{};
 					parse<false, options>::impl(key, context);
 
-					if (*context.iter == ':') [[likely]] {
+					if (*context.iter == colon) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
 						parse<false, options>::impl(value[key], context);
@@ -627,15 +649,19 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char rightBrace{ '}' };
+		static constexpr char leftBrace{ '{' };
+		static constexpr char colon{ ':' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '{') [[likely]] {
+			if (*context.iter == leftBrace) [[likely]] {
 				++context.iter;
 				++context.currentObjectDepth;
-				if (*context.iter != '}') [[likely]] {
+				if (*context.iter != rightBrace) [[likely]] {
 					static thread_local typename unwrap_t<value_type>::key_type key{};
 					parse<true, options>::impl(key, context);
 
-					if (*context.iter == ':') [[likely]] {
+					if (*context.iter == colon) [[likely]] {
 						++context.iter;
 						parse<true, options>::impl(value[key], context);
 					} else [[unlikely]] {
@@ -645,13 +671,13 @@ namespace jsonifier_internal {
 						return;
 					}
 
-					while (*context.iter != '}') [[likely]] {
-						if (*context.iter == ',') [[likely]] {
+					while (*context.iter != rightBrace) [[likely]] {
+						if (*context.iter == comma) [[likely]] {
 							++context.iter;
 							static thread_local typename unwrap_t<value_type>::key_type key{};
 							parse<true, options>::impl(key, context);
 
-							if (*context.iter == ':') [[likely]] {
+							if (*context.iter == colon) [[likely]] {
 								++context.iter;
 								parse<true, options>::impl(value[key], context);
 							} else {
@@ -694,8 +720,9 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::optional_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char n{ 'n' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter != 'n') [[likely]] {
+			if (*context.iter != n) [[likely]] {
 				parse<false, options>::impl(value.emplace(), context);
 			} else {
 				if (parseNull(context.iter)) [[likely]] {
@@ -713,8 +740,9 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::optional_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char n{ 'n' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter != 'n') [[likely]] {
+			if (*context.iter != n) [[likely]] {
 				parse<true, options>::impl(value.emplace(), context);
 			} else {
 				if (parseNull(context.iter)) [[likely]] {
@@ -733,11 +761,14 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
 					size_t wsSize{ size_t(context.iter - wsStart) };
@@ -761,11 +792,11 @@ namespace jsonifier_internal {
 				for (size_t i = 0; i < n; ++i) {
 					parse<false, options>::impl(*(iterNew++), context);
 
-					if (*context.iter == ',') [[likely]] {
+					if (*context.iter == comma) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
 					} else [[unlikely]] {
-						if (*context.iter == ']') [[likely]] {
+						if (*context.iter == rightBracket) [[likely]] {
 							++context.iter;
 							JSONIFIER_SKIP_WS()
 							--context.currentArrayDepth;
@@ -783,11 +814,11 @@ namespace jsonifier_internal {
 			while (true) {
 				parse<false, options>::impl(value.emplace_back(), context);
 
-				if (*context.iter == ',') [[likely]] {
+				if (*context.iter == comma) [[likely]] {
 					++context.iter;
 					JSONIFIER_SKIP_MATCHING_WS();
 				} else [[unlikely]] {
-					if (*context.iter == ']') [[likely]] {
+					if (*context.iter == rightBracket) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
 						--context.currentArrayDepth;
@@ -810,21 +841,24 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					if (const size_t n = value.size(); n > 0) [[likely]] {
 						auto iterNew = value.begin();
 
 						for (size_t i = 0; i < n; ++i) {
 							parse<true, options>::impl(*(iterNew++), context);
 
-							if (*context.iter == ',') [[likely]] {
+							if (*context.iter == comma) [[likely]] {
 								++context.iter;
 							} else [[unlikely]] {
-								if (*context.iter == ']') [[likely]] {
+								if (*context.iter == rightBracket) [[likely]] {
 									++context.iter;
 									--context.currentArrayDepth;
 									return (value.size() == i + 1) ? noop() : value.resize(i + 1);
@@ -841,10 +875,10 @@ namespace jsonifier_internal {
 					while (true) {
 						parse<true, options>::impl(value.emplace_back(), context);
 
-						if (*context.iter == ',') [[likely]] {
+						if (*context.iter == comma) [[likely]] {
 							++context.iter;
 						} else [[unlikely]] {
-							if (*context.iter == ']') [[likely]] {
+							if (*context.iter == rightBracket) [[likely]] {
 								++context.iter;
 								--context.currentArrayDepth;
 								return;
@@ -875,11 +909,14 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::raw_array_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
 					size_t wsSize{ size_t(context.iter - wsStart) };
@@ -907,11 +944,11 @@ namespace jsonifier_internal {
 				for (size_t i = 0; i < n; ++i) {
 					parse<false, options>::impl(*(iterNew++), context);
 
-					if (*context.iter == ',') [[likely]] {
+					if (*context.iter == comma) [[likely]] {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
 					} else [[unlikely]] {
-						if (*context.iter == ']') [[likely]] {
+						if (*context.iter == rightBracket) [[likely]] {
 							++context.iter;
 							JSONIFIER_SKIP_WS()
 							--context.currentArrayDepth;
@@ -935,20 +972,23 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::raw_array_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
+		static constexpr char rightBracket{ ']' };
+		static constexpr char leftBracket{ '[' };
+		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter == '[') [[likely]] {
+			if (*context.iter == leftBracket) [[likely]] {
 				++context.currentArrayDepth;
 				++context.iter;
-				if (*context.iter != ']') [[likely]] {
+				if (*context.iter != rightBracket) [[likely]] {
 					auto iterNew = std::begin(value);
 
 					for (size_t i = 0; i < value.size(); ++i) {
 						parse<true, options>::impl(*(iterNew++), context);
 
-						if (*context.iter == ',') [[likely]] {
+						if (*context.iter == comma) [[likely]] {
 							++context.iter;
 						} else [[unlikely]] {
-							if (*context.iter == ']') [[likely]] {
+							if (*context.iter == rightBracket) [[likely]] {
 								++context.iter;
 								--context.currentArrayDepth;
 								return;
@@ -1027,8 +1067,9 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::shared_ptr_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
+		static constexpr char n{ 'n' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter != 'n') [[likely]] {
+			if (*context.iter != n) [[likely]] {
 				using member_type = decltype(*value);
 				if (!value) [[unlikely]] {
 					value = std::make_shared<std::remove_pointer_t<unwrap_t<member_type>>>();
@@ -1050,8 +1091,9 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::unique_ptr_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
+		static constexpr char n{ 'n' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter != 'n') [[likely]] {
+			if (*context.iter != n) [[likely]] {
 				using member_type = decltype(*value);
 				if (!value) [[unlikely]] {
 					value = std::make_unique<std::remove_pointer_t<unwrap_t<member_type>>>();
@@ -1073,8 +1115,9 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::pointer_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
+		static constexpr char n{ 'n' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if (*context.iter != 'n') [[likely]] {
+			if (*context.iter != n) [[likely]] {
 				if (!value) [[unlikely]] {
 					value = new std::remove_pointer_t<unwrap_t<value_type>>{};
 				}
