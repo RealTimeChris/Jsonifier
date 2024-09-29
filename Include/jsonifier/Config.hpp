@@ -38,6 +38,25 @@
 	#define JSONIFIER_GNUCXX 1
 #endif
 
+#if defined(JSONIFIER_MSVC)
+	#define JSONIFIER_VISUAL_STUDIO 1
+	#if defined(JSONIFIER_CLANG)
+		#define JSONIFIER_CLANG_VISUAL_STUDIO 1
+	#else
+		#define JSONIFIER_REGULAR_VISUAL_STUDIO 1
+	#endif
+#endif
+
+#define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
+
+#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
+	#define JSONIFIER_MAC 1
+#elif defined(linux) || defined(__linux) || defined(__linux__) || defined(__gnu_linux__)
+	#define JSONIFIER_LINUX 1
+#elif defined(WIN32) || defined(_WIN32) || defined(_WIN64)
+	#define JSONIFIER_WIN 1
+#endif
+
 #if defined(__has_builtin)
 	#define JSONIFIER_HAS_BUILTIN(x) __has_builtin(x)
 #else
@@ -58,16 +77,6 @@
 	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
 #else
 	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
-#endif
-
-#define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
-
-#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
-	#define JSONIFIER_MAC 1
-#elif defined(linux) || defined(__linux) || defined(__linux__) || defined(__gnu_linux__)
-	#define JSONIFIER_LINUX 1
-#elif defined(WIN32) || defined(_WIN32) || defined(_WIN64)
-	#define JSONIFIER_WIN 1
 #endif
 
 #if defined(NDEBUG)
@@ -101,15 +110,6 @@
 
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
-#endif
-
-#if defined(JSONIFIER_MSVC)
-	#define JSONIFIER_VISUAL_STUDIO 1
-	#if defined(JSONIFIER_CLANG)
-		#define JSONIFIER_CLANG_VISUAL_STUDIO 1
-	#else
-		#define JSONIFIER_REGULAR_VISUAL_STUDIO 1
-	#endif
 #endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY)

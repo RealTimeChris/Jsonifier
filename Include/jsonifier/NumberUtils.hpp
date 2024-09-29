@@ -121,17 +121,17 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return parseUint(iter, value);
+					return parseInteger(iter, end, value);
 				} else {
 					uint64_t i;
-					return parseUint(iter, i) ? (value = static_cast<value_type>(i), true) : false;
+					return parseInteger(iter, end, i) ? (value = i, true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					return (parseInt(iter, value));
+					return parseInteger(iter, end, value);
 				} else {
 					int64_t i;
-					return parseInt(iter, i) ? (value = static_cast<value_type>(i), true) : false;
+					return parseInteger(iter, end, i) ? (value = i, true) : false;
 				}
 			}
 		} else {
@@ -143,7 +143,7 @@ namespace jsonifier_internal {
 					return parseFloat(iter, end, value);
 				} else {
 					double i;
-					return parseFloat(iter, end, value) ? (value = i, true) : false;
+					return parseFloat(iter, end, i) ? (value = i, true) : false;
 				}
 			}
 		}
