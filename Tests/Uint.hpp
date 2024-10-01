@@ -42,24 +42,33 @@ namespace uint_validation_tests {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<uint64_t> data;
 		auto result = parser.parseJson(data, dataToParse);
-		if (result && parser.getErrors().size() == 0 && passTest) {
+		if (passTest) {
 			if (data.size() == 1) {
-				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << passTestValues[testName] << std::endl;
+				if (result && passTestValues[testName] == data[0]) {
+					std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
+					std::cout << testName << " Succeeded - Expected Output: " << passTestValues[testName] << std::endl;
+				} else {
+					std::cout << testName << " Failed - Output: " << data[0] << std::endl;
+					std::cout << testName << " Failed - Expected Output: " << passTestValues[testName] << std::endl;
+					for (auto& value: parser.getErrors()) {
+						std::cout << "Jsonifier Error: " << value << std::endl;
+					}
+				}
 			} else {
 				std::cout << testName << " Failed." << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << passTestValues[testName] << std::endl;
 				for (auto& value: parser.getErrors()) {
 					std::cout << "Jsonifier Error: " << value << std::endl;
 				}
 			}
-		} else if (!result && parser.getErrors().size() != 0 && !passTest) {
-			std::cout << testName << " Succeeded - Expected Output: " << failTestValues[testName] << std::endl;
 		} else {
-			std::cout << testName << " Failed." << std::endl;
-			for (auto& value: parser.getErrors()) {
-				std::cout << "Jsonifier Error: " << value << std::endl;
+			if (!result && parser.getErrors().size() != 0) {
+				std::cout << testName << " Succeeded - Expected Output: " << failTestValues[testName] << std::endl;
+			} else {
+				std::cout << testName << " Failed - Expected Output: " << failTestValues[testName] << std::endl;
 			}
 		}
+
 		return true;
 	}
 

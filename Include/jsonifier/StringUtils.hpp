@@ -36,14 +36,6 @@ namespace jsonifier_internal {
 		++context.iter; \
 	}
 
-#define JSONIFIER_SKIP_WS_CHECKED() \
-	while (whitespaceTable[static_cast<uint8_t>(*context.iter)]) { \
-		++context.iter; \
-		if (context.iter >= context.endIter) { \
-			return; \
-		} \
-	}
-
 	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& context, uint64_t length) noexcept {
 		if (length > 7) {
 			uint64_t v[2];
@@ -258,7 +250,7 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& quotes, const simd_type& backslashes) noexcept {
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, backslashes) | simd_internal::opCmpEq(simdValue, quotes)));
+		return tzcnt64(static_cast<integer_type>(simd_internal::opCmpEq(simdValue, backslashes) | simd_internal::opCmpEq(simdValue, quotes)));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -271,14 +263,14 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		const size_t lo7  = simdValue & mask;
 		const size_t next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
+		return static_cast<integer_type>(tzcnt64(next) >> 3u);
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::tzcnt(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues01, simdValue), simdValue) |
+		return tzcnt64(static_cast<integer_type>(simd_internal::opCmpEq(simd_internal::opShuffle(simdValues01, simdValue), simdValue) |
 			simd_internal::opCmpEq(simd_internal::opShuffle(simdValues02, simdValue), simdValue)));
 	}
 
@@ -293,7 +285,7 @@ namespace jsonifier_internal {
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		const size_t lo7  = simdValue & mask;
 		const size_t next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & midBitsMask) + mask)) | simdValue) & lowBitsMask;
-		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
+		return static_cast<integer_type>(tzcnt64(next) >> 3u);
 	}
 
 	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
@@ -486,7 +478,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -663,83 +655,65 @@ namespace jsonifier_internal {
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
 			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
 			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
-			const simd_type lo7Mask				   = simd_internal::gatherValue<simd_type>(int8_t(0b01111111));
-			const simd_type quoteChar			   = simd_internal::gatherValue<simd_type>('"');
-			const simd_type backslashChar		   = simd_internal::gatherValue<simd_type>('\\');
-			const simd_type less32Mask			   = simd_internal::gatherValue<simd_type>(int8_t(0b01100000));
-			const simd_type highBitMask			   = simd_internal::gatherValue<simd_type>(int8_t(0b10000000));
+			const simd_type simdValues00		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data());
+			const simd_type simdValues01		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray01<bytesPerStep>.data());
+			simd_type simdValue;
+			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				std::cout << "LENGTH NEW-02: " << lengthNew << std::endl;
-				simd_type v = simd_internal::gatherValues<simd_type>(reinterpret_cast<const simd_type*>(string1));
-				std::cout << "LENGTH NEW-03: " << lengthNew << std::endl;
-				simd_internal::store(v, reinterpret_cast<simd_type*>(string2));
-				std::cout << "LENGTH NEW-04: " << lengthNew << std::endl;
-				const simd_type lo7				= simd_internal::opAnd(v, lo7Mask);
-				const simd_type quote			= simd_internal::opAdd8(simd_internal::opXor(lo7, quoteChar), lo7Mask);
-				const simd_type backslash		= simd_internal::opAdd8(simd_internal::opXor(lo7, backslashChar), lo7Mask);
-				const simd_type less32			= simd_internal::opAdd8(simd_internal::opAnd(v, less32Mask), lo7Mask);
-				simd_type temp					= simd_internal::opAnd(quote, backslash);
-				temp							= simd_internal::opAnd(temp, less32);
-				temp							= simd_internal::opOr(temp, v);
-				simd_type next					= simd_internal::opNot(temp);
-				next							= simd_internal::opAnd(next, highBitMask);
-				integer_type maskNew			= simd_internal::opBitMask(next);
-				if (maskNew == 0) {
+				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+				if (nextEscapeable < mask) [[likely]] {
+					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
+					if (escapeChar != 0u) [[likely]] {
+						lengthNew -= nextEscapeable;
+						string2 += nextEscapeable;
+						string1 += nextEscapeable;
+						std::memcpy(string2, &escapeChar, 2);
+						string2 += 2ull;
+						--lengthNew;
+						++string1;
+					} else {
+						string2 += nextEscapeable;
+						return;
+					}
+				} else {
+					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
 					string1 += bytesProcessed;
-					lengthNew -= bytesProcessed;
-					continue;
 				}
-				integer_type length = simd_internal::tzcnt(maskNew);
-				string1  += length;
-				string2 += length;
-				lengthNew -= length;
-				std::memcpy(string2, &escapeTable[uint8_t(*string1)], 2);
-				--lengthNew;
-				string2 += 2;
-				++string1;
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
 			static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
 			static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
-			const simd_type lo7Mask				   = simd_internal::gatherValue<simd_type>(int8_t(0b01111111));
-			const simd_type quoteChar			   = simd_internal::gatherValue<simd_type>('"');
-			const simd_type backslashChar		   = simd_internal::gatherValue<simd_type>('\\');
-			const simd_type less32Mask			   = simd_internal::gatherValue<simd_type>(int8_t(0b01100000));
-			const simd_type highBitMask			   = simd_internal::gatherValue<simd_type>(int8_t(0b10000000));
+			const simd_type simdValues00		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data());
+			const simd_type simdValues01		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray01<bytesPerStep>.data());
+			simd_type simdValue;
+			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-				std::cout << "LENGTH NEW-01: " << lengthNew << std::endl;
-				simd_type v = simd_internal::gatherValues<simd_type>(reinterpret_cast<const simd_type*>(string1));
-				simd_internal::store(v, reinterpret_cast<simd_type*>(string2));
-				const simd_type lo7		  = simd_internal::opAnd(v, lo7Mask);
-				const simd_type quote	  = simd_internal::opAdd8(simd_internal::opXor(lo7, quoteChar), lo7Mask);
-				const simd_type backslash = simd_internal::opAdd8(simd_internal::opXor(lo7, backslashChar), lo7Mask);
-				const simd_type less32	  = simd_internal::opAdd8(simd_internal::opAnd(v, less32Mask), lo7Mask);
-				simd_type temp			  = simd_internal::opAnd(quote, backslash);
-				temp					  = simd_internal::opAnd(temp, less32);
-				temp					  = simd_internal::opOr(temp, v);
-				simd_type next			  = simd_internal::opNot(temp);
-				next					  = simd_internal::opAnd(next, highBitMask);
-				integer_type maskNew	  = simd_internal::opBitMask(next);
-				if (maskNew == 0) {
+				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+				if (nextEscapeable < mask) [[likely]] {
+					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
+					if (escapeChar != 0u) [[likely]] {
+						lengthNew -= nextEscapeable;
+						string2 += nextEscapeable;
+						string1 += nextEscapeable;
+						std::memcpy(string2, &escapeChar, 2);
+						string2 += 2ull;
+						--lengthNew;
+						++string1;
+					} else {
+						string2 += nextEscapeable;
+						return;
+					}
+				} else {
+					lengthNew -= bytesProcessed;
 					string2 += bytesProcessed;
 					string1 += bytesProcessed;
-					lengthNew -= bytesProcessed;
-					continue;
 				}
-				integer_type length = simd_internal::tzcnt(maskNew);
-				string1 += length;
-				string2 += length;
-				lengthNew -= length;
-				std::memcpy(string2, &escapeTable[uint8_t(*string1)], 2);
-				--lengthNew;
-				string2 += 2;
-				++string1;
 			}
 		}
 #endif
@@ -888,7 +862,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void skipObject(context_type& context) noexcept {
 			++context.iter;
 			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS_CHECKED();
+				JSONIFIER_SKIP_WS();
 			}
 			if (*context.iter == '}') {
 				return;
@@ -904,7 +878,7 @@ namespace jsonifier_internal {
 				}
 				++context.iter;
 				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS_CHECKED();
+					JSONIFIER_SKIP_WS();
 				}
 			}
 		}
@@ -912,7 +886,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void skipArray(context_type& context) noexcept {
 			++context.iter;
 			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS_CHECKED();
+				JSONIFIER_SKIP_WS();
 			}
 			if (*context.iter == ']') {
 				return;
@@ -924,7 +898,7 @@ namespace jsonifier_internal {
 				}
 				++context.iter;
 				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS_CHECKED();
+					JSONIFIER_SKIP_WS();
 				}
 			}
 		}
@@ -1062,32 +1036,32 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE static void skipToNextValue(context_type& context) noexcept {
 			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS_CHECKED();
+				JSONIFIER_SKIP_WS();
 			}
 			switch (*context.iter) {
 				case '{': {
 					skipObject(context);
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					break;
 				}
 				case '[': {
 					skipArray(context);
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					break;
 				}
 				case '"': {
 					skipString(context);
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					if (*context.iter == ':') {
 						++context.iter;
 						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS_CHECKED();
+							JSONIFIER_SKIP_WS();
 						}
 						skipToNextValue(context);
 					}
@@ -1096,7 +1070,7 @@ namespace jsonifier_internal {
 				case ':': {
 					++context.iter;
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					skipToNextValue(context);
 					break;
@@ -1104,21 +1078,21 @@ namespace jsonifier_internal {
 				case 'n': {
 					context.iter += 4;
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					break;
 				}
 				case 'f': {
 					context.iter += 5;
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					break;
 				}
 				case 't': {
 					context.iter += 4;
 					if constexpr (!options.minified) {
-						JSONIFIER_SKIP_WS_CHECKED();
+						JSONIFIER_SKIP_WS();
 					}
 					break;
 				}

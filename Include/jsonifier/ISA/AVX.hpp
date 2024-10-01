@@ -105,11 +105,6 @@ namespace simd_internal {
 		return _mm_andnot_si128(other, value);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01>
-	JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
-		return _mm_xor_si128(value, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
-	}
-
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opTest(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return !_mm_testz_si128(value, other);
@@ -128,6 +123,11 @@ namespace simd_internal {
 		auto result = _mm_and_si128(value, _mm_set_epi64x(0x8000000000000000ll, 0x00ll));
 		return !_mm_testz_si128(result, result);
 	}
+
+	#if defined(opNot)
+		#undef opNot
+	#endif
+	#define opNot(x) _mm_xor_si128(x, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
 
 	#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 
@@ -212,11 +212,6 @@ namespace simd_internal {
 		return !_mm256_testz_si256(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_t01>
-	JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
-		return _mm256_xor_si256(value, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
-	}
-
 	template<jsonifier::concepts::simd_int_256_type simd_type> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_256 opSetLSB(simd_type&& value, bool valueNew) noexcept {
 		#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
 		jsonifier_simd_int_256 mask{ 0x01u, '\0', '\0', '\0' };
@@ -230,6 +225,11 @@ namespace simd_internal {
 		auto result = _mm256_and_si256(value, _mm256_set_epi64x(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll));
 		return !_mm256_testz_si256(result, result);
 	}
+
+		#if defined(opNot)
+			#undef opNot
+		#endif
+		#define opNot(x) _mm256_xor_si256(x, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
 
 		#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 

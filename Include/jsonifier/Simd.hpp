@@ -150,21 +150,21 @@ namespace jsonifier_internal {
 
 		template<size_type index> JSONIFIER_ALWAYS_INLINE size_type rollValuesIntoTape(size_type currentIndex, size_type newBits) noexcept {
 			static constexpr size_type bitTotal{ index * 64ull };
-			structuralIndices[0 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[0 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[1 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[2 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[3 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[4 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[5 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[6 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
-			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(simd_internal::tzcnt(newBits) + bitTotal + stringIndex);
+			structuralIndices[7 + (currentIndex * 8) + tapeIndex] = currentParseBuffer.data() + static_cast<uint32_t>(tzcnt64(newBits) + bitTotal + stringIndex);
 			newBits												  = blsr(newBits);
 			return newBits;
 		}
@@ -259,7 +259,7 @@ namespace jsonifier_internal {
 			rawStructurals.quotes						  = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t inString				  = simd_internal::opClMul(rawStructurals.quotes, prevInString);
 			jsonifier_simd_int_t stringTail				  = simd_internal::opXor(inString, rawStructurals.quotes);
-			jsonifier_simd_int_t scalar					  = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+			jsonifier_simd_int_t scalar					  = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			jsonifier_simd_int_t nonQuoteScalar			  = simd_internal::opAndNot(scalar, rawStructurals.quotes);
 			jsonifier_simd_int_t followsNonQuoteScalar	  = simd_internal::opFollows(nonQuoteScalar, overflow);
 			jsonifier_simd_int_t potentialScalarStart	  = simd_internal::opAndNot(scalar, followsNonQuoteScalar);
