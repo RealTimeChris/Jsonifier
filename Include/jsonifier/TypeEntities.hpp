@@ -581,6 +581,5 @@ namespace jsonifier_internal {
 #include <jsonifier/ISA/AVX.hpp>
 #include <jsonifier/ISA/Lzcount.hpp>
 #include <jsonifier/ISA/Popcount.hpp>
-#include <jsonifier/ISA/Bmi2.hpp>
 #include <jsonifier/ISA/Bmi.hpp>
 #include <jsonifier/ISA/Fallback.hpp>

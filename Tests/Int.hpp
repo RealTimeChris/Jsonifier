@@ -28,7 +28,7 @@
 
 namespace int_validation_tests {
 
-	std::unordered_map<const std::string_view, int64_t> passTestValues{ { "passTest01.json", 0 }, { "passTest02.json", 1 }, { "passTest03.json", 32767 },
+	std::unordered_map<std::string_view, int64_t> passTestValues{ { "passTest01.json", 0 }, { "passTest02.json", 1 }, { "passTest03.json", 32767 },
 		{ "passTest04.json", 2147483647 }, { "passTest05.json", 9223372036854775807LL }, { "passTest06.json", -1 }, { "passTest07.json", -32768 },
 		{ "passTest08.json", -2147483648 }, { "passTest09.json", -9223372036854775808LL }, { "passTest10.json", 42 }, { "passTest11.json", 122 }, { "passTest12.json", 1 },
 		{ "passTest13.json", 1000003000000 }, { "passTest14.json", 1002340000000 } };
@@ -42,21 +42,33 @@ namespace int_validation_tests {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<int64_t> data;
 		auto result = parser.parseJson(data, dataToParse);
-		if (result && parser.getErrors().size() == 0 && passTest) {
+		if (passTest) {
 			if (data.size() == 1) {
-				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << passTestValues[testName] << std::endl;
+				if (result && passTestValues[testName] == data[0]) {
+					std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
+					std::cout << testName << " Succeeded - Expected Output: " << passTestValues[testName] << std::endl;
+				} else {
+					std::cout << testName << " Failed - Output: " << data[0] << std::endl;
+					std::cout << testName << " Failed - Expected Output: " << passTestValues[testName] << std::endl;
+					for (auto& value: parser.getErrors()) {
+						std::cout << "Jsonifier Error: " << value << std::endl;
+					}
+				}
 			} else {
 				std::cout << testName << " Failed." << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << passTestValues[testName] << std::endl;
 				for (auto& value: parser.getErrors()) {
 					std::cout << "Jsonifier Error: " << value << std::endl;
 				}
 			}
-		} else if (!result && parser.getErrors().size() != 0 && !passTest) {
-			std::cout << testName << " Succeeded - Expected Output: " << failTestValues[testName] << std::endl;
 		} else {
-			std::cout << testName << " Failed." << std::endl;
+			if (!result && parser.getErrors().size() != 0) {
+				std::cout << testName << " Succeeded - Expected Output: " << failTestValues[testName] << std::endl;
+			} else {
+				std::cout << testName << " Failed - Expected Output: " << failTestValues[testName] << std::endl;
+			}
 		}
+		
 		return true;
 	}
 

@@ -2347,7 +2347,7 @@ compute_error_scaled(int64_t q, uint64_t w, int lz) noexcept {
 template <typename binary>
 fastfloat_really_inline FASTFLOAT_CONSTEXPR20 adjusted_mantissa
 compute_error(int64_t q, uint64_t w) noexcept {
-  int lz = simd_internal::lzcnt(w);
+	int lz = lzcnt64(w);
   w <<= lz;
   value128 product =
       compute_product_approximation<binary::mantissa_explicit_bits() + 3>(q, w);
@@ -2379,7 +2379,7 @@ compute_float(int64_t q, uint64_t w) noexcept {
   // powers::largest_power_of_five].
 
   // We want the most significant bit of i to be 1. Shift if needed.
-  int lz = simd_internal::lzcnt(w);
+  int lz = lzcnt64(w);
   w <<= lz;
 
   // The required precision is binary::mantissa_explicit_bits() + 3 because
@@ -2629,13 +2629,13 @@ empty_hi64(bool &truncated) noexcept {
 fastfloat_really_inline uint64_t
 uint64_hi64(uint64_t r0, bool &truncated) noexcept {
   truncated = false;
-  int shl = simd_internal::lzcnt(r0);
+  int shl = lzcnt64(r0);
   return r0 << shl;
 }
 
 fastfloat_really_inline uint64_t
 uint64_hi64(uint64_t r0, uint64_t r1, bool &truncated) noexcept {
-  int shl = simd_internal::lzcnt(r0);
+	int shl = lzcnt64(r0);
   if (shl == 0) {
     truncated = r1 != 0;
     return r0;
@@ -3031,11 +3031,11 @@ struct bigint : pow5_tables<> {
       return 0;
     } else {
 #ifdef FASTFLOAT_64BIT_LIMB
-      return simd_internal::lzcnt(vec.rindex(0));
+      return lzcnt64(vec.rindex(0));
 #else
       // no use defining a specialized simd_internal::lzcnt for a 32-bit type.
       uint64_t r0 = vec.rindex(0);
-      return simd_internal::lzcnt(r0 << 32);
+	  return lzcnt64(r0 << 32);
 #endif
     }
   }

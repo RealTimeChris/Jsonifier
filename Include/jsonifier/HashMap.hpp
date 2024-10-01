@@ -765,7 +765,7 @@ namespace jsonifier_internal {
 						const size_t resultIndex = group * hashData.bucketSize;
 						const auto simdValues	 = simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex);
 						const auto matches		 = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simdValues);
-						const size_t tz			 = simd_internal::tzcnt(simd_internal::opBitMask(matches));
+						const size_t tz			 = tzcnt64(simd_internal::opBitMask(matches));
 						return hashData.indices[resultIndex + tz];
 					}
 				}

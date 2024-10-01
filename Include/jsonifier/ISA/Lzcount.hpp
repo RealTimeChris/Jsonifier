@@ -29,41 +29,39 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
-		return _lzcnt_u32(value);
-	}
+	#define lzcnt32(value) _lzcnt_u32(value)
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
-		return _lzcnt_u64(value);
-	}
+	#define lzcnt64(value) _lzcnt_u64(value)
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
-		uint64_t leading_zero = 0;
+	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt32(value_type value) noexcept {
+		uint32_t leading_zero = 0;
 		if (_BitScanReverse32(&leading_zero, value)) {
-			return 32 - leading_zero;
+			return 63 - leading_zero;
 		} else {
-			return 32;
+			return 64;
 		}
-	#else
-		return __builtin_clz(value);
-	#endif
 	}
+		#define lzcnt32(value) lzcnt32(value)
+	#else
+		#define lzcnt32(value) __builtin_clzll(value)
+	#endif
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt64(value_type value) noexcept {
 		uint64_t leading_zero = 0;
 		if (_BitScanReverse64(&leading_zero, value)) {
 			return 63 - leading_zero;
 		} else {
 			return 64;
 		}
-	#else
-		return __builtin_clzll(value);
-	#endif
 	}
+		#define lzcnt64(value) lzcnt64(value)
+	#else
+		#define lzcnt64(value) __builtin_clzll(value)
+	#endif
 
 #else
 

@@ -39,18 +39,14 @@ namespace jsonifier_internal {
 		1000000000ull, 10000000000ull, 100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull,
 		1000000000000000000ull, 10000000000000000000ull };
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t digiTypeDot = 1 << 4;
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t digiTypeExp = 1 << 5;
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t digiTypeDot{ 1 << 4 };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t digiTypeExp{ 1 << 5 };
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint8_t, 256> digiTable = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
-		0x08, 0x10, 0x00, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	JSONIFIER_ALWAYS_INLINE bool digiIsFp(uint8_t d) noexcept {
-		return (digiTable[d] & (digiTypeDot | digiTypeExp)) != 0;
-	}
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint8_t, 256> digiTable{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x08,
+		0x10, 0x00, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 	JSONIFIER_ALWAYS_INLINE constexpr bool isSafeAddition(uint64_t a, uint64_t b) noexcept {
 		return a <= (std::numeric_limits<uint64_t>::max)() - b;
@@ -61,14 +57,14 @@ namespace jsonifier_internal {
 		return a <= b;
 	}
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE auto e_bit		   = static_cast<uint8_t>('E' ^ 'e');
-	JSONIFIER_ALWAYS_INLINE_VARIABLE auto f64MinDecExp = (-324);
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimalPoint = '.';
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char smallE	   = 'e';
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char bigE		   = 'E';
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus		   = '-';
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char plus		   = '+';
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero		   = '0';
+	JSONIFIER_ALWAYS_INLINE_VARIABLE auto eBit{ static_cast<uint8_t>('E' ^ 'e') };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE auto f64MinDecExp{ (-324) };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimalPoint{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char smallE{ 'e' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char bigE{ 'E' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus{ '-' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char plus{ '+' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
 
 	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint64_t, 256> numberSubTable{ []() {
 		std::array<uint64_t, 256> returnValues{};
@@ -93,41 +89,53 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE bool digiFinish(auto& exp, auto& val, auto& sig) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type> JSONIFIER_ALWAYS_INLINE bool digiFinish(int32_t& exp, value_type& value, uint64_t& sig) {
 		if (exp <= -20) [[unlikely]] {
-			val = unwrap_t<decltype(val)>(0);
+			value = unwrap_t<decltype(value)>(0);
 			return true;
 		}
 
-		val = static_cast<unwrap_t<decltype(val)>>(sig);
-		if (exp >= 0) {
-			val *= static_cast<unwrap_t<decltype(val)>>(powerOfTenInt[exp]);
+		value = static_cast<unwrap_t<decltype(value)>>(sig);
+		if constexpr (isVolatile) {
+			if (exp >= 0) {
+				value = value * static_cast<value_type>(powerOfTenInt[exp]);
+			} else {
+				value = value / static_cast<value_type>(powerOfTenInt[-exp]);
+			}
 		} else {
-			val /= static_cast<unwrap_t<decltype(val)>>(powerOfTenInt[-exp]);
+			if (exp >= 0) {
+				value *= static_cast<value_type>(powerOfTenInt[exp]);
+			} else {
+				value /= static_cast<value_type>(powerOfTenInt[-exp]);
+			}
 		}
 		return true;
 	}
 
-	JSONIFIER_ALWAYS_INLINE bool digiExpFinish(auto& sig, auto& val, auto& expSig, auto& exp) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type>
+	JSONIFIER_ALWAYS_INLINE bool digiExpFinish(uint64_t& sig, value_type& value, int32_t& expSig, int32_t& exp) {
 		if (sig == 0) {
-			val = 0;
+			value = 0;
 			return true;
 		}
 		if (expSig == 19) {
-			val *= static_cast<unwrap_t<decltype(val)>>(powerOfTenInt[expSig - 1]);
-			if (isSafeMultiplication10(val)) [[likely]] {
-				return bool(val *= 10);
-			} else [[unlikely]] {
-				return false;
+			value *= static_cast<unwrap_t<decltype(value)>>(powerOfTenInt[expSig - 1]);
+			if constexpr (isVolatile) {
+				value = value * static_cast<value_type>(powerOfTenInt[expSig - 1]);
+				return bool(value *= 10);
+			} else {
+				value *= static_cast<value_type>(powerOfTenInt[expSig - 1]);
+				return bool(value *= 10);
 			}
 		} else if (expSig >= 20) [[unlikely]] {
 			return false;
 		}
 		exp = expSig;
-		return digiFinish(exp, val, sig);
+		return digiFinish<isVolatile>(exp, value, sig);
 	};
 
-	JSONIFIER_ALWAYS_INLINE bool digiExpMore(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool digiExpMore(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp) {
 		expSign = (*++cur == minus);
 		cur += (*cur == plus || *cur == minus);
 		if (uint8_t(numberSubTable[*cur]) > 9) {
@@ -143,59 +151,62 @@ namespace jsonifier_internal {
 		}
 		if ((cur - tmp >= 6)) [[unlikely]] {
 			if (sig == 0 || expSign) {
-				val = 0;
+				value = 0;
 				return true;
 			} else {
 				return false;
 			}
 		}
 		expSig += expSign ? -expLit : expLit;
-		return digiExpFinish(sig, val, expSig, exp);
+		return digiExpFinish<isVolatile>(sig, value, expSig, exp);
 	};
 
-
-	JSONIFIER_ALWAYS_INLINE bool digiFracEnd(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp, auto sigEnd, auto dotPos) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool digiFracEnd(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp, const char_type*& sigEnd, const char_type*& dotPos) {
 		sigEnd = cur;
 		expSig = -int32_t((cur - dotPos) - 1);
 		if (expSig == 0) [[unlikely]]
 			return false;
-		if ((e_bit | *cur) != smallE) [[likely]] {
+		if ((eBit | *cur) != smallE) [[likely]] {
 			if ((expSig < f64MinDecExp - 19)) [[unlikely]] {
-				val = 0;
+				value = 0;
 				return true;
 			}
 			exp = expSig;
-			return digiFinish(exp, val, sig);
+			return digiFinish<isVolatile>(exp, value, sig);
 		} else {
-			return digiExpMore(expSign, cur, tmp, val, expSig, expLit, sig, exp);
+			return digiExpMore<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp);
 		}
 	};
 
-	JSONIFIER_ALWAYS_INLINE bool digiStop(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp, auto sigEnd, auto dotPos, auto& fracZeros,
-		size_t i) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool digiStop(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp, const char_type*& sigEnd, const char_type*& dotPos,
+		uint32_t& fracZeros, size_t i) {
 		cur += i + 1 + fracZeros;
-		return digiFracEnd(expSign, cur, tmp, val, expSig, expLit, sig, exp, sigEnd, dotPos);
+		return digiFracEnd<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos);
 	};
 
-	JSONIFIER_ALWAYS_INLINE bool digiFrac(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp, auto sigEnd, auto dotPos, auto& fracZeros,
-		auto& numTmp, size_t i) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool digiFrac(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp, const char_type*& sigEnd, const char_type*& dotPos,
+		uint32_t& fracZeros, uint64_t& numTmp, size_t i) {
 		while (i < 21) {
 			if (((numTmp = uint64_t(numberSubTable[cur[i + 1 + fracZeros]])) <= 9)) [[likely]] {
 				sig = numTmp + sig * 10;
 
 			} else {
-				return digiStop(expSign, cur, tmp, val, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, i);
+				return digiStop<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, i);
 			}
 			++i;
 		}
 		return true;
 	};
 
-	JSONIFIER_ALWAYS_INLINE bool digiSepr(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp, auto sigEnd, auto dotPos, auto& fracZeros,
-		auto& numTmp, size_t i) {
-		if ((!digiIsFp(uint8_t(cur[i])))) [[likely]] {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool digiSepr(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp, const char_type*& sigEnd, const char_type*& dotPos,
+		uint32_t& fracZeros, uint64_t& numTmp, size_t i) {
+		if (((digiTable[uint8_t(cur[i])] & (digiTypeDot | digiTypeExp)) == 0)) [[likely]] {
 			cur += i;
-			val = sig;
+			value = sig;
 			return true;
 		}
 		dotPos = cur + i;
@@ -203,16 +214,21 @@ namespace jsonifier_internal {
 			if (sig == 0)
 				while (cur[fracZeros + i + 1] == zero)
 					++fracZeros;
-			return digiFrac(expSign, cur, tmp, val, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, i);
+			return digiFrac<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, i);
 		}
 		cur += i;
 		sigEnd = cur;
-		return digiExpMore(expSign, cur, tmp, val, expSig, expLit, sig, exp);
+		return digiExpMore<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp);
 	};
 
-	JSONIFIER_ALWAYS_INLINE bool exprIntg(auto& expSign, auto& cur, auto& tmp, auto& val, auto& expSig, auto& expLit, auto& sig, auto& exp, auto sigEnd, auto dotPos, auto& fracZeros,
-		auto& numTmp, size_t i) {
+	template<bool isVolatile, jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool exprIntg(bool& expSign, const char_type*& cur,
+		const char_type*& tmp, value_type& value, int32_t& expSig, int32_t& expLit, uint64_t& sig, int32_t& exp, const char_type*& sigEnd, const char_type*& dotPos,
+		uint32_t& fracZeros, uint64_t& numTmp, size_t i) {
+		auto prevSig	= sig;
+		auto prevNumTmp = numTmp;
 		while (i < 21) {
+			prevSig	= sig;
+			prevNumTmp = numTmp;
 			if ((numTmp = numberSubTable[cur[i]]) <= 9) [[likely]] {
 				sig = numTmp + sig * 10;
 			} else {
@@ -220,9 +236,27 @@ namespace jsonifier_internal {
 					if (*cur == zero)
 						return false;
 				}
-				return digiSepr(expSign, cur, tmp, val, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, i);
+				if constexpr (jsonifier::concepts::unsigned_type<unwrap_t<value_type>>) {
+					if (prevSig > (std::numeric_limits<unwrap_t<decltype(sig)>>::max() - prevNumTmp) / 10) [[unlikely]] {
+						return false;
+					}
+				} else {
+					if (prevSig > (-std::numeric_limits<unwrap_t<value_type>>::min() - prevNumTmp) / 10) [[unlikely]] {
+						return false;
+					}
+				}
+				return digiSepr<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, i);
 			};
 			++i;
+		}
+		if constexpr (jsonifier::concepts::unsigned_type<unwrap_t<value_type>>) {
+			if (prevSig > (std::numeric_limits<unwrap_t<decltype(sig)>>::max() - prevNumTmp) / 10) [[unlikely]] {
+				return false;
+			}
+		} else {
+			if (prevSig > (-std::numeric_limits<unwrap_t<value_type>>::min() - prevNumTmp) / 10) [[unlikely]] {
+				return false;
+			}
 		}
 		return true;
 	};
@@ -244,7 +278,7 @@ namespace jsonifier_internal {
 			return false;
 		}
 
-		return exprIntg(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, 0);
+		return exprIntg<isVolatile>(expSign, cur, tmp, value, expSig, expLit, sig, exp, sigEnd, dotPos, fracZeros, numTmp, 1);
 	}
 
 	template<typename value_type, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool stoui64(value_type& res, const char_type* c) noexcept {

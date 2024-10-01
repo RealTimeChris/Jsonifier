@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
 	JSONIFIER_ALWAYS_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
-		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
+		return (x + digitCountTable[31 - lzcnt32(x | 1)]) >> 32;
 	}
 
 	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
