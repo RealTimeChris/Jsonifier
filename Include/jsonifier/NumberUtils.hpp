@@ -121,23 +121,25 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return parseInteger(iter, end, value);
+					return parseInt(value, iter);
 				} else {
 					uint64_t i;
-					return parseInteger(iter, end, i) ? (value = i, true) : false;
+					return parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					return parseInteger(iter, end, value);
+					bool negative{ *iter == '-' ? (++iter, true) : false };
+					return parseInt(value, iter) ? negative ? ((value *= -1), true) : true : false;
 				} else {
+					bool negative{ *iter == '-' ? (++iter, true) : false };
 					int64_t i;
-					return parseInteger(iter, end, i) ? (value = i, true) : false;
+					return parseInt(i, iter) ? negative ? (value = static_cast<value_type>(i * -1), true) : (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				double temp;
-				return parseFloat(iter, temp) ? (value = temp, true) : false;
+				return parseFloat(iter, end, temp) ? (value = temp, true) : false;
 			} else {
 				if constexpr (jsonifier::concepts::double_type<value_type>) {
 					return parseFloat(iter, end, value);
