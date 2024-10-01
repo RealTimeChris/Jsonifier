@@ -259,7 +259,7 @@ namespace jsonifier_internal {
 			rawStructurals.quotes						  = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t inString				  = simd_internal::opClMul(rawStructurals.quotes, prevInString);
 			jsonifier_simd_int_t stringTail				  = simd_internal::opXor(inString, rawStructurals.quotes);
-			jsonifier_simd_int_t scalar					  = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+			jsonifier_simd_int_t scalar					  = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			jsonifier_simd_int_t nonQuoteScalar			  = simd_internal::opAndNot(scalar, rawStructurals.quotes);
 			jsonifier_simd_int_t followsNonQuoteScalar	  = simd_internal::opFollows(nonQuoteScalar, overflow);
 			jsonifier_simd_int_t potentialScalarStart	  = simd_internal::opAndNot(scalar, followsNonQuoteScalar);

@@ -229,7 +229,6 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::integer_t value_type, typename char_type> JSONIFIER_ALWAYS_INLINE bool parseInt(value_type& value, char_type*& cur) noexcept {
 		constexpr auto isVolatile = std::is_volatile_v<std::remove_reference_t<decltype(value)>>;
-		const char_type* sig_cut;
 		[[maybe_unused]] const char_type* sigEnd{};
 		const char_type* dotPos{};
 		uint32_t fracZeros = 0;

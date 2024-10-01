@@ -41,7 +41,7 @@ namespace uint_validation_tests {
 	auto runTest(const std::string_view testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool passTest = false) noexcept {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<uint64_t> data;
-		auto result = parser.parseJson(data, dataToParse.data());
+		auto result = parser.parseJson(data, dataToParse);
 		if (result && parser.getErrors().size() == 0 && passTest) {
 			if (data.size() == 1) {
 				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;

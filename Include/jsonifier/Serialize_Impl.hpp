@@ -390,7 +390,7 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto additionalSize = size_collect_impl<options, value_type, unwrap_t<serialize_context_type>>::impl(value.size(), serializePair.indent);
+			const auto additionalSize = size_collect_impl<options, value_type, unwrap_t<serialize_context_type>>::impl(value.size(), serializePair.indent) + bytesPerStep;
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
