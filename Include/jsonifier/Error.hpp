@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 	};
 
 	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, parse_errors error) {
-		os << tzcnt64(static_cast<uint64_t>(error));
+		os << simd_internal::tzcnt(static_cast<uint64_t>(error));
 		return os;
 	}
 

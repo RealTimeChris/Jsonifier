@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
 					if (mask != 0) [[unlikely]] {
-						data += tzcnt64(mask);
+						data += simd_internal::tzcnt(mask);
 						return data;
 					}
 					lengthNew -= vectorSize;
@@ -74,7 +74,7 @@ namespace jsonifier_internal {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
 					if (mask != 0) [[unlikely]] {
-						data += tzcnt32(mask);
+						data += simd_internal::tzcnt(mask);
 						return data;
 					}
 					lengthNew -= vectorSize;
@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
 					if (mask != 0) [[unlikely]] {
-						data += tzcnt16(mask);
+						data += simd_internal::tzcnt(mask);
 						return data;
 					}
 					lengthNew -= vectorSize;
@@ -114,7 +114,7 @@ namespace jsonifier_internal {
 						const auto chunk = simdValue ^ valueNew;
 						auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
 						if (next) {
-							next = tzcnt64(static_cast<uint64_t>(next)) >> 3u;
+							next = simd_internal::tzcnt(static_cast<uint64_t>(next)) >> 3u;
 							data += next;
 							return data;
 						} else {
@@ -135,7 +135,7 @@ namespace jsonifier_internal {
 					const auto chunk = simdValue ^ valueNew;
 					auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
 					if (next) {
-						next = tzcnt32(static_cast<uint64_t>(next)) >> 3u;
+						next = simd_internal::tzcnt(static_cast<uint32_t>(next)) >> 3u;
 						data += next;
 						return data;
 					} else {
@@ -155,7 +155,7 @@ namespace jsonifier_internal {
 					const auto chunk = simdValue ^ valueNew;
 					auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
 					if (next) {
-						next = tzcnt16(static_cast<uint64_t>(next)) >> 3u;
+						next = simd_internal::tzcnt(static_cast<uint16_t>(next)) >> 3u;
 						data += next;
 						return data;
 					} else {

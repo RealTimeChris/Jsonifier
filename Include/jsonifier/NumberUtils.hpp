@@ -121,19 +121,17 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return parseInt(value, iter);
+					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
 				} else {
-					uint64_t i;
-					return parseInt(i, iter) ? (value = i, true) : false;
+					uint64_t i{};
+					return integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					bool negative{ *iter == '-' ? (++iter, true) : false };
-					return parseInt(value, iter) ? negative ? ((value *= -1), true) : true : false;
+					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
 				} else {
-					bool negative{ *iter == '-' ? (++iter, true) : false };
-					int64_t i;
-					return parseInt(i, iter) ? negative ? (value = static_cast<value_type>(i * -1), true) : (value = static_cast<value_type>(i), true) : false;
+					int64_t i{};
+					return integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {

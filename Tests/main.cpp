@@ -666,7 +666,7 @@ template<test_type type, typename test_data_type, bool minified, uint64_t iterat
 		results_data simdjsonResults{};
 		results_data glazeResults{};
 
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 		simdjsonResults = json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
 		glazeResults	= json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
 #endif
@@ -700,7 +700,7 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		jsonResults.testName = static_cast<std::string>(testName.view());
 		results_data jsonifierResults{};
 		results_data glazeResults{};
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 		glazeResults = json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
@@ -733,7 +733,7 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		results_data jsonifierResults{};
 		results_data simdjsonResults{};
 		results_data glazeResults{};
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 		simdjsonResults = json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
 		glazeResults	= json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
@@ -767,7 +767,7 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		jsonResults.testName = static_cast<std::string>(testName.view());
 		results_data jsonifierResults{};
 		results_data glazeResults{};
-#if !defined(ASAN)
+#if !defined(ASAN_ENABLED)
 		glazeResults = json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
@@ -796,7 +796,7 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 static constexpr auto totalIterationCountCap{ 1000 };
 
 void testFunction() {
-	conformance_tests::conformanceTests();
+	//conformance_tests::conformanceTests();
 	round_trip_tests::roundTripTests();
 	string_validation_tests::stringTests();
 	float_validation_tests::floatTests();

@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2024 RealTimeChris
+	Copyright (c) 2023 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -24,7 +24,7 @@
 #pragma once
 
 #undef JSONIFIER_CPU_INSTRUCTIONS
-#define JSONIFIER_CPU_INSTRUCTIONS 78
+#define JSONIFIER_CPU_INSTRUCTIONS 38
 
 #if !defined(JSONIFIER_CHECK_FOR_INSTRUCTION)
 	#define JSONIFIER_CHECK_FOR_INSTRUCTION(x) (JSONIFIER_CPU_INSTRUCTIONS & x)
@@ -43,24 +43,21 @@
 #if !defined(JSONIFIER_BMI)
 	#define JSONIFIER_BMI (1 << 2)
 #endif
-#if !defined(JSONIFIER_BMI2)
-	#define JSONIFIER_BMI2 (1 << 3)
-#endif
 #if !defined(JSONIFIER_NEON)
-	#define JSONIFIER_NEON (1 << 4)
+	#define JSONIFIER_NEON (1 << 3)
 #endif
 #if !defined(JSONIFIER_AVX)
-	#define JSONIFIER_AVX (1 << 5)
+	#define JSONIFIER_AVX (1 << 4)
 #endif
 #if !defined(JSONIFIER_AVX2)
-	#define JSONIFIER_AVX2 (1 << 6)
+	#define JSONIFIER_AVX2 (1 << 5)
 #endif
 #if !defined(JSONIFIER_AVX512)
-	#define JSONIFIER_AVX512 (1 << 7)
+	#define JSONIFIER_AVX512 (1 << 6)
 #endif
 
 #if !defined(JSONIFIER_ANY)
-	#define JSONIFIER_ANY (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512 | JSONIFIER_POPCNT | JSONIFIER_BMI | JSONIFIER_BMI2 | JSONIFIER_LZCNT)
+	#define JSONIFIER_ANY (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512 | JSONIFIER_POPCNT | JSONIFIER_BMI | JSONIFIER_LZCNT)
 #endif
 
 #if !defined(JSONIFIER_ANY_AVX)

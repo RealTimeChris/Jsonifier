@@ -19,7 +19,7 @@
 #	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #	DEALINGS IN THE SOFTWARE.
 # https://github.com/RealTimeChris/jsonifier
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 include(GetCommitHash.cmake)
