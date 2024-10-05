@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::unsigned_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
 		template<parsing_state state> struct parse_function_caller {
 			JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue, value_type intDigits,
-				int64_t& exp, int8_t& expSign) {
+				int64_t exp, int8_t expSign) {
 				if constexpr (state == parsing_state::starting) {
 					if (isDigit(*cur)) {
 						value = toDigit(*cur);
@@ -221,7 +221,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::signed_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
 		template<parsing_state state, bool positive> struct parse_function_caller {
 			JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue, value_type intDigits,
-				int64_t& exp, int8_t& expSign) {
+				int64_t exp, int8_t expSign) {
 				if constexpr (state == parsing_state::starting) {
 					if (isNumberValue(*cur)) {
 						if (*cur == minus) {
@@ -239,13 +239,15 @@ namespace jsonifier_internal {
 				} else if constexpr (state == parsing_state::collecting_integer) {
 					if (isDigit(*cur)) {
 						auto numTmp = toDigit(*cur);
-						auto posComparisonValue{ size_t(std::numeric_limits<value_type>::max() - numTmp) / 10 };
-						auto negComparisonValue{ (static_cast<size_t>(std::numeric_limits<value_type>::min()) - numTmp) / 10 };
 						if constexpr (positive) {
+							static constexpr auto posCompRaw{ std::numeric_limits<value_type>::max() };
+							const auto posComparisonValue{ size_t(posCompRaw - numTmp) / 10 };
 							if (value > posComparisonValue) [[unlikely]] {
 								return false;
 							}
 						} else {
+							static constexpr auto negCompRaw{ static_cast<size_t>(std::numeric_limits<value_type>::max()) };
+							const auto negComparisonValue{ negCompRaw - numTmp / 10 };
 							if (value > negComparisonValue) [[unlikely]] {
 								return false;
 							}
@@ -337,13 +339,8 @@ namespace jsonifier_internal {
 
 					if constexpr (positive) {
 						value = static_cast<value_type>(combinedValue);
-
 					} else {
-						if (combinedValue > 0.0) {
-							value = fastFloor(combinedValue * -1);
-						} else {
-							value = static_cast<value_type>(combinedValue);
-						}
+						value = fastFloor(combinedValue * -1);
 					}
 
 					return true;
