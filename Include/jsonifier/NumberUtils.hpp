@@ -112,6 +112,8 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
+	template<typename value_type, typename char_type> inline static thread_local integer_parser<value_type, char_type> integerParser{};
+
 	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = unwrap_t<value_type_new>;
 
@@ -121,17 +123,17 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
+					return integerParser<value_type, std::remove_reference_t<decltype(*iter)>>.parseInt(value, iter);
 				} else {
 					uint64_t i{};
-					return integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = i, true) : false;
+					return integerParser<uint64_t, std::remove_reference_t<decltype(*iter)>>.parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
+					return integerParser<value_type, std::remove_reference_t<decltype(*iter)>>.parseInt(value, iter);
 				} else {
 					int64_t i{};
-					return integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
+					return integerParser<int64_t, std::remove_reference_t<decltype(*iter)>>.parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
