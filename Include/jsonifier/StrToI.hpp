@@ -45,15 +45,14 @@ namespace jsonifier_internal {
 
 	enum class parsing_state {
 		starting				  = 0,
-		starting_signed			  = 1,
-		collecting_integer_start  = 2,
-		collecting_integer		  = 3,
-		collecting_fractional	  = 4,
-		finishing_fractional	  = 5,
-		collecting_exponent		  = 6,
-		checking_digit			  = 7,
-		collecting_exponent_value = 8,
-		finishing				  = 9,
+		collecting_integer_start  = 1,
+		collecting_integer		  = 2,
+		collecting_fractional	  = 3,
+		finishing_fractional	  = 4,
+		collecting_exponent		  = 5,
+		checking_digit			  = 6,
+		collecting_exponent_value = 7,
+		finishing				  = 8,
 	};
 
 	static constexpr uint8_t digiTypeDigit = 1 << 1;
@@ -110,77 +109,74 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::unsigned_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
 		template<parsing_state state> struct parse_function_caller {
-			template<uint8_t index> JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue,
-				value_type intDigits, int64_t& exp, int8_t& expSign) {
+			JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue, value_type intDigits,
+				int64_t& exp, int8_t& expSign) {
 				if constexpr (state == parsing_state::starting) {
-					if constexpr (isDigit(index)) {
-						static constexpr auto newValue = toDigit(index);
-						value						   = newValue;
+					if (isDigit(*cur)) {
+						value = toDigit(*cur);
 						++cur;
-						return parse_function_caller<parsing_state::collecting_integer>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_integer>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return false;
 					}
 				} else if constexpr (state == parsing_state::collecting_integer) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						constexpr auto comparisonValue{ (std::numeric_limits<value_type>::max() - numTmp) / 10 };
+					if (isDigit(*cur)) {
+						auto numTmp = toDigit(*cur);
+						auto comparisonValue{ (std::numeric_limits<value_type>::max() - numTmp) / 10 };
 						if (value > comparisonValue) [[unlikely]] {
 							return false;
 						}
 						value = numTmp + value * 10;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_integer>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_integer>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					if constexpr (isExponent(index)) {
+					if (isExponent(*cur)) {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
-					} else if constexpr (index == '.') {
+						return parse_function_caller<parsing_state::collecting_exponent>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					} else if (*cur == '.') {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_fractional>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_fractional>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return true;
 					}
 				} else if constexpr (state == parsing_state::collecting_fractional) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						fracValue			  = numTmp + fracValue * 10;
+					if (isDigit(*cur)) {
+						fracValue = toDigit(*cur) + fracValue * 10;
 						++fracDigits;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_fractional>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_fractional>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					return parse_function_caller<parsing_state::finishing_fractional>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::finishing_fractional>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 				} else if constexpr (state == parsing_state::finishing_fractional) {
-					if constexpr (isExponent(index)) {
+					if (isExponent(*cur)) {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_exponent>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return true;
 					}
 				} else if constexpr (state == parsing_state::collecting_exponent) {
-					if constexpr (isPlusOrMinus(index)) {
-						if constexpr (index == '-') {
+					if (isPlusOrMinus(*cur)) {
+						if (*cur == '-') {
 							expSign = -1;
 						}
 						++cur;
 					}
-					return parse_function_caller<parsing_state::checking_digit>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::checking_digit>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 
 				} else if constexpr (state == parsing_state::checking_digit) {
-					if constexpr (isDigit(index)) {
-						return parse_function_caller<parsing_state::collecting_exponent_value>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					if (isDigit(*cur)) {
+						return parse_function_caller<parsing_state::collecting_exponent_value>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return false;
 					}
 
 				} else if constexpr (state == parsing_state::collecting_exponent_value) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						exp					  = numTmp + exp * 10;
+					if (isDigit(*cur)) {
+						exp = toDigit(*cur) + exp * 10;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent_value>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_exponent_value>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					return parse_function_caller<parsing_state::finishing>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::finishing>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 				} else if constexpr (state == parsing_state::finishing) {
 					exp *= expSign;
 
@@ -210,64 +206,41 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-
-			template<size_t... indices> static constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) {
-				using function_type = decltype(&parse_function_caller<state>::parseValue<0>);
-				return array<function_type, sizeof...(indices)>{ &parse_function_caller<state>::parseValue<indices>... };
-			}
-
-			static constexpr auto generateFunctionPtrs() {
-				return generateFunctionPtrsImpl(std::make_index_sequence<256>{});
-			}
-
-			JSONIFIER_ALWAYS_INLINE static bool callFunction(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue, value_type intDigits,
-				int64_t& exp, int8_t& expSign) {
-				static constexpr auto functionPtrs{ generateFunctionPtrs() };
-				return functionPtrs[static_cast<uint8_t>(*cur)](cur, fracDigits, value, fracValue, intDigits, exp, expSign);
-			}
 		};
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& cur) noexcept {
-			jsonifierPrefetchImpl(&value);
 			value_type fracDigits = 0;
 			value_type intDigits  = 0;
 			value_type fracValue  = 0;
 			int64_t exp			  = 0;
 			int8_t expSign		  = 1;
-			return parse_function_caller<parsing_state::starting>::callFunction(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+			return parse_function_caller<parsing_state::starting>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 		}
 	};
 
 	template<jsonifier::concepts::signed_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
 		template<parsing_state state, bool positive> struct parse_function_caller {
-			template<uint8_t index> JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, int8_t sign, value_type fracDigits, value_type& value,
-				value_type fracValue, value_type intDigits, int64_t& exp, int8_t& expSign) {
+			JSONIFIER_MAYBE_ALWAYS_INLINE static bool parseValue(const char_type*& cur, value_type fracDigits, value_type& value, value_type fracValue, value_type intDigits,
+				int64_t& exp, int8_t& expSign) {
 				if constexpr (state == parsing_state::starting) {
-					if constexpr (isNumberValue(index)) {
-						if constexpr (index == minus) {
-							sign = -1;
+					if (isNumberValue(*cur)) {
+						if (*cur == minus) {
 							++cur;
-							return parse_function_caller<parsing_state::starting_signed, false>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+							value = toDigit(*cur);
+							++cur;
+							return parse_function_caller<parsing_state::collecting_integer, false>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 						}
-						return parse_function_caller<parsing_state::starting_signed, true>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
-					} else {
-						return false;
-					}
-				}
-				if constexpr (state == parsing_state::starting_signed) {
-					if constexpr (isDigit(index)) {
-						static constexpr auto newValue = toDigit(index);
-						value						   = newValue;
+						value = toDigit(*cur);
 						++cur;
-						return parse_function_caller<parsing_state::collecting_integer, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_integer, true>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return false;
 					}
 				} else if constexpr (state == parsing_state::collecting_integer) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						constexpr auto posComparisonValue{ size_t(std::numeric_limits<value_type>::max() - numTmp) / 10 };
-						constexpr auto negComparisonValue{ (static_cast<size_t>(std::numeric_limits<value_type>::min()) - numTmp) / 10 };
+					if (isDigit(*cur)) {
+						auto numTmp = toDigit(*cur);
+						auto posComparisonValue{ size_t(std::numeric_limits<value_type>::max() - numTmp) / 10 };
+						auto negComparisonValue{ (static_cast<size_t>(std::numeric_limits<value_type>::min()) - numTmp) / 10 };
 						if constexpr (positive) {
 							if (value > posComparisonValue) [[unlikely]] {
 								return false;
@@ -279,63 +252,65 @@ namespace jsonifier_internal {
 						}
 						value = numTmp + value * 10;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_integer, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_integer, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					if constexpr (isExponent(index)) {
+					if (isExponent(*cur)) {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
-					} else if constexpr (index == '.') {
+						return parse_function_caller<parsing_state::collecting_exponent, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
+					} else if (*cur == '.') {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_fractional, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp,
-							expSign);
+						return parse_function_caller<parsing_state::collecting_fractional, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
-						value *= sign;
-						return true;
+						if constexpr (positive) {
+							return true;
+						} else {
+							value *= -1;
+							return true;
+						}
 					}
 				} else if constexpr (state == parsing_state::collecting_fractional) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						fracValue			  = numTmp + fracValue * 10;
+					if (isDigit(*cur)) {
+						fracValue = toDigit(*cur) + fracValue * 10;
 						++fracDigits;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_fractional, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp,
-							expSign);
+						return parse_function_caller<parsing_state::collecting_fractional, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					return parse_function_caller<parsing_state::finishing_fractional, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::finishing_fractional, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 				} else if constexpr (state == parsing_state::finishing_fractional) {
-					if constexpr (isExponent(index)) {
+					if (isExponent(*cur)) {
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+						return parse_function_caller<parsing_state::collecting_exponent, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
-						value *= sign;
-						return true;
+						if constexpr (positive) {
+							return true;
+						} else {
+							value *= -1;
+							return true;
+						}
 					}
 				} else if constexpr (state == parsing_state::collecting_exponent) {
-					if constexpr (isPlusOrMinus(index)) {
-						if constexpr (index == '-') {
+					if (isPlusOrMinus(*cur)) {
+						if (*cur == '-') {
 							expSign = -1;
 						}
 						++cur;
 					}
-					return parse_function_caller<parsing_state::checking_digit, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::checking_digit, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 
 				} else if constexpr (state == parsing_state::checking_digit) {
-					if constexpr (isDigit(index)) {
-						return parse_function_caller<parsing_state::collecting_exponent_value, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp,
-							expSign);
+					if (isDigit(*cur)) {
+						return parse_function_caller<parsing_state::collecting_exponent_value, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					} else {
 						return false;
 					}
 
 				} else if constexpr (state == parsing_state::collecting_exponent_value) {
-					if constexpr (isDigit(index)) {
-						constexpr auto numTmp = toDigit(index);
-						exp					  = numTmp + exp * 10;
+					if (isDigit(*cur)) {
+						exp = toDigit(*cur) + exp * 10;
 						++cur;
-						return parse_function_caller<parsing_state::collecting_exponent_value, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp,
-							expSign);
+						return parse_function_caller<parsing_state::collecting_exponent_value, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 					}
-					return parse_function_caller<parsing_state::finishing, positive>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+					return parse_function_caller<parsing_state::finishing, positive>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 				} else if constexpr (state == parsing_state::finishing) {
 					exp *= expSign;
 
@@ -343,11 +318,11 @@ namespace jsonifier_internal {
 						return false;
 					}
 
-					double fractionalCorrection = static_cast<double>(fracValue) / powerOfTenInt[fracDigits];
-					double combinedValue		= (static_cast<double>(value) + fractionalCorrection);
+					auto fractionalCorrection = fracValue / powerOfTenInt[fracDigits];
+					auto combinedValue		  = (value + fractionalCorrection);
 
-					static constexpr auto doubleMax{ static_cast<double>(std::numeric_limits<value_type>::max()) };
-					static constexpr auto doubleMin{ static_cast<double>(std::numeric_limits<value_type>::min()) };
+					static constexpr auto doubleMax{ (std::numeric_limits<value_type>::max()) };
+					static constexpr auto doubleMin{ (std::numeric_limits<value_type>::min()) };
 					if (exp > 0) {
 						if (combinedValue > doubleMax / powerOfTenInt[exp]) [[unlikely]] {
 							return false;
@@ -360,10 +335,15 @@ namespace jsonifier_internal {
 						combinedValue /= powerOfTenInt[-exp];
 					}
 
-					if (sign == -1 && combinedValue > 0.0) {
-						value = fastFloor(combinedValue * sign);
+					if constexpr (positive) {
+						value = static_cast<value_type>(combinedValue);
+
 					} else {
-						value = static_cast<value_type>(combinedValue) * sign;
+						if (combinedValue > 0.0) {
+							value = fastFloor(combinedValue * -1);
+						} else {
+							value = static_cast<value_type>(combinedValue);
+						}
 					}
 
 					return true;
@@ -371,32 +351,15 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-
-			template<size_t... indices> static constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) {
-				using function_type = decltype(&parse_function_caller<state, positive>::parseValue<0>);
-				return array<function_type, sizeof...(indices)>{ &parse_function_caller<state, positive>::parseValue<indices>... };
-			}
-
-			static constexpr auto generateFunctionPtrs() {
-				return generateFunctionPtrsImpl(std::make_index_sequence<256>{});
-			}
-
-			JSONIFIER_ALWAYS_INLINE static bool callFunction(const char_type*& cur, int8_t sign, value_type fracDigits, value_type& value, value_type fracValue,
-				value_type intDigits, int64_t& exp, int8_t& expSign) {
-				static constexpr auto functionPtrs{ generateFunctionPtrs() };
-				return functionPtrs[static_cast<uint8_t>(*cur)](cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
-			}
 		};
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& cur) noexcept {
-			jsonifierPrefetchImpl(&value);
 			value_type fracDigits = 0;
 			value_type intDigits  = 0;
 			value_type fracValue  = 0;
 			int8_t expSign		  = 1;
 			int64_t exp			  = 0;
-			int8_t sign			  = 1;
-			return parse_function_caller<parsing_state::starting, true>::callFunction(cur, sign, fracDigits, value, fracValue, intDigits, exp, expSign);
+			return parse_function_caller<parsing_state::starting, true>::parseValue(cur, fracDigits, value, fracValue, intDigits, exp, expSign);
 		}
 	};
 
