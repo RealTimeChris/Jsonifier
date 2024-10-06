@@ -98,55 +98,47 @@ namespace jsonifier_internal {
 		int8_t numTmp;
 		int64_t exp;
 
-		template<bool first = true> JSONIFIER_ALWAYS_INLINE bool parseFraction(const char_type*& iter, value_type& value) {
-			if constexpr (first) {
-				fracDigits = 0;
-				if (isDigit(*iter)) [[likely]] {
-					fracValue = toDigit(*iter);
-					++fracDigits;
-					++iter;
-					return parseFraction<false>(iter, value);
-				} else {
-					return false;
-				}
+		JSONIFIER_ALWAYS_INLINE bool parseFraction(const char_type*& iter, value_type& value) {
+			fracDigits = 0;
+			if (isDigit(*iter)) [[likely]] {
+				fracValue = toDigit(*iter);
+				++fracDigits;
+				++iter;
 			} else {
-				while (isDigit(*iter)) {
-					fracValue = toDigit(*iter) + fracValue * 10;
-					++fracDigits;
-					++iter;
-				}
-				if (isExponent(*iter)) {
-					++iter;
-					return parseExponent(iter, value);
-				} else {
-					return true;
-				}
+				return false;
+			}
+			while (isDigit(*iter)) {
+				fracValue = toDigit(*iter) + fracValue * 10;
+				++fracDigits;
+				++iter;
+			}
+			if (isExponent(*iter)) {
+				++iter;
+				return parseExponent(iter, value);
+			} else {
+				return true;
 			}
 		}
 
-		template<bool first = true> JSONIFIER_ALWAYS_INLINE bool parseExponent(const char_type*& iter, value_type& value) {
-			if constexpr (first) {
-				expSign = 1;
-				if (isPlusOrMinus(*iter)) {
-					if (*iter == '-') {
-						expSign = -1;
-					}
-					++iter;
+		JSONIFIER_ALWAYS_INLINE bool parseExponent(const char_type*& iter, value_type& value) {
+			expSign = 1;
+			if (isPlusOrMinus(*iter)) {
+				if (*iter == '-') {
+					expSign = -1;
 				}
-				if (isDigit(*iter)) [[likely]] {
-					exp = toDigit(*iter);
-					++iter;
-					return parseExponent<false>(iter, value);
-				} else {
-					return false;
-				}
-			} else {
-				while (isDigit(*iter)) [[likely]] {
-					exp = toDigit(*iter) + exp * 10;
-					++iter;
-				}
-				return parseFinish(iter, value);
+				++iter;
 			}
+			if (isDigit(*iter)) [[likely]] {
+				exp = toDigit(*iter);
+				++iter;
+			} else {
+				return false;
+			}
+			while (isDigit(*iter)) [[likely]] {
+				exp = toDigit(*iter) + exp * 10;
+				++iter;
+			}
+			return parseFinish(iter, value);
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool parseFinish(const char_type*& iter, value_type& value) {
@@ -213,9 +205,10 @@ namespace jsonifier_internal {
 				return false;
 			}
 
+			static constexpr auto rawCompVal{ std::numeric_limits<value_type>::max() };
+
 			while (isDigit(*iter)) [[likely]] {
 				numTmp = toDigit(*iter);
-				static constexpr auto rawCompVal{ std::numeric_limits<value_type>::max() };
 				const auto comparisonValue{ (rawCompVal - numTmp) / 10 };
 				if (value > comparisonValue) [[unlikely]] {
 					return false;
@@ -251,55 +244,47 @@ namespace jsonifier_internal {
 		int8_t numTmp;
 		int64_t exp;
 
-		template<bool first = true> JSONIFIER_ALWAYS_INLINE bool parseFraction(const char_type*& iter, value_type& value) {
-			if constexpr (first) {
-				fracDigits = 0;
-				if (isDigit(*iter)) [[likely]] {
-					fracValue = toDigit(*iter);
-					++fracDigits;
-					++iter;
-					return parseFraction<false>(iter, value);
-				} else {
-					return false;
-				}
+		JSONIFIER_ALWAYS_INLINE bool parseFraction(const char_type*& iter, value_type& value) {
+			fracDigits = 0;
+			if (isDigit(*iter)) [[likely]] {
+				fracValue = toDigit(*iter);
+				++fracDigits;
+				++iter;
 			} else {
-				while (isDigit(*iter)) {
-					fracValue = toDigit(*iter) + fracValue * 10;
-					++fracDigits;
-					++iter;
-				}
-				if (isExponent(*iter)) {
-					++iter;
-					return parseExponent(iter, value);
-				} else {
-					return true;
-				}
+				return false;
+			}
+			while (isDigit(*iter)) {
+				fracValue = toDigit(*iter) + fracValue * 10;
+				++fracDigits;
+				++iter;
+			}
+			if (isExponent(*iter)) {
+				++iter;
+				return parseExponent(iter, value);
+			} else {
+				return true;
 			}
 		}
 
-		template<bool first = true> JSONIFIER_ALWAYS_INLINE bool parseExponent(const char_type*& iter, value_type& value) {
-			if constexpr (first) {
-				expSign = 1;
-				if (isPlusOrMinus(*iter)) {
-					if (*iter == '-') {
-						expSign = -1;
-					}
-					++iter;
+		JSONIFIER_ALWAYS_INLINE bool parseExponent(const char_type*& iter, value_type& value) {
+			expSign = 1;
+			if (isPlusOrMinus(*iter)) {
+				if (*iter == '-') {
+					expSign = -1;
 				}
-				if (isDigit(*iter)) [[likely]] {
-					exp = toDigit(*iter);
-					++iter;
-					return parseExponent<false>(iter, value);
-				} else {
-					return false;
-				}
-			} else {
-				while (isDigit(*iter)) [[likely]] {
-					exp = toDigit(*iter) + exp * 10;
-					++iter;
-				}
-				return parseFinish(iter, value);
+				++iter;
 			}
+			if (isDigit(*iter)) [[likely]] {
+				exp = toDigit(*iter);
+				++iter;
+			} else {
+				return false;
+			}
+			while (isDigit(*iter)) [[likely]] {
+				exp = toDigit(*iter) + exp * 10;
+				++iter;
+			}
+			return parseFinish(iter, value);
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool parseFinish(const char_type*& iter, value_type& value) {
@@ -345,7 +330,7 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
+		template<bool first = true> JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
 			if (!isDigit(*iter)) {
 				return false;
 			}
