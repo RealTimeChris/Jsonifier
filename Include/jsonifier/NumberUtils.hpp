@@ -117,12 +117,12 @@ namespace jsonifier_internal {
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			static thread_local integer_parser<value_type, std::remove_reference_t<decltype(*iter)>> integerParser{};
-			if constexpr (std::is_unsigned_v<value_type>) {
+			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
 					return integerParser.parseInt(value, iter);
 				} else {
 					static thread_local integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>> integerParserUint{};
-					uint64_t i{};
+					uint64_t i;
 					return integerParserUint.parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
@@ -130,7 +130,7 @@ namespace jsonifier_internal {
 					return integerParser.parseInt(value, iter);
 				} else {
 					static thread_local integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>> integerParserInt{};
-					int64_t i{};
+					int64_t i;
 					return integerParserInt.parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}

@@ -914,7 +914,7 @@ void testFunction() {
 	parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 	std::cout << "Json Data: " << resultsStringJson << std::endl;
 	bnch_swt::file_loader<basePath + "/Results.json">::saveFile(resultsStringJson);
-	bnch_swt::file_loader<README_PATH + getCurrentPathImpl() + ".md">::saveFile(newerString);
+	bnch_swt::file_loader<README_PATH + getCurrentPathImpl() + ".md">::saveFile(static_cast<std::string>(newerString));
 	std::cout << "Md Data: " << newerString << std::endl;
 	executePythonScript(std::string{ BASE_PATH } + "/GenerateGraphs.py", std::string{ basePath.view() } + "/Results.json",
 		std::string{ GRAPHS_PATH } + "/" + std::string{ getCurrentPathImpl().view() } + "/");
