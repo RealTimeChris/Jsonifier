@@ -76,13 +76,13 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-#define isPlusOrMinus(d) plusOrMinusTable[d]
+#define isPlusOrMinus(d) plusOrMinusTable[static_cast<uint8_t>(d)]
 
-#define isExponentOrFractional(d) expFracTable[d]
+#define isExponentOrFractional(d) expFracTable[static_cast<uint8_t>(d)]
 
-#define isExponent(d) expTable[d]
+#define isExponent(d) expTable[static_cast<uint8_t>(d)]
 
-#define isDigit(d) digiTable[d]
+#define isDigit(d) digiTable[static_cast<uint8_t>(d)]
 
 	static constexpr char decimalPoint{ '.' };
 	static constexpr char zero{ '0' };
@@ -192,42 +192,28 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		template<size_t index = 0> JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
-			if constexpr (index < 3) {
-				if constexpr (index == 0) {
-					if (isDigit(*iter)) {
-						value = toDigit(*iter);
-						++iter;
-						return parseInteger<index + 1>(iter, value);
-					} else {
-						return false;
-					}
-				} else if constexpr (index == 2) {
-					if (*(iter - 2) == zero) {
-						return false;
-					}
-				}
-				if (isDigit(*iter)) [[likely]] {
-					numTmp = toDigit(*iter);
-					value  = numTmp + value * 10;
-					++iter;
-					return parseInteger<index + 1>(iter, value);
-				} else {
-					if (!isExponentOrFractional(*iter)) {
-						return true;
-					}
-					if (*iter == decimalPoint) {
-						++iter;
-						return parseFraction(iter, value);
-					} else {
-						fracDigits = 0;
-						fracValue  = 0;
-						++iter;
-						return parseExponent(iter, value);
-					}
+		JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
+			if (!isDigit(*iter)) {
+				return false;
+			}
+
+			value = toDigit(*iter);
+			++iter;
+
+			if (isDigit(*iter)) {
+				value = value * 10 + toDigit(*iter);
+				++iter;
+			} else {
+				if (!isExponentOrFractional(*iter)) [[likely]] {
+					return true;
 				}
 			}
-			while (isDigit(*iter)) {
+
+			if (*(iter - 2) == zero) {
+				return false;
+			}
+
+			while (isDigit(*iter)) [[likely]] {
 				numTmp = toDigit(*iter);
 				static constexpr auto rawCompVal{ std::numeric_limits<value_type>::max() };
 				const auto comparisonValue{ (rawCompVal - numTmp) / 10 };
@@ -237,9 +223,12 @@ namespace jsonifier_internal {
 				value = numTmp + value * 10;
 				++iter;
 			}
+
 			if (!isExponentOrFractional(*iter)) [[likely]] {
 				return true;
-			} else if (*iter == decimalPoint) {
+			}
+
+			if (*iter == decimalPoint) {
 				++iter;
 				return parseFraction(iter, value);
 			} else {
@@ -251,7 +240,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool parseInt(value_type& value, char_type*& iter) noexcept {
-			return integer_parser<value_type, char_type>::parseInteger<0>(iter, value);
+			return integer_parser<value_type, char_type>::parseInteger(iter, value);
 		}
 	};
 
@@ -356,49 +345,37 @@ namespace jsonifier_internal {
 			return true;
 		}
 
-		template<size_t index = 0> JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
-			if constexpr (index < 3) {
-				if constexpr (index == 0) {
-					if (isDigit(*iter)) {
-						value = toDigit(*iter);
-						++iter;
-						return parseInteger<index + 1>(iter, value);
-					} else {
-						return false;
-					}
-				} else if constexpr (index == 2) {
-					if (*(iter - 2) == zero) {
-						return false;
-					}
-				}
-				if (isDigit(*iter)) [[likely]] {
-					numTmp = toDigit(*iter);
-					value  = numTmp + value * 10;
-					++iter;
-					return parseInteger<index + 1>(iter, value);
-				} else {
-					if (!isExponentOrFractional(*iter)) {
-						return true;
-					}
-					if (*iter == decimalPoint) {
-						++iter;
-						return parseFraction(iter, value);
-					} else {
-						fracDigits = 0;
-						fracValue  = 0;
-						++iter;
-						return parseExponent(iter, value);
-					}
+		JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
+			if (!isDigit(*iter)) {
+				return false;
+			}
+
+			value = toDigit(*iter);
+			++iter;
+
+			if (isDigit(*iter)) {
+				value = value * 10 + toDigit(*iter);
+				++iter;
+			} else {
+				if (!isExponentOrFractional(*iter)) [[likely]] {
+					return true;
 				}
 			}
-			while (isDigit(*iter)) {
-				numTmp = toDigit(*iter);
-				value  = numTmp + value * 10;
+
+			if (*(iter - 2) == zero) {
+				return false;
+			}
+
+			while (isDigit(*iter)) [[likely]] {
+				value = value * 10 + toDigit(*iter);
 				++iter;
 			}
+
 			if (!isExponentOrFractional(*iter)) [[likely]] {
 				return true;
-			} else if (*iter == decimalPoint) {
+			}
+
+			if (*iter == decimalPoint) {
 				++iter;
 				return parseFraction(iter, value);
 			} else {
@@ -414,9 +391,9 @@ namespace jsonifier_internal {
 			if (negative) {
 				++iter;
 			}
-			auto result							 = integer_parser<value_type, char_type>::parseInteger(iter, value);
+			auto result					   = integer_parser<value_type, char_type>::parseInteger(iter, value);
 			static constexpr auto maxValue = uint64_t((std::numeric_limits<value_type>::max)());
-			static constexpr auto minValue		 = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
+			static constexpr auto minValue = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
 
 			if (negative) {
 				if (value <= static_cast<uint64_t>(minValue)) {
