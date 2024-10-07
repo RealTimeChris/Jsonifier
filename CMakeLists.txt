@@ -31,13 +31,14 @@ collect_version("jsonifier")
 set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD 23)
+
 project(
   "${PROJECT_NAME}"
   VERSION "${PRODUCT_VERSION}"
   LANGUAGES CXX
 )
-
-set(CMAKE_CXX_STANDARD 20)
 
 add_library("${PROJECT_NAME}" INTERFACE)
 
@@ -88,7 +89,9 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:CLANG>:-march=native>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
 	"$<$<CXX_COMPILER_ID:GNU>:-march=native>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-std=c++23>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
+	"$<$<CXX_COMPILER_ID:GNU>:-std=c++23>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/fp:fast>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"

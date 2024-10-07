@@ -390,7 +390,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
-			if (newSize > capacityVal) [[likely]] {
+			if JSONIFIER_LIKELY ((newSize > capacityVal)) {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
 					if (sizeVal > 0ull) {
@@ -400,7 +400,7 @@ namespace jsonifier {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
 					}
-					if (dataVal && capacityVal > 0) [[likely]] {
+					if JSONIFIER_LIKELY ((dataVal && capacityVal > 0)) {
 						allocator::deallocate(dataVal);
 					}
 				} catch (...) {
@@ -410,7 +410,7 @@ namespace jsonifier {
 				capacityVal = newSize;
 				dataVal		= newPtr;
 				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
-			} else if (newSize > sizeVal) [[unlikely]] {
+			} else if JSONIFIER_UNLIKELY ((newSize > sizeVal)) {
 				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 			} else if (newSize < sizeVal) {
 				std::destroy(dataVal + newSize, dataVal + sizeVal);
@@ -419,10 +419,10 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
-			if (capacityNew > capacityVal) [[likely]] {
+			if JSONIFIER_LIKELY ((capacityNew > capacityVal)) {
 				pointer newPtr = allocator::allocate(capacityNew);
 				try {
-					if (dataVal && capacityVal > 0) [[likely]] {
+					if JSONIFIER_LIKELY ((dataVal && capacityVal > 0)) {
 						if (sizeVal > 0) {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}

@@ -33,11 +33,11 @@ namespace jsonifier_internal {
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		static constexpr UC decimalPoint = '.';
-		static constexpr UC smallE		  = 'e';
-		static constexpr UC bigE		  = 'E';
-		static constexpr UC minus		  = '-';
-		static constexpr UC plus		  = '+';
-		static constexpr UC zero		  = '0';
+		static constexpr UC smallE		 = 'e';
+		static constexpr UC bigE		 = 'E';
+		static constexpr UC minus		 = '-';
+		static constexpr UC plus		 = '+';
+		static constexpr UC zero		 = '0';
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		if (*first == minus) {
 			++first;
 
-			if (!is_integer(*first)) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((!is_integer(*first))) {
 				return false;
 			}
 		}
@@ -134,7 +134,7 @@ namespace jsonifier_internal {
 			if (digit_count > 19) {
 				answer.too_many_digits = true;
 				i					   = 0;
-				first					   = answer.integer.ptr;
+				first				   = answer.integer.ptr;
 				UC const* int_end	   = first + answer.integer.len();
 				static constexpr uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
 				while ((i < minimal_nineteen_digit_integer) && (first != int_end)) {
@@ -144,7 +144,7 @@ namespace jsonifier_internal {
 				if (i >= minimal_nineteen_digit_integer) {
 					exponent = end_of_integer_part - first + exp_number;
 				} else {
-					first				   = answer.fraction.ptr;
+					first			   = answer.fraction.ptr;
 					UC const* frac_end = first + answer.fraction.len();
 					while ((i < minimal_nineteen_digit_integer) && (first != frac_end)) {
 						i = i * 10 + uint64_t(*first - zero);
@@ -156,7 +156,7 @@ namespace jsonifier_internal {
 		}
 		answer.exponent = exponent;
 		answer.mantissa = i;
-		if (answer.valid) [[likely]] {
+		if JSONIFIER_LIKELY ((answer.valid)) {
 			first = answer.lastmatch;
 			return from_chars_advanced(answer, value).ptr != nullptr;
 		} else {

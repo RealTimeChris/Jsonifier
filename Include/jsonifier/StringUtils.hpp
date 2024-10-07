@@ -42,7 +42,7 @@ namespace jsonifier_internal {
 			while (length > 8) {
 				std::memcpy(v, wsStart, 8);
 				std::memcpy(v + 1, context, 8);
-				if (v[0] == v[1]) [[likely]] {
+				if JSONIFIER_LIKELY ((v[0] == v[1])) {
 					length -= 8;
 					wsStart += 8;
 					context += 8;
@@ -61,7 +61,7 @@ namespace jsonifier_internal {
 				uint32_t v[2];
 				std::memcpy(v, wsStart, n);
 				std::memcpy(v + 1, context, n);
-				if (v[0] == v[1]) [[likely]] {
+				if JSONIFIER_LIKELY ((v[0] == v[1])) {
 					wsStart += n;
 					length -= n;
 					context += n;
@@ -76,7 +76,7 @@ namespace jsonifier_internal {
 				uint16_t v[2];
 				std::memcpy(v, wsStart, n);
 				std::memcpy(v + 1, context, n);
-				if (v[0] == v[1]) [[likely]] {
+				if JSONIFIER_LIKELY ((v[0] == v[1])) {
 					context += n;
 				} else {
 					return;
@@ -331,7 +331,7 @@ namespace jsonifier_internal {
 		std::remove_const_t<char_type01> escapeChar;
 		while (lengthNew > 0) {
 			*string2 = static_cast<char_type02>(*string1);
-			if (*string1 == '"' || *string1 == '\\') [[likely]] {
+			if JSONIFIER_LIKELY ((*string1 == '"' || *string1 == '\\')) {
 				escapeChar = *string1;
 				if (escapeChar == '"') {
 					return string2;
@@ -354,7 +354,7 @@ namespace jsonifier_internal {
 						string1 += 2;
 					}
 				}
-			} else if (static_cast<uint8_t>(*string2) < 32) [[unlikely]] {
+			} else if JSONIFIER_UNLIKELY ((static_cast<uint8_t>(*string2) < 32)) {
 				return nullptr;
 			} else {
 				--lengthNew;
@@ -383,7 +383,7 @@ namespace jsonifier_internal {
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 					escapeChar = string1[nextBackslashOrQuote];
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
@@ -414,7 +414,7 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
-				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+				} else if JSONIFIER_UNLIKELY ((hasByteLessThanValue<31>(simdValue))) {
 					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
@@ -437,7 +437,7 @@ namespace jsonifier_internal {
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 					escapeChar = string1[nextBackslashOrQuote];
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
@@ -468,7 +468,7 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
-				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+				} else if JSONIFIER_UNLIKELY ((hasByteLessThanValue<31>(simdValue))) {
 					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
@@ -491,7 +491,7 @@ namespace jsonifier_internal {
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, quotes, backslashes);
-				if (nextBackslashOrQuote < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 					escapeChar = string1[nextBackslashOrQuote];
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
@@ -522,7 +522,7 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
-				} else if (hasByteLessThanValue<31>(simdValue)) [[unlikely]] {
+				} else if JSONIFIER_UNLIKELY ((hasByteLessThanValue<31>(simdValue))) {
 					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
@@ -541,7 +541,7 @@ namespace jsonifier_internal {
 			integer_type nextBackslashOrQuote;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue);
-				if (nextBackslashOrQuote < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 					escapeChar = string1[nextBackslashOrQuote];
 					if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
@@ -572,7 +572,7 @@ namespace jsonifier_internal {
 							string1 += bytesProcessed;
 						}
 					}
-				} else if (hasByteLessThanValue<31, simd_type>(string1)) [[unlikely]] {
+				} else if JSONIFIER_UNLIKELY (((hasByteLessThanValue<31, simd_type>(string1)))) {
 					return static_cast<iterator_type02>(nullptr);
 				} else {
 					lengthNew -= bytesProcessed;
@@ -602,7 +602,7 @@ namespace jsonifier_internal {
 		auto* endIter = string1 + lengthNew;
 		for (; string1 < endIter; ++string1) {
 			auto escapeChar = escapeTable[static_cast<uint8_t>(*string1)];
-			if ((escapeChar)) [[likely]] {
+			if JSONIFIER_LIKELY (((escapeChar))) {
 				std::memcpy(string2, &escapeChar, 2);
 				string2 += 2;
 			} else {
@@ -627,9 +627,9 @@ namespace jsonifier_internal {
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
-				if (nextEscapeable < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
-					if (escapeChar != 0u) [[likely]] {
+					if JSONIFIER_LIKELY ((escapeChar != 0u)) {
 						lengthNew -= nextEscapeable;
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
@@ -661,9 +661,9 @@ namespace jsonifier_internal {
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
-				if (nextEscapeable < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
-					if (escapeChar != 0u) [[likely]] {
+					if JSONIFIER_LIKELY ((escapeChar != 0u)) {
 						lengthNew -= nextEscapeable;
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
@@ -695,9 +695,9 @@ namespace jsonifier_internal {
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
-				if (nextEscapeable < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
-					if (escapeChar != 0u) [[likely]] {
+					if JSONIFIER_LIKELY ((escapeChar != 0u)) {
 						lengthNew -= nextEscapeable;
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
@@ -726,9 +726,9 @@ namespace jsonifier_internal {
 			integer_type nextEscapeable;
 			while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 				nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue);
-				if (nextEscapeable < mask) [[likely]] {
+				if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 					escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
-					if (escapeChar != 0u) [[likely]] {
+					if JSONIFIER_LIKELY ((escapeChar != 0u)) {
 						lengthNew -= nextEscapeable;
 						string2 += nextEscapeable;
 						string1 += nextEscapeable;
@@ -786,7 +786,7 @@ namespace jsonifier_internal {
 			context += 4;
 			return true;
 		} else {
-			if (compareStringAsInt<"false">(context)) [[likely]] {
+			if JSONIFIER_LIKELY ((compareStringAsInt<"false">(context))) {
 				value = false;
 				context += 5;
 				return true;
@@ -797,7 +797,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename context_type> JSONIFIER_ALWAYS_INLINE bool parseNull(context_type& context) {
-		if (compareStringAsInt<"null">(context)) [[likely]] {
+		if JSONIFIER_LIKELY ((compareStringAsInt<"null">(context))) {
 			context += 4;
 			return true;
 		} else {
@@ -807,23 +807,25 @@ namespace jsonifier_internal {
 
 	template<const auto options, typename context_type> struct derailleur {
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, context_type& context) noexcept {
-			if (*context.iter == '"') [[likely]] {
+			if JSONIFIER_LIKELY ((*context.iter == '"')) {
 				++context.iter;
 				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
-				if (newPtr) [[likely]] {
+				if JSONIFIER_LIKELY ((newPtr)) {
 					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (value.size() != newSize) {
 						value.resize(newSize);
 					}
 					std::memcpy(value.data(), stringBuffer.data(), newSize);
 					++context.iter;
-				} else [[unlikely]] {
+				}
+				JSONIFIER_UNLIKELY(else) {
 					static constexpr auto sourceLocation{ std::source_location::current() };
 					context.parserPtr->template reportError<sourceLocation, parse_errors::Invalid_String_Characters>(context);
 					return false;
 				}
 				return true;
-			} else [[unlikely]] {
+			}
+			JSONIFIER_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
 				return false;
@@ -1119,7 +1121,7 @@ namespace jsonifier_internal {
 			requires(!std::same_as<context_type, iterator>)
 		JSONIFIER_ALWAYS_INLINE static size_t countValueElements(iterator iter, iterator endIter) noexcept {
 			auto newValue = *iter;
-			if (newValue == ']' || newValue == '}') [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((newValue == ']' || newValue == '}')) {
 				return 0;
 			}
 			size_t currentCount{ 1 };
@@ -1175,10 +1177,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, endIter);
 						break;
 					}
-						[[likely]] default : {
-							++iter;
-							break;
-						}
+					[[likely]] default: {
+						++iter;
+						break;
+					}
 				}
 			}
 			return currentCount;
@@ -1295,7 +1297,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto options, typename context_type> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(context_type context) noexcept {
-		if (*context.iter == '"') [[likely]] {
+		if JSONIFIER_LIKELY ((*context.iter == '"')) {
 			++context.iter;
 			auto start	 = context.iter;
 			context.iter = char_comparison<'"'>::memchar(context.iter, static_cast<size_t>(context.endIter - context.iter));

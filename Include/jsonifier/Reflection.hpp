@@ -31,8 +31,8 @@
 namespace jsonifier_internal {
 
 	template<typename member_type, typename class_type> struct member_pointer {
-		member_type class_type::*ptr{};
-		JSONIFIER_ALWAYS_INLINE constexpr member_pointer(member_type class_type::*p) noexcept : ptr(p){};
+		member_type class_type::* ptr{};
+		JSONIFIER_ALWAYS_INLINE constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p){};
 	};
 
 	template<typename member_type_new, typename class_type_new> struct data_member {
@@ -50,11 +50,11 @@ namespace jsonifier_internal {
 			return memberPtr.ptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr data_member(jsonifier::string_view str, member_type class_type::*ptr) noexcept : memberPtr(ptr), name(str){};
+		JSONIFIER_ALWAYS_INLINE constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str){};
 	};
 
 	template<typename member_type, typename class_type>
-	JSONIFIER_ALWAYS_INLINE constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::*ptr) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::* ptr) noexcept {
 		return data_member<member_type, class_type>(str, ptr);
 	}
 

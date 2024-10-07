@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 				while (lengthNew >= vectorSize) {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
-					if (mask != 0) [[unlikely]] {
+					if JSONIFIER_UNLIKELY ((mask != 0)) {
 						data += simd_internal::tzcnt(mask);
 						return data;
 					}
@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 				while (lengthNew >= vectorSize) {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
-					if (mask != 0) [[unlikely]] {
+					if JSONIFIER_UNLIKELY ((mask != 0)) {
 						data += simd_internal::tzcnt(mask);
 						return data;
 					}
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 				while (lengthNew >= vectorSize) {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
 					mask  = simd_internal::opCmpEq(chunk, search_value);
-					if (mask != 0) [[unlikely]] {
+					if JSONIFIER_UNLIKELY ((mask != 0)) {
 						data += simd_internal::tzcnt(mask);
 						return data;
 					}

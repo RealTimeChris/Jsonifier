@@ -88,7 +88,7 @@ namespace jsonifier_internal {
 
 		template<typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
-			const auto n		  = str.size();
+			const auto n = str.size();
 			std::memcpy(buffer.data() + index, str.data(), n);
 			index += n;
 		}
@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 
 		template<typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, const char* string, uint64_t size, index_type& index) noexcept {
-			const auto n		  = size;
+			const auto n = size;
 			std::memcpy(buffer.data() + index, string, n);
 			index += n;
 		}

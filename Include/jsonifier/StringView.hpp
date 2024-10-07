@@ -133,7 +133,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr const_reference at(const size_type offsetNew) const noexcept {
-			if (offsetNew >= sizeVal) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((offsetNew >= sizeVal)) {
 				throw std::out_of_range{ "Sorry, but that index is beyond the end of this string_view instance." };
 			}
 			return dataVal[offsetNew];
@@ -181,7 +181,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr string_view_base substr(const size_type offsetNew = 0, size_type countNew = npos) const {
-			if (offsetNew > sizeVal) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((offsetNew > sizeVal)) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
@@ -192,7 +192,7 @@ namespace jsonifier {
 		template<typename value_type_newer = value_type> JSONIFIER_ALWAYS_INLINE constexpr explicit operator jsonifier::string_base<value_type_newer>() const noexcept {
 			jsonifier::string_base<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
-			if (sizeVal > 0 && dataVal) [[likely]] {
+			if JSONIFIER_LIKELY ((sizeVal > 0 && dataVal)) {
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
 			return returnValue;
@@ -201,7 +201,7 @@ namespace jsonifier {
 		template<typename value_type_newer = value_type> JSONIFIER_ALWAYS_INLINE constexpr explicit operator std::basic_string<value_type_newer>() const noexcept {
 			std::basic_string<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
-			if (sizeVal > 0 && dataVal) [[likely]] {
+			if JSONIFIER_LIKELY ((sizeVal > 0 && dataVal)) {
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
 			return returnValue;

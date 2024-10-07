@@ -115,7 +115,7 @@ template<typename value_type> struct test_generator {
 		auto unicodeCount			 = randomizeNumberUniform(1, length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
-			if (x % unicodeCount == 0) [[unlikely]] {
+			if JSONIFIER_UNLIKELY((x % unicodeCount == 0)) {
 				insertUnicodeInJSON(result);
 			}
 			result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];

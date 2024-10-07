@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
 						++currentDistance;
-						if (currentDistance > 0) [[likely]] {
+						if JSONIFIER_LIKELY ((currentDistance > 0)) {
 							writeCharacters(out, previousPtr, currentDistance, index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -60,7 +60,7 @@ namespace jsonifier_internal {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
 						}
-						if (currentDistance > 0) [[likely]] {
+						if JSONIFIER_LIKELY ((currentDistance > 0)) {
 							writeCharacters(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -102,12 +102,12 @@ namespace jsonifier_internal {
 					[[unlikely]] case json_structural_type::Error:
 					[[unlikely]] case json_structural_type::Type_Count:
 						[[fallthrough]];
-						[[unlikely]] default : {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
-								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
-							return;
-						}
+					[[unlikely]] default: {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
+							static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
+						return;
+					}
 				}
 				previousPtr = (*iter);
 				++iter;

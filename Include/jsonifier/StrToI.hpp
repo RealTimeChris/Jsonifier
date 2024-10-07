@@ -35,11 +35,43 @@
 
 namespace jsonifier_internal {
 
-	constexpr std::array<uint64_t, 20> powerOfTenInt{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
-		100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
-		10000000000000000000ull };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<size_t, 20> powerOfTenInt{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull,
+		10000000000ull, 100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull,
+		1000000000000000000ull, 10000000000000000000ull };
 
-	constexpr std::array<bool, 256> digiTable{ [] {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 10> rawCompValsPos{ [] {
+		auto rawCompVal{ std::numeric_limits<value_type>::max() };
+		std::array<value_type, 10> returnValues{};
+		returnValues[0] = (rawCompVal - 0) / 10;
+		returnValues[1] = (rawCompVal - 1) / 10;
+		returnValues[2] = (rawCompVal - 2) / 10;
+		returnValues[3] = (rawCompVal - 3) / 10;
+		returnValues[4] = (rawCompVal - 4) / 10;
+		returnValues[5] = (rawCompVal - 5) / 10;
+		returnValues[6] = (rawCompVal - 6) / 10;
+		returnValues[7] = (rawCompVal - 7) / 10;
+		returnValues[8] = (rawCompVal - 8) / 10;
+		returnValues[9] = (rawCompVal - 9) / 10;
+		return returnValues;
+	}() };
+
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 10> rawCompValsNeg{ [] {
+		auto rawCompVal{ size_t((std::numeric_limits<value_type>::max)()) + 1 };
+		std::array<value_type, 10> returnValues{};
+		returnValues[0] = (rawCompVal - 0) / 10;
+		returnValues[1] = (rawCompVal - 1) / 10;
+		returnValues[2] = (rawCompVal - 2) / 10;
+		returnValues[3] = (rawCompVal - 3) / 10;
+		returnValues[4] = (rawCompVal - 4) / 10;
+		returnValues[5] = (rawCompVal - 5) / 10;
+		returnValues[6] = (rawCompVal - 6) / 10;
+		returnValues[7] = (rawCompVal - 7) / 10;
+		returnValues[8] = (rawCompVal - 8) / 10;
+		returnValues[9] = (rawCompVal - 9) / 10;
+		return returnValues;
+	}() };
+
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> digiTable{ [] {
 		std::array<bool, 256> returnValues{};
 		returnValues['0'] = true;
 		returnValues['1'] = true;
@@ -54,14 +86,14 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	constexpr std::array<bool, 256> expTable{ [] {
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> expTable{ [] {
 		std::array<bool, 256> returnValues{};
 		returnValues['e'] = true;
 		returnValues['E'] = true;
 		return returnValues;
 	}() };
 
-	constexpr std::array<bool, 256> expFracTable{ [] {
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> expFracTable{ [] {
 		std::array<bool, 256> returnValues{};
 		returnValues['e'] = true;
 		returnValues['E'] = true;
@@ -69,36 +101,36 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	constexpr std::array<bool, 256> plusOrMinusTable{ [] {
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> plusOrMinusTable{ [] {
 		std::array<bool, 256> returnValues{};
 		returnValues['-'] = true;
 		returnValues['+'] = true;
 		return returnValues;
 	}() };
 
-#define isPlusOrMinus(d) plusOrMinusTable[static_cast<uint8_t>(d)]
+#define isPlusOrMinus(c) plusOrMinusTable[static_cast<uint8_t>(c)]
 
-#define isExponentOrFractional(d) expFracTable[static_cast<uint8_t>(d)]
+#define isExponentOrFractional(c) expFracTable[static_cast<uint8_t>(c)]
 
-#define isExponent(d) expTable[static_cast<uint8_t>(d)]
+#define isExponent(c) expTable[static_cast<uint8_t>(c)]
 
-#define isDigit(d) digiTable[static_cast<uint8_t>(d)]
+#define isDigit(c) digiTable[static_cast<uint8_t>(c)]
 
-	static constexpr char decimalPoint{ '.' };
-	static constexpr char zero{ '0' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimalPoint{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
 
 #define toDigit(c) (static_cast<char>(c) - zero)
 
 	template<typename value_type, typename char_type> struct integer_parser {
-		uint64_t fracValue;
 		int64_t fracDigits;
+		size_t fracValue;
 		int8_t expSign;
 		int8_t numTmp;
-		int64_t exp;
+		int64_t expValue;
 
 		JSONIFIER_ALWAYS_INLINE bool parseFraction(const char_type*& iter, value_type& value) {
 			fracDigits = 0;
-			if (isDigit(*iter)) [[likely]] {
+			if JSONIFIER_LIKELY ((isDigit(*iter))) {
 				fracValue = toDigit(*iter);
 				++fracDigits;
 				++iter;
@@ -107,13 +139,9 @@ namespace jsonifier_internal {
 					++fracDigits;
 					++iter;
 				}
-				if (isExponent(*iter)) {
-					++iter;
-					return parseExponent(iter, value);
-				} else {
-					return true;
-				}
-			} else [[unlikely]] {
+				return (isExponent(*iter)) ? (++iter, parseExponent(iter, value)) : true;
+			}
+			JSONIFIER_UNLIKELY(else) {
 				return false;
 			}
 		}
@@ -126,146 +154,110 @@ namespace jsonifier_internal {
 				}
 				++iter;
 			}
-			if (isDigit(*iter)) [[likely]] {
-				exp = toDigit(*iter);
+			if JSONIFIER_LIKELY ((isDigit(*iter))) {
+				expValue = toDigit(*iter);
 				++iter;
 				while (isDigit(*iter)) [[likely]] {
-					exp = toDigit(*iter) + exp * 10;
+					expValue = toDigit(*iter) + expValue * 10;
 					++iter;
 				}
 				return parseFinish(iter, value);
-			} else [[unlikely]] {
+			}
+			JSONIFIER_UNLIKELY(else) {
 				return false;
 			}
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool parseFinish(const char_type*& iter, value_type& value) {
-			if (exp <= 19) [[likely]] {
-				exp *= expSign;
+			if JSONIFIER_LIKELY ((expValue <= 19)) {
+				const auto powerExp = powerOfTenInt[expValue];
+
+				expValue *= expSign;
 
 				static constexpr value_type doubleMax = std::numeric_limits<value_type>::max();
 				static constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
-				const auto powerExp					  = powerOfTenInt[exp > 0 ? exp : -exp];
 
-				if (fracDigits + exp >= 0) {
-					auto fractionalCorrection = exp > fracDigits ? fracValue * powerOfTenInt[exp - fracDigits] : fracValue / powerOfTenInt[fracDigits - exp];
-					if (exp > 0) {
-						if (value > doubleMax / powerExp) [[unlikely]] {
-							return false;
-						}
-						value *= powerExp;
-						value += fractionalCorrection;
-					} else {
-						if (value < doubleMin * powerExp) [[unlikely]] {
-							return false;
-						}
-						value /= powerExp;
-						value += fractionalCorrection;
-					}
+				if (fracDigits + expValue >= 0) {
+					auto fractionalCorrection = expValue > fracDigits ? fracValue * powerOfTenInt[expValue - fracDigits] : fracValue / powerOfTenInt[fracDigits - expValue];
+					return (expValue > 0) ? ((value <= (doubleMax / powerExp)) ? (value *= powerExp, value += fractionalCorrection, true) : false)
+										  : ((value >= (doubleMin * powerExp)) ? (value /= powerExp, value += fractionalCorrection, true) : false);
 				} else {
-					if (exp > 0) {
-						if (value > doubleMax / powerExp) [[unlikely]] {
-							return false;
-						}
-						value *= powerExp;
-					} else {
-						if (value < doubleMin * powerExp) [[unlikely]] {
-							return false;
-						}
-						value /= powerExp;
-					}
+					return (expValue > 0) ? ((value <= (doubleMax / powerExp)) ? (value *= powerExp, true) : false)
+										  : ((value >= (doubleMin * powerExp)) ? (value /= powerExp, true) : false);
 				}
-
 				return true;
-			} else [[unlikely]] {
+			}
+			JSONIFIER_UNLIKELY(else) {
 				return false;
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
-			if (isDigit(*iter)) [[likely]] {
+		template<bool positive = true> JSONIFIER_ALWAYS_INLINE bool parseInteger(const char_type*& iter, value_type& value) {
+			static constexpr auto maxLoopIndex{ jsonifier::concepts::signed_type<value_type> ? 16ull : 17ull };
+			if JSONIFIER_LIKELY ((isDigit(*iter))) {
 				value = toDigit(*iter);
 				++iter;
 
-				if (isDigit(*iter)) [[likely]] {
+				if JSONIFIER_LIKELY ((isDigit(*iter))) {
 					value = toDigit(*iter) + value * 10;
 					++iter;
-				} else [[unlikely]] {
-					if (!isExponentOrFractional(*iter)) [[likely]] {
-						return true;
-					} else if (*iter == decimalPoint) {
-						++iter;
-						return parseFraction(iter, value);
-					} else {
-						fracDigits = 0;
-						fracValue  = 0;
-						++iter;
-						return parseExponent(iter, value);
-					}
+				}
+				JSONIFIER_UNLIKELY(else) {
+					return (!isExponentOrFractional(*iter)) ? true
+						: (*iter == decimalPoint)			? (++iter, parseFraction(iter, value))
+															: (fracDigits = 0, fracValue = 0, ++iter, parseExponent(iter, value));
 				}
 
-				if (*(iter - 2) != zero) [[likely]] {
-					if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-						for (size_t x = 0; x < 17; ++x) [[likely]] {
-							if (isDigit(*iter)) {
-								value = toDigit(*iter) + value * 10;
-								++iter;
-							} else {
-								break;
-							}
-						}
+				if JSONIFIER_LIKELY ((*(iter - 2) != zero)) {
+					size_t x{};
+					for (; x < maxLoopIndex; ++x) [[likely]] {
 						if (isDigit(*iter)) {
-							static constexpr auto rawCompVal{ std::numeric_limits<value_type>::max() };
-							numTmp = toDigit(*iter);
-							if (value > (rawCompVal - numTmp) / 10) [[unlikely]] {
-								return false;
-							}
-							value = numTmp + value * 10;
-							++iter;
-						}
-					} else {
-						while (isDigit(*iter)) {
 							value = toDigit(*iter) + value * 10;
 							++iter;
+						} else {
+							return (!isExponentOrFractional(*iter)) ? true
+								: (*iter == decimalPoint)			? (++iter, parseFraction(iter, value))
+																	: (fracDigits = 0, fracValue = 0, ++iter, parseExponent(iter, value));
 						}
-					}					
-					if (!isExponentOrFractional(*iter)) [[likely]] {
-						return true;
-					} else if (*iter == decimalPoint) {
-						++iter;
-						return parseFraction(iter, value);
-					} else {
-						fracDigits = 0;
-						fracValue  = 0;
-						++iter;
-						return parseExponent(iter, value);
 					}
-
-				} else [[unlikely]] {
+					if JSONIFIER_UNLIKELY ((x > maxLoopIndex - 1 && isDigit(*iter))) {
+						numTmp = toDigit(*iter);
+						if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
+							if JSONIFIER_UNLIKELY ((value > rawCompValsPos<value_type>[numTmp])) {
+								return false;
+							}
+						} else {
+							if constexpr (positive) {
+								if JSONIFIER_UNLIKELY ((value > rawCompValsPos<value_type>[numTmp])) {
+									return false;
+								}
+							} else {
+								if JSONIFIER_UNLIKELY ((value > rawCompValsNeg<value_type>[numTmp])) {
+									return false;
+								}
+							}
+						}
+						value = numTmp + value * 10;
+						++iter;
+					}
+					return true;
+				}
+				JSONIFIER_UNLIKELY(else) {
 					return false;
 				}
-			} else [[unlikely]] {
+			}
+			JSONIFIER_UNLIKELY(else) {
 				return false;
 			}
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool parseInt(value_type& value, char_type*& iter) noexcept {
 			if constexpr (jsonifier::concepts::signed_type<value_type>) {
-				static constexpr auto maxValue = uint64_t((std::numeric_limits<value_type>::max)());
-				static constexpr auto minValue = uint64_t((std::numeric_limits<value_type>::max)()) + 1;
-
-				if ((*iter == '-' ? (++iter, true) : false)) {
-					auto result = integer_parser<value_type, char_type>::parseInteger(iter, value);
-					if (static_cast<uint64_t>(value) <= static_cast<uint64_t>(minValue)) {
-						value *= -1;
-						return result;
-					} else {
-						return false;
-					}
-				} else {
-					auto result = integer_parser<value_type, char_type>::parseInteger(iter, value);
-					return (static_cast<uint64_t>(value) <= maxValue) ? result : false;
-				}
+				static constexpr auto maxValue = size_t((std::numeric_limits<value_type>::max)());
+				static constexpr auto minValue = size_t((std::numeric_limits<value_type>::max)()) + 1;
+				bool result;
+				return ((*iter == '-' ? (++iter, result = integer_parser<value_type, char_type>::parseInteger<false>(iter, value), value *= -1, result)
+									  : integer_parser<value_type, char_type>::parseInteger(iter, value)));
 			} else {
 				return integer_parser<value_type, char_type>::parseInteger(iter, value);
 			}
@@ -282,7 +274,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, typename char_type> JSONIFIER_ALWAYS_INLINE constexpr bool stoui64(value_type res, const char_type* c) noexcept {
-		if (!isDigit(*c)) [[unlikely]] {
+		if JSONIFIER_UNLIKELY ((!isDigit(*c))) {
 			return false;
 		}
 
@@ -292,7 +284,7 @@ namespace jsonifier_internal {
 		std::array<uint8_t, N> digits{ 0 };
 		auto nextDigit	  = digits.begin();
 		auto consumeDigit = [&c, &nextDigit, &digits]() {
-			if (nextDigit < digits.cend()) [[likely]] {
+			if JSONIFIER_LIKELY ((nextDigit < digits.cend())) {
 				*nextDigit = static_cast<uint8_t>(*c - 0x30u);
 				++nextDigit;
 			}
@@ -303,7 +295,7 @@ namespace jsonifier_internal {
 			++c;
 			++nextDigit;
 
-			if (*c == 0x30u) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((*c == 0x30u)) {
 				return false;
 			}
 		}
@@ -328,37 +320,39 @@ namespace jsonifier_internal {
 				negative = (*c == '-');
 				++c;
 			}
-			uint8_t exp = 0;
-			while (isDigit(*c) && exp < 128) {
-				exp = static_cast<uint8_t>(10 * exp + (*c - 0x30u));
+			uint8_t expValue = 0;
+			while (isDigit(*c) && expValue < 128) {
+				expValue = static_cast<uint8_t>(10 * expValue + (*c - 0x30u));
 				++c;
 			}
-			n += negative ? -exp : exp;
+			n += negative ? -expValue : expValue;
 		}
 
 		res = 0;
-		if (n < 0) [[unlikely]] {
+		if JSONIFIER_UNLIKELY ((n < 0)) {
 			return true;
 		}
 
 		if constexpr (std::is_same_v<value_type, size_t>) {
-			if (n > 20) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((n > 20)) {
 				return false;
 			}
 
-			if (n == 20) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((n == 20)) {
 				for (auto k = 0; k < 19; ++k) {
 					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<size_t>(k)]);
 				}
 
-				if (isSafeMultiplication10(res)) [[likely]] {
+				if JSONIFIER_LIKELY ((isSafeMultiplication10(res))) {
 					res *= 10;
-				} else [[unlikely]] {
+				}
+				JSONIFIER_UNLIKELY(else) {
 					return false;
 				}
-				if (isSafeAddition(res, digits.back())) [[likely]] {
+				if JSONIFIER_LIKELY ((isSafeAddition(res, digits.back()))) {
 					res += digits.back();
-				} else [[unlikely]] {
+				}
+				JSONIFIER_UNLIKELY(else) {
 					return false;
 				}
 			} else [[likely]] {
@@ -367,9 +361,10 @@ namespace jsonifier_internal {
 				}
 			}
 		} else {
-			if (n >= N) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((n >= N)) {
 				return false;
-			} else [[likely]] {
+			}
+			JSONIFIER_LIKELY(else) {
 				for (auto k = 0; k < n; ++k) {
 					res = static_cast<value_type>(10) * res + static_cast<value_type>(digits[static_cast<size_t>(k)]);
 				}

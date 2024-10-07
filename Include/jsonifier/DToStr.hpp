@@ -43,9 +43,9 @@ namespace jsonifier_internal {
 		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-		0 };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+		0, 0, 0, 0, 0, 0 };
 
 	template<typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
@@ -166,7 +166,7 @@ namespace jsonifier_internal {
 		bool sign							   = (rawVal >> (sizeof(value_type) * 8 - 1));
 		uint32_t expRaw						   = rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
-		if (expRaw == (uint32_t(1) << exponentBits) - 1) [[unlikely]] {
+		if JSONIFIER_UNLIKELY ((expRaw == (uint32_t(1) << exponentBits) - 1)) {
 			std::memcpy(buf, "null", 4);
 			return buf + 4;
 		}
@@ -174,7 +174,7 @@ namespace jsonifier_internal {
 		*buf = '-';
 		buf += sign;
 
-		if ((rawVal << 1) == 0) [[unlikely]] {
+		if JSONIFIER_UNLIKELY (((rawVal << 1) == 0)) {
 			*buf = '0';
 			return buf + 1;
 		}

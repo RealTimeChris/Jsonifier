@@ -43,8 +43,7 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
-	struct serialize_impl;
+	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type> struct serialize_impl;
 
 	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
@@ -69,7 +68,7 @@ namespace jsonifier_internal {
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
 			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
-			if (buffer.size() != serializePair.index) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
 				buffer.resize(serializePair.index);
 			}
 			if (!comparison<0, unwrap_t<decltype(*buffer.data())>, unwrap_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
@@ -86,7 +85,7 @@ namespace jsonifier_internal {
 			jsonifier::string newString{};
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
-			if (newString.size() != serializePair.index) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((newString.size() != serializePair.index)) {
 				newString.resize(serializePair.index);
 			}
 			std::memcpy(newString.data(), stringBuffer.data(), serializePair.index);

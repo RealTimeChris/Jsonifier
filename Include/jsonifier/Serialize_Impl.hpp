@@ -183,8 +183,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type,
-		typename serialize_context_type>
+	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			static constexpr auto numMembers = std::tuple_size_v<core_tuple_t<value_type>>;
@@ -199,7 +198,7 @@ namespace jsonifier_internal {
 					static constexpr auto key	   = subTuple.view();
 					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 						auto& keys = value.jsonifierExcludedKeys;
-						if (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) [[likely]] {
+						if JSONIFIER_LIKELY ((keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end())) {
 							return;
 						}
 					}
@@ -239,7 +238,7 @@ namespace jsonifier_internal {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
 			writer<options>::template writeCharacter<'{'>(buffer, serializePair.index);
-			if (size > 0) [[likely]] {
+			if JSONIFIER_LIKELY ((size > 0)) {
 				writer<options>::writeObjectEntry(buffer, serializePair);
 
 				auto iter = value.begin();
@@ -280,7 +279,7 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			if (value) [[likely]] {
+			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
 				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
@@ -305,7 +304,7 @@ namespace jsonifier_internal {
 				if constexpr (currentIndex < maxIndex - 1) {
 					if constexpr (options.prettify) {
 						auto k = serializePair.index + serializePair.indent + 256;
-						if (k > buffer.size()) [[unlikely]] {
+						if JSONIFIER_UNLIKELY ((k > buffer.size())) {
 							buffer.resize(max(buffer.size() * 2, k));
 						}
 						writer<options>::template writeCharacters<",\n">(buffer, serializePair.index);
@@ -328,7 +327,7 @@ namespace jsonifier_internal {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
 			writer<options>::template writeCharacter<'['>(buffer, serializePair.index);
-			if (maxIndex > 0) [[likely]] {
+			if JSONIFIER_LIKELY ((maxIndex > 0)) {
 				writer<options>::writeArrayEntry(buffer, serializePair);
 				auto iter = value.begin();
 				serialize<options>::impl(*iter, buffer, serializePair);
@@ -354,8 +353,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type,
-		typename serialize_context_type>
+	template<jsonifier::serialize_options options, jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new<value_type_internal, size>& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
@@ -439,19 +437,16 @@ namespace jsonifier_internal {
 					writer<options>::writeCharacters(buffer, serializePair.index, R"(\\)");
 					break;
 				}
-					[[likely]] default : {
-						writer<options>::writeCharacter(buffer, serializePair.index, value);
-					}
+				[[likely]] default: { writer<options>::writeCharacter(buffer, serializePair.index, value); }
 			}
 			writer<options>::template writeCharacter<'"'>(buffer, serializePair.index);
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::shared_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type,
-		typename serialize_context_type>
+	template<jsonifier::serialize_options options, jsonifier::concepts::shared_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			if (value) [[likely]] {
+			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
 				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
@@ -459,11 +454,10 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type,
-		typename serialize_context_type>
+	template<jsonifier::serialize_options options, jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			if (value) [[likely]] {
+			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
 				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
@@ -479,8 +473,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type,
-		typename serialize_context_type>
+	template<jsonifier::serialize_options options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			static constexpr auto additionalSize = size_collect_impl<options, value_type, unwrap_t<serialize_context_type>>::impl();
@@ -498,7 +491,7 @@ namespace jsonifier_internal {
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			if (value) [[likely]] {
+			if JSONIFIER_LIKELY ((value)) {
 				writer<options>::template writeCharacters<"true">(buffer, serializePair.index);
 			} else {
 				writer<options>::template writeCharacters<"false">(buffer, serializePair.index);

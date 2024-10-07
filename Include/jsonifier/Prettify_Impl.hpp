@@ -70,12 +70,12 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'['>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
+						if JSONIFIER_UNLIKELY ((size_t(prettifyPair.indent) >= prettifyPair.state.size())) {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.newLinesInArray) {
-							if (**iter != ']') [[unlikely]] {
+							if JSONIFIER_UNLIKELY ((**iter != ']')) {
 								writer<options>::writeNewLine(out, prettifyPair);
 							}
 						}
@@ -118,7 +118,7 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'{'>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if (size_t(prettifyPair.indent) >= prettifyPair.state.size()) [[unlikely]] {
+						if JSONIFIER_UNLIKELY ((size_t(prettifyPair.indent) >= prettifyPair.state.size())) {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;

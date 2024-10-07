@@ -444,7 +444,7 @@ namespace jsonifier_internal {
 			returnValues.uniqueIndex = std::numeric_limits<size_t>::max();
 			return returnValues;
 		} else {
-			returnValues.type		 = hash_map_type::simd_full_length;
+			returnValues.type = hash_map_type::simd_full_length;
 			return returnValues;
 		}
 	}
@@ -463,7 +463,7 @@ namespace jsonifier_internal {
 				returnValues.uniqueIndices[results[x].length] = static_cast<uint8_t>(uniqueIndex);
 			}
 		}
-		returnValues.type		 = hash_map_type::unique_per_length;
+		returnValues.type = hash_map_type::unique_per_length;
 		return returnValues;
 	}
 
@@ -490,7 +490,7 @@ namespace jsonifier_internal {
 		if (collided) {
 			return collectUniquePerLengthHashMapData<value_type>(pairsNew);
 		} else {
-			returnValues.type		 = hash_map_type::unique_byte_and_length;
+			returnValues.type = hash_map_type::unique_byte_and_length;
 			return returnValues;
 		}
 	}
@@ -514,7 +514,7 @@ namespace jsonifier_internal {
 		} else {
 			return collectUniqueByteAndLengthHashMapData<value_type>(pairsNew);
 		}
-		returnValues.type		 = hash_map_type::first_byte_and_unique_index;
+		returnValues.type = hash_map_type::first_byte_and_unique_index;
 		return returnValues;
 	}
 
@@ -527,7 +527,7 @@ namespace jsonifier_internal {
 				const auto slot					 = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
 				returnValues.uniqueIndices[slot] = x;
 			}
-			returnValues.type		 = hash_map_type::single_byte;
+			returnValues.type = hash_map_type::single_byte;
 			return returnValues;
 		} else {
 			return collectFirstByteAndUniqueIndexHashMapData<value_type>(pairsNew);
@@ -703,17 +703,17 @@ namespace jsonifier_internal {
 			if constexpr (hashData.type == hash_map_type::single_element) {
 				return 0;
 			} else if constexpr (hashData.type == hash_map_type::double_element) {
-				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
+				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
 					return iter[hashData.uniqueIndex] & 1;
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::triple_element) {
-				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
+				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
 					return (static_cast<uint8_t>(iter[hashData.uniqueIndex] ^ hashData.firstChar) * hashData.seed) & 3;
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
-				if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
+				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
 					return hashData.uniqueIndices[iter[hashData.uniqueIndex]];
 				}
 				return hashData.storageSize;
@@ -721,9 +721,9 @@ namespace jsonifier_internal {
 				static constexpr auto uniqueFirstByteCount{ countFirstBytes(tupleReferencesByFirstByte<value_type>) };
 				static constexpr auto mappings{ generateMappingsForFirstBytes(collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>),
 					hashData.uniqueIndices) };
-				const uint8_t firstByte	  = static_cast<uint8_t>(iter[0]);
+				const uint8_t firstByte = static_cast<uint8_t>(iter[0]);
 				const uint8_t uniqueIdx = hashData.uniqueIndices[firstByte];
-				if (checkForEnd(iter, end, uniqueIdx)) [[likely]] {
+				if JSONIFIER_LIKELY ((checkForEnd(iter, end, uniqueIdx))) {
 					const uint8_t keyChar	  = static_cast<uint8_t>(iter[uniqueIdx]);
 					const size_t flattenedIdx = (static_cast<size_t>(firstByte) << 8) | static_cast<size_t>(keyChar);
 					return mappings[flattenedIdx];
@@ -732,9 +732,9 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::unique_byte_and_length) {
 				static constexpr size_t storageMask = hashData.storageSize - 1;
 				const auto newPtr					= char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
-				if (newPtr) [[likely]] {
+				if JSONIFIER_LIKELY ((newPtr)) {
 					const size_t length = static_cast<size_t>(newPtr - iter);
-					if (checkForEnd(iter, end, hashData.uniqueIndex)) [[likely]] {
+					if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
 						const size_t combinedKey = iter[hashData.uniqueIndex] ^ length;
 						return hashData.indices[combinedKey & storageMask];
 					}
@@ -743,10 +743,10 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData.type == hash_map_type::unique_per_length) {
 				static constexpr auto mappings = generateMappingsForLengths<keyStatsVal<value_type>.maxLength>(tupleReferencesByLength<value_type>, hashData.uniqueIndices);
 				const auto newPtr			   = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
-				if (newPtr) [[likely]] {
+				if JSONIFIER_LIKELY ((newPtr)) {
 					const size_t length			= static_cast<size_t>(newPtr - iter);
 					const size_t localUniqueIdx = hashData.uniqueIndices[length];
-					if (localUniqueIdx != 255 && checkForEnd(iter, end, localUniqueIdx)) [[likely]] {
+					if JSONIFIER_LIKELY ((localUniqueIdx != 255 && checkForEnd(iter, end, localUniqueIdx))) {
 						return mappings[(length << 8) | iter[localUniqueIdx]];
 					}
 				}
@@ -756,10 +756,10 @@ namespace jsonifier_internal {
 				static constexpr rt_key_hasher<hashData.seed> hasher{};
 				static constexpr auto sizeMask{ hashData.numGroups - 1 };
 				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
-				if (newPtr) [[likely]] {
-					size_t length			 = static_cast<size_t>(newPtr - iter);
+				if JSONIFIER_LIKELY ((newPtr)) {
+					size_t length = static_cast<size_t>(newPtr - iter);
 					length		  = (hashData.uniqueIndex > length) ? length : hashData.uniqueIndex;
-					if (checkForEnd(iter, end, length)) [[likely]] {
+					if JSONIFIER_LIKELY ((checkForEnd(iter, end, length))) {
 						const auto hash			 = hasher.hashKeyRt(iter, length);
 						const size_t group		 = (hash >> 8) & (sizeMask);
 						const size_t resultIndex = group * hashData.bucketSize;

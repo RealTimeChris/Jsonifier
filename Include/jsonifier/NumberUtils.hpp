@@ -59,7 +59,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto currentIter = static_cast<const char*>(string.data());
 			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
 			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
@@ -69,7 +69,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE double strToDouble<16>(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtod(string.data(), nullptr);
 		}
 		return newValue;
@@ -77,7 +77,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
 			jsonifier_internal::stoui64(newValue, newPtr);
 		}
@@ -86,7 +86,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtoll(string.data(), nullptr, 16);
 		}
 		return newValue;
@@ -94,7 +94,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
 			jsonifier_internal::stoui64(newValue, newPtr);
 		}
@@ -103,7 +103,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if (string.size() > 0) [[likely]] {
+		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			newValue = std::strtoull(string.data(), nullptr, 16);
 		}
 		return newValue;

@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
 		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
-			if (count == 0) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((count == 0)) {
 				return nullptr;
 			}
 #if defined(JSONIFIER_MSVC)
@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
-			if (ptr) [[likely]] {
+			if JSONIFIER_LIKELY ((ptr)) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
 #else

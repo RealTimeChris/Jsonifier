@@ -71,22 +71,22 @@ namespace jsonifier_internal {
 	template<> JSONIFIER_ALWAYS_INLINE bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData) noexcept;
 
 	JSONIFIER_ALWAYS_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) noexcept {
-		if (isNumberType(charToCheck)) [[likely]] {
+		if JSONIFIER_LIKELY ((isNumberType(charToCheck))) {
 			return jsonifier::json_type::Number;
 		} else {
-			if (boolTable[charToCheck]) [[likely]] {
+			if JSONIFIER_LIKELY ((boolTable[charToCheck])) {
 				return jsonifier::json_type::Bool;
 			} else {
-				if (charToCheck == '{') [[unlikely]] {
+				if JSONIFIER_UNLIKELY ((charToCheck == '{')) {
 					return jsonifier::json_type::Object;
 				} else {
-					if (charToCheck == '[') [[unlikely]] {
+					if JSONIFIER_UNLIKELY ((charToCheck == '[')) {
 						return jsonifier::json_type::Array;
 					} else {
-						if (charToCheck == '"') [[unlikely]] {
+						if JSONIFIER_UNLIKELY ((charToCheck == '"')) {
 							return jsonifier::json_type::String;
 						} else {
-							if (charToCheck == 'n') [[unlikely]] {
+							if JSONIFIER_UNLIKELY ((charToCheck == 'n')) {
 								return jsonifier::json_type::Null;
 							} else {
 								return jsonifier::json_type::Unset;

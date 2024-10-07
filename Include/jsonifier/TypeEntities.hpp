@@ -93,7 +93,8 @@ namespace jsonifier_internal {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
 
-	template<const auto& function, typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
+	template<const auto& function, typename... arg_types, size_t... indices>
+	JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) {
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
 	}
 
@@ -105,7 +106,7 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) {
 		if constexpr (currentIndex < std::variant_size_v<unwrap_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
-			if (variantNew.index() == currentIndex) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((variantNew.index() == currentIndex)) {
 				function(std::get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
 				return;
 			}
@@ -521,7 +522,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(stop_watch&& other) noexcept {
-			if (this != &other) [[likely]] {
+			if JSONIFIER_LIKELY ((this != &other)) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			}
@@ -533,7 +534,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(const stop_watch& other) noexcept {
-			if (this != &other) [[likely]] {
+			if JSONIFIER_LIKELY ((this != &other)) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			}
@@ -554,7 +555,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void reset(value_type newTimeValue = value_type{}) noexcept {
-			if (newTimeValue != value_type{}) [[likely]] {
+			if JSONIFIER_LIKELY ((newTimeValue != value_type{})) {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
 			} else {

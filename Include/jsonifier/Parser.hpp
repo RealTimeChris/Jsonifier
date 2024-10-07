@@ -107,7 +107,7 @@ namespace jsonifier_internal {
 				}
 			}
 			derivedRef.errors.clear();
-			if (!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '[')) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '['))) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return false;
@@ -134,13 +134,13 @@ namespace jsonifier_internal {
 				stringBuffer.resize(newSize);
 			}
 			if constexpr (options.validateJson) {
-				if (!derivedRef.validateJson(in)) [[unlikely]] {
+				if JSONIFIER_UNLIKELY ((!derivedRef.validateJson(in))) {
 					return value_type{};
 				}
 			}
 			derivedRef.errors.clear();
 			unwrap_t<value_type> object{};
-			if (!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '[')) [[unlikely]] {
+			if JSONIFIER_UNLIKELY ((!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '['))) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return std::move(object);
