@@ -260,7 +260,7 @@ namespace jsonifier_internal {
 
 			auto consumeDigits = [&](uint64_t min_count = 1) {
 				uint64_t count = 0;
-				while (isDigit(*newPtr)) {
+				while (digiTable[*newPtr]) {
 					++newPtr;
 					++count;
 				}

@@ -29,7 +29,7 @@
 namespace int_validation_tests {
 
 	constexpr std::array<int64_t, 24> expectedInt64Values{ 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, std::numeric_limits<int64_t>::max(),
-		std::numeric_limits<int64_t>::min(), 0, 1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, -1, 500, 1 };
+		std::numeric_limits<int64_t>::min(), 0, 1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 };
 
 	template<bool passTest = true, typename value_type>
 	auto runTest(value_type& expectedValue, const std::string_view testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {

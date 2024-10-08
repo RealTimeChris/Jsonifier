@@ -243,8 +243,8 @@ namespace jsonifier_internal {
 		value_type x;
 		std::memcpy(&x, values, sizeof(value_type));
 		static constexpr value_type factor	 = ~value_type(0) / value_type(255);
-		static constexpr value_type msb_mask = value_type(128);
-		return ((( x )-factor * n) & ~( x )&factor * msb_mask) != 0;
+		static constexpr value_type msbMask = value_type(128);
+		return ((( x )-factor * n) & ~( x )&factor * msbMask) != 0;
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2, simd_type& simdValue,
@@ -291,7 +291,7 @@ namespace jsonifier_internal {
 	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
 		auto endIter = string1 + lengthNew;
 		while (string1 < endIter) {
-			auto* newIter = jsonifier_internal::char_comparison<'"'>::memchar(string1, lengthNew);
+			auto* newIter = char_comparison<'"'>::memchar(string1, lengthNew);
 			if (newIter) {
 				string1 = newIter;
 
@@ -1296,7 +1296,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<const auto options, typename context_type> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(context_type context) noexcept {
+	template<const auto options, typename context_type> JSONIFIER_ALWAYS_INLINE size_t getKeyLength(context_type& context) noexcept {
 		if JSONIFIER_LIKELY ((*context.iter == '"')) {
 			++context.iter;
 			auto start	 = context.iter;

@@ -176,13 +176,13 @@ namespace fast_float {
 	using from_chars_result = from_chars_result_t<char>;
 
 	template<typename UC> struct parse_options_t {
-		constexpr explicit parse_options_t(chars_format fmt = chars_format::general, UC dot = UC('.')) : format(fmt), decimalPoint(dot) {
+		constexpr explicit parse_options_t(chars_format fmt = chars_format::general, UC dot = UC('.')) : format(fmt), decimal(dot) {
 		}
 
 		/** Which number formats are accepted */
 		chars_format format;
 		/** The character used as decimal point */
-		UC decimalPoint;
+		UC decimal;
 	};
 	using parse_options = parse_options_t<char>;
 
@@ -1111,7 +1111,7 @@ namespace fast_float {
 	template<typename UC>
 	fastfloat_really_inline FASTFLOAT_CONSTEXPR20 parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend, parse_options_t<UC> options) noexcept {
 		chars_format const fmt = options.format;
-		UC const decimalPoint  = options.decimalPoint;
+		UC const decimal  = options.decimal;
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
@@ -1131,7 +1131,7 @@ namespace fast_float {
 					return report_parse_error<UC>(p, parse_error::missing_integer_after_sign);
 				}
 			} else {
-				if (!is_integer(*p) && (*p != decimalPoint)) {// a sign must be followed by an integer or the dot
+				if (!is_integer(*p) && (*p != decimal)) {// a sign must be followed by an integer or the dot
 					return report_parse_error<UC>(p, parse_error::missing_integer_or_dot_after_sign);
 				}
 			}
@@ -1160,7 +1160,7 @@ namespace fast_float {
 		}
 
 		int64_t exponent			 = 0;
-		const bool has_decimal_point = (p != pend) && (*p == decimalPoint);
+		const bool has_decimal_point = (p != pend) && (*p == decimal);
 		if (has_decimal_point) {
 			++p;
 			UC const* before = p;
@@ -1241,7 +1241,7 @@ namespace fast_float {
 			// We need to be mindful of the case where we only have zeroes...
 			// E.g., 0.000000000...000.
 			UC const* start = start_digits;
-			while ((start != pend) && (*start == UC('0') || *start == decimalPoint)) {
+			while ((start != pend) && (*start == UC('0') || *start == decimal)) {
 				if (*start == UC('0')) {
 					digit_count--;
 				}

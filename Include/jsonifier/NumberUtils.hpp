@@ -79,7 +79,7 @@ namespace jsonifier {
 		int64_t newValue{};
 		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
-			jsonifier_internal::stoui64(newValue, newPtr);
+			jsonifier_internal::integer_parser<int64_t, char>{}.parseInt(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -96,7 +96,7 @@ namespace jsonifier {
 		uint64_t newValue{};
 		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
-			jsonifier_internal::stoui64(newValue, newPtr);
+			jsonifier_internal::integer_parser<uint64_t, char>{}.parseInt(newValue, newPtr);
 		}
 		return newValue;
 	}

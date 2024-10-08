@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 
 			while (*iter) {
 				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {
-					[[likely]] case json_structural_type::String: {
+					case json_structural_type::String: {
 						currentDistance = *iter - previousPtr;
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
@@ -53,10 +53,10 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Comma:
+					case json_structural_type::Comma:
 						writeCharacter<','>(out, index);
 						break;
-					[[likely]] case json_structural_type::Number: {
+					case json_structural_type::Number: {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
 						}
@@ -70,20 +70,20 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Colon:
+					case json_structural_type::Colon:
 						writeCharacter<0x3A>(out, index);
 						break;
-					[[unlikely]] case json_structural_type::Array_Start:
+					case json_structural_type::Array_Start:
 						writeCharacter<'['>(out, index);
 						break;
-					[[unlikely]] case json_structural_type::Array_End:
+					case json_structural_type::Array_End:
 						writeCharacter<']'>(out, index);
 						break;
-					[[unlikely]] case json_structural_type::Null: {
+					case json_structural_type::Null: {
 						writeCharacters<"null">(out, index);
 						break;
 					}
-					[[unlikely]] case json_structural_type::Bool: {
+					case json_structural_type::Bool: {
 						if (*previousPtr == 't') {
 							writeCharacters<"true">(out, index);
 							break;
@@ -92,17 +92,17 @@ namespace jsonifier_internal {
 							break;
 						}
 					}
-					[[unlikely]] case json_structural_type::Object_Start:
+					case json_structural_type::Object_Start:
 						writeCharacter<'{'>(out, index);
 						break;
-					[[unlikely]] case json_structural_type::Object_End:
+					case json_structural_type::Object_End:
 						writeCharacter<'}'>(out, index);
 						break;
-					[[unlikely]] case json_structural_type::Unset:
-					[[unlikely]] case json_structural_type::Error:
-					[[unlikely]] case json_structural_type::Type_Count:
+					case json_structural_type::Unset:
+					case json_structural_type::Error:
+					case json_structural_type::Type_Count:
 						[[fallthrough]];
-					[[unlikely]] default: {
+					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));

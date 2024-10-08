@@ -59,19 +59,19 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::concepts::pointer_t value_type> const char* getEndIter(value_type value) {
-		return char_comparison<'\0'>::memchar(value, std::numeric_limits<size_t>::max());
+		return reinterpret_cast<const char*>(char_comparison<'\0'>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
 	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) {
-		return value;
+		return reinterpret_cast<const char*>(value);
 	}
 
 	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) {
-		return value.data() + value.size();
+		return reinterpret_cast<const char*>(value.data() + value.size());
 	}
 
 	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) {
-		return value.data();
+		return reinterpret_cast<const char*>(value.data());
 	}
 
 	template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> struct parse_impl;

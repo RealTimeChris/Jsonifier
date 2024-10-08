@@ -508,7 +508,7 @@ namespace jsonifier_internal {
 				if (uniqueIndex == std::numeric_limits<size_t>::max()) {
 					return collectUniqueByteAndLengthHashMapData<value_type>(pairsNew);
 				} else {
-					returnValues.uniqueIndices[results[x].rootPtr[0].key[0]] = uniqueIndex;
+					returnValues.uniqueIndices[results[x].rootPtr[0].key[0]] = static_cast<uint8_t>(uniqueIndex);
 				}
 			}
 		} else {
@@ -525,7 +525,7 @@ namespace jsonifier_internal {
 			returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
 			for (size_t x = 0; x < pairsNew.count; ++x) {
 				const auto slot					 = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
-				returnValues.uniqueIndices[slot] = x;
+				returnValues.uniqueIndices[slot] = static_cast<uint8_t>(x);
 			}
 			returnValues.type = hash_map_type::single_byte;
 			return returnValues;

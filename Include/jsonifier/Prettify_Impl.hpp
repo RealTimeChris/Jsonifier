@@ -32,14 +32,14 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			while (*iter) {
 				switch (asciiClassesMap[uint8_t(**iter)]) {
-					[[likely]] case json_structural_type::String: {
+					case json_structural_type::String: {
 						const auto newPtr = *iter;
 						++iter;
 						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
 						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
-					[[unlikely]] case json_structural_type::Comma: {
+					case json_structural_type::Comma: {
 						writer<options>::template writeCharacter<','>(out, prettifyPair.index);
 						++iter;
 						if constexpr (options.newLinesInArray) {
@@ -53,20 +53,20 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[likely]] case json_structural_type::Number: {
+					case json_structural_type::Number: {
 						const auto newPtr = (*iter);
 						++iter;
 						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
 						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
-					[[unlikely]] case json_structural_type::Colon: {
+					case json_structural_type::Colon: {
 						writer<options>::template writeCharacter<':'>(out, prettifyPair.index);
 						writer<options>::template writeCharacter<options.indentChar>(out, prettifyPair.index);
 						++iter;
 						break;
 					}
-					[[unlikely]] case json_structural_type::Array_Start: {
+					case json_structural_type::Array_Start: {
 						writer<options>::template writeCharacter<'['>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Array_End: {
+					case json_structural_type::Array_End: {
 						--prettifyPair.indent;
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -98,12 +98,12 @@ namespace jsonifier_internal {
 						++iter;
 						break;
 					}
-					[[unlikely]] case json_structural_type::Null: {
+					case json_structural_type::Null: {
 						writer<options>::template writeCharacters<"null">(out, prettifyPair.index);
 						++iter;
 						break;
 					}
-					[[unlikely]] case json_structural_type::Bool: {
+					case json_structural_type::Bool: {
 						if (**iter == 't') {
 							writer<options>::template writeCharacters<"true">(out, prettifyPair.index);
 							++iter;
@@ -114,7 +114,7 @@ namespace jsonifier_internal {
 							break;
 						}
 					}
-					[[unlikely]] case json_structural_type::Object_Start: {
+					case json_structural_type::Object_Start: {
 						writer<options>::template writeCharacter<'{'>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					[[unlikely]] case json_structural_type::Object_End: {
+					case json_structural_type::Object_End: {
 						--prettifyPair.indent;
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -142,13 +142,13 @@ namespace jsonifier_internal {
 						++iter;
 						break;
 					}
-					[[unlikely]] case json_structural_type::Unset:
+					case json_structural_type::Unset:
 						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Error:
+					case json_structural_type::Error:
 						[[fallthrough]];
-					[[unlikely]] case json_structural_type::Type_Count:
+					case json_structural_type::Type_Count:
 						[[fallthrough]];
-					[[unlikely]] default: {
+					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 							getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));

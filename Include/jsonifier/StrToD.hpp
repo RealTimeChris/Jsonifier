@@ -32,7 +32,7 @@ namespace jsonifier_internal {
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
-		static constexpr UC decimalPoint = '.';
+		static constexpr UC decimal = '.';
 		static constexpr UC smallE		 = 'e';
 		static constexpr UC bigE		 = 'E';
 		static constexpr UC minus		 = '-';
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 
 		int64_t exponent			 = 0;
 		const bool has_decimal_point = [&] {
-			return (*first == decimalPoint);
+			return (*first == decimal);
 		}();
 		if (has_decimal_point) {
 			++first;
@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 
 		if (digit_count > 19) {
 			UC const* start = start_digits;
-			while ((*start == zero || *start == decimalPoint)) {
+			while ((*start == zero || *start == decimal)) {
 				if (*start == zero) {
 					--digit_count;
 				}

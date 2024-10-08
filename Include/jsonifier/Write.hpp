@@ -99,12 +99,6 @@ namespace jsonifier_internal {
 			index += n;
 		}
 
-		template<char c, typename buffer_type, jsonifier::concepts::uint64_type index_type>
-		JSONIFIER_ALWAYS_INLINE static void writeCharacter(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
-			std::memset(buffer.data() + index, c, n);
-			index += n;
-		}
-
 		template<jsonifier::concepts::buffer_like buffer_type, typename serialize_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void writeNewLine(buffer_type& buffer, serialize_pair_t& serializePair) noexcept {
 			auto indentTotal			= serializePair.indent * options.indentSize;
