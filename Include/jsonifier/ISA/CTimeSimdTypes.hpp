@@ -223,7 +223,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename simd_int_t01, size_t... indices> JSONIFIER_ALWAYS_INLINE constexpr uint16_t mm128MovemaskEpi8(simd_int_t01&& a, std::index_sequence<indices...>&&) noexcept {
-		uint16_t mask{ 0 };
+		uint16_t mask{};
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
 	}

@@ -198,7 +198,7 @@ namespace fast_float {
 #elif (defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM) || defined(__ppc__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__))
 	#define FASTFLOAT_32BIT 1
 #else
-// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
+	// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
 	// We can never tell the register width, but the SIZE_MAX is a good
 	// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
 	// portability.
@@ -241,12 +241,12 @@ namespace fast_float {
 	#endif
 	#
 	#ifndef __BYTE_ORDER__
-		// safe choice
+// safe choice
 		#define FASTFLOAT_IS_BIG_ENDIAN 0
 	#endif
 	#
 	#ifndef __ORDER_LITTLE_ENDIAN__
-		// safe choice
+// safe choice
 		#define FASTFLOAT_IS_BIG_ENDIAN 0
 	#endif
 	#
@@ -270,7 +270,7 @@ namespace fast_float {
 #endif
 
 #if defined(__GNUC__)
-	// disable -Wcast-align=strict (GCC only)
+// disable -Wcast-align=strict (GCC only)
 	#define FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 #else
 	#define FASTFLOAT_SIMD_DISABLE_WARNINGS
@@ -338,7 +338,7 @@ namespace fast_float {
 
 	// Compares two ASCII strings in a case insensitive manner.
 	template<typename UC> inline FASTFLOAT_CONSTEXPR14 bool fastfloat_strncasecmp(UC const* input1, UC const* input2, size_t length) {
-		char running_diff{ 0 };
+		char running_diff{};
 		for (size_t i = 0; i < length; ++i) {
 			running_diff |= (char(input1[i]) ^ char(input2[i]));
 		}
@@ -457,8 +457,8 @@ namespace fast_float {
 	}
 
 	struct adjusted_mantissa {
-		uint64_t mantissa{ 0 };
-		int32_t power2{ 0 };// a negative value indicates an invalid result
+		uint64_t mantissa{};
+		int32_t power2{};// a negative value indicates an invalid result
 		adjusted_mantissa() = default;
 		constexpr bool operator==(const adjusted_mantissa& o) const {
 			return mantissa == o.mantissa && power2 == o.power2;
@@ -1083,8 +1083,8 @@ namespace fast_float {
 	};
 
 	template<typename UC> struct parsed_number_string_t {
-		int64_t exponent{ 0 };
-		uint64_t mantissa{ 0 };
+		int64_t exponent{};
+		uint64_t mantissa{};
 		UC const* lastmatch{ nullptr };
 		bool negative{ false };
 		bool valid{ false };
@@ -1111,7 +1111,7 @@ namespace fast_float {
 	template<typename UC>
 	fastfloat_really_inline FASTFLOAT_CONSTEXPR20 parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend, parse_options_t<UC> options) noexcept {
 		chars_format const fmt = options.format;
-		UC const decimal  = options.decimal;
+		UC const decimal	   = options.decimal;
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
@@ -2968,7 +2968,7 @@ namespace fast_float {
 	template<uint16_t size> struct stackvec {
 		limb data[size];
 		// we never need more than 150 limbs
-		uint16_t length{ 0 };
+		uint16_t length{};
 
 		stackvec()							  = default;
 		stackvec(const stackvec&)			  = delete;

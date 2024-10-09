@@ -242,7 +242,7 @@ namespace jsonifier_internal {
 	template<const auto n, typename value_type = uint64_t> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(const char* values) {
 		value_type x;
 		std::memcpy(&x, values, sizeof(value_type));
-		static constexpr value_type factor	 = ~value_type(0) / value_type(255);
+		static constexpr value_type factor	= ~value_type(0) / value_type(255);
 		static constexpr value_type msbMask = value_type(128);
 		return ((( x )-factor * n) & ~( x )&factor * msbMask) != 0;
 	}

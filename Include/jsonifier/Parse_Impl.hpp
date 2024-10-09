@@ -701,27 +701,27 @@ namespace jsonifier_internal {
 
 					while
 						JSONIFIER_LIKELY((*context.iter != rightBrace)) {
-						if JSONIFIER_LIKELY ((*context.iter == comma)) {
-							++context.iter;
-							static thread_local typename unwrap_t<value_type>::key_type key{};
-							parse<true, options>::impl(key, context);
-
-							if JSONIFIER_LIKELY ((*context.iter == colon)) {
+							if JSONIFIER_LIKELY ((*context.iter == comma)) {
 								++context.iter;
-								parse<true, options>::impl(value[key], context);
+								static thread_local typename unwrap_t<value_type>::key_type key{};
+								parse<true, options>::impl(key, context);
+
+								if JSONIFIER_LIKELY ((*context.iter == colon)) {
+									++context.iter;
+									parse<true, options>::impl(value[key], context);
+								} else {
+									static constexpr auto sourceLocation{ std::source_location::current() };
+									context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+									derailleur<options, parse_context_type>::skipToNextValue(context);
+									return;
+								}
 							} else {
 								static constexpr auto sourceLocation{ std::source_location::current() };
-								context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+								context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Comma_Or_Object_End>(context);
 								derailleur<options, parse_context_type>::skipToNextValue(context);
 								return;
 							}
-						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Comma_Or_Object_End>(context);
-							derailleur<options, parse_context_type>::skipToNextValue(context);
-							return;
 						}
-					}
 					++context.iter;
 					--context.currentObjectDepth;
 				} else {

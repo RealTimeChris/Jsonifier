@@ -394,7 +394,7 @@ constexpr jsonifier_internal::string_literal write_table_header = jsonifier_inte
 
 
 std::string getCPUInfo() {
-	char brand[49] = { 0 };
+	char brand[49] = {};
 	int32_t regs[12]{};
 	size_t length{};
 #if defined(__x86_64__) || defined(_M_AMD64)

@@ -33,11 +33,11 @@ namespace jsonifier_internal {
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		static constexpr UC decimal = '.';
-		static constexpr UC smallE		 = 'e';
-		static constexpr UC bigE		 = 'E';
-		static constexpr UC minus		 = '-';
-		static constexpr UC plus		 = '+';
-		static constexpr UC zero		 = '0';
+		static constexpr UC smallE	= 'e';
+		static constexpr UC bigE	= 'E';
+		static constexpr UC minus	= '-';
+		static constexpr UC plus	= '+';
+		static constexpr UC zero	= '0';
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;

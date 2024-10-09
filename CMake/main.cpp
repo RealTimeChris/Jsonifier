@@ -38,7 +38,7 @@ inline static uint64_t xgetbv();
 #endif
 
 std::string getCPUInfo() {
-	char brand[49]{ 0 };
+	char brand[49]{};
 #if defined(__x86_64__) || defined(_M_AMD64)
 	uint32_t regs[12];
 	regs[0] = 0x80000000;

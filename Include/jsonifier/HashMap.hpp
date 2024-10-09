@@ -281,10 +281,6 @@ namespace jsonifier_internal {
 		hash_map_type type{};
 	};
 
-	template<typename value_type> using variant_type =
-		std::variant<single_element_data<value_type>, double_element_data<value_type>, triple_element_data<value_type>, single_byte_data<value_type>,
-			first_byte_and_unique_index_data<value_type>, unique_byte_and_length_data<value_type>, unique_per_length_data<value_type>, simd_full_length_data<value_type>>;
-
 	struct string_lengths : public tuple_references {
 		size_t length{};
 	};

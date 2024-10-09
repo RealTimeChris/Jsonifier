@@ -547,7 +547,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE bool hasTimeElapsed() noexcept {
 			if JSONIFIER_LIKELY ((std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
-				totalNumberOfTimeUnits.load(std::memory_order_acquire))) {
+									 totalNumberOfTimeUnits.load(std::memory_order_acquire))) {
 				return true;
 			} else {
 				return false;
