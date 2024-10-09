@@ -112,6 +112,106 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus{ '-' };
 	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
 
+	struct JSONIFIER_ALIGN value128 final {
+		uint64_t low;
+		uint64_t high;
+	};
+
+	JSONIFIER_ALWAYS_INLINE constexpr uint64_t emulu(uint32_t x, uint32_t y) {
+		return x * ( uint64_t )y;
+	}
+
+	JSONIFIER_ALWAYS_INLINE constexpr uint64_t umul128Generic(uint64_t ab, uint64_t cd, uint64_t* hi) {
+		uint64_t a_high = ab >> 32;
+		uint64_t a_low	= ab & 0xFFFFFFFF;
+		uint64_t b_high = cd >> 32;
+		uint64_t b_low	= cd & 0xFFFFFFFF;
+		uint64_t ad		= emulu(a_high, b_low);
+		uint64_t bd		= emulu(a_low, b_low);
+		uint64_t adbc	= ad + emulu(a_low, b_high);
+		uint64_t lo		= bd + (adbc << 32);
+		uint64_t carry	= (lo < bd);
+		*hi				= emulu(a_high, b_high) + (adbc >> 32) + carry;
+		return lo;
+	}
+
+	JSONIFIER_ALWAYS_INLINE constexpr value128 fullMultiplication(uint64_t a, uint64_t b) {
+		if (std::is_constant_evaluated()) {
+			value128 answer;
+			answer.low = umul128Generic(a, b, &answer.high);
+			return answer;
+		}
+		value128 answer;
+#if defined(_M_ARM64) && !defined(__MINGW32__)
+		answer.high = __umulh(a, b);
+		answer.low	= a * b;
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+		answer.low = _umul128(a, b, &answer.high);
+#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+		__uint128_t r = (( __uint128_t )a) * b;
+		answer.low	  = uint64_t(r);
+		answer.high	  = uint64_t(r >> 64);
+#else
+		answer.low = umul128Generic(a, b, &answer.high);
+#endif
+		return answer;
+	}
+
+	JSONIFIER_ALWAYS_INLINE constexpr value128 fullDivision(uint64_t high, uint64_t low, uint64_t divisor) {
+		value128 result{};
+
+		if (divisor == 0) {
+			return result;
+		}
+
+		if (high == 0) {
+			result.low	= low / divisor;
+			result.high = low % divisor;
+			return result;
+		}
+
+#if defined(_WIN64) && !defined(__clang__)
+		result.low = _udiv128(high, low, divisor, &result.high);
+
+#elif defined(__SIZEOF_INT128__)
+		__uint128_t dividend = (( __uint128_t )high << 64) | low;
+		result.low			 = uint64_t(dividend / divisor);
+		result.high			 = uint64_t(dividend % divisor);
+
+#elif defined(__aarch64__) && !defined(__MINGW32__)
+		uint64_t remainder = high;
+		for (int i = 0; i < 64; ++i) {
+			remainder = (remainder << 1) | (low >> 63);
+			low <<= 1;
+			if (remainder >= divisor) {
+				remainder -= divisor;
+				low |= 1;
+			}
+		}
+		result.low	= low;
+		result.high = remainder;
+
+#else
+		uint64_t remainder		= high;
+		constexpr uint64_t base = uint64_t(1) << 32;
+
+		for (int i = 0; i < 64; ++i) {
+			remainder = (remainder << 1) | (low >> 63);
+			low <<= 1;
+
+			if (remainder >= divisor) {
+				remainder -= divisor;
+				low |= 1;
+			}
+		}
+
+		result.low	= low;
+		result.high = remainder;
+#endif
+
+		return result;
+	}
+
 #define toDigit(c) (static_cast<value_type>(static_cast<char>(c) - zero))
 
 	template<typename value_type, typename char_type> struct integer_parser {
@@ -166,20 +266,42 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE bool parseFinish(value_type& value, char_type*& iter, int8_t& expSign, int64_t& expValue, int8_t& fracDigits, int64_t& fracValue) {
 			if JSONIFIER_LIKELY ((expValue <= 19)) {
-				const auto powerExp = powerOfTenInt[expValue];
+				const auto powerExp			   = powerOfTenInt[expValue];
+				static constexpr auto multiply = [](auto& value, auto& expValue) {
+#if defined(__SIZEOF_INT128__)
+					const __uint128_t res = __uint128_t(value) * expValue;
+					value				  = value_type(res);
+					return res <= (std::numeric_limits<value_type>::max)();
+#else
+					const auto res = fullMultiplication(value, expValue);
+					value		   = value_type(res.low);
+					return res.high == 0;
+#endif
+				};
 
-				expValue *= expSign;
+				static constexpr auto divide = [](auto& value, auto& expValue) {
+#if defined(__SIZEOF_INT128__)
+					const __uint128_t res = __uint128_t(value) / expValue;
+					value				  = value_type(res);
+					return res <= (std::numeric_limits<value_type>::max)();
+#else
+					const auto res = fullDivision(0, value, expValue);
+					value		   = value_type(res.low);
+					return res.high == 0;
+#endif
+				};
 
 				static constexpr value_type doubleMax = std::numeric_limits<value_type>::max();
 				static constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
 
 				if (fracDigits + expValue >= 0) {
+					expValue *= expSign;
 					const auto fractionalCorrection = expValue > fracDigits ? fracValue * powerOfTenInt[expValue - fracDigits] : fracValue / powerOfTenInt[fracDigits - expValue];
-					return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (value *= powerExp, value += fractionalCorrection, true) : false)
-										 : ((value >= (doubleMin * powerExp)) ? (value /= powerExp, value += fractionalCorrection, true) : false);
+					return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), value += fractionalCorrection, true) : false)
+										 : ((value >= (doubleMin * powerExp)) ? (divide(value, powerExp), value += fractionalCorrection, true) : false);
 				} else {
-					return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (value *= powerExp, true) : false)
-										 : ((value >= (doubleMin * powerExp)) ? (value /= powerExp, true) : false);
+					return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), true) : false)
+										 : ((value >= (doubleMin * powerExp)) ? (divide(value, powerExp), true) : false);
 				}
 				return true;
 			}
