@@ -42,35 +42,35 @@ namespace jsonifier_internal {
 		10000000000ull, 100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull,
 		1000000000000000000ull, 10000000000000000000ull };
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 10> rawCompValsPos{ [] {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 256> rawCompValsPos{ [] {
 		constexpr auto rawCompVal{ std::numeric_limits<value_type>::max() };
-		std::array<value_type, 10> returnValues{};
-		returnValues[0] = (rawCompVal - 0) / 10;
-		returnValues[1] = (rawCompVal - 1) / 10;
-		returnValues[2] = (rawCompVal - 2) / 10;
-		returnValues[3] = (rawCompVal - 3) / 10;
-		returnValues[4] = (rawCompVal - 4) / 10;
-		returnValues[5] = (rawCompVal - 5) / 10;
-		returnValues[6] = (rawCompVal - 6) / 10;
-		returnValues[7] = (rawCompVal - 7) / 10;
-		returnValues[8] = (rawCompVal - 8) / 10;
-		returnValues[9] = (rawCompVal - 9) / 10;
+		std::array<value_type, 256> returnValues{};
+		returnValues['9'] = (rawCompVal - 9) / 10;
+		returnValues['8'] = (rawCompVal - 8) / 10;
+		returnValues['7'] = (rawCompVal - 7) / 10;
+		returnValues['6'] = (rawCompVal - 6) / 10;
+		returnValues['5'] = (rawCompVal - 5) / 10;
+		returnValues['4'] = (rawCompVal - 4) / 10;
+		returnValues['3'] = (rawCompVal - 3) / 10;
+		returnValues['2'] = (rawCompVal - 2) / 10;
+		returnValues['1'] = (rawCompVal - 1) / 10;
+		returnValues['0'] = (rawCompVal - 0) / 10;
 		return returnValues;
 	}() };
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 10> rawCompValsNeg{ [] {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<value_type, 256> rawCompValsNeg{ [] {
 		constexpr auto rawCompVal{ size_t(std::numeric_limits<value_type>::max()) + 1 };
-		std::array<value_type, 10> returnValues{};
-		returnValues[0] = (rawCompVal - 0) / 10;
-		returnValues[1] = (rawCompVal - 1) / 10;
-		returnValues[2] = (rawCompVal - 2) / 10;
-		returnValues[3] = (rawCompVal - 3) / 10;
-		returnValues[4] = (rawCompVal - 4) / 10;
-		returnValues[5] = (rawCompVal - 5) / 10;
-		returnValues[6] = (rawCompVal - 6) / 10;
-		returnValues[7] = (rawCompVal - 7) / 10;
-		returnValues[8] = (rawCompVal - 8) / 10;
-		returnValues[9] = (rawCompVal - 9) / 10;
+		std::array<value_type, 256> returnValues{};
+		returnValues['9'] = (rawCompVal - 9) / 10;
+		returnValues['8'] = (rawCompVal - 8) / 10;
+		returnValues['7'] = (rawCompVal - 7) / 10;
+		returnValues['6'] = (rawCompVal - 6) / 10;
+		returnValues['5'] = (rawCompVal - 5) / 10;
+		returnValues['4'] = (rawCompVal - 4) / 10;
+		returnValues['3'] = (rawCompVal - 3) / 10;
+		returnValues['2'] = (rawCompVal - 2) / 10;
+		returnValues['1'] = (rawCompVal - 1) / 10;
+		returnValues['0'] = (rawCompVal - 0) / 10;
 		return returnValues;
 	}() };
 
@@ -143,10 +143,25 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimal{ '.' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus{ '-' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char plus{ '+' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decimal{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t minus{ '-' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t plus{ '+' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t zero{ '0' };
+
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint8_t, 256> subTable{ [] {
+		std::array<uint8_t, 256> returnValues{};
+		returnValues['0'] = '0' - zero;
+		returnValues['1'] = '1' - zero;
+		returnValues['2'] = '2' - zero;
+		returnValues['3'] = '3' - zero;
+		returnValues['4'] = '4' - zero;
+		returnValues['5'] = '5' - zero;
+		returnValues['6'] = '6' - zero;
+		returnValues['7'] = '7' - zero;
+		returnValues['8'] = '8' - zero;
+		returnValues['9'] = '9' - zero;
+		return returnValues;
+	}() };
 
 	struct JSONIFIER_ALIGN value128 final {
 		uint64_t high;
@@ -172,137 +187,137 @@ namespace jsonifier_internal {
 	}
 
 	template<typename value_type, typename char_type> struct integer_parser {
-		JSONIFIER_ALWAYS_INLINE bool parseFraction(value_type& value, char_type*& iter) noexcept {
-			if JSONIFIER_LIKELY ((digiTable[static_cast<uint8_t>(*iter)])) {
-				int64_t fracValue = static_cast<uint8_t>(*iter - '0');
+		JSONIFIER_ALWAYS_INLINE bool parseFraction(value_type& value, const uint8_t*& iter) noexcept {
+			if JSONIFIER_LIKELY ((digiTable[*iter])) {
+				int64_t fracValue = subTable[*iter];
 				++iter;
+
 				int8_t fracDigits{ static_cast<int8_t>(parseChars(fracValue, iter) + 1) };
-				return (expTable[static_cast<uint8_t>(*iter)]) ? (++iter, parseExponent(value, iter, fracDigits, fracValue)) : true;
+				return (expTable[*iter]) ? (++iter, parseExponent(value, iter, fracDigits, fracValue)) : true;
 			}
 			JSONIFIER_UNLIKELY(else) {
 				return false;
 			}
 		}
 
-		template<typename value_type02> JSONIFIER_ALWAYS_INLINE int64_t parseChars(value_type02& value, char_type*& iter) noexcept {
-			uint8_t numTmp = static_cast<uint8_t>(*iter);
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+		template<typename value_type02> JSONIFIER_ALWAYS_INLINE int64_t parseChars(value_type02& value, const uint8_t*& iter) noexcept {
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 0;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 1;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 2;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 3;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 4;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 5;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 6;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 7;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 8;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 9;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 10;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 11;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 12;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 13;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 14;
 			}
-			if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-				value = static_cast<value_type>(numTmp - '0') + value * 10;
+			if ((digiTable[*iter])) {
+				value = value * 10 + (*iter - '0');
 				++iter;
-				numTmp = static_cast<uint8_t>(*iter);
+
 			} else {
 				return 15;
 			}
 			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-				if ((digiTable[static_cast<uint8_t>(numTmp)])) {
-					value = static_cast<value_type>(numTmp - '0') + value * 10;
+				if ((digiTable[*iter])) {
+					value = value * 10 + (*iter - '0');
 					++iter;
-					numTmp = static_cast<uint8_t>(*iter);
+
 				} else {
 					return 16;
 				}
@@ -311,17 +326,18 @@ namespace jsonifier_internal {
 			return 16;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool parseExponent(value_type& value, char_type*& iter, int8_t fracDigits = 0, int64_t fracValue = 0) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool parseExponent(value_type& value, const uint8_t*& iter, int8_t fracDigits = 0, int64_t fracValue = 0) noexcept {
 			int8_t expSign = 1;
 			if (*iter == minus) {
 				expSign = -1;
 				++iter;
+
 			} else if (*iter == plus) {
 				++iter;
 			}
 
-			if JSONIFIER_LIKELY ((digiTable[static_cast<uint8_t>(*iter)])) {
-				int64_t expValue = static_cast<uint8_t>(*iter - '0');
+			if JSONIFIER_LIKELY ((digiTable[*iter])) {
+				int64_t expValue = static_cast<uint8_t>(subTable[*iter]);
 				++iter;
 				parseChars(expValue, iter);
 				return parseFinish(value, iter, expSign, expValue, fracDigits, fracValue);
@@ -339,24 +355,29 @@ namespace jsonifier_internal {
 			return res <= (std::numeric_limits<value_type>::max)();
 #elif defined(_M_ARM64) && !defined(__MINGW32__)
 			values[1] = __umulh(value, expValue);
-			values[0] = value * expValue;
+			value	  = value * expValue;
 #elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
-			values[0] = _umul128(value, expValue, values + 1);
+			value = _umul128(value, expValue, values + 1);
 #elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			values[0] = (( __uint128_t )value) * expValue;
-			values[1] = uint64_t(r >> 64);
+			value = (( __uint128_t )value) * expValue;
 #else
-			values[0] = umul128Generic(value, expValue, values + 1);
+			value = umul128Generic(value, expValue, values + 1);
 #endif
-			value = value_type(values[0]);
 			return values[1] == 0;
 		};
 
 		JSONIFIER_ALWAYS_INLINE bool divide(value_type& value, const int64_t& expValue) noexcept {
+			uint64_t values[2];
 #if defined(__SIZEOF_INT128__)
 			const __uint128_t res = __uint128_t(value) / expValue;
 			value				  = value_type(res);
 			return res <= (std::numeric_limits<value_type>::max)();
+#elif defined(_M_ARM64) && !defined(__MINGW32__)
+			__udiv128(0, value, expValue, &values[0]);
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+			value = _udiv128(0, value, expValue, &values[1]);
+#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+			value = (( __uint128_t )value) / expValue;
 #else
 			if (expValue == 0) {
 				return true;
@@ -364,15 +385,16 @@ namespace jsonifier_internal {
 			value = value_type(value / expValue);
 			return value % expValue == 0;
 #endif
+			return values[1] == 0;
 		};
 
-		JSONIFIER_ALWAYS_INLINE bool parseFinish(value_type& value, char_type*& iter, const int8_t& expSign, int64_t& expValue, const int8_t& fracDigits,
-			const int64_t& fracValue) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool parseFinish(value_type& value, const uint8_t*& iter, const int8_t expSign = 0, int64_t expValue = 0, const int8_t fracDigits = 0,
+			const int64_t fracValue = 0) noexcept {
 			if JSONIFIER_LIKELY ((expValue <= 19)) {
 				const auto powerExp = powerOfTenInt[expValue];
 
-				static constexpr value_type doubleMax = std::numeric_limits<value_type>::max();
-				static constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
+				constexpr value_type doubleMax = std::numeric_limits<value_type>::max();
+				constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
 
 				if (fracDigits + expValue >= 0) {
 					expValue *= expSign;
@@ -390,45 +412,51 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool positive = true> JSONIFIER_ALWAYS_INLINE bool parseInteger(value_type& value, char_type*& iter) noexcept {
-			static constexpr auto maxLoopIndex{ jsonifier::concepts::signed_type<value_type> ? 16ull : 17ull };
-			if JSONIFIER_LIKELY ((digiTable[static_cast<uint8_t>(*iter)])) {
-				value = static_cast<value_type>(*iter - '0');
+		template<bool positive = true> JSONIFIER_ALWAYS_INLINE bool parseInteger(value_type& value, const uint8_t*& iter) noexcept {
+			constexpr auto maxLoopIndex{ jsonifier::concepts::signed_type<value_type> ? 16ull : 17ull };
+			if JSONIFIER_LIKELY ((digiTable[*iter])) {
+				value = subTable[*iter];
 				++iter;
 
-				if JSONIFIER_LIKELY ((digiTable[static_cast<uint8_t>(*iter)])) {
-					value = static_cast<value_type>(*iter - '0') + value * 10;
+				if JSONIFIER_LIKELY ((digiTable[*iter])) {
+					value = value * 10 + (subTable[*iter]);
 					++iter;
 				}
 				JSONIFIER_UNLIKELY(else) {
-					return (!expFracTable[static_cast<uint8_t>(*iter)]) ? true : (*iter == decimal) ? (++iter, parseFraction(value, iter)) : (++iter, parseExponent(value, iter));
+					return (!expFracTable[*iter]) ? true : (*iter == decimal) ? (++iter, parseFraction(value, iter)) : (++iter, parseExponent(value, iter));
 				}
 
-				if JSONIFIER_LIKELY ((nonZeroDigiTable[static_cast<uint8_t>(*(iter - 2))])) {
-					parseChars(value, iter);
-					if JSONIFIER_UNLIKELY ((digiTable[static_cast<uint8_t>(*iter)])) {
-						value_type numTmp = static_cast<value_type>(*iter - '0');
-						if constexpr (positive) {
-							if JSONIFIER_UNLIKELY ((value > rawCompValsPos<value_type>[numTmp])) [[unlikely]] {
-								return false;
-							}
-						} else {
-							if JSONIFIER_UNLIKELY ((value > rawCompValsNeg<value_type>[numTmp])) [[unlikely]] {
-								return false;
-							}
-						}
-						value = numTmp + value * 10;
-						++iter;
-						return !digiTable[static_cast<uint8_t>(*iter)];
-					} else {
-						return (!expFracTable[static_cast<uint8_t>(*iter)]) ? true
-							: (*iter == decimal)							? (++iter, parseFraction(value, iter))
-																			: (++iter, parseExponent(value, iter));
-					}
-				}
-				JSONIFIER_UNLIKELY(else) {
+				if (iter[-2] == zero) {
 					return false;
 				}
+
+				parseChars(value, iter);
+
+				if (digiTable[*iter]) {
+					if constexpr (positive) {
+						if (value > rawCompValsPos<value_type>[*iter]) [[unlikely]] {
+							return false;
+						}
+					} else {
+						if (value > rawCompValsNeg<value_type>[*iter]) [[unlikely]] {
+							return false;
+						}
+					}
+					value = value * 10 + (subTable[*iter]);
+					++iter;
+
+				} else {
+					if (expTable[*iter]) {
+						++iter;
+						return parseExponent(value, iter);
+					} else if (*iter == decimal) {
+						++iter;
+						return parseFraction(value, iter);
+					}
+					return true;
+				}
+
+				return !digiTable[*iter];
 			}
 			JSONIFIER_UNLIKELY(else) {
 				return false;
@@ -437,13 +465,18 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE bool parseInt(value_type& value, char_type*& iter) noexcept {
 			if constexpr (jsonifier::concepts::signed_type<value_type>) {
-				static constexpr auto maxValue = size_t((std::numeric_limits<value_type>::max)());
-				static constexpr auto minValue = size_t((std::numeric_limits<value_type>::max)()) + 1;
+				constexpr auto maxValue = size_t((std::numeric_limits<value_type>::max)());
+				constexpr auto minValue = size_t((std::numeric_limits<value_type>::max)()) + 1;
 				bool result;
-				return ((*iter == minus ? (++iter, result = integer_parser<value_type, char_type>::parseInteger<false>(value, iter), value *= -1, result)
-										: integer_parser<value_type, char_type>::parseInteger(value, iter)));
+				auto newIter02 = reinterpret_cast<const uint8_t*>(iter);
+				result		   = ((*newIter02 == minus ? (++newIter02, result = parseInteger<false>(value, newIter02), value *= -1, result) : parseInteger(value, newIter02)));
+				iter += newIter02 - reinterpret_cast<const uint8_t*>(iter);
+				return result;
 			} else {
-				return integer_parser<value_type, char_type>::parseInteger(value, iter);
+				auto newIter02 = reinterpret_cast<const uint8_t*>(iter);
+				auto result	   = parseInteger(value, newIter02);
+				iter += newIter02 - reinterpret_cast<const uint8_t*>(iter);
+				return result;
 			}
 		}
 	};
