@@ -273,12 +273,15 @@ namespace jsonifier_internal {
 	template<typename value_type> struct simd_full_length_data {
 		static constexpr size_t storageSize{ 2048 };
 		JSONIFIER_ALWAYS_INLINE constexpr simd_full_length_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups }, type{ newData.type } {};
+			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups },
+			  uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, seed{ newData.hasher.seed } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 2049> controlBytes{};
 		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
+		size_t uniqueIndex{};
 		hash_map_type type{};
+		size_t seed{};
 	};
 
 	struct string_lengths : public tuple_references {
@@ -450,7 +453,7 @@ namespace jsonifier_internal {
 		constexpr auto results			 = collectLengths<uniqueLengthCount>(tupleReferencesByLength<value_type>);
 		constexpr auto keyStatsValNew	 = keyStats(results);
 		hash_map_construction_data<value_type> returnValues{};
-		returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
+		returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
 		for (size_t x = 0; x < uniqueLengthCount; ++x) {
 			auto uniqueIndex = findUniqueColumnIndex(results[x], keyStatsValNew[x].minLength);
 			if (uniqueIndex == std::numeric_limits<size_t>::max()) {
@@ -497,7 +500,7 @@ namespace jsonifier_internal {
 		constexpr auto results				= collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>);
 		constexpr auto keyStatsValNew		= keyStats(results);
 		hash_map_construction_data<value_type> returnValues{};
-		returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
+		returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
 		if (keyStatsValNewer.maxLength < 256) {
 			for (size_t x = 0; x < uniqueFirstByteCount; ++x) {
 				auto uniqueIndex = findUniqueColumnIndex(results[x], keyStatsValNew[x].minLength);
@@ -623,7 +626,7 @@ namespace jsonifier_internal {
 		} else if constexpr (constructionData.type == hash_map_type::simd_full_length) {
 			return simd_full_length_data{ constructionData };
 		} else {
-			return empty_data{ constructionData };
+			static_assert(constructionData.type != hash_map_type::unset, "Failed to construct that hashmap!");
 		}
 	}
 
@@ -672,7 +675,7 @@ namespace jsonifier_internal {
 	}
 
 #if !defined(NDEBUG)
-	std::unordered_map<std::string, uint32_t> types{};
+	inline std::unordered_map<std::string, uint32_t> types{};
 #endif
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
@@ -748,7 +751,7 @@ namespace jsonifier_internal {
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::simd_full_length) {
-				using simd_type = typename unwrap_t<decltype(hashData)>::simd_type;
+				using simd_type = map_simd_t<hashData.storageSize>;
 				static constexpr rt_key_hasher<hashData.seed> hasher{};
 				static constexpr auto sizeMask{ hashData.numGroups - 1 };
 				const auto newPtr = char_comparison<'"'>::memchar(iter + subAmount01, subAmount02);
@@ -761,7 +764,7 @@ namespace jsonifier_internal {
 						const size_t resultIndex = group * hashData.bucketSize;
 						const auto simdValues	 = simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex);
 						const auto matches		 = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simdValues);
-						const size_t tz			 = simd_internal::tzcnt(simd_internal::opBitMask(matches));
+						const size_t tz			 = simd_internal::tzcnt(matches);
 						return hashData.indices[resultIndex + tz];
 					}
 				}

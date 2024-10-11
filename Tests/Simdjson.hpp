@@ -553,7 +553,7 @@ template<> void getValue(int32_t*& out_value, simdjson::ondemand::value jsonData
 	if (auto result = jsonData.get(temp); result) {
 		throwError(result);
 	}
-	out_value = new int32_t(static_cast<int32_t>(temp));
+	out_value = new int32_t{ static_cast<int32_t>(temp) };
 }
 
 template<> void getValue(std::unique_ptr<int32_t>& out_value, simdjson::ondemand::value jsonData) {

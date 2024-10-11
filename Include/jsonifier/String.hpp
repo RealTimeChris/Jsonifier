@@ -490,8 +490,7 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = traits_type::length(rhs);
 			return rhsLength == lhs.size() &&
-				jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(), rhs.data(),
-					rhs.size());
+				jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs)>>::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {

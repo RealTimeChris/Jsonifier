@@ -50,11 +50,11 @@ namespace jsonifier_internal {
 	template<typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
-		uint32_t abbccddee = uint32_t(sig / 100000000);
-		uint32_t ffgghhii  = uint32_t(sig - uint64_t(abbccddee) * 100000000);
+		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
+		uint32_t ffgghhii  = static_cast<uint32_t>(sig - static_cast<uint64_t>(abbccddee) * 100000000);
 		uint32_t abbcc	   = abbccddee / 10000;
 		uint32_t ddee	   = abbccddee - abbcc * 10000;
-		uint32_t abb	   = uint32_t((uint64_t(abbcc) * 167773) >> 24);
+		uint32_t abb	   = static_cast<uint32_t>((static_cast<uint64_t>(abbcc) * 167773) >> 24);
 		uint32_t a		   = (abb * 41) >> 12;
 		uint32_t bb		   = abb - a * 100;
 		uint32_t cc		   = abbcc - abb * 100;
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 		if (ffgghhii) {
 			uint32_t dd	  = (ddee * 5243) >> 19;
 			uint32_t ee	  = ddee - dd * 100;
-			uint32_t ffgg = uint32_t((uint64_t(ffgghhii) * 109951163) >> 40);
+			uint32_t ffgg = static_cast<uint32_t>((static_cast<uint64_t>(ffgghhii) * 109951163) >> 40);
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff	  = (ffgg * 5243) >> 19;
 			uint32_t gg	  = ffgg - ff * 100;
@@ -117,7 +117,7 @@ namespace jsonifier_internal {
 
 	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* writeU32Len1To9(char_type* buf, uint32_t val) noexcept {
 		if (val < 10) {
-			*buf = uint8_t(val + '0');
+			*buf = static_cast<uint8_t>(val + '0');
 			return buf + 1;
 		}
 
@@ -139,7 +139,7 @@ namespace jsonifier_internal {
 		}
 
 		if (val < 10) {
-			*--p = uint8_t(val + '0');
+			*--p = static_cast<uint8_t>(val + '0');
 		} else {
 			std::memcpy(p - 2, charTable + (val * 2), 2);
 		}
@@ -166,7 +166,7 @@ namespace jsonifier_internal {
 		bool sign							   = (rawVal >> (sizeof(value_type) * 8 - 1));
 		uint32_t expRaw						   = rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
-		if JSONIFIER_UNLIKELY ((expRaw == (uint32_t(1) << exponentBits) - 1)) {
+		if JSONIFIER_UNLIKELY ((expRaw == (static_cast<uint32_t>(1) << exponentBits) - 1)) {
 			std::memcpy(buf, "null", 4);
 			return buf + 4;
 		}
@@ -182,7 +182,7 @@ namespace jsonifier_internal {
 		if constexpr (isFloat) {
 			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
 
-			uint32_t sigDec			= uint32_t(v.significand);
+			uint32_t sigDec			= static_cast<uint32_t>(v.significand);
 			int32_t expDec			= v.exponent;
 			const int32_t numDigits = static_cast<int32_t>(fastDigitCount(sigDec));
 			int32_t dotPos			= numDigits + expDec;
@@ -198,7 +198,7 @@ namespace jsonifier_internal {
 					return writeU32Len1To9(buf, sigDec);
 				} else {
 					auto numEnd			  = writeU32Len1To9(buf, sigDec);
-					int32_t digitsWritten = int32_t(numEnd - buf);
+					int32_t digitsWritten = static_cast<int32_t>(numEnd - buf);
 					if (dotPos < digitsWritten) {
 						std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
 						buf[dotPos] = '.';
@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 				}
 			} else {
 				auto end = writeU32Len1To9(buf + 1, sigDec);
-				expDec += int32_t(end - (buf + 1)) - 1;
+				expDec += static_cast<int32_t>(end - (buf + 1)) - 1;
 				buf[0] = buf[1];
 				buf[1] = '.';
 				if (end == buf + 2) {
@@ -277,9 +277,9 @@ namespace jsonifier_internal {
 					std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
 					return buf + 2 - lz;
 				} else {
-					const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
-					const uint32_t lo = uint32_t(expDec) - hi * 100;
-					buf[0]			  = uint8_t(hi) + '0';
+					const uint32_t hi = (static_cast<uint32_t>(expDec) * 656) >> 16;
+					const uint32_t lo = static_cast<uint32_t>(expDec) - hi * 100;
+					buf[0]			  = static_cast<uint8_t>(hi) + '0';
 					std::memcpy(&buf[1], charTable + (lo * 2), 2);
 					return buf + 3;
 				}

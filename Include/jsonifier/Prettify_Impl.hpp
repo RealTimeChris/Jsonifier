@@ -30,12 +30,14 @@ namespace jsonifier_internal {
 	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl : public writer<options> {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
 		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
+			const char* newPtr{};
+			uint64_t newSize{};
 			while (*iter) {
-				switch (asciiClassesMap[uint8_t(**iter)]) {
+				switch (asciiClassesMap[static_cast<uint8_t>(**iter)]) {
 					case json_structural_type::String: {
-						const auto newPtr = *iter;
+						newPtr = *iter;
 						++iter;
-						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
+						newSize = static_cast<uint64_t>((*iter) - newPtr);
 						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
@@ -54,9 +56,9 @@ namespace jsonifier_internal {
 						break;
 					}
 					case json_structural_type::Number: {
-						const auto newPtr = (*iter);
+						newPtr = (*iter);
 						++iter;
-						const auto newSize = static_cast<uint64_t>((*iter) - newPtr);
+						newSize = static_cast<uint64_t>((*iter) - newPtr);
 						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
 						break;
 					}
@@ -70,7 +72,7 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'['>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if JSONIFIER_UNLIKELY ((size_t(prettifyPair.indent) >= prettifyPair.state.size())) {
+						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifyPair.indent) >= prettifyPair.state.size())) {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
@@ -118,7 +120,7 @@ namespace jsonifier_internal {
 						writer<options>::template writeCharacter<'{'>(out, prettifyPair.index);
 						++iter;
 						++prettifyPair.indent;
-						if JSONIFIER_UNLIKELY ((size_t(prettifyPair.indent) >= prettifyPair.state.size())) {
+						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifyPair.indent) >= prettifyPair.state.size())) {
 							prettifyPair.state.resize(prettifyPair.state.size() * 2);
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;

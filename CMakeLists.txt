@@ -80,6 +80,9 @@ endif()
     "$<INSTALL_INTERFACE:include/>"
  )
 
+set(ASM_OUTPUT_DIR "${CMAKE_BINARY_DIR}/assembly")
+file(MAKE_DIRECTORY ${ASM_OUTPUT_DIR})
+
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"

@@ -30,10 +30,10 @@
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
 #elif defined(_MSC_VER)
-	#define JSONIFIER_MSVC 1
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4324)
+	#define JSONIFIER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
 	#define JSONIFIER_GNUCXX 1
 #endif
@@ -89,7 +89,6 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#pragma warning(disable : C4820)
 		#define JSONIFIER_NO_INLINE __declspec(noinline)
 		#define JSONIFIER_FLATTEN inline [[msvc::flatten]]
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
@@ -111,9 +110,9 @@
 #else
 	#define JSONIFIER_NO_INLINE
 	#define JSONIFIER_FLATTEN
-	#define JSONIFIER_ALWAYS_INLINE
-	#define JSONIFIER_MAYBE_ALWAYS_INLINE
-	#define JSONIFIER_INLINE
+	#define JSONIFIER_ALWAYS_INLINE inline
+	#define JSONIFIER_MAYBE_ALWAYS_INLINE inline
+	#define JSONIFIER_INLINE inline
 #endif
 
 #if !defined JSONIFIER_ALIGN
@@ -142,17 +141,17 @@ using jsonifier_simd_int_t = __m512i;
 static constexpr size_t bitsPerStep{ 512 };
 using jsonifier_string_parsing_type = size_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m512x;
-	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using jsonifier_simd_int_t = __m256i;
 static constexpr size_t bitsPerStep{ 256 };
 using jsonifier_string_parsing_type = uint32_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m256x;
-	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using jsonifier_simd_int_t = __m128i;
 static constexpr size_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-	   #endif
+	#endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	#include <arm_neon.h>
@@ -196,7 +195,9 @@ using string_buffer_ptr = char*;
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 
-JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept { JSONIFIER_PREFETCH(ptr) }
+JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
+	JSONIFIER_PREFETCH(ptr)
+}
 
-std::atomic_uint64_t sectionInstanceCount {};
-std::atomic_uint64_t coreInstanceCount{};
+inline std::atomic_uint64_t sectionInstanceCount{};
+inline std::atomic_uint64_t coreInstanceCount{};

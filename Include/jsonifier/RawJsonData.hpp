@@ -52,23 +52,22 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE value_type constructValueFromRawJsonData(const jsonifier::string& newData) noexcept;
+	template<typename value_type> value_type constructValueFromRawJsonData(const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE std::unordered_map<jsonifier::string, jsonifier::raw_json_data>
-	constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(const jsonifier::string& newData) noexcept;
-
-	template<> JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(
+	template<> std::unordered_map<jsonifier::string, jsonifier::raw_json_data> constructValueFromRawJsonData<std::unordered_map<jsonifier::string, jsonifier::raw_json_data>>(
 		const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE jsonifier::string constructValueFromRawJsonData<jsonifier::string>(const jsonifier::string& newData) noexcept;
+	template<> jsonifier::vector<jsonifier::raw_json_data> constructValueFromRawJsonData<jsonifier::vector<jsonifier::raw_json_data>>(const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE double constructValueFromRawJsonData<double>(const jsonifier::string& newData) noexcept;
+	template<> jsonifier::string constructValueFromRawJsonData<jsonifier::string>(const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE uint64_t constructValueFromRawJsonData<uint64_t>(const jsonifier::string& newData) noexcept;
+	template<> double constructValueFromRawJsonData<double>(const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE int64_t constructValueFromRawJsonData<int64_t>(const jsonifier::string& newData) noexcept;
+	template<> uint64_t constructValueFromRawJsonData<uint64_t>(const jsonifier::string& newData) noexcept;
 
-	template<> JSONIFIER_ALWAYS_INLINE bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData) noexcept;
+	template<> int64_t constructValueFromRawJsonData<int64_t>(const jsonifier::string& newData) noexcept;
+
+	template<> bool constructValueFromRawJsonData<bool>(const jsonifier::string& newData) noexcept;
 
 	JSONIFIER_ALWAYS_INLINE jsonifier::json_type getValueType(uint8_t charToCheck) noexcept {
 		if JSONIFIER_LIKELY ((isNumberType(charToCheck))) {

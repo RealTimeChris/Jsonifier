@@ -121,7 +121,7 @@ namespace jsonifier_internal {
 					if constexpr (memberCount > 0) {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
-						size_t wsSize{ size_t(context.iter - wsStart) };
+						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 						bool antihash{ true };
 
 						if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
@@ -489,7 +489,7 @@ namespace jsonifier_internal {
 					if constexpr (memberCount > 0) {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
-						size_t wsSize{ size_t(context.iter - wsStart) };
+						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 						auto newPtr = std::get<0>(value);
 						parse<false, options>::impl(getMember(newPtr, value), context);
 
@@ -607,7 +607,7 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((*context.iter != rightBrace)) {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
-					size_t wsSize{ size_t(context.iter - wsStart) };
+					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 					static thread_local typename unwrap_t<value_type>::key_type key{};
 					parse<false, options>::impl(key, context);
 
@@ -803,7 +803,7 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
-					size_t wsSize{ size_t(context.iter - wsStart) };
+					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 					parseObjects<true>(value, context, wsStart, wsSize);
 				} else {
 					++context.iter;
@@ -961,7 +961,7 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					const auto wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
-					size_t wsSize{ size_t(context.iter - wsStart) };
+					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 					if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
 						return parseObjects<true>(value, context, wsStart, wsSize);
 					} else {

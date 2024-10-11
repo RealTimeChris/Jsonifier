@@ -60,7 +60,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpLt(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		jsonifier_simd_int_128 offset		  = _mm_set1_epi8(0x80);
+		jsonifier_simd_int_128 offset		  = _mm_set1_epi8(static_cast<char>(0x80));
 		jsonifier_simd_int_128 adjusted_value = _mm_add_epi8(value, offset);
 		jsonifier_simd_int_128 adjusted_other = _mm_add_epi8(other, offset);
 		return _mm_movemask_epi8(_mm_cmpgt_epi8(adjusted_other, adjusted_value));
@@ -162,7 +162,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opCmpLt(simd_int_t01&& value, simd_int_t02&& other) noexcept {
-		jsonifier_simd_int_256 offset		  = _mm256_set1_epi8(0x80);
+		jsonifier_simd_int_256 offset		  = _mm256_set1_epi8(static_cast<char>(0x80));
 		jsonifier_simd_int_256 adjusted_value = _mm256_add_epi8(value, offset);
 		jsonifier_simd_int_256 adjusted_other = _mm256_add_epi8(other, offset);
 		return _mm256_movemask_epi8(_mm256_cmpgt_epi8(adjusted_other, adjusted_value));

@@ -460,6 +460,14 @@ namespace std {
 	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
 }
 
+#if defined(max)
+	#undef max
+#endif
+
+#if defined(min)
+	#undef min
+#endif
+
 namespace jsonifier_internal {
 
 	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {

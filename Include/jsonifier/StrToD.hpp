@@ -32,12 +32,12 @@ namespace jsonifier_internal {
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
-		static constexpr UC decimal = '.';
-		static constexpr UC smallE	= 'e';
-		static constexpr UC bigE	= 'E';
-		static constexpr UC minus	= '-';
-		static constexpr UC plus	= '+';
-		static constexpr UC zero	= '0';
+		static constexpr UC decimalNew = '.';
+		static constexpr UC smallE	   = 'e';
+		static constexpr UC bigE	   = 'E';
+		static constexpr UC minus	   = '-';
+		static constexpr UC plus	   = '+';
+		static constexpr UC zero	   = '0';
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
@@ -55,13 +55,13 @@ namespace jsonifier_internal {
 		uint64_t i = 0;
 
 		while (is_integer(*first)) {
-			i = 10 * i + uint64_t(*first - zero);
+			i = 10 * i + static_cast<uint64_t>(*first - zero);
 			++first;
 		}
 
 		UC const* const end_of_integer_part = first;
-		int64_t digit_count					= int64_t(end_of_integer_part - start_digits);
-		answer.integer						= fast_float::span<const UC>(start_digits, size_t(digit_count));
+		int64_t digit_count					= static_cast<int64_t>(end_of_integer_part - start_digits);
+		answer.integer						= fast_float::span<const UC>(start_digits, static_cast<size_t>(digit_count));
 
 		if (digit_count == 0 || (start_digits[0] == zero && digit_count > 1)) {
 			return false;
@@ -69,7 +69,7 @@ namespace jsonifier_internal {
 
 		int64_t exponent			 = 0;
 		const bool has_decimal_point = [&] {
-			return (*first == decimal);
+			return (*first == decimalNew);
 		}();
 		if (has_decimal_point) {
 			++first;
@@ -77,12 +77,12 @@ namespace jsonifier_internal {
 			loop_parse_if_eight_digits(first, end, i);
 
 			while (is_integer(*first)) {
-				uint8_t digit = uint8_t(*first - zero);
+				uint8_t digit = static_cast<uint8_t>(*first - zero);
 				++first;
 				i = i * 10 + digit;
 			}
 			exponent		= before - first;
-			answer.fraction = fast_float::span<const UC>(before, size_t(first - before));
+			answer.fraction = fast_float::span<const UC>(before, static_cast<size_t>(first - before));
 			digit_count -= exponent;
 		}
 
@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 				first = location_of_e;
 			} else {
 				while (is_integer(*first)) {
-					uint8_t digit = uint8_t(*first - zero);
+					uint8_t digit = static_cast<uint8_t>(*first - zero);
 					if (exp_number < 0x10000000) {
 						exp_number = 10 * exp_number + digit;
 					}
@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 
 		if (digit_count > 19) {
 			UC const* start = start_digits;
-			while ((*start == zero || *start == decimal)) {
+			while ((*start == zero || *start == decimalNew)) {
 				if (*start == zero) {
 					--digit_count;
 				}
@@ -138,7 +138,7 @@ namespace jsonifier_internal {
 				UC const* int_end	   = first + answer.integer.len();
 				static constexpr uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
 				while ((i < minimal_nineteen_digit_integer) && (first != int_end)) {
-					i = i * 10 + uint64_t(*first - zero);
+					i = i * 10 + static_cast<uint64_t>(*first - zero);
 					++first;
 				}
 				if (i >= minimal_nineteen_digit_integer) {
@@ -147,7 +147,7 @@ namespace jsonifier_internal {
 					first			   = answer.fraction.ptr;
 					UC const* frac_end = first + answer.fraction.len();
 					while ((i < minimal_nineteen_digit_integer) && (first != frac_end)) {
-						i = i * 10 + uint64_t(*first - zero);
+						i = i * 10 + static_cast<uint64_t>(*first - zero);
 						++first;
 					}
 					exponent = answer.fraction.ptr - first + exp_number;

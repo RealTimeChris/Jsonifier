@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 		0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
 	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toCharsU64Len8(char_type* buf, uint32_t value) noexcept {
-		const uint32_t aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
+		const uint32_t aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
 		const uint32_t ccdd = value - aabb * 10000;
 		const uint32_t aa	= (aabb * 5243) >> 19;
 		const uint32_t cc	= (ccdd * 5243) >> 19;
@@ -84,7 +84,7 @@ namespace jsonifier_internal {
 				return buf + 4;
 			} else {
 				if (value < 1000000) {
-					aa	 = uint32_t((uint64_t(value) * 429497) >> 32);
+					aa	 = static_cast<uint32_t>((static_cast<uint64_t>(value) * 429497) >> 32);
 					bbcc = value - aa * 10000;
 					bb	 = (bbcc * 5243) >> 19;
 					cc	 = bbcc - bb * 100;
@@ -95,7 +95,7 @@ namespace jsonifier_internal {
 					std::memcpy(buf + 4, charTable + cc * 2, 2);
 					return buf + 6;
 				} else {
-					aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
+					aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
 					ccdd = value - aabb * 10000;
 					aa	 = (aabb * 5243) >> 19;
 					cc	 = (ccdd * 5243) >> 19;
@@ -115,7 +115,7 @@ namespace jsonifier_internal {
 
 	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toCharsU64Len58(char_type* buf, uint32_t value) noexcept {
 		if (value < 1000000) {
-			const uint32_t aa	= uint32_t((uint64_t(value) * 429497) >> 32);
+			const uint32_t aa	= static_cast<uint32_t>((static_cast<uint64_t>(value) * 429497) >> 32);
 			const uint32_t bbcc = value - aa * 10000;
 			const uint32_t bb	= (bbcc * 5243) >> 19;
 			const uint32_t cc	= bbcc - bb * 100;
@@ -126,7 +126,7 @@ namespace jsonifier_internal {
 			std::memcpy(buf + 4, charTable + cc * 2, 2);
 			return buf + 6;
 		} else {
-			const uint32_t aabb = uint32_t((uint64_t(value) * 109951163) >> 40);
+			const uint32_t aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
 			const uint32_t ccdd = value - aabb * 10000;
 			const uint32_t aa	= (aabb * 5243) >> 19;
 			const uint32_t cc	= (ccdd * 5243) >> 19;
@@ -144,20 +144,20 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::uint64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type value) noexcept {
 		if (value < 100000000) {
-			buf = toCharsU64Len18(buf, uint32_t(value));
+			buf = toCharsU64Len18(buf, static_cast<uint32_t>(value));
 			return buf;
 		} else {
 			if (value < 100000000ull * 100000000ull) {
 				const uint64_t hgh = value / 100000000;
-				auto low		   = uint32_t(value - hgh * 100000000);
-				buf				   = toCharsU64Len18(buf, uint32_t(hgh));
+				auto low		   = static_cast<uint32_t>(value - hgh * 100000000);
+				buf				   = toCharsU64Len18(buf, static_cast<uint32_t>(hgh));
 				buf				   = toCharsU64Len8(buf, low);
 				return buf;
 			} else {
 				const uint64_t tmp = value / 100000000;
-				auto low		   = uint32_t(value - tmp * 100000000);
-				auto hgh		   = uint32_t(tmp / 10000);
-				auto mid		   = uint32_t(tmp - hgh * 10000);
+				auto low		   = static_cast<uint32_t>(value - tmp * 100000000);
+				auto hgh		   = static_cast<uint32_t>(tmp / 10000);
+				auto mid		   = static_cast<uint32_t>(tmp - hgh * 10000);
 				buf				   = toCharsU64Len58(buf, hgh);
 				buf				   = toCharsU64Len4(buf, mid);
 				buf				   = toCharsU64Len8(buf, low);
@@ -168,7 +168,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::concepts::int64_type value_type, typename char_type> JSONIFIER_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type x) noexcept {
 		*buf = '-';
-		return toChars(buf + (x < 0), uint64_t(x ^ (x >> 63)) - (x >> 63));
+		return toChars(buf + (x < 0), static_cast<uint64_t>(x ^ (x >> 63)) - (x >> 63));
 	}
 
 }// namespace jsonifier_internal

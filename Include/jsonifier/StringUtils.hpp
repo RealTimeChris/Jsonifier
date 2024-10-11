@@ -184,23 +184,23 @@ namespace jsonifier_internal {
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename context_type> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, context_type c) noexcept {
 		if (cp <= 0x7F) {
-			c[0] = uint8_t(cp);
+			c[0] = static_cast<uint8_t>(cp);
 			return 1;
 		}
 		if (cp <= 0x7FF) {
-			c[0] = uint8_t((cp >> 6) + 192);
-			c[1] = uint8_t((cp & 63) + 128);
+			c[0] = static_cast<uint8_t>((cp >> 6) + 192);
+			c[1] = static_cast<uint8_t>((cp & 63) + 128);
 			return 2;
 		} else if (cp <= 0xFFFF) {
-			c[0] = uint8_t((cp >> 12) + 224);
-			c[1] = uint8_t(((cp >> 6) & 63) + 128);
-			c[2] = uint8_t((cp & 63) + 128);
+			c[0] = static_cast<uint8_t>((cp >> 12) + 224);
+			c[1] = static_cast<uint8_t>(((cp >> 6) & 63) + 128);
+			c[2] = static_cast<uint8_t>((cp & 63) + 128);
 			return 3;
 		} else if (cp <= 0x10FFFF) {
-			c[0] = uint8_t((cp >> 18) + 240);
-			c[1] = uint8_t(((cp >> 12) & 63) + 128);
-			c[2] = uint8_t(((cp >> 6) & 63) + 128);
-			c[3] = uint8_t((cp & 63) + 128);
+			c[0] = static_cast<uint8_t>((cp >> 18) + 240);
+			c[1] = static_cast<uint8_t>(((cp >> 12) & 63) + 128);
+			c[2] = static_cast<uint8_t>(((cp >> 6) & 63) + 128);
+			c[3] = static_cast<uint8_t>((cp & 63) + 128);
 			return 4;
 		}
 		return 0;
@@ -299,7 +299,7 @@ namespace jsonifier_internal {
 				while (*prev == '\\') {
 					--prev;
 				}
-				if (size_t(string1 - prev) % 2) {
+				if (static_cast<size_t>(string1 - prev) % 2) {
 					break;
 				}
 				++string1;
@@ -1301,7 +1301,7 @@ namespace jsonifier_internal {
 			++context.iter;
 			auto start	 = context.iter;
 			context.iter = char_comparison<'"'>::memchar(context.iter, static_cast<size_t>(context.endIter - context.iter));
-			return size_t(context.iter - start);
+			return static_cast<size_t>(context.iter - start);
 		} else {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
