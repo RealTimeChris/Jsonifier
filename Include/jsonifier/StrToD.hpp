@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename T, typename UC> constexpr bool parseFloat(UC const*& first, UC const* end, T& value) noexcept {
+	template<typename T, typename UC> constexpr bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
 		using namespace fast_float;
 		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
@@ -35,54 +35,54 @@ namespace jsonifier_internal {
 		static constexpr UC decimalNew = '.';
 		static constexpr UC smallE	   = 'e';
 		static constexpr UC bigE	   = 'E';
-		static constexpr UC minus	   = '-';
-		static constexpr UC plus	   = '+';
-		static constexpr UC zero	   = '0';
+		static constexpr UC minusNew   = '-';
+		static constexpr UC plusNew	   = '+';
+		static constexpr UC zeroNew	   = '0';
 
 		parsed_number_string_t<UC> answer;
 		answer.valid		   = false;
 		answer.too_many_digits = false;
-		answer.negative		   = (*first == minus);
-		if (*first == minus) {
-			++first;
+		answer.negative		   = (*iter == minusNew);
+		if (answer.negative) {
+			++iter;
 
-			if JSONIFIER_UNLIKELY ((!is_integer(*first))) {
+			if JSONIFIER_UNLIKELY ((!is_integer(*iter))) {
 				return false;
 			}
 		}
-		UC const* const start_digits = first;
+		UC const* const start_digits = iter;
 
 		uint64_t i = 0;
 
-		while (is_integer(*first)) {
-			i = 10 * i + static_cast<uint64_t>(*first - zero);
-			++first;
+		while (is_integer(*iter)) {
+			i = 10 * i + static_cast<uint64_t>(*iter - zeroNew);
+			++iter;
 		}
 
-		UC const* const end_of_integer_part = first;
+		UC const* const end_of_integer_part = iter;
 		int64_t digit_count					= static_cast<int64_t>(end_of_integer_part - start_digits);
 		answer.integer						= fast_float::span<const UC>(start_digits, static_cast<size_t>(digit_count));
 
-		if (digit_count == 0 || (start_digits[0] == zero && digit_count > 1)) {
+		if (digit_count == 0 || (start_digits[0] == zeroNew && digit_count > 1)) {
 			return false;
 		}
 
 		int64_t exponent			 = 0;
 		const bool has_decimal_point = [&] {
-			return (*first == decimalNew);
+			return (*iter == decimalNew);
 		}();
 		if (has_decimal_point) {
-			++first;
-			UC const* before = first;
-			loop_parse_if_eight_digits(first, end, i);
+			++iter;
+			UC const* before = iter;
+			loop_parse_if_eight_digits(iter, end, i);
 
-			while (is_integer(*first)) {
-				uint8_t digit = static_cast<uint8_t>(*first - zero);
-				++first;
+			while (is_integer(*iter)) {
+				uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
+				++iter;
 				i = i * 10 + digit;
 			}
-			exponent		= before - first;
-			answer.fraction = fast_float::span<const UC>(before, static_cast<size_t>(first - before));
+			exponent		= before - iter;
+			answer.fraction = fast_float::span<const UC>(before, static_cast<size_t>(iter - before));
 			digit_count -= exponent;
 		}
 
@@ -92,25 +92,25 @@ namespace jsonifier_internal {
 
 		int64_t exp_number = 0;
 
-		if ((smallE == *first) || (bigE == *first)) {
-			UC const* location_of_e = first;
-			++first;
+		if ((smallE == *iter) || (bigE == *iter)) {
+			UC const* location_of_e = iter;
+			++iter;
 			bool neg_exp = false;
-			if (minus == *first) {
+			if (minusNew == *iter) {
 				neg_exp = true;
-				++first;
-			} else if (plus == *first) {
-				++first;
+				++iter;
+			} else if (plusNew == *iter) {
+				++iter;
 			}
-			if (!is_integer(*first)) {
-				first = location_of_e;
+			if (!is_integer(*iter)) {
+				iter = location_of_e;
 			} else {
-				while (is_integer(*first)) {
-					uint8_t digit = static_cast<uint8_t>(*first - zero);
+				while (is_integer(*iter)) {
+					uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
 					if (exp_number < 0x10000000) {
 						exp_number = 10 * exp_number + digit;
 					}
-					++first;
+					++iter;
 				}
 				if (neg_exp) {
 					exp_number = -exp_number;
@@ -119,13 +119,13 @@ namespace jsonifier_internal {
 			}
 		}
 
-		answer.lastmatch = first;
+		answer.lastmatch = iter;
 		answer.valid	 = true;
 
 		if (digit_count > 19) {
 			UC const* start = start_digits;
-			while ((*start == zero || *start == decimalNew)) {
-				if (*start == zero) {
+			while ((*start == zeroNew || *start == decimalNew)) {
+				if (*start == zeroNew) {
 					--digit_count;
 				}
 				++start;
@@ -134,30 +134,30 @@ namespace jsonifier_internal {
 			if (digit_count > 19) {
 				answer.too_many_digits = true;
 				i					   = 0;
-				first				   = answer.integer.ptr;
-				UC const* int_end	   = first + answer.integer.len();
+				iter				   = answer.integer.ptr;
+				UC const* int_end	   = iter + answer.integer.len();
 				static constexpr uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
-				while ((i < minimal_nineteen_digit_integer) && (first != int_end)) {
-					i = i * 10 + static_cast<uint64_t>(*first - zero);
-					++first;
+				while ((i < minimal_nineteen_digit_integer) && (iter != int_end)) {
+					i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
+					++iter;
 				}
 				if (i >= minimal_nineteen_digit_integer) {
-					exponent = end_of_integer_part - first + exp_number;
+					exponent = end_of_integer_part - iter + exp_number;
 				} else {
-					first			   = answer.fraction.ptr;
-					UC const* frac_end = first + answer.fraction.len();
-					while ((i < minimal_nineteen_digit_integer) && (first != frac_end)) {
-						i = i * 10 + static_cast<uint64_t>(*first - zero);
-						++first;
+					iter			   = answer.fraction.ptr;
+					UC const* frac_end = iter + answer.fraction.len();
+					while ((i < minimal_nineteen_digit_integer) && (iter != frac_end)) {
+						i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
+						++iter;
 					}
-					exponent = answer.fraction.ptr - first + exp_number;
+					exponent = answer.fraction.ptr - iter + exp_number;
 				}
 			}
 		}
 		answer.exponent = exponent;
 		answer.mantissa = i;
 		if JSONIFIER_LIKELY ((answer.valid)) {
-			first = answer.lastmatch;
+			iter = answer.lastmatch;
 			return from_chars_advanced(answer, value).ptr != nullptr;
 		} else {
 			return false;

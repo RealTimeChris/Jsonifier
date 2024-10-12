@@ -82,20 +82,20 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
 			static constexpr auto s = str.view();
 			static constexpr auto n = s.size();
-			std::memcpy(buffer.data() + index, s.data(), n);
+			std::copy_n(s.data(), n, buffer.data() + index);
 			index += n;
 		}
 
 		template<typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(const jsonifier::string_view str, buffer_type& buffer, index_type& index) noexcept {
 			const auto n = str.size();
-			std::memcpy(buffer.data() + index, str.data(), n);
+			std::copy_n(str.data(), n, buffer.data() + index);
 			index += n;
 		}
 
 		template<char c, typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(uint64_t n, buffer_type& buffer, index_type& index) noexcept {
-			std::memset(buffer.data() + index, c, n);
+			std::fill_n(buffer.data() + index, n, c);
 			index += n;
 		}
 
@@ -112,14 +112,14 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, index_type& index) noexcept {
 			static constexpr auto s = str;
 			static constexpr auto n = s.size();
-			std::memcpy(buffer.data() + index, s.data(), n);
+			std::copy_n(str.data(), n, buffer.data() + index);
 			index += n;
 		}
 
 		template<typename buffer_type, jsonifier::concepts::uint64_type index_type>
 		JSONIFIER_ALWAYS_INLINE static void writeCharacters(buffer_type& buffer, const char* string, uint64_t size, index_type& index) noexcept {
 			const auto n = size;
-			std::memcpy(buffer.data() + index, string, n);
+			std::copy_n(string, n, buffer.data() + index);
 			index += n;
 		}
 
