@@ -93,6 +93,13 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
+	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> plusMinusTable{ [] {
+		std::array<bool, 256> returnValues{};
+		returnValues['-'] = true;
+		returnValues['+'] = true;
+		return returnValues;
+	}() };
+
 	JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<bool, 256> expFracDigitTable{ [] {
 		std::array<bool, 256> returnValues{};
 		returnValues['.'] = true;
@@ -147,15 +154,11 @@ namespace jsonifier_internal {
 			if JSONIFIER_LIKELY ((digiTable[numTmp])) {
 				int64_t fracValue = subTable[numTmp];
 				++iter;
-				numTmp = *iter;
 				int8_t fracDigits{ 1 };
-				while (digiTable[numTmp]) {
-					fracValue = fracValue * 10 + subTable[numTmp];
-					++iter;
-					numTmp = *iter;
-					++fracDigits;
-				}
-				return (expTable[numTmp]) ? (++iter, parseExponent(value, iter, fracDigits, fracValue)) : iter;
+				auto iterNew = iter;
+				fracValue	 = parseChars(fracValue, iter);
+				fracDigits += iter - iterNew;
+				return (expTable[*iter]) ? (++iter, parseExponent(value, iter, fracDigits, fracValue)) : iter;
 			}
 			JSONIFIER_UNLIKELY(else) {
 				return nullptr;
@@ -201,7 +204,6 @@ namespace jsonifier_internal {
 			if JSONIFIER_LIKELY ((digiTable[numTmp])) {
 				int64_t expValue = static_cast<int64_t>(subTable[numTmp]);
 				++iter;
-				numTmp	 = *iter;
 				expValue = parseChars(expValue, iter);
 				return finishExponent(value, iter, expSign, expValue, fracDigits, fracValue);
 			}
@@ -408,7 +410,6 @@ namespace jsonifier_internal {
 				if (digiTable[numTmp]) {
 					value = value * 10 + subTable[numTmp];
 					++iter;
-					numTmp = *iter;
 					if (iter[-2] == zero) [[unlikely]] {
 						return nullptr;
 					}
@@ -418,30 +419,25 @@ namespace jsonifier_internal {
 
 					if JSONIFIER_LIKELY ((!expFracDigitTable[numTmp])) {
 						return iter;
-					} else {
-						if (numTmp == decimal) {
-							++iter;
-							return parseFraction(value, iter);
-						} else if (expTable[numTmp]) {
-							++iter;
-							return parseExponent(value, iter, 0, 0);
-						} else {
-							if (digiTable[numTmp]) {
-								if constexpr (!positive) {
-									if (value > rawCompValsNeg<value_type>[numTmp]) [[unlikely]] {
-										return nullptr;
-									}
-								} else {
-									if (value > rawCompValsPos<value_type>[numTmp]) [[unlikely]] {
-										return nullptr;
-									}
-								}
-								value = value * 10 + subTable[numTmp];
-								++iter;
-								numTmp = *iter;
+					} else if (digiTable[numTmp]) {
+						if constexpr (!positive) {
+							if (value > rawCompValsNeg<value_type>[numTmp]) [[unlikely]] {
+								return nullptr;
 							}
-							return !digiTable[numTmp] ? iter : nullptr;
+						} else {
+							if (value > rawCompValsPos<value_type>[numTmp]) [[unlikely]] {
+								return nullptr;
+							}
 						}
+						value = value * 10 + subTable[numTmp];
+						++iter;
+						return !digiTable[*iter] ? iter : nullptr;
+					} else if (numTmp == decimal) {
+						++iter;
+						return parseFraction(value, iter);
+					} else {
+						++iter;
+						return parseExponent(value, iter, 0, 0);
 					}
 				} else {
 					if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
