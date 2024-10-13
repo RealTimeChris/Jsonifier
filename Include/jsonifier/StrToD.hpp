@@ -27,140 +27,198 @@
 
 namespace jsonifier_internal {
 
-	template<typename T, typename UC> constexpr bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
-		using namespace fast_float;
-		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
-		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+	JSONIFIER_ALWAYS_INLINE_VARIABLE bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-		static constexpr UC decimalNew = '.';
-		static constexpr UC smallE	   = 'e';
-		static constexpr UC bigE	   = 'E';
-		static constexpr UC minusNew   = '-';
-		static constexpr UC plusNew	   = '+';
-		static constexpr UC zeroNew	   = '0';
+	JSONIFIER_ALWAYS_INLINE_VARIABLE bool expFracTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-		parsed_number_string_t<UC> answer;
-		answer.valid		   = false;
-		answer.too_many_digits = false;
-		answer.negative		   = (*iter == minusNew);
-		if (answer.negative) {
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimal{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus{ '-' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char plus{ '+' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char nine{ '9' };
+
+	template<typename value_type, typename char_t> JSONIFIER_ALWAYS_INLINE bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
+		using namespace jsonifier_fast_float;
+		span<const char_t> fraction;
+
+		int64_t expNumber{};
+		int64_t exponent{};
+		uint64_t mantissa{};
+
+		const bool negative{ *iter == minus };
+		bool tooManyDigits{ false };
+
+		if (negative) {
 			++iter;
 
-			if JSONIFIER_UNLIKELY ((!is_integer(*iter))) {
+			if JSONIFIER_UNLIKELY (!JSONIFIER_IS_DIGIT(*iter)) {
 				return false;
 			}
 		}
-		UC const* const start_digits = iter;
 
-		uint64_t i = 0;
+		span<const char_t> integer{ iter };
+		
+		if (uint64_t val; (end - iter) >= 2 && (val = read2_to_u64(iter) - 0x3030, is_made_of_two_digits_no_sub(val))) {
+			mantissa = mantissa * 100 + parse_two_digits_unrolled_no_sub(val);
+			iter += 2;
+		}
 
-		while (is_integer(*iter)) {
-			i = 10 * i + static_cast<uint64_t>(*iter - zeroNew);
+		while (JSONIFIER_IS_DIGIT(*iter)) {
+			mantissa = 10 * mantissa + static_cast<uint8_t>(*iter - zero);
 			++iter;
 		}
 
-		UC const* const end_of_integer_part = iter;
-		int64_t digit_count					= static_cast<int64_t>(end_of_integer_part - start_digits);
-		answer.integer						= fast_float::span<const UC>(start_digits, static_cast<size_t>(digit_count));
+		int64_t digitCount = static_cast<int64_t>(iter - integer.ptr);
+		integer.end = integer.ptr + static_cast<uint64_t>(digitCount);
 
-		if (digit_count == 0 || (start_digits[0] == zeroNew && digit_count > 1)) {
+		if JSONIFIER_UNLIKELY (digitCount == 0 || (integer.ptr[0] == zero && digitCount > 1)) {
 			return false;
 		}
 
-		int64_t exponent			 = 0;
-		const bool has_decimal_point = [&] {
-			return (*iter == decimalNew);
-		}();
-		if (has_decimal_point) {
-			++iter;
-			UC const* before = iter;
-			loop_parse_if_eight_digits(iter, end, i);
+		char_t const* before;
 
-			while (is_integer(*iter)) {
-				uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
+		if (*iter == decimal) {
+			++iter;
+			before = iter;
+
+			loop_parse_if_eight_digits(iter, end, mantissa);
+
+			while ((iter != end) && JSONIFIER_IS_DIGIT(*iter)) {
+				uint8_t digit = uint8_t(*iter - char('0'));
 				++iter;
-				i = i * 10 + digit;
+				mantissa = mantissa * 10 + digit;
 			}
-			exponent		= before - iter;
-			answer.fraction = fast_float::span<const UC>(before, static_cast<size_t>(iter - before));
-			digit_count -= exponent;
+
+			exponent	 = before - iter;
+			fraction.ptr = before;
+			fraction.end = fraction.ptr + static_cast<uint64_t>(iter - before);
+			digitCount -= exponent;
+
+			if JSONIFIER_UNLIKELY (exponent == 0) {
+				return false;
+			}
 		}
 
-		if (has_decimal_point && exponent == 0) {
-			return false;
-		}
-
-		int64_t exp_number = 0;
-
-		if ((smallE == *iter) || (bigE == *iter)) {
-			UC const* location_of_e = iter;
+		if (expTable[*iter]) {
+			before = iter;
 			++iter;
-			bool neg_exp = false;
-			if (minusNew == *iter) {
-				neg_exp = true;
+			bool negExp = false;
+			if (minus == *iter) {
+				negExp = true;
 				++iter;
-			} else if (plusNew == *iter) {
+			} else if (plus == *iter) {
 				++iter;
 			}
-			if (!is_integer(*iter)) {
-				iter = location_of_e;
+			if (!JSONIFIER_IS_DIGIT(*iter)) {
+				iter = before;
 			} else {
-				while (is_integer(*iter)) {
-					uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
-					if (exp_number < 0x10000000) {
-						exp_number = 10 * exp_number + digit;
+				while (JSONIFIER_IS_DIGIT(*iter)) {
+					if (expNumber < 0x10000000) {
+						expNumber = 10 * expNumber + static_cast<uint8_t>(*iter - zero);
 					}
 					++iter;
 				}
-				if (neg_exp) {
-					exp_number = -exp_number;
+				if (negExp) {
+					expNumber = -expNumber;
 				}
-				exponent += exp_number;
+				exponent += expNumber;
 			}
 		}
 
-		answer.lastmatch = iter;
-		answer.valid	 = true;
-
-		if (digit_count > 19) {
-			UC const* start = start_digits;
-			while ((*start == zeroNew || *start == decimalNew)) {
-				if (*start == zeroNew) {
-					--digit_count;
+		if (digitCount > 19) {
+			before = integer.ptr;
+			while ((*before == zero || *before == decimal)) {
+				if (*before == zero) {
+					--digitCount;
 				}
-				++start;
+				++before;
 			}
 
-			if (digit_count > 19) {
-				answer.too_many_digits = true;
-				i					   = 0;
-				iter				   = answer.integer.ptr;
-				UC const* int_end	   = iter + answer.integer.len();
-				static constexpr uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
-				while ((i < minimal_nineteen_digit_integer) && (iter != int_end)) {
-					i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
-					++iter;
+			if (digitCount > 19) {
+				tooManyDigits = true;
+				mantissa	  = 0;
+				before		  = integer.ptr;
+				static constexpr uint64_t minNineteenDigitInteger{ 1000000000000000000 };
+				while ((mantissa < minNineteenDigitInteger) && (before != integer.end)) {
+					mantissa = mantissa * 10 + static_cast<uint8_t>(*before - zero);
+					++before;
 				}
-				if (i >= minimal_nineteen_digit_integer) {
-					exponent = end_of_integer_part - iter + exp_number;
+				if (mantissa >= minNineteenDigitInteger) {
+					exponent = integer.end - before + expNumber;
 				} else {
-					iter			   = answer.fraction.ptr;
-					UC const* frac_end = iter + answer.fraction.len();
-					while ((i < minimal_nineteen_digit_integer) && (iter != frac_end)) {
-						i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
-						++iter;
+					before = fraction.ptr;
+					while ((mantissa < minNineteenDigitInteger) && (before != fraction.end)) {
+						mantissa = mantissa * 10 + static_cast<uint8_t>(*before - zero);
+						++before;
 					}
-					exponent = answer.fraction.ptr - iter + exp_number;
+					exponent = fraction.ptr - before + expNumber;
 				}
 			}
 		}
-		answer.exponent = exponent;
-		answer.mantissa = i;
-		if JSONIFIER_LIKELY ((answer.valid)) {
-			iter = answer.lastmatch;
-			return from_chars_advanced(answer, value).ptr != nullptr;
-		} else {
+
+		if (binary_format<value_type>::min_exponent_fast_path <= exponent && exponent <= binary_format<value_type>::max_exponent_fast_path && !tooManyDigits) {
+			if (rounds_to_nearest::roundsToNearest) {
+				if (mantissa <= binary_format<value_type>::max_mantissa_fast_path_value) {
+					value = value_type(mantissa);
+					if (exponent < 0) {
+						value = value / binary_format<value_type>::exact_power_of_ten(-exponent);
+					} else {
+						value = value * binary_format<value_type>::exact_power_of_ten(exponent);
+					}
+					if (negative) {
+						value = -value;
+					}
+					return true;
+				}
+			} else {
+				if (exponent >= 0 && mantissa <= binary_format<value_type>::max_mantissa_fast_path(exponent)) {
+#if defined(__clang__) || defined(JSONIFIER_FASTFLOAT_32BIT)
+					if (mantissa == 0) {
+						value = negative ? value_type(-0.) : value_type(0.);
+						return true;
+					}
+#endif
+					value = value_type(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
+					if (negative) {
+						value = -value;
+					}
+					return true;
+				}
+			}
+		}
+		adjusted_mantissa am = compute_float<binary_format<value_type>>(exponent, mantissa);
+		if (tooManyDigits && am.power2 >= 0) {
+			if (am != compute_float<binary_format<value_type>>(exponent, mantissa + 1)) {
+				am = compute_error<binary_format<value_type>>(exponent, mantissa);
+			}
+		}
+		if JSONIFIER_UNLIKELY (am.power2 < 0) {
+			am = digit_comp<value_type>(integer, fraction, mantissa, exponent, am);
+		}
+		to_float(negative, am, value);
+		if JSONIFIER_UNLIKELY ((mantissa != 0 && am.mantissa == 0 && am.power2 == 0) || am.power2 == binary_format<value_type>::infinite_power) {
 			return false;
 		}
+		return true;
 	}
 }

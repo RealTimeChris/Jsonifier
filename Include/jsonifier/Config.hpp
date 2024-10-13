@@ -49,12 +49,14 @@
 
 #define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 
-#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__)) || defined(TARGET_OS_MAC)
 	#define JSONIFIER_MAC 1
 #elif defined(linux) || defined(__linux) || defined(__linux__) || defined(__gnu_linux__)
 	#define JSONIFIER_LINUX 1
 #elif defined(WIN32) || defined(_WIN32) || defined(_WIN64)
 	#define JSONIFIER_WIN 1
+#else
+	#error "Undetected platform."
 #endif
 
 #if defined(__has_builtin)
@@ -64,11 +66,15 @@
 #endif
 
 #if !defined(JSONIFIER_LIKELY)
-	#define JSONIFIER_LIKELY(...) __VA_ARGS__ [[likely]]
+	#define JSONIFIER_LIKELY(...) (__VA_ARGS__) [[likely]]
 #endif
 
 #if !defined(JSONIFIER_UNLIKELY)
-	#define JSONIFIER_UNLIKELY(...) __VA_ARGS__ [[unlikely]]
+	#define JSONIFIER_UNLIKELY(...) (__VA_ARGS__) [[unlikely]]
+#endif
+
+#if !defined(JSONIFIER_ELSE_UNLIKELY)
+	#define JSONIFIER_ELSE_UNLIKELY(...) __VA_ARGS__ [[unlikely]]
 #endif
 
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
@@ -89,29 +95,21 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_NO_INLINE __declspec(noinline)
-		#define JSONIFIER_FLATTEN inline [[msvc::flatten]]
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
-		#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
-		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE inline
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
-	#define JSONIFIER_NO_INLINE
-	#define JSONIFIER_FLATTEN
 	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_MAYBE_ALWAYS_INLINE inline
+	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif
 
@@ -123,65 +121,6 @@
 	#include <immintrin.h>
 
 #endif
-
-JSONIFIER_ALWAYS_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) noexcept {
-	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
-}
-
-#include <jsonifier/ISA/CTimeSimdTypes.hpp>
-
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-using jsonifier_simd_int_128 = __m128i;
-using jsonifier_simd_int_256 = __m256i;
-using jsonifier_simd_int_512 = __m512i;
-
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-using jsonifier_simd_int_t = __m512i;
-static constexpr size_t bitsPerStep{ 512 };
-using jsonifier_string_parsing_type = size_t;
-using jsonifier_simd_fb_type		= jsonifier_internal::__m512x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-using jsonifier_simd_int_t = __m256i;
-static constexpr size_t bitsPerStep{ 256 };
-using jsonifier_string_parsing_type = uint32_t;
-using jsonifier_simd_fb_type		= jsonifier_internal::__m256x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-using jsonifier_simd_int_t = __m128i;
-static constexpr size_t bitsPerStep{ 128 };
-using jsonifier_string_parsing_type = uint16_t;
-using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-	#endif
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-
-	#include <arm_neon.h>
-
-using jsonifier_simd_int_128 = uint8x16_t;
-using jsonifier_simd_int_256 = uint32_t;
-using jsonifier_simd_int_512 = size_t;
-
-using jsonifier_simd_int_t = uint8x16_t;
-static constexpr size_t bitsPerStep{ 128 };
-using jsonifier_string_parsing_type = uint16_t;
-using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-#else
-using jsonifier_simd_int_128 = jsonifier_internal::__m128x;
-using jsonifier_simd_int_256 = uint32_t;
-using jsonifier_simd_int_512 = size_t;
-
-using jsonifier_simd_int_t = jsonifier_internal::__m128x;
-static constexpr size_t bitsPerStep{ 128 };
-using jsonifier_string_parsing_type = uint16_t;
-using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-#endif
-
-static constexpr size_t bytesPerStep{ bitsPerStep / 8 };
-static constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
-static constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
-
-using string_view_ptr	= const char*;
-using structural_index	= const char*;
-using string_buffer_ptr = char*;
 
 #if defined(__APPLE__) && defined(__arm64__)
 	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
@@ -198,6 +137,3 @@ using string_buffer_ptr = char*;
 JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
 	JSONIFIER_PREFETCH(ptr)
 }
-
-inline std::atomic_uint64_t sectionInstanceCount{};
-inline std::atomic_uint64_t coreInstanceCount{};

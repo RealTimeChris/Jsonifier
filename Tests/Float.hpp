@@ -50,10 +50,10 @@ namespace float_validation_tests {
 		{ "test66.json", 5708990770823839207320493820740630171355185151999e-3 }, { "test67.json", 5708990770823839207320493820740630171355185152001e-3 }, { "test68.json", 1e+308 },
 		{ "test69.json", 2.22507e-308 } };
 
-	auto runTest(const std::string_view& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	auto runTest(const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<double> data;
-		if (parser.parseJson(data, dataToParse.data()) && parser.getErrors().size() == 0) {
+		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
 			if (data.size() == 1) {
 				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
 				std::cout << testName << " Succeeded - Expected Output: " << testValues[testName] << std::endl;

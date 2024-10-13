@@ -56,13 +56,13 @@ namespace jsonifier_internal {
 	  public:
 		template<json_structural_type typeNew, typename derived_type_new> friend struct validate_impl;
 
-		JSONIFIER_ALWAYS_INLINE validator& operator=(const validator& other) = delete;
-		JSONIFIER_ALWAYS_INLINE validator(const validator& other)			 = delete;
+		JSONIFIER_INLINE validator& operator=(const validator& other) = delete;
+		JSONIFIER_INLINE validator(const validator& other)			  = delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE bool validateJson(string_type&& in) noexcept {
+		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
-			section.reset(in.data(), in.size());
+			index = 0;
+			section.reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
 			const char** iter{ section.begin() };
@@ -72,8 +72,8 @@ namespace jsonifier_internal {
 					error::constructError<sourceLocation, error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
-			auto result = impl(iter, derivedRef.index, *this);
-			if (derivedRef.index > 0 || *iter || derivedRef.errors.size() > 0) {
+			auto result = impl(iter, index, *this);
+			if (index > 0 || *iter || derivedRef.errors.size() > 0) {
 				result = false;
 			}
 			return result;
@@ -83,10 +83,11 @@ namespace jsonifier_internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 		mutable const char* rootIter{};
 		mutable const char* endIter{};
+		uint64_t index{};
 
-		JSONIFIER_ALWAYS_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<typename iterator, typename validator_type> JSONIFIER_ALWAYS_INLINE static bool impl(iterator& iter, uint64_t& depth, validator_type& validator) noexcept {
+		template<typename iterator, typename validator_type> JSONIFIER_INLINE static bool impl(iterator& iter, uint64_t& depth, validator_type& validator) noexcept {
 			if (*iter && **iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth, validator);
 			} else {
@@ -114,15 +115,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~validator() noexcept = default;
+		JSONIFIER_INLINE ~validator() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

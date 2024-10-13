@@ -28,15 +28,17 @@
 
 namespace conformance_tests {
 
-	template<typename test_type>
-	test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
+	template<typename test_type> test_type runTest(const std::string& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 		std::cout << "Running Test: " << testName << std::endl;
 		test_type valueNew{};
 		auto result = parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse);
 		if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 			std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
-		} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
+		} else if (!result && doWeFail) {
 			std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
 		} else {
 			std::cout << "Test: " << testName << " = Failed" << std::endl;
 			for (auto& value: parser.getErrors()) {

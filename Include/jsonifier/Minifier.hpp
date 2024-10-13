@@ -23,7 +23,6 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Write.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier_internal {
@@ -42,59 +41,57 @@ namespace jsonifier_internal {
 	  public:
 		template<typename derived_type_new> friend struct minify_impl;
 
-		JSONIFIER_ALWAYS_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_ALWAYS_INLINE minifier(const minifier& other)			   = delete;
+		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
+		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
-		template<jsonifier ::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE auto minifyJson(string_type&& in) noexcept {
-			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size())) {
+		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
+			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
-			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset(in.data(), in.size());
+			const auto* dataPtr = in.data();
+			rootIter			= dataPtr;
+			endIter				= dataPtr + in.size();
+			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
-				return unwrap_t<string_type>{};
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
+				return std::remove_cvref_t<string_type>{};
 			}
-			unwrap_t<string_type> newString{};
-			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
-			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
-				newString.resize(derivedRef.index);
-				std::memcpy(newString.data(), stringBuffer.data(), derivedRef.index);
+			std::remove_cvref_t<string_type> newString{};
+			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
+			if (index != std::numeric_limits<uint32_t>::max()) {
+				newString.resize(index);
+				std::memcpy(newString.data(), stringBuffer.data(), index);
 				return newString;
 			} else {
-				return unwrap_t<string_type>{};
+				return std::remove_cvref_t<string_type>{};
 			}
 		}
 
 		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		JSONIFIER_ALWAYS_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
-			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size())) {
+		JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
-			derivedRef.index = 0;
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset(in.data(), in.size());
+			const auto* dataPtr = in.data();
+			rootIter			= dataPtr;
+			endIter				= dataPtr + in.size();
+			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
 			}
-			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
-			if JSONIFIER_LIKELY ((derivedRef.index != std::numeric_limits<uint32_t>::max())) {
-				if JSONIFIER_LIKELY ((buffer.size() != derivedRef.index)) {
-					buffer.resize(derivedRef.index);
+			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
+			if JSONIFIER_LIKELY (index != std::numeric_limits<uint32_t>::max()) {
+				if JSONIFIER_LIKELY (buffer.size() != index) {
+					buffer.resize(index);
 				}
-				std::memcpy(buffer.data(), stringBuffer.data(), derivedRef.index);
+				std::memcpy(buffer.data(), stringBuffer.data(), index);
 				return true;
 			} else {
 				return false;
@@ -106,21 +103,21 @@ namespace jsonifier_internal {
 		const char* rootIter{};
 		const char* endIter{};
 
-		JSONIFIER_ALWAYS_INLINE size_t getSize() const {
+		JSONIFIER_INLINE size_t getSize() const {
 			return endIter - rootIter;
 		}
 
-		JSONIFIER_ALWAYS_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~minifier() noexcept = default;
+		JSONIFIER_INLINE ~minifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

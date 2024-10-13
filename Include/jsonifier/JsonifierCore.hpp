@@ -43,35 +43,35 @@ namespace jsonifier {
 		friend class jsonifier_internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		friend class jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core() noexcept = default;
+		JSONIFIER_INLINE jsonifier_core() noexcept = default;
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
+			if JSONIFIER_LIKELY (this != &other) {
 				errors = std::move(other.errors);
 			}
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = std::move(other);
 		};
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
+			if JSONIFIER_LIKELY (this != &other) {
 				errors = other.errors;
 			}
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = other;
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<jsonifier_internal::error>& getErrors() noexcept {
 			return errors;
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~jsonifier_core() noexcept = default;
+		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
 
 	  protected:
 		using prettifier = jsonifier_internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
@@ -81,7 +81,6 @@ namespace jsonifier {
 		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
 		vector<jsonifier_internal::error> errors{};
-		uint64_t index{};
 	};
 
 }

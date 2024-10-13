@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO realtimechris/jsonifier
     REF "v${VERSION}"    
-    SHA512 50f8c244c87bc038251ef13574ae86ce20ca1df9ef1c8fc8de5ebade038a60bb8b98528ce6c978ffe4e0f24b12959a650e8ef5d3c53bcdbd1f187b6cae18493a
+    SHA512 5ba01859139d6b3c9c538cebb44c5512d85adf43be469bdf35acd2d3dcc85b9202daf72b8501b50e9fd2d7e726bf678e2ef823a48c116c39b2db2e5e30601b5e
     HEAD_REF main
 )
 

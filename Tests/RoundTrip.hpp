@@ -51,7 +51,7 @@ template<> struct jsonifier::core<round_trip_tests::Obj3> {
 namespace round_trip_tests {
 
 	template<typename test_type>
-	test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	test_type runTest(const std::string& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << "Running Test: " << testName << std::endl;
 		test_type valueNew{};
 		std::string newString{};

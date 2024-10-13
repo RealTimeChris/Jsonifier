@@ -32,7 +32,7 @@ namespace int_validation_tests {
 		std::numeric_limits<int64_t>::min(), 0, 1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 };
 
 	template<bool passTest = true, typename value_type>
-	auto runTest(value_type& expectedValue, const std::string_view testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	auto runTest(value_type& expectedValue, const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse.substr(1, dataToParse.size() - 2) << std::endl;
 		std::vector<int64_t> data;
 		auto result = parser.parseJson(data, dataToParse);
@@ -53,6 +53,7 @@ namespace int_validation_tests {
 			}
 		} else {
 			if (!result) {
+				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
 				std::cout << testName << " Succeeded - Expected Output: " << expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
 			} else {
 				if (data.size() == 1) {
@@ -69,18 +70,22 @@ namespace int_validation_tests {
 
 	bool intTests() noexcept {
 		std::cout << "Int Tests: " << std::endl;
-		auto file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "IntValidation/passTests.json">::loadFile();
+		std::string filePath01{ JSON_TEST_PATH  };
+		filePath01 += "IntValidation/passTests.json";
+		auto file = bnch_swt::file_loader::loadFile(filePath01);
 		std::vector<std::string> passTests{};
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson(passTests, file);
 		for (size_t x = 0; x < passTests.size(); ++x) {
-			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x), passTests[x], parser);
+			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "IntValidation/failTests.json">::loadFile();
+		std::string filePath02{ JSON_TEST_PATH };
+		filePath02 += "IntValidation/failTests.json";
+		file = bnch_swt::file_loader::loadFile(filePath02);
 		std::vector<std::string> failTests{};
 		parser.parseJson(failTests, file);
 		for (size_t x = 0; x < failTests.size(); ++x) {
-			runTest<false>(failTests[x], "Integer-Fail-Test " + std::to_string(x), failTests[x], parser);
+			runTest<false>(failTests[x], "Integer-Fail-Test " + std::to_string(x + 1), failTests[x], parser);
 		}
 		return true;
 	}

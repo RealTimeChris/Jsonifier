@@ -29,6 +29,7 @@
 // into their custom namespace which contains the defintions of all the standard C++ library
 // features used in this header. (The list can be found below.)
 #include <jsonifier/Config.hpp>
+#include <jsonifier/Array.hpp>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -207,7 +208,8 @@ namespace jsonifier_jkj {
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. This function does not do bias adjustment.
 			static constexpr exponent_int extract_exponent_bits(carrier_uint u) noexcept {
-				return exponent_int((u >> format::significand_bits) & ((exponent_int(1) << format::exponent_bits) - 1));
+				constexpr exponent_int value{ 1 };
+				return exponent_int((u >> format::significand_bits) & ((value << format::exponent_bits) - 1));
 			}
 
 			// Extract significand bits from a bit pattern.
@@ -1065,27 +1067,28 @@ namespace jsonifier_jkj {
 		template<typename FloatFormat, typename Dummy = void> struct cache_holder;
 
 		template<typename Dummy> struct cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type																									  = std::uint_least64_t;
-			static constexpr int32_t cache_bits																						  = 64;
-			static constexpr int32_t min_k																							  = -31;
-			static constexpr int32_t max_k																							  = 46;
-			static constexpr std::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = { { UINT64_C(0x81ceb32c4b43fcf5),
-				UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49), UINT64_C(0xc612062576589ddb),
-				UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2), UINT64_C(0x971da05074da7bef),
-				UINT64_C(0xbce5086492111aeb), UINT64_C(0xec1e4a7db69561a6), UINT64_C(0x9392ee8e921d5d08), UINT64_C(0xb877aa3236a4b44a), UINT64_C(0xe69594bec44de15c),
-				UINT64_C(0x901d7cf73ab0acda), UINT64_C(0xb424dc35095cd810), UINT64_C(0xe12e13424bb40e14), UINT64_C(0x8cbccc096f5088cc), UINT64_C(0xafebff0bcb24aaff),
-				UINT64_C(0xdbe6fecebdedd5bf), UINT64_C(0x89705f4136b4a598), UINT64_C(0xabcc77118461cefd), UINT64_C(0xd6bf94d5e57a42bd), UINT64_C(0x8637bd05af6c69b6),
-				UINT64_C(0xa7c5ac471b478424), UINT64_C(0xd1b71758e219652c), UINT64_C(0x83126e978d4fdf3c), UINT64_C(0xa3d70a3d70a3d70b), UINT64_C(0xcccccccccccccccd),
-				UINT64_C(0x8000000000000000), UINT64_C(0xa000000000000000), UINT64_C(0xc800000000000000), UINT64_C(0xfa00000000000000), UINT64_C(0x9c40000000000000),
-				UINT64_C(0xc350000000000000), UINT64_C(0xf424000000000000), UINT64_C(0x9896800000000000), UINT64_C(0xbebc200000000000), UINT64_C(0xee6b280000000000),
-				UINT64_C(0x9502f90000000000), UINT64_C(0xba43b74000000000), UINT64_C(0xe8d4a51000000000), UINT64_C(0x9184e72a00000000), UINT64_C(0xb5e620f480000000),
-				UINT64_C(0xe35fa931a0000000), UINT64_C(0x8e1bc9bf04000000), UINT64_C(0xb1a2bc2ec5000000), UINT64_C(0xde0b6b3a76400000), UINT64_C(0x8ac7230489e80000),
-				UINT64_C(0xad78ebc5ac620000), UINT64_C(0xd8d726b7177a8000), UINT64_C(0x878678326eac9000), UINT64_C(0xa968163f0a57b400), UINT64_C(0xd3c21bcecceda100),
-				UINT64_C(0x84595161401484a0), UINT64_C(0xa56fa5b99019a5c8), UINT64_C(0xcecb8f27f4200f3a), UINT64_C(0x813f3978f8940985), UINT64_C(0xa18f07d736b90be6),
-				UINT64_C(0xc9f2c9cd04674edf), UINT64_C(0xfc6f7c4045812297), UINT64_C(0x9dc5ada82b70b59e), UINT64_C(0xc5371912364ce306), UINT64_C(0xf684df56c3e01bc7),
-				UINT64_C(0x9a130b963a6c115d), UINT64_C(0xc097ce7bc90715b4), UINT64_C(0xf0bdc21abb48db21), UINT64_C(0x96769950b50d88f5), UINT64_C(0xbc143fa4e250eb32),
-				UINT64_C(0xeb194f8e1ae525fe), UINT64_C(0x92efd1b8d0cf37bf), UINT64_C(0xb7abc627050305ae), UINT64_C(0xe596b7b0c643c71a), UINT64_C(0x8f7e32ce7bea5c70),
-				UINT64_C(0xb35dbf821ae4f38c), UINT64_C(0xe0352f62a19e306f) } };
+			using cache_entry_type																													 = std::uint_least64_t;
+			static constexpr int32_t cache_bits																										 = 64;
+			static constexpr int32_t min_k																											 = -31;
+			static constexpr int32_t max_k																											 = 46;
+			static constexpr jsonifier_internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
+				{ UINT64_C(0x81ceb32c4b43fcf5), UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49),
+					UINT64_C(0xc612062576589ddb), UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2),
+					UINT64_C(0x971da05074da7bef), UINT64_C(0xbce5086492111aeb), UINT64_C(0xec1e4a7db69561a6), UINT64_C(0x9392ee8e921d5d08), UINT64_C(0xb877aa3236a4b44a),
+					UINT64_C(0xe69594bec44de15c), UINT64_C(0x901d7cf73ab0acda), UINT64_C(0xb424dc35095cd810), UINT64_C(0xe12e13424bb40e14), UINT64_C(0x8cbccc096f5088cc),
+					UINT64_C(0xafebff0bcb24aaff), UINT64_C(0xdbe6fecebdedd5bf), UINT64_C(0x89705f4136b4a598), UINT64_C(0xabcc77118461cefd), UINT64_C(0xd6bf94d5e57a42bd),
+					UINT64_C(0x8637bd05af6c69b6), UINT64_C(0xa7c5ac471b478424), UINT64_C(0xd1b71758e219652c), UINT64_C(0x83126e978d4fdf3c), UINT64_C(0xa3d70a3d70a3d70b),
+					UINT64_C(0xcccccccccccccccd), UINT64_C(0x8000000000000000), UINT64_C(0xa000000000000000), UINT64_C(0xc800000000000000), UINT64_C(0xfa00000000000000),
+					UINT64_C(0x9c40000000000000), UINT64_C(0xc350000000000000), UINT64_C(0xf424000000000000), UINT64_C(0x9896800000000000), UINT64_C(0xbebc200000000000),
+					UINT64_C(0xee6b280000000000), UINT64_C(0x9502f90000000000), UINT64_C(0xba43b74000000000), UINT64_C(0xe8d4a51000000000), UINT64_C(0x9184e72a00000000),
+					UINT64_C(0xb5e620f480000000), UINT64_C(0xe35fa931a0000000), UINT64_C(0x8e1bc9bf04000000), UINT64_C(0xb1a2bc2ec5000000), UINT64_C(0xde0b6b3a76400000),
+					UINT64_C(0x8ac7230489e80000), UINT64_C(0xad78ebc5ac620000), UINT64_C(0xd8d726b7177a8000), UINT64_C(0x878678326eac9000), UINT64_C(0xa968163f0a57b400),
+					UINT64_C(0xd3c21bcecceda100), UINT64_C(0x84595161401484a0), UINT64_C(0xa56fa5b99019a5c8), UINT64_C(0xcecb8f27f4200f3a), UINT64_C(0x813f3978f8940985),
+					UINT64_C(0xa18f07d736b90be6), UINT64_C(0xc9f2c9cd04674edf), UINT64_C(0xfc6f7c4045812297), UINT64_C(0x9dc5ada82b70b59e), UINT64_C(0xc5371912364ce306),
+					UINT64_C(0xf684df56c3e01bc7), UINT64_C(0x9a130b963a6c115d), UINT64_C(0xc097ce7bc90715b4), UINT64_C(0xf0bdc21abb48db21), UINT64_C(0x96769950b50d88f5),
+					UINT64_C(0xbc143fa4e250eb32), UINT64_C(0xeb194f8e1ae525fe), UINT64_C(0x92efd1b8d0cf37bf), UINT64_C(0xb7abc627050305ae), UINT64_C(0xe596b7b0c643c71a),
+					UINT64_C(0x8f7e32ce7bea5c70), UINT64_C(0xb35dbf821ae4f38c), UINT64_C(0xe0352f62a19e306f) }
+			};
 		};
 #if !JSONIFIER_HAS_INLINE_VARIABLE
 		// decltype(...) should not depend on Dummy; see
@@ -1094,11 +1097,11 @@ namespace jsonifier_jkj {
 #endif
 
 		template<typename Dummy> struct cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type																									  = detail::wuint::uint128;
-			static constexpr int32_t cache_bits																						  = 128;
-			static constexpr int32_t min_k																							  = -292;
-			static constexpr int32_t max_k																							  = 326;
-			static constexpr std::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
+			using cache_entry_type																													 = detail::wuint::uint128;
+			static constexpr int32_t cache_bits																										 = 128;
+			static constexpr int32_t min_k																											 = -292;
+			static constexpr int32_t max_k																											 = 326;
+			static constexpr jsonifier_internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
 					{ UINT64_C(0x9becce62836ac577), UINT64_C(0x4ee367f9430aec33) }, { UINT64_C(0xc2e801fb244576d5), UINT64_C(0x229c41f793cda740) },
@@ -1438,8 +1441,8 @@ namespace jsonifier_jkj {
 			static constexpr size_t compressed_table_size = static_cast<size_t>((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr size_t pow5_table_size		  = static_cast<size_t>((compression_ratio + 1) / 2);
 
-			using cache_holder_t												= std::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t													= std::array<std::uint_least16_t, pow5_table_size>;
+			using cache_holder_t												= jsonifier_internal::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t													= jsonifier_internal::array<std::uint_least16_t, pow5_table_size>;
 			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};
 				for (size_t i = 0; i < compressed_table_size; ++i) {
@@ -1501,8 +1504,8 @@ namespace jsonifier_jkj {
 			static constexpr size_t compressed_table_size = static_cast<size_t>((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr size_t pow5_table_size		  = static_cast<size_t>(compression_ratio);
 
-			using cache_holder_t = std::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t	 = std::array<std::uint_least64_t, pow5_table_size>;
+			using cache_holder_t = jsonifier_internal::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t	 = jsonifier_internal::array<std::uint_least64_t, pow5_table_size>;
 
 			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};
@@ -2973,7 +2976,7 @@ namespace jsonifier_jkj {
 
 			// Policy kind detectors.
 			struct is_sign_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -2981,7 +2984,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_trailing_zero_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -2989,7 +2992,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_decimal_to_binary_rounding_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -2997,7 +3000,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_binary_to_decimal_rounding_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3005,7 +3008,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_cache_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
@@ -3013,7 +3016,7 @@ namespace jsonifier_jkj {
 				}
 			};
 			struct is_preferred_integer_types_policy {
-				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
+				constexpr bool operator()(...) noexcept {
 					return false;
 				}
 				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {

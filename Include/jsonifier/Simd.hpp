@@ -40,13 +40,13 @@ namespace jsonifier_internal {
 			index			= 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE uint64_t getRemainder(string_buffer_ptr dest) const noexcept {
-			if JSONIFIER_UNLIKELY ((length == index)) {
-				return 0;
+		JSONIFIER_ALWAYS_INLINE const char* getRemainder() noexcept {
+			if JSONIFIER_UNLIKELY (length == index) {
+				return nullptr;
 			}
-			std::fill_n(dest, bitsPerStep, 0x20);
-			std::copy_n(inString + index, length - index, dest);
-			return length - index;
+			std::fill_n(block, bitsPerStep, 0x20);
+			std::copy_n(inString + index, length - index, block);
+			return block;
 		}
 
 		JSONIFIER_ALWAYS_INLINE string_view_ptr fullBlock() noexcept {
@@ -60,6 +60,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
+		JSONIFIER_ALIGN char block[bitsPerStep]{};
 		string_view_ptr inString{};
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
@@ -78,10 +79,10 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool minified = false, typename char_type> JSONIFIER_ALWAYS_INLINE void reset(char_type* stringViewNew, size_type size) noexcept {
+		template<bool minified = false> JSONIFIER_ALWAYS_INLINE void reset(const void* stringViewNew, size_type size) noexcept {
 			currentParseBuffer = jsonifier::string_view_base{ static_cast<string_view_ptr>(stringViewNew), size };
 			auto newSize	   = roundUpToMultiple<8ull>(static_cast<size_type>(static_cast<double>(currentParseBuffer.size()) * multiplier));
-			if JSONIFIER_UNLIKELY ((structuralIndexCount < newSize)) {
+			if JSONIFIER_UNLIKELY (structuralIndexCount < newSize) {
 				resize(newSize * 2);
 			}
 			resetImpl<minified>();
@@ -103,7 +104,6 @@ namespace jsonifier_internal {
 	  protected:
 		JSONIFIER_ALIGN size_type newBits[sixtyFourBitsPerStep]{};
 		jsonifier::string_view currentParseBuffer{};
-		JSONIFIER_ALIGN char block[bitsPerStep]{};
 		string_block_reader stringBlockReader{};
 		structural_index* structuralIndices{};
 		size_type structuralIndexCount{};
@@ -143,8 +143,8 @@ namespace jsonifier_internal {
 			while (stringBlockReader.hasFullBlock()) {
 				generateStructurals<false, minified>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
 			}
-			if JSONIFIER_LIKELY ((stringBlockReader.getRemainder(block) > 0)) {
-				generateStructurals<true, minified>(block, escaped, nextIsEscaped, rawStructurals);
+			if JSONIFIER_LIKELY (auto newPtr = stringBlockReader.getRemainder(); newPtr) {
+				generateStructurals<true, minified>(newPtr, escaped, nextIsEscaped, rawStructurals);
 			}
 		}
 
@@ -169,7 +169,7 @@ namespace jsonifier_internal {
 			return newBits;
 		}
 
-		template<size_type currentIndex = 0> void prefetchStringValues(string_view_ptr values) noexcept {
+		template<size_type currentIndex = 0> JSONIFIER_ALWAYS_INLINE void prefetchStringValues(string_view_ptr values) noexcept {
 			if constexpr (currentIndex < sixtyFourBitsPerStep) {
 				jsonifierPrefetchImpl(values + (currentIndex * 64));
 				prefetchStringValues<currentIndex + 1>(values);
@@ -216,7 +216,7 @@ namespace jsonifier_internal {
 
 		template<size_type index = 0> JSONIFIER_ALWAYS_INLINE void addTapeValues() noexcept {
 			if constexpr (index < sixtyFourBitsPerStep) {
-				if JSONIFIER_UNLIKELY ((!newBits[index])) {
+				if JSONIFIER_UNLIKELY (!newBits[index]) {
 					return addTapeValues<index + 1>();
 				}
 				auto cnt			  = popcnt(newBits[index]);
@@ -247,8 +247,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
-			return simd_internal::opTest(rawStructurals.backslashes, rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals)
-																								 : collectEmptyEscaped(escaped, nextIsEscaped);
+			return simd_internal::opTest(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals) : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 
 		template<bool minified> JSONIFIER_ALWAYS_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
@@ -257,9 +256,9 @@ namespace jsonifier_internal {
 			rawStructurals.quotes = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t scalar;
 			if constexpr (!minified) {
-				scalar = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+				scalar = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			} else {
-				scalar = opNot(rawStructurals.op);
+				scalar = simd_internal::opNot(rawStructurals.op);
 			}
 			rawStructurals.op = simd_internal::opAndNot(
 				simd_internal::opOr(rawStructurals.op, simd_internal::opAndNot(scalar, simd_internal::opFollows(simd_internal::opAndNot(scalar, rawStructurals.quotes), overflow))),

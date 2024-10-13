@@ -32,10 +32,10 @@ namespace string_validation_tests {
 		{ "test5.json", "Hello\u0000World" }, { "test6.json", "\"\\/\b\f\n\r\t" }, { "test8.json", "\u0024" }, { "test9.json", "\u00A2" }, { "test10.json", "\u20AC" },
 		{ "test11.json", "\U0001D11E" } };
 
-	auto runTest(const std::string_view& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	auto runTest(const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		std::vector<std::string> data;
-		if (parser.parseJson(data, dataToParse.data()) && parser.getErrors().size() == 0) {
+		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
 			if (data.size() == 1) {
 				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
 				std::cout << testName << " Succeeded - Expected Output: " << testValues[testName] << std::endl;

@@ -17,7 +17,7 @@
       "205706008": "Orchestre jardin",
       "205706009": "Orchestre cour",
       "342752287": "Zone physique secrète"
-   ,
+   },
    "audienceSubCategoryNames": {
       "337100890": "Abonné"
    },
@@ -3368,7 +3368,7 @@
          "subtitle": null,
          "topicIds": []
       }
-   ,
+   },
    "performances": [
       {
          "eventId": 138586341,
@@ -50405,7 +50405,7 @@
       "341264863": "3ème catégorie",
       "341264866": "1ère catégorie",
       "341264867": "2ème catégorie"
-   ,
+   },
    "subTopicNames": {
       "337184279": "Musique du monde",
       "337184262": "Musique amplifiée",
@@ -50426,14 +50426,14 @@
       "337184296": "Musique ancienne",
       "337184298": "Voix",
       "337184299": "famille"
-   ,
+   },
    "subjectNames": {},
    "topicNames": {
       "107888604": "Activité",
       "324846098": "Type de public",
       "324846099": "Genre",
       "324846100": "Formations musicales"
-   ,
+   },
    "topicSubTopics": {
       "107888604": [
          337184283,
@@ -50462,7 +50462,7 @@
          337184273,
          337184282
       ]
-   ,
+   },
    "venueNames": {
       "PLEYEL_PLEYEL": "Salle Pleyel"
    }

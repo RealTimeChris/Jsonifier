@@ -81,7 +81,7 @@
     <allmemberslink visible="yes"/>
     <usedfiles visible="$SHOW_USED_FILES"/>
     <authorsection visible="yes"/>
-  </class>
+  </typename>
 
   <!-- Layout definition for a namespace page -->
   <namespace>

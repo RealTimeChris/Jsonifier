@@ -2,9 +2,12 @@
 ![Commit Activity](https://img.shields.io/github/commit-activity/y/realtimechris/jsonifier?color=999EE0&label=Commits&style=plastic)
 ![Lines of Code](https://tokei.rs/b1/github/RealTimeChris/Jsonifier-Code-Only?color=light-blue&label=Lines%20Of%20Code%20&style=plastic)
 
+#### Jsonifier is fully [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259) compliant.
+
 ### A few classes for validating, serializing, parsing, prettifying, and minifying objects into/from JSON strings - very rapidly.
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/blob/dev/Include/jsonifier/Simd.hpp) as well as compile-time [hash-maps](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/HashMap.hpp) for the keys of the data being parsed.***
+### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/tree/main/Include/jsonifier/ISA) as well as compile-time [hash-maps](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/HashMap.hpp) for the keys of the data being parsed.***
 ### [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
+### [More Benchmarks](https://github.com/Loki-Astari/JsonBenchmark)
 ----
 
 ### Compiler Support
@@ -24,6 +27,7 @@
 - ## [Installation](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Installation.md)
 - ## [Reflection](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Reflection.md)
 - ## [Optimizing For Minified Json](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Optimizing_For_Minified_Json.md)
+- ## [Partial Reading](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/PartialReading.md)
 - ## [Serializing-Parsing](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Usage_Serializing_Parsing.md)
 - ## [Validating](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Validating.md)
 - ## [Prettifying](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Prettifying.md)

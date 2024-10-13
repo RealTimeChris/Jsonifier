@@ -28,13 +28,13 @@
 namespace jsonifier_internal {
 
 	template<typename value_type>
-	concept not_uint8_t = !std::same_as<unwrap_t<value_type>, uint8_t>;
+	concept not_uint8_t = !std::same_as<std::remove_cvref_t<value_type>, uint8_t>;
 
 	template<typename value_type> class char_traits;
 
-	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<unwrap_t<value_type>> {};
+	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<std::remove_cvref_t<value_type>> {};
 
-	template<jsonifier::concepts::uint8_type value_type_new> class char_traits<value_type_new> {
+	template<jsonifier::concepts::uns8_t value_type_new> class char_traits<value_type_new> {
 	  public:
 		using value_type	= uint8_t;
 		using pointer		= value_type*;
@@ -92,8 +92,8 @@ namespace jsonifier {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using difference_type		 = std::ptrdiff_t;
-		using iterator				 = jsonifier_internal::iterator<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using iterator				 = jsonifier_internal::iterator_type<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator_type<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
@@ -110,7 +110,7 @@ namespace jsonifier {
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		JSONIFIER_ALWAYS_INLINE string_base& operator=(string_base&& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				string_base newValue{ other };
 				swap(newValue);
 			}
@@ -122,7 +122,7 @@ namespace jsonifier {
 		};
 
 		JSONIFIER_ALWAYS_INLINE string_base& operator=(const string_base& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				string_base newValue{ other };
 				swap(newValue);
 			}
@@ -131,7 +131,7 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE string_base(const string_base& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			size_type newSize = other.size();
-			if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
+			if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other.data(), other.data() + newSize, dataVal);
@@ -146,8 +146,8 @@ namespace jsonifier {
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE string_base(value_type_newer&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
-			size_type newSize = other.size() * (sizeof(typename jsonifier_internal::unwrap_t<value_type_newer>::value_type) / sizeof(value_type));
-			if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
+			size_type newSize = other.size() * (sizeof(typename std::remove_cvref_t<value_type_newer>::value_type) / sizeof(value_type));
+			if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other.data(), other.data() + newSize, dataVal);
@@ -163,9 +163,9 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_ALWAYS_INLINE string_base(value_type_newer other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			if (other) {
-				auto newSize = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) *
+				const auto newSize = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) *
 					(sizeof(std::remove_pointer_t<value_type_newer>) / sizeof(value_type));
-				if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
+				if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 					reserve(newSize);
 					sizeVal = newSize;
 					std::uninitialized_copy(other, other + newSize, dataVal);
@@ -184,7 +184,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE string_base(const_pointer other, uint64_t newSize) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
-			if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
+			if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other, other + newSize, dataVal);
@@ -193,7 +193,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE string_base(const_iterator other, uint64_t newSize) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
-			if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
+			if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 				reserve(newSize);
 				sizeVal = newSize;
 				std::uninitialized_copy(other.operator->(), other.operator->() + newSize, dataVal);
@@ -202,14 +202,14 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const noexcept {
-			if JSONIFIER_UNLIKELY ((static_cast<int64_t>(position) >= static_cast<int64_t>(sizeVal))) {
+			if JSONIFIER_UNLIKELY (static_cast<int64_t>(position) >= static_cast<int64_t>(sizeVal)) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
 			count = jsonifier_internal::min(count, sizeVal - position);
 
 			string_base result{};
-			if JSONIFIER_LIKELY ((count > 0)) {
+			if JSONIFIER_LIKELY (count > 0) {
 				result.resize(count);
 				std::copy(dataVal + position, dataVal + position + count * sizeof(value_type), result.dataVal);
 			}
@@ -222,35 +222,35 @@ namespace jsonifier {
 			return jsonifier_internal::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rbegin() noexcept {
+		constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rend() noexcept {
+		constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return const_iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return const_iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+		constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rend() const noexcept {
+		constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator{ begin() };
 		}
 
@@ -279,10 +279,10 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void append(const string_base& newSize) noexcept {
-			if JSONIFIER_UNLIKELY ((sizeVal + newSize.size() >= capacityVal)) {
+			if JSONIFIER_UNLIKELY (sizeVal + newSize.size() >= capacityVal) {
 				reserve(sizeVal + newSize.size());
 			}
-			if JSONIFIER_LIKELY ((newSize.size() > 0)) {
+			if JSONIFIER_LIKELY (newSize.size() > 0) {
 				std::copy(newSize.data(), newSize.data() + newSize.size(), dataVal + sizeVal);
 				sizeVal += newSize.size();
 				allocator::construct(&dataVal[sizeVal], value_type{});
@@ -290,10 +290,10 @@ namespace jsonifier {
 		}
 
 		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE void append(value_type_newer* values, uint64_t newSize) noexcept {
-			if JSONIFIER_UNLIKELY ((sizeVal + newSize >= capacityVal)) {
+			if JSONIFIER_UNLIKELY (sizeVal + newSize >= capacityVal) {
 				reserve(sizeVal + newSize);
 			}
-			if JSONIFIER_LIKELY ((newSize > 0 && values)) {
+			if JSONIFIER_LIKELY (newSize > 0 && values) {
 				std::copy(values, values + newSize, dataVal + sizeVal);
 				sizeVal += newSize;
 				allocator::construct(&dataVal[sizeVal], value_type{});
@@ -304,11 +304,11 @@ namespace jsonifier {
 			int64_t newSize = end - start;
 			auto posNew		= where.operator->() - dataVal;
 
-			if JSONIFIER_UNLIKELY ((newSize <= 0)) {
+			if JSONIFIER_UNLIKELY (newSize <= 0) {
 				return;
 			}
 
-			if JSONIFIER_UNLIKELY ((sizeVal + newSize >= capacityVal)) {
+			if JSONIFIER_UNLIKELY (sizeVal + newSize >= capacityVal) {
 				reserve(sizeVal + newSize);
 			}
 
@@ -320,19 +320,19 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE void insert(iterator values, value_type toInsert) noexcept {
 			auto positionNew = values - begin();
-			if JSONIFIER_UNLIKELY ((sizeVal + 1 >= capacityVal)) {
+			if JSONIFIER_UNLIKELY (sizeVal + 1 >= capacityVal) {
 				reserve((sizeVal + 1) * 2);
 			}
-			auto newSize = sizeVal - positionNew;
+			const auto newSize = sizeVal - positionNew;
 			std::memmove(dataVal + positionNew + 1, dataVal + positionNew, newSize * sizeof(value_type));
 			allocator::construct(&dataVal[positionNew], toInsert);
 			++sizeVal;
 		}
 
 		JSONIFIER_ALWAYS_INLINE void erase(size_type count) noexcept {
-			if JSONIFIER_UNLIKELY ((count == 0)) {
+			if JSONIFIER_UNLIKELY (count == 0) {
 				return;
-			} else if JSONIFIER_LIKELY ((count > sizeVal)) {
+			} else if JSONIFIER_LIKELY (count > sizeVal) {
 				count = sizeVal;
 			}
 			traits_type::move(dataVal, dataVal + count, sizeVal - count);
@@ -342,9 +342,9 @@ namespace jsonifier {
 
 		JSONIFIER_ALWAYS_INLINE void erase(iterator count) noexcept {
 			auto newSize = count.operator->() - dataVal;
-			if JSONIFIER_UNLIKELY ((newSize == 0)) {
+			if JSONIFIER_UNLIKELY (newSize == 0) {
 				return;
-			} else if JSONIFIER_UNLIKELY ((newSize > static_cast<int64_t>(sizeVal))) {
+			} else if JSONIFIER_UNLIKELY (newSize > static_cast<int64_t>(sizeVal)) {
 				newSize = static_cast<int64_t>(sizeVal);
 			}
 			traits_type::move(dataVal, dataVal + newSize, sizeVal - newSize);
@@ -353,7 +353,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void emplace_back(value_type value) noexcept {
-			if JSONIFIER_UNLIKELY ((sizeVal + 1 >= capacityVal)) {
+			if JSONIFIER_UNLIKELY (sizeVal + 1 >= capacityVal) {
 				reserve((sizeVal + 2) * 4);
 			}
 			allocator::construct(&dataVal[sizeVal++], value);
@@ -361,14 +361,14 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE const_reference at(size_type index) const noexcept {
-			if JSONIFIER_UNLIKELY ((index >= sizeVal)) {
+			if JSONIFIER_UNLIKELY (index >= sizeVal) {
 				throw std::runtime_error{ "Sorry, but that index is beyond the end of this string." };
 			}
 			return dataVal[index];
 		}
 
 		JSONIFIER_ALWAYS_INLINE reference at(size_type index) noexcept {
-			if JSONIFIER_UNLIKELY ((index >= sizeVal)) {
+			if JSONIFIER_UNLIKELY (index >= sizeVal) {
 				throw std::runtime_error{ "Sorry, but that index is beyond the end of this string." };
 			}
 			return dataVal[index];
@@ -388,7 +388,7 @@ namespace jsonifier {
 
 		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE explicit operator jsonifier::string_base<value_type_newer>() const noexcept {
 			jsonifier::string_base<value_type_newer> returnValue{};
-			if JSONIFIER_LIKELY ((sizeVal > 0)) {
+			if JSONIFIER_LIKELY (sizeVal > 0) {
 				returnValue.resize(sizeVal);
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
@@ -397,7 +397,7 @@ namespace jsonifier {
 
 		template<typename value_type_newer> JSONIFIER_ALWAYS_INLINE explicit operator std::basic_string<value_type_newer>() const noexcept {
 			std::basic_string<value_type_newer> returnValue{};
-			if JSONIFIER_LIKELY ((sizeVal > 0)) {
+			if JSONIFIER_LIKELY (sizeVal > 0) {
 				returnValue.resize(sizeVal);
 				std::memcpy(returnValue.data(), data(), returnValue.size());
 			}
@@ -405,19 +405,19 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE virtual void clear() noexcept {
-			if JSONIFIER_LIKELY ((sizeVal > 0)) {
+			if JSONIFIER_LIKELY (sizeVal > 0) {
 				allocator::construct(dataVal, static_cast<value_type>(0x00u));
 			}
 			sizeVal = 0;
 		}
 
 		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
-			if JSONIFIER_LIKELY ((static_cast<int64_t>(newSize) > 0)) {
-				if JSONIFIER_LIKELY ((newSize > capacityVal)) {
+			if JSONIFIER_LIKELY (static_cast<int64_t>(newSize) > 0) {
+				if JSONIFIER_LIKELY (newSize > capacityVal) {
 					pointer newPtr = allocator::allocate(newSize + 1);
 					try {
-						if JSONIFIER_LIKELY ((dataVal)) {
-							if JSONIFIER_LIKELY ((sizeVal > 0)) {
+						if JSONIFIER_LIKELY (dataVal) {
+							if JSONIFIER_LIKELY (sizeVal > 0) {
 								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							}
 							allocator::deallocate(dataVal);
@@ -431,11 +431,11 @@ namespace jsonifier {
 					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 					allocator::construct(newPtr + newSize, value_type{});
 					sizeVal = newSize;
-				} else if JSONIFIER_LIKELY ((newSize > sizeVal)) {
+				} else if JSONIFIER_LIKELY (newSize > sizeVal) {
 					std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 					allocator::construct(dataVal + newSize, value_type{});
 					sizeVal = newSize;
-				} else if JSONIFIER_LIKELY ((newSize < sizeVal)) {
+				} else if JSONIFIER_LIKELY (newSize < sizeVal) {
 					std::destroy(dataVal + newSize, dataVal + sizeVal);
 					allocator::construct(dataVal + newSize, value_type{});
 					sizeVal = newSize;
@@ -447,11 +447,11 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
-			if JSONIFIER_LIKELY ((capacityNew > capacityVal)) {
+			if JSONIFIER_LIKELY (capacityNew > capacityVal) {
 				pointer newPtr = allocator::allocate(capacityNew + 1);
 				try {
-					if JSONIFIER_LIKELY ((dataVal)) {
-						if JSONIFIER_LIKELY ((sizeVal > 0)) {
+					if JSONIFIER_LIKELY (dataVal) {
+						if JSONIFIER_LIKELY (sizeVal > 0) {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
 						allocator::deallocate(dataVal);
@@ -466,15 +466,15 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type capacity() const noexcept {
+		constexpr size_type capacity() const noexcept {
 			return capacityVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return sizeVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr bool empty() const noexcept {
+		constexpr bool empty() const noexcept {
 			return sizeVal == 0;
 		}
 
@@ -490,13 +490,13 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = traits_type::length(rhs);
 			return rhsLength == lhs.size() &&
-				jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs)>>::compare(lhs.data(), rhs, rhsLength);
+				jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs)>>::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			if (lhs.size() == rhs.size()) {
 				if (lhs.size() > 0) {
-					return jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(),
+					return jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(),
 						rhs.data(), rhs.size());
 				}
 				return true;
@@ -597,8 +597,8 @@ namespace jsonifier {
 		pointer dataVal{};
 
 		JSONIFIER_ALWAYS_INLINE void reset() noexcept {
-			if JSONIFIER_LIKELY ((dataVal && capacityVal)) {
-				if JSONIFIER_LIKELY ((sizeVal)) {
+			if JSONIFIER_LIKELY (dataVal && capacityVal) {
+				if JSONIFIER_LIKELY (sizeVal) {
 					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
@@ -619,6 +619,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	inline static thread_local jsonifier::string_base<char, 1024 * 1024> stringBuffer{};
+	static thread_local jsonifier::string_base<char, 1024 * 1024 * 2> stringBuffer{};
 
 }

@@ -31,7 +31,7 @@ namespace simd_internal {
 
 	#define blsr(value) _blsr_u64(value)
 
-	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns16_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_LINUX)
 		return __tzcnt_u16(value);
 	#else
@@ -39,11 +39,11 @@ namespace simd_internal {
 	#endif
 	}
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 		return _tzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 		return _tzcnt_u64(value);
 	}
 
@@ -51,35 +51,47 @@ namespace simd_internal {
 
 	#define blsr(value) (value & (value - 1))
 
-	template<jsonifier::concepts::uint16_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns16_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
-		return _tzcnt_u16(value);
+			return _tzcnt_u16(value);
 	#else
-		return __builtin_ctz(value);
+			return __builtin_ctz(value);
 	#endif
+		} else {
+			return sizeof(value_type) * 8;
+		}
 	}
 
-	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
-		return _tzcnt_u32(value);
+			return _tzcnt_u32(value);
 	#else
-		return __builtin_ctz(value);
+			return __builtin_ctz(value);
 	#endif
+		} else {
+			return sizeof(value_type) * 8;
+		}
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
-		return _tzcnt_u64(value);
+			return _tzcnt_u64(value);
 	#else
-		return __builtin_ctzll(value);
+			return __builtin_ctzll(value);
 	#endif
+		} else {
+			return sizeof(value_type) * 8;
+		}
 	}
 
 #else
 
 	#define blsr(value) (value & (value - 1))
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
+	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

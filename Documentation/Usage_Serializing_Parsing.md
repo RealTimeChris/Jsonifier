@@ -24,7 +24,7 @@ namespace TestNS {
 	};
 
 	struct nested_object_t {
-		std::vector<std::array<double, 3>> v3s{};
+		std::vector<array<double, 3>> v3s{};
 		jsonifier::string id{};
 	};
 
@@ -133,12 +133,14 @@ The `parse_options` struct allows customization of parsing behavior. Here's the 
 ```cpp
 struct parse_options {
 	bool validateJson{ false };
+	bool partialRead{ false };
 	bool knownOrder{ false };
 	bool minified{ false };
 };
 ```
 
 - `validateJson`: Indicates whether to call validateJson to validate the Json in compliance with RFC standards before parsing it.
+- `partialRead`: Indicates whether to the input is only being partially read from.
 - `knownOrder`: Indicates whether or not the registration core-tuple had its members set up in the order that the json data will be coming in as, which will significantly improve performance.
 - `minified`: Indicates whether the input JSON string is minified (default: `false`).
 
@@ -195,14 +197,12 @@ The `serialize_options` struct allows customization of serialization behavior. H
 
 ```cpp
 struct serialize_options {
-	bool newLinesInArray{ true };
 	size_t indentSize{ 3 };
 	char indentChar{ ' ' };
 	bool prettify{ false };
 };
 ```
 
-- `newLinesInArray`: Specifies whether or not there are newlines appended after each array element.
 - `indentSize`: Specifies the number of indent characters appended for each of the indentations.
 - `indentChar`: Specifies which character to use when indenting prettified json data.
 - `prettify`: Indicates whether to prettify the JSON output (default: `false`).

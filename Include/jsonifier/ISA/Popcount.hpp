@@ -33,11 +33,11 @@ namespace simd_internal {
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	#define popcnt(value) vaddv_u8(vcnt_u8(vcreate_u8(value)))
+	#define popcnt(value) __builtin_popcountll(value)
 
 #else
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
+	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_ALWAYS_INLINE value_type popcnt(value_type value) noexcept {
 		value_type count{};
 
 		while (value > 0) {

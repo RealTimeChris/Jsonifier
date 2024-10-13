@@ -1,4 +1,5 @@
-## Registering a Structure Using Reflection with Jsonifier
+
+# Registering a Structure Using Reflection with Jsonifier
 
 ### Overview
 
@@ -21,7 +22,7 @@ struct available_tag {
 // Register the structure using reflection
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    static constexpr auto parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 
 // Define JSON data and the structure instance
@@ -38,6 +39,47 @@ In this example:
 - We define a structure named `available_tag` with members `name`, `moderated`, and `id`.
 - We then specialize the `jsonifier::core` template for this structure, providing reflection capabilities to parse JSON data into the structure.
 - Finally, we demonstrate how to parse JSON data into an instance of `available_tag` using the `jsonifier_core` instance's `parseJson` method.
+
+### Renaming Members in JSON Representation
+
+If you need to rename members in the JSON output instead of having them reflected by their original member names, you can do so by specifying alternative names directly in the `createValue` function. This allows for more control over the serialization process.
+
+Here’s how you can achieve this:
+
+```cpp
+// Define the structure with original member names
+struct twitter_user_data {
+    jsonifier::string name;
+    jsonifier::string screen_name;
+    jsonifier::string location;
+    // other members...
+};
+
+// Register the structure with renamed JSON keys
+template<> struct jsonifier::core<twitter_user_data> {
+    using value_type = twitter_user_data;
+
+    static constexpr auto parseValue =
+        createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, 
+            &value_type::description, &value_type::url, &value_type::entities, &value_type::followers_count, 
+            &value_type::friends_count, &value_type::listed_count, &value_type::created_at, &value_type::favourites_count, 
+            &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified, 
+            &value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, 
+            &value_type::is_translator, &value_type::is_translation_enabled, &value_type::profile_background_color, 
+            &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, 
+            &value_type::profile_background_tile, &value_type::profile_image_url, &value_type::profile_image_url_https, 
+            &value_type::profile_banner_url, &value_type::profile_link_color, 
+            &value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, 
+            &value_type::profile_text_color, &value_type::profile_use_background_image, 
+            &value_type::default_profile, &value_type::default_profile_image, 
+            &value_type::following, &value_type::follow_request_sent, &value_type::notifications>(
+            "protected", &value_type::protectedVal);
+};
+```
+
+In the above example:
+- The `twitter_user_data` structure has several members. When registering the structure, you can define how these members are represented in the JSON output.
+- For instance, if you want to change how `protectedVal` appears in the JSON (for example, renaming it to `protected`, as protected is not available for a variable name in C++), you would specify this in the `createValue` function.
 
 ### Usage
 
@@ -60,7 +102,7 @@ Specialize the `jsonifier::core` template for the structure, providing the neces
 ```cpp
 template<> struct jsonifier::core<available_tag> {
     using value_type = available_tag;
-    constexpr decltype(auto) parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
+    static constexpr auto parseValue = createValue<&value_type::name, &value_type::moderated, &value_type::id>();
 };
 ```
 

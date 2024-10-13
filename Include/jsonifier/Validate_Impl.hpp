@@ -162,17 +162,17 @@ namespace jsonifier_internal {
 		}
 	};
 
-	constexpr std::array<bool, 256> hexDigits{ { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+	constexpr bool hexDigits[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, true, true, true,
-		true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, true, true, true, true, true, true, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false } };
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 	template<typename derived_type> struct validate_impl<json_structural_type::String, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
@@ -232,7 +232,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 
@@ -260,7 +260,7 @@ namespace jsonifier_internal {
 
 			auto consumeDigits = [&](uint64_t min_count = 1) {
 				uint64_t count = 0;
-				while (digiTable[*newPtr]) {
+				while (JSONIFIER_IS_DIGIT(*newPtr)) {
 					++newPtr;
 					++count;
 				}
@@ -332,7 +332,7 @@ namespace jsonifier_internal {
 				}
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 
@@ -352,7 +352,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 

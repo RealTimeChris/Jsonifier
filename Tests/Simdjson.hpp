@@ -29,7 +29,7 @@
 #if !defined(ASAN_ENABLED)
 
 template<typename value_type>
-concept bool_t = std::is_same_v<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
+concept bool_t = std::same_as<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
 	std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::const_reference>;
 
 template<typename value_type>
@@ -42,7 +42,7 @@ template<typename value_type>
 concept signed_type = std::signed_integral<std::remove_cvref_t<value_type>> && !floating_type<value_type> && !bool_t<value_type>;
 
 template<typename value_type>
-concept range = requires(std::remove_cvref_t<value_type> value) {
+concept has_range = requires(std::remove_cvref_t<value_type> value) {
 	typename std::remove_cvref_t<value_type>::value_type;
 	{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
 	{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
@@ -63,7 +63,7 @@ template<typename value_type>
 concept map_t = requires(std::remove_cvref_t<value_type> value) {
 	typename std::remove_cvref_t<value_type>::mapped_type;
 	typename std::remove_cvref_t<value_type>::key_type;
-} && range<value_type> && map_subscriptable<value_type> && !std::is_integral_v<std::remove_cvref_t<value_type>>;
+} && has_range<value_type> && map_subscriptable<value_type> && !std::is_integral_v<std::remove_cvref_t<value_type>>;
 
 template<typename value_type>
 concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
@@ -74,9 +74,7 @@ concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
 
 template<typename value_type>
 concept has_substr = requires(std::remove_cvref_t<value_type> value) {
-	{
-		value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{})
-	} -> std::same_as<std::remove_cvref_t<value_type>>;
+	{ value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{}) } -> std::same_as<std::remove_cvref_t<value_type>>;
 };
 
 template<typename value_type>
@@ -96,7 +94,7 @@ concept has_size = requires(std::remove_cvref_t<value_type> value) {
 
 template<typename value_type>
 concept string_t =
-	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::is_same_v<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
+	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::same_as<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
 
 template<typename value_type>
 concept copyable = std::copyable<std::remove_cvref_t<value_type>>;
@@ -128,7 +126,6 @@ void throwError(auto error, std::source_location location = std::source_location
 	stream << "Error: " << error << std::endl;
 	stream << "Thrown from: " << location.file_name() << ", At Line: " << location.line() << std::endl;
 	std::cout << stream.str();
-	throw std::runtime_error{ stream.str() };
 }
 
 template<typename value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData);
@@ -719,9 +716,17 @@ template<> void getValue(guild_data& msg, simdjson::ondemand::value jsonData) {
 	getValue(msg.stickers, obj, "stickers");
 	getValue(msg.features, obj, "features");
 	getValue(msg.channels, obj, "channels");
-	getValue(msg.roles, obj, "roles");
-	getValue(msg.splash, obj, "splash");
+	getValue(msg.members, obj, "members");
+	getValue(msg.threads, obj, "threads");
+	getValue(msg.region, obj, "region");
 	getValue(msg.banner, obj, "banner");
+	getValue(msg.splash, obj, "splash");
+	getValue(msg.owner, obj, "owner");
+	getValue(msg.large, obj, "large");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.roles, obj, "roles");
+	getValue(msg.lazy, obj, "lazy");
+	getValue(msg.nsfw, obj, "nsfw");
 	getValue(msg.icon, obj, "icon");
 	getValue(msg.name, obj, "name");
 	getValue(msg.id, obj, "id");
@@ -802,6 +807,11 @@ void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData
 	getValue(returnValue.x, obj, "x");
 	getValue(returnValue.y, obj, "y");
 	getValue(returnValue.z, obj, "z");
+}
+
+void getValue(partial_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.m, obj, "m");
 }
 
 #endif

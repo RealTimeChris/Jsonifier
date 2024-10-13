@@ -32,7 +32,7 @@ namespace uint_validation_tests {
 		500, 1 };
 
 	template<bool passTest = true, typename value_type>
-	auto runTest(value_type& expectedValue, const std::string_view testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	auto runTest(value_type& expectedValue, const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse.substr(1, dataToParse.size() - 2) << std::endl;
 		std::vector<uint64_t> data;
 		auto result = parser.parseJson(data, dataToParse);
@@ -53,6 +53,7 @@ namespace uint_validation_tests {
 			}
 		} else {
 			if (!result) {
+				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
 				std::cout << testName << " Succeeded - Expected Output: " << expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
 			} else {
 				if (data.size() == 1) {
@@ -69,14 +70,18 @@ namespace uint_validation_tests {
 
 	bool uintTests() noexcept {
 		std::cout << "Uint Tests: " << std::endl;
-		auto file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "UintValidation/passTests.json">::loadFile();
+		std::string filePath01{ JSON_TEST_PATH };
+		filePath01 += "UintValidation/passTests.json";
+		auto file = bnch_swt::file_loader::loadFile(filePath01);
 		std::vector<std::string> passTests{};
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson(passTests, file);
 		for (size_t x = 0; x < passTests.size(); ++x) {
 			runTest(expectedInt64Values[x], "Unsigned-Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "UintValidation/failTests.json">::loadFile();
+		std::string filePath02{ JSON_TEST_PATH };
+		filePath02 += "UintValidation/failTests.json";
+		file = bnch_swt::file_loader::loadFile(filePath02);
 		std::vector<std::string> failTests{};
 		parser.parseJson(failTests, file);
 		for (size_t x = 0; x < failTests.size(); ++x) {

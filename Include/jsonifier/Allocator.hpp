@@ -28,7 +28,7 @@
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			return (value + (multiple - 1)) & ~(multiple - 1);
 		} else {
@@ -37,7 +37,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			return value & ~(multiple - 1);
 		} else {
@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
 		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
-			if JSONIFIER_UNLIKELY ((count == 0)) {
+			if JSONIFIER_UNLIKELY (count == 0) {
 				return nullptr;
 			}
 #if defined(JSONIFIER_MSVC)
@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
-			if JSONIFIER_LIKELY ((ptr)) {
+			if JSONIFIER_LIKELY (ptr) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
 #else

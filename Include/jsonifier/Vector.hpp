@@ -36,8 +36,8 @@ namespace jsonifier {
 		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier_internal::iterator<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator<const value_type>;
+		using iterator				 = jsonifier_internal::iterator_type<value_type>;
+		using const_iterator		 = jsonifier_internal::iterator_type<const value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -390,7 +390,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
-			if JSONIFIER_LIKELY ((newSize > capacityVal)) {
+			if JSONIFIER_LIKELY (newSize > capacityVal) {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
 					if (sizeVal > 0ull) {
@@ -400,7 +400,7 @@ namespace jsonifier {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
 					}
-					if JSONIFIER_LIKELY ((dataVal && capacityVal > 0)) {
+					if JSONIFIER_LIKELY (dataVal && capacityVal > 0) {
 						allocator::deallocate(dataVal);
 					}
 				} catch (...) {
@@ -410,7 +410,7 @@ namespace jsonifier {
 				capacityVal = newSize;
 				dataVal		= newPtr;
 				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
-			} else if JSONIFIER_UNLIKELY ((newSize > sizeVal)) {
+			} else if JSONIFIER_UNLIKELY (newSize > sizeVal) {
 				std::uninitialized_value_construct(dataVal + sizeVal, dataVal + capacityVal);
 			} else if (newSize < sizeVal) {
 				std::destroy(dataVal + newSize, dataVal + sizeVal);
@@ -419,10 +419,10 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
-			if JSONIFIER_LIKELY ((capacityNew > capacityVal)) {
+			if JSONIFIER_LIKELY (capacityNew > capacityVal) {
 				pointer newPtr = allocator::allocate(capacityNew);
 				try {
-					if JSONIFIER_LIKELY ((dataVal && capacityVal > 0)) {
+					if JSONIFIER_LIKELY (dataVal && capacityVal > 0) {
 						if (sizeVal > 0) {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
@@ -460,7 +460,7 @@ namespace jsonifier {
 				}
 				return true;
 			} else {
-				return jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*rhs.data())>, std::remove_reference_t<decltype(*data())>>::compare(rhs.data(), data(),
+				return jsonifier_internal::comparison<std::remove_reference_t<decltype(*rhs.data())>, std::remove_reference_t<decltype(*data())>>::compare(rhs.data(), data(),
 					size());
 			}
 		}

@@ -98,11 +98,11 @@ inline static uint64_t xgetbv() {
 }
 
 inline static uint32_t detectSupportedArchitectures() {
-	std::uint32_t eax	  = 0;
-	std::uint32_t ebx	  = 0;
-	std::uint32_t ecx	  = 0;
-	std::uint32_t edx	  = 0;
-	std::uint32_t hostIsa = 0x0;
+	uint32_t eax	  = 0;
+	uint32_t ebx	  = 0;
+	uint32_t ecx	  = 0;
+	uint32_t edx	  = 0;
+	uint32_t hostIsa = 0x0;
 
 	eax = 0x1;
 	ecx = 0x0;
