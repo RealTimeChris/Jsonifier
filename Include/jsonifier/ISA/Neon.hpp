@@ -27,7 +27,7 @@
 
 namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if defined(JSONIFIER_NEON)
 
 	static uint8x16_t mask{ vdupq_n_u8(0x0f) };
 

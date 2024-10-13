@@ -207,7 +207,8 @@ namespace jsonifier_jkj {
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. This function does not do bias adjustment.
 			static constexpr exponent_int extract_exponent_bits(carrier_uint u) noexcept {
-				return exponent_int((u >> format::significand_bits) & ((exponent_int(1) << format::exponent_bits) - 1));
+				constexpr exponent_int expInteger{ 1 };
+				return exponent_int((u >> format::significand_bits) & ((expInteger << format::exponent_bits) - 1));
 			}
 
 			// Extract significand bits from a bit pattern.

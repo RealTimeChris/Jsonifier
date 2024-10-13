@@ -517,11 +517,14 @@ namespace jsonifier_internal {
 				}
 			} else {
 				if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<uint64_t>(value)) - buffer.data());
+					auto newValue		= static_cast<uint64_t>(value);
+					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, newValue) - buffer.data());
 				} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<int64_t>(value)) - buffer.data());
+					auto newValue		= static_cast<int64_t>(value);
+					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, newValue) - buffer.data());
 				} else {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<double>(value)) - buffer.data());
+					auto newValue		= static_cast<double>(value);
+					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, newValue) - buffer.data());
 				}
 			}
 		}

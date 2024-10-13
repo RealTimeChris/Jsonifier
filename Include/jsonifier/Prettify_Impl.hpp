@@ -88,7 +88,7 @@ namespace jsonifier_internal {
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
-								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
+								getUnderlyingPtr(iter) - prettifyPair.rootIter, prettifyPair.endIter - prettifyPair.rootIter, prettifyPair.rootIter));
 							return;
 						}
 						if constexpr (options.newLinesInArray) {
@@ -134,7 +134,7 @@ namespace jsonifier_internal {
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
-								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
+								getUnderlyingPtr(iter) - prettifyPair.rootIter, prettifyPair.endIter - prettifyPair.rootIter, prettifyPair.rootIter));
 							return;
 						}
 						if (*iter[-1] != '{') {
@@ -153,7 +153,7 @@ namespace jsonifier_internal {
 					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
-							getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
+							getUnderlyingPtr(iter) - prettifyPair.rootIter, prettifyPair.endIter - prettifyPair.rootIter, prettifyPair.rootIter));
 						return;
 					}
 				}

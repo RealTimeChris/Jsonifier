@@ -27,11 +27,11 @@
 
 namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+#if defined(JSONIFIER_POPCNT) || defined(JSONIFIER_ANY_AVX)
 
 	#define popcnt(value) _mm_popcnt_u64(value)
 
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif defined(JSONIFIER_NEON)
 
 	#define popcnt(value) vaddv_u8(vcnt_u8(vcreate_u8(value)))
 

@@ -86,7 +86,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values);
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opSub(simd_int_t01&& value, simd_int_t01&& other) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opSub(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + sixtyFourBitsPerStep);
@@ -228,11 +228,13 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
+	template<bool minified> JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		simd_int_t_holder returnValues;
 		returnValues.op			 = collectStructuralIndices(values);
 		returnValues.quotes		 = collectValues<'"'>(values);
-		returnValues.whitespace	 = collectWhitespaceIndices(values);
+		if constexpr (!minified) {
+			returnValues.whitespace = collectWhitespaceIndices(values);
+		}
 		returnValues.backslashes = collectValues<'\\'>(values);
 		return returnValues;
 	}

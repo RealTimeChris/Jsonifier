@@ -65,9 +65,9 @@ namespace jsonifier_internal {
 			prettifyPair.index	= 0;
 			prettifyPair.indent = 0;
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset(in.data(), in.size());
+			prettifyPair.rootIter = in.data();
+			prettifyPair.endIter  = in.data() + in.size();
+			section.reset<true>(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY ((!*iter)) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
@@ -95,8 +95,8 @@ namespace jsonifier_internal {
 			prettifyPair.index	= 0;
 			prettifyPair.indent = 0;
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
+			prettifyPair.rootIter = in.data();
+			prettifyPair.endIter = in.data() + in.size();
 			section.reset(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY ((!*iter)) {
@@ -121,11 +121,11 @@ namespace jsonifier_internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 		struct prettify_pair {
 			jsonifier::vector<json_structural_type> state{};
+			const char* rootIter{};
+			const char* endIter{};
 			size_t indent{};
 			size_t index{};
 		} prettifyPair;
-		const char* rootIter{};
-		const char* endIter{};
 
 		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
 			prettifyPair.state.resize(64);

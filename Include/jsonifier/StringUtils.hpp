@@ -205,27 +205,27 @@ namespace jsonifier_internal {
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
-		static constexpr uint32_t substitution_code_point = 0xFffd;
-		uint32_t code_point								  = hexToU32NoCheck(srcPtr + 2);
+		static constexpr uint32_t substitutionCodePoint = 0xFffd;
+		uint32_t codePoint								  = hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
-		if (code_point >= 0xD800 && code_point < 0xDc00) {
+		if (codePoint >= 0xD800 && codePoint < 0xDc00) {
 			if (((srcPtr[0] << 8) | srcPtr[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
-				code_point = substitution_code_point;
+				codePoint = substitutionCodePoint;
 			} else {
-				uint32_t code_point_2 = hexToU32NoCheck(srcPtr + 2);
+				uint32_t codePoint2 = hexToU32NoCheck(srcPtr + 2);
 
-				uint32_t low_bit = code_point_2 - 0xDc00;
-				if (low_bit >> 10) {
-					code_point = substitution_code_point;
+				uint32_t lowBit = codePoint2 - 0xDc00;
+				if (lowBit >> 10) {
+					codePoint = substitutionCodePoint;
 				} else {
-					code_point = (((code_point - 0xD800) << 10) | low_bit) + 0x10000;
+					codePoint = (((codePoint - 0xD800) << 10) | lowBit) + 0x10000;
 					srcPtr += 6;
 				}
 			}
-		} else if (code_point >= 0xDc00 && code_point <= 0xDfff) {
-			code_point = substitution_code_point;
+		} else if (codePoint >= 0xDc00 && codePoint <= 0xDfff) {
+			codePoint = substitutionCodePoint;
 		}
-		size_t offset = codePointToUtf8(code_point, dstPtr);
+		size_t offset = codePointToUtf8(codePoint, dstPtr);
 		dstPtr += offset;
 		return offset > 0;
 	}
@@ -365,7 +365,7 @@ namespace jsonifier_internal {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -419,7 +419,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+#if defined(JSONIFIER_AVX2)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
@@ -473,7 +473,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -610,7 +610,7 @@ namespace jsonifier_internal {
 	template<typename iterator_type01, typename iterator_type02>
 	JSONIFIER_MAYBE_ALWAYS_INLINE static void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
 		uint16_t escapeChar;
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -644,7 +644,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+#if defined(JSONIFIER_AVX2)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
@@ -678,7 +678,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;

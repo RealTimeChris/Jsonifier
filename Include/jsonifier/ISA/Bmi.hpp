@@ -27,7 +27,7 @@
 
 namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+#if defined(JSONIFIER_BMI) || defined(JSONIFIER_ANY_AVX)
 
 	#define blsr(value) _blsr_u64(value)
 
@@ -47,7 +47,7 @@ namespace simd_internal {
 		return _tzcnt_u64(value);
 	}
 
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif defined(JSONIFIER_NEON)
 
 	#define blsr(value) (value & (value - 1))
 

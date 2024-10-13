@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 
 	template<char value> struct char_comparison {
 		JSONIFIER_ALWAYS_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 			}
 #endif
 
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX2)
 			if (lengthNew >= 32) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
@@ -82,7 +82,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX) || defined(JSONIFIER_NEON)
 			if (lengthNew >= 16) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
@@ -177,7 +177,7 @@ namespace jsonifier_internal {
 
 	template<typename char_type01, typename char_type02> struct comparison<0, char_type01, char_type02> {
 		JSONIFIER_ALWAYS_INLINE static bool compare(char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -195,7 +195,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+#if defined(JSONIFIER_AVX2)
 			if (lengthNew >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
@@ -213,7 +213,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX) || defined(JSONIFIER_NEON)
 			if (lengthNew >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -285,7 +285,7 @@ namespace jsonifier_internal {
 	template<size_t count, typename char_type01, typename char_type02> struct comparison {
 		JSONIFIER_ALWAYS_INLINE static bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
 			size_t lengthNew{ count };
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX512)
 			if constexpr (count >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -305,7 +305,7 @@ namespace jsonifier_internal {
 #endif
 			constexpr size_t newCount01{ count % 64 };
 
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
+#if defined(JSONIFIER_AVX2)
 			if constexpr (newCount01 >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
@@ -324,7 +324,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			constexpr size_t newCount02{ newCount01 % 32 };
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if defined(JSONIFIER_AVX) || defined(JSONIFIER_NEON)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;

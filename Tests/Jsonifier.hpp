@@ -134,20 +134,17 @@ template<> struct jsonifier::core<user_entities> {
 };
 
 template<> struct jsonifier::core<twitter_user_data> {
-	using value_type				 = twitter_user_data;
-	static constexpr auto parseValue = createValue("id", &value_type::id, "id_str", &value_type::id_str, "name", &value_type::name, "screen_name", &value_type::screen_name,
-		"location", &value_type::location, "description", &value_type::description, "url", &value_type::url, "entities", &value_type::entities, "protected",
-		&value_type::protectedVal, "followers_count", &value_type::followers_count, "friends_count", &value_type::friends_count, "listed_count", &value_type::listed_count,
-		"created_at", &value_type::created_at, "favourites_count", &value_type::favourites_count, "utc_offset", &value_type::utc_offset, "time_zone", &value_type::time_zone,
-		"geo_enabled", &value_type::geo_enabled, "verified", &value_type::verified, "statuses_count", &value_type::statuses_count, "lang", &value_type::lang,
-		"contributors_enabled", &value_type::contributors_enabled, "is_translator", &value_type::is_translator, "is_translation_enabled", &value_type::is_translation_enabled,
-		"profile_background_color", &value_type::profile_background_color, "profile_background_image_url", &value_type::profile_background_image_url,
-		"profile_background_image_url_https", &value_type::profile_background_image_url_https, "profile_background_tile", &value_type::profile_background_tile, "profile_image_url",
-		&value_type::profile_image_url, "profile_image_url_https", &value_type::profile_image_url_https, "profile_banner_url", &value_type::profile_banner_url,
-		"profile_link_color", &value_type::profile_link_color, "profile_sidebar_border_color", &value_type::profile_sidebar_border_color, "profile_sidebar_fill_color",
-		&value_type::profile_sidebar_fill_color, "profile_text_color", &value_type::profile_text_color, "profile_use_background_image", &value_type::profile_use_background_image,
-		"default_profile", &value_type::default_profile, "default_profile_image", &value_type::default_profile_image, "following", &value_type::following, "follow_request_sent",
-		&value_type::follow_request_sent, "notifications", &value_type::notifications);
+	using value_type = twitter_user_data;
+
+	static constexpr auto parseValue =
+		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
+			&value_type::entities, &value_type::followers_count, &value_type::friends_count, &value_type::listed_count, &value_type::created_at, &value_type::favourites_count,
+			&value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified, &value_type::statuses_count, &value_type::lang,
+			&value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled, &value_type::profile_background_color,
+			&value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile, &value_type::profile_image_url,
+			&value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color, &value_type::profile_sidebar_border_color,
+			&value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image, &value_type::default_profile,
+			&value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>("protected", &value_type::protectedVal);
 };
 
 template<> struct jsonifier::core<status_data> {

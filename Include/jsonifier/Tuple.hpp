@@ -77,35 +77,36 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
+	template<typename... arg_types> constexpr auto createValueArgs(arg_types&&... args) noexcept {
 		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
-			return value{ jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...) };
+			return jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...);
 		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
 			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
 		} else if constexpr (sizeof...(arg_types) == 1) {
 			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
-			return scalar_value{ std::make_tuple(std::forward<arg_types>(args)...) };
-		} else {
-			return value{ concepts::empty{} };
+			return std::make_tuple(std::forward<arg_types>(args)...);
 		}
 	}
 
 	/*
 	* Function to create a reflected value from member pointers
 	*/
-	template<auto... values> constexpr auto createValue() noexcept {
-		// Check if there are member pointers specified
-		if constexpr (sizeof...(values) > 0) {
-			// Create a tuple with the specified member pointers
-			constexpr auto newTuple = std::make_tuple(values...);
+	template<auto... values> constexpr auto createValueTemplates() noexcept {
+		constexpr auto newTuple	   = std::make_tuple(values...);
+		constexpr auto memberNames = jsonifier_internal::getNames<values...>();
+		return jsonifier_internal::generateInterleavedTuple(newTuple, memberNames);
+	}
 
-			// Get the names of the specified member pointers
-			constexpr auto memberNames = jsonifier_internal::getNames<values...>();
-
-			// Generate an interleaved tuple of member names and values
-			return value{ jsonifier_internal::generateInterleavedTuple(newTuple, memberNames) };
+	template<auto... values, typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
+		if constexpr (sizeof...(values) > 0 && sizeof...(args) > 0) {
+			auto newerTuple = createValueTemplates<values...>();
+			auto newTuple	= createValueArgs(std::forward<arg_types>(args)...);
+			return value{ std::tuple_cat(newTuple, newerTuple) };
+		} else if constexpr (sizeof...(values) > 0) {
+			return value{ createValueTemplates<values...>() };
+		} else if constexpr (sizeof...(args) > 0) {
+			return value{ createValueArgs(std::forward<arg_types>(args)...) };
 		} else {
-			// If no member pointers are specified, create a reflected value with an empty placeholder
 			return value{ concepts::empty{} };
 		}
 	}
