@@ -179,6 +179,7 @@ namespace jsonifier_internal {
 			if (errorIndex >= errorString.size() || errorString.size() == 0) {
 				return;
 			}
+			/*
 			auto end		 = std::end(errorString);
 			auto rend		 = std::rend(errorString);
 			auto begin		 = std::begin(errorString);
@@ -230,7 +231,7 @@ namespace jsonifier_internal {
 			} catch (...) {
 				// Catch and return in case of any unforeseen errors during counting
 				return;
-			}
+			}*/
 		}
 
 
