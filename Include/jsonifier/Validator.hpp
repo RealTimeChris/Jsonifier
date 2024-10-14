@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();
 			derivedRef.index = 0;
-			section.reset(in.data(), in.size());
+			section.reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
 			const char** iter{ section.begin() };

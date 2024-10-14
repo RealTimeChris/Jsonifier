@@ -26,8 +26,7 @@
 
 namespace simd_internal {
 
-#if !defined(JSONIFIER_AVX) && !defined(JSONIFIER_AVX2) && !defined(JSONIFIER_AVX512) && \
-	!defined(JSONIFIER_NEON)
+#if !defined(JSONIFIER_AVX) && !defined(JSONIFIER_AVX2) && !defined(JSONIFIER_AVX512) && !defined(JSONIFIER_NEON)
 
 	#if defined(opAndNot)
 		#undef opAndNot

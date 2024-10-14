@@ -168,7 +168,7 @@ namespace jsonifier_internal {
 
 			if JSONIFIER_LIKELY ((exponentBits != (static_cast<uint32_t>(1) << exponentBitsCount) - 1)) {
 				*buf = '-';
-				buf += (val < 0.0f);
+				buf += (val <= -0.0f);
 
 				if constexpr (isFloat) {
 					const auto v = jsonifier_jkj::dragonbox::to_decimal_ex(s, exponentBits, jsonifier_jkj::dragonbox::policy::sign::ignore,
@@ -285,6 +285,8 @@ namespace jsonifier_internal {
 			}
 		}
 		JSONIFIER_UNLIKELY(else) {
+			*buf = '-';
+			buf += (std::bit_cast<uint64_t>(val) >> (sizeof(value_type) * 8 - 1));
 			*buf = '0';
 			return buf + 1;
 		}

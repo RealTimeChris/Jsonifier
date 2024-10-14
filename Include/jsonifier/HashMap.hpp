@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type>
-	concept has_view = requires(unwrap_t<value_type> value) { value.view(); };
+	concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
 
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, std::array<tuple_reference, maxIndex>& tupleRefs) {
@@ -116,7 +116,7 @@ namespace jsonifier_internal {
 		return createNewTupleImpl<value_type>(std::make_index_sequence<tupleRefs.size()>{});
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto coreTupleV{ createNewTuple<unwrap_t<value_type>>() };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto coreTupleV{ createNewTuple<std::remove_cvref_t<value_type>>() };
 
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefsByLength{ collectTupleRefs(coreTupleV<value_type>) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
@@ -679,7 +679,7 @@ namespace jsonifier_internal {
 #endif
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
-		static constexpr auto hashData = collectMapConstructionData<unwrap_t<value_type>>();
+		static constexpr auto hashData = collectMapConstructionData<std::remove_cvref_t<value_type>>();
 		static constexpr auto subAmount01{ []() constexpr {
 			return ((keyStatsVal<value_type>.maxLength - keyStatsVal<value_type>.minLength) >= bytesPerStep) ? keyStatsVal<value_type>.minLength : 0;
 		}() };

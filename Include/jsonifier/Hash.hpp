@@ -138,7 +138,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t seed> struct rt_key_hasher {
+	template<size_t seedNew> struct rt_key_hasher {
+		static constexpr size_t seed{ seedNew };
 		/**
 		 * @brief Hashes a key at runtime.
 		 *

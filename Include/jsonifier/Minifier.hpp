@@ -53,22 +53,22 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			section.reset(in.data(), in.size());
+			section.reset<false>(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
 					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
-				return unwrap_t<string_type>{};
+				return std::remove_cvref_t<string_type>{};
 			}
-			unwrap_t<string_type> newString{};
+			std::remove_cvref_t<string_type> newString{};
 			minify_impl<derived_type>::impl(iter, stringBuffer, derivedRef.index, *this);
 			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(derivedRef.index);
 				std::memcpy(newString.data(), stringBuffer.data(), derivedRef.index);
 				return newString;
 			} else {
-				return unwrap_t<string_type>{};
+				return std::remove_cvref_t<string_type>{};
 			}
 		}
 
@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			section.reset(in.data(), in.size());
+			section.reset<false>(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };

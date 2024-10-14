@@ -780,7 +780,7 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 static constexpr auto totalIterationCountCap{ 1000 };
 
 void testFunction() {
-	//conformance_tests::conformanceTests();
+	conformance_tests::conformanceTests();
 	round_trip_tests::roundTripTests();
 	string_validation_tests::stringTests();
 	float_validation_tests::floatTests();

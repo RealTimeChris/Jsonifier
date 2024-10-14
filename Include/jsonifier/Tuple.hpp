@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename member_type, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(member_type&& member_ptr, value_type&& value) {
-		using value_type02 = unwrap_t<member_type>;
+		using value_type02 = std::remove_cvref_t<member_type>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
 			return std::forward<value_type>(value).*std::forward<member_type>(member_ptr);
 		} else if constexpr (std::is_pointer_v<value_type02>) {
@@ -64,7 +64,7 @@ namespace jsonifier_internal {
 	}
 
 	template<auto member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) {
-		using value_type02 = unwrap_t<decltype(member_ptr)>;
+		using value_type02 = std::remove_cvref_t<decltype(member_ptr)>;
 		if constexpr (std::is_member_object_pointer_v<value_type02>) {
 			return std::forward<value_type>(value).*member_ptr;
 		} else if constexpr (std::is_pointer_v<value_type02>) {

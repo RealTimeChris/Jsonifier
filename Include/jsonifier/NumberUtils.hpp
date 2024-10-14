@@ -79,7 +79,7 @@ namespace jsonifier {
 		int64_t newValue{};
 		if JSONIFIER_LIKELY ((string.size() > 0)) {
 			auto newPtr = string.data();
-			jsonifier_internal::integer_parser<int64_t, char>{}.parseInt(newValue, newPtr);
+			jsonifier_internal::integer_parser<int64_t, char>::parseInt(newValue, newPtr);
 		}
 		return newValue;
 	}
@@ -113,25 +113,22 @@ namespace jsonifier {
 namespace jsonifier_internal {
 
 	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
-		using value_type = unwrap_t<value_type_new>;
+		using value_type = std::remove_cvref_t<value_type_new>;
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			static constexpr integer_parser<value_type, std::remove_reference_t<decltype(*iter)>> integerParser{};
 			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return integerParser.parseInt(value, iter);
+					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
 				} else {
-					static constexpr integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>> integerParserUint{};
 					uint64_t i;
-					return integerParserUint.parseInt(i, iter) ? (value = i, true) : false;
+					return integer_parser<uint64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = i, true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					return integerParser.parseInt(value, iter);
+					return integer_parser<value_type, std::remove_reference_t<decltype(*iter)>>::parseInt(value, iter);
 				} else {
-					static constexpr integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>> integerParserInt{};
 					int64_t i;
-					return integerParserInt.parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
+					return integer_parser<int64_t, std::remove_reference_t<decltype(*iter)>>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {

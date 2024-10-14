@@ -167,8 +167,7 @@ namespace jsonifier_internal {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
 		}
 
-		template<typename iterator_type, typename value_type>
-		JSONIFIER_ALWAYS_INLINE iterator_type find(iterator_type start, iterator_type end, const value_type& value) {
+		template<typename iterator_type, typename value_type> JSONIFIER_ALWAYS_INLINE iterator_type find(iterator_type start, iterator_type end, const value_type& value) noexcept {
 			while (start < end && *start != value) {
 				++start;
 			}
@@ -179,18 +178,16 @@ namespace jsonifier_internal {
 			if (errorIndex >= errorString.size() || errorString.size() == 0) {
 				return;
 			}
-			/*
-			auto end		 = std::end(errorString);
-			auto rend		 = std::rend(errorString);
-			auto begin		 = std::begin(errorString);
-			auto rbegin		 = std::rbegin(errorString);
-			using V			 = unwrap_t<decltype(errorString[0])>;
-			const auto start = begin + static_cast<int64_t>(errorIndex);
+			using V			  = std::remove_cvref_t<decltype(errorString[0])>;
+			const auto begin  = std::begin(errorString);
+			const auto end	  = std::end(errorString);
+			const auto rbegin = std::rbegin(errorString);
+			const auto rend	  = std::rend(errorString);
+			const auto start  = begin + static_cast<int64_t>(errorIndex);
 			if (start > end) {
 				return;
 			}
 			try {
-				// Perform the count safely
 				line			  = static_cast<uint64_t>(std::count(begin, start, static_cast<V>('\n')) + 1ll);
 				const auto rstart = rbegin + (static_cast<int64_t>(errorString.size()) - static_cast<int64_t>(errorIndex) - 1ll);
 				if (rstart > rend) {
@@ -231,7 +228,7 @@ namespace jsonifier_internal {
 			} catch (...) {
 				// Catch and return in case of any unforeseen errors during counting
 				return;
-			}*/
+			}
 		}
 
 

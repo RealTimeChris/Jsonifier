@@ -106,6 +106,7 @@ namespace jsonifier {
 		template<typename value_type> friend value_type constructValueFromRawJsonData(const jsonifier::string& newData);
 		using object_type = std::unordered_map<jsonifier::string, raw_json_data>;
 		using array_type  = jsonifier::vector<raw_json_data>;
+		using size_type	  = size_t;
 
 		JSONIFIER_ALWAYS_INLINE raw_json_data() = default;
 
@@ -118,12 +119,30 @@ namespace jsonifier {
 			*this = value;
 		}
 
+		template<size_t size> JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const char (&str)[size]) noexcept {
+			jsonData = str;
+			return *this;
+		}
+
+		template<size_t size> JSONIFIER_ALWAYS_INLINE raw_json_data(const char (&str)[size]) noexcept {
+			*this = str;
+		}
+
 		JSONIFIER_ALWAYS_INLINE const char* data() const noexcept {
 			return jsonData.data();
 		}
 
 		JSONIFIER_ALWAYS_INLINE char* data() noexcept {
 			return jsonData.data();
+		}
+
+		JSONIFIER_ALWAYS_INLINE raw_json_data operator[](size_type index) const noexcept {
+			return this->operator array_type()[index];
+		}
+
+		JSONIFIER_ALWAYS_INLINE raw_json_data operator[](jsonifier::string_view key) const noexcept {
+			return this->operator std::unordered_map<jsonifier::string_base<char, 0U>, jsonifier::raw_json_data, std::hash<jsonifier::string_base<char, 0U>>,
+				std::equal_to<jsonifier::string_base<char, 0U>>, std::allocator<std::pair<const jsonifier::string, jsonifier::raw_json_data>>>()[key];
 		}
 
 		JSONIFIER_ALWAYS_INLINE json_type getType() const noexcept {
@@ -138,7 +157,7 @@ namespace jsonifier {
 			jsonData.resize(newSize);
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator object_type() noexcept {
+		JSONIFIER_ALWAYS_INLINE explicit operator object_type() const noexcept {
 			if (getType() == json_type::Object) {
 				return constructValueFromRawJsonData<object_type>(jsonData);
 			} else {
@@ -146,7 +165,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator array_type() noexcept {
+		JSONIFIER_ALWAYS_INLINE explicit operator array_type() const noexcept {
 			if (getType() == json_type::Array) {
 				return constructValueFromRawJsonData<array_type>(jsonData);
 			} else {
@@ -194,7 +213,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::string_view rawJson() noexcept {
+		JSONIFIER_ALWAYS_INLINE jsonifier::string_view rawJson() const noexcept {
 			return jsonData;
 		}
 
@@ -206,7 +225,7 @@ namespace jsonifier {
 		string jsonData{};
 	};
 
-	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, raw_json_data& jsonValue) noexcept {
+	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
 		os << jsonValue.rawJson();
 		return os;
 	}
@@ -240,9 +259,6 @@ namespace jsonifier_internal {
 				derailleur<optionsNew, parse_context<bool>>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
 				auto newSize = newIter02 - newIter01;
-				if (endValue) {
-					--newSize;
-				}
 				newString.resize(static_cast<uint64_t>(newSize));
 				std::copy(newIter01.operator->(), newIter01.operator->() + static_cast<uint64_t>(newSize), newString.data());
 				newIter01 = newIter02;
@@ -279,7 +295,7 @@ namespace jsonifier_internal {
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				auto newKey = collectKey();
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
-				collectCharacter(0x3A);
+				collectCharacter(':');
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				bool endValue{ x == newCount - 1 };
 				results[newKey] = collectValue(endValue);
