@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
 		static constexpr uint32_t substitutionCodePoint = 0xFffd;
-		uint32_t codePoint								  = hexToU32NoCheck(srcPtr + 2);
+		uint32_t codePoint								= hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
 		if (codePoint >= 0xD800 && codePoint < 0xDc00) {
 			if (((srcPtr[0] << 8) | srcPtr[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
@@ -1194,7 +1194,9 @@ namespace jsonifier_internal {
 			auto frac_start_it = endIter;
 			auto fracStart	   = [&]() -> bool {
 				frac_start_it = iter;
-				iter		  = std::find_if_not(iter, endIter, isNumberType);
+				while (iter < endIter && isNumberType(*iter)) {
+					++iter;
+				}
 				if (iter == frac_start_it) {
 					return true;
 				}
@@ -1208,7 +1210,9 @@ namespace jsonifier_internal {
 			auto expStart = [&]() -> bool {
 				iter += *iter == '+' || *iter == '-';
 				auto exp_start_it = iter;
-				iter			  = std::find_if_not(iter, endIter, isNumberType);
+				while (iter < endIter && isNumberType(*iter)) {
+					++iter;
+				}
 				if (iter == exp_start_it) {
 					return true;
 				}
@@ -1224,7 +1228,9 @@ namespace jsonifier_internal {
 					return;
 				}
 			}
-			iter = std::find_if_not(iter, endIter, isNumberType);
+			while (iter < endIter && isNumberType(*iter)) {
+				++iter;
+			}
 			if (iter == sig_start_it) {
 				return;
 			}
@@ -1245,7 +1251,9 @@ namespace jsonifier_internal {
 			auto frac_start_it = context.endIter;
 			auto fracStart	   = [&]() -> bool {
 				frac_start_it = context.iter;
-				context.iter  = std::find_if_not(context.iter, context.endIter, isNumberType);
+				while (context.iter < context.endIter && isNumberType(*context.iter)) {
+					++context.iter;
+				}
 				if (context.iter == frac_start_it) {
 					return true;
 				}
@@ -1259,7 +1267,9 @@ namespace jsonifier_internal {
 			auto expStart = [&]() -> bool {
 				context.iter += *context.iter == '+' || *context.iter == '-';
 				auto exp_start_it = context.iter;
-				context.iter	  = std::find_if_not(context.iter, context.endIter, isNumberType);
+				while (context.iter < context.endIter && isNumberType(*context.iter)) {
+					++context.iter;
+				}
 				if (context.iter == exp_start_it) {
 					return true;
 				}
@@ -1275,7 +1285,9 @@ namespace jsonifier_internal {
 					return;
 				}
 			}
-			context.iter = std::find_if_not(context.iter, context.endIter, isNumberType);
+			while (context.iter < context.endIter && isNumberType(*context.iter)) {
+				++context.iter;
+			}
 			if (context.iter == sig_start_it) {
 				return;
 			}

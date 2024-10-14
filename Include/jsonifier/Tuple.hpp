@@ -105,7 +105,11 @@ namespace jsonifier {
 		} else if constexpr (sizeof...(values) > 0) {
 			return value{ createValueTemplates<values...>() };
 		} else if constexpr (sizeof...(args) > 0) {
-			return value{ createValueArgs(std::forward<arg_types>(args)...) };
+			if constexpr (sizeof...(args) == 1) {
+				return scalar_value{ createValueArgs(std::forward<arg_types>(args)...) };
+			} else {
+				return value{ createValueArgs(std::forward<arg_types>(args)...) };
+			}
 		} else {
 			return value{ concepts::empty{} };
 		}
