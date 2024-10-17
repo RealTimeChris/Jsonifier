@@ -45,6 +45,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct parse_context {
 		constexpr parse_context() noexcept = default;
+		constexpr parse_context(derived_type* ptrNew) noexcept : parserPtr{ ptrNew } {};
 		constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
 			rootIter = iterNew;
 			iter	 = iterNew;
@@ -92,10 +93,11 @@ namespace jsonifier_internal {
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
-			context.rootIter  = getBeginIter(in);
-			context.iter	  = context.rootIter;
-			context.endIter	  = getEndIter(in);
-			context.parserPtr = this;
+			context.rootIter		   = getBeginIter(in);
+			context.iter			   = context.rootIter;
+			context.endIter			   = getEndIter(in);
+			context.currentObjectDepth = 0;
+			context.currentArrayDepth  = 0;
 			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 			if (stringBuffer.size() < newSize) {
 				stringBuffer.resize(newSize);
@@ -130,10 +132,11 @@ namespace jsonifier_internal {
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
-			context.rootIter  = getBeginIter(in);
-			context.iter	  = context.rootIter;
-			context.endIter	  = getEndIter(in);
-			context.parserPtr = this;
+			context.rootIter		   = getBeginIter(in);
+			context.iter			   = context.rootIter;
+			context.endIter			   = getEndIter(in);
+			context.currentObjectDepth = 0;
+			context.currentArrayDepth  = 0;
 			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 			if (stringBuffer.size() < newSize) {
 				stringBuffer.resize(newSize);
@@ -173,7 +176,7 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		parse_context<derived_type> context{};
+		parse_context<derived_type> context{ this };
 
 		JSONIFIER_ALWAYS_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
 

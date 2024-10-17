@@ -133,11 +133,12 @@ namespace jsonifier_internal {
 							}
 						}
 
+						static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
+
 						static constexpr auto parseLambda01 = [](auto& antihashNew, auto& value, auto& context) {
 							antihashNew = false;
 							auto index	= hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 							if JSONIFIER_LIKELY ((index < memberCount)) {
-								static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 								if JSONIFIER_LIKELY ((arrayOfPtrs[index](value, context))) {
 								}
 								JSONIFIER_UNLIKELY(else) {
@@ -214,7 +215,7 @@ namespace jsonifier_internal {
 
 									if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 										++context.iter;
-										if constexpr (options.knownOrder) {
+										if constexpr (options.knownOrder && antiHashNew) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
 											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
@@ -242,7 +243,6 @@ namespace jsonifier_internal {
 										}
 										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
-											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
 												return parseLambda(std::integral_constant<size_t, index>{}, std::integral_constant<bool, newLines>{},
 													std::integral_constant<bool, false>{}, parseLambda, value, context, wsStart, wsSize);
@@ -329,44 +329,52 @@ namespace jsonifier_internal {
 							}
 						}
 
-						if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
-							++context.iter;
-							static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-							static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
-							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
-							static constexpr auto keySize		= key.size();
-							static constexpr auto keySizeNew	= keySize + 1;
-							if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-													 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-														 stringLiteral.data(), context.iter))) {
-								context.iter += keySizeNew;
-								if JSONIFIER_LIKELY ((*context.iter == colon)) {
-									++context.iter;
-									parse<true, options>::impl(value.*ptr, context);
+						static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
+
+						static constexpr auto parseLambda01 = [](auto& antihashNew, auto& value, auto& context) {
+							antihashNew = false;
+							auto index	= hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+							if JSONIFIER_LIKELY ((index < memberCount)) {
+								if JSONIFIER_LIKELY ((arrayOfPtrs[index](value, context))) {
 								}
 								JSONIFIER_UNLIKELY(else) {
-									static constexpr auto sourceLocation{ std::source_location::current() };
-									context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
-									derailleur<options, parse_context_type>::skipToNextValue(context);
-								}
-							}
-							JSONIFIER_UNLIKELY(else) {
-								antihash   = false;
-								auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-								if JSONIFIER_LIKELY ((index < memberCount)) {
-									static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
-									if JSONIFIER_LIKELY ((arrayOfPtrs[index](value, context))) {
-									}
-									JSONIFIER_UNLIKELY(else) {
-										derailleur<options, parse_context_type>::skipKey(context);
-										++context.iter;
-										derailleur<options, parse_context_type>::skipToNextValue(context);
-									}
-								} else {
 									derailleur<options, parse_context_type>::skipKey(context);
 									++context.iter;
 									derailleur<options, parse_context_type>::skipToNextValue(context);
 								}
+							} else {
+								derailleur<options, parse_context_type>::skipKey(context);
+								++context.iter;
+								derailleur<options, parse_context_type>::skipToNextValue(context);
+							}
+						};
+
+						if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
+							++context.iter;
+							if constexpr (options.knownOrder) {
+								static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+								static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
+								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
+								static constexpr auto keySize		= key.size();
+								static constexpr auto keySizeNew	= keySize + 1;
+								if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
+														 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+															 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
+									context.iter += keySizeNew;
+									if JSONIFIER_LIKELY ((*context.iter == colon)) {
+										++context.iter;
+										parse<true, options>::impl(value.*ptr, context);
+									}
+									JSONIFIER_UNLIKELY(else) {
+										static constexpr auto sourceLocation{ std::source_location::current() };
+										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+										derailleur<options, parse_context_type>::skipToNextValue(context);
+									}
+								} else {
+									parseLambda01(antihash, value, context);
+								}
+							} else {
+								parseLambda01(antihash, value, context);
 							}
 						}
 						JSONIFIER_UNLIKELY(else) {
@@ -374,8 +382,8 @@ namespace jsonifier_internal {
 							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
 							derailleur<options, parse_context_type>::skipToNextValue(context);
 						}
-
-						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda, value_type& value, parse_context_type& context) {
+						static constexpr auto parseLambda = [](const auto index, const auto antiHashNew, auto&& parseLambda, value_type& value,
+																parse_context_type& context) {
 							if constexpr (index < memberCount) {
 								if JSONIFIER_LIKELY ((*context.iter != rightBrace)) {
 									if JSONIFIER_LIKELY ((*context.iter == comma)) {
@@ -400,15 +408,15 @@ namespace jsonifier_internal {
 
 									if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 										++context.iter;
-										if constexpr (options.knownOrder) {
+										if constexpr (options.knownOrder && antiHashNew) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
 											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
 											if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-																		 stringLiteral.data(), context.iter))) {
+																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+																		 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
 												context.iter += keySizeNew;
 												if JSONIFIER_LIKELY ((*context.iter == colon)) {
 													++context.iter;
@@ -424,9 +432,9 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+										if JSONIFIER_LIKELY ((auto indexNew =
+																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
-											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
 												return parseLambda(std::integral_constant<size_t, index>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
 											}
@@ -450,11 +458,16 @@ namespace jsonifier_internal {
 										return;
 									}
 								}
+								return;
 							}
 							return;
 						};
-						if (antihash) {
-							parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, parseLambda, value, context);
+						if constexpr (options.knownOrder) {
+							if (antihash) {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, parseLambda, value, context);
+							} else {
+								parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
+							}
 						} else {
 							parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
 						}

@@ -763,14 +763,15 @@ namespace jsonifier_internal {
 	}
 
 	template<string_literal string, typename char_type> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char_type* context) noexcept {
-		static constexpr auto newString{ getStringAsInt<char_type, string>() };
-		if constexpr (string.size() % 2 == 0) {
-			convert_length_to_int_t<string.size()> newerString;
-			std::memcpy(&newerString, context, string.size());
+		JSONIFIER_ALIGN static constexpr jsonifier_internal::string_literal stringNew{ string };
+		static constexpr auto newString{ getStringAsInt<char_type, stringNew>() };
+		if constexpr (stringNew.size() % 2 == 0) {
+			convert_length_to_int_t<stringNew.size()> newerString;
+			std::memcpy(&newerString, context, stringNew.size());
 			return newString == newerString;
 		} else {
-			convert_length_to_int_t<string.size()> newerString{};
-			std::memcpy(&newerString, context, string.size());
+			convert_length_to_int_t<stringNew.size()> newerString{};
+			std::memcpy(&newerString, context, stringNew.size());
 			return newString == newerString;
 		}
 	}

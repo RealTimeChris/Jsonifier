@@ -67,6 +67,7 @@ endif()
  
  target_link_options(
      "${PROJECT_NAME}" INTERFACE
+	 "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
      "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
      "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
      "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
@@ -85,6 +86,7 @@ file(MAKE_DIRECTORY ${ASM_OUTPUT_DIR})
 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
+	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wno-ignored-attributes>"	
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
