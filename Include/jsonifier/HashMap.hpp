@@ -713,7 +713,7 @@ namespace jsonifier_internal {
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
 				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
-					return hashData.uniqueIndices[iter[hashData.uniqueIndex]];
+					return hashData.uniqueIndices[static_cast<uint8_t>(iter[hashData.uniqueIndex])];
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::first_byte_and_unique_index) {

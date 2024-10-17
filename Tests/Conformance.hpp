@@ -35,7 +35,7 @@ namespace conformance_tests {
 		auto result = parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse);
 		if ((parser.getErrors().size() == 0 && result) && !doWeFail) {
 			std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
-		} else if ((parser.getErrors().size() != 0 || !result) && doWeFail) {
+		} else if (!result && doWeFail) {
 			std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
 		} else {
 			std::cout << "Test: " << testName << " = Failed" << std::endl;
@@ -49,7 +49,7 @@ namespace conformance_tests {
 	bool conformanceTests() noexcept {
 		jsonifier::jsonifier_core parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
-		processFilesInFolder(jsonTests, "ConformanceTests");
+		processFilesInFolder(jsonTests, "/ConformanceTests");
 		std::cout << "Conformance Tests: " << std::endl;
 		runTest<std::unordered_map<std::string, std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
 		runTest<std::unordered_map<std::string, std::string>>("fail03.json", jsonTests["fail03.json"].fileContents, parser);

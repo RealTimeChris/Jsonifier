@@ -101,7 +101,7 @@ namespace jsonifier {
 		if constexpr (sizeof...(values) > 0 && sizeof...(args) > 0) {
 			auto newerTuple = createValueTemplates<values...>();
 			auto newTuple	= createValueArgs(std::forward<arg_types>(args)...);
-			return value{ std::tuple_cat(newTuple, newerTuple) };
+			return value{ std::tuple_cat(newerTuple, newTuple) };
 		} else if constexpr (sizeof...(values) > 0) {
 			return value{ createValueTemplates<values...>() };
 		} else if constexpr (sizeof...(args) > 0) {
