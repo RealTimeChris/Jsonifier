@@ -37,6 +37,9 @@ namespace conformance_tests {
 			std::cout << "Test: " << testName << " = Succeeded 01" << std::endl;
 		} else if (!result && doWeFail) {
 			std::cout << "Test: " << testName << " = Succeeded 02" << std::endl;
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
 		} else {
 			std::cout << "Test: " << testName << " = Failed" << std::endl;
 			for (auto& value: parser.getErrors()) {
