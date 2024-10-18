@@ -34,7 +34,7 @@ namespace int_validation_tests {
 	template<bool passTest = true, typename value_type>
 	auto runTest(value_type& expectedValue, const std::string_view testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse.substr(1, dataToParse.size() - 2) << std::endl;
-		std::vector<int64_t> data;
+		std::vector<long long> data;
 		auto result = parser.parseJson(data, dataToParse);
 		if constexpr (passTest) {
 			if (result && parser.getErrors().size() == 0) {
@@ -69,18 +69,20 @@ namespace int_validation_tests {
 
 	bool intTests() noexcept {
 		std::cout << "Int Tests: " << std::endl;
-		auto file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "IntValidation/passTests.json">::loadFile();
+		static constexpr jsonifier_internal::string_literal filePath01{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/passTests.json" } };
+		auto file = bnch_swt::file_loader<filePath01>::loadFile();
 		std::vector<std::string> passTests{};
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson(passTests, file);
 		for (size_t x = 0; x < passTests.size(); ++x) {
-			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x), passTests[x], parser);
+			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		file = bnch_swt::file_loader<jsonifier_internal::string_literal{ JSON_TEST_PATH } + "IntValidation/failTests.json">::loadFile();
+		static constexpr jsonifier_internal::string_literal filePath02{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/failTests.json" } };
+		file = bnch_swt::file_loader<filePath02>::loadFile();
 		std::vector<std::string> failTests{};
 		parser.parseJson(failTests, file);
 		for (size_t x = 0; x < failTests.size(); ++x) {
-			runTest<false>(failTests[x], "Integer-Fail-Test " + std::to_string(x), failTests[x], parser);
+			runTest<false>(failTests[x], "Integer-Fail-Test " + std::to_string(x + 1), failTests[x], parser);
 		}
 		return true;
 	}

@@ -28,6 +28,7 @@
 #include "Twitter.hpp"
 #include "Discord.hpp"
 #include "Canada.hpp"
+#include <thread>
 
 class test_base {
   public:
@@ -115,7 +116,7 @@ template<typename value_type> struct test_generator {
 		auto unicodeCount			 = randomizeNumberUniform(1, length / 8);
 		std::string result{};
 		for (int32_t x = 0; x < length; ++x) {
-			if JSONIFIER_UNLIKELY((x % unicodeCount == 0)) {
+			if (x % unicodeCount == 0) [[unlikely]] {
 				insertUnicodeInJSON(result);
 			}
 			result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];

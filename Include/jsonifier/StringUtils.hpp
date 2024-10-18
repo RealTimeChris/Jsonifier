@@ -871,7 +871,7 @@ namespace jsonifier_internal {
 				if (*context.iter != '"') {
 					return false;
 				}
-				skipString(context.iter, context.endIter);
+				skipString(context);
 				if constexpr (!options.minified) {
 					JSONIFIER_SKIP_WS();
 				}
@@ -883,7 +883,7 @@ namespace jsonifier_internal {
 				if constexpr (!options.minified) {
 					JSONIFIER_SKIP_WS();
 				}
-				if (!skipToNextValue(context.iter, context.endIter)) {
+				if (!skipToNextValue(context)) {
 					return false;
 				}
 				if constexpr (!options.minified) {
@@ -914,7 +914,7 @@ namespace jsonifier_internal {
 				return true;
 			}
 			while (true) {
-				if (!skipToNextValue(context.iter, context.endIter)) {
+				if (!skipToNextValue(context)) {
 					return false;
 				}
 				if constexpr (!options.minified) {

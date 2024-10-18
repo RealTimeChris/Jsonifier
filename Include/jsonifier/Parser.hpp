@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct parse_context {
 		constexpr parse_context() noexcept = default;
-		constexpr parse_context(derived_type* ptrNew) noexcept : parserPtr{ ptrNew } {};
+		constexpr parse_context(parser<derived_type>* ptrNew) noexcept : parserPtr{ ptrNew } {};
 		constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
 			rootIter = iterNew;
 			iter	 = iterNew;
