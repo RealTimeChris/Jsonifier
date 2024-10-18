@@ -145,7 +145,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case json_structural_type::Unset:
-						[[fallthrough]];
+						return;
 					case json_structural_type::Error:
 						[[fallthrough]];
 					case json_structural_type::Type_Count:

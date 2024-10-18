@@ -69,16 +69,16 @@ namespace int_validation_tests {
 
 	bool intTests() noexcept {
 		std::cout << "Int Tests: " << std::endl;
-		static constexpr jsonifier_internal::string_literal filePath01{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/passTests.json" } };
-		auto file = bnch_swt::file_loader<filePath01>::loadFile();
+		std::string filePath01{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/passTests.json" } };
+		auto file = bnch_swt::file_loader::loadFile(filePath01);
 		std::vector<std::string> passTests{};
 		jsonifier::jsonifier_core parser{};
 		parser.parseJson(passTests, file);
 		for (size_t x = 0; x < passTests.size(); ++x) {
 			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		static constexpr jsonifier_internal::string_literal filePath02{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/failTests.json" } };
-		file = bnch_swt::file_loader<filePath02>::loadFile();
+		std::string filePath02{ JSON_TEST_PATH + jsonifier_internal::string_literal{ "IntValidation/failTests.json" } };
+		file = bnch_swt::file_loader::loadFile(filePath02);
 		std::vector<std::string> failTests{};
 		parser.parseJson(failTests, file);
 		for (size_t x = 0; x < failTests.size(); ++x) {

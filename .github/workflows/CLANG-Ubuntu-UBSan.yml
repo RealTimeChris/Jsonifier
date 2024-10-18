@@ -1,4 +1,4 @@
-name: Build-and-Test-CLANG-Ubuntu
+name: Build-and-Test-CLANG-Ubuntu-UBSan
 
 on:
   workflow_dispatch:

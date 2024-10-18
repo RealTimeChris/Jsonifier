@@ -17,7 +17,6 @@
          "in_reply_to_user_id_str": "866260188",
          "in_reply_to_screen_name": "aym0566x",
          "user": {
-            "protected": false,
             "id": 1186275104,
             "id_str": "1186275104",
             "name": "AYUMI",
@@ -31,6 +30,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 262,
             "friends_count": 252,
             "listed_count": 0,
@@ -110,7 +110,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 903487807,
             "id_str": "903487807",
             "name": "RT&ファボ魔のむっつんさっm",
@@ -136,6 +135,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 95,
             "friends_count": 158,
             "listed_count": 1,
@@ -251,7 +251,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 77915997,
                "id_str": "77915997",
                "name": "(有)刀",
@@ -284,6 +283,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 1095,
                "friends_count": 740,
                "listed_count": 50,
@@ -393,7 +393,6 @@
          "in_reply_to_user_id_str": "114188950",
          "in_reply_to_screen_name": "longhairxMIURA",
          "user": {
-            "protected": false,
             "id": 114786346,
             "id_str": "114786346",
             "name": "PROTECT-value_type",
@@ -419,6 +418,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 1387,
             "friends_count": 903,
             "listed_count": 25,
@@ -498,7 +498,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 392585658,
             "id_str": "392585658",
             "name": "原稿",
@@ -534,6 +533,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 1324,
             "friends_count": 1165,
             "listed_count": 99,
@@ -610,7 +610,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 309565423,
                "id_str": "309565423",
                "name": "おもっこ",
@@ -624,6 +623,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 730,
                "friends_count": 200,
                "listed_count": 23,
@@ -694,7 +694,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 753161754,
             "id_str": "753161754",
             "name": "ねこねこみかん＊",
@@ -708,6 +707,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 217,
             "friends_count": 258,
             "listed_count": 8,
@@ -831,7 +831,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 82900665,
                "id_str": "82900665",
                "name": "[90]青葉台  芦 (第二粟屋) 屋",
@@ -845,6 +844,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 587,
                "friends_count": 623,
                "listed_count": 30,
@@ -962,7 +962,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2530194984,
             "id_str": "2530194984",
             "name": "川之江中高生あるある",
@@ -976,6 +975,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 113,
             "friends_count": 157,
             "listed_count": 0,
@@ -1044,7 +1044,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 428179337,
             "id_str": "428179337",
             "name": "サラ",
@@ -1058,6 +1057,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 104,
             "friends_count": 421,
             "listed_count": 2,
@@ -1126,7 +1126,6 @@
          "in_reply_to_user_id_str": "531544559",
          "in_reply_to_screen_name": "ran_kirazuki",
          "user": {
-            "protected": false,
             "id": 2364828518,
             "id_str": "2364828518",
             "name": "雨",
@@ -1140,6 +1139,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 28,
             "friends_count": 28,
             "listed_count": 0,
@@ -1219,7 +1219,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2179759316,
             "id_str": "2179759316",
             "name": "まお",
@@ -1233,6 +1232,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 111,
             "friends_count": 121,
             "listed_count": 0,
@@ -1319,7 +1319,6 @@
             "in_reply_to_user_id_str": "2179759316",
             "in_reply_to_screen_name": "samao21718",
             "user": {
-               "protected": false,
                "id": 1680668713,
                "id_str": "1680668713",
                "name": "★Shiiiii!☆",
@@ -1333,6 +1332,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 429,
                "friends_count": 434,
                "listed_count": 0,
@@ -1414,7 +1414,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1330420010,
             "id_str": "1330420010",
             "name": "獨行道bot",
@@ -1428,6 +1427,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 4,
             "friends_count": 5,
             "listed_count": 1,
@@ -1496,7 +1496,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2714526565,
             "id_str": "2714526565",
             "name": "モテモテ大作戦★男子編",
@@ -1510,6 +1509,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 664,
             "friends_count": 1835,
             "listed_count": 0,
@@ -1586,7 +1586,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -1600,6 +1599,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -1670,7 +1670,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2699261263,
             "id_str": "2699261263",
             "name": "心に響くアツい名言集",
@@ -1684,6 +1683,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 183,
             "friends_count": 1126,
             "listed_count": 0,
@@ -1760,7 +1760,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -1774,6 +1773,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -1844,7 +1844,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1021030416,
             "id_str": "1021030416",
             "name": "narur",
@@ -1858,6 +1857,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 257,
             "friends_count": 237,
             "listed_count": 2,
@@ -1993,7 +1993,6 @@
             "in_reply_to_user_id_str": "333344408",
             "in_reply_to_screen_name": "8CBR8",
             "user": {
-               "protected": false,
                "id": 359324738,
                "id_str": "359324738",
                "name": "POTENZA_SUPERGT",
@@ -2019,6 +2018,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 9612,
                "friends_count": 308,
                "listed_count": 373,
@@ -2149,7 +2149,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2762136439,
             "id_str": "2762136439",
             "name": "ここだけの本音★男子編",
@@ -2163,6 +2162,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 101,
             "friends_count": 985,
             "listed_count": 0,
@@ -2239,7 +2239,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -2253,6 +2252,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -2323,7 +2323,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2454426158,
             "id_str": "2454426158",
             "name": "ぴかりん",
@@ -2337,6 +2336,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 1274,
             "friends_count": 1320,
             "listed_count": 17,
@@ -2423,7 +2423,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 1261662588,
                "id_str": "1261662588",
                "name": "ゆう矢",
@@ -2449,6 +2448,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 265,
                "friends_count": 124,
                "listed_count": 12,
@@ -2529,7 +2529,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1366375976,
             "id_str": "1366375976",
             "name": "ゆいの",
@@ -2543,6 +2542,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 270,
             "friends_count": 260,
             "listed_count": 0,
@@ -2611,7 +2611,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2704420069,
             "id_str": "2704420069",
             "name": "共感★絶対あるあるww",
@@ -2625,6 +2624,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 857,
             "friends_count": 1873,
             "listed_count": 0,
@@ -2701,7 +2701,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -2715,6 +2714,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -2785,7 +2785,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 960765968,
             "id_str": "960765968",
             "name": "さち",
@@ -2799,6 +2798,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 3212,
             "friends_count": 3528,
             "listed_count": 91,
@@ -2885,7 +2885,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 1104771276,
                "id_str": "1104771276",
                "name": "アッサム山中（殺処分ゼロに一票）",
@@ -2921,6 +2920,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 2977,
                "friends_count": 3127,
                "listed_count": 64,
@@ -3001,7 +3001,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2708607692,
             "id_str": "2708607692",
             "name": "おしゃれ★ペアルック",
@@ -3015,6 +3014,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 129,
             "friends_count": 1934,
             "listed_count": 0,
@@ -3091,7 +3091,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3105,6 +3104,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -3175,7 +3175,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2745389137,
             "id_str": "2745389137",
             "name": "LOVE ♥ ラブライブ",
@@ -3189,6 +3188,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 251,
             "friends_count": 969,
             "listed_count": 0,
@@ -3265,7 +3265,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3279,6 +3278,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -3349,7 +3349,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2726346560,
             "id_str": "2726346560",
             "name": "恋する♡ドレスシリーズ",
@@ -3363,6 +3362,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 314,
             "friends_count": 1900,
             "listed_count": 0,
@@ -3439,7 +3439,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3453,6 +3452,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -3523,7 +3523,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2759192574,
             "id_str": "2759192574",
             "name": "胸キュン♥動物図鑑",
@@ -3537,6 +3536,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 80,
             "friends_count": 959,
             "listed_count": 1,
@@ -3613,7 +3613,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3627,6 +3626,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -3697,7 +3697,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2719228561,
             "id_str": "2719228561",
             "name": "ディズニー★パラダイス",
@@ -3711,6 +3710,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 331,
             "friends_count": 1867,
             "listed_count": 0,
@@ -3787,7 +3787,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3801,6 +3800,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -3871,7 +3871,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2714772727,
             "id_str": "2714772727",
             "name": "生々しい風刺画",
@@ -3885,6 +3884,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 298,
             "friends_count": 1902,
             "listed_count": 1,
@@ -3961,7 +3961,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -3975,6 +3974,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -4045,7 +4045,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2721682579,
             "id_str": "2721682579",
             "name": "嵐★大好きっ娘",
@@ -4059,6 +4058,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 794,
             "friends_count": 1913,
             "listed_count": 2,
@@ -4135,7 +4135,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -4149,6 +4148,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -4219,7 +4219,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 353516742,
             "id_str": "353516742",
             "name": "おしんこー＠土曜西え41a",
@@ -4245,6 +4244,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 479,
             "friends_count": 510,
             "listed_count": 43,
@@ -4321,7 +4321,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 126573583,
                "id_str": "126573583",
                "name": "椎名高志",
@@ -4357,6 +4356,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 110756,
                "friends_count": 61,
                "listed_count": 8159,
@@ -4427,7 +4427,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2762581922,
             "id_str": "2762581922",
             "name": "下ネタ＆笑変態雑学",
@@ -4441,6 +4440,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 37,
             "friends_count": 990,
             "listed_count": 0,
@@ -4517,7 +4517,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -4531,6 +4530,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -4601,7 +4601,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744544025,
             "id_str": "2744544025",
             "name": "超簡単★初心者英語",
@@ -4615,6 +4614,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 147,
             "friends_count": 970,
             "listed_count": 1,
@@ -4691,7 +4691,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -4705,6 +4704,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -4775,7 +4775,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2762816814,
             "id_str": "2762816814",
             "name": "現代のハンドサイン",
@@ -4789,6 +4788,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 95,
             "friends_count": 996,
             "listed_count": 0,
@@ -4865,7 +4865,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -4879,6 +4878,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -4949,7 +4949,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2714167411,
             "id_str": "2714167411",
             "name": "今日からアナタもイイ女♪",
@@ -4963,6 +4962,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 390,
             "friends_count": 1425,
             "listed_count": 0,
@@ -5039,7 +5039,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -5053,6 +5052,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -5123,7 +5123,6 @@
          "in_reply_to_user_id_str": "2591363659",
          "in_reply_to_screen_name": "kohecyan3",
          "user": {
-            "protected": false,
             "id": 2613282517,
             "id_str": "2613282517",
             "name": "K",
@@ -5137,6 +5136,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 113,
             "friends_count": 185,
             "listed_count": 0,
@@ -5224,7 +5224,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2709308887,
             "id_str": "2709308887",
             "name": "IQ★力だめし",
@@ -5238,6 +5237,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 443,
             "friends_count": 1851,
             "listed_count": 1,
@@ -5314,7 +5314,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -5328,6 +5327,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -5398,7 +5398,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1171299612,
             "id_str": "1171299612",
             "name": "如月 克己",
@@ -5412,6 +5411,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 65,
             "friends_count": 63,
             "listed_count": 0,
@@ -5480,7 +5480,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2766021865,
             "id_str": "2766021865",
             "name": "徳田有希★応援隊",
@@ -5494,6 +5493,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 123,
             "friends_count": 978,
             "listed_count": 0,
@@ -5570,7 +5570,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -5584,6 +5583,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -5654,7 +5654,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744683982,
             "id_str": "2744683982",
             "name": "腐女子の☆部屋",
@@ -5668,6 +5667,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 241,
             "friends_count": 990,
             "listed_count": 0,
@@ -5744,7 +5744,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -5758,6 +5757,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -5828,7 +5828,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2763178045,
             "id_str": "2763178045",
             "name": "萌え芸術★ラテアート",
@@ -5842,6 +5841,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 187,
             "friends_count": 998,
             "listed_count": 0,
@@ -5918,7 +5918,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -5932,6 +5931,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -6002,7 +6002,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2724158970,
             "id_str": "2724158970",
             "name": "全部★ジャニーズ図鑑",
@@ -6016,6 +6015,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 738,
             "friends_count": 1838,
             "listed_count": 0,
@@ -6092,7 +6092,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -6106,6 +6105,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -6176,7 +6176,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2347898072,
             "id_str": "2347898072",
             "name": "にたにた",
@@ -6190,6 +6189,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 64,
             "friends_count": 70,
             "listed_count": 1,
@@ -6274,7 +6274,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 856045488,
                "id_str": "856045488",
                "name": "なおぴす",
@@ -6288,6 +6287,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 267,
                "friends_count": 259,
                "listed_count": 2,
@@ -6366,7 +6366,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2709561589,
             "id_str": "2709561589",
             "name": "爆笑★LINE あるある",
@@ -6380,6 +6379,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 496,
             "friends_count": 1875,
             "listed_count": 1,
@@ -6456,7 +6456,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -6470,6 +6469,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -6540,7 +6540,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2734455415,
             "id_str": "2734455415",
             "name": "全力★ミサワ的w発言!!",
@@ -6554,6 +6553,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 144,
             "friends_count": 1915,
             "listed_count": 1,
@@ -6630,7 +6630,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -6644,6 +6643,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -6714,7 +6714,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2708183557,
             "id_str": "2708183557",
             "name": "お宝ww有名人卒アル特集",
@@ -6728,6 +6727,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 286,
             "friends_count": 1938,
             "listed_count": 0,
@@ -6804,7 +6804,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -6818,6 +6817,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -6888,7 +6888,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1620730616,
             "id_str": "1620730616",
             "name": "ひーちゃん@橘芋健ぴ",
@@ -6902,6 +6901,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 109,
             "friends_count": 148,
             "listed_count": 0,
@@ -6970,7 +6970,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2278053589,
             "id_str": "2278053589",
             "name": "AuctionCamera",
@@ -6996,6 +6995,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 5,
             "friends_count": 24,
             "listed_count": 0,
@@ -7121,7 +7121,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2762405780,
             "id_str": "2762405780",
             "name": "ヤバすぎる!!ギネス世界記録",
@@ -7135,6 +7134,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 36,
             "friends_count": 985,
             "listed_count": 0,
@@ -7211,7 +7211,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -7225,6 +7224,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -7295,7 +7295,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 597357105,
             "id_str": "597357105",
             "name": "ふじよし",
@@ -7309,6 +7308,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 128,
             "friends_count": 126,
             "listed_count": 6,
@@ -7377,7 +7377,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 18477566,
             "id_str": "18477566",
             "name": "Natit（なち）＠そうだ、トップ行こう",
@@ -7413,6 +7412,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 591,
             "friends_count": 548,
             "listed_count": 93,
@@ -7489,7 +7489,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2761692762,
                "id_str": "2761692762",
                "name": "三浦学苑軟式野球部応援団！",
@@ -7515,6 +7514,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 464,
                "friends_count": 117,
                "listed_count": 4,
@@ -7585,7 +7585,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2725976444,
             "id_str": "2725976444",
             "name": "スマホに密封★アニメ画像",
@@ -7599,6 +7598,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 227,
             "friends_count": 1918,
             "listed_count": 0,
@@ -7675,7 +7675,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -7689,6 +7688,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -7759,7 +7759,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2713926078,
             "id_str": "2713926078",
             "name": "アナタのそばの身近な危険",
@@ -7773,6 +7772,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 301,
             "friends_count": 1871,
             "listed_count": 0,
@@ -7849,7 +7849,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -7863,6 +7862,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -7933,7 +7933,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2726199583,
             "id_str": "2726199583",
             "name": "人気者♥デイジー大好き",
@@ -7947,6 +7946,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 190,
             "friends_count": 474,
             "listed_count": 0,
@@ -8023,7 +8023,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -8037,6 +8036,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -8107,7 +8107,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2721453846,
             "id_str": "2721453846",
             "name": "幸せ話でフル充電しようww",
@@ -8121,6 +8120,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 302,
             "friends_count": 1886,
             "listed_count": 0,
@@ -8197,7 +8197,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -8211,6 +8210,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -8281,7 +8281,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2571968509,
             "id_str": "2571968509",
             "name": "イイヒト",
@@ -8295,6 +8294,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 156,
             "friends_count": 165,
             "listed_count": 14,
@@ -8371,7 +8371,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 1600750194,
                "id_str": "1600750194",
                "name": "臙脂",
@@ -8397,6 +8396,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 155,
                "friends_count": 154,
                "listed_count": 10,
@@ -8467,7 +8467,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2762237088,
             "id_str": "2762237088",
             "name": "秘密の本音♥女子編",
@@ -8481,6 +8480,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 123,
             "friends_count": 988,
             "listed_count": 0,
@@ -8557,7 +8557,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -8571,6 +8570,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -8641,7 +8641,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2740047343,
             "id_str": "2740047343",
             "name": "美し過ぎる★色鉛筆アート",
@@ -8655,6 +8654,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 321,
             "friends_count": 1990,
             "listed_count": 0,
@@ -8731,7 +8731,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -8745,6 +8744,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -8815,7 +8815,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1886570281,
             "id_str": "1886570281",
             "name": "行政法過去問",
@@ -8829,6 +8828,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 1554,
             "friends_count": 1772,
             "listed_count": 12,
@@ -8897,7 +8897,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744863153,
             "id_str": "2744863153",
             "name": "K点越えの発想力!!",
@@ -8911,6 +8910,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 76,
             "friends_count": 957,
             "listed_count": 0,
@@ -8987,7 +8987,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -9001,6 +9000,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -9071,7 +9071,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2698625690,
             "id_str": "2698625690",
             "name": "血液型の真実",
@@ -9085,6 +9084,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 193,
             "friends_count": 1785,
             "listed_count": 1,
@@ -9161,7 +9161,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -9175,6 +9174,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -9245,7 +9245,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2714868440,
             "id_str": "2714868440",
             "name": "やっぱり神が？？を作る時",
@@ -9259,6 +9258,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 243,
             "friends_count": 1907,
             "listed_count": 0,
@@ -9335,7 +9335,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -9349,6 +9348,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -9419,7 +9419,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 62525372,
             "id_str": "62525372",
             "name": "NANCY-MOON☆ひよこちゃん☆",
@@ -9443,6 +9442,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 270,
             "friends_count": 328,
             "listed_count": 4,
@@ -9548,7 +9548,6 @@
             "in_reply_to_user_id_str": "238157843",
             "in_reply_to_screen_name": "Lightworker19",
             "user": {
-               "protected": false,
                "id": 29599253,
                "id_str": "29599253",
                "name": "タクラミックス",
@@ -9562,6 +9561,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 5136,
                "friends_count": 724,
                "listed_count": 335,
@@ -9662,7 +9662,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2714052962,
             "id_str": "2714052962",
             "name": "やっぱりアナ雪が好き♥",
@@ -9676,6 +9675,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 368,
             "friends_count": 1826,
             "listed_count": 1,
@@ -9752,7 +9752,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -9766,6 +9765,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -9836,7 +9836,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2281979863,
             "id_str": "2281979863",
             "name": "News 24h China",
@@ -9850,6 +9849,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 719,
             "friends_count": 807,
             "listed_count": 7,
@@ -9928,7 +9928,6 @@
          "in_reply_to_user_id_str": "535179785",
          "in_reply_to_screen_name": "Take3carnifex",
          "user": {
-            "protected": false,
             "id": 226897125,
             "id_str": "226897125",
             "name": "ひかり＠hack",
@@ -9954,6 +9953,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 296,
             "friends_count": 348,
             "listed_count": 3,
@@ -10033,7 +10033,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744236873,
             "id_str": "2744236873",
             "name": "今どき女子高生の謎w",
@@ -10047,6 +10046,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 79,
             "friends_count": 973,
             "listed_count": 0,
@@ -10123,7 +10123,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -10137,6 +10136,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -10207,7 +10207,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2761782601,
             "id_str": "2761782601",
             "name": "私の理想の男性像",
@@ -10221,6 +10220,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 69,
             "friends_count": 974,
             "listed_count": 0,
@@ -10297,7 +10297,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -10311,6 +10310,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -10381,7 +10381,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2725690658,
             "id_str": "2725690658",
             "name": "激アツ★6秒動画",
@@ -10395,6 +10394,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 195,
             "friends_count": 494,
             "listed_count": 0,
@@ -10471,7 +10471,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -10485,6 +10484,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -10555,7 +10555,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2748747362,
             "id_str": "2748747362",
             "name": "笑える博物館",
@@ -10569,6 +10568,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 19,
             "friends_count": 10,
             "listed_count": 0,
@@ -10686,7 +10686,6 @@
          "in_reply_to_user_id_str": "1717603286",
          "in_reply_to_screen_name": "nasan_arai",
          "user": {
-            "protected": false,
             "id": 2417626784,
             "id_str": "2417626784",
             "name": "✩.ゆきଘ(*´꒳`)",
@@ -10712,6 +10711,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 198,
             "friends_count": 245,
             "listed_count": 1,
@@ -10799,7 +10799,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1435517814,
             "id_str": "1435517814",
             "name": "俺、関係ないよ？",
@@ -10825,6 +10824,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 1066,
             "friends_count": 1799,
             "listed_count": 6,
@@ -10893,7 +10893,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2386208737,
             "id_str": "2386208737",
             "name": "闇未来Bot",
@@ -10907,6 +10906,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 7,
             "friends_count": 2,
             "listed_count": 0,
@@ -10975,7 +10975,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2725681663,
             "id_str": "2725681663",
             "name": "絶品!!スイーツ天国",
@@ -10989,6 +10988,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 401,
             "friends_count": 1877,
             "listed_count": 1,
@@ -11065,7 +11065,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -11079,6 +11078,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -11149,7 +11149,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2699667800,
             "id_str": "2699667800",
             "name": "電車厳禁!!おもしろ話w",
@@ -11163,6 +11162,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 461,
             "friends_count": 1919,
             "listed_count": 0,
@@ -11239,7 +11239,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -11253,6 +11252,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -11323,7 +11323,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2695745652,
             "id_str": "2695745652",
             "name": "笑えるwwランキング",
@@ -11337,6 +11336,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 314,
             "friends_count": 1943,
             "listed_count": 1,
@@ -11413,7 +11413,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -11427,6 +11426,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -11497,7 +11497,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2707963890,
             "id_str": "2707963890",
             "name": "スニーカー大好き★図鑑",
@@ -11511,6 +11510,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 394,
             "friends_count": 1891,
             "listed_count": 0,
@@ -11587,7 +11587,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -11601,6 +11600,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -11671,7 +11671,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2249378935,
             "id_str": "2249378935",
             "name": "Maggie Becerril ",
@@ -11685,6 +11684,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 120,
             "friends_count": 391,
             "listed_count": 0,
@@ -11764,7 +11764,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2719746578,
             "id_str": "2719746578",
             "name": "ザ・異性の裏の顔",
@@ -11778,6 +11777,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 238,
             "friends_count": 1922,
             "listed_count": 0,
@@ -11854,7 +11854,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -11868,6 +11867,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -11938,7 +11938,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744054334,
             "id_str": "2744054334",
             "name": "超w美女☆アルバム",
@@ -11952,6 +11951,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 45,
             "friends_count": 966,
             "listed_count": 0,
@@ -12028,7 +12028,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12042,6 +12041,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12112,7 +12112,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744261238,
             "id_str": "2744261238",
             "name": "男に見せない女子の裏生態",
@@ -12126,6 +12125,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 203,
             "friends_count": 967,
             "listed_count": 0,
@@ -12202,7 +12202,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12216,6 +12215,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12286,7 +12286,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2759403146,
             "id_str": "2759403146",
             "name": "驚きの動物たちの生態",
@@ -12300,6 +12299,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 67,
             "friends_count": 954,
             "listed_count": 0,
@@ -12376,7 +12376,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12390,6 +12389,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12460,7 +12460,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2706659820,
             "id_str": "2706659820",
             "name": "モテ女子★ファションの秘密",
@@ -12474,6 +12473,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 217,
             "friends_count": 1806,
             "listed_count": 0,
@@ -12550,7 +12550,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12564,6 +12563,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12634,7 +12634,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2761896468,
             "id_str": "2761896468",
             "name": "男女の違いを解明する",
@@ -12648,6 +12647,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 82,
             "friends_count": 992,
             "listed_count": 0,
@@ -12724,7 +12724,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12738,6 +12737,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12808,7 +12808,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744950735,
             "id_str": "2744950735",
             "name": "神レベル★極限の発想",
@@ -12822,6 +12821,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 84,
             "friends_count": 992,
             "listed_count": 0,
@@ -12898,7 +12898,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -12912,6 +12911,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -12982,7 +12982,6 @@
          "in_reply_to_user_id_str": "796000214",
          "in_reply_to_screen_name": "kaoritoxx",
          "user": {
-            "protected": false,
             "id": 2256249487,
             "id_str": "2256249487",
             "name": "はあちゃん@海賊同盟中",
@@ -12996,6 +12995,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 415,
             "friends_count": 384,
             "listed_count": 3,
@@ -13075,7 +13075,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2698885082,
             "id_str": "2698885082",
             "name": "恋愛仙人",
@@ -13089,6 +13088,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 618,
             "friends_count": 1847,
             "listed_count": 1,
@@ -13165,7 +13165,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -13179,6 +13178,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -13249,7 +13249,6 @@
          "in_reply_to_user_id_str": "141170845",
          "in_reply_to_screen_name": "itsukibot_",
          "user": {
-            "protected": false,
             "id": 2184752048,
             "id_str": "2184752048",
             "name": "アンドー",
@@ -13263,6 +13262,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 15,
             "friends_count": 24,
             "listed_count": 0,
@@ -13342,7 +13342,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2706951979,
             "id_str": "2706951979",
             "name": "あの伝説の名ドラマ＆名場面",
@@ -13356,6 +13355,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 300,
             "friends_count": 1886,
             "listed_count": 0,
@@ -13432,7 +13432,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -13446,6 +13445,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -13516,7 +13516,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2724328646,
             "id_str": "2724328646",
             "name": "マジで食べたい♥ケーキ特集",
@@ -13530,6 +13529,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 158,
             "friends_count": 1907,
             "listed_count": 0,
@@ -13606,7 +13606,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -13620,6 +13619,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -13690,7 +13690,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2704003662,
             "id_str": "2704003662",
             "name": "アディダス★マニア",
@@ -13704,6 +13703,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 340,
             "friends_count": 1851,
             "listed_count": 0,
@@ -13780,7 +13780,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -13794,6 +13793,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -13864,7 +13864,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2719061228,
             "id_str": "2719061228",
             "name": "萌えペット大好き",
@@ -13878,6 +13877,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 289,
             "friends_count": 1812,
             "listed_count": 0,
@@ -13954,7 +13954,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -13968,6 +13967,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -14038,7 +14038,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2744344514,
             "id_str": "2744344514",
             "name": "恋愛の教科書",
@@ -14052,6 +14051,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 124,
             "friends_count": 955,
             "listed_count": 0,
@@ -14128,7 +14128,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -14142,6 +14141,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -14212,7 +14212,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2699365116,
             "id_str": "2699365116",
             "name": "オモロすぎる★学生の日常",
@@ -14226,6 +14225,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 289,
             "friends_count": 1156,
             "listed_count": 2,
@@ -14302,7 +14302,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -14316,6 +14315,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -14386,7 +14386,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2721907602,
             "id_str": "2721907602",
             "name": "憧れの★インテリア図鑑",
@@ -14400,6 +14399,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 298,
             "friends_count": 1925,
             "listed_count": 0,
@@ -14476,7 +14476,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -14490,6 +14489,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -14560,7 +14560,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1953404612,
             "id_str": "1953404612",
             "name": "わろめっと",
@@ -14574,6 +14573,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 16980,
             "friends_count": 16983,
             "listed_count": 18,
@@ -14667,7 +14667,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 402427654,
             "id_str": "402427654",
             "name": "中国新闻",
@@ -14681,6 +14680,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 2429,
             "friends_count": 15,
             "listed_count": 29,
@@ -14759,7 +14759,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2700961603,
             "id_str": "2700961603",
             "name": "LDH ★大好き応援団",
@@ -14773,6 +14772,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 458,
             "friends_count": 1895,
             "listed_count": 0,
@@ -14849,7 +14849,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -14863,6 +14862,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -14933,7 +14933,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2719489172,
             "id_str": "2719489172",
             "name": "マジ!?怖いアニメ都市伝説",
@@ -14947,6 +14946,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 377,
             "friends_count": 1911,
             "listed_count": 1,
@@ -15023,7 +15023,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2745121514,
                "id_str": "2745121514",
                "name": "幸せの☆お守り",
@@ -15037,6 +15036,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 213,
                "friends_count": 991,
                "listed_count": 0,
@@ -15107,7 +15107,6 @@
          "in_reply_to_user_id_str": "2286548834",
          "in_reply_to_screen_name": "vesperia1985",
          "user": {
-            "protected": false,
             "id": 2389045190,
             "id_str": "2389045190",
             "name": "りいこ",
@@ -15121,6 +15120,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 67,
             "friends_count": 69,
             "listed_count": 0,
@@ -15200,7 +15200,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1319883571,
             "id_str": "1319883571",
             "name": "森林木工家具製作所",
@@ -15226,6 +15225,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 677,
             "friends_count": 743,
             "listed_count": 1,
@@ -15304,7 +15304,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 413944345,
             "id_str": "413944345",
             "name": "泥酔イナバウアー",
@@ -15318,6 +15317,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 298,
             "friends_count": 300,
             "listed_count": 4,
@@ -15394,7 +15394,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 2243896200,
                "id_str": "2243896200",
                "name": "知らぬが仏bot",
@@ -15408,6 +15407,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 3288,
                "friends_count": 3482,
                "listed_count": 7,
@@ -15478,7 +15478,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 2463035136,
             "id_str": "2463035136",
             "name": "や",
@@ -15492,6 +15491,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 4,
             "friends_count": 30,
             "listed_count": 0,
@@ -15578,7 +15578,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 1261662588,
                "id_str": "1261662588",
                "name": "ゆう矢",
@@ -15604,6 +15603,7 @@
                      ]
                   }
                },
+               "protected": false,
                "followers_count": 265,
                "friends_count": 124,
                "listed_count": 12,
@@ -15684,7 +15684,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 889332218,
             "id_str": "889332218",
             "name": "民權初步",
@@ -15698,6 +15697,7 @@
                },
                "url": null
             },
+            "protected": false,
             "followers_count": 313,
             "friends_count": 46,
             "listed_count": 0,
@@ -15823,7 +15823,6 @@
             "in_reply_to_user_id_str": null,
             "in_reply_to_screen_name": null,
             "user": {
-               "protected": false,
                "id": 67661086,
                "id_str": "67661086",
                "name": "※范强※法特姗瑟希蒲※",
@@ -15837,6 +15836,7 @@
                   },
                   "url": null
                },
+               "protected": false,
                "followers_count": 7143,
                "friends_count": 779,
                "listed_count": 94,
@@ -15956,7 +15956,6 @@
          "in_reply_to_user_id_str": null,
          "in_reply_to_screen_name": null,
          "user": {
-            "protected": false,
             "id": 1609789375,
             "id_str": "1609789375",
             "name": "食いしん坊前ちゃん",
@@ -15992,6 +15991,7 @@
                   ]
                }
             },
+            "protected": false,
             "followers_count": 560,
             "friends_count": 875,
             "listed_count": 11,
