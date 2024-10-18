@@ -53,7 +53,7 @@ namespace int_validation_tests {
 			}
 		} else {
 			if (!result) {
-				std::cout << testName << " Succeeded - Expected Output: " << expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
+				std::cout << testName << " Succeeded - Expected Output: " << std::endl;//<< expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
 			} else {
 				if (data.size() == 1) {
 					std::cout << testName << " Failed - Output: " << data[0] << std::endl;

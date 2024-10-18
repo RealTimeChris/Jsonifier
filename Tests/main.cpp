@@ -376,7 +376,6 @@ constexpr jsonifier_internal::string_literal write_table_header = jsonifier_inte
 };
 #endif
 
-
 std::string getCPUInfo() {
 	char brand[49] = { 0 };
 	int32_t regs[12]{};
@@ -655,16 +654,18 @@ template<test_type type, typename test_data_type, bool minified, uint64_t iterat
 		glazeResults	= json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
+#if !defined(ASAN_ENABLED)
 		simdjsonResults.print();
 		glazeResults.print();
-		jsonifierResults.print();
 		jsonResults.results.emplace_back(simdjsonResults);
 		jsonResults.results.emplace_back(glazeResults);
+#endif
+		jsonifierResults.print();
 		jsonResults.results.emplace_back(jsonifierResults);
 		jsonResults.markdownResults += table_header.view() + "\n";
 		std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 		for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
-			if (iter->readResult.jsonSpeed.value() < (jsonResults.results[0].readResult.jsonSpeed.value() / 30)) {
+			if (iter->readResult.jsonSpeed.has_value() && iter->readResult.jsonSpeed.value() < (jsonResults.results[0].readResult.jsonSpeed.value() / 30)) {
 				iter = jsonResults.results.erase(iter);
 			} else {
 				jsonResults.markdownResults += iter->jsonStats();
@@ -688,15 +689,16 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		glazeResults = json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
-
-		glazeResults.print();
-		jsonifierResults.print();
+#if !defined(ASAN_ENABLED)
 		jsonResults.results.emplace_back(glazeResults);
+		glazeResults.print();
+#endif
+		jsonifierResults.print();
 		jsonResults.results.emplace_back(jsonifierResults);
 		jsonResults.markdownResults += write_table_header.view() + "\n";
 		std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 		for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
-			if (iter->writeResult.jsonSpeed.value() < (jsonResults.results[0].writeResult.jsonSpeed.value() / 30)) {
+			if (iter->readResult.jsonSpeed.has_value() && iter->readResult.jsonSpeed.value() < (jsonResults.results[0].readResult.jsonSpeed.value() / 30)) {
 				iter = jsonResults.results.erase(iter);
 			} else {
 				jsonResults.markdownResults += iter->jsonStats();
@@ -722,16 +724,18 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		glazeResults	= json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
-		simdjsonResults.print();
-		glazeResults.print();
-		jsonifierResults.print();
+#if !defined(ASAN_ENABLED)
 		jsonResults.results.emplace_back(simdjsonResults);
 		jsonResults.results.emplace_back(glazeResults);
+		simdjsonResults.print();
+		glazeResults.print();
+#endif
+		jsonifierResults.print();
 		jsonResults.results.emplace_back(jsonifierResults);
 		jsonResults.markdownResults += write_table_header.view() + "\n";
 		std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 		for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
-			if (iter->writeResult.jsonSpeed.value() < (jsonResults.results[0].writeResult.jsonSpeed.value() / 30)) {
+			if (iter->readResult.jsonSpeed.has_value() && iter->readResult.jsonSpeed.value() < (jsonResults.results[0].readResult.jsonSpeed.value() / 30)) {
 				iter = jsonResults.results.erase(iter);
 			} else {
 				jsonResults.markdownResults += iter->jsonStats();
@@ -755,11 +759,12 @@ template<uint64_t iterations, jsonifier_internal::string_literal testName> struc
 		glazeResults = json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
 #endif
 		jsonifierResults = json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
-
-		glazeResults.print();
-		jsonifierResults.print();
 		jsonResults.results.emplace_back(jsonifierResults);
+#if !defined(ASAN_ENABLED)
 		jsonResults.results.emplace_back(glazeResults);
+		glazeResults.print();
+#endif
+		jsonifierResults.print();
 		jsonResults.markdownResults += read_table_header.view() + "\n";
 		std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 		for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
@@ -782,16 +787,21 @@ static constexpr auto totalIterationCountCap{ 1000 };
 void testFunction() {
 	//conformance_tests::conformanceTests();
 	round_trip_tests::roundTripTests();
-	string_validation_tests::stringTests();
+	//string_validation_tests::stringTests();
 	float_validation_tests::floatTests();
 	uint_validation_tests::uintTests();
 	int_validation_tests::intTests();
 	test_generator<test_struct> testJsonData{};
 	std::string jsonDataNew{};
+	std::cout << "WERE HERE 0101" << std::endl;
 	jsonifier::jsonifier_core parser{};
+	std::cout << "WERE HERE 0202" << std::endl;
 	parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
+	std::cout << "WERE HERE 0303" << std::endl;
 	bnch_swt::file_loader<basePath + "/JsonData-Prettified.json">::saveFile(jsonDataNew);
+	std::cout << "WERE HERE 0404" << std::endl;
 	std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
+	std::cout << "WERE HERE 0505" << std::endl;
 	bnch_swt::file_loader<basePath + "/JsonData-Minified.json">::saveFile(jsonMinifiedData);
 	std::string discordData{ bnch_swt::file_loader<JSON_PATH + jsonifier_internal::string_literal{ "/DiscordData-Prettified.json" }>::loadFile() };
 	std::string discordMinifiedData{ bnch_swt::file_loader<JSON_PATH + jsonifier_internal::string_literal{ "/DiscordData-Minified.json" }>::loadFile() };

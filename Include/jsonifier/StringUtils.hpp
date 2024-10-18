@@ -36,6 +36,14 @@ namespace jsonifier_internal {
 		++context.iter; \
 	}
 
+#define CHECK_FOR_END(iter) \
+	if (iter >= context.endIter) { \
+		static constexpr auto sourceLocation{ std::source_location::current() }; \
+		context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context); \
+		derailleur<options, parse_context_type>::skipToNextValue(context); \
+		return; \
+	}
+
 	template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE void skipMatchingWs(iterator01 wsStart, iterator02& context, uint64_t length) noexcept {
 		if (length > 7) {
 			uint64_t v[2];
