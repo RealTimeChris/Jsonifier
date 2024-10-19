@@ -87,56 +87,75 @@ template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
 
-std::random_device randomEngine{};
-std::mt19937_64 gen{ randomEngine() };
-
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-
+	inline static std::random_device randomEngine{};
+	inline static std::mt19937_64 gen{ randomEngine() };
 	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 
-	template<typename value_type01, typename value_type02> value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
+	template<typename value_type01, typename value_type02> static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
 		std::uniform_real_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
 		return dis(gen);
 	}
 
-	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02> value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
+	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02> static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
 		std::uniform_int_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
 		return dis(gen);
 	}
 
-	void insertUnicodeInJSON(std::string& jsonString) {
+	static void insertUnicodeInJSON(std::string& jsonString) {
 		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(0ull, std::size(unicode_emoji::unicodeEmoji) - 1)];
-		jsonString += static_cast<jsonifier::string>(newStringView);
+		jsonString += static_cast<std::string>(newStringView);
 	}
 
-	std::string generateString() {
+	static std::string generateString() {
 		auto length{ randomizeNumberUniform(32, 64) };
 		constexpr size_t charsetSize = charset.size();
-		auto unicodeCount			 = randomizeNumberUniform(1, length / 8);
-		std::string result{};
-		for (int32_t x = 0; x < length; ++x) {
-			if (x % unicodeCount == 0) [[unlikely]] {
-				insertUnicodeInJSON(result);
+		auto unicodeCount			 = std::max(1, length / 8);
+		std::vector<size_t> unicodeIndices{};
+		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto&& checkForPresenceOfIndexNew) -> void {
+			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
+				index = randomizeNumberUniform(0ull, charsetSize - 1);
+				checkForPresenceOfIndexNew(indices, index, checkForPresenceOfIndexNew);
+			} else {
+				indices.emplace_back(index);
 			}
-			result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];
+		};
+		for (size_t x = 0; x < unicodeCount; ++x) {
+			auto newValue = randomizeNumberUniform(0ull, charsetSize - 1);
+			checkForPresenceOfIndex(unicodeIndices, newValue, checkForPresenceOfIndex);
 		}
+		std::sort(unicodeIndices.begin(), unicodeIndices.end(), std::less<size_t>{});
+
+		std::string result{};
+		int32_t insertedUnicode = 0;
+		auto iter				= unicodeIndices.begin();
+		for (int32_t x = 0; x < length; ++x) {
+			if (iter < unicodeIndices.end() && x == *iter) [[unlikely]] {
+				insertUnicodeInJSON(result);
+				insertedUnicode++;
+				++iter;
+			} else {
+				result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];
+			}
+		}
+
 		return result;
 	}
 
-	double generateDouble() {
+	static double generateDouble() {
 		return randomizeNumberUniform(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
 	};
 
-	bool generateBool() {
+	static bool generateBool() {
 		return static_cast<bool>(randomizeNumberUniform(0, 100) >= 50);
 	};
 
-	size_t generateUint() {
+	static size_t generateUint() {
 		return randomizeNumberUniform(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max());
 	};
 
-	int64_t generateInt() {
+	static int64_t generateInt() {
 		return randomizeNumberUniform(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max());
 	};
 
@@ -299,9 +318,9 @@ struct results_data {
 	std::unordered_set<std::string> jsonifierExcludedKeys{};
 	result<result_type::write> writeResult{};
 	result<result_type::read> readResult{};
-	jsonifier::string name{};
-	jsonifier::string test{};
-	jsonifier::string url{};
+	std::string name{};
+	std::string test{};
+	std::string url{};
 	size_t iterations{};
 
 	bool operator>(const results_data& other) const noexcept {
@@ -321,7 +340,7 @@ struct results_data {
 
 	results_data() noexcept = default;
 
-	results_data(const jsonifier::string& nameNew, const jsonifier::string& testNew, const jsonifier::string& urlNew, size_t iterationsNew) {
+	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, size_t iterationsNew) {
 		iterations = iterationsNew;
 		name	   = nameNew;
 		test	   = testNew;
@@ -337,7 +356,7 @@ struct results_data {
 	}
 
 	void print() const noexcept {
-		std::cout << jsonifier::string{ "| " } + name + " " + test + ": " + url + "\n" +
+		std::cout << std::string{ "| " } + name + " " + test + ": " + url + "\n" +
 				"| ------------------------------------------------------------ "
 				"|\n";
 		if (readResult.byteLength.has_value() && readResult.jsonSpeed.has_value()) {

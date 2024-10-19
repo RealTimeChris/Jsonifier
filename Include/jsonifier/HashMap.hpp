@@ -521,10 +521,10 @@ namespace jsonifier_internal {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 		if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-			returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
+			returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
 			for (size_t x = 0; x < pairsNew.count; ++x) {
-				const auto slot					 = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
-				returnValues.uniqueIndices[slot] = static_cast<uint8_t>(x);
+				const auto slot										   = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
+				returnValues.uniqueIndices[static_cast<uint8_t>(slot)] = static_cast<uint8_t>(x);
 			}
 			returnValues.type = hash_map_type::single_byte;
 			return returnValues;

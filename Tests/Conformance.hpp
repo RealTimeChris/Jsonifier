@@ -28,7 +28,7 @@
 
 namespace conformance_tests {
 
-	template<typename test_type> test_type runTest(const std::string& testName, std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
+	template<typename test_type> test_type runTest(const std::string& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser, bool doWeFail = true) noexcept {
 		std::cout << "Running Test: " << testName << std::endl;
 		test_type valueNew{};
 		auto result = parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse);
@@ -51,7 +51,7 @@ namespace conformance_tests {
 	bool conformanceTests() noexcept {
 		jsonifier::jsonifier_core parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
-		processFilesInFolder(jsonTests, "/ConformanceTests");
+		processFilesInFolder(jsonTests, "ConformanceTests");
 		std::cout << "Conformance Tests: " << std::endl;
 		runTest<std::unordered_map<std::string, std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
 		runTest<std::unordered_map<std::string, std::string>>("fail03.json", jsonTests["fail03.json"].fileContents, parser);

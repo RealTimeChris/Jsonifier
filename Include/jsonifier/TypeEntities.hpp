@@ -87,6 +87,10 @@ namespace jsonifier_internal {
 		using type = value_type;
 	};
 
+	template<typename value_type> struct get_int_type {
+		using type = std::conditional_t<std::is_unsigned_v<std::remove_cvref_t<value_type>>, uint8_t, int8_t>;
+	};
+
 	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
 	};
@@ -220,8 +224,8 @@ namespace jsonifier {
 			std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::const_reference>;
 
 		template<typename value_type>
-		concept always_null_t = std::is_same_v<std::remove_cvref_t<value_type>, std::nullptr_t> ||
-			std::is_same_v<std::remove_cvref_t<value_type>, std::monostate> || std::is_same_v<std::remove_cvref_t<value_type>, std::nullopt_t>;
+		concept always_null_t = std::is_same_v<std::remove_cvref_t<value_type>, std::nullptr_t> || std::is_same_v<std::remove_cvref_t<value_type>, std::monostate> ||
+			std::is_same_v<std::remove_cvref_t<value_type>, std::nullopt_t>;
 
 		template<typename value_type>
 		concept pointer_t = (std::is_pointer_v<std::remove_cvref_t<value_type>> ||

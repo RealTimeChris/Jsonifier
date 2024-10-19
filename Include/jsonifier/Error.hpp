@@ -120,8 +120,8 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE bool isNumberType(uint8_t c) noexcept {
-		return numberTable[c];
+	template<typename char_type> JSONIFIER_ALWAYS_INLINE bool isNumberType(char_type c) noexcept {
+		return numberTable[static_cast<uint8_t>(c)];
 	}
 
 	constexpr std::array<bool, 256> boolTable{ [] {

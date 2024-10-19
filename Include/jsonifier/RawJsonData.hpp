@@ -254,7 +254,7 @@ namespace jsonifier_internal {
 				}
 			};
 
-			auto collectValue = [&](bool endValue) {
+			auto collectValue = [&]() {
 				newIter02 = newIter01;
 				derailleur<optionsNew, parse_context<bool>>::skipToNextValue(newIter02, endIter01);
 				jsonifier::string newString{};
@@ -297,8 +297,7 @@ namespace jsonifier_internal {
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				collectCharacter(':');
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
-				bool endValue{ x == newCount - 1 };
-				results[newKey] = collectValue(endValue);
+				results[newKey] = collectValue();
 				derailleur<optionsNew, parse_context<bool>>::skipWs(newIter01);
 				collectCharacter(',');
 			}

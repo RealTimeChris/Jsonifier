@@ -74,9 +74,7 @@ concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
 
 template<typename value_type>
 concept has_substr = requires(std::remove_cvref_t<value_type> value) {
-	{
-		value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{})
-	} -> std::same_as<std::remove_cvref_t<value_type>>;
+	{ value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{}) } -> std::same_as<std::remove_cvref_t<value_type>>;
 };
 
 template<typename value_type>
@@ -128,7 +126,6 @@ void throwError(auto error, std::source_location location = std::source_location
 	stream << "Error: " << error << std::endl;
 	stream << "Thrown from: " << location.file_name() << ", At Line: " << location.line() << std::endl;
 	std::cout << stream.str();
-	throw std::runtime_error{ stream.str() };
 }
 
 template<typename value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData);
@@ -553,7 +550,7 @@ template<> void getValue(int32_t*& out_value, simdjson::ondemand::value jsonData
 	if (auto result = jsonData.get(temp); result) {
 		throwError(result);
 	}
-	out_value = new int32_t(static_cast<int32_t>(temp));
+	out_value = new int32_t{ static_cast<int32_t>(temp) };
 }
 
 template<> void getValue(std::unique_ptr<int32_t>& out_value, simdjson::ondemand::value jsonData) {

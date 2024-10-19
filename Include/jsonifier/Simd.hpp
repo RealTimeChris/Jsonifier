@@ -227,7 +227,7 @@ namespace jsonifier_internal {
 				tapeIndex += cnt;
 				return addTapeValues<index + 1>();
 			}
-		} 
+		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA)) };

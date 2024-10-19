@@ -141,17 +141,17 @@ using jsonifier_simd_int_t = __m512i;
 static constexpr size_t bitsPerStep{ 512 };
 using jsonifier_string_parsing_type = size_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m512x;
-	   #elif defined(JSONIFIER_AVX2)
+	#elif defined(JSONIFIER_AVX2)
 using jsonifier_simd_int_t = __m256i;
 static constexpr size_t bitsPerStep{ 256 };
 using jsonifier_string_parsing_type = uint32_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m256x;
-	   #elif defined(JSONIFIER_AVX)
+	#elif defined(JSONIFIER_AVX)
 using jsonifier_simd_int_t = __m128i;
 static constexpr size_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-	   #endif
+	#endif
 #elif defined(JSONIFIER_NEON)
 
 	#include <arm_neon.h>

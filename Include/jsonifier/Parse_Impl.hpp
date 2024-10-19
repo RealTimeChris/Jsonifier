@@ -43,8 +43,8 @@ namespace jsonifier_internal {
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY ((comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(),
-										 context.iter))) {
+				if JSONIFIER_LIKELY ((comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
+										 stringLiteral.data(), context.iter))) {
 					context.iter += keySizeNew;
 					JSONIFIER_SKIP_WS();
 					if JSONIFIER_LIKELY ((*context.iter == colon)) {
@@ -74,8 +74,8 @@ namespace jsonifier_internal {
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY ((comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(),
-										 context.iter))) {
+				if JSONIFIER_LIKELY ((comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
+										 stringLiteral.data(), context.iter))) {
 					context.iter += keySizeNew;
 					if JSONIFIER_LIKELY ((*context.iter == colon)) {
 						++context.iter;
@@ -96,7 +96,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type, size_t... indices>
 	JSONIFIER_ALWAYS_INLINE constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) {
 		using function_type = decltype(&index_processor<options, minified>::template processIndex<0, value_type, parse_context_type>);
-		return std::array<function_type, sizeof...(indices)>{ &index_processor<options, minified>::template processIndex<indices, value_type, parse_context_type>... };
+		return std::array<function_type, sizeof...(indices)>{ { &index_processor<options, minified>::template processIndex<indices, value_type, parse_context_type>... } };
 	}
 
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE constexpr auto generateFunctionPtrs() {
@@ -159,8 +159,8 @@ namespace jsonifier_internal {
 								static constexpr auto keySize		= key.size();
 								static constexpr auto keySizeNew	= keySize + 1;
 								if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-														 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-															 stringLiteral.data(), context.iter))) {
+														 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+															 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
 									context.iter += keySizeNew;
 									JSONIFIER_SKIP_WS();
 									if JSONIFIER_LIKELY ((*context.iter == colon)) {
@@ -219,8 +219,8 @@ namespace jsonifier_internal {
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
 											if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-																		 stringLiteral.data(), context.iter))) {
+																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+																		 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
 												context.iter += keySizeNew;
 												JSONIFIER_SKIP_WS();
 												if JSONIFIER_LIKELY ((*context.iter == colon)) {
@@ -238,7 +238,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+										if JSONIFIER_LIKELY ((auto indexNew =
+																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
@@ -267,11 +268,7 @@ namespace jsonifier_internal {
 							}
 							return;
 						};
-						if (context.iter + wsSize >= context.endIter) {
-							--context.currentObjectDepth;
-							return;
-						};
-						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
+						if (context.iter + wsSize < context.endIter && whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
 							if constexpr (options.knownOrder) {
 								if (antihash) {
 									parseLambda(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, parseLambda, value,
@@ -337,8 +334,8 @@ namespace jsonifier_internal {
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
 							if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-													 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-														 stringLiteral.data(), context.iter))) {
+													 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+														 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
 								context.iter += keySizeNew;
 								if JSONIFIER_LIKELY ((*context.iter == colon)) {
 									++context.iter;
@@ -405,8 +402,8 @@ namespace jsonifier_internal {
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
 											if JSONIFIER_LIKELY ((*(context.iter + key.size()) == doubleQuote &&
-																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>, std::remove_cvref_t<decltype(*context.iter)>>::compare(
-																		 stringLiteral.data(), context.iter))) {
+																	 comparison<keySize, std::remove_cvref_t<decltype(*stringLiteral.data())>,
+																		 std::remove_cvref_t<decltype(*context.iter)>>::compare(stringLiteral.data(), context.iter))) {
 												context.iter += keySizeNew;
 												if JSONIFIER_LIKELY ((*context.iter == colon)) {
 													++context.iter;
@@ -422,7 +419,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+										if JSONIFIER_LIKELY ((auto indexNew =
+																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {

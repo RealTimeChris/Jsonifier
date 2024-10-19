@@ -48,8 +48,8 @@ namespace jsonifier_internal {
 	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
-			serialize_impl<options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
-				std::forward<serialize_context_type>(iter));
+			serialize_impl<options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value),
+				std::forward<buffer_type>(buffer), std::forward<serialize_context_type>(iter));
 		}
 	};
 
@@ -71,7 +71,8 @@ namespace jsonifier_internal {
 			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
 				buffer.resize(serializePair.index);
 			}
-			if (!comparison<0, std::remove_cvref_t<decltype(*buffer.data())>, std::remove_cvref_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(), serializePair.index)) {
+			if (!comparison<0, std::remove_cvref_t<decltype(*buffer.data())>, std::remove_cvref_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(),
+					serializePair.index)) {
 				std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			}
 			return true;

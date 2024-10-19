@@ -200,10 +200,10 @@ namespace fast_float {
 	#elif (defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM) || defined(__ppc__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__))
 		#define FASTFLOAT_32BIT 1
 	#else
-	// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
-	// We can never tell the register width, but the SIZE_MAX is a good
-	// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
-	// portability.
+// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
+// We can never tell the register width, but the SIZE_MAX is a good
+// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
+// portability.
 		#if SIZE_MAX == 0xffff
 			#error Unknown platform (16-bit, unsupported)
 		#elif SIZE_MAX == 0xffffffff
@@ -243,12 +243,12 @@ namespace fast_float {
 		#endif
 		#
 		#ifndef __BYTE_ORDER__
-// safe choice
+		// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
 		#ifndef __ORDER_LITTLE_ENDIAN__
-// safe choice
+		// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
@@ -272,7 +272,7 @@ namespace fast_float {
 	#endif
 
 	#if defined(__GNUC__)
-// disable -Wcast-align=strict (GCC only)
+	// disable -Wcast-align=strict (GCC only)
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 	#else
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS
