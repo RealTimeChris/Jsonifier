@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<size_t sizeVal, typename value_type_new> struct JSONIFIER_ALIGN string_literal {
+	template<size_t sizeVal, typename value_type_new> struct string_literal {
 		using value_type	  = value_type_new;
 		using const_reference = const value_type&;
 		using reference		  = value_type&;
@@ -54,28 +54,28 @@ namespace jsonifier_internal {
 		}
 
 		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const string_literal<sizeNew, value_type_new>& str) const noexcept {
-			JSONIFIER_ALIGN string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
 		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+=(const value_type (&str)[sizeNew]) const noexcept {
-			JSONIFIER_ALIGN string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str, str + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
 		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+(const string_literal<sizeNew, value_type_new>& str) const noexcept {
-			JSONIFIER_ALIGN string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
 		template<size_type sizeNew> JSONIFIER_ALWAYS_INLINE constexpr auto operator+(const value_type (&str)[sizeNew]) const noexcept {
-			JSONIFIER_ALIGN string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str, str + sizeNew, newLiteral.data() + size());
 			return newLiteral;

@@ -752,7 +752,7 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t length> struct convert_length_to_int {
-		static_assert(length <= 8, "Sorry, but that string is too int64_t!");
+		static_assert(length <= 8, "Sorry, but that string is too long!");
 		using type = std::conditional_t<length == 1, uint8_t,
 			std::conditional_t<length <= 2, uint16_t, std::conditional_t<length <= 4, uint32_t, std::conditional_t<length <= 8, size_t, void>>>>;
 	};

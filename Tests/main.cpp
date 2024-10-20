@@ -202,7 +202,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 		results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
 		test_data_type testData{};
 		auto readResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, glazeLibraryName, "dodgerblue">([&]() {
-			if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = false }>(testData, newBuffer); error) {
+			if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = minified }>(testData, newBuffer); error) {
 				std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
 			}
 			bnch_swt::doNotOptimizeAway(testData);
@@ -791,7 +791,7 @@ void testFunction() {
 	jsonifier::jsonifier_core parser{};
 	parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
 	bnch_swt::file_loader::saveFile(jsonDataNew, basePath + "/JsonData-Prettified.json");
-	std::string jsonMinifiedData{ parser.minifyJson(jsonDataNew) };
+	std::string jsonMinifiedData{ glz::minify_json(jsonDataNew) };
 	bnch_swt::file_loader::saveFile(jsonMinifiedData, std::string{ static_cast<std::string>(basePath) + "/JsonData-Minified.json" });
 	std::string discordData{ bnch_swt::file_loader::loadFile(jsonPath + "/DiscordData-Prettified.json") };
 	std::string discordMinifiedData{ bnch_swt::file_loader::loadFile(jsonPath + "/DiscordData-Minified.json") };

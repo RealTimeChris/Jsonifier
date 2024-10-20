@@ -108,7 +108,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::signed_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
 		JSONIFIER_ALWAYS_INLINE constexpr integer_parser() noexcept = default;
 
-		JSONIFIER_ALWAYS_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
+		JSONIFIER_ALWAYS_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
 			value_type aLow	 = ab & 0xFFFFFFFF;
 			value_type bHigh = cd >> 32;
@@ -123,35 +123,33 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-			JSONIFIER_ALIGN uint64_t values;
 #if defined(_M_ARM64) && !defined(__MINGW32__)
-			values = __umulh(value, expValue);
-			value  = value * expValue;
+			return (__mulh(value, expValue) == 0) ? (value = value * expValue, true) : false;
 #elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__) && !defined(_M_ARM64))
-			value = _umul128(value, expValue, &values);
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__uint128_t r = (( __uint128_t )value) * expValue;
-			value		  = static_cast<value_type>(r);
-			values		  = static_cast<value_type>(r >> 64);
-#else
-			value = umul128Generic(value, expValue, values);
-#endif
+			JSONIFIER_ALIGN value_type values;
+			value = _mul128(value, expValue, &values);
 			return values == 0;
-		};
+#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+			__int128_t r = (( __int128_t )value) * expValue;
+			return (static_cast<value_type>(r >> 64) == 0) ? (value = static_cast<value_type>(r), true) : false;
+#else
+			JSONIFIER_ALIGN value_type values;
+			value = mul128Generic(value, expValue, values);
+			return values == 0;
+#endif
+		}
 
 		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-			JSONIFIER_ALIGN uint64_t values;
 #if defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
-			value = _udiv128(0, value, static_cast<uint64_t>(expValue), &values);
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__uint128_t dividend = __uint128_t(value);
-			value				 = static_cast<value_type>(dividend / expValue);
-			values				 = static_cast<value_type>(dividend % expValue);
-#else
-			values = value % expValue;
-			value  = value / expValue;
-#endif
+			JSONIFIER_ALIGN value_type values;
+			value = _div128(0, value, expValue, &values);
 			return values == 0;
+#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+			__int128_t dividend = __int128_t(value);
+			return (static_cast<value_type>(dividend % expValue) == 0) ? (value = static_cast<value_type>(dividend / expValue), true) : false;
+#else
+			return (value % expValue == 0) ? (value = value / expValue, true) : false;
+#endif
 		}
 
 		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
@@ -244,14 +242,10 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool negative> JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
-				if constexpr (negative) {
-					return (iter = parseFraction(value, iter), value *= -1, iter);
-				} else {
-					return parseFraction(value, iter);
-				}
+				return parseFraction(value, iter);
 			} else if (expTable[*iter]) {
 				++iter;
 				int8_t expSign = 1;
@@ -261,18 +255,14 @@ namespace jsonifier_internal {
 				} else if (*iter == plus) {
 					++iter;
 				}
-				if constexpr (negative) {
-					return (iter = parseExponent(value, iter, expSign), value *= -1, iter);
-				} else {
-					return parseExponent(value, iter, expSign);
-				}
+				return parseExponent(value, iter, expSign);
 			}
 			if JSONIFIER_LIKELY ((!expFracTable[*iter])) {
 				return iter;
 			} else {
 				return nullptr;
 			}
-		};
+		}
 
 		template<bool negative> JSONIFIER_ALWAYS_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
 			uint8_t numTmp{ *iter };
@@ -291,12 +281,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_UNLIKELY ((iter[-2] == zero)) {
@@ -310,12 +306,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -325,12 +327,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -340,12 +348,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -355,12 +369,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -370,12 +390,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -385,12 +411,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -400,12 +432,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -415,12 +453,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -430,12 +474,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -445,12 +495,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -460,12 +516,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -475,12 +537,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -490,12 +558,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -505,12 +579,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -520,12 +600,18 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
@@ -535,58 +621,67 @@ namespace jsonifier_internal {
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
 				}
-				return finishParse<negative>(value, iter);
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
+				} else {
+					return finishParse(value, iter);
+				}
 			}
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
 				if (negative) {
-					if (static_cast<uint64_t>(value) > static_cast<uint64_t>(rawCompValsNeg<value_type>[numTmp])) {
+					if (value > static_cast<uint64_t>(rawCompValsNeg<value_type>[numTmp])) {
 						return nullptr;
-					} else {
-						value = static_cast<uint64_t>(value) * 10 + static_cast<uint64_t>(numTmp - zero);
-						++iter;
-						numTmp = *iter;
 					}
+					value *= -1;
+					value = static_cast<value_type>(static_cast<uint64_t>(value * 10 - static_cast<uint64_t>(numTmp - zero)));
 				} else {
-					if (static_cast<uint64_t>(value) > rawCompValsPos<value_type>[numTmp]) {
+					if (value > rawCompValsPos<value_type>[numTmp]) {
 						return nullptr;
-					} else {
-						value = static_cast<uint64_t>(value) * 10 + static_cast<uint64_t>(numTmp - zero);
-						++iter;
-						numTmp = *iter;
 					}
+					value = static_cast<uint64_t>(value * 10 + static_cast<uint64_t>(numTmp - zero));
 				}
-			}
-			JSONIFIER_UNLIKELY(else) {
-				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
-						value *= -1;
-					}
-					return iter;
-				}
-				return finishParse<negative>(value, iter);
-			}
-
-			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
 				++iter;
 				numTmp = *iter;
 			}
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
-					if constexpr (negative) {
+					if (negative) {
 						value *= -1;
+						return iter;
+					} else {
+						return iter;
 					}
-					return iter;
+				}
+				if (negative) {
+					return (iter = finishParse(value, iter), value *= -1, iter);
 				} else {
-					return nullptr;
+					return finishParse(value, iter);
 				}
 			}
+
+			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
+				if (negative) {
+					value = value * 10 - static_cast<value_type>(numTmp - zero);
+				} else {
+					value = value * 10 + static_cast<value_type>(numTmp - zero);
+				}
+				++iter;
+				numTmp = *iter;
+			}
+			JSONIFIER_UNLIKELY(else) {
+				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
+					return iter;
+				}
+			}
+			return nullptr;
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& iter) noexcept {
@@ -631,35 +726,33 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-			JSONIFIER_ALIGN uint64_t values;
 #if defined(_M_ARM64) && !defined(__MINGW32__)
-			values = __umulh(value, expValue);
-			value  = value * expValue;
+			return (__umulh(value, expValue) == 0) ? (value = value * expValue, true) : false;
 #elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__) && !defined(_M_ARM64))
+			JSONIFIER_ALIGN value_type values;
 			value = _umul128(value, expValue, &values);
+			return values == 0;
 #elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
 			__uint128_t r = (( __uint128_t )value) * expValue;
-			value		  = static_cast<value_type>(r);
-			values		  = static_cast<value_type>(r >> 64);
+			return (static_cast<value_type>(r >> 64) == 0) ? (value = static_cast<value_type>(r), true) : false;
 #else
+			JSONIFIER_ALIGN value_type values;
 			value = umul128Generic(value, expValue, values);
-#endif
 			return values == 0;
-		};
+#endif
+		}
 
 		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-			JSONIFIER_ALIGN uint64_t values;
 #if defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
-			value = _udiv128(0, value, static_cast<uint64_t>(expValue), &values);
+			JSONIFIER_ALIGN value_type values;
+			value = _udiv128(0, value, expValue, &values);
+			return values == 0;
 #elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
 			__uint128_t dividend = __uint128_t(value);
-			value				 = static_cast<value_type>(dividend / expValue);
-			values				 = static_cast<value_type>(dividend % expValue);
+			return (static_cast<value_type>(dividend % expValue) == 0) ? (value = static_cast<value_type>(dividend / expValue), true) : false;
 #else
-			values = value % expValue;
-			value  = value / expValue;
+			return (value % expValue == 0) ? (value = value / expValue, true) : false;
 #endif
-			return values == 0;
 		}
 
 		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
@@ -772,7 +865,7 @@ namespace jsonifier_internal {
 			} else {
 				return nullptr;
 			}
-		};
+		}
 
 		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
 			uint8_t numTmp{ *iter };
@@ -1027,10 +1120,9 @@ namespace jsonifier_internal {
 			JSONIFIER_UNLIKELY(else) {
 				if JSONIFIER_LIKELY ((!expFracTable[numTmp])) {
 					return iter;
-				} else {
-					return nullptr;
 				}
 			}
+			return nullptr;
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& iter) noexcept {

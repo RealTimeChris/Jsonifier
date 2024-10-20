@@ -44,7 +44,7 @@ namespace jsonifier_internal {
 						}
 						++currentDistance;
 						if JSONIFIER_LIKELY ((currentDistance > 0)) {
-							writeCharacters(out, previousPtr, currentDistance, index);
+							writeCharacters(out, previousPtr, static_cast<uint64_t>(currentDistance), index);
 						} else {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(

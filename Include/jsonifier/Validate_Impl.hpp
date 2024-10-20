@@ -232,7 +232,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 
@@ -332,7 +332,7 @@ namespace jsonifier_internal {
 				}
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 
@@ -352,7 +352,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return *iter;
+			return static_cast<bool>(*iter);
 		}
 	};
 
