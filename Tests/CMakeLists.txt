@@ -44,7 +44,7 @@ FetchContent_MakeAvailable(BenchmarkSuite)
 
 FetchContent_Declare(
   simdjson
-  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_REPOSITORY https://github.com/realtimechris/simdjson.git
   GIT_TAG master
   GIT_SHALLOW TRUE
 )

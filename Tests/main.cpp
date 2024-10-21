@@ -282,7 +282,7 @@ template<typename test_data_type, bool minified, size_t iterations, jsonifier_in
 struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, testNameNew> {
 	static auto run(const std::string& newestBuffer) {
 		std::string newBuffer{ newestBuffer };
-		newBuffer.reserve(newBuffer.size() + simdjson::SIMDJSON_PADDING);
+		newBuffer.reserve(newBuffer.size() + 256);
 		static constexpr jsonifier_internal::string_literal testName{ testNameNew };
 		results_data r{ simdjsonLibraryName, testName, simdjsonCommitUrl, iterations };
 		simdjson::ondemand::parser parser{};
