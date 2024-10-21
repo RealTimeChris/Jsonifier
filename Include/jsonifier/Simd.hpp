@@ -31,6 +31,8 @@
 
 namespace jsonifier_internal {
 
+	enum class simd_errors { success = 0, unclosed_string = 1, no_input = 2 };
+
 	class string_block_reader {
 	  public:
 		JSONIFIER_ALWAYS_INLINE void reset(string_view_ptr stringViewNew, uint64_t lengthNew) noexcept {
@@ -78,13 +80,19 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool minified, typename char_type> JSONIFIER_ALWAYS_INLINE void reset(char_type* stringViewNew, size_type size) noexcept {
+		template<bool minified, typename char_type> JSONIFIER_ALWAYS_INLINE simd_errors reset(char_type* stringViewNew, size_type size) noexcept {
 			currentParseBuffer = jsonifier::string_view_base{ static_cast<string_view_ptr>(stringViewNew), size };
 			auto newSize	   = roundUpToMultiple<8ull>(static_cast<size_type>(static_cast<double>(currentParseBuffer.size()) * multiplier));
 			if JSONIFIER_UNLIKELY ((structuralIndexCount < newSize)) {
 				resize(newSize * 2);
 			}
 			resetImpl<minified>();
+			if (prevInString != 0) {
+				return simd_errors::unclosed_string;
+			} else if (tapeIndex == 0) {
+				return simd_errors::no_input;
+			}
+			return simd_errors::success;
 		}
 
 		JSONIFIER_ALWAYS_INLINE auto end() noexcept {
@@ -257,9 +265,9 @@ namespace jsonifier_internal {
 			rawStructurals.quotes = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t scalar;
 			if constexpr (!minified) {
-				scalar = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+				scalar = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			} else {
-				scalar = opNot(rawStructurals.op);
+				scalar = simd_internal::opNot(rawStructurals.op);
 			}
 			rawStructurals.op = simd_internal::opAndNot(
 				simd_internal::opOr(rawStructurals.op, simd_internal::opAndNot(scalar, simd_internal::opFollows(simd_internal::opAndNot(scalar, rawStructurals.quotes), overflow))),

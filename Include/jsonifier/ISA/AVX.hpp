@@ -124,10 +124,9 @@ namespace simd_internal {
 		return !_mm_testz_si128(result, result);
 	}
 
-	#if defined(opNot)
-		#undef opNot
-	#endif
-	#define opNot(x) _mm_xor_si128(x, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return _mm128_xor_si128(value, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
 
 	#if defined(JSONIFIER_AVX2)
 
@@ -226,10 +225,10 @@ namespace simd_internal {
 		return !_mm256_testz_si256(result, result);
 	}
 
-		#if defined(opNot)
-			#undef opNot
-		#endif
-		#define opNot(x) _mm256_xor_si256(x, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_256_type simd_int_t01>
+	JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return _mm256_xor_si256(value, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
 
 		#if defined(JSONIFIER_AVX512)
 

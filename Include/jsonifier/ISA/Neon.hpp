@@ -131,7 +131,10 @@ namespace simd_internal {
 		return opBitMask(vcgtq_u8(other, value));
 	}
 
-	#define opNot(x) vmvnq_u8(x)
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01>
+	JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return vmvnq_u8(value);
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) noexcept {
 		constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };

@@ -123,32 +123,40 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(_M_ARM64) && !defined(__MINGW32__)
-			return (__mulh(value, expValue) == 0) ? (value = value * expValue, true) : false;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__) && !defined(_M_ARM64))
+#if defined(__SIZEOF_INT128__)
+			const __int128_t res = static_cast<__int128_t>(value) * static_cast<__int128_t>(expValue);
+			value				 = static_cast<value_type>(res);
+			return res <= std::numeric_limits<value_type>::max();
+#elif defined(_M_ARM64) && !defined(__MINGW32__)
+			JSONIFIER_ALIGN value_type values;
+			values = __mulh(value, expValue);
+			value  = value * expValue;
+			return values == 0;
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _mul128(value, expValue, &values);
 			return values == 0;
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__int128_t r = (( __int128_t )value) * expValue;
-			return (static_cast<value_type>(r >> 64) == 0) ? (value = static_cast<value_type>(r), true) : false;
 #else
 			JSONIFIER_ALIGN value_type values;
-			value = mul128Generic(value, expValue, values);
+			value = mul128Generic(value, expValue, &values);
 			return values == 0;
 #endif
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#if defined(__SIZEOF_INT128__)
+			const __int128_t dividend = static_cast<__int128_t>(value);
+			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
+			return (dividend % static_cast<__int128_t>(expValue)) == 0;
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _div128(0, value, expValue, &values);
 			return values == 0;
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__int128_t dividend = __int128_t(value);
-			return (static_cast<value_type>(dividend % expValue) == 0) ? (value = static_cast<value_type>(dividend / expValue), true) : false;
 #else
-			return (value % expValue == 0) ? (value = value / expValue, true) : false;
+			JSONIFIER_ALIGN value_type values;
+			values = value % expValue;
+			value  = value / expValue;
+			return values == 0;
 #endif
 		}
 
@@ -637,13 +645,13 @@ namespace jsonifier_internal {
 
 			if JSONIFIER_LIKELY ((isDigit(numTmp))) {
 				if (negative) {
-					if (value > static_cast<uint64_t>(rawCompValsNeg<value_type>[numTmp])) {
+					if (static_cast<uint64_t>(value) > static_cast<uint64_t>(rawCompValsNeg<value_type>[numTmp])) {
 						return nullptr;
 					}
 					value *= -1;
 					value = static_cast<value_type>(static_cast<uint64_t>(value * 10 - static_cast<uint64_t>(numTmp - zero)));
 				} else {
-					if (value > rawCompValsPos<value_type>[numTmp]) {
+					if (static_cast<value_type>(value) > static_cast<value_type>(rawCompValsPos<value_type>[numTmp])) {
 						return nullptr;
 					}
 					value = static_cast<uint64_t>(value * 10 + static_cast<uint64_t>(numTmp - zero));
@@ -726,32 +734,40 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(_M_ARM64) && !defined(__MINGW32__)
-			return (__umulh(value, expValue) == 0) ? (value = value * expValue, true) : false;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__) && !defined(_M_ARM64))
+#if defined(__SIZEOF_INT128__)
+			const __uint128_t res = static_cast<__uint128_t>(value) * static_cast<__uint128_t>(expValue);
+			value				  = static_cast<value_type>(res);
+			return res <= std::numeric_limits<value_type>::max();
+#elif defined(_M_ARM64) && !defined(__MINGW32__)
+			JSONIFIER_ALIGN value_type values;
+			values = __umulh(value, expValue);
+			value  = value * expValue;
+			return values == 0;
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _umul128(value, expValue, &values);
 			return values == 0;
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__uint128_t r = (( __uint128_t )value) * expValue;
-			return (static_cast<value_type>(r >> 64) == 0) ? (value = static_cast<value_type>(r), true) : false;
 #else
 			JSONIFIER_ALIGN value_type values;
-			value = umul128Generic(value, expValue, values);
+			value = umul128Generic(value, expValue, &values);
 			return values == 0;
 #endif
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#if defined(__SIZEOF_INT128__)
+			const __uint128_t dividend = static_cast<__uint128_t>(value);
+			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
+			return (dividend % static_cast<__uint128_t>(expValue)) == 0;
+#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _udiv128(0, value, expValue, &values);
 			return values == 0;
-#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
-			__uint128_t dividend = __uint128_t(value);
-			return (static_cast<value_type>(dividend % expValue) == 0) ? (value = static_cast<value_type>(dividend / expValue), true) : false;
 #else
-			return (value % expValue == 0) ? (value = value / expValue, true) : false;
+			JSONIFIER_ALIGN value_type values;
+			values = value % expValue;
+			value  = value / expValue;
+			return values == 0;
 #endif
 		}
 

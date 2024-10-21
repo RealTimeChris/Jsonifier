@@ -448,7 +448,7 @@ namespace fast_float {
 		answer.low	= a * b;
 	#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__) && !defined(_M_ARM64))
 		answer.low = _umul128(a, b, &answer.high);// _umul128 not available on ARM64
-	#elif defined(FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
+	#elif defined(__SIZEOF_INT128__)
 		__uint128_t r = (( __uint128_t )a) * b;
 		answer.low	  = static_cast<uint64_t>(r);
 		answer.high	  = static_cast<uint64_t>(r >> 64);
