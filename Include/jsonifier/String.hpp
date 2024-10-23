@@ -211,7 +211,7 @@ namespace jsonifier {
 			string_base result{};
 			if JSONIFIER_LIKELY ((count > 0)) {
 				result.resize(count);
-				std::copy(dataVal + position, dataVal + position + count * sizeof(value_type), result.dataVal);
+				std::memcpy(result.dataVal, dataVal + position, position + count * sizeof(value_type));
 			}
 			return result;
 		}
@@ -283,7 +283,7 @@ namespace jsonifier {
 				reserve(sizeVal + newSize.size());
 			}
 			if JSONIFIER_LIKELY ((newSize.size() > 0)) {
-				std::copy(newSize.data(), newSize.data() + newSize.size(), dataVal + sizeVal);
+				std::memcpy(dataVal + sizeVal, newSize.data(), newSize.size());
 				sizeVal += newSize.size();
 				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
@@ -294,7 +294,7 @@ namespace jsonifier {
 				reserve(sizeVal + newSize);
 			}
 			if JSONIFIER_LIKELY ((newSize > 0 && values)) {
-				std::copy(values, values + newSize, dataVal + sizeVal);
+				std::memcpy(dataVal + sizeVal, values, newSize);
 				sizeVal += newSize;
 				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
@@ -313,7 +313,7 @@ namespace jsonifier {
 			}
 
 			std::memmove(dataVal + posNew + newSize, dataVal + posNew, (sizeVal - posNew) * sizeof(value_type));
-			std::copy(start.operator->(), start.operator->() + newSize * sizeof(value_type), dataVal + posNew);
+			std::memcpy(dataVal + posNew, start.operator->(), newSize * sizeof(value_type));
 			sizeVal += newSize;
 			allocator::construct(&dataVal[sizeVal], value_type{});
 		}

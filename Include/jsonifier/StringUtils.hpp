@@ -835,6 +835,35 @@ namespace jsonifier_internal {
 			}
 		}
 
+		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseStringNr(value_type&& value, context_type& context) noexcept {
+			if JSONIFIER_LIKELY ((*context.iter == '"')) {
+				++context.iter;
+				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
+				if JSONIFIER_LIKELY ((newPtr)) {
+					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
+					if (newSize > 0) {
+						if (value.size() != newSize) {
+							value.resize(newSize);
+						}
+						std::memcpy(value.data(), stringBuffer.data(), newSize);
+						value[newSize] = '\0';
+						++context.iter;
+					}
+				}
+				JSONIFIER_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Invalid_String_Characters>(context);
+					return false;
+				}
+				return true;
+			}
+			JSONIFIER_UNLIKELY(else) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
+				return false;
+			}
+		}
+
 		JSONIFIER_ALWAYS_INLINE static void skipString(context_type& context) noexcept {
 			++context.iter;
 			auto newLength = static_cast<size_t>(context.endIter - context.iter);
@@ -983,6 +1012,14 @@ namespace jsonifier_internal {
 			}
 		}
 
+		template<typename iterator_type> JSONIFIER_INLINE static bool isNumeric(iterator_type& iter) noexcept {
+			if (*iter == '-' || *iter == '+' || *iter == 'E' || *iter == 'e' || *iter == '.' || std::isdigit(static_cast<uint8_t>(*iter))) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		JSONIFIER_INLINE static bool skipToNextValue(context_type& context) noexcept {
 			if constexpr (!options.minified) {
 				if (context.iter < context.endIter) {
@@ -1094,7 +1131,16 @@ namespace jsonifier_internal {
 				case '8':
 				case '9':
 				case '-': {
-					skipNumber(context);
+					if constexpr (!options.minified) {
+						if (context.iter < context.endIter) {
+							JSONIFIER_SKIP_WS();
+						} else {
+							return false;
+						}
+					}
+					while (isNumeric(context.iter)) {
+						++context.iter;
+					}
 					break;
 				}
 				default: {
@@ -1277,7 +1323,13 @@ namespace jsonifier_internal {
 				case '8':
 				case '9':
 				case '-': {
-					skipNumber(iter, endIter);
+					if constexpr (!options.minified) {
+						skipWs(iter);
+					}
+					while (isNumeric(iter)) {
+						++iter;
+					}
+					break;
 					break;
 				}
 				default: {
@@ -1344,7 +1396,12 @@ namespace jsonifier_internal {
 					[[unlikely]] case '8':
 					[[unlikely]] case '9':
 					[[unlikely]] case '-': {
-						skipNumber(iter, endIter);
+						if constexpr (!options.minified) {
+							skipWs(iter);
+						}
+						while (isNumeric(iter)) {
+							++iter;
+						}
 						break;
 					}
 						[[likely]] default : {
@@ -1452,11 +1509,8 @@ namespace jsonifier_internal {
 			};
 			if (*context.iter == '0') {
 				++context.iter;
-				if (*context.iter != '.') {
-					return;
-				}
 				++context.iter;
-				if (fracStart()) {
+				if (!fracStart()) {
 					return;
 				}
 			}

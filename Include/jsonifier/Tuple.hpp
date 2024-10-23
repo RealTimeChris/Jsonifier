@@ -72,14 +72,11 @@ namespace jsonifier_internal {
 		} else {
 			return member_ptr;
 		}
-	}
-}
-
-namespace jsonifier {
+	}	
 
 	template<typename... arg_types> constexpr auto createValueArgs(arg_types&&... args) noexcept {
 		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
-			return jsonifier_internal::generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...);
+			return generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...);
 		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
 			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
 		} else if constexpr (sizeof...(arg_types) == 1) {
@@ -94,21 +91,24 @@ namespace jsonifier {
 	template<auto... values> constexpr auto createValueTemplates() noexcept {
 		constexpr auto newTuple	   = std::make_tuple(values...);
 		constexpr auto memberNames = jsonifier_internal::getNames<values...>();
-		return jsonifier_internal::generateInterleavedTuple(newTuple, memberNames);
+		return generateInterleavedTuple(newTuple, memberNames);
 	}
+}
+
+namespace jsonifier {
 
 	template<auto... values, typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
 		if constexpr (sizeof...(values) > 0 && sizeof...(args) > 0) {
-			auto newerTuple = createValueTemplates<values...>();
-			auto newTuple	= createValueArgs(std::forward<arg_types>(args)...);
+			auto newerTuple = jsonifier_internal::createValueTemplates<values...>();
+			auto newTuple	= jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...);
 			return value{ std::tuple_cat(newerTuple, newTuple) };
 		} else if constexpr (sizeof...(values) > 0) {
-			return value{ createValueTemplates<values...>() };
+			return value{ jsonifier_internal::createValueTemplates<values...>() };
 		} else if constexpr (sizeof...(args) > 0) {
 			if constexpr (sizeof...(args) == 1) {
-				return scalar_value{ createValueArgs(std::forward<arg_types>(args)...) };
+				return scalar_value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
 			} else {
-				return value{ createValueArgs(std::forward<arg_types>(args)...) };
+				return value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
 			}
 		} else {
 			return value{ concepts::empty{} };

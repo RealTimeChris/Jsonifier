@@ -113,12 +113,12 @@ namespace jsonifier_internal {
 			value_type aLow	 = ab & 0xFFFFFFFF;
 			value_type bHigh = cd >> 32;
 			value_type bLow	 = cd & 0xFFFFFFFF;
-			value_type ad	 = aHigh * static_cast<value_type>(bLow);
-			value_type bd	 = aHigh * static_cast<value_type>(bLow);
-			value_type adbc	 = ad + aLow * static_cast<value_type>(bHigh);
+			value_type ad	 = aHigh * bLow;
+			value_type bd	 = aHigh * bLow;
+			value_type adbc	 = ad + aLow * bHigh;
 			value_type lo	 = bd + (adbc << 32);
 			value_type carry = (lo < bd);
-			hi				 = aHigh * static_cast<value_type>(bHigh) + (adbc >> 32) + carry;
+			hi				 = aHigh * bHigh + (adbc >> 32) + carry;
 			return lo;
 		}
 
@@ -132,7 +132,7 @@ namespace jsonifier_internal {
 			values = __mulh(value, expValue);
 			value  = value * expValue;
 			return values == 0;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#elif (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _mul128(value, expValue, &values);
 			return values == 0;
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 			const __int128_t dividend = static_cast<__int128_t>(value);
 			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
 			return (dividend % static_cast<__int128_t>(expValue)) == 0;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#elif (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _div128(0, value, expValue, &values);
 			return values == 0;
@@ -205,9 +205,9 @@ namespace jsonifier_internal {
 					constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
 
 					if (fracDigits + expValue >= 0) {
-						expValue *= expSign;
 						const auto fractionalCorrection =
 							expValue > fracDigits ? fracValue * powerOfTenInt<value_type>[expValue - fracDigits] : fracValue / powerOfTenInt<value_type>[fracDigits - expValue];
+						expValue *= expSign;
 						return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), value += fractionalCorrection, iter) : nullptr)
 											 : ((value / powerExp >= (doubleMin)) ? (divide(value, powerExp), value += fractionalCorrection, iter) : nullptr);
 					} else {
@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);
@@ -724,12 +724,12 @@ namespace jsonifier_internal {
 			value_type aLow	 = ab & 0xFFFFFFFF;
 			value_type bHigh = cd >> 32;
 			value_type bLow	 = cd & 0xFFFFFFFF;
-			value_type ad	 = aHigh * static_cast<value_type>(bLow);
-			value_type bd	 = aHigh * static_cast<value_type>(bLow);
-			value_type adbc	 = ad + aLow * static_cast<value_type>(bHigh);
+			value_type ad	 = aHigh * bLow;
+			value_type bd	 = aHigh * bLow;
+			value_type adbc	 = ad + aLow * bHigh;
 			value_type lo	 = bd + (adbc << 32);
 			value_type carry = (lo < bd);
-			hi				 = aHigh * static_cast<value_type>(bHigh) + (adbc >> 32) + carry;
+			hi				 = aHigh * bHigh + (adbc >> 32) + carry;
 			return lo;
 		}
 
@@ -743,7 +743,7 @@ namespace jsonifier_internal {
 			values = __umulh(value, expValue);
 			value  = value * expValue;
 			return values == 0;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#elif (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _umul128(value, expValue, &values);
 			return values == 0;
@@ -759,7 +759,7 @@ namespace jsonifier_internal {
 			const __uint128_t dividend = static_cast<__uint128_t>(value);
 			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
 			return (dividend % static_cast<__uint128_t>(expValue)) == 0;
-#elif defined(FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(__clang__))
+#elif (defined(_WIN64) && !defined(__clang__))
 			JSONIFIER_ALIGN value_type values;
 			value = _udiv128(0, value, expValue, &values);
 			return values == 0;
@@ -861,7 +861,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);

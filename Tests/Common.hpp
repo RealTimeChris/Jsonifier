@@ -144,8 +144,12 @@ template<typename value_type> struct test_generator {
 	}
 
 	static double generateDouble() {
-		return randomizeNumberUniform(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
-	};
+		double min = std::numeric_limits<double>::min();
+		double max = std::numeric_limits<double>::max();
+		std::uniform_real_distribution<double> dis(log(min), log(max));
+		double logValue = dis(gen);
+		return std::exp(logValue);
+	}
 
 	static bool generateBool() {
 		return static_cast<bool>(randomizeNumberUniform(0, 100) >= 50);

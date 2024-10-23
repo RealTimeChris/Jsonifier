@@ -129,7 +129,7 @@ struct twitter_user_data {
 	bool geo_enabled;
 	bool verified;
 	int64_t statuses_count;
-	std::string  lang;
+	std::string lang;
 	bool contributors_enabled;
 	bool is_translator;
 	bool is_translation_enabled;
@@ -141,7 +141,7 @@ struct twitter_user_data {
 	std::string profile_image_url_https;
 	std::optional<std::string> profile_banner_url;
 	std::string profile_link_color;
-	std::string  profile_sidebar_border_color;
+	std::string profile_sidebar_border_color;
 	std::string profile_sidebar_fill_color;
 	std::string profile_text_color;
 	bool profile_use_background_image;
@@ -184,4 +184,3 @@ struct twitter_message {
 	std::vector<status_data> statuses;
 	search_metadata_data search_metadata;
 };
-

@@ -152,17 +152,13 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
-		static_assert(std::numeric_limits<value_type>::is_iec559);
-		static_assert(std::numeric_limits<value_type>::radix == 2);
-		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
-		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 
 		if JSONIFIER_LIKELY ((val != 0.0)) {
-			using ConversionTraits = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;
-			using FormatTraits	   = jsonifier_jkj::dragonbox::ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>;
-			constexpr bool isFloat = std::is_same_v<float, value_type>;
+			using conversion_traits		  = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;
+			using format_traits			  = jsonifier_jkj::dragonbox::ieee754_binary_traits<typename conversion_traits::format, typename conversion_traits::carrier_uint>;
+			static constexpr bool isFloat = std::is_same_v<float, value_type>;
 			static constexpr uint32_t exponentBitsCount = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-			const auto br								= jsonifier_jkj::dragonbox::make_float_bits<value_type, ConversionTraits, FormatTraits>(val);
+			const auto br								= jsonifier_jkj::dragonbox::make_float_bits<value_type, conversion_traits, format_traits>(val);
 			const auto exponentBits						= br.extract_exponent_bits();
 			const auto s								= br.remove_exponent_bits();
 

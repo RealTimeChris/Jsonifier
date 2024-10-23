@@ -127,7 +127,7 @@ namespace jsonifier_internal {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (context.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(context), false)
 				: (context.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context), false)
-				: (context.iter != context.endIter)	 ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(context), false)
+				: (context.iter < context.endIter)	 ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(context), false)
 				: derivedRef.errors.size() > 0		 ? false
 													 : true;
 		}
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (context.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
 				: (context.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
-				: (context.iter != context.endIter)	 ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
+				: (context.iter < context.endIter)	 ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
 				: derivedRef.errors.size() > 0		 ? std::remove_cvref_t<value_type>{}
 													 : object;
 		}
