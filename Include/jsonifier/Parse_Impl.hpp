@@ -485,9 +485,8 @@ namespace jsonifier_internal {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						auto newPtr = std::get<0>(value);
-						parse<false, options>::impl(getMember(newPtr, value), context);
-
+						auto& newValue = std::get<0>(value);
+						parse<false, options>::impl(newValue, context);
 						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
 							parseObjects<memberCount, 1, true>(value, context, wsStart, wsSize);
 						} else {
@@ -514,8 +513,8 @@ namespace jsonifier_internal {
 					if JSONIFIER_LIKELY ((*context.iter == comma)) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
-						auto newPtr = std::get<currentIndex>(value);
-						parse<false, options>::impl(getMember(newPtr, value), context);
+						auto& newValue = std::get<currentIndex>(value);
+						parse<false, options>::impl(newValue, context);
 						return parseObjects<n, currentIndex + 1, newLines>(value, context, wsStart, wsSize);
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -526,12 +525,10 @@ namespace jsonifier_internal {
 				} else {
 					++context.iter;
 					JSONIFIER_SKIP_WS();
-					--context.currentArrayDepth;
 				}
 			} else {
 				++context.iter;
 				JSONIFIER_SKIP_WS();
-				--context.currentArrayDepth;
 			}
 		}
 	};
@@ -548,8 +545,8 @@ namespace jsonifier_internal {
 				++context.currentArrayDepth;
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					if constexpr (memberCount > 0) {
-						auto newPtr = std::get<0>(value);
-						parse<true, options>::impl(getMember(newPtr, value), context);
+						auto& newValue = std::get<0>(value);
+						parse<true, options>::impl(newValue, context);
 						parseObjects<memberCount, 1>(value, context);
 					}
 				}
@@ -569,8 +566,8 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					if JSONIFIER_LIKELY ((*context.iter == comma)) {
 						++context.iter;
-						auto newPtr = std::get<currentIndex>(value);
-						parse<true, options>::impl(getMember(newPtr, value), context);
+						auto& newValue = std::get<currentIndex>(value);
+						parse<true, options>::impl(newValue, context);
 						return parseObjects<n, currentIndex + 1>(value, context);
 					} else {
 						static constexpr auto sourceLocation{ std::source_location::current() };
@@ -1067,6 +1064,9 @@ namespace jsonifier_internal {
 	struct parse_impl<minified, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			auto newPtr = static_cast<const char*>(context.iter);
+			if constexpr (!minified) {
+				JSONIFIER_SKIP_WS();
+			}
 			derailleur<options, parse_context_type>::skipToNextValue(context);
 			int64_t newSize = static_cast<const char*>(context.iter) - newPtr;
 			if JSONIFIER_LIKELY ((newSize > 0)) {

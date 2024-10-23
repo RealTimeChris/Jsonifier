@@ -192,41 +192,79 @@ namespace jsonifier_internal {
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeObjectEntry<numMembers>(buffer, serializePair);
-			static constexpr auto serializeLambda = [](const auto currentIndex, const auto maxIndex, auto&& value, auto&& buffer, auto&& serializePair) {
-				if constexpr (currentIndex < maxIndex) {
-					static constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
-					static constexpr auto key	   = subTuple.view();
-					if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-						auto& keys = value.jsonifierExcludedKeys;
-						if JSONIFIER_LIKELY ((keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end())) {
-							return;
-						}
-					}
-					static constexpr auto memberPtr = subTuple.ptr();
-					static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
-					if constexpr (options.prettify) {
-						static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
-						writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
-					} else {
-						static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
-						writer<options>::template writeCharacters<quotedKey>(buffer, serializePair.index);
-					}
-
-					serialize<options>::impl(value.*memberPtr, buffer, serializePair);
-					if constexpr (currentIndex < maxIndex - 1) {
-						if constexpr (options.prettify) {
-							writer<options>::template writeCharacters<",\n">(buffer, serializePair.index);
-							writer<options>::template writeCharacters<' '>(serializePair.indent * options.indentSize, buffer, serializePair.index);
-						} else {
-							writer<options>::template writeCharacter<','>(buffer, serializePair.index);
-						}
-					}
-					return;
+			if constexpr (numMembers > 0) {
+				if constexpr (options.prettify) {
+					++serializePair.indent;
+					auto indentTotal			= serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '{';
+					++serializePair.index;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				} else {
+					buffer[serializePair.index] = '{';
+					++serializePair.index;
 				}
-			};
-			forEach<numMembers, serializeLambda>(value, buffer, serializePair);
-			writer<options>::template writeObjectExit<numMembers>(buffer, serializePair);
+				static constexpr auto serializeLambda = [](const auto currentIndex, const auto maxIndex, auto&& value, auto&& buffer, auto&& serializePair) {
+					if constexpr (currentIndex < maxIndex) {
+						static constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+						static constexpr auto key	   = subTuple.view();
+						if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+							auto& keys = value.jsonifierExcludedKeys;
+							if JSONIFIER_LIKELY ((keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end())) {
+								return;
+							}
+						}
+						static constexpr auto memberPtr = subTuple.ptr();
+						static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
+						if constexpr (options.prettify) {
+							static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
+							static constexpr auto size		= quotedKey.size();
+							std::memcpy(&buffer[serializePair.index], quotedKey.data(), size);
+							serializePair.index += size;
+						} else {
+							static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
+							static constexpr auto size		= quotedKey.size();
+							std::memcpy(&buffer[serializePair.index], quotedKey.data(), size);
+							serializePair.index += size;
+						}
+
+						serialize<options>::impl(value.*memberPtr, buffer, serializePair);
+						if constexpr (currentIndex < maxIndex - 1) {
+							if constexpr (options.prettify) {
+								auto indentTotal			= serializePair.indent * options.indentSize;
+								buffer[serializePair.index] = ',';
+								++serializePair.index;
+								buffer[serializePair.index] = '\n';
+								++serializePair.index;
+								std::memset(&buffer[serializePair.index], ' ', serializePair.indent * options.indentSize);
+								serializePair.index += indentTotal;
+							} else {
+								buffer[serializePair.index] = ',';
+								++serializePair.index;
+							}
+						}
+						return;
+					}
+				};
+				forEach<numMembers, serializeLambda>(value, buffer, serializePair);
+				if constexpr (options.prettify && numMembers > 0) {
+					--serializePair.indent;
+					auto indentTotal			= serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				}
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
+			} else {
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
+			}
 		}
 	};
 
@@ -246,36 +284,73 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto size			  = value.size();
-			const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(size, serializePair.indent);
+			const auto maxIndex = value.size();
+			auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeCharacter<'{'>(buffer, serializePair.index);
-			if JSONIFIER_LIKELY ((size > 0)) {
-				writer<options>::writeObjectEntry(buffer, serializePair);
-
+			if JSONIFIER_LIKELY ((maxIndex > 0)) {
+				if constexpr (options.prettify) {
+					++serializePair.indent;
+					auto indentTotal	 = serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '{';
+					++serializePair.index;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				} else {
+					buffer[serializePair.index] = '{';
+					++serializePair.index;
+				}
 				auto iter = value.begin();
 				serialize<options>::impl(iter->first, buffer, serializePair);
-				writer<options>::template writeCharacter<':'>(buffer, serializePair.index);
+				buffer[serializePair.index] = ':';
+				++serializePair.index;
 				if constexpr (options.prettify) {
-					writer<options>::template writeCharacter<0x20u>(buffer, serializePair.index);
+					buffer[serializePair.index] = ' ';
+					++serializePair.index;
 				}
 				serialize<options>::impl(iter->second, buffer, serializePair);
 				++iter;
-				auto endIter = value.end();
-				for (; iter != endIter; ++iter) {
-					writer<options>::writeEntrySeparator(buffer, serializePair);
-					serialize<options>::impl(iter->first, buffer, serializePair);
-					writer<options>::template writeCharacter<':'>(buffer, serializePair.index);
+				const auto end = value.end();
+				for (; iter != end; ++iter) {
 					if constexpr (options.prettify) {
-						writer<options>::template writeCharacter<0x20u>(buffer, serializePair.index);
+						auto indentTotal			= serializePair.indent * options.indentSize;
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+						buffer[serializePair.index] = '\n';
+						++serializePair.index;
+						std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+						serializePair.index += indentTotal;
+					} else {
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+					}
+					serialize<options>::impl(iter->first, buffer, serializePair);
+					buffer[serializePair.index] = ':';
+					++serializePair.index;
+					if constexpr (options.prettify) {
+						buffer[serializePair.index] = ' ';
+						++serializePair.index;
 					}
 					serialize<options>::impl(iter->second, buffer, serializePair);
 				}
-				writer<options>::writeObjectExit(buffer, serializePair);
+				if constexpr (options.prettify) {
+					--serializePair.indent;
+					auto indentTotal			= serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				}
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
 			} else {
-				writer<options>::template writeCharacter<'}'>(buffer, serializePair.index);
+				buffer[serializePair.index] = '{';
+				++serializePair.index;
+				buffer[serializePair.index] = '}';
+				++serializePair.index;
 			}
 		}
 	};
@@ -296,7 +371,9 @@ namespace jsonifier_internal {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
-				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
+				static constexpr uint32_t nullV{ 1819047278 };
+				std::memcpy(&buffer[serializePair.index], &nullV, 4);
+				serializePair.index += 4;
 			}
 		}
 	};
@@ -305,9 +382,31 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			static constexpr auto size = std::tuple_size_v<std::remove_reference_t<value_type>>;
-			writer<options>::writeArrayEntry(buffer, serializePair);
+			auto additionalSize		   = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(serializePair.indent);
+			if (buffer.size() < serializePair.index + additionalSize) {
+				buffer.resize((serializePair.index + additionalSize) * 2);
+			}
+			buffer[serializePair.index] = '[';
+			++serializePair.index;
+			if constexpr (options.prettify) {
+				++serializePair.indent;
+				auto indentTotal			= serializePair.indent * options.indentSize;
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+				serializePair.index += indentTotal;
+			}
 			serializeObjects<0, size>(value, buffer, serializePair);
-			writer<options>::writeArrayExit(buffer, serializePair);
+			if constexpr (options.prettify) {
+				--serializePair.indent;
+				auto indentTotal			= serializePair.indent * options.indentSize;
+				buffer[serializePair.index] = '\n';
+				++serializePair.index;
+				std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+				serializePair.index += indentTotal;
+			}
+			buffer[serializePair.index] = ']';
+			++serializePair.index;
 		}
 
 		template<size_t currentIndex, size_t maxIndex, typename value_type_new>
@@ -317,14 +416,15 @@ namespace jsonifier_internal {
 				serialize<options>::impl(subTuple, buffer, serializePair);
 				if constexpr (currentIndex < maxIndex - 1) {
 					if constexpr (options.prettify) {
-						auto k = serializePair.index + serializePair.indent + 256;
-						if JSONIFIER_UNLIKELY ((k > buffer.size())) {
-							buffer.resize(max(buffer.size() * 2, k));
-						}
-						writer<options>::template writeCharacters<",\n">(buffer, serializePair.index);
-						writer<options>::template writeCharacters<' '>(serializePair.indent * options.indentSize, buffer, serializePair.index);
+						static constexpr auto size = std::size(",\n") - 1;
+						auto indentTotal		   = serializePair.indent * options.indentSize;
+						std::memcpy(&buffer[serializePair.index], ",\n", size);
+						serializePair.index += size;
+						std::memset(&buffer[serializePair.index], ' ', serializePair.indent * options.indentSize);
+						serializePair.index += indentTotal;
 					} else {
-						writer<options>::template writeCharacter<','>(buffer, serializePair.index);
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
 					}
 				}
 				return serializeObjects<currentIndex + 1, maxIndex>(value, buffer, serializePair);
@@ -335,24 +435,60 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto maxIndex		  = value.size();
-			const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
+			const auto maxIndex = value.size();
+			auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeCharacter<'['>(buffer, serializePair.index);
 			if JSONIFIER_LIKELY ((maxIndex > 0)) {
-				writer<options>::writeArrayEntry(buffer, serializePair);
+				if constexpr (options.prettify) {
+					++serializePair.indent;
+					auto indentTotal	 = serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '[';
+					++serializePair.index;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				} else {
+					buffer[serializePair.index] = '[';
+					++serializePair.index;
+				}
 				auto iter = value.begin();
 				serialize<options>::impl(*iter, buffer, serializePair);
 				++iter;
-				for (const auto end = value.end(); iter != end; ++iter) {
-					writer<options>::writeEntrySeparator(buffer, serializePair);
+				const auto end = value.end();
+				for (; iter != end; ++iter) {
+					if constexpr (options.prettify) {
+						auto indentTotal			= serializePair.indent * options.indentSize;
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+						buffer[serializePair.index] = '\n';
+						++serializePair.index;
+						std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+						serializePair.index += indentTotal;
+					} else {
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+					}
 					serialize<options>::impl(*iter, buffer, serializePair);
 				}
-				writer<options>::writeArrayExit(buffer, serializePair);
+				if constexpr (options.prettify) {
+					--serializePair.indent;
+					auto indentTotal			= serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				}
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
+			} else {
+				buffer[serializePair.index] = '[';
+				++serializePair.index;
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
 			}
-			writer<options>::template writeCharacter<']'>(buffer, serializePair.index);
 		}
 	};
 
@@ -362,7 +498,9 @@ namespace jsonifier_internal {
 			if (value) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
-				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
+				static constexpr uint32_t nullV{ 1819047278 };
+				std::memcpy(&buffer[serializePair.index], &nullV, 4);
+				serializePair.index += 4;
 			}
 		}
 	};
@@ -371,24 +509,60 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new<value_type_internal, size>& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::template impl<size>(serializePair.indent);
+			const auto maxIndex = std::size(value);
+			auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			auto maxIndex = std::size(value);
-			writer<options>::template writeCharacter<'['>(buffer, serializePair.index);
-			if (maxIndex > 0) {
-				writer<options>::writeArrayEntry(buffer, serializePair);
+			if JSONIFIER_LIKELY ((maxIndex > 0)) {
+				if constexpr (options.prettify) {
+					++serializePair.indent;
+					auto indentTotal	 = serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '[';
+					++serializePair.index;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				} else {
+					buffer[serializePair.index] = '[';
+					++serializePair.index;
+				}
 				auto iter = std::begin(value);
 				serialize<options>::impl(*iter, buffer, serializePair);
 				++iter;
-				for (const auto end = std::end(value); iter != end; ++iter) {
-					writer<options>::writeEntrySeparator(buffer, serializePair);
+				const auto end = std::end(value);
+				for (; iter != end; ++iter) {
+					if constexpr (options.prettify) {
+						auto indentTotal			= serializePair.indent * options.indentSize;
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+						buffer[serializePair.index] = '\n';
+						++serializePair.index;
+						std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+						serializePair.index += indentTotal;
+					} else {
+						buffer[serializePair.index] = ',';
+						++serializePair.index;
+					}
 					serialize<options>::impl(*iter, buffer, serializePair);
 				}
-				writer<options>::writeArrayExit(buffer, serializePair);
+				if constexpr (options.prettify) {
+					--serializePair.indent;
+					auto indentTotal			= serializePair.indent * options.indentSize;
+					buffer[serializePair.index] = '\n';
+					++serializePair.index;
+					std::memset(&buffer[serializePair.index], options.indentChar, indentTotal);
+					serializePair.index += indentTotal;
+				}
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
+			} else {
+				buffer[serializePair.index] = '[';
+				++serializePair.index;
+				buffer[serializePair.index] = ']';
+				++serializePair.index;
 			}
-			writer<options>::template writeCharacter<']'>(buffer, serializePair.index);
 		}
 	};
 
@@ -402,60 +576,79 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(value.size(), serializePair.indent);
+			const auto additionalSize = value.size() + 2 + (serializePair.indent + options.indentSize);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeCharacter<'"'>(buffer, serializePair.index);
-			auto newPtr = buffer.data() + serializePair.index;
+			buffer[serializePair.index] = '"';
+			++serializePair.index;
+			auto newPtr = &buffer[serializePair.index];
 			serializeStringImpl(value.data(), newPtr, value.size());
 			serializePair.index = static_cast<size_t>(newPtr - buffer.data());
-			writer<options>::template writeCharacter<'"'>(buffer, serializePair.index);
+			buffer[serializePair.index] = '"';
+			++serializePair.index;
 		}
 	};
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl();
+			const auto additionalSize = 3 + (serializePair.indent + options.indentSize);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeCharacter<'"'>(buffer, serializePair.index);
+			buffer[serializePair.index] = '"';
+			++serializePair.index;
 			switch (value) {
 				[[unlikely]] case '\b': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\b)");
+					static constexpr auto size = std::size(R"(\b)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\b)", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '\t': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\t)");
+					static constexpr auto size = std::size(R"(\t)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\t)", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '\n': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\n)");
+					static constexpr auto size = std::size(R"(\n)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\n)", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '\f': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\f)");
+					static constexpr auto size = std::size(R"(\f)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\f)", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '\r': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\r)");
+					static constexpr auto size = std::size(R"(\r)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\r)", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '"': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\")");
+					static constexpr auto size = std::size(R"(\")") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\")", size);
+					serializePair.index += size;
 					break;
 				}
 				[[unlikely]] case '\\': {
-					writer<options>::writeCharacters(buffer, serializePair.index, R"(\\)");
+					static constexpr auto size = std::size(R"(\\)") - 1;
+					std::memcpy(&buffer[serializePair.index], R"(\\)", size);
+					serializePair.index += size;
 					break;
 				}
 					[[likely]] default : {
-						writer<options>::writeCharacter(buffer, serializePair.index, value);
+						buffer[serializePair.index] = value;
+						++serializePair.index;
 					}
 			}
-			writer<options>::template writeCharacter<'"'>(buffer, serializePair.index);
+			buffer[serializePair.index] = '"';
+			++serializePair.index;
 		}
 	};
 
@@ -465,7 +658,9 @@ namespace jsonifier_internal {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
-				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
+				static constexpr uint32_t nullV{ 1819047278 };
+				std::memcpy(&buffer[serializePair.index], &nullV, 4);
+				serializePair.index += 4;
 			}
 		}
 	};
@@ -476,7 +671,9 @@ namespace jsonifier_internal {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
-				writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
+				static constexpr uint32_t nullV{ 1819047278 };
+				std::memcpy(&buffer[serializePair.index], &nullV, 4);
+				serializePair.index += 4;
 			}
 		}
 	};
@@ -492,45 +689,48 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl();
+			const auto additionalSize = 4 + (serializePair.indent + options.indentSize);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			writer<options>::template writeCharacters<"null">(buffer, serializePair.index);
+			static constexpr uint32_t nullV{ 1819047278 };
+			std::memcpy(&buffer[serializePair.index], &nullV, 4);
+			serializePair.index += 4;
 		}
 	};
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl();
+			const auto additionalSize = 5 + (serializePair.indent + options.indentSize);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
-			if JSONIFIER_LIKELY ((value)) {
-				writer<options>::template writeCharacters<"true">(buffer, serializePair.index);
-			} else {
-				writer<options>::template writeCharacters<"false">(buffer, serializePair.index);
-			}
+			static constexpr uint64_t falseV{ 435728179558 };
+			static constexpr uint64_t trueV{ 434025983730 };
+
+			const uint64_t state = falseV - (value * trueV);
+			std::memcpy(&buffer[serializePair.index], &state, 8);
+			serializePair.index += 5 - value;
 		}
 	};
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl();
+			const auto additionalSize = 64 + (serializePair.indent + options.indentSize);
 			if (buffer.size() < serializePair.index + additionalSize) {
 				buffer.resize((serializePair.index + additionalSize) * 2);
 			}
 			if constexpr (sizeof(value_type) == 8) {
-				serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, value) - buffer.data());
+				serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], value) - buffer.data());
 			} else {
 				if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<uint64_t>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], static_cast<uint64_t>(value)) - buffer.data());
 				} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<int64_t>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
 				} else {
-					serializePair.index = static_cast<size_t>(toChars(buffer.data() + serializePair.index, static_cast<double>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], static_cast<double>(value)) - buffer.data());
 				}
 			}
 		}

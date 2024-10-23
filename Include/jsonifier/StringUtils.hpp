@@ -983,6 +983,14 @@ namespace jsonifier_internal {
 			}
 		}
 
+		template<typename iterator_type> JSONIFIER_INLINE static bool isNumeric(iterator_type& iter) noexcept {
+			if (*iter == '-' || *iter == '+' || *iter == 'E' || *iter == 'e' || *iter == '.' || std::isdigit(*iter)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		JSONIFIER_INLINE static bool skipToNextValue(context_type& context) noexcept {
 			if constexpr (!options.minified) {
 				if (context.iter < context.endIter) {
@@ -1094,7 +1102,16 @@ namespace jsonifier_internal {
 				case '8':
 				case '9':
 				case '-': {
-					skipNumber(context);
+					if constexpr (!options.minified) {
+						if (context.iter < context.endIter) {
+							JSONIFIER_SKIP_WS();
+						} else {
+							return false;
+						}
+					}
+					while (isNumeric(context.iter)) {
+						++context.iter;
+					}
 					break;
 				}
 				default: {
@@ -1277,7 +1294,13 @@ namespace jsonifier_internal {
 				case '8':
 				case '9':
 				case '-': {
-					skipNumber(iter, endIter);
+					if constexpr (!options.minified) {
+						skipWs(iter);
+					}
+					while (isNumeric(iter)) {
+						++iter;
+					}
+					break;
 					break;
 				}
 				default: {
@@ -1344,7 +1367,12 @@ namespace jsonifier_internal {
 					[[unlikely]] case '8':
 					[[unlikely]] case '9':
 					[[unlikely]] case '-': {
-						skipNumber(iter, endIter);
+						if constexpr (!options.minified) {
+							skipWs(iter);
+						}
+						while (isNumeric(iter)) {
+							++iter;
+						}
 						break;
 					}
 						[[likely]] default : {
@@ -1452,11 +1480,8 @@ namespace jsonifier_internal {
 			};
 			if (*context.iter == '0') {
 				++context.iter;
-				if (*context.iter != '.') {
-					return;
-				}
 				++context.iter;
-				if (fracStart()) {
+				if (!fracStart()) {
 					return;
 				}
 			}

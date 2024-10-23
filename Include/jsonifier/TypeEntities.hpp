@@ -266,7 +266,8 @@ namespace jsonifier {
 		concept double_type = std::is_same_v<double, std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept float_type = std::floating_point<std::remove_cvref_t<value_type>>;
+		concept float_type = std::floating_point<std::remove_cvref_t<value_type>> && (std::numeric_limits<std::remove_cvref_t<value_type>>::radix == 2) &&
+			std::numeric_limits<std::remove_cvref_t<value_type>>::is_iec559;
 
 		template<typename value_type>
 		concept json_structural_iterator_t = std::is_same_v<std::remove_cvref_t<value_type>, jsonifier_internal::json_structural_iterator>;

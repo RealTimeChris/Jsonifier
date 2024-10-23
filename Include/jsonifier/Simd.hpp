@@ -46,8 +46,8 @@ namespace jsonifier_internal {
 			if JSONIFIER_UNLIKELY ((length == index)) {
 				return 0;
 			}
-			std::fill_n(dest, bitsPerStep, static_cast<char>(0x20));
-			std::copy_n(inString + index, length - index, dest);
+			std::memset(dest, static_cast<char>(0x20), bitsPerStep);
+			std::memcpy(dest, inString + index, length - index);
 			return length - index;
 		}
 

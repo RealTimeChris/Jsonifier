@@ -5,7 +5,7 @@
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
-	without restriction, including without limitation the rights to use, copy, modify, merge,
+	withbuffer restriction, including withbuffer limitation the rights to use, copy, modify, merge,
 	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -27,9 +27,9 @@
 
 namespace jsonifier_internal {
 
-	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl : public writer<options> {
+	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator, typename prettify_pair_t>
-		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
+		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& buffer, prettify_pair_t& prettifyPair, prettifier_type& prettifier) noexcept {
 			const char* newPtr{};
 			uint64_t newSize{};
 			while (*iter) {
@@ -38,19 +38,30 @@ namespace jsonifier_internal {
 						newPtr = *iter;
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
-						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
+						std::memcpy(&buffer[prettifyPair.index], newPtr, newSize);
+						prettifyPair.index += newSize;
 						break;
 					}
 					case json_structural_type::Comma: {
-						writer<options>::template writeCharacter<','>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = ',';
+						++prettifyPair.index;
 						++iter;
 						if constexpr (options.newLinesInArray) {
-							writer<options>::writeNewLine(out, prettifyPair);
+							auto indentTotal		= prettifyPair.indent * options.indentSize;
+							buffer[prettifyPair.index] = '\n';
+							++prettifyPair.index;
+							std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+							prettifyPair.index += indentTotal;
 						} else {
 							if (prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] == json_structural_type::Object_Start) {
-								writer<options>::writeNewLine(out, prettifyPair);
+								auto indentTotal		= prettifyPair.indent * options.indentSize;
+								buffer[prettifyPair.index] = '\n';
+								++prettifyPair.index;
+								std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+								prettifyPair.index += indentTotal;
 							} else {
-								writer<options>::template writeCharacter<options.indentChar>(out, prettifyPair.index);
+								buffer[prettifyPair.index] = options.indentChar;
+								++prettifyPair.index;
 							}
 						}
 						break;
@@ -59,17 +70,21 @@ namespace jsonifier_internal {
 						newPtr = (*iter);
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
-						writer<options>::writeCharacters(out, newPtr, newSize, prettifyPair.index);
+						std::memcpy(&buffer[prettifyPair.index], newPtr, newSize);
+						prettifyPair.index += newSize;
 						break;
 					}
 					case json_structural_type::Colon: {
-						writer<options>::template writeCharacter<':'>(out, prettifyPair.index);
-						writer<options>::template writeCharacter<options.indentChar>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = ':';
+						++prettifyPair.index;
+						buffer[prettifyPair.index] = options.indentChar;
+						++prettifyPair.index;
 						++iter;
 						break;
 					}
 					case json_structural_type::Array_Start: {
-						writer<options>::template writeCharacter<'['>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = '[';
+						++prettifyPair.index;
 						++iter;
 						++prettifyPair.indent;
 						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifyPair.indent) >= prettifyPair.state.size())) {
@@ -78,7 +93,11 @@ namespace jsonifier_internal {
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.newLinesInArray) {
 							if JSONIFIER_UNLIKELY ((**iter != ']')) {
-								writer<options>::writeNewLine(out, prettifyPair);
+								auto indentTotal		= prettifyPair.indent * options.indentSize;
+								buffer[prettifyPair.index] = '\n';
+								++prettifyPair.index;
+								std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+								prettifyPair.index += indentTotal;
 							}
 						}
 						break;
@@ -93,31 +112,40 @@ namespace jsonifier_internal {
 						}
 						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
-								writer<options>::writeNewLine(out, prettifyPair);
+								auto indentTotal		= prettifyPair.indent * options.indentSize;
+								buffer[prettifyPair.index] = '\n';
+								++prettifyPair.index;
+								std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+								prettifyPair.index += indentTotal;
 							}
 						}
-						writer<options>::template writeCharacter<']'>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = ']';
+						++prettifyPair.index;
 						++iter;
 						break;
 					}
 					case json_structural_type::Null: {
-						writer<options>::template writeCharacters<"null">(out, prettifyPair.index);
+						std::memcpy(&buffer[prettifyPair.index], "null", 4);
+						prettifyPair.index += 4;
 						++iter;
 						break;
 					}
 					case json_structural_type::Bool: {
 						if (**iter == 't') {
-							writer<options>::template writeCharacters<"true">(out, prettifyPair.index);
+							std::memcpy(&buffer[prettifyPair.index], "true", 4);
+							prettifyPair.index += 4;
 							++iter;
 							break;
 						} else {
-							writer<options>::template writeCharacters<"false">(out, prettifyPair.index);
+							std::memcpy(&buffer[prettifyPair.index], "false", 5);
+							prettifyPair.index += 5;
 							++iter;
 							break;
 						}
 					}
 					case json_structural_type::Object_Start: {
-						writer<options>::template writeCharacter<'{'>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = '{';
+						++prettifyPair.index;
 						++iter;
 						++prettifyPair.indent;
 						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifyPair.indent) >= prettifyPair.state.size())) {
@@ -125,7 +153,11 @@ namespace jsonifier_internal {
 						}
 						prettifyPair.state[static_cast<uint64_t>(prettifyPair.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
-							writer<options>::writeNewLine(out, prettifyPair);
+							auto indentTotal		= prettifyPair.indent * options.indentSize;
+							buffer[prettifyPair.index] = '\n';
+							++prettifyPair.index;
+							std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+							prettifyPair.index += indentTotal;
 						}
 						break;
 					}
@@ -138,9 +170,14 @@ namespace jsonifier_internal {
 							return;
 						}
 						if (*iter[-1] != '{') {
-							writer<options>::writeNewLine(out, prettifyPair);
+							auto indentTotal		= prettifyPair.indent * options.indentSize;
+							buffer[prettifyPair.index] = '\n';
+							++prettifyPair.index;
+							std::memset(buffer.data() + prettifyPair.index, options.indentChar, indentTotal);
+							prettifyPair.index += indentTotal;
 						}
-						writer<options>::template writeCharacter<'}'>(out, prettifyPair.index);
+						buffer[prettifyPair.index] = '}';
+						++prettifyPair.index;
 						++iter;
 						break;
 					}
