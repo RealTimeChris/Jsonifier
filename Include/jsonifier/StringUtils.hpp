@@ -479,7 +479,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX)
+#if defined(JSONIFIER_AVX) || defined(JSONIFIER_MAC)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -684,7 +684,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX)
+#if defined(JSONIFIER_AVX) || defined(JSONIFIER_MAC)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -759,7 +759,7 @@ namespace jsonifier_internal {
 
 	template<size_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
 
-	template<typename char_type, string_literal string> JSONIFIER_ALWAYS_INLINE constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
+	template<typename char_type, string_literal string> constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
 		const char_type* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (size_t x = 0; x < string.size(); ++x) {
@@ -811,14 +811,13 @@ namespace jsonifier_internal {
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((*context.iter == '"')) {
 				++context.iter;
-				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
+				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), static_cast<size_t>(context.endIter - context.iter));
 				if JSONIFIER_LIKELY ((newPtr)) {
 					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (value.size() != newSize) {
 						value.resize(newSize);
 					}
 					std::memcpy(value.data(), stringBuffer.data(), newSize);
-					value[newSize] = '\0';
 					++context.iter;
 				}
 				JSONIFIER_UNLIKELY(else) {
@@ -838,7 +837,7 @@ namespace jsonifier_internal {
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseStringNr(value_type&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((*context.iter == '"')) {
 				++context.iter;
-				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
+				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), static_cast<size_t>(context.endIter - context.iter));
 				if JSONIFIER_LIKELY ((newPtr)) {
 					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (newSize > 0) {

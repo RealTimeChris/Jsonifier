@@ -124,7 +124,7 @@
 
 #endif
 
-JSONIFIER_ALWAYS_INLINE constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) noexcept {
+constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) noexcept {
 	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
 }
 

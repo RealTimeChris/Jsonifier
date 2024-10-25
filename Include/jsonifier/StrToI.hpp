@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 	template<typename value_type, typename char_type> struct integer_parser;
 
 	template<jsonifier::concepts::signed_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
-		JSONIFIER_ALWAYS_INLINE constexpr integer_parser() noexcept = default;
+		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
@@ -205,9 +205,9 @@ namespace jsonifier_internal {
 					constexpr value_type doubleMin = std::numeric_limits<value_type>::min();
 
 					if (fracDigits + expValue >= 0) {
+						expValue *= expSign;
 						const auto fractionalCorrection =
 							expValue > fracDigits ? fracValue * powerOfTenInt<value_type>[expValue - fracDigits] : fracValue / powerOfTenInt<value_type>[fracDigits - expValue];
-						expValue *= expSign;
 						return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), value += fractionalCorrection, iter) : nullptr)
 											 : ((value / powerExp >= (doubleMin)) ? (divide(value, powerExp), value += fractionalCorrection, iter) : nullptr);
 					} else {
@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);
@@ -654,7 +654,7 @@ namespace jsonifier_internal {
 					if (static_cast<value_type>(value) > static_cast<value_type>(rawCompValsPos<value_type>[numTmp])) {
 						return nullptr;
 					}
-					value = static_cast<uint64_t>(value * 10 + static_cast<uint64_t>(numTmp - zero));
+					value = static_cast<int64_t>(value * 10 + static_cast<uint64_t>(numTmp - zero));
 				}
 				++iter;
 				numTmp = *iter;
@@ -717,7 +717,7 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::concepts::unsigned_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
-		JSONIFIER_ALWAYS_INLINE constexpr integer_parser() noexcept = default;
+		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
@@ -861,7 +861,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);

@@ -100,7 +100,7 @@ namespace jsonifier_internal {
 		 *
 		 * @param seedNew The new seed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE constexpr void updateSeed() {
+		constexpr void updateSeed() {
 			seed = xoshiro256::operator()();
 		}
 
@@ -111,7 +111,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
+		template<typename char_type> constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				seed64 ^= readBitsCt<size_t>(value);
@@ -147,7 +147,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE constexpr size_t hashKeyRt(const char* value, size_t length) const noexcept {
+		JSONIFIER_ALWAYS_INLINE size_t hashKeyRt(const char* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);

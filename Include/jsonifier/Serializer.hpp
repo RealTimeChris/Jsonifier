@@ -42,35 +42,27 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr jsonifier::serialize_options disableCheckedForSize(jsonifier::serialize_options optionsOld) {
+	static constexpr jsonifier::serialize_options setCheckedForSize(jsonifier::serialize_options optionsOld, bool enable) {
 		jsonifier::serialize_options returnValues{ optionsOld };
-		returnValues.checkedForSize = false;
-		return returnValues;
-	}
-
-	static constexpr jsonifier::serialize_options enableCheckedForSize(jsonifier::serialize_options optionsOld) {
-		jsonifier::serialize_options returnValues{ optionsOld };
-		returnValues.checkedForSize = true;
+		returnValues.checkedForSize = enable;
 		return returnValues;
 	}
 
 	enum class serialize_errors { Success = 0 };
 
-	template<size_t indentationLevel, jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
-	struct serialize_impl;
+	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type> struct serialize_impl;
 
-	template<size_t indentationLevel, const auto options> struct serialize {
+	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
-			serialize_impl<indentationLevel, options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, std::remove_cvref_t<serialize_context_type>>::impl(
-				std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<serialize_context_type>(iter));
+			serialize_impl<options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value),
+				std::forward<buffer_type>(buffer), std::forward<serialize_context_type>(iter));
 		}
 	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<size_t indentationLevel, jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type,
-			typename serialize_context_type>
+		template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 		friend struct serialize_impl;
 
 		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
@@ -82,14 +74,11 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize<1, optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
 				buffer.resize(serializePair.index);
 			}
-			if (!comparison<0, std::remove_cvref_t<decltype(*buffer.data())>, std::remove_cvref_t<decltype(*stringBuffer.data())>>::compare(buffer.data(), stringBuffer.data(),
-					serializePair.index)) {
-				std::memcpy(buffer.data(), stringBuffer.data(), serializePair.index);
-			}
+			std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
 			return true;
 		}
 
@@ -100,7 +89,7 @@ namespace jsonifier_internal {
 			serializePair.indent = 0;
 			jsonifier::string newString{};
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
-			serialize<1, optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
 			if JSONIFIER_UNLIKELY ((newString.size() != serializePair.index)) {
 				newString.resize(serializePair.index);
 			}

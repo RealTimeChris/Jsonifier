@@ -222,35 +222,35 @@ namespace jsonifier {
 			return jsonifier_internal::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
+		JSONIFIER_ALWAYS_INLINE iterator begin() noexcept {
 			return iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
+		JSONIFIER_ALWAYS_INLINE iterator end() noexcept {
 			return iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rbegin() noexcept {
+		JSONIFIER_ALWAYS_INLINE reverse_iterator rbegin() noexcept {
 			return reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rend() noexcept {
+		JSONIFIER_ALWAYS_INLINE reverse_iterator rend() noexcept {
 			return reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
+		JSONIFIER_ALWAYS_INLINE const_iterator begin() const noexcept {
 			return const_iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
+		JSONIFIER_ALWAYS_INLINE const_iterator end() const noexcept {
 			return const_iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+		JSONIFIER_ALWAYS_INLINE const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rend() const noexcept {
+		JSONIFIER_ALWAYS_INLINE const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator{ begin() };
 		}
 
@@ -466,15 +466,15 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type capacity() const noexcept {
+		JSONIFIER_ALWAYS_INLINE size_type capacity() const noexcept {
 			return capacityVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		JSONIFIER_ALWAYS_INLINE size_type size() const noexcept {
 			return sizeVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr bool empty() const noexcept {
+		JSONIFIER_ALWAYS_INLINE bool empty() const noexcept {
 			return sizeVal == 0;
 		}
 

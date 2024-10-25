@@ -56,7 +56,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<string_literal stringNew> JSONIFIER_ALWAYS_INLINE constexpr auto toLittleEndian() {
+	template<string_literal stringNew> constexpr auto toLittleEndian() {
 		constexpr auto N{ stringNew.size() };
 		if constexpr (N == 1) {
 			return static_cast<uint8_t>(static_cast<uint8_t>(stringNew[0]));
