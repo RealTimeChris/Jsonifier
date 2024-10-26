@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 
 	template<char value> struct char_comparison {
 		JSONIFIER_ALWAYS_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
-#if defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 			}
 #endif
 
-#if defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 32) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
@@ -82,7 +82,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if defined(JSONIFIER_AVX) || defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 16) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
@@ -177,7 +177,7 @@ namespace jsonifier_internal {
 
 	template<typename char_type01, typename char_type02> struct comparison<0, char_type01, char_type02> {
 		JSONIFIER_ALWAYS_INLINE static bool compare(char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
-#if defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -195,7 +195,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 			if (lengthNew >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
@@ -213,7 +213,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if defined(JSONIFIER_AVX) || defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if (lengthNew >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -281,11 +281,31 @@ namespace jsonifier_internal {
 			return true;
 		}
 	};
+	
+	JSONIFIER_ALWAYS_INLINE bool isLower24Equal(uint32_t value1, uint32_t value2) {
+		static constexpr uint32_t mask = 0xFFFFFF;
+		return (value1 & mask) == (value2 & mask);
+	}
+
+	JSONIFIER_ALWAYS_INLINE bool isLower56Equal(uint64_t value1, uint64_t value2) {
+		static constexpr uint64_t mask = 0x00FFFFFFFFFFFFFF;
+		return (value1 & mask) == (value2 & mask);
+	}
+
+	JSONIFIER_ALWAYS_INLINE bool isLower48Equal(uint64_t value1, uint64_t value2) {
+		static constexpr uint64_t mask = 0x0000FFFFFFFFFFFF;
+		return (value1 & mask) == (value2 & mask);
+	}
+
+	JSONIFIER_ALWAYS_INLINE bool isLower40Equal(uint64_t value1, uint64_t value2) {
+		static constexpr uint64_t mask = 0x000000FFFFFFFFFF;
+		return (value1 & mask) == (value2 & mask);
+	}
 
 	template<size_t count, typename char_type01, typename char_type02> struct comparison {
 		JSONIFIER_ALWAYS_INLINE static bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
 			size_t lengthNew{ count };
-#if defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if constexpr (count >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -305,7 +325,7 @@ namespace jsonifier_internal {
 #endif
 			constexpr size_t newCount01{ count % 64 };
 
-#if defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 			if constexpr (newCount01 >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
@@ -324,7 +344,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			constexpr size_t newCount02{ newCount01 % 32 };
-#if defined(JSONIFIER_AVX) || defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -367,18 +387,28 @@ namespace jsonifier_internal {
 				std::memcpy(v, lhs, sizeof(size_t));
 				std::memcpy(v + 1, rhs, sizeof(size_t));
 				return v[0] == v[1];
-			} else if constexpr (newCount03 > 4) {
-				size_t v[2]{};
+			} else if constexpr (newCount03 == 7) {
+				size_t v[2];
 				std::memcpy(v, lhs, newCount03);
 				std::memcpy(v + 1, rhs, newCount03);
-				return v[0] == v[1];
+				return isLower56Equal(v[0], v[1]);
+			} else if constexpr (newCount03 == 6) {
+				size_t v[2];
+				std::memcpy(v, lhs, newCount03);
+				std::memcpy(v + 1, rhs, newCount03);
+				return isLower48Equal(v[0], v[1]);
+			} else if constexpr (newCount03 == 5) {
+				size_t v[2];
+				std::memcpy(v, lhs, newCount03);
+				std::memcpy(v + 1, rhs, newCount03);
+				return isLower40Equal(v[0], v[1]);
 			} else if constexpr (newCount03 == 4) {
 				uint32_t v[2];
 				std::memcpy(v, lhs, newCount03);
 				std::memcpy(v + 1, rhs, newCount03);
-				return v[0] == v[1];
+				return isLower24Equal(v[0], v[1]);
 			} else if constexpr (newCount03 == 3) {
-				uint32_t v[2]{};
+				uint32_t v[2];
 				std::memcpy(v, lhs, newCount03);
 				std::memcpy(v + 1, rhs, newCount03);
 				return v[0] == v[1];

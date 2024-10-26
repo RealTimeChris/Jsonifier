@@ -33,8 +33,8 @@ namespace jsonifier_internal {
 			const char* newPtr{};
 			uint64_t newSize{};
 			while (*iter) {
-				switch (asciiClassesMap[static_cast<uint8_t>(**iter)]) {
-					case json_structural_type::String: {
+				switch (static_cast<uint8_t>(**iter)) {
+					case '"': {
 						newPtr = *iter;
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
@@ -42,7 +42,7 @@ namespace jsonifier_internal {
 						prettifyPair.index += newSize;
 						break;
 					}
-					case json_structural_type::Comma: {
+					case ',': {
 						buffer[prettifyPair.index] = ',';
 						++prettifyPair.index;
 						++iter;
@@ -66,7 +66,17 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case json_structural_type::Number: {
+					case '0':
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+					case '8':
+					case '9':
+					case '-': {
 						newPtr = (*iter);
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
@@ -74,7 +84,7 @@ namespace jsonifier_internal {
 						prettifyPair.index += newSize;
 						break;
 					}
-					case json_structural_type::Colon: {
+					case ':': {
 						buffer[prettifyPair.index] = ':';
 						++prettifyPair.index;
 						buffer[prettifyPair.index] = options.indentChar;
@@ -82,7 +92,7 @@ namespace jsonifier_internal {
 						++iter;
 						break;
 					}
-					case json_structural_type::Array_Start: {
+					case '[': {
 						buffer[prettifyPair.index] = '[';
 						++prettifyPair.index;
 						++iter;
@@ -102,7 +112,7 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case json_structural_type::Array_End: {
+					case ']': {
 						--prettifyPair.indent;
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -124,26 +134,25 @@ namespace jsonifier_internal {
 						++iter;
 						break;
 					}
-					case json_structural_type::Null: {
+					case 'n': {
 						std::memcpy(&buffer[prettifyPair.index], "null", 4);
 						prettifyPair.index += 4;
 						++iter;
 						break;
 					}
-					case json_structural_type::Bool: {
-						if (**iter == 't') {
-							std::memcpy(&buffer[prettifyPair.index], "true", 4);
-							prettifyPair.index += 4;
-							++iter;
-							break;
-						} else {
-							std::memcpy(&buffer[prettifyPair.index], "false", 5);
-							prettifyPair.index += 5;
-							++iter;
-							break;
-						}
+					case 't': {
+						std::memcpy(&buffer[prettifyPair.index], "true", 4);
+						prettifyPair.index += 4;
+						++iter;
+						break;
 					}
-					case json_structural_type::Object_Start: {
+					case 'f': {
+						std::memcpy(&buffer[prettifyPair.index], "false", 5);
+						prettifyPair.index += 5;
+						++iter;
+						break;
+					}
+					case '{': {
 						buffer[prettifyPair.index] = '{';
 						++prettifyPair.index;
 						++iter;
@@ -161,7 +170,7 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case json_structural_type::Object_End: {
+					case '}': {
 						--prettifyPair.indent;
 						if (prettifyPair.indent < 0) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -181,12 +190,8 @@ namespace jsonifier_internal {
 						++iter;
 						break;
 					}
-					case json_structural_type::Unset:
+					case '\0':
 						return;
-					case json_structural_type::Error:
-						[[fallthrough]];
-					case json_structural_type::Type_Count:
-						[[fallthrough]];
 					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(

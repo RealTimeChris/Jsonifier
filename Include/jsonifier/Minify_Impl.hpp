@@ -37,8 +37,8 @@ namespace jsonifier_internal {
 			++iter;
 
 			while (*iter) {
-				switch (asciiClassesMap[static_cast<uint8_t>(*previousPtr)]) {
-					case json_structural_type::String: {
+				switch (static_cast<uint8_t>(*previousPtr)) {
+					case '"': {
 						currentDistance = *iter - previousPtr;
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
@@ -54,11 +54,21 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case json_structural_type::Comma:
+					case ',':
 						out[index] = ',';
 						++index;
 						break;
-					case json_structural_type::Number: {
+					case '0':
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+					case '8':
+					case '9':
+					case '-': {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
 						}
@@ -73,46 +83,44 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case json_structural_type::Colon:
+					case ':':
 						out[index] = ':';
 						++index;
 						break;
-					case json_structural_type::Array_Start:
+					case '[':
 						out[index] = '[';
 						++index;
 						break;
-					case json_structural_type::Array_End:
+					case ']':
 						out[index] = ']';
 						++index;
 						break;
-					case json_structural_type::Null: {
+					case 'n': {
 						std::memcpy(&out[index], "null", 4);
 						index += 4;
 						break;
 					}
-					case json_structural_type::Bool: {
-						if (*previousPtr == 't') {
-							std::memcpy(&out[index], "true", 4);
-							index += 4;
-							break;
-						} else {
-							std::memcpy(&out[index], "false", 5);
-							index += 5;
-							break;
-						}
+					case 'f': {
+						std::memcpy(&out[index], "false", 5);
+						index += 5;
+						break;
 					}
-					case json_structural_type::Object_Start:
+					case 't': {
+						std::memcpy(&out[index], "true", 4);
+						index += 4;
+						break;
+					}
+					case '{':
 						out[index] = '{';
 						++index;
 						break;
-					case json_structural_type::Object_End:
+					case '}':
 						out[index] = '}';
 						++index;
 						break;
-					case json_structural_type::Unset:
-					case json_structural_type::Error:
-					case json_structural_type::Type_Count:
 						[[fallthrough]];
+					case '\0':
+						return;
 					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(

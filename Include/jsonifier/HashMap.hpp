@@ -350,8 +350,8 @@ namespace jsonifier_internal {
 		std::array<first_bytes, firstByteCount> valuesNew{};
 		size_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
-			if (lengths[static_cast<uint8_t>(values.rootPtr[x].key[0])] == 0) {
-				++lengths[static_cast<uint8_t>(values.rootPtr[x].key[0])];
+			if (lengths[values.rootPtr[x].key[0]] == 0) {
+				++lengths[values.rootPtr[x].key[0]];
 				first_bytes tupleRefs{};
 				tupleRefs.rootPtr		= &values.rootPtr[x];
 				tupleRefs.value			= values.rootPtr[x].key[0];
@@ -507,7 +507,7 @@ namespace jsonifier_internal {
 				if (uniqueIndex == std::numeric_limits<size_t>::max()) {
 					return collectUniqueByteAndLengthHashMapData<value_type>(pairsNew);
 				} else {
-					returnValues.uniqueIndices[static_cast<uint8_t>(results[x].rootPtr[0].key[0])] = static_cast<uint8_t>(uniqueIndex);
+					returnValues.uniqueIndices[results[x].rootPtr[0].key[0]] = static_cast<uint8_t>(uniqueIndex);
 				}
 			}
 		} else {
@@ -521,10 +521,10 @@ namespace jsonifier_internal {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 		if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-			returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
+			returnValues.uniqueIndices.fill(returnValues.uniqueIndices.size() - 1);
 			for (size_t x = 0; x < pairsNew.count; ++x) {
-				const auto slot										   = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
-				returnValues.uniqueIndices[static_cast<uint8_t>(slot)] = static_cast<uint8_t>(x);
+				const auto slot					 = pairsNew.rootPtr[x].key.data()[returnValues.uniqueIndex];
+				returnValues.uniqueIndices[slot] = static_cast<uint8_t>(x);
 			}
 			returnValues.type = hash_map_type::single_byte;
 			return returnValues;
@@ -538,9 +538,9 @@ namespace jsonifier_internal {
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 		bool collided{ true };
 		while (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
-			returnValues.firstChar = static_cast<char>(pairsNew.rootPtr[0].key[returnValues.uniqueIndex]);
-			const auto mix1		   = static_cast<char>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ returnValues.firstChar;
-			const auto mix2		   = static_cast<char>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ returnValues.firstChar;
+			returnValues.firstChar = static_cast<uint8_t>(pairsNew.rootPtr[0].key[returnValues.uniqueIndex]);
+			const auto mix1		   = static_cast<uint8_t>(pairsNew.rootPtr[1].key[returnValues.uniqueIndex]) ^ returnValues.firstChar;
+			const auto mix2		   = static_cast<uint8_t>(pairsNew.rootPtr[2].key[returnValues.uniqueIndex]) ^ returnValues.firstChar;
 			for (size_t x = 0; x < 4; ++x) {
 				uint8_t hash0 = 0 & 3;
 				uint8_t hash1 = (mix1 * returnValues.hasher.seed) & 3;
@@ -665,7 +665,7 @@ namespace jsonifier_internal {
 				const auto& keyNew = keys[x].rootPtr[y].key;
 				if (uniqueIndex < keyNew.size()) {
 					uint8_t keyChar					= static_cast<uint8_t>(keyNew[uniqueIndex]);
-					size_t flattenedIdx				= firstByte * 256u + keyChar;
+					size_t flattenedIdx				= firstByte * 256 + keyChar;
 					flattenedMappings[flattenedIdx] = keys[x].rootPtr[y].oldIndex;
 				}
 			}
@@ -703,7 +703,7 @@ namespace jsonifier_internal {
 				return 0;
 			} else if constexpr (hashData.type == hash_map_type::double_element) {
 				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
-					return static_cast<size_t>(iter[static_cast<uint8_t>(hashData.uniqueIndex)] & 1);
+					return iter[hashData.uniqueIndex] & 1;
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::triple_element) {
@@ -713,7 +713,7 @@ namespace jsonifier_internal {
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::single_byte) {
 				if JSONIFIER_LIKELY ((checkForEnd(iter, end, hashData.uniqueIndex))) {
-					return hashData.uniqueIndices[static_cast<uint8_t>(iter[hashData.uniqueIndex])];
+					return hashData.uniqueIndices[iter[hashData.uniqueIndex]];
 				}
 				return hashData.storageSize;
 			} else if constexpr (hashData.type == hash_map_type::first_byte_and_unique_index) {

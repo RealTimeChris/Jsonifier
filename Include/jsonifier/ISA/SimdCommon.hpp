@@ -230,8 +230,8 @@ namespace simd_internal {
 
 	template<bool minified> JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		simd_int_t_holder returnValues;
-		returnValues.op		= collectStructuralIndices(values);
-		returnValues.quotes = collectValues<'"'>(values);
+		returnValues.op			 = collectStructuralIndices(values);
+		returnValues.quotes		 = collectValues<'"'>(values);
 		if constexpr (!minified) {
 			returnValues.whitespace = collectWhitespaceIndices(values);
 		}

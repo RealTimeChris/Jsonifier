@@ -201,7 +201,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
+		JSONIFIER_ALWAYS_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const noexcept {
 			if JSONIFIER_UNLIKELY ((static_cast<int64_t>(position) >= static_cast<int64_t>(sizeVal))) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
@@ -211,7 +211,7 @@ namespace jsonifier {
 			string_base result{};
 			if JSONIFIER_LIKELY ((count > 0)) {
 				result.resize(count);
-				std::memcpy(result.dataVal, dataVal + position, position + count * sizeof(value_type));
+				std::copy(dataVal + position, dataVal + position + count * sizeof(value_type), result.dataVal);
 			}
 			return result;
 		}
@@ -222,35 +222,35 @@ namespace jsonifier {
 			return jsonifier_internal::min(static_cast<size_type>((std::numeric_limits<difference_type>::max)()), storageMax - 1);
 		}
 
-		JSONIFIER_ALWAYS_INLINE iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE reverse_iterator rbegin() noexcept {
+		constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE reverse_iterator rend() noexcept {
+		constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return const_iterator{ dataVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return const_iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_ALWAYS_INLINE const_reverse_iterator rbegin() const noexcept {
+		constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator{ end() };
 		}
 
-		JSONIFIER_ALWAYS_INLINE const_reverse_iterator rend() const noexcept {
+		constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator{ begin() };
 		}
 
@@ -283,7 +283,7 @@ namespace jsonifier {
 				reserve(sizeVal + newSize.size());
 			}
 			if JSONIFIER_LIKELY ((newSize.size() > 0)) {
-				std::memcpy(dataVal + sizeVal, newSize.data(), newSize.size());
+				std::copy(newSize.data(), newSize.data() + newSize.size(), dataVal + sizeVal);
 				sizeVal += newSize.size();
 				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
@@ -294,7 +294,7 @@ namespace jsonifier {
 				reserve(sizeVal + newSize);
 			}
 			if JSONIFIER_LIKELY ((newSize > 0 && values)) {
-				std::memcpy(dataVal + sizeVal, values, newSize);
+				std::copy(values, values + newSize, dataVal + sizeVal);
 				sizeVal += newSize;
 				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
@@ -313,7 +313,7 @@ namespace jsonifier {
 			}
 
 			std::memmove(dataVal + posNew + newSize, dataVal + posNew, (sizeVal - posNew) * sizeof(value_type));
-			std::memcpy(dataVal + posNew, start.operator->(), newSize * sizeof(value_type));
+			std::copy(start.operator->(), start.operator->() + newSize * sizeof(value_type), dataVal + posNew);
 			sizeVal += newSize;
 			allocator::construct(&dataVal[sizeVal], value_type{});
 		}
@@ -466,15 +466,15 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE size_type capacity() const noexcept {
+		constexpr size_type capacity() const noexcept {
 			return capacityVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return sizeVal;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool empty() const noexcept {
+		constexpr bool empty() const noexcept {
 			return sizeVal == 0;
 		}
 

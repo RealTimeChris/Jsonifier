@@ -30,9 +30,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename member_type_new, typename class_type_new> struct member_pointer {
-		using member_type = member_type_new;
-		using class_type = class_type_new;
+	template<typename member_type, typename class_type> struct member_pointer {
 		member_type class_type::* ptr{};
 		constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p){};
 	};

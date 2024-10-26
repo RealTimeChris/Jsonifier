@@ -46,11 +46,11 @@ namespace jsonifier_internal {
 			values[length] = '\0';
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
+		constexpr const_pointer data() const noexcept {
 			return values;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr pointer data() noexcept {
+		constexpr pointer data() noexcept {
 			return values;
 		}
 
@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 			return values[index];
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return length;
 		}
 
@@ -108,7 +108,7 @@ namespace jsonifier_internal {
 			return returnValues;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr jsonifier::string_view view() const noexcept {
+		constexpr jsonifier::string_view view() const noexcept {
 			JSONIFIER_ALIGN jsonifier::string_view returnValues{ values, length };
 			return returnValues;
 		}
@@ -177,62 +177,26 @@ namespace jsonifier_internal {
 		return sl;
 	}
 
-	JSONIFIER_ALWAYS_INLINE bool isLower24Equal(uint32_t value1, uint32_t value2) {
-		static constexpr uint32_t mask = 0xFFFFFF;
-		return (value1 & mask) == (value2 & mask);
-	}
-
-	JSONIFIER_ALWAYS_INLINE bool isLower56Equal(uint64_t value1, uint64_t value2) {
-		static constexpr uint64_t mask = 0x00FFFFFFFFFFFFFF;
-		return (value1 & mask) == (value2 & mask);
-	}
-
-	JSONIFIER_ALWAYS_INLINE bool isLower48Equal(uint64_t value1, uint64_t value2) {
-		static constexpr uint64_t mask = 0x0000FFFFFFFFFFFF;
-		return (value1 & mask) == (value2 & mask);
-	}
-
-	JSONIFIER_ALWAYS_INLINE bool isLower40Equal(uint64_t value1, uint64_t value2) {
-		static constexpr uint64_t mask = 0x000000FFFFFFFFFF;
-		return (value1 & mask) == (value2 & mask);
-	}
-
-	JSONIFIER_ALWAYS_INLINE bool isLower16Equal(uint64_t value1, uint64_t value2) {
-		static constexpr uint64_t mask = 0xFFFF;
-		return (value1 & mask) == (value2 & mask);
-	}
-
-	JSONIFIER_ALWAYS_INLINE bool isLower8Equal(uint64_t value1, uint64_t value2) {
-		static constexpr uint64_t mask = 0xFF;
-		return (value1 & mask) == (value2 & mask);
+	template<string_literal string, size_t offset> constexpr auto offSetNewLiteral() noexcept {
+		constexpr auto newSize = string.size() - offset;
+		string_literal<newSize + 1, char> sl{};
+		std::copy_n(string.data(), newSize, sl.values);
+		sl[newSize] = '\0';
+		return sl;
 	}
 
 	template<string_literal stringNew> struct string_literal_comparitor {
 		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			static constexpr auto string{ stringNew };
-			static constexpr auto length{ string.size() };
-			size_t lengthNew{ length };
-			static constexpr jsonifier::string_view newerView{ string.data() + string.size() - length, length };
-			static constexpr auto newerLiteral{ stringLiteralFromView<newerView.size()>(newerView) };
-			if constexpr (length > 8) {
-				static constexpr auto valuesNew{ packValues<newerLiteral>() };
-				size_t currentIndex{};
-				size_t v;
-				while (lengthNew > 8) {
-					std::memcpy(&v, str, sizeof(size_t));
-					if (v != valuesNew[currentIndex]) {
-						std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-						std::cout << "CURRENT KEY: " << string << std::endl;
-						return false;
-					}
-					++currentIndex;
-					lengthNew -= 8;
-					str += 8;
-				}
-			}
-			static constexpr auto newLength{ length % 8 };
-			static constexpr jsonifier::string_view newView{ newerLiteral.data() + newerLiteral.size() - newLength, newLength };
-			static constexpr auto newLiteral{ stringLiteralFromView<newView.size()>(newView) };
+			return true;
+		}
+	};
+
+	template<string_literal stringNew>
+		requires(stringNew.size() > 0 && stringNew.size() <= 8)
+	struct string_literal_comparitor<stringNew> {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			static constexpr auto newLength{ stringNew.size() };
+			static constexpr auto newLiteral{ stringNew };
 			if constexpr (newLength == 8) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
 				size_t v;
@@ -240,8 +204,6 @@ namespace jsonifier_internal {
 				if (valuesNew == v) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 7) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -250,8 +212,6 @@ namespace jsonifier_internal {
 				if (isLower56Equal(valuesNew, v)) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 6) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -260,8 +220,6 @@ namespace jsonifier_internal {
 				if (isLower48Equal(valuesNew, v)) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 5) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -270,8 +228,6 @@ namespace jsonifier_internal {
 				if (isLower40Equal(valuesNew, v)) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 4) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -280,8 +236,6 @@ namespace jsonifier_internal {
 				if (valuesNew == v) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 3) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -290,8 +244,6 @@ namespace jsonifier_internal {
 				if (isLower24Equal(valuesNew, v)) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			} else if constexpr (newLength == 2) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -300,19 +252,65 @@ namespace jsonifier_internal {
 				if (valuesNew == v) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return true;
 			} else if constexpr (newLength == 1) {
 				static constexpr auto valuesNew{ packValues<newLiteral>() };
 				if (valuesNew == *str) {
 					return true;
 				}
-				std::cout << "CURRENT SOUGHT STRING: " << jsonifier::string_view{ str, string.size() } << std::endl;
-				std::cout << "CURRENT KEY: " << string << std::endl;
 				return false;
 			}
 			return true;
+		}
+	};
+
+	template<string_literal stringNew>
+		requires(stringNew.size() > 8 && stringNew.size <= 16)
+	struct string_literal_comparitor<stringNew> {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			static constexpr auto newLiteral{ stringNew };
+			static constexpr auto newLength{ stringNew.size() };
+			static constexpr auto valuesNew{ packValues<newLiteral>() };
+			jsonifier_simd_int_128 data1{};
+			std::memcpy(&data1, str, newLength);
+			jsonifier_simd_int_128 data2{};
+			std::memcpy(&data2, &valuesNew, newLength);
+
+			static constexpr auto maskBytes = []() constexpr {
+				alignas(16) std::array<uint8_t, 16> maskBytes{};
+				for (size_t i = 0; i < newLength; ++i) {
+					maskBytes[i] = 0xFF;
+				}
+				return maskBytes;
+			}();
+
+			jsonifier_simd_int_128 mask	  = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytes.data());
+			data1						  = simd_internal::opAnd(data1, mask);
+			data2						  = simd_internal::opAnd(data2, mask);
+			jsonifier_simd_int_128 result = simd_internal::opXor(data1, data2);
+			return simd_internal::opTest(result, result);
+		}
+	};
+
+	template<string_literal stringNew>
+		requires(stringNew.size() > 16)
+	struct string_literal_comparitor<stringNew> {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			if constexpr (stringNew.size() > 16) {
+				static constexpr auto string{ offSetNewLiteral<stringNew, 16>() };
+				static constexpr auto length{ string.size() };
+				if (!string_literal_comparitor<string>::impl(str)) {
+					return false;
+				} else if constexpr (string.size() > 16) {
+					str += 16;
+					static constexpr auto stringNewer{ offSetNewLiteral<string, string.size() - 16>() };
+					return string_literal_comparitor<stringNewer>::impl(str);
+				} else {
+					str += string.size();
+					static constexpr auto stringNewer{ offSetNewLiteral<string, string.size()>() };
+					return string_literal_comparitor<stringNewer>::impl(str);
+				}
+			}
 		}
 	};
 

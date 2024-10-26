@@ -138,8 +138,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t seedNew> struct rt_key_hasher {
-		static constexpr size_t seed{ seedNew };
+	template<size_t seed> struct rt_key_hasher {
 		/**
 		 * @brief Hashes a key at runtime.
 		 *
@@ -147,7 +146,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE size_t hashKeyRt(const char* value, size_t length) const noexcept {
+		constexpr size_t hashKeyRt(const char* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);

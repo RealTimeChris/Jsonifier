@@ -152,139 +152,138 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
+		static_assert(std::numeric_limits<value_type>::is_iec559);
+		static_assert(std::numeric_limits<value_type>::radix == 2);
+		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
+		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
+		using raw = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
 
-		if JSONIFIER_LIKELY ((val != 0.0)) {
-			using conversion_traits		  = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;
-			using format_traits			  = jsonifier_jkj::dragonbox::ieee754_binary_traits<typename conversion_traits::format, typename conversion_traits::carrier_uint>;
-			static constexpr bool isFloat = std::is_same_v<float, value_type>;
-			static constexpr uint32_t exponentBitsCount = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
-			const auto br								= jsonifier_jkj::dragonbox::make_float_bits<value_type, conversion_traits, format_traits>(val);
-			const auto exponentBits						= br.extract_exponent_bits();
-			const auto s								= br.remove_exponent_bits();
+		raw rawVal;
+		std::memcpy(&rawVal, &val, sizeof(value_type));
 
-			if JSONIFIER_LIKELY ((exponentBits != (static_cast<uint32_t>(1) << exponentBitsCount) - 1)) {
-				*buf = '-';
-				buf += (val <= -0.0f);
+		constexpr bool isFloat				   = std::is_same_v<float, value_type>;
+		static constexpr uint32_t exponentBits = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
+		bool sign							   = (rawVal >> (sizeof(value_type) * 8 - 1));
+		uint32_t expRaw						   = rawVal << 1 >> (sizeof(raw) * 8 - exponentBits);
 
-				if constexpr (isFloat) {
-					const auto v = jsonifier_jkj::dragonbox::to_decimal_ex(s, exponentBits, jsonifier_jkj::dragonbox::policy::sign::ignore,
-						jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
+		if JSONIFIER_UNLIKELY ((expRaw == (static_cast<uint32_t>(1) << exponentBits) - 1)) {
+			std::memcpy(buf, "null", 4);
+			return buf + 4;
+		}
 
-					uint32_t sigDec			= static_cast<uint32_t>(v.significand);
-					int32_t expDec			= v.exponent;
-					const int32_t numDigits = static_cast<int32_t>(fastDigitCount(sigDec));
-					int32_t dotPos			= numDigits + expDec;
+		*buf = '-';
+		buf += sign;
 
-					if (-6 < dotPos && dotPos <= 9) {
-						if (dotPos <= 0) {
-							*buf++ = '0';
-							*buf++ = '.';
-							while (dotPos < 0) {
-								*buf++ = '0';
-								++dotPos;
-							}
-							return writeU32Len1To9(buf, sigDec);
-						} else {
-							auto numEnd			  = writeU32Len1To9(buf, sigDec);
-							int32_t digitsWritten = static_cast<int32_t>(numEnd - buf);
-							if (dotPos < digitsWritten) {
-								std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
-								buf[dotPos] = '.';
-								return numEnd + 1;
-							} else {
-								if (dotPos > digitsWritten) {
-									std::memset(numEnd, '0', dotPos - digitsWritten);
-									return buf + dotPos;
-								} else {
-									return numEnd;
-								}
-							}
-						}
-					} else {
-						auto end = writeU32Len1To9(buf + 1, sigDec);
-						expDec += static_cast<int32_t>(end - (buf + 1)) - 1;
-						buf[0] = buf[1];
-						buf[1] = '.';
-						if (end == buf + 2) {
-							buf[2] = '0';
-							++end;
-						}
-						*end = 'E';
-						buf	 = end + 1;
-						if (expDec < 0) {
-							*buf = '-';
-							++buf;
-							expDec = -expDec;
-						}
-						expDec		= std::abs(expDec);
-						uint32_t lz = expDec < 10;
-						std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
-						return buf + 2 - lz;
+		if JSONIFIER_UNLIKELY (((rawVal << 1) == 0)) {
+			*buf = '0';
+			return buf + 1;
+		}
+
+		if constexpr (isFloat) {
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
+
+			uint32_t sigDec			= static_cast<uint32_t>(v.significand);
+			int32_t expDec			= v.exponent;
+			const int32_t numDigits = static_cast<int32_t>(fastDigitCount(sigDec));
+			int32_t dotPos			= numDigits + expDec;
+
+			if (-6 < dotPos && dotPos <= 9) {
+				if (dotPos <= 0) {
+					*buf++ = '0';
+					*buf++ = '.';
+					while (dotPos < 0) {
+						*buf++ = '0';
+						++dotPos;
 					}
+					return writeU32Len1To9(buf, sigDec);
 				} else {
-					const auto v = jsonifier_jkj::dragonbox::to_decimal_ex(s, exponentBits, jsonifier_jkj::dragonbox::policy::sign::ignore,
-						jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
-
-					uint64_t sigDec = v.significand;
-					int32_t expDec	= v.exponent;
-
-					int32_t sigLen = 17;
-					sigLen -= (sigDec < 100000000ull * 100000000ull);
-					sigLen -= (sigDec < 100000000ull * 10000000ull);
-					int32_t dotPos = sigLen + expDec;
-
-					if (-6 < dotPos && dotPos <= 21) {
-						if (dotPos <= 0) {
-							auto numHdr = buf + (2 - dotPos);
-							auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-							buf[0]		= '0';
-							buf[1]		= '.';
-							buf += 2;
-							std::memset(buf, '0', static_cast<size_t>(numHdr - buf));
-							return numEnd;
-						} else {
-							std::memset(buf, '0', 24);
-							auto numHdr = buf + 1;
-							auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-							std::memmove(buf, buf + 1, static_cast<size_t>(dotPos));
-							buf[dotPos] = '.';
-							return ((numEnd - numHdr) <= dotPos) ? buf + dotPos : numEnd;
-						}
+					auto numEnd			  = writeU32Len1To9(buf, sigDec);
+					int32_t digitsWritten = static_cast<int32_t>(numEnd - buf);
+					if (dotPos < digitsWritten) {
+						std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
+						buf[dotPos] = '.';
+						return numEnd + 1;
 					} else {
-						auto end = writeU64Len15To17Trim(buf + 1, sigDec);
-						end -= (end == buf + 2);
-						expDec += sigLen - 1;
-						buf[0] = buf[1];
-						buf[1] = '.';
-						end[0] = 'E';
-						buf	   = end + 1;
-						buf[0] = '-';
-						buf += expDec < 0;
-						expDec = std::abs(expDec);
-						if (expDec < 100) {
-							uint32_t lz = expDec < 10;
-							std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
-							return buf + 2 - lz;
+						if (dotPos > digitsWritten) {
+							std::memset(numEnd, '0', dotPos - digitsWritten);
+							return buf + dotPos;
 						} else {
-							const uint32_t hi = (static_cast<uint32_t>(expDec) * 656) >> 16;
-							const uint32_t lo = static_cast<uint32_t>(expDec) - hi * 100;
-							buf[0]			  = static_cast<uint8_t>(hi) + '0';
-							std::memcpy(&buf[1], charTable + (lo * 2), 2);
-							return buf + 3;
+							return numEnd;
 						}
 					}
 				}
+			} else {
+				auto end = writeU32Len1To9(buf + 1, sigDec);
+				expDec += static_cast<int32_t>(end - (buf + 1)) - 1;
+				buf[0] = buf[1];
+				buf[1] = '.';
+				if (end == buf + 2) {
+					buf[2] = '0';
+					++end;
+				}
+				*end = 'E';
+				buf	 = end + 1;
+				if (expDec < 0) {
+					*buf = '-';
+					++buf;
+					expDec = -expDec;
+				}
+				expDec		= std::abs(expDec);
+				uint32_t lz = expDec < 10;
+				std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
+				return buf + 2 - lz;
 			}
-			JSONIFIER_UNLIKELY(else) {
-				std::memcpy(buf, "null", 4);
-				return buf + 4;
+		} else {
+			const auto v = jsonifier_jkj::dragonbox::to_decimal(val, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
+
+			uint64_t sigDec = v.significand;
+			int32_t expDec	= v.exponent;
+
+			int32_t sigLen = 17;
+			sigLen -= (sigDec < 100000000ull * 100000000ull);
+			sigLen -= (sigDec < 100000000ull * 10000000ull);
+			int32_t dotPos = sigLen + expDec;
+
+			if (-6 < dotPos && dotPos <= 21) {
+				if (dotPos <= 0) {
+					auto numHdr = buf + (2 - dotPos);
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
+					buf[0]		= '0';
+					buf[1]		= '.';
+					buf += 2;
+					std::memset(buf, '0', static_cast<size_t>(numHdr - buf));
+					return numEnd;
+				} else {
+					std::memset(buf, '0', 24);
+					auto numHdr = buf + 1;
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
+					std::memmove(buf, buf + 1, static_cast<size_t>(dotPos));
+					buf[dotPos] = '.';
+					return ((numEnd - numHdr) <= dotPos) ? buf + dotPos : numEnd;
+				}
+			} else {
+				auto end = writeU64Len15To17Trim(buf + 1, sigDec);
+				end -= (end == buf + 2);
+				expDec += sigLen - 1;
+				buf[0] = buf[1];
+				buf[1] = '.';
+				end[0] = 'E';
+				buf	   = end + 1;
+				buf[0] = '-';
+				buf += expDec < 0;
+				expDec = std::abs(expDec);
+				if (expDec < 100) {
+					uint32_t lz = expDec < 10;
+					std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
+					return buf + 2 - lz;
+				} else {
+					const uint32_t hi = (static_cast<uint32_t>(expDec) * 656) >> 16;
+					const uint32_t lo = static_cast<uint32_t>(expDec) - hi * 100;
+					buf[0]			  = static_cast<uint8_t>(hi) + '0';
+					std::memcpy(&buf[1], charTable + (lo * 2), 2);
+					return buf + 3;
+				}
 			}
-		}
-		JSONIFIER_UNLIKELY(else) {
-			*buf = '-';
-			buf += (std::bit_cast<uint64_t>(val) >> (sizeof(value_type) * 8 - 1));
-			*buf = '0';
-			return buf + 1;
 		}
 	}
 

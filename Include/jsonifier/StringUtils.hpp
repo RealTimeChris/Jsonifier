@@ -365,7 +365,7 @@ namespace jsonifier_internal {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
-#if defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -419,7 +419,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX2)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
@@ -473,7 +473,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX) || defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -610,7 +610,7 @@ namespace jsonifier_internal {
 	template<typename iterator_type01, typename iterator_type02>
 	JSONIFIER_MAYBE_ALWAYS_INLINE static void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
 		uint16_t escapeChar;
-#if defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -644,7 +644,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX2)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
@@ -678,7 +678,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if defined(JSONIFIER_AVX) || defined(JSONIFIER_AVX2) || defined(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -753,7 +753,7 @@ namespace jsonifier_internal {
 
 	template<size_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
 
-	template<typename char_type, string_literal string> JSONIFIER_ALWAYS_INLINE constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
+	template<typename char_type, string_literal string> constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
 		const char_type* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (size_t x = 0; x < string.size(); ++x) {

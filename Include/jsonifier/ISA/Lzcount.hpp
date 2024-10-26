@@ -27,7 +27,7 @@
 
 namespace simd_internal {
 
-#if defined(JSONIFIER_LZCNT) || defined(JSONIFIER_ANY_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 		return _lzcnt_u32(value);
@@ -37,7 +37,7 @@ namespace simd_internal {
 		return _lzcnt_u64(value);
 	}
 
-#elif defined(JSONIFIER_NEON)
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<jsonifier::concepts::uint32_type value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
