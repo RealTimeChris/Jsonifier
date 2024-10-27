@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case ',':
-						out[index] = ',';
+						std::memcpy(&out[index], ",", 1);
 						++index;
 						break;
 					case '0':
@@ -84,15 +84,15 @@ namespace jsonifier_internal {
 						break;
 					}
 					case ':':
-						out[index] = ':';
+						std::memcpy(&out[index], ":", 1);
 						++index;
 						break;
 					case '[':
-						out[index] = '[';
+						std::memcpy(&out[index], "[", 1);
 						++index;
 						break;
 					case ']':
-						out[index] = ']';
+						std::memcpy(&out[index], "]", 1);
 						++index;
 						break;
 					case 'n': {
@@ -111,11 +111,11 @@ namespace jsonifier_internal {
 						break;
 					}
 					case '{':
-						out[index] = '{';
+						std::memcpy(&out[index], "{", 1);
 						++index;
 						break;
 					case '}':
-						out[index] = '}';
+						std::memcpy(&out[index], "}", 1);
 						++index;
 						break;
 						[[fallthrough]];

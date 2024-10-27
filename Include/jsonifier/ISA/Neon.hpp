@@ -56,8 +56,8 @@ namespace simd_internal {
 		return veorq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value, simd_int_t02&&) {
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01>
+	JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value) {
 		return vmaxvq_u8(value) != 0;
 	}
 
