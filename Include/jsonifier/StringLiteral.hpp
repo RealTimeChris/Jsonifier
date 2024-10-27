@@ -268,13 +268,15 @@ namespace jsonifier_internal {
 		requires(stringNew.size() > 8 && stringNew.size <= 16)
 	struct string_literal_comparitor<stringNew> {
 		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			uint8_t tempValues01[16]{};
+			uint8_t tempValues02[16]{};
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
-			jsonifier_simd_int_128 data1{};
-			std::memcpy(&data1, str, newLength);
-			jsonifier_simd_int_128 data2{};
-			std::memcpy(&data2, &valuesNew, newLength);
+			std::memcpy(&tempValues01, str, newLength);
+			jsonifier_simd_int_128 data1{ simd_internal::gatherValues<jsonifier_simd_int_128>(tempValues01) };
+			std::memcpy(&tempValues02, &valuesNew, newLength);
+			jsonifier_simd_int_128 data2{ simd_internal::gatherValues<jsonifier_simd_int_128>(tempValues02) };
 
 			static constexpr auto maskBytes = []() constexpr {
 				alignas(16) std::array<uint8_t, 16> maskBytes{};
