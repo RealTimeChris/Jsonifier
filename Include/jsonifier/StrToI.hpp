@@ -103,9 +103,9 @@ namespace jsonifier_internal {
 
 #define isDigit(x) ((x <= nine) && (x >= zero))
 
-	template<typename value_type, typename char_type> struct integer_parser;
+	template<typename value_type> struct integer_parser;
 
-	template<jsonifier::concepts::signed_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
+	template<jsonifier::concepts::signed_type value_type> struct integer_parser<value_type> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
@@ -692,7 +692,7 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
 			if (*iter == minus) {
 				++iter;
 				const uint8_t* resultPtr{ parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter)) };
@@ -716,7 +716,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::concepts::unsigned_type value_type, typename char_type> struct integer_parser<value_type, char_type> {
+	template<jsonifier::concepts::unsigned_type value_type> struct integer_parser<value_type> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
@@ -1141,7 +1141,7 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, char_type*& iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
 			auto resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
 			if JSONIFIER_LIKELY ((resultPtr)) {
 				iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);

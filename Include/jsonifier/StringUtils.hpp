@@ -174,30 +174,30 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu };
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
-	template<typename char_type> JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(char_type* string1) noexcept {
+	JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(const char* string1) noexcept {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
-	template<typename char_type> JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, char_type* c) noexcept {
+	JSONIFIER_ALWAYS_INLINE size_t codePointToUtf8(uint32_t cp, char* c) noexcept {
 		if (cp <= 0x7F) {
-			c[0] = static_cast<char_type>(cp);
+			c[0] = static_cast<char>(cp);
 			return 1;
 		}
 		if (cp <= 0x7FF) {
-			c[0] = static_cast<char_type>((cp >> 6) + 192);
-			c[1] = static_cast<char_type>((cp & 63) + 128);
+			c[0] = static_cast<char>((cp >> 6) + 192);
+			c[1] = static_cast<char>((cp & 63) + 128);
 			return 2;
 		} else if (cp <= 0xFFFF) {
-			c[0] = static_cast<char_type>((cp >> 12) + 224);
-			c[1] = static_cast<char_type>(((cp >> 6) & 63) + 128);
-			c[2] = static_cast<char_type>((cp & 63) + 128);
+			c[0] = static_cast<char>((cp >> 12) + 224);
+			c[1] = static_cast<char>(((cp >> 6) & 63) + 128);
+			c[2] = static_cast<char>((cp & 63) + 128);
 			return 3;
 		} else if (cp <= 0x10FFFF) {
-			c[0] = static_cast<char_type>((cp >> 18) + 240);
-			c[1] = static_cast<char_type>(((cp >> 12) & 63) + 128);
-			c[2] = static_cast<char_type>(((cp >> 6) & 63) + 128);
-			c[3] = static_cast<char_type>((cp & 63) + 128);
+			c[0] = static_cast<char>((cp >> 18) + 240);
+			c[1] = static_cast<char>(((cp >> 12) & 63) + 128);
+			c[2] = static_cast<char>(((cp >> 6) & 63) + 128);
+			c[3] = static_cast<char>((cp & 63) + 128);
 			return 4;
 		}
 		return 0;
@@ -365,7 +365,7 @@ namespace jsonifier_internal {
 		using char_type01 =
 			typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 		std::remove_const_t<char_type01> escapeChar;
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -610,7 +610,7 @@ namespace jsonifier_internal {
 	template<typename iterator_type01, typename iterator_type02>
 	JSONIFIER_MAYBE_ALWAYS_INLINE static void serializeStringImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
 		uint16_t escapeChar;
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
@@ -753,8 +753,8 @@ namespace jsonifier_internal {
 
 	template<size_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
 
-	template<typename char_type, string_literal string> constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
-		const char_type* stringNew = string.data();
+	template<string_literal string> constexpr convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
+		const char* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (size_t x = 0; x < string.size(); ++x) {
 			returnValue |= static_cast<convert_length_to_int_t<string.size()>>(stringNew[x]) << x * 8;
@@ -762,8 +762,8 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<string_literal string, typename char_type> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char_type* context) {
-		static constexpr auto newString{ getStringAsInt<char_type, string>() };
+	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char* context) {
+		static constexpr auto newString{ getStringAsInt<string>() };
 		if constexpr (string.size() % 2 == 0) {
 			convert_length_to_int_t<string.size()> newerString;
 			std::memcpy(&newerString, context, string.size());

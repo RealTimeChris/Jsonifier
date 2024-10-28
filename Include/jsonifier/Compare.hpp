@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 
 	template<char value> struct char_comparison {
 		JSONIFIER_ALWAYS_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
@@ -176,8 +176,8 @@ namespace jsonifier_internal {
 	template<size_t count = 0, typename char_type01 = char, typename char_type02 = char> struct comparison;
 
 	template<typename char_type01, typename char_type02> struct comparison<0, char_type01, char_type02> {
-		JSONIFIER_ALWAYS_INLINE static bool compare(char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+		JSONIFIER_ALWAYS_INLINE static bool compare(const char* lhs, char* rhs, size_t lengthNew) noexcept {
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -339,9 +339,9 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t count, typename char_type01, typename char_type02> struct comparison {
-		JSONIFIER_ALWAYS_INLINE static bool compare(const char_type01* lhs, const char_type02* rhs) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool compare(const char* lhs, const char* rhs) noexcept {
 			size_t lengthNew{ count };
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if constexpr (count >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
@@ -401,8 +401,8 @@ namespace jsonifier_internal {
 			if constexpr (newCount03 >= 8) {
 				size_t v[2];
 				while (lengthNew >= 8) {
-					std::memcpy(v, lhs, sizeof(size_t));
-					std::memcpy(v + 1, rhs, sizeof(size_t));
+					v[0] = packBytes<size_t, 8>(lhs);
+					v[1] = packBytes<size_t, 8>(rhs);
 					if (v[0] != v[1]) {
 						return false;
 					}
@@ -441,9 +441,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool compareOld(const char_type01* lhs, const char_type02* rhs) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool compareOld(const char* lhs, const char* rhs) noexcept {
 			size_t lengthNew{ count };
-#if JSONIFIER_CHECK_FOR_AVX(JSONIFIER_AVX512)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if constexpr (count >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;

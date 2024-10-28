@@ -130,10 +130,6 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/ISA/JsonifierCPUInstru
 	#define JSONIFIER_CHECK_FOR_INSTRUCTION(x) (JSONIFIER_CPU_INSTRUCTIONS & x)
 #endif
 
-#if !defined(JSONIFIER_CHECK_FOR_AVX)
-	#define JSONIFIER_CHECK_FOR_AVX(x) (JSONIFIER_CPU_INSTRUCTIONS >= x)
-#endif
-
 #if !defined(JSONIFIER_POPCNT)
 	#define JSONIFIER_POPCNT (1 << 0)
 #endif

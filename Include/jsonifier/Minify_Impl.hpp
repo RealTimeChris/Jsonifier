@@ -30,10 +30,10 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct minify_impl {
 		template<jsonifier::concepts::string_t string_type, typename minifier_type, typename iterator>
-		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, uint64_t& index, minifier_type& minifier) noexcept {
+		JSONIFIER_ALWAYS_INLINE static uint64_t impl(iterator& iter, string_type&& out, minifier_type& minifier) noexcept {
 			auto previousPtr = *iter;
 			int64_t currentDistance{};
-
+			uint64_t index{};
 			++iter;
 
 			while (*iter) {
@@ -50,24 +50,35 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
 								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
-							return;
+							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
 					}
-					case ',':
+					case ',': {
 						std::memcpy(&out[index], ",", 1);
 						++index;
 						break;
+					}
 					case '0':
+						[[fallthrough]];
 					case '1':
+						[[fallthrough]];
 					case '2':
+						[[fallthrough]];
 					case '3':
+						[[fallthrough]];
 					case '4':
+						[[fallthrough]];
 					case '5':
+						[[fallthrough]];
 					case '6':
+						[[fallthrough]];
 					case '7':
+						[[fallthrough]];
 					case '8':
+						[[fallthrough]];
 					case '9':
+						[[fallthrough]];
 					case '-': {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
@@ -79,22 +90,25 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
 								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
-							return;
+							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
 					}
-					case ':':
+					case ':': {
 						std::memcpy(&out[index], ":", 1);
 						++index;
 						break;
-					case '[':
+					}
+					case '[': {
 						std::memcpy(&out[index], "[", 1);
 						++index;
 						break;
-					case ']':
+					}
+					case ']': {
 						std::memcpy(&out[index], "]", 1);
 						++index;
 						break;
+					}
 					case 'n': {
 						std::memcpy(&out[index], "null", 4);
 						index += 4;
@@ -110,22 +124,24 @@ namespace jsonifier_internal {
 						index += 4;
 						break;
 					}
-					case '{':
+					case '{': {
 						std::memcpy(&out[index], "{", 1);
 						++index;
 						break;
-					case '}':
+					}
+					case '}': {
 						std::memcpy(&out[index], "}", 1);
 						++index;
 						break;
-						[[fallthrough]];
-					case '\0':
-						return;
+					}
+					case '\0': {
+						return index;
+					}
 					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
-						return;
+						return std::numeric_limits<uint32_t>::max();
 					}
 				}
 				previousPtr = (*iter);
@@ -135,6 +151,7 @@ namespace jsonifier_internal {
 				out[index] = *previousPtr;
 				++index;
 			}
+			return index;
 		}
 	};
 

@@ -72,12 +72,12 @@ namespace simd_internal {
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint16_type char_type>
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) noexcept {
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
 		return vreinterpretq_u8_u16(vld1q_u16(str));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(char_type* str) noexcept {
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
 		return vreinterpretq_u8_u64(vld1q_u64(str));
 	}
 

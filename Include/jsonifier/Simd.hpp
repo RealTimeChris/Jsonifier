@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool minified = false, typename char_type> JSONIFIER_ALWAYS_INLINE void reset(char_type* stringViewNew, size_type size) noexcept {
+		template<bool minified = false> JSONIFIER_ALWAYS_INLINE void reset(const char* stringViewNew, size_type size) noexcept {
 			currentParseBuffer = jsonifier::string_view_base{ static_cast<string_view_ptr>(stringViewNew), size };
 			auto newSize	   = roundUpToMultiple<8ull>(static_cast<size_type>(static_cast<double>(currentParseBuffer.size()) * multiplier));
 			if JSONIFIER_UNLIKELY ((structuralIndexCount < newSize)) {

@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 		0, 0, 0, 0, 0, 0 };
 
-	template<typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* writeU64Len15To17Trim(char_type* buf, uint64_t sig) noexcept {
+	JSONIFIER_MAYBE_ALWAYS_INLINE char* writeU64Len15To17Trim(char* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 		uint32_t bb		   = abb - a * 100;
 		uint32_t cc		   = abbcc - abb * 100;
 
-		buf[0] = char_type(a + '0');
+		buf[0] = char(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
 		std::memcpy(buf, charTable + (bb * 2 + lz), 2);
@@ -115,7 +115,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename char_type> JSONIFIER_ALWAYS_INLINE char_type* writeU32Len1To9(char_type* buf, uint32_t val) noexcept {
+	JSONIFIER_ALWAYS_INLINE char* writeU32Len1To9(char* buf, uint32_t val) noexcept {
 		if (val < 10) {
 			*buf = static_cast<uint8_t>(val + '0');
 			return buf + 1;
@@ -151,7 +151,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<jsonifier::concepts::float_type value_type, typename char_type> JSONIFIER_MAYBE_ALWAYS_INLINE char_type* toChars(char_type* buf, value_type val) noexcept {
+	template<jsonifier::concepts::float_type value_type> JSONIFIER_MAYBE_ALWAYS_INLINE char* toChars(char* buf, value_type val) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);

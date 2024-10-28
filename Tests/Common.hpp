@@ -148,7 +148,8 @@ template<typename value_type> struct test_generator {
 		double max = std::numeric_limits<double>::max();
 		std::uniform_real_distribution<double> dis(log(min), log(max));
 		double logValue = dis(gen);
-		return std::exp(logValue);
+		bool negative{ generateBool() };
+		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
 
 	static bool generateBool() {

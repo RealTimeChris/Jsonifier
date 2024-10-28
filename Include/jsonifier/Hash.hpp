@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type, typename char_type> constexpr value_type readBitsCt(const char_type* ptr) {
+	template<typename value_type> constexpr value_type readBitsCt(const char* ptr) {
 		value_type returnValue{};
 		for (size_t x = 0; x < sizeof(value_type); ++x) {
 			returnValue |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
@@ -111,7 +111,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		template<typename char_type> constexpr size_t hashKeyCt(const char_type* value, size_t length) const noexcept {
+		constexpr size_t hashKeyCt(const char* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				seed64 ^= readBitsCt<size_t>(value);
