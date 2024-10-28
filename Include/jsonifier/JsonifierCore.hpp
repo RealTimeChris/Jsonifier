@@ -81,7 +81,6 @@ namespace jsonifier {
 		using parser	 = jsonifier_internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
 		vector<jsonifier_internal::error> errors{};
-		uint64_t index{};
 	};
 
 }

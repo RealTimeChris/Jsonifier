@@ -124,8 +124,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> using core_tuple_t = decltype(coreTupleV<value_type>);
 
-	template<typename value_type01, typename value_type02>
-	constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) noexcept {
+	template<typename value_type01, typename value_type02> constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) noexcept {
 		for (size_t x = 0; x < size; ++x) {
 			if (hashData[x] == byteToCheckFor) {
 				return true;
@@ -220,8 +219,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct double_element_data {
 		static constexpr size_t storageSize{ 2 };
-		constexpr double_element_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
+		constexpr double_element_data(const hash_map_construction_data<value_type>& newData) noexcept : uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -264,8 +262,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct unique_per_length_data {
 		static constexpr size_t storageSize{ 256 };
-		constexpr unique_per_length_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
+		constexpr unique_per_length_data(const hash_map_construction_data<value_type>& newData) noexcept : uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
 		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
 		hash_map_type type{};
 	};
@@ -406,7 +403,7 @@ namespace jsonifier_internal {
 	template<typename value_type> constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		bool collided{};
-		for (size_t w = 0; w < keyStatsVal<value_type>.maxLength; ++w) {
+		for (size_t w = keyStatsVal<value_type>.minLength; w < keyStatsVal<value_type>.maxLength; ++w) {
 			returnValues.uniqueIndex = w;
 			for (size_t x = 0; x < 2; ++x) {
 				returnValues.controlBytes.fill(std::numeric_limits<uint8_t>::max());

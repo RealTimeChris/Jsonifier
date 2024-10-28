@@ -250,8 +250,7 @@ namespace simd_internal {
 		return _mm512_set1_epi8(static_cast<char>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_512_type simd_int_type_new>
-	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char* storageLocation) noexcept {
+	template<jsonifier::concepts::simd_int_512_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char* storageLocation) noexcept {
 		_mm512_store_si512(reinterpret_cast<__m512i*>(storageLocation), value);
 	}
 

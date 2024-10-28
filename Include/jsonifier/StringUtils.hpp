@@ -206,7 +206,7 @@ namespace jsonifier_internal {
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
 		static constexpr uint32_t subCodePoint = 0xFffd;
-		uint32_t codePoint								  = hexToU32NoCheck(srcPtr + 2);
+		uint32_t codePoint					   = hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
 		if (codePoint >= 0xD800 && codePoint < 0xDc00) {
 			if (((srcPtr[0] << 8) | srcPtr[1]) != ((static_cast<uint8_t>('\\') << 8) | static_cast<uint8_t>('u'))) {
@@ -1172,10 +1172,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, endIter);
 						break;
 					}
-						[[likely]] default : {
-							++iter;
-							break;
-						}
+					[[likely]] default: {
+						++iter;
+						break;
+					}
 				}
 			}
 			return currentCount;

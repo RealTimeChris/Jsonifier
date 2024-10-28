@@ -49,7 +49,6 @@ namespace jsonifier_internal {
 			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size())) {
 				stringBuffer.resize(in.size());
 			}
-			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
@@ -62,10 +61,10 @@ namespace jsonifier_internal {
 				return std::remove_cvref_t<string_type>{};
 			}
 			std::remove_cvref_t<string_type> newString{};
-			derivedRef.index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
-			if (derivedRef.index != std::numeric_limits<uint32_t>::max()) {
-				newString.resize(derivedRef.index);
-				std::memcpy(newString.data(), stringBuffer.data(), derivedRef.index);
+			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
+			if (index != std::numeric_limits<uint32_t>::max()) {
+				newString.resize(index);
+				std::memcpy(newString.data(), stringBuffer.data(), index);
 				return newString;
 			} else {
 				return std::remove_cvref_t<string_type>{};
@@ -77,7 +76,6 @@ namespace jsonifier_internal {
 			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size())) {
 				stringBuffer.resize(in.size());
 			}
-			derivedRef.index = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
@@ -89,12 +87,12 @@ namespace jsonifier_internal {
 					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
 				return false;
 			}
-			derivedRef.index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
-			if JSONIFIER_LIKELY ((derivedRef.index != std::numeric_limits<uint32_t>::max())) {
-				if JSONIFIER_LIKELY ((buffer.size() != derivedRef.index)) {
-					buffer.resize(derivedRef.index);
+			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
+			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint32_t>::max())) {
+				if JSONIFIER_LIKELY ((buffer.size() != index)) {
+					buffer.resize(index);
 				}
-				std::memcpy(buffer.data(), stringBuffer.data(), derivedRef.index);
+				std::memcpy(buffer.data(), stringBuffer.data(), index);
 				return true;
 			} else {
 				return false;

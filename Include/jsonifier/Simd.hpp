@@ -247,8 +247,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
 			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
-			return simd_internal::opTest(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals)
-																								 : collectEmptyEscaped(escaped, nextIsEscaped);
+			return simd_internal::opTest(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals) : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 
 		template<bool minified> JSONIFIER_ALWAYS_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,

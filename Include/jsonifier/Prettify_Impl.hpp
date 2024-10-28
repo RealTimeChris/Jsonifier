@@ -29,39 +29,40 @@ namespace jsonifier_internal {
 
 	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator>
-		JSONIFIER_ALWAYS_INLINE static void impl(iterator& iter, string_type&& out, prettifier_type& prettifier) noexcept {
+		JSONIFIER_ALWAYS_INLINE static uint64_t impl(iterator& iter, string_type&& out, prettifier_type& prettifier) noexcept {
 			const char* newPtr{};
 			uint64_t newSize{};
+			uint64_t index{};
 			while (*iter) {
 				switch (static_cast<uint8_t>(**iter)) {
 					case '"': {
 						newPtr = *iter;
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
-						std::memcpy(&out[prettifier.index], newPtr, newSize);
-						prettifier.index += newSize;
+						std::memcpy(&out[index], newPtr, newSize);
+						index += newSize;
 						break;
 					}
 					case ',': {
-						std::memcpy(&out[prettifier.index], ",", 1);
-						++prettifier.index;
+						std::memcpy(&out[index], ",", 1);
+						++index;
 						++iter;
 						if constexpr (options.newLinesInArray) {
-							auto indentTotal		= prettifier.indent * options.indentSize;
-							out[prettifier.index] = '\n';
-							++prettifier.index;
-							std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-							prettifier.index += indentTotal;
+							auto indentTotal	  = prettifier.indent * options.indentSize;
+							out[index] = '\n';
+							++index;
+							std::memset(out.data() + index, options.indentChar, indentTotal);
+							index += indentTotal;
 						} else {
 							if (prettifier.state[static_cast<uint64_t>(prettifier.indent)] == json_structural_type::Object_Start) {
-								auto indentTotal		= prettifier.indent * options.indentSize;
-								out[prettifier.index] = '\n';
-								++prettifier.index;
-								std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-								prettifier.index += indentTotal;
+								auto indentTotal	  = prettifier.indent * options.indentSize;
+								out[index] = '\n';
+								++index;
+								std::memset(out.data() + index, options.indentChar, indentTotal);
+								index += indentTotal;
 							} else {
-								out[prettifier.index] = options.indentChar;
-								++prettifier.index;
+								out[index] = options.indentChar;
+								++index;
 							}
 						}
 						break;
@@ -90,21 +91,21 @@ namespace jsonifier_internal {
 						newPtr = (*iter);
 						++iter;
 						newSize = static_cast<uint64_t>((*iter) - newPtr);
-						std::memcpy(&out[prettifier.index], newPtr, newSize);
-						prettifier.index += newSize;
+						std::memcpy(&out[index], newPtr, newSize);
+						index += newSize;
 						break;
 					}
 					case ':': {
-						std::memcpy(&out[prettifier.index], ":", 1);
-						++prettifier.index;
-						out[prettifier.index] = options.indentChar;
-						++prettifier.index;
+						std::memcpy(&out[index], ":", 1);
+						++index;
+						out[index] = options.indentChar;
+						++index;
 						++iter;
 						break;
 					}
 					case '[': {
-						std::memcpy(&out[prettifier.index], "[", 1);
-						++prettifier.index;
+						std::memcpy(&out[index], "[", 1);
+						++index;
 						++iter;
 						++prettifier.indent;
 						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifier.indent) >= prettifier.state.size())) {
@@ -113,11 +114,11 @@ namespace jsonifier_internal {
 						prettifier.state[static_cast<uint64_t>(prettifier.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.newLinesInArray) {
 							if JSONIFIER_UNLIKELY ((**iter != ']')) {
-								auto indentTotal		= prettifier.indent * options.indentSize;
-								out[prettifier.index] = '\n';
-								++prettifier.index;
-								std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-								prettifier.index += indentTotal;
+								auto indentTotal	  = prettifier.indent * options.indentSize;
+								out[index] = '\n';
+								++index;
+								std::memset(out.data() + index, options.indentChar, indentTotal);
+								index += indentTotal;
 							}
 						}
 						break;
@@ -128,43 +129,43 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
-							return;
+							return std::numeric_limits<uint64_t>::max();
 						}
 						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
-								auto indentTotal		= prettifier.indent * options.indentSize;
-								out[prettifier.index] = '\n';
-								++prettifier.index;
-								std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-								prettifier.index += indentTotal;
+								auto indentTotal	  = prettifier.indent * options.indentSize;
+								out[index] = '\n';
+								++index;
+								std::memset(out.data() + index, options.indentChar, indentTotal);
+								index += indentTotal;
 							}
 						}
-						std::memcpy(&out[prettifier.index], "]", 1);
-						++prettifier.index;
+						std::memcpy(&out[index], "]", 1);
+						++index;
 						++iter;
 						break;
 					}
 					case 'n': {
-						std::memcpy(&out[prettifier.index], "null", 4);
-						prettifier.index += 4;
+						std::memcpy(&out[index], "null", 4);
+						index += 4;
 						++iter;
 						break;
 					}
 					case 't': {
-						std::memcpy(&out[prettifier.index], "true", 4);
-						prettifier.index += 4;
+						std::memcpy(&out[index], "true", 4);
+						index += 4;
 						++iter;
 						break;
 					}
 					case 'f': {
-						std::memcpy(&out[prettifier.index], "false", 5);
-						prettifier.index += 5;
+						std::memcpy(&out[index], "false", 5);
+						index += 5;
 						++iter;
 						break;
 					}
 					case '{': {
-						std::memcpy(&out[prettifier.index], "{", 1);
-						++prettifier.index;
+						std::memcpy(&out[index], "{", 1);
+						++index;
 						++iter;
 						++prettifier.indent;
 						if JSONIFIER_UNLIKELY ((static_cast<size_t>(prettifier.indent) >= prettifier.state.size())) {
@@ -172,11 +173,11 @@ namespace jsonifier_internal {
 						}
 						prettifier.state[static_cast<uint64_t>(prettifier.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
-							auto indentTotal		= prettifier.indent * options.indentSize;
-							out[prettifier.index] = '\n';
-							++prettifier.index;
-							std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-							prettifier.index += indentTotal;
+							auto indentTotal	  = prettifier.indent * options.indentSize;
+							out[index] = '\n';
+							++index;
+							std::memset(out.data() + index, options.indentChar, indentTotal);
+							index += indentTotal;
 						}
 						break;
 					}
@@ -186,32 +187,32 @@ namespace jsonifier_internal {
 							static constexpr auto sourceLocation{ std::source_location::current() };
 							prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 								getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
-							return;
+							return std::numeric_limits<uint64_t>::max();
 						}
 						if (*iter[-1] != '{') {
-							auto indentTotal		= prettifier.indent * options.indentSize;
-							out[prettifier.index] = '\n';
-							++prettifier.index;
-							std::memset(out.data() + prettifier.index, options.indentChar, indentTotal);
-							prettifier.index += indentTotal;
+							auto indentTotal	  = prettifier.indent * options.indentSize;
+							out[index] = '\n';
+							++index;
+							std::memset(out.data() + index, options.indentChar, indentTotal);
+							index += indentTotal;
 						}
-						std::memcpy(&out[prettifier.index], "}", 1);
-						++prettifier.index;
+						std::memcpy(&out[index], "}", 1);
+						++index;
 						++iter;
 						break;
 					}
 					case '\0': {
-						return;
+						return index;
 					}
 					default: {
 						static constexpr auto sourceLocation{ std::source_location::current() };
 						prettifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 							getUnderlyingPtr(iter) - prettifier.rootIter, prettifier.endIter - prettifier.rootIter, prettifier.rootIter));
-						return;
+						return std::numeric_limits<uint64_t>::max();
 					}
 				}
 			}
-			return;
+			return index;
 		}
 	};
 

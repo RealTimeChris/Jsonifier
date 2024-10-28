@@ -232,7 +232,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+										if JSONIFIER_LIKELY ((auto indexNew =
+																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
@@ -408,7 +409,8 @@ namespace jsonifier_internal {
 												}
 											}
 										}
-										if JSONIFIER_LIKELY ((auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+										if JSONIFIER_LIKELY ((auto indexNew =
+																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
 											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
 											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {

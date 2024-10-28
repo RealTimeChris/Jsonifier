@@ -146,7 +146,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		constexpr size_t hashKeyRt(const char* value, size_t length) const noexcept {
+		JSONIFIER_ALWAYS_INLINE size_t hashKeyRt(const char* value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);

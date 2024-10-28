@@ -43,10 +43,10 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static auto* memchar(auto* data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
-				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
-				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
+				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
+				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
-				const simd_type search_value		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
@@ -64,10 +64,10 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 			if (lengthNew >= 32) {
-				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
-				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
+				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
+				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
-				const simd_type search_value		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
@@ -82,12 +82,13 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if (lengthNew >= 16) {
-				using simd_type						 = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
-				using integer_type					 = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
+				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
+				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
-				const simd_type search_value		 = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
@@ -213,7 +214,8 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if (lengthNew >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -379,7 +381,8 @@ namespace jsonifier_internal {
 			}
 #endif
 			static constexpr size_t newCount02{ newCount01 % 32 };
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -410,7 +413,7 @@ namespace jsonifier_internal {
 					lhs += 8;
 					rhs += 8;
 				}
-			} 
+			}
 			static constexpr auto newCount04{ newCount03 % 8 };
 			if constexpr (newCount04 == 7) {
 				static constexpr size_t mask = 0x00FFFFFFFFFFFFFF;
@@ -481,7 +484,8 @@ namespace jsonifier_internal {
 			}
 #endif
 			constexpr size_t newCount02{ newCount01 % 32 };
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;

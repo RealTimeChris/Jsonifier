@@ -111,19 +111,19 @@ template<typename value_type> struct test_generator {
 	static std::string generateString() {
 		auto length{ randomizeNumberUniform(32, 64) };
 		constexpr size_t charsetSize = charset.size();
-		auto unicodeCount			 = std::max(1, length / 8);
+		auto unicodeCount			 = randomizeNumberUniform(1ull, std::max(1, length / 8));
 		std::vector<size_t> unicodeIndices{};
-		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto&& checkForPresenceOfIndexNew) -> void {
+		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
-				index = randomizeNumberUniform(0ull, charsetSize - 1);
-				checkForPresenceOfIndexNew(indices, index, checkForPresenceOfIndexNew);
+				index = randomizeNumberUniform(0ull, length);
+				checkForPresenceOfIndexNew(indices, index, length, checkForPresenceOfIndexNew);
 			} else {
 				indices.emplace_back(index);
 			}
 		};
 		for (size_t x = 0; x < unicodeCount; ++x) {
-			auto newValue = randomizeNumberUniform(0ull, charsetSize - 1);
-			checkForPresenceOfIndex(unicodeIndices, newValue, checkForPresenceOfIndex);
+			auto newValue = randomizeNumberUniform(0ull, length);
+			checkForPresenceOfIndex(unicodeIndices, newValue, length, checkForPresenceOfIndex);
 		}
 		std::sort(unicodeIndices.begin(), unicodeIndices.end(), std::less<size_t>{});
 

@@ -29,12 +29,18 @@
 
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
+	#define UINT64REFORVAL const uint64_t&
+	#define VALREFORVAL const value_type&
 #elif defined(_MSC_VER)
+	#define UINT64REFORVAL uint64_t
+	#define VALREFORVAL value_type
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4324)
 	#define JSONIFIER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
+	#define UINT64REFORVAL uint64_t
+	#define VALREFORVAL value_type
 	#define JSONIFIER_GNUCXX 1
 #endif
 
@@ -141,17 +147,17 @@ using jsonifier_simd_int_t = __m512i;
 static constexpr size_t bitsPerStep{ 512 };
 using jsonifier_string_parsing_type = size_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m512x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 using jsonifier_simd_int_t = __m256i;
 static constexpr size_t bitsPerStep{ 256 };
 using jsonifier_string_parsing_type = uint32_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m256x;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+	   #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 using jsonifier_simd_int_t = __m128i;
 static constexpr size_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 using jsonifier_simd_fb_type		= jsonifier_internal::__m128x;
-	#endif
+	   #endif
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	#include <arm_neon.h>

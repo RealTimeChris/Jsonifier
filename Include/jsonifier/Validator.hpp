@@ -61,7 +61,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();
-			derivedRef.index = 0;
+			index = 0;
 			section.reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
@@ -72,8 +72,8 @@ namespace jsonifier_internal {
 					error::constructError<sourceLocation, error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
-			auto result = impl(iter, derivedRef.index, *this);
-			if (derivedRef.index > 0 || *iter || derivedRef.errors.size() > 0) {
+			auto result = impl(iter, index, *this);
+			if (index > 0 || *iter || derivedRef.errors.size() > 0) {
 				result = false;
 			}
 			return result;
@@ -83,6 +83,7 @@ namespace jsonifier_internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 		mutable const char* rootIter{};
 		mutable const char* endIter{};
+		uint64_t index{};
 
 		JSONIFIER_ALWAYS_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 

@@ -32,7 +32,7 @@ namespace jsonifier_internal {
 
 	template<typename member_type, typename class_type> struct member_pointer {
 		member_type class_type::* ptr{};
-		constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p){};
+		constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p) {};
 	};
 
 	template<typename member_type_new, typename class_type_new> struct data_member {
@@ -50,11 +50,10 @@ namespace jsonifier_internal {
 			return memberPtr.ptr;
 		}
 
-		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str){};
+		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str) {};
 	};
 
-	template<typename member_type, typename class_type>
-	constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::* ptr) noexcept {
+	template<typename member_type, typename class_type> constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::* ptr) noexcept {
 		return data_member<member_type, class_type>(str, ptr);
 	}
 
@@ -168,8 +167,8 @@ namespace jsonifier_internal {
 	 * @param views Array of member names.
 	 * @return Interleaved tuple of member names and values.
 	 */
-	template<typename... tuple_types> constexpr auto generateInterleavedTuple(const std::tuple<tuple_types...>& tuple,
-		const std::array<jsonifier::string_view, sizeof...(tuple_types)>& views) noexcept {
+	template<typename... tuple_types>
+	constexpr auto generateInterleavedTuple(const std::tuple<tuple_types...>& tuple, const std::array<jsonifier::string_view, sizeof...(tuple_types)>& views) noexcept {
 		return generateInterleavedTupleImpl(tuple, views, std::index_sequence_for<tuple_types...>{});
 	}
 

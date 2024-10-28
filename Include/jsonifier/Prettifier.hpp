@@ -62,11 +62,10 @@ namespace jsonifier_internal {
 				stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
-			index	= 0;
 			indent = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
-			endIter  = in.data() + in.size();
+			endIter	 = in.data() + in.size();
 			section.reset<true>(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY ((!*iter)) {
@@ -76,8 +75,8 @@ namespace jsonifier_internal {
 				return std::remove_cvref_t<string_type>{};
 			}
 			std::remove_cvref_t<string_type> newString{};
-			prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
-			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint32_t>::max())) {
+			auto index = prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
+			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint64_t>::max())) {
 				newString.resize(index);
 				std::memcpy(newString.data(), stringBuffer.data(), index);
 				return newString;
@@ -92,11 +91,10 @@ namespace jsonifier_internal {
 				stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
-			index	= 0;
 			indent = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
-			endIter  = in.data() + in.size();
+			endIter	 = in.data() + in.size();
 			section.reset<true>(in.data(), in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY ((!*iter)) {
@@ -105,8 +103,8 @@ namespace jsonifier_internal {
 					in.end() - in.begin(), in.data()));
 				return false;
 			}
-			prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
-			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint32_t>::max())) {
+			auto index = prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
+			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint64_t>::max())) {
 				if JSONIFIER_LIKELY ((buffer.size() != index)) {
 					buffer.resize(index);
 				}
@@ -123,7 +121,6 @@ namespace jsonifier_internal {
 		const char* rootIter{};
 		const char* endIter{};
 		size_t indent{};
-		size_t index{};
 
 		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
 			state.resize(64);

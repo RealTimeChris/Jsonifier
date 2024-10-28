@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 		} else {
 			return member_ptr;
 		}
-	}	
+	}
 
 	template<typename... arg_types> constexpr auto createValueArgs(arg_types&&... args) noexcept {
 		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {

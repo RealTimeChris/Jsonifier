@@ -71,14 +71,13 @@ namespace jsonifier {
 			return *this;
 		}
 
-		template<typename value_type_newer, jsonifier::concepts::same_character_size<value_type>>
-		constexpr string_view_base(const value_type_newer& stringNew) noexcept {
+		template<typename value_type_newer, jsonifier::concepts::same_character_size<value_type>> constexpr string_view_base(const value_type_newer& stringNew) noexcept {
 			*this = stringNew;
 		}
 
-		constexpr string_view_base(const_pointer pointerNew, const size_type countNew) noexcept : dataVal(pointerNew), sizeVal(countNew){};
+		constexpr string_view_base(const_pointer pointerNew, const size_type countNew) noexcept : dataVal(pointerNew), sizeVal(countNew) {};
 
-		constexpr string_view_base(const_pointer pointerNew) noexcept : dataVal(pointerNew), sizeVal(std::char_traits<value_type>::length(pointerNew)){};
+		constexpr string_view_base(const_pointer pointerNew) noexcept : dataVal(pointerNew), sizeVal(std::char_traits<value_type>::length(pointerNew)) {};
 
 		constexpr const_iterator begin() noexcept {
 			return const_iterator{ dataVal };
@@ -211,15 +210,14 @@ namespace jsonifier {
 			return { data(), size() };
 		}
 
-		template<jsonifier::concepts::pointer_t value_type_newer> constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(
-			const string_view_base& lhs, const value_type_newer& rhs) noexcept {
+		template<jsonifier::concepts::pointer_t value_type_newer>
+		constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
 			return rhsLength == lhs.size() &&
 				jsonifier_internal::comparison<0, std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs)>>::compare(lhs.data(), rhs, rhsLength);
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer>
-		constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
+		template<jsonifier::concepts::string_t value_type_newer> constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			if (std::is_constant_evaluated()) {
 				auto compareValues = [=]() -> bool {
 					for (uint64_t x = 0; x < rhs.size(); ++x) {
@@ -289,15 +287,13 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type size>
-		constexpr string_base<value_type_newer> operator+(const value_type_newer (&rhs)[size]) const noexcept {
+		template<typename value_type_newer, size_type size> constexpr string_base<value_type_newer> operator+(const value_type_newer (&rhs)[size]) const noexcept {
 			string_base<value_type_newer> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<typename value_type_newer, size_type size>
-		constexpr string_base<value_type_newer> operator+=(const value_type_newer (&rhs)[size]) noexcept {
+		template<typename value_type_newer, size_type size> constexpr string_base<value_type_newer> operator+=(const value_type_newer (&rhs)[size]) noexcept {
 			string_base<value_type_newer> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
