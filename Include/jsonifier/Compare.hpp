@@ -82,8 +82,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			if (lengthNew >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
@@ -214,8 +213,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			if (lengthNew >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -284,62 +282,6 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, size_t> && count == 8)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 8);
-		return newValue;
-	}
-
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, size_t> && count == 7)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 7);
-		return newValue;
-	}
-
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, size_t> && count == 6)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 6);
-		return newValue;
-	}
-
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, size_t> && count == 5)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 5);
-		return newValue;
-	}
-
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, uint32_t> && count == 4)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 4);
-		return newValue;
-	}
-
-	template<typename value_type, size_t count>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, uint32_t> && count == 3)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 3);
-		return newValue;
-	}
-
-	template<typename value_type>
-		requires(std::is_same_v<std::remove_cvref_t<value_type>, uint16_t>)
-	JSONIFIER_ALWAYS_INLINE value_type packBytes(const char* str) {
-		value_type newValue;
-		std::memcpy(&newValue, str, 2);
-		return newValue;
-	}
-
 	template<size_t count, typename char_type01, typename char_type02> struct comparison {
 		JSONIFIER_ALWAYS_INLINE static bool compare(const char* lhs, const char* rhs) noexcept {
 			size_t lengthNew{ count };
@@ -381,8 +323,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			static constexpr size_t newCount02{ newCount01 % 32 };
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -401,11 +342,12 @@ namespace jsonifier_internal {
 			}
 #endif
 			static constexpr size_t newCount03{ newCount02 % 16 };
+			static constexpr size_t newCount04{ newCount03 % 8 };
 			if constexpr (newCount03 >= 8) {
 				size_t v[2];
-				while (lengthNew >= 8) {
-					v[0] = packBytes<size_t, 8>(lhs);
-					v[1] = packBytes<size_t, 8>(rhs);
+				while (lengthNew > 8) {
+					std::memcpy(v, lhs, sizeof(size_t));
+					std::memcpy(v + 1, rhs, sizeof(size_t));
 					if (v[0] != v[1]) {
 						return false;
 					}
@@ -413,29 +355,46 @@ namespace jsonifier_internal {
 					lhs += 8;
 					rhs += 8;
 				}
+
+				lhs -= newCount04;
+				rhs -= newCount04;
+				std::memcpy(v, lhs, sizeof(size_t));
+				std::memcpy(v + 1, rhs, sizeof(size_t));
+				return v[0] == v[1];
 			}
-			static constexpr auto newCount04{ newCount03 % 8 };
 			if constexpr (newCount04 == 7) {
 				static constexpr size_t mask = 0x00FFFFFFFFFFFFFF;
-				size_t v[2]{ packBytes<size_t, 7>(lhs), packBytes<size_t, 7>(rhs) };
+				size_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return (v[0] & mask) == (v[1] & mask);
 			} else if constexpr (newCount04 == 6) {
 				static constexpr size_t mask = 0x0000FFFFFFFFFFFF;
-				size_t v[2]{ packBytes<size_t, 6>(lhs), packBytes<size_t, 6>(rhs) };
+				size_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return (v[0] & mask) == (v[1] & mask);
 			} else if constexpr (newCount04 == 5) {
 				static constexpr size_t mask = 0x000000FFFFFFFFFF;
-				size_t v[2]{ packBytes<size_t, 5>(lhs), packBytes<size_t, 5>(rhs) };
+				size_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return (v[0] & mask) == (v[1] & mask);
 			} else if constexpr (newCount04 == 4) {
-				uint32_t v[2]{ packBytes<uint32_t, 4>(lhs), packBytes<uint32_t, 4>(rhs) };
+				uint32_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return v[0] == v[1];
 			} else if constexpr (newCount04 == 3) {
 				static constexpr uint32_t mask = 0xFFFFFF;
-				uint32_t v[2]{ packBytes<uint32_t, 3>(lhs), packBytes<uint32_t, 3>(rhs) };
+				uint32_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return (v[0] & mask) == (v[1] & mask);
 			} else if constexpr (newCount04 == 2) {
-				uint16_t v[2]{ packBytes<uint16_t>(lhs), packBytes<uint16_t>(rhs) };
+				uint16_t v[2];
+				std::memcpy(v, lhs, newCount04);
+				std::memcpy(v + 1, rhs, newCount04);
 				return v[0] == v[1];
 			} else if constexpr (newCount04 == 1) {
 				return *lhs == *rhs;
@@ -464,7 +423,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-			constexpr size_t newCount01{ count % 64 };
+			static constexpr size_t newCount01{ count % 64 };
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 			if constexpr (newCount01 >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
@@ -483,9 +442,8 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-			constexpr size_t newCount02{ newCount01 % 32 };
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+			static constexpr size_t newCount02{ newCount01 % 32 };
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			if constexpr (newCount02 >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
@@ -503,7 +461,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-			constexpr size_t newCount03{ newCount02 % 16 };
+			static constexpr size_t newCount03{ newCount02 % 16 };
 			if constexpr (newCount03 >= 8) {
 				size_t v[2];
 				while (lengthNew > 8) {

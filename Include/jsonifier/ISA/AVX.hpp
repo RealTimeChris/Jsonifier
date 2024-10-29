@@ -29,17 +29,17 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
-		return _mm_load_si128(reinterpret_cast<const __m128i*>(str));
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
+		return _mm_load_si128(static_cast<const __m128i*>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const char* str) noexcept {
-		return _mm_loadu_si128(reinterpret_cast<const __m128i*>(str));
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const void* str) noexcept {
+		return _mm_loadu_si128(static_cast<const __m128i*>(str));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
-		return _mm_set1_epi64x(str);
+		return _mm_set1_epi64x(static_cast<int64_t>(str));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
@@ -48,9 +48,9 @@ namespace simd_internal {
 		return _mm_set1_epi8(static_cast<char>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
-	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
-		_mm_store_si128(reinterpret_cast<__m128i*>(storageLocation), value);
+	template<jsonifier::concepts::simd_int_128_type simd_int_type_new>
+	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, void* storageLocation) noexcept {
+		_mm_store_si128(static_cast<__m128i*>(storageLocation), value);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
@@ -123,24 +123,23 @@ namespace simd_internal {
 		return !_mm_testz_si128(result, result);
 	}
 
-	#if defined(opNot)
-		#undef opNot
-	#endif
-	#define opNot(x) _mm_xor_si128(x, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return _mm_xor_si128(value, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
 
 	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
-		return _mm256_load_si256(reinterpret_cast<const __m256i*>(str));
+	template<jsonifier::concepts::simd_int_256_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
+		return _mm256_load_si256(static_cast<const __m256i*>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const char* str) noexcept {
-		return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(str));
+	template<jsonifier::concepts::simd_int_256_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const void* str) noexcept {
+		return _mm256_loadu_si256(static_cast<const __m256i*>(str));
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
-		return _mm256_set1_epi64x(str);
+		return _mm256_set1_epi64x(static_cast<int64_t>(str));
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type>
@@ -149,9 +148,8 @@ namespace simd_internal {
 		return _mm256_set1_epi8(static_cast<char>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_256_type simd_int_type_new, typename char_type>
-	JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, char_type* storageLocation) noexcept {
-		_mm256_store_si256(reinterpret_cast<__m256i*>(storageLocation), value);
+	template<jsonifier::concepts::simd_int_256_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE void store(simd_int_type_new&& value, void* storageLocation) noexcept {
+		_mm256_store_si256(static_cast<__m256i*>(storageLocation), value);
 	}
 
 	template<jsonifier::concepts::simd_int_256_type simd_int_t01, jsonifier::concepts::simd_int_256_type simd_int_t02>
@@ -224,10 +222,9 @@ namespace simd_internal {
 		return !_mm256_testz_si256(result, result);
 	}
 
-		#if defined(opNot)
-			#undef opNot
-		#endif
-		#define opNot(x) _mm256_xor_si256(x, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_256_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return _mm256_xor_si256(value, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
 
 		#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
@@ -316,10 +313,9 @@ namespace simd_internal {
 		return !_mm512_testz_si512(result, result);
 	}
 
-			#if defined(opNot)
-				#undef opNot
-			#endif
-			#define opNot(x) _mm512_xor_si512(x, _mm512_set1_epi64x(0xFFFFFFFFFFFFFFFFll))
+	template<jsonifier::concepts::simd_int_512_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return _mm512_xor_si512(value, _mm512_set1_epi64x(0xFFFFFFFFFFFFFFFFll));
+	}
 
 		#endif
 

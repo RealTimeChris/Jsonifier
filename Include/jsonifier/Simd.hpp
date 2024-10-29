@@ -256,9 +256,9 @@ namespace jsonifier_internal {
 			rawStructurals.quotes = simd_internal::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t scalar;
 			if constexpr (!minified) {
-				scalar = opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
+				scalar = simd_internal::opNot(simd_internal::opOr(rawStructurals.op, rawStructurals.whitespace));
 			} else {
-				scalar = opNot(rawStructurals.op);
+				scalar = simd_internal::opNot(rawStructurals.op);
 			}
 			rawStructurals.op = simd_internal::opAndNot(
 				simd_internal::opOr(rawStructurals.op, simd_internal::opAndNot(scalar, simd_internal::opFollows(simd_internal::opAndNot(scalar, rawStructurals.quotes), overflow))),

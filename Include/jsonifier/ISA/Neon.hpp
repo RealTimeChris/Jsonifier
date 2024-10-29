@@ -111,13 +111,17 @@ namespace simd_internal {
 
 	static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
 
+	JSONIFIER_ALWAYS_INLINE uint16_t packBitsFromNibbles(uint64_t nibbles) {
+		return static_cast<uint16_t>((nibbles & 0x01) | ((nibbles & 0x10) >> 3) | ((nibbles & 0x100) >> 6) | ((nibbles & 0x1000) >> 9) | ((nibbles & 0x10000) >> 12) |
+			((nibbles & 0x100000) >> 15) | ((nibbles & 0x1000000) >> 18) | ((nibbles & 0x10000000) >> 21) | ((nibbles & 0x100000000) >> 24) | ((nibbles & 0x1000000000) >> 27) |
+			((nibbles & 0x10000000000) >> 30) | ((nibbles & 0x100000000000) >> 33) | ((nibbles & 0x1000000000000) >> 36) | ((nibbles & 0x10000000000000) >> 39) |
+			((nibbles & 0x100000000000000) >> 42) | ((nibbles & 0x1000000000000000) >> 45));
+	}
+
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint64_t opBitMask(simd_int_t01&& value) noexcept {
-		uint8x16_t input	 = value;
-		uint16x8_t high_bits = vreinterpretq_u16_u8(vshrq_n_u8(input, 7));
-		uint32x4_t paired16	 = vreinterpretq_u32_u16(vsraq_n_u16(high_bits, high_bits, 7));
-		uint64x2_t paired32	 = vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
-		uint8x16_t paired64	 = vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));
-		return vgetq_lane_u8(paired64, 0) | (( int32_t )vgetq_lane_u8(paired64, 8) << 8);
+		const uint8x8_t res	   = vshrn_n_u16(value, 4);
+		const uint64_t matches = vget_lane_u64(vreinterpret_u64_u8(res), 0);
+		return packBitsFromNibbles(matches);
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
@@ -130,7 +134,9 @@ namespace simd_internal {
 		return opBitMask(vcgtq_u8(other, value));
 	}
 
-	#define opNot(x) vmvnq_u8(x)
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+		return vmvnq_u8(value);
+	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
 		constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
