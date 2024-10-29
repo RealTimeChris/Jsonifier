@@ -118,10 +118,8 @@ namespace simd_internal {
 			((nibbles & 0x100000000000000) >> 42) | ((nibbles & 0x1000000000000000) >> 45));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint64_t opBitMask(simd_int_t01&& value) noexcept {
-		const uint8x8_t res	   = vshrn_n_u16(value, 4);
-		const uint64_t matches = vget_lane_u64(vreinterpret_u64_u8(res), 0);
-		return packBitsFromNibbles(matches);
+	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t opBitMask(simd_int_t01&& value) noexcept {
+		return packBitsFromNibbles(vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(value, 4)), 0));
 	}
 
 	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
