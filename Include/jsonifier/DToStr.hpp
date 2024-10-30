@@ -117,7 +117,7 @@ namespace jsonifier_internal {
 
 	JSONIFIER_ALWAYS_INLINE char* writeU32Len1To9(char* buf, uint32_t value) noexcept {
 		if (value < 10) {
-			*buf = value + '0';
+			*buf = static_cast<char>(value + '0');
 			return buf + 1;
 		}
 
@@ -139,7 +139,7 @@ namespace jsonifier_internal {
 		}
 
 		if (value < 10) {
-			*--p = value + '0';
+			*--p = static_cast<char>(value + '0');
 		} else {
 			std::memcpy(p - 2, charTable + (value * 2), 2);
 		}
@@ -160,7 +160,7 @@ namespace jsonifier_internal {
 			static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 			static constexpr bool isFloat = std::is_same_v<float, value_type>;
-			using raw_type		   = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
+			using raw_type				  = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
 
 			if (value != 0.0) {
 				using conversion_traits = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;
@@ -175,7 +175,7 @@ namespace jsonifier_internal {
 					return buf + 4;
 				}
 
-				*buf				= '-';
+				*buf						  = '-';
 				static constexpr auto zeroNew = value_type(0.0);
 				buf += (value < zeroNew);
 

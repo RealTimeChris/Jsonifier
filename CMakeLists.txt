@@ -54,8 +54,10 @@ set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 
-if (NOT JSONIFIER_CPU_INSTRUCTIONS)
+if (NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
+else()
+	include("WriteInstructionHeader")
 endif()
 
  set_target_properties(

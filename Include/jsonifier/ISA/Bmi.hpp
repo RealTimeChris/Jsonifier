@@ -91,7 +91,7 @@ namespace simd_internal {
 
 	#define blsr(value) (value & (value - 1))
 
-	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(VALREFORVAL value) noexcept {
+	template<jsonifier::concepts::unsigned_type value_type> JSONIFIER_ALWAYS_INLINE value_type tzcnt(value_type value) noexcept {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

@@ -230,8 +230,8 @@ namespace jsonifier {
 				return lhs.size() == rhs.size() && compareValues;
 			} else {
 				return rhs.size() == lhs.size() &&
-					jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(),
-						rhs.data(), rhs.size());
+					jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(), rhs.data(),
+						rhs.size());
 			}
 		}
 

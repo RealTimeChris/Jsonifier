@@ -48,15 +48,15 @@ namespace jsonifier_internal {
 						++index;
 						++iter;
 						if constexpr (options.newLinesInArray) {
-							auto indentTotal	  = prettifier.indent * options.indentSize;
-							out[index] = '\n';
+							auto indentTotal = prettifier.indent * options.indentSize;
+							out[index]		 = '\n';
 							++index;
 							std::memset(out.data() + index, options.indentChar, indentTotal);
 							index += indentTotal;
 						} else {
 							if (prettifier.state[static_cast<uint64_t>(prettifier.indent)] == json_structural_type::Object_Start) {
-								auto indentTotal	  = prettifier.indent * options.indentSize;
-								out[index] = '\n';
+								auto indentTotal = prettifier.indent * options.indentSize;
+								out[index]		 = '\n';
 								++index;
 								std::memset(out.data() + index, options.indentChar, indentTotal);
 								index += indentTotal;
@@ -114,8 +114,8 @@ namespace jsonifier_internal {
 						prettifier.state[static_cast<uint64_t>(prettifier.indent)] = json_structural_type::Array_Start;
 						if constexpr (options.newLinesInArray) {
 							if JSONIFIER_UNLIKELY ((**iter != ']')) {
-								auto indentTotal	  = prettifier.indent * options.indentSize;
-								out[index] = '\n';
+								auto indentTotal = prettifier.indent * options.indentSize;
+								out[index]		 = '\n';
 								++index;
 								std::memset(out.data() + index, options.indentChar, indentTotal);
 								index += indentTotal;
@@ -133,8 +133,8 @@ namespace jsonifier_internal {
 						}
 						if constexpr (options.newLinesInArray) {
 							if (*iter[-1] != '[') {
-								auto indentTotal	  = prettifier.indent * options.indentSize;
-								out[index] = '\n';
+								auto indentTotal = prettifier.indent * options.indentSize;
+								out[index]		 = '\n';
 								++index;
 								std::memset(out.data() + index, options.indentChar, indentTotal);
 								index += indentTotal;
@@ -173,8 +173,8 @@ namespace jsonifier_internal {
 						}
 						prettifier.state[static_cast<uint64_t>(prettifier.indent)] = json_structural_type::Object_Start;
 						if (**iter != '}') {
-							auto indentTotal	  = prettifier.indent * options.indentSize;
-							out[index] = '\n';
+							auto indentTotal = prettifier.indent * options.indentSize;
+							out[index]		 = '\n';
 							++index;
 							std::memset(out.data() + index, options.indentChar, indentTotal);
 							index += indentTotal;
@@ -190,8 +190,8 @@ namespace jsonifier_internal {
 							return std::numeric_limits<uint64_t>::max();
 						}
 						if (*iter[-1] != '{') {
-							auto indentTotal	  = prettifier.indent * options.indentSize;
-							out[index] = '\n';
+							auto indentTotal = prettifier.indent * options.indentSize;
+							out[index]		 = '\n';
 							++index;
 							std::memset(out.data() + index, options.indentChar, indentTotal);
 							index += indentTotal;
