@@ -68,7 +68,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case '0':
-						[[fallthrou]];
+						[[fallthrough]];
 					case '1':
 						[[fallthrough]];
 					case '2':

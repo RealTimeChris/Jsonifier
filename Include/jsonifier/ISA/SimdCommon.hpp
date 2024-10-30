@@ -48,7 +48,7 @@ namespace simd_internal {
 
 	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle);
 
-	template<jsonifier::concepts::simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
+	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
 
 	JSONIFIER_ALWAYS_INLINE static uint64_t prefixXor(uint64_t prevInString) noexcept {
 		prevInString ^= prevInString << 1;

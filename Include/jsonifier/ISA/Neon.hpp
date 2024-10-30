@@ -23,88 +23,80 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/ISA/SimdTypes.hpp>
 
 namespace simd_internal {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	static uint8x16_t mask{ vdupq_n_u8(0x0f) };
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opShuffle(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return vqtbl1q_u8(value, vandq_u8(other, mask));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAndNot(simd_int_t01&& value, simd_int_t02&& other) {
 		return vbicq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAnd(simd_int_t01&& value, simd_int_t02&& other) {
 		return vandq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opOr(simd_int_t01&& value, simd_int_t02&& other) {
 		return vorrq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opXor(simd_int_t01&& value, simd_int_t02&& other) {
 		return veorq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opTest(simd_int_t01&& value) {
 		return vmaxvq_u8(value) != 0;
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opSub64(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return vreinterpretq_u8_u64(vsubq_u64(value, other));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE auto opAdd8(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return vaddq_u8(value, other);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint16_type char_type>
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
-		return vreinterpretq_u8_u16(vld1q_u16(str));
-	}
-
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const char_type* str) noexcept {
-		return vreinterpretq_u8_u64(vld1q_u64(str));
-	}
-
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
 		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const void* str) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValuesU(const void* str) noexcept {
 		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint64_type char_type>
+	template<simd_int_128_type simd_int_type_new, typename char_type>
+		requires(sizeof(char_type) == 8)
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
 		return vdupq_n_u64(str);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
+	template<simd_int_128_type simd_int_type_new, typename char_type>
 		requires(sizeof(char_type) == 1)
 	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
 		return vdupq_n_u8(str);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, typename char_type>
+	template<simd_int_128_type simd_int_type_new, typename char_type>
 	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
 		vst1q_u64(storageLocation, vreinterpretq_u64_u8(value));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_type_new, jsonifier::concepts::uint8_type char_type>
+	template<simd_int_128_type simd_int_type_new, typename char_type>
+		requires(sizeof(char_type) == 1)
 	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
 		vst1q_u8(storageLocation, value);
 	}
@@ -118,33 +110,37 @@ namespace simd_internal {
 			((nibbles & 0x100000000000000) >> 42) | ((nibbles & 0x1000000000000000) >> 45));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t opBitMask(simd_int_t01&& value) noexcept {
-		return packBitsFromNibbles(vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(value, 4)), 0));
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint16_t opBitMask(simd_int_t01&& value) noexcept {
+		static const uint8x16_t idx	  = { 0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15 };
+		static const uint16x8_t mbits = { 0x0101, 0x0202, 0x0404, 0x0808, 0x1010, 0x2020, 0x4040, 0x8080 };
+		const uint8x16_t perm		  = vqtbl1q_u8(value, idx);
+		return vaddvq_u16(vandq_u16(vreinterpretq_u16_u8(perm), mbits));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE uint16_t opCmpEq(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return opBitMask(vceqq_u8(value, other));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01, jsonifier::concepts::simd_int_128_type simd_int_t02>
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	JSONIFIER_ALWAYS_INLINE uint16_t opCmpLt(simd_int_t01&& value, simd_int_t02&& other) noexcept {
 		return opBitMask(vcgtq_u8(other, value));
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE auto opNot(simd_int_t01&& value) noexcept {
 		return vmvnq_u8(value);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(simd_int_t01&& value, bool valueNew) {
 		constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
 	}
 
-	template<jsonifier::concepts::simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_int_t01&& value) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opGetMSB(simd_int_t01&& value) {
 		return (vgetq_lane_u8(value, 15) & 0x80) != 0;
 	}
 
-#endif
+	#endif
 
 }
+

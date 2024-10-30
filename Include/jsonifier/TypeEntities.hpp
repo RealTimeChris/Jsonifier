@@ -118,6 +118,8 @@ namespace jsonifier_internal {
 
 }
 
+#include <jsonifier/ISA/AVX.hpp>
+
 namespace jsonifier {
 
 	template<typename value_type, uint64_t> class string_base;
@@ -148,15 +150,6 @@ namespace jsonifier {
 	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
 
 	namespace concepts {
-
-		template<typename value_type>
-		concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, std::remove_cvref_t<value_type>>;
-		template<typename value_type>
-		concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, std::remove_cvref_t<value_type>>;
-		template<typename value_type>
-		concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
-		template<typename value_type>
-		concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
 		concept range = requires(std::remove_cvref_t<value_type> value) {
@@ -487,7 +480,7 @@ namespace jsonifier_internal {
 		std::cout << std::endl;
 	}
 
-	template<jsonifier::concepts::simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
+	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
 		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
 		std::stringstream theStream{};
 		store(value, values);
@@ -590,8 +583,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }
 
-#include <jsonifier/ISA/AVX.hpp>
+
 #include <jsonifier/ISA/Lzcount.hpp>
 #include <jsonifier/ISA/Popcount.hpp>
 #include <jsonifier/ISA/Bmi.hpp>
-#include <jsonifier/ISA/Fallback.hpp>

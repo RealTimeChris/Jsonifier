@@ -23,7 +23,6 @@
 /// https://github.com/RealTimeChris/
 #pragma once
 
-#include <jsonifier/ISA/CTimeSimdTypes.hpp>
 #include <source_location>
 #include <unordered_map>
 #include <exception>

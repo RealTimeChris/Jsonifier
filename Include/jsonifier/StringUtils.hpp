@@ -56,7 +56,7 @@ namespace jsonifier_internal {
 			return;
 		}
 		{
-			constexpr uint64_t n{ sizeof(uint32_t) };
+			static constexpr uint64_t n{ sizeof(uint32_t) };
 			if (length >= n) {
 				uint32_t v[2];
 				std::memcpy(v, wsStart, n);
@@ -71,7 +71,7 @@ namespace jsonifier_internal {
 			}
 		}
 		{
-			constexpr uint64_t n{ sizeof(uint16_t) };
+			static constexpr uint64_t n{ sizeof(uint16_t) };
 			if (length >= n) {
 				uint16_t v[2];
 				std::memcpy(v, wsStart, n);
@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 		return ptr;
 	}
 
-	constexpr std::array<uint32_t, 886> digitToVal32{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+	constexpr std::array<uint32_t, 886> digitToVal32{ { 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
@@ -171,7 +171,7 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu };
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu } };
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
 	JSONIFIER_ALWAYS_INLINE uint32_t hexToU32NoCheck(const char* string1) noexcept {
@@ -473,8 +473,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON) 
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -679,8 +678,7 @@ namespace jsonifier_internal {
 			}
 		}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON) 
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 		{
 			using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 			using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -765,14 +763,15 @@ namespace jsonifier_internal {
 	}
 
 	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char* context) {
-		static constexpr auto newString{ getStringAsInt<string>() };
+		static constexpr auto tempString{ string };
+		static constexpr auto newString{ getStringAsInt<tempString>() };
 		if constexpr (string.size() % 2 == 0) {
-			convert_length_to_int_t<string.size()> newerString;
-			std::memcpy(&newerString, context, string.size());
+			convert_length_to_int_t<tempString.size()> newerString;
+			std::memcpy(&newerString, context, tempString.size());
 			return newString == newerString;
 		} else {
-			convert_length_to_int_t<string.size()> newerString{};
-			std::memcpy(&newerString, context, string.size());
+			convert_length_to_int_t<tempString.size()> newerString{};
+			std::memcpy(&newerString, context, tempString.size());
 			return newString == newerString;
 		}
 	}
@@ -806,7 +805,7 @@ namespace jsonifier_internal {
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((*context.iter == '"')) {
 				++context.iter;
-				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), context.endIter - context.iter);
+				auto newPtr = parseStringImpl(context.iter, stringBuffer.data(), static_cast<size_t>(context.endIter - context.iter));
 				if JSONIFIER_LIKELY ((newPtr)) {
 					auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (value.size() != newSize) {
@@ -1015,17 +1014,28 @@ namespace jsonifier_internal {
 					break;
 				}
 				case '0':
+					[[fallthrough]];
 				case '1':
+					[[fallthrough]];
 				case '2':
+					[[fallthrough]];
 				case '3':
+					[[fallthrough]];
 				case '4':
+					[[fallthrough]];
 				case '5':
+					[[fallthrough]];
 				case '6':
+					[[fallthrough]];
 				case '7':
+					[[fallthrough]];
 				case '8':
+					[[fallthrough]];
 				case '9':
+					[[fallthrough]];
 				case '-': {
 					skipNumber(iter, endIter);
+					break;
 				}
 				default: {
 					break;
@@ -1096,17 +1106,28 @@ namespace jsonifier_internal {
 					break;
 				}
 				case '0':
+					[[fallthrough]];
 				case '1':
+					[[fallthrough]];
 				case '2':
+					[[fallthrough]];
 				case '3':
+					[[fallthrough]];
 				case '4':
+					[[fallthrough]];
 				case '5':
+					[[fallthrough]];
 				case '6':
+					[[fallthrough]];
 				case '7':
+					[[fallthrough]];
 				case '8':
+					[[fallthrough]];
 				case '9':
+					[[fallthrough]];
 				case '-': {
 					skipNumber(context);
+					break;
 				}
 				default: {
 					break;
@@ -1174,10 +1195,10 @@ namespace jsonifier_internal {
 						skipNumber(iter, endIter);
 						break;
 					}
-					[[likely]] default: {
-						++iter;
-						break;
-					}
+						[[likely]] default : {
+							++iter;
+							break;
+						}
 				}
 			}
 			return currentCount;

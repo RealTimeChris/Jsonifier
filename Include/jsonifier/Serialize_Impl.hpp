@@ -718,20 +718,16 @@ namespace jsonifier_internal {
 					buffer.resize((serializePair.index + additionalSize) * 2);
 				}
 			}
-			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-				if constexpr (sizeof(value_type) == 8) {
-					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], value) - buffer.data());
-				} else {
-					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], static_cast<uint64_t>(value)) - buffer.data());
-				}
-			} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
-				if constexpr (sizeof(value_type) == 8) {
-					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], value) - buffer.data());
-				} else {
-					serializePair.index = static_cast<size_t>(toChars(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
-				}
-			} else {
+			if constexpr (sizeof(value_type) == 8) {
 				serializePair.index = static_cast<size_t>(to_chars<std::remove_cvref_t<value_type>>::impl(&buffer[serializePair.index], value) - buffer.data());
+			} else {
+				if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
+					serializePair.index = static_cast<size_t>(to_chars<uint64_t>::impl(&buffer[serializePair.index], static_cast<uint64_t>(value)) - buffer.data());
+				} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
+					serializePair.index = static_cast<size_t>(to_chars<int64_t>::impl(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
+				} else {
+					serializePair.index = static_cast<size_t>(to_chars<double>::impl(&buffer[serializePair.index], static_cast<double>(value)) - buffer.data());
+				}
 			}
 		}
 	};

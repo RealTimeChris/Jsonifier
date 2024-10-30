@@ -28,7 +28,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace jsonifier_internal {
+namespace simd_internal {
 
 	union __m128x {
 		template<typename value_type> constexpr __m128x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06,
@@ -226,6 +226,39 @@ namespace jsonifier_internal {
 		uint16_t mask{};
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
+	}
+
+	constexpr __m128x mm128AddEpi8(const __m128x& a, const __m128x& b) noexcept {
+		__m128x result;
+		for (int i = 0; i < 16; ++i) {
+			result.m128x_int8[i] = static_cast<int8_t>(a.m128x_int8[i] + b.m128x_int8[i]);
+		}
+		return result;
+	}
+
+	constexpr __m128x mm128CmpGtEpi8(const __m128x& a, const __m128x& b) noexcept {
+		__m128x result;
+
+		for (size_t i = 0; i < 16; ++i) {
+			result.m128x_uint8[i] = static_cast<uint8_t>(static_cast<int8_t>(a.m128x_uint8[i]) > static_cast<int8_t>(b.m128x_uint8[i]) ? 0xFF : 0x00);
+		}
+
+		return result;
+	}
+
+	constexpr __m128x mm128Set1Epi8(uint8_t value) noexcept {
+		__m128x result;
+
+		size_t repeated_value = 0;
+		for (int32_t i = 0; i < 8; ++i) {
+			repeated_value |= (static_cast<size_t>(value) << (i * 8));
+		}
+
+		for (int32_t i = 0; i < 2; ++i) {
+			result.m128x_uint64[i] = repeated_value;
+		}
+
+		return result;
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128OrSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
@@ -432,476 +465,6 @@ namespace jsonifier_internal {
 		size_t index{};
 		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
 		return result;
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m256x mm256AndSi256(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
-		__m256x value{};
-		memcpy(value.m256x_uint64, valOne.m256x_uint64, sizeof(value));
-		value.m256x_uint64[0] &= valTwo.m256x_uint64[0];
-		value.m256x_uint64[1] &= valTwo.m256x_uint64[1];
-		value.m256x_uint64[2] &= valTwo.m256x_uint64[2];
-		value.m256x_uint64[3] &= valTwo.m256x_uint64[3];
-		return value;
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m256x mm256XorSi256(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
-		__m256x value{};
-		std::copy(valOne.m256x_uint64, valOne.m256x_uint64 + 4, value.m256x_uint64);
-		value.m256x_uint64[0] ^= valTwo.m256x_uint64[0];
-		value.m256x_uint64[1] ^= valTwo.m256x_uint64[1];
-		value.m256x_uint64[2] ^= valTwo.m256x_uint64[2];
-		value.m256x_uint64[3] ^= valTwo.m256x_uint64[3];
-		return value;
-	}
-
-	constexpr __m256x mm256SetrEpi64x(size_t argOne, size_t argTwo, size_t argThree, size_t argFour) noexcept {
-		__m256x returnValue{};
-		returnValue.m256x_uint64[0] = argFour;
-		returnValue.m256x_uint64[1] = argThree;
-		returnValue.m256x_uint64[2] = argTwo;
-		returnValue.m256x_uint64[3] = argOne;
-		return returnValue;
-	}
-
-	constexpr __m256x mm256AddEpi64(const __m256x& value01, const __m256x& value02) noexcept {
-		__m256x returnValue{};
-		__m256x value01New{ value01 }, value02New{ value02 };
-		returnValue.m256x_uint64[0] = value01New.m256x_uint64[0] + value02New.m256x_uint64[0];
-		returnValue.m256x_uint64[1] = value01New.m256x_uint64[1] + value02New.m256x_uint64[1];
-		returnValue.m256x_uint64[2] = value01New.m256x_uint64[2] + value02New.m256x_uint64[2];
-		returnValue.m256x_uint64[3] = value01New.m256x_uint64[3] + value02New.m256x_uint64[3];
-		return returnValue;
-	}
-
-	constexpr void mm256StoreUSi256(uint8_t* ptr, const __m256x& data) noexcept {
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i] = static_cast<uint8_t>(data.m256x_uint64[0] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 8] = static_cast<uint8_t>(data.m256x_uint64[1] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 16] = static_cast<uint8_t>(data.m256x_uint64[2] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 24] = static_cast<uint8_t>(data.m256x_uint64[3] >> (i * 8));
-		}
-	}
-
-	template<typename value_type> constexpr void mm256StoreUSi256(value_type* ptr, const __m256x& data) noexcept {
-		for (int32_t i = 0; i < 4; ++i) {
-			ptr[i] = static_cast<size_t>(data.m256x_uint64[i]);
-		}
-	}
-
-	constexpr __m256x mm256ShuffleEpi32(const __m256x& a, int32_t imm8) noexcept {
-		__m256x result{};
-		set32(result.m256x_uint64, 0, get32(a.m256x_uint64, (imm8 >> 0) & 0x3));
-		set32(result.m256x_uint64, 1, get32(a.m256x_uint64, (imm8 >> 2) & 0x3));
-		set32(result.m256x_uint64, 2, get32(a.m256x_uint64, (imm8 >> 4) & 0x3));
-		set32(result.m256x_uint64, 3, get32(a.m256x_uint64, (imm8 >> 6) & 0x3));
-		set32(result.m256x_uint64, 4, get32(a.m256x_uint64, (imm8 >> 8) & 0x3));
-		set32(result.m256x_uint64, 5, get32(a.m256x_uint64, (imm8 >> 10) & 0x3));
-		set32(result.m256x_uint64, 6, get32(a.m256x_uint64, (imm8 >> 12) & 0x3));
-		set32(result.m256x_uint64, 7, get32(a.m256x_uint64, (imm8 >> 14) & 0x3));
-		return result;
-	}
-
-	constexpr __m256x mm256MulEpi32(const __m256x& a, const __m256x& b) noexcept {
-		__m256x result{};
-
-		uint32_t a_val[8];
-		uint32_t b_val[8];
-		for (int32_t i = 0; i < 8; ++i) {
-			a_val[i] = get32(a.m256x_uint64, i);
-			b_val[i] = get32(b.m256x_uint64, i);
-		}
-		set64(result.m256x_uint64, 0, static_cast<size_t>(a_val[0]) * static_cast<size_t>(b_val[0]) | static_cast<size_t>(a_val[1]) * static_cast<size_t>(b_val[1]));
-		set64(result.m256x_uint64, 1, static_cast<size_t>(a_val[2]) * static_cast<size_t>(b_val[2]) | static_cast<size_t>(a_val[3]) * static_cast<size_t>(b_val[3]));
-		set64(result.m256x_uint64, 2, static_cast<size_t>(a_val[4]) * static_cast<size_t>(b_val[4]) | static_cast<size_t>(a_val[5]) * static_cast<size_t>(b_val[5]));
-		set64(result.m256x_uint64, 3, static_cast<size_t>(a_val[6]) * static_cast<size_t>(b_val[6]) | static_cast<size_t>(a_val[7]) * static_cast<size_t>(b_val[7]));
-
-		return result;
-	}
-
-	constexpr __m256x mm256SubEpi64(const __m256x& value01, const __m256x& value02) noexcept {
-		__m256x returnValue{};
-		returnValue.m256x_uint64[0] = value01.m256x_uint64[0] - value02.m256x_uint64[0];
-		returnValue.m256x_uint64[1] = value01.m256x_uint64[1] - value02.m256x_uint64[1];
-		returnValue.m256x_uint64[2] = value01.m256x_uint64[2] - value02.m256x_uint64[2];
-		returnValue.m256x_uint64[3] = value01.m256x_uint64[3] - value02.m256x_uint64[3];
-		return returnValue;
-	}
-
-	constexpr __m256x mm256SrliEpi64(const __m256x& a, uint32_t imm8) noexcept {
-		__m256x result{};
-		result.m256x_uint64[0] = a.m256x_uint64[0] >> imm8;
-		result.m256x_uint64[1] = a.m256x_uint64[1] >> imm8;
-		result.m256x_uint64[2] = a.m256x_uint64[2] >> imm8;
-		result.m256x_uint64[3] = a.m256x_uint64[3] >> imm8;
-		return result;
-	}
-
-	constexpr __m256x mm256SlliEpi64(const __m256x& a, uint32_t imm8) noexcept {
-		__m256x result{};
-		result.m256x_uint64[0] = a.m256x_uint64[0] << imm8;
-		result.m256x_uint64[1] = a.m256x_uint64[1] << imm8;
-		result.m256x_uint64[2] = a.m256x_uint64[2] << imm8;
-		result.m256x_uint64[3] = a.m256x_uint64[3] << imm8;
-		return result;
-	}
-
-	constexpr __m256x mm256Set1Epi32(uint32_t value) noexcept {
-		size_t extended_value = (static_cast<size_t>(value) << 32) | value;
-		return __m256x{ extended_value, extended_value, extended_value, extended_value };
-	}
-
-	template<typename value_type> constexpr __m256x mm256LoadUSi256(const value_type* ptr) noexcept {
-		size_t low01  = 0;
-		size_t low02  = 0;
-		size_t high01 = 0;
-		size_t high02 = 0;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low01 |= static_cast<const size_t>(ptr[i]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low02 |= static_cast<const size_t>(ptr[i + 8]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high01 |= static_cast<const size_t>(ptr[i + 16]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high02 |= static_cast<const size_t>(ptr[i + 24]) << (i * 8);
-		}
-		__m256x returnValues{};
-		returnValues.m256x_uint64[0] = low01;
-		returnValues.m256x_uint64[1] = low02;
-		returnValues.m256x_uint64[2] = high01;
-		returnValues.m256x_uint64[3] = high02;
-		return returnValues;
-	}
-
-	template<typename value_type>
-		requires(sizeof(value_type) == 8)
-	constexpr __m256x mm256LoadUSi256(const value_type* ptr) noexcept {
-		__m256x returnValues{};
-		returnValues.m256x_uint64[0] = ptr[0];
-		returnValues.m256x_uint64[1] = ptr[1];
-		returnValues.m256x_uint64[2] = ptr[2];
-		returnValues.m256x_uint64[3] = ptr[3];
-		return returnValues;
-	}
-
-	constexpr __m256x mm256BlendVEpi8(const __m256x& a, const __m256x& b, const __m256x& mask) noexcept {
-		__m256x result;
-		for (int32_t i = 0; i < 2; ++i) {
-			result.m256x_uint64[i] = 0;
-			for (int32_t j = 0; j < 8; ++j) {
-				uint8_t maskByte	= (mask.m256x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t aByte		= (a.m256x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t bByte		= (b.m256x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t blendedByte = (maskByte ? bByte : aByte);
-				result.m256x_uint64[i] |= (static_cast<size_t>(blendedByte) << (j * 8));
-			}
-		}
-		return result;
-	}
-
-	constexpr __m256x mm256LoadUSi256(const __m256x* ptr) noexcept {
-		__m256x returnValues{ *ptr };
-		return returnValues;
-	}
-
-	template<typename value_type>
-		requires(sizeof(value_type) == 1)
-	constexpr __m512x mm512LoadUSi512(const value_type* ptr) noexcept {
-		size_t low00  = 0;
-		size_t low01  = 0;
-		size_t low02  = 0;
-		size_t low03  = 0;
-		size_t high00 = 0;
-		size_t high01 = 0;
-		size_t high02 = 0;
-		size_t high03 = 0;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low00 |= static_cast<const size_t>(ptr[i]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low01 |= static_cast<const size_t>(ptr[i + 8]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low02 |= static_cast<const size_t>(ptr[i + 16]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low03 |= static_cast<const size_t>(ptr[i + 24]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high00 |= static_cast<const size_t>(ptr[i + 32]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high01 |= static_cast<const size_t>(ptr[i + 40]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high02 |= static_cast<const size_t>(ptr[i + 48]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high03 |= static_cast<const size_t>(ptr[i + 56]) << (i * 8);
-		}
-		__m512x returnValues{};
-		returnValues.m512x_uint64[0] = low00;
-		returnValues.m512x_uint64[1] = low01;
-		returnValues.m512x_uint64[2] = low02;
-		returnValues.m512x_uint64[3] = low03;
-		returnValues.m512x_uint64[4] = high00;
-		returnValues.m512x_uint64[5] = high01;
-		returnValues.m512x_uint64[6] = high02;
-		returnValues.m512x_uint64[7] = high03;
-		return returnValues;
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m512x mm512XorSi512(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
-		__m512x value{};
-		std::copy(valOne.m512x_uint64, valOne.m512x_uint64 + 8, value.m512x_uint64);
-		value.m512x_uint64[0] ^= valTwo.m512x_uint64[0];
-		value.m512x_uint64[1] ^= valTwo.m512x_uint64[1];
-		value.m512x_uint64[2] ^= valTwo.m512x_uint64[2];
-		value.m512x_uint64[3] ^= valTwo.m512x_uint64[3];
-		value.m512x_uint64[4] ^= valTwo.m512x_uint64[4];
-		value.m512x_uint64[5] ^= valTwo.m512x_uint64[5];
-		value.m512x_uint64[6] ^= valTwo.m512x_uint64[6];
-		value.m512x_uint64[7] ^= valTwo.m512x_uint64[7];
-		return value;
-	}
-
-	constexpr __m512x mm512SrliEpi64(const __m512x& a, uint32_t imm8) noexcept {
-		__m512x result{};
-		result.m512x_uint64[0] = a.m512x_uint64[0] >> imm8;
-		result.m512x_uint64[1] = a.m512x_uint64[1] >> imm8;
-		result.m512x_uint64[2] = a.m512x_uint64[2] >> imm8;
-		result.m512x_uint64[3] = a.m512x_uint64[3] >> imm8;
-		result.m512x_uint64[4] = a.m512x_uint64[4] >> imm8;
-		result.m512x_uint64[5] = a.m512x_uint64[5] >> imm8;
-		result.m512x_uint64[6] = a.m512x_uint64[6] >> imm8;
-		result.m512x_uint64[7] = a.m512x_uint64[7] >> imm8;
-		return result;
-	}
-
-	constexpr __m512x mm512MulEpi32(const __m512x& a, const __m512x& b) noexcept {
-		__m512x result{};
-
-		uint32_t a_val[16];
-		uint32_t b_val[16];
-		for (int32_t i = 0; i < 16; ++i) {
-			a_val[i] = get32(a.m512x_uint64, i);
-			b_val[i] = get32(b.m512x_uint64, i);
-		}
-		set64(result.m512x_uint64, 0, static_cast<size_t>(a_val[0]) * static_cast<size_t>(b_val[0]) | static_cast<size_t>(a_val[1]) * static_cast<size_t>(b_val[1]));
-		set64(result.m512x_uint64, 1, static_cast<size_t>(a_val[2]) * static_cast<size_t>(b_val[2]) | static_cast<size_t>(a_val[3]) * static_cast<size_t>(b_val[3]));
-		set64(result.m512x_uint64, 2, static_cast<size_t>(a_val[4]) * static_cast<size_t>(b_val[4]) | static_cast<size_t>(a_val[5]) * static_cast<size_t>(b_val[5]));
-		set64(result.m512x_uint64, 3, static_cast<size_t>(a_val[6]) * static_cast<size_t>(b_val[6]) | static_cast<size_t>(a_val[7]) * static_cast<size_t>(b_val[7]));
-		set64(result.m512x_uint64, 4, static_cast<size_t>(a_val[8]) * static_cast<size_t>(b_val[8]) | static_cast<size_t>(a_val[9]) * static_cast<size_t>(b_val[9]));
-		set64(result.m512x_uint64, 5, static_cast<size_t>(a_val[10]) * static_cast<size_t>(b_val[10]) | static_cast<size_t>(a_val[11]) * static_cast<size_t>(b_val[11]));
-		set64(result.m512x_uint64, 6, static_cast<size_t>(a_val[12]) * static_cast<size_t>(b_val[12]) | static_cast<size_t>(a_val[13]) * static_cast<size_t>(b_val[13]));
-		set64(result.m512x_uint64, 7, static_cast<size_t>(a_val[14]) * static_cast<size_t>(b_val[14]) | static_cast<size_t>(a_val[15]) * static_cast<size_t>(b_val[15]));
-
-		return result;
-	}
-
-	constexpr __m512x mm512ShuffleEpi32(const __m512x& a, int32_t imm8) noexcept {
-		__m512x result{};
-		set32(result.m512x_uint64, 0, get32(a.m512x_uint64, (imm8 >> 0) & 0x3));
-		set32(result.m512x_uint64, 1, get32(a.m512x_uint64, (imm8 >> 2) & 0x3));
-		set32(result.m512x_uint64, 2, get32(a.m512x_uint64, (imm8 >> 4) & 0x3));
-		set32(result.m512x_uint64, 3, get32(a.m512x_uint64, (imm8 >> 6) & 0x3));
-		set32(result.m512x_uint64, 4, get32(a.m512x_uint64, (imm8 >> 8) & 0x3));
-		set32(result.m512x_uint64, 5, get32(a.m512x_uint64, (imm8 >> 10) & 0x3));
-		set32(result.m512x_uint64, 6, get32(a.m512x_uint64, (imm8 >> 12) & 0x3));
-		set32(result.m512x_uint64, 7, get32(a.m512x_uint64, (imm8 >> 14) & 0x3));
-		set32(result.m512x_uint64, 8, get32(a.m512x_uint64, (imm8 >> 16) & 0x3));
-		set32(result.m512x_uint64, 9, get32(a.m512x_uint64, (imm8 >> 18) & 0x3));
-		set32(result.m512x_uint64, 10, get32(a.m512x_uint64, (imm8 >> 20) & 0x3));
-		set32(result.m512x_uint64, 11, get32(a.m512x_uint64, (imm8 >> 22) & 0x3));
-		set32(result.m512x_uint64, 12, get32(a.m512x_uint64, (imm8 >> 24) & 0x3));
-		set32(result.m512x_uint64, 13, get32(a.m512x_uint64, (imm8 >> 26) & 0x3));
-		set32(result.m512x_uint64, 14, get32(a.m512x_uint64, (imm8 >> 28) & 0x3));
-		set32(result.m512x_uint64, 15, get32(a.m512x_uint64, (imm8 >> 30) & 0x3));
-		return result;
-	}
-
-	constexpr __m512x mm512AddEpi64(const __m512x& value01, const __m512x& value02) noexcept {
-		__m512x returnValue{};
-		__m512x value01New{ value01 }, value02New{ value02 };
-		returnValue.m512x_uint64[0] = value01New.m512x_uint64[0] + value02New.m512x_uint64[0];
-		returnValue.m512x_uint64[1] = value01New.m512x_uint64[1] + value02New.m512x_uint64[1];
-		returnValue.m512x_uint64[2] = value01New.m512x_uint64[2] + value02New.m512x_uint64[2];
-		returnValue.m512x_uint64[3] = value01New.m512x_uint64[3] + value02New.m512x_uint64[3];
-		returnValue.m512x_uint64[4] = value01New.m512x_uint64[4] + value02New.m512x_uint64[4];
-		returnValue.m512x_uint64[5] = value01New.m512x_uint64[5] + value02New.m512x_uint64[5];
-		returnValue.m512x_uint64[6] = value01New.m512x_uint64[6] + value02New.m512x_uint64[6];
-		returnValue.m512x_uint64[7] = value01New.m512x_uint64[7] + value02New.m512x_uint64[7];
-		return returnValue;
-	}
-
-	template<typename value_type>
-		requires(sizeof(value_type) == 8)
-	constexpr __m512x mm512LoadUSi512(const value_type* ptr) noexcept {
-		__m512x returnValues{};
-		returnValues.m512x_uint64[0] = ptr[0];
-		returnValues.m512x_uint64[1] = ptr[1];
-		returnValues.m512x_uint64[2] = ptr[2];
-		returnValues.m512x_uint64[3] = ptr[3];
-		returnValues.m512x_uint64[4] = ptr[4];
-		returnValues.m512x_uint64[5] = ptr[5];
-		returnValues.m512x_uint64[6] = ptr[6];
-		returnValues.m512x_uint64[7] = ptr[7];
-		return returnValues;
-	}
-
-	constexpr void mm512StoreUSi512(uint8_t* ptr, const __m512x& data) noexcept {
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i] = static_cast<uint8_t>(data.m512x_uint64[0] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 8] = static_cast<uint8_t>(data.m512x_uint64[1] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 16] = static_cast<uint8_t>(data.m512x_uint64[2] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 24] = static_cast<uint8_t>(data.m512x_uint64[3] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 32] = static_cast<uint8_t>(data.m512x_uint64[4] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 40] = static_cast<uint8_t>(data.m512x_uint64[5] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 48] = static_cast<uint8_t>(data.m512x_uint64[6] >> (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 56] = static_cast<uint8_t>(data.m512x_uint64[7] >> (i * 8));
-		}
-	}
-
-	template<typename value_type> constexpr void mm512StoreUSi512(value_type* ptr, const __m512x& data) noexcept {
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i] = static_cast<size_t>(data.m512x_uint64[i]);
-		}
-	}
-
-	constexpr __m512x mm512Set1Epi32(uint32_t value) noexcept {
-		size_t extended_value = (static_cast<size_t>(value) << 32) | value;
-		return __m512x{ extended_value, extended_value, extended_value, extended_value, extended_value, extended_value, extended_value, extended_value };
-	}
-
-	constexpr __m512x mm512SlliEpi64(const __m512x& a, uint32_t imm8) noexcept {
-		__m512x result{};
-		result.m512x_uint64[0] = a.m512x_uint64[0] << imm8;
-		result.m512x_uint64[1] = a.m512x_uint64[1] << imm8;
-		result.m512x_uint64[2] = a.m512x_uint64[2] << imm8;
-		result.m512x_uint64[3] = a.m512x_uint64[3] << imm8;
-		result.m512x_uint64[4] = a.m512x_uint64[4] << imm8;
-		result.m512x_uint64[5] = a.m512x_uint64[5] << imm8;
-		result.m512x_uint64[6] = a.m512x_uint64[6] << imm8;
-		result.m512x_uint64[7] = a.m512x_uint64[7] << imm8;
-		return result;
-	}
-
-	constexpr __m512x mm512TernarylogicEpi32(const __m512x& a, const __m512x& b, const __m512x& c, const uint8_t k) noexcept {
-		__m512x result;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			size_t val_a = a.m512x_uint64[i];
-			size_t val_b = b.m512x_uint64[i];
-			size_t val_c = c.m512x_uint64[i];
-
-			size_t result_val = 0;
-
-			for (int32_t bit = 0; bit < 64; ++bit) {
-				uint8_t bit_a = (val_a >> bit) & 1;
-				uint8_t bit_b = (val_b >> bit) & 1;
-				uint8_t bit_c = (val_c >> bit) & 1;
-
-				uint8_t index	   = static_cast<uint8_t>((bit_a << 2) | (bit_b << 1) | bit_c);
-				uint8_t result_bit = static_cast<uint8_t>((k >> index) & 1);
-
-				result_val |= (static_cast<size_t>(result_bit) << bit);
-			}
-
-			result.m512x_uint64[i] = result_val;
-		}
-
-		return result;
-	}
-
-	constexpr __m512x mm512MaskSubEpi64(const __m512x& a, uint8_t mask, const __m512x& b, const __m512x& c) noexcept {
-		__m512x result;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			if (mask & (1 << i)) {
-				result.m512x_uint64[i] = b.m512x_uint64[i] - c.m512x_uint64[i];
-			} else {
-				result.m512x_uint64[i] = a.m512x_uint64[i];
-			}
-		}
-
-		return result;
-	}
-
-	constexpr __m512x mm512Set1Epi64(size_t argOne) noexcept {
-		__m512x returnValue{};
-		returnValue.m512x_uint64[0] = argOne;
-		returnValue.m512x_uint64[1] = argOne;
-		returnValue.m512x_uint64[2] = argOne;
-		returnValue.m512x_uint64[3] = argOne;
-		returnValue.m512x_uint64[4] = argOne;
-		returnValue.m512x_uint64[5] = argOne;
-		returnValue.m512x_uint64[6] = argOne;
-		returnValue.m512x_uint64[7] = argOne;
-		return returnValue;
-	}
-
-	constexpr __m512x mm512Set1Epi8(uint8_t value) noexcept {
-		__m512x result;
-
-		size_t repeated_value = 0;
-		for (int32_t i = 0; i < 8; ++i) {
-			repeated_value |= (static_cast<size_t>(value) << (i * 8));
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			result.m512x_uint64[i] = repeated_value;
-		}
-
-		return result;
-	}
-
-	constexpr __m512x mm512LoadUSi512(const __m512x* ptr) noexcept {
-		__m512x returnValues{ *ptr };
-		return returnValues;
 	}
 
 }
