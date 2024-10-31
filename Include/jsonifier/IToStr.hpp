@@ -145,8 +145,11 @@ namespace jsonifier_internal {
 	template<typename value_type> struct to_chars;
 
 	template<jsonifier::concepts::uint64_type value_type> struct to_chars<value_type> {
-		JSONIFIER_MAYBE_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
-			if (value < 100000000) {
+		JSONIFIER_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
+			if (value == 0) {
+				*buf = '0';
+				return buf + 1;
+			} else if (value < 100000000) {
 				buf = toCharsU64Len18(buf, static_cast<uint32_t>(value));
 				return buf;
 			} else {
@@ -171,7 +174,7 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::concepts::int64_type value_type> struct to_chars<value_type> {
-		JSONIFIER_MAYBE_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
+		JSONIFIER_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
 			*buf = '-';
 			return to_chars<uint64_t>::impl(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63)) - (value >> 63));
 		}

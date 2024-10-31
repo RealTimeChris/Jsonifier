@@ -77,10 +77,10 @@ using structural_index	= const char*;
 using string_buffer_ptr = char*;
 
 template<typename value_type>
-concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, std::remove_cvref_t<value_type>>;
+concept simd_int_512_type = std::same_as<jsonifier_simd_int_512, std::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, std::remove_cvref_t<value_type>>;
+concept simd_int_256_type = std::same_as<jsonifier_simd_int_256, std::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
+concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
+concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;

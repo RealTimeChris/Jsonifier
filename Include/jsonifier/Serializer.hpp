@@ -32,7 +32,6 @@
 namespace jsonifier {
 
 	struct serialize_options {
-		bool newLinesInArray{ true };
 		bool checkedForSize{ true };
 		size_t indentSize{ 3 };
 		char indentChar{ ' ' };
@@ -78,7 +77,7 @@ namespace jsonifier_internal {
 			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
 				buffer.resize(serializePair.index);
 			}
-			std::copy(stringBuffer.data(), stringBuffer.data() + serializePair.index, buffer.data());
+			std::memcpy(buffer.data(), stringBuffer.data(), serializePair.index);
 			return true;
 		}
 

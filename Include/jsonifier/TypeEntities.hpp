@@ -45,8 +45,6 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class parser;
 
-	class json_structural_iterator;
-
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
@@ -54,12 +52,6 @@ namespace jsonifier_internal {
 	template<template<typename...> class value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
 
 	template<uint64_t index> using tag = std::integral_constant<uint64_t, index>;
-
-	template<uint64_t index> constexpr tag<index> TagV{};
-
-	template<typename value_type, typename... value_types> struct collect_first_type {
-		using type = value_type;
-	};
 
 	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
 		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
@@ -118,8 +110,6 @@ namespace jsonifier_internal {
 
 }
 
-#include <jsonifier/ISA/AVX.hpp>
-
 namespace jsonifier {
 
 	template<typename value_type, uint64_t> class string_base;
@@ -152,14 +142,9 @@ namespace jsonifier {
 	namespace concepts {
 
 		template<typename value_type>
-		concept range = requires(std::remove_cvref_t<value_type> value) {
-			typename std::remove_cvref_t<value_type>::value_type;
-			{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
-			{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
-		} || requires(std::remove_cvref_t<value_type> value) {
-			typename std::remove_cvref_t<value_type>::value_type;
-			{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::iterator>;
-			{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::iterator>;
+		concept has_range = requires(std::remove_cvref_t<value_type> value) {
+			{ value.begin() } -> std::forward_iterator;
+			{ value.end() } -> std::forward_iterator;
 		};
 
 		template<typename value_type>
@@ -182,7 +167,22 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept variant_t = jsonifier_internal::is_specialization_v<std::remove_cvref_t<value_type>, std::variant>;
+		concept has_empty = requires(std::remove_cvref_t<value_type> value) {
+			{ value.empty() } -> std::same_as<bool>;
+		};
+
+		template<typename value_type>
+		concept variant_t = requires(std::remove_cvref_t<value_type> var) {
+			{ var.index() } -> std::same_as<std::size_t>;
+			{ var.valueless_by_exception() } -> std::same_as<bool>;
+			{ var.template emplace<0>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ var.template emplace<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ var.template holds_alternative<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<bool>;
+			{ std::get<0>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ std::get<typename std::remove_cvref_t<value_type>::template type<0>>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ std::get_if<0>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
+			{ std::get_if<typename std::remove_cvref_t<value_type>::template type<0>>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
+		};
 
 		template<typename value_type>
 		concept has_resize = requires(std::remove_cvref_t<value_type> value) { value.resize(typename std::remove_cvref_t<value_type>::size_type{}); };
@@ -198,27 +198,12 @@ namespace jsonifier {
 		concept stateless = std::is_empty_v<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept void_t = std::is_void_v<std::remove_cvref_t<value_type>>;
-
-		template<typename value_type>
-		concept has_ptr_operator = requires(std::remove_cvref_t<value_type> value) { value.operator->(); };
-
-		template<typename value_type>
-		concept indexable = stateless<value_type> || requires(std::remove_cvref_t<value_type> value) { value[jsonifier_internal::tag<0>()]; };
-
-		template<typename value_type_01, typename value_type_02>
-		concept related_ptr = (std::derived_from<std::remove_cvref_t<value_type_01>, std::remove_cvref_t<value_type_02>> ||
-								  std::is_base_of_v<std::remove_cvref_t<value_type_01>, std::remove_cvref_t<value_type_02>> ||
-								  std::is_same_v<std::remove_cvref_t<value_type_01>, std::remove_cvref_t<value_type_02>>) &&
-			std::is_pointer_v<std::remove_cvref_t<value_type_01>>;
-
-		template<typename value_type>
-		concept bool_t = std::is_same_v<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
+		concept bool_t = std::same_as<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
 			std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::const_reference>;
 
 		template<typename value_type>
-		concept always_null_t = std::is_same_v<std::remove_cvref_t<value_type>, std::nullptr_t> || std::is_same_v<std::remove_cvref_t<value_type>, std::monostate> ||
-			std::is_same_v<std::remove_cvref_t<value_type>, std::nullopt_t>;
+		concept always_null_t = std::same_as<std::remove_cvref_t<value_type>, std::nullptr_t> || std::same_as<std::remove_cvref_t<value_type>, std::monostate> ||
+			std::same_as<std::remove_cvref_t<value_type>, std::nullopt_t>;
 
 		template<typename value_type>
 		concept pointer_t = (std::is_pointer_v<std::remove_cvref_t<value_type>> ||
@@ -256,20 +241,11 @@ namespace jsonifier {
 		concept int64_type = sizeof(std::remove_cvref_t<value_type>) == 8 && signed_type<value_type>;
 
 		template<typename value_type>
-		concept double_type = std::is_same_v<double, std::remove_cvref_t<value_type>>;
-
-		template<typename value_type>
 		concept float_type = std::floating_point<std::remove_cvref_t<value_type>> && (std::numeric_limits<std::remove_cvref_t<value_type>>::radix == 2) &&
 			std::numeric_limits<std::remove_cvref_t<value_type>>::is_iec559;
 
 		template<typename value_type>
-		concept json_structural_iterator_t = std::is_same_v<std::remove_cvref_t<value_type>, jsonifier_internal::json_structural_iterator>;
-
-		template<typename value_type>
-		concept char_type = std::is_same_v<std::remove_cvref_t<value_type>, char>;
-
-		template<typename value_type>
-		concept u_char_type = std::is_same_v<std::remove_cvref_t<value_type>, uint8_t>;
+		concept char_type = std::same_as<std::remove_cvref_t<value_type>, char>;
 
 		template<typename value_type>
 		concept num_t = (float_type<value_type> || unsigned_type<value_type> || signed_type<value_type>) && !char_type<value_type>;
@@ -282,14 +258,19 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept string_t = has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::is_same_v<std::remove_cvref_t<value_type>, char> &&
-			vector_subscriptable<value_type> && !pointer_t<value_type>;
+		concept has_find = requires(std::remove_cvref_t<value_type> value) {
+			{ value.find(typename std::remove_cvref_t<value_type>::value_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::size_type>;
+		} || requires(std::remove_cvref_t<value_type> value) {
+			{ value.find(typename std::remove_cvref_t<value_type>::key_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::iterator>;
+		} || requires(std::remove_cvref_t<value_type> value) {
+			{ value.find(typename std::remove_cvref_t<value_type>::key_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
+		};
 
 		template<typename value_type>
-		concept map_t = requires(std::remove_cvref_t<value_type> value) {
-			typename std::remove_cvref_t<value_type>::mapped_type;
-			typename std::remove_cvref_t<value_type>::key_type;
-		} && range<value_type> && map_subscriptable<value_type>;
+		concept string_t = has_substr<value_type> && has_data<value_type> && has_size<value_type> && vector_subscriptable<value_type> && has_find<value_type>;
+
+		template<typename value_type>
+		concept map_t = map_subscriptable<value_type> && has_range<value_type> && has_size<value_type> && has_find<value_type> && has_empty<value_type>;
 
 		template<typename value_type>
 		concept pair_t = requires(std::remove_cvref_t<value_type> value) {
@@ -299,27 +280,17 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_emplace_back = requires(std::remove_cvref_t<value_type> value) {
-			{ value.emplace_back(typename std::remove_cvref_t<value_type>::value_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::value_type&>;
-		};
-
-		template<typename value_type>
-		concept has_control_byes = requires(std::remove_cvref_t<value_type> value) {
-			{ value.controlBytes };
-		};
-
-		template<typename value_type>
-		concept has_reserve = requires(std::remove_cvref_t<value_type> value) {
-			{ value.reserve(typename std::remove_cvref_t<value_type>::size_type{}) } -> std::same_as<void>;
-		};
-
-		template<typename value_type>
-		concept has_capacity = requires(std::remove_cvref_t<value_type> value) {
-			{ value.capacity() } -> std::same_as<typename std::remove_cvref_t<value_type>::size_type>;
+			{ value.emplace_back(typename std::remove_cvref_t<value_type>::value_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::reference>;
 		};
 
 		template<typename value_type>
 		concept has_release = requires(std::remove_cvref_t<value_type> value) {
 			{ value.release() } -> std::same_as<typename std::remove_cvref_t<value_type>::pointer>;
+		};
+
+		template<typename value_type>
+		concept has_reset = requires(std::remove_cvref_t<value_type> value) {
+			{ value.reset() } -> std::same_as<void>;
 		};
 
 		template<typename value_type>
@@ -334,15 +305,10 @@ namespace jsonifier {
 		concept unique_ptr_t = requires(std::remove_cvref_t<value_type> value) {
 			typename std::remove_cvref_t<value_type>::element_type;
 			typename std::remove_cvref_t<value_type>::deleter_type;
-		} && has_release<value_type>;
+		} && has_release<value_type> && has_get<value_type>;
 
 		template<typename value_type>
-		concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
-
-		template<typename value_type>
-		concept has_find = requires(std::remove_cvref_t<value_type> value) {
-			{ value.find(typename std::remove_cvref_t<value_type>::key_type{}) };
-		};
+		concept shared_ptr_t = has_reset<value_type> && has_get<value_type> && copyable<value_type>;
 
 		template<typename value_type>
 		concept has_excluded_keys = requires(std::remove_cvref_t<value_type> value) {
@@ -356,13 +322,10 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept is_double_ptr = std::same_as<const char**, std::remove_cvref_t<value_type>> || std::same_as<char**, std::remove_cvref_t<value_type>>;
-
-		template<typename value_type>
 		concept null_t = nullable_t<value_type> || always_null_t<value_type>;
 
 		template<typename value_type>
-		concept raw_json_t = std::is_same_v<std::remove_cvref_t<value_type>, jsonifier::raw_json_data>;
+		concept raw_json_t = std::same_as<std::remove_cvref_t<value_type>, jsonifier::raw_json_data>;
 
 		template<typename value_type01, typename value_type02>
 		concept same_character_size = requires() {
@@ -378,14 +341,19 @@ namespace jsonifier {
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 
 		template<typename value_type>
-		concept optional_t = jsonifier_internal::is_specialization_v<std::remove_cvref_t<value_type>, std::optional>;
+		concept optional_t = requires(std::remove_cvref_t<value_type> opt) {
+			{ opt.has_value() } -> std::same_as<bool>;
+			{ opt.value() } -> std::same_as<typename std::remove_cvref_t<value_type>::value_type&>;
+			{ *opt } -> std::same_as<typename std::remove_cvref_t<value_type>::value_type&>;
+			{ opt.reset() } -> std::same_as<void>;
+			{ opt.emplace(typename std::remove_cvref_t<value_type>::value_type{}) } -> std::same_as<typename std::remove_cvref_t<value_type>::value_type&>;
+		};
 
 		template<typename value_type>
 		concept enum_t = std::is_enum_v<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !has_substr<value_type> && !std::is_pointer_v<std::remove_cvref_t<value_type>> &&
-			!tuple_t<value_type> && has_resize<value_type>;
+		concept vector_t = vector_subscriptable<value_type> && has_resize<value_type> && has_emplace_back<value_type>;
 
 		template<typename value_type>
 		concept jsonifier_t = requires { jsonifier::core<std::remove_cvref_t<value_type>>::parseValue; };
@@ -429,7 +397,7 @@ namespace jsonifier {
 		concept buffer_like = vector_subscriptable<value_type> && has_data<value_type> && has_resize<value_type>;
 
 		template<typename value_type> constexpr bool printErrorFunction() noexcept {
-			using fail_type = typename value_type::fail_type;
+			using fail_type = typename std::remove_cvref_t<value_type>::fail_type;
 			return false;
 		}
 
@@ -480,36 +448,9 @@ namespace jsonifier_internal {
 		std::cout << std::endl;
 	}
 
-	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept {
-		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
-		std::stringstream theStream{};
-		store(value, values);
-		std::cout << valuesTitle;
-		for (jsonifier_string_parsing_type x = 0; x < sizeof(simd_type); ++x) {
-			for (jsonifier_string_parsing_type y = 0; y < 8; ++y) {
-				std::cout << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-			}
-		}
-		std::cout << std::endl;
-		return value;
-	}
-
 	JSONIFIER_ALWAYS_INLINE std::string printBits(bool value) noexcept {
 		std::stringstream theStream{};
 		theStream << std::boolalpha << value << std::endl;
-		return theStream.str();
-	}
-
-	template<typename simd_type> JSONIFIER_ALWAYS_INLINE std::string printBits(const simd_type& value) noexcept {
-		JSONIFIER_ALIGN uint8_t values[sizeof(simd_type)]{};
-		std::stringstream theStream{};
-		store(value, values);
-		for (uint64_t x = 0; x < bytesPerStep; ++x) {
-			for (uint64_t y = 0; y < 8; ++y) {
-				theStream << std::bitset<1>{ static_cast<uint64_t>(*(values + x)) >> y };
-			}
-		}
-		theStream << std::endl;
 		return theStream.str();
 	}
 
@@ -583,7 +524,5 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }
 
-
 #include <jsonifier/ISA/Lzcount.hpp>
 #include <jsonifier/ISA/Popcount.hpp>
-#include <jsonifier/ISA/Bmi.hpp>

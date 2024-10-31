@@ -58,8 +58,8 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
 		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t indent) noexcept {
-			constexpr auto numMembers = std::tuple_size_v<core_tuple_t<value_type>>;
-			constexpr auto newSize	  = []() constexpr {
+			static constexpr auto numMembers = std::tuple_size_v<core_tuple_t<value_type>>;
+			static constexpr auto newSize	 = []() constexpr {
 				   serialize_size_values pair{};
 				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& pairNew) {
 					   if constexpr (currentIndex < maxIndex) {
@@ -89,38 +89,32 @@ namespace jsonifier_internal {
 				   return pair;
 			}();
 
-			return (indent * newSize.newLineCount) + newSize.ctIndex;
+			return indent + newSize.ctIndex;
 		}
 	};
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::vector_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
 		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size, size_t indent) noexcept {
-			static constexpr auto newSize = []() constexpr {
+			static constexpr const auto newSize = []() constexpr {
 				serialize_size_values pair{};
+				++pair.ctIndex;
 				++pair.ctIndex;
 				++pair.ctIndex;
 				return pair;
 			}();
 			if constexpr (sizeable_type<typename std::remove_cvref_t<value_type>::value_type>) {
+				static constexpr auto paddingSize = getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>();
 				if constexpr (options.prettify) {
-					if constexpr (options.newLinesInArray) {
-						return (indent * size) + newSize.ctIndex + (size * 2) + (size * getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>());
-					} else {
-						return indent + size + newSize.ctIndex + (size * getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>());
-					}
+					return newSize.ctIndex + (2 * indent) + size * (2 + indent) + (size * paddingSize);
 				} else {
-					return size + newSize.ctIndex + (size * getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>());
+					return newSize.ctIndex + size + (size * paddingSize);
 				}
 			} else {
 				if constexpr (options.prettify) {
-					if constexpr (options.newLinesInArray) {
-						return (indent * size) + newSize.ctIndex + (size * 2);
-					} else {
-						return indent + size + newSize.ctIndex;
-					}
+					return newSize.ctIndex + (2 * indent) + size * (2 + indent);
 				} else {
-					return size + newSize.ctIndex;
+					return newSize.ctIndex + size;
 				}
 			}
 		}
@@ -129,18 +123,14 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::raw_array_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
 		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t indent, size_t size) noexcept {
-			static constexpr auto newSize = []() constexpr {
+			static constexpr const auto newSize = []() constexpr {
 				serialize_size_values pair{};
 				++pair.ctIndex;
 				++pair.ctIndex;
 				return pair;
 			}();
 			if constexpr (options.prettify) {
-				if constexpr (options.newLinesInArray) {
-					return (indent * size) + newSize.ctIndex + (size * 2);
-				} else {
-					return indent + size + newSize.ctIndex;
-				}
+				return indent + newSize.ctIndex + (size * 2);
 			} else {
 				return size + newSize.ctIndex;
 			}
@@ -150,7 +140,7 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::map_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
 		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size, size_t indent) noexcept {
-			static constexpr auto newSize = []() constexpr {
+			static constexpr const auto newSize = []() constexpr {
 				serialize_size_values pair{};
 				if constexpr (options.prettify) {
 					pair.ctIndex += std::size(",\n") + 1;
@@ -164,7 +154,7 @@ namespace jsonifier_internal {
 				return pair;
 			}();
 
-			return (indent * size) + (size * newSize.ctIndex);
+			return indent + (size * newSize.ctIndex);
 		}
 	};
 
@@ -235,9 +225,9 @@ namespace jsonifier_internal {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			static constexpr auto numMembers{ std::tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(serializePair.indent);
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize = serializePair.index + size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(serializePair.indent);
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			if constexpr (numMembers > 0) {
@@ -291,13 +281,14 @@ namespace jsonifier_internal {
 		static constexpr auto newValue05{ packValues<"{}">() };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto maxIndex = value.size();
-			if constexpr (options.checkedForSize) {
-				auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
-				}
-			}
 			if JSONIFIER_LIKELY ((maxIndex > 0)) {
+				if constexpr (options.checkedForSize) {
+					const auto newSize =
+						serializePair.index + size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
+					if (buffer.size() <= newSize) {
+						buffer.resize((buffer.size() + newSize) * 2);
+					}
+				}
 				if constexpr (options.prettify) {
 					serializePair.indent += options.indentSize;
 					std::memcpy(&buffer[serializePair.index], &newValue01, 2);
@@ -370,7 +361,7 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			if JSONIFIER_LIKELY ((value)) {
+			if JSONIFIER_LIKELY ((value.has_value())) {
 				serialize<options>::impl(*value, buffer, serializePair);
 			} else {
 				std::memcpy(&buffer[serializePair.index], &nullV, 4);
@@ -434,13 +425,12 @@ namespace jsonifier_internal {
 		static constexpr auto newValue03{ packValues<"[]">() };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto maxIndex = value.size();
-			if constexpr (options.checkedForSize) {
-				auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
-				}
-			}
 			if JSONIFIER_LIKELY ((maxIndex > 0)) {
+				const auto newSize =
+					serializePair.index + size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(maxIndex, serializePair.indent);
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
+				}
 				if constexpr (options.prettify) {
 					serializePair.indent += options.indentSize;
 					std::memcpy(&buffer[serializePair.index], &newValue01, 2);
@@ -505,9 +495,10 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new<value_type_internal, size>& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto maxIndex = std::size(value);
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(serializePair.indent, maxIndex);
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize =
+					serializePair.index + size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(serializePair.indent, maxIndex);
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			if JSONIFIER_LIKELY ((maxIndex > 0)) {
@@ -562,20 +553,31 @@ namespace jsonifier_internal {
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
+		static constexpr auto newValue01{ packValues<"\"\"">() };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			if constexpr (options.checkedForSize) {
-				auto additionalSize = value.size() + 2 + serializePair.indent;
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+			if JSONIFIER_LIKELY ((value.size() > 0)) {
+				if constexpr (options.checkedForSize) {
+					const auto newSize = serializePair.index + 10 + 2 * value.size();
+					if (newSize >= buffer.size()) [[unlikely]] {
+						buffer.resize((buffer.size() + newSize) * 2);
+					}
 				}
+				buffer[serializePair.index] = '"';
+				++serializePair.index;
+				auto newPtr = string_serializer<decltype(value.data()), decltype(&buffer[serializePair.index])>::impl(value.data(), &buffer[serializePair.index], value.size());
+				serializePair.index			= static_cast<size_t>(newPtr - buffer.data());
+				buffer[serializePair.index] = '"';
+				++serializePair.index;
+			} else {
+				if constexpr (options.checkedForSize) {
+					const auto newSize = serializePair.index + 2;
+					if (newSize >= buffer.size()) [[unlikely]] {
+						buffer.resize((buffer.size() + newSize) * 2);
+					}
+				}
+				std::memcpy(&buffer[serializePair.index], &newValue01, 2);
+				serializePair.index += 2;
 			}
-			buffer[serializePair.index] = '"';
-			++serializePair.index;
-			auto newPtr = &buffer[serializePair.index];
-			serializeStringImpl(value.data(), newPtr, value.size());
-			serializePair.index			= static_cast<size_t>(newPtr - buffer.data());
-			buffer[serializePair.index] = '"';
-			++serializePair.index;
 		}
 	};
 
@@ -583,9 +585,9 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = 3 + serializePair.indent;
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize = serializePair.index + 3 + serializePair.indent;
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			buffer[serializePair.index] = '"';
@@ -682,9 +684,9 @@ namespace jsonifier_internal {
 		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = 4 + serializePair.indent;
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize = serializePair.index + 4 + serializePair.indent;
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			std::memcpy(&buffer[serializePair.index], &nullV, 4);
@@ -698,9 +700,9 @@ namespace jsonifier_internal {
 		static constexpr uint64_t trueV{ 434025983730 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = 5 + serializePair.indent;
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize = serializePair.index + 5 + serializePair.indent;
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			const uint64_t state = falseV - (value * trueV);
@@ -713,9 +715,9 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (options.checkedForSize) {
-				auto additionalSize = 64 + serializePair.indent;
-				if (buffer.size() < serializePair.index + additionalSize) {
-					buffer.resize((serializePair.index + additionalSize) * 2);
+				const auto newSize = serializePair.index + 64 + serializePair.indent;
+				if (buffer.size() <= newSize) {
+					buffer.resize((buffer.size() + newSize) * 2);
 				}
 			}
 			if constexpr (sizeof(value_type) == 8) {
@@ -726,7 +728,7 @@ namespace jsonifier_internal {
 				} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
 					serializePair.index = static_cast<size_t>(to_chars<int64_t>::impl(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
 				} else {
-					serializePair.index = static_cast<size_t>(to_chars<double>::impl(&buffer[serializePair.index], static_cast<double>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(to_chars<float>::impl(&buffer[serializePair.index], value) - buffer.data());
 				}
 			}
 		}

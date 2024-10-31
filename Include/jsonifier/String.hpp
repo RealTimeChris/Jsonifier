@@ -163,7 +163,7 @@ namespace jsonifier {
 
 		template<jsonifier::concepts::pointer_t value_type_newer> JSONIFIER_ALWAYS_INLINE string_base(value_type_newer other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			if (other) {
-				auto newSize = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) *
+				const auto newSize = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) *
 					(sizeof(std::remove_pointer_t<value_type_newer>) / sizeof(value_type));
 				if JSONIFIER_LIKELY ((newSize > 0 && newSize < maxSize())) {
 					reserve(newSize);
@@ -323,7 +323,7 @@ namespace jsonifier {
 			if JSONIFIER_UNLIKELY ((sizeVal + 1 >= capacityVal)) {
 				reserve((sizeVal + 1) * 2);
 			}
-			auto newSize = sizeVal - positionNew;
+			const auto newSize = sizeVal - positionNew;
 			std::memmove(dataVal + positionNew + 1, dataVal + positionNew, newSize * sizeof(value_type));
 			allocator::construct(&dataVal[positionNew], toInsert);
 			++sizeVal;
@@ -341,7 +341,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void erase(iterator count) noexcept {
-			auto newSize = count.operator->() - dataVal;
+			const auto newSize = count.operator->() - dataVal;
 			if JSONIFIER_UNLIKELY ((newSize == 0)) {
 				return;
 			} else if JSONIFIER_UNLIKELY ((newSize > static_cast<int64_t>(sizeVal))) {

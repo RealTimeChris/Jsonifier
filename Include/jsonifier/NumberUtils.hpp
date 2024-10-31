@@ -122,14 +122,14 @@ namespace jsonifier_internal {
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
 				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
-					return integer_parser<uint64_t>::parseInt(value, iter);
+					return integer_parser<value_type>::parseInt(value, iter);
 				} else {
 					uint64_t i;
 					return integer_parser<uint64_t>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::int64_type<value_type>) {
-					return integer_parser<int64_t>::parseInt(value, iter);
+					return integer_parser<value_type>::parseInt(value, iter);
 				} else {
 					int64_t i;
 					return integer_parser<int64_t>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
@@ -138,14 +138,9 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				double temp;
-				return parseFloat(iter, end, temp) ? (value = temp, true) : false;
+				return parseFloat(iter, end, temp) ? (value = static_cast<value_type>(temp), true) : false;
 			} else {
-				if constexpr (jsonifier::concepts::double_type<value_type>) {
-					return parseFloat(iter, end, value);
-				} else {
-					double i;
-					return parseFloat(iter, end, i) ? (value = i, true) : false;
-				}
+				return parseFloat(iter, end, value);
 			}
 		}
 		return true;

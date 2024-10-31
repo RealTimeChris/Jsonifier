@@ -195,14 +195,12 @@ The `serialize_options` struct allows customization of serialization behavior. H
 
 ```cpp
 struct serialize_options {
-	bool newLinesInArray{ true };
 	size_t indentSize{ 3 };
 	char indentChar{ ' ' };
 	bool prettify{ false };
 };
 ```
 
-- `newLinesInArray`: Specifies whether or not there are newlines appended after each array element.
 - `indentSize`: Specifies the number of indent characters appended for each of the indentations.
 - `indentChar`: Specifies which character to use when indenting prettified json data.
 - `prettify`: Indicates whether to prettify the JSON output (default: `false`).

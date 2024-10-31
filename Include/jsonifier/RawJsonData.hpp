@@ -265,7 +265,7 @@ namespace jsonifier_internal {
 					++newIter01;
 				}
 				jsonifier::string newString{};
-				auto newSize = newIter01 - newIter02;
+				const auto newSize = newIter01 - newIter02;
 				newString.resize(static_cast<uint64_t>(newSize));
 				std::copy(newIter02.operator->(), newIter02.operator->() + static_cast<uint64_t>(newSize), newString.data());
 				newIter01 = newIter02;

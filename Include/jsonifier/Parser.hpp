@@ -107,7 +107,7 @@ namespace jsonifier_internal {
 				}
 			}
 			derivedRef.errors.clear();
-			if JSONIFIER_UNLIKELY ((!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '['))) {
+			if JSONIFIER_UNLIKELY ((!optionsReal.iter)) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return false;
@@ -140,7 +140,7 @@ namespace jsonifier_internal {
 			}
 			derivedRef.errors.clear();
 			std::remove_cvref_t<value_type> object{};
-			if JSONIFIER_UNLIKELY ((!optionsReal.iter || (*optionsReal.iter != '{' && *optionsReal.iter != '['))) {
+			if JSONIFIER_UNLIKELY ((!optionsReal.iter)) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return std::move(object);

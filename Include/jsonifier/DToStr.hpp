@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 		0, 0, 0, 0, 0, 0 };
 
-	JSONIFIER_MAYBE_ALWAYS_INLINE char* writeU64Len15To17Trim(char* buf, uint64_t sig) noexcept {
+	JSONIFIER_ALWAYS_INLINE char* writeU64Len15To17Trim(char* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
@@ -154,13 +154,13 @@ namespace jsonifier_internal {
 	template<typename value_type> struct to_chars;
 
 	template<jsonifier::concepts::float_type value_type> struct to_chars<value_type> {
-		JSONIFIER_MAYBE_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
+		JSONIFIER_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
 			static_assert(std::numeric_limits<value_type>::is_iec559);
 			static_assert(std::numeric_limits<value_type>::radix == 2);
-			static_assert(std::is_same_v<float, value_type> || std::is_same_v<double, value_type>);
+			static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-			static constexpr bool isFloat = std::is_same_v<float, value_type>;
-			using raw_type				  = std::conditional_t<std::is_same_v<float, value_type>, uint32_t, uint64_t>;
+			static constexpr bool isFloat = std::same_as<float, value_type>;
+			using raw_type				  = std::conditional_t<std::same_as<float, value_type>, uint32_t, uint64_t>;
 
 			if (value != 0.0) {
 				using conversion_traits = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;

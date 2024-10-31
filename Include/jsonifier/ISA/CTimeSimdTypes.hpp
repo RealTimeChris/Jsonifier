@@ -83,149 +83,14 @@ namespace simd_internal {
 #endif
 	};
 
-	union __m256x {
-		template<typename value_type> constexpr __m256x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06,
-			value_type arg07, value_type arg08, value_type arg09, value_type arg10, value_type arg11, value_type arg12, value_type arg13, value_type arg14, value_type arg15,
-			value_type arg16, value_type arg17, value_type arg18, value_type arg19, value_type arg20, value_type arg21, value_type arg22, value_type arg23, value_type arg24,
-			value_type arg25, value_type arg26, value_type arg27, value_type arg28, value_type arg29, value_type arg30, value_type arg31, value_type arg32) noexcept {
-			m256x_uint64[0] = static_cast<size_t>(arg01);
-			m256x_uint64[0] |= static_cast<size_t>(arg02) << 8;
-			m256x_uint64[0] |= static_cast<size_t>(arg03) << 16;
-			m256x_uint64[0] |= static_cast<size_t>(arg04) << 24;
-			m256x_uint64[0] |= static_cast<size_t>(arg05) << 32;
-			m256x_uint64[0] |= static_cast<size_t>(arg06) << 40;
-			m256x_uint64[0] |= static_cast<size_t>(arg07) << 48;
-			m256x_uint64[0] |= static_cast<size_t>(arg08) << 56;
-			m256x_uint64[1] = static_cast<size_t>(arg09);
-			m256x_uint64[1] |= static_cast<size_t>(arg10) << 8;
-			m256x_uint64[1] |= static_cast<size_t>(arg11) << 16;
-			m256x_uint64[1] |= static_cast<size_t>(arg12) << 24;
-			m256x_uint64[1] |= static_cast<size_t>(arg13) << 32;
-			m256x_uint64[1] |= static_cast<size_t>(arg14) << 40;
-			m256x_uint64[1] |= static_cast<size_t>(arg15) << 48;
-			m256x_uint64[1] |= static_cast<size_t>(arg16) << 56;
-			m256x_uint64[2] = static_cast<size_t>(arg17);
-			m256x_uint64[2] |= static_cast<size_t>(arg18) << 8;
-			m256x_uint64[2] |= static_cast<size_t>(arg19) << 16;
-			m256x_uint64[2] |= static_cast<size_t>(arg20) << 24;
-			m256x_uint64[2] |= static_cast<size_t>(arg21) << 32;
-			m256x_uint64[2] |= static_cast<size_t>(arg22) << 40;
-			m256x_uint64[2] |= static_cast<size_t>(arg23) << 48;
-			m256x_uint64[2] |= static_cast<size_t>(arg24) << 56;
-			m256x_uint64[3] = static_cast<size_t>(arg25);
-			m256x_uint64[3] |= static_cast<size_t>(arg26) << 8;
-			m256x_uint64[3] |= static_cast<size_t>(arg27) << 16;
-			m256x_uint64[3] |= static_cast<size_t>(arg28) << 24;
-			m256x_uint64[3] |= static_cast<size_t>(arg29) << 32;
-			m256x_uint64[3] |= static_cast<size_t>(arg30) << 40;
-			m256x_uint64[3] |= static_cast<size_t>(arg31) << 48;
-			m256x_uint64[3] |= static_cast<size_t>(arg32) << 56;
-		}
-
-		constexpr __m256x(size_t argOne, size_t argTwo, size_t argThree, size_t argFour) noexcept {
-			m256x_uint64[0] = argOne;
-			m256x_uint64[1] = argTwo;
-			m256x_uint64[2] = argThree;
-			m256x_uint64[3] = argFour;
-		}
-
-		constexpr __m256x() noexcept {
-			m256x_uint64[0] = 0;
-			m256x_uint64[1] = 0;
-			m256x_uint64[2] = 0;
-			m256x_uint64[3] = 0;
-		}
-
-#if JSONIFIER_WIN
-		int8_t m256x_int8[32]{};
-		int16_t m256x_int16[16];
-		int32_t m256x_int32[8];
-		int64_t m256x_int64[4];
-		uint8_t m256x_uint8[32];
-		int16_t m256x_uint16[16];
-		int32_t m256x_uint32[8];
-		size_t m256x_uint64[4];
-#else
-		int64_t m256x_int64[4];
-		int32_t m256x_int32[8];
-		int16_t m256x_int16[16];
-		int8_t m256x_int8[32]{};
-		size_t m256x_uint64[4];
-		int32_t m256x_uint32[8];
-		int16_t m256x_uint16[16];
-		uint8_t m256x_uint8[32];
-#endif
-	};
-
-	union __m512x {
-		template<typename value_type> constexpr __m512x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06,
-			value_type arg07, value_type arg08, value_type arg09, value_type arg10, value_type arg11, value_type arg12, value_type arg13, value_type arg14, value_type arg15,
-			value_type arg16, value_type arg17, value_type arg18, value_type arg19, value_type arg20, value_type arg21, value_type arg22, value_type arg23, value_type arg24,
-			value_type arg25, value_type arg26, value_type arg27, value_type arg28, value_type arg29, value_type arg30, value_type arg31, value_type arg32, value_type arg33,
-			value_type arg34, value_type arg35, value_type arg36, value_type arg37, value_type arg38, value_type arg39, value_type arg40, value_type arg41, value_type arg42,
-			value_type arg43, value_type arg44, value_type arg45, value_type arg46, value_type arg47, value_type arg48, value_type arg49, value_type arg50, value_type arg51,
-			value_type arg52, value_type arg53, value_type arg54, value_type arg55, value_type arg56, value_type arg57, value_type arg58, value_type arg59, value_type arg60,
-			value_type arg61, value_type arg62, value_type arg63, value_type arg64) noexcept {
-			m512x_uint64[0] = static_cast<size_t>(arg01) | (static_cast<size_t>(arg02) << 8) | (static_cast<size_t>(arg03) << 16) | (static_cast<size_t>(arg04) << 24) |
-				(static_cast<size_t>(arg05) << 32) | (static_cast<size_t>(arg06) << 40) | (static_cast<size_t>(arg07) << 48) | (static_cast<size_t>(arg08) << 56);
-			m512x_uint64[1] = static_cast<size_t>(arg09) | (static_cast<size_t>(arg10) << 8) | (static_cast<size_t>(arg11) << 16) | (static_cast<size_t>(arg12) << 24) |
-				(static_cast<size_t>(arg13) << 32) | (static_cast<size_t>(arg14) << 40) | (static_cast<size_t>(arg15) << 48) | (static_cast<size_t>(arg16) << 56);
-			m512x_uint64[2] = static_cast<size_t>(arg17) | (static_cast<size_t>(arg18) << 8) | (static_cast<size_t>(arg19) << 16) | (static_cast<size_t>(arg20) << 24) |
-				(static_cast<size_t>(arg21) << 32) | (static_cast<size_t>(arg22) << 40) | (static_cast<size_t>(arg23) << 48) | (static_cast<size_t>(arg24) << 56);
-			m512x_uint64[3] = static_cast<size_t>(arg25) | (static_cast<size_t>(arg26) << 8) | (static_cast<size_t>(arg27) << 16) | (static_cast<size_t>(arg28) << 24) |
-				(static_cast<size_t>(arg29) << 32) | (static_cast<size_t>(arg30) << 40) | (static_cast<size_t>(arg31) << 48) | (static_cast<size_t>(arg32) << 56);
-			m512x_uint64[4] = static_cast<size_t>(arg33) | (static_cast<size_t>(arg34) << 8) | (static_cast<size_t>(arg35) << 16) | (static_cast<size_t>(arg36) << 24) |
-				(static_cast<size_t>(arg37) << 32) | (static_cast<size_t>(arg38) << 40) | (static_cast<size_t>(arg39) << 48) | (static_cast<size_t>(arg40) << 56);
-			m512x_uint64[5] = static_cast<size_t>(arg41) | (static_cast<size_t>(arg42) << 8) | (static_cast<size_t>(arg43) << 16) | (static_cast<size_t>(arg44) << 24) |
-				(static_cast<size_t>(arg45) << 32) | (static_cast<size_t>(arg46) << 40) | (static_cast<size_t>(arg47) << 48) | (static_cast<size_t>(arg48) << 56);
-			m512x_uint64[6] = static_cast<size_t>(arg49) | (static_cast<size_t>(arg50) << 8) | (static_cast<size_t>(arg51) << 16) | (static_cast<size_t>(arg52) << 24) |
-				(static_cast<size_t>(arg53) << 32) | (static_cast<size_t>(arg54) << 40) | (static_cast<size_t>(arg55) << 48) | (static_cast<size_t>(arg56) << 56);
-			m512x_uint64[7] = static_cast<size_t>(arg57) | (static_cast<size_t>(arg58) << 8) | (static_cast<size_t>(arg59) << 16) | (static_cast<size_t>(arg60) << 24) |
-				(static_cast<size_t>(arg61) << 32) | (static_cast<size_t>(arg62) << 40) | (static_cast<size_t>(arg63) << 48) | (static_cast<size_t>(arg64) << 56);
-		}
-
-		constexpr __m512x(size_t argOne, size_t argTwo, size_t argThree, size_t argFour, size_t argFive, size_t argSix, size_t argSeven, size_t argEight) noexcept {
-			m512x_uint64[0] = argOne;
-			m512x_uint64[1] = argTwo;
-			m512x_uint64[2] = argThree;
-			m512x_uint64[3] = argFour;
-			m512x_uint64[4] = argFive;
-			m512x_uint64[5] = argSix;
-			m512x_uint64[6] = argSeven;
-			m512x_uint64[7] = argEight;
-		}
-
-		constexpr __m512x() noexcept {
-			for (int32_t i = 0; i < 8; ++i) {
-				m512x_uint64[i] = 0;
-			}
-		}
-
-#if JSONIFIER_WIN
-		int8_t m512x_int8[64]{};
-		int16_t m512x_int16[32];
-		int32_t m512x_int32[16];
-		int64_t m512x_int64[8];
-		uint8_t m512x_uint8[64];
-		uint16_t m512x_uint16[32];
-		uint32_t m512x_uint32[16];
-		size_t m512x_uint64[8];
-#else
-		int64_t m512x_int64[8];
-		int32_t m512x_int32[16];
-		int16_t m512x_int16[32];
-		int8_t m512x_int8[64]{};
-		size_t m512x_uint64[8];
-		uint32_t m512x_uint32[16];
-		uint16_t m512x_uint16[32];
-		uint8_t m512x_uint8[64];
-#endif
-	};
-
-	template<typename simd_int_t01, size_t... indices> constexpr uint16_t mm128MovemaskEpi8(simd_int_t01&& a, std::index_sequence<indices...>&&) noexcept {
+	template<typename simd_int_t01, size_t... indices> constexpr uint16_t mm128MovemaskEpi8Impl(const simd_int_t01& a, std::index_sequence<indices...>&&) noexcept {
 		uint16_t mask{};
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
+	}
+
+	template<typename simd_int_t01> constexpr uint16_t mm128MovemaskEpi8(const simd_int_t01& a) noexcept {
+		return mm128MovemaskEpi8Impl(a, std::make_index_sequence<16>{});
 	}
 
 	constexpr __m128x mm128AddEpi8(const __m128x& a, const __m128x& b) noexcept {
@@ -261,7 +126,7 @@ namespace simd_internal {
 		return result;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128OrSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128OrSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
 		__m128x value{};
 		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
 		value.m128x_uint64[0] |= valTwo.m128x_uint64[0];
@@ -269,7 +134,7 @@ namespace simd_internal {
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128AndSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128AndSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
 		__m128x value{};
 		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
 		value.m128x_uint64[0] &= valTwo.m128x_uint64[0];
@@ -277,7 +142,7 @@ namespace simd_internal {
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128AndNotSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128AndNotSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
 		__m128x value{};
 		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
 		value.m128x_uint64[0] &= ~valOne.m128x_uint64[0];
@@ -285,7 +150,7 @@ namespace simd_internal {
 		return value;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128XorSi128(simd_int_t01&& valOne, simd_int_t02&& valTwo) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128XorSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
 		__m128x value{};
 		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
 		value.m128x_uint64[0] ^= valTwo.m128x_uint64[0];
@@ -294,19 +159,24 @@ namespace simd_internal {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	constexpr __m128x mm128CmpEqEpi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>&&) noexcept {
+	constexpr __m128x mm128CmpEqEpi8Impl(const simd_int_t01& a, const simd_int_t02& b, std::index_sequence<indices...>&&) noexcept {
 		__m128x result{};
 		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
 		return result;
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> constexpr bool mm128TestzSi128(simd_int_t01& valOne, simd_int_t02& valTwo) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128CmpEqEpi8(const simd_int_t01& a, const simd_int_t02& b) noexcept {
+		return mm128CmpEqEpi8Impl(a, b, std::make_index_sequence<16>{});
+	}
+
+	template<typename simd_int_t01, typename simd_int_t02> constexpr bool mm128TestzSi128(simd_int_t01& valOneNew, simd_int_t02& valTwo) noexcept {
+		std::remove_const_t<simd_int_t01> valOne{ valOneNew };
 		valOne.m128x_uint64[0] &= valTwo.m128x_uint64[0];
 		valOne.m128x_uint64[1] &= valTwo.m128x_uint64[1];
 		return valOne.m128x_uint64[0] == 0 && valOne.m128x_uint64[1] == 0;
 	}
 
-	constexpr __m128x mm128SetrEpi64x(size_t argOne, size_t argTwo) noexcept {
+	constexpr __m128x mm128SetEpi64x(size_t argOne, size_t argTwo) noexcept {
 		__m128x returnValue{};
 		std::copy(&argOne, &argOne + 1, returnValue.m128x_uint64);
 		std::copy(&argTwo, &argTwo + 1, returnValue.m128x_uint64 + 1);
@@ -384,16 +254,16 @@ namespace simd_internal {
 	constexpr __m128x mm128MulEpi32(const __m128x& a, const __m128x& b) noexcept {
 		__m128x result{};
 
-		uint32_t a_val[4];
-		uint32_t b_val[4];
+		uint32_t aVal[4];
+		uint32_t bVal[4];
 
 		for (int32_t i = 0; i < 4; ++i) {
-			a_val[i] = get32(a.m128x_uint64, i);
-			b_val[i] = get32(b.m128x_uint64, i);
+			aVal[i] = get32(a.m128x_uint64, i);
+			bVal[i] = get32(b.m128x_uint64, i);
 		}
 
-		set64(result.m128x_uint64, 0, static_cast<size_t>(a_val[0]) * static_cast<size_t>(b_val[0]) | static_cast<size_t>(a_val[1]) * static_cast<size_t>(b_val[1]));
-		set64(result.m128x_uint64, 1, static_cast<size_t>(a_val[2]) * static_cast<size_t>(b_val[2]) | static_cast<size_t>(a_val[3]) * static_cast<size_t>(b_val[3]));
+		set64(result.m128x_uint64, 0, static_cast<size_t>(aVal[0]) * static_cast<size_t>(bVal[0]) | static_cast<size_t>(aVal[1]) * static_cast<size_t>(bVal[1]));
+		set64(result.m128x_uint64, 1, static_cast<size_t>(aVal[2]) * static_cast<size_t>(bVal[2]) | static_cast<size_t>(aVal[3]) * static_cast<size_t>(bVal[3]));
 
 		return result;
 	}
@@ -420,25 +290,12 @@ namespace simd_internal {
 	}
 
 	constexpr __m128x mm128Set1Epi32(uint32_t value) noexcept {
-		size_t extended_value = (static_cast<size_t>(value) << 32) | value;
-		return __m128x{ extended_value, extended_value };
+		size_t extendedValue = (static_cast<size_t>(value) << 32) | value;
+		return __m128x{ extendedValue, extendedValue };
 	}
 
-	template<typename value_type> constexpr __m128x mm128LoadUSi128(const value_type* ptr) noexcept {
-		size_t low	= 0;
-		size_t high = 0;
-
-		for (int32_t i = 0; i < 8; ++i) {
-			low |= static_cast<const size_t>(ptr[i]) << (i * 8);
-		}
-
-		for (int32_t i = 0; i < 8; ++i) {
-			high |= static_cast<const size_t>(ptr[i + 8]) << (i * 8);
-		}
-		__m128x returnValues{};
-		returnValues.m128x_uint64[0] = low;
-		returnValues.m128x_uint64[1] = high;
-		return returnValues;
+	template<typename value_type> constexpr __m128x mm128LoadUSi128(const __m128x* ptr) noexcept {
+		return *ptr;
 	}
 
 	template<typename value_type>
@@ -460,7 +317,7 @@ namespace simd_internal {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	constexpr __m128x mm128ShuffleEpi8(simd_int_t01&& a, simd_int_t02&& b, std::index_sequence<indices...>) noexcept {
+	constexpr __m128x mm128ShuffleEpi8(const simd_int_t01& a, const simd_int_t02& b, std::index_sequence<indices...>) noexcept {
 		__m128x result{};
 		size_t index{};
 		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);

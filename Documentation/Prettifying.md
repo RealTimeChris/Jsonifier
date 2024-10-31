@@ -46,13 +46,11 @@ The `prettify_options` struct allows customization of prettifying behavior. Here
 
 ```cpp
 struct prettify_options {
-	bool newLinesInArray{ true };
 	uint64_t indentSize{ 3 };
 	char indentChar{ ' ' };
 };
 ```
 
-- `newLinesInArray`: Specifies whether new lines are allowed within arrays (default: `true`).
 - `indentSize`: Sets the size of indentation (default: `3`).
 - `indentChar`: Specifies the default character to use for indentation (default: ` `).
 

@@ -31,7 +31,6 @@
 namespace jsonifier {
 
 	struct prettify_options {
-		bool newLinesInArray{ true };
 		uint64_t indentSize{ 3 };
 		char indentChar{ ' ' };
 	};

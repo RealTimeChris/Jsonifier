@@ -29,7 +29,7 @@
 #if !defined(ASAN_ENABLED)
 
 template<typename value_type>
-concept bool_t = std::is_same_v<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
+concept bool_t = std::same_as<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
 	std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::const_reference>;
 
 template<typename value_type>
@@ -42,7 +42,7 @@ template<typename value_type>
 concept signed_type = std::signed_integral<std::remove_cvref_t<value_type>> && !floating_type<value_type> && !bool_t<value_type>;
 
 template<typename value_type>
-concept range = requires(std::remove_cvref_t<value_type> value) {
+concept has_range = requires(std::remove_cvref_t<value_type> value) {
 	typename std::remove_cvref_t<value_type>::value_type;
 	{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
 	{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
@@ -63,7 +63,7 @@ template<typename value_type>
 concept map_t = requires(std::remove_cvref_t<value_type> value) {
 	typename std::remove_cvref_t<value_type>::mapped_type;
 	typename std::remove_cvref_t<value_type>::key_type;
-} && range<value_type> && map_subscriptable<value_type> && !std::is_integral_v<std::remove_cvref_t<value_type>>;
+} && has_range<value_type> && map_subscriptable<value_type> && !std::is_integral_v<std::remove_cvref_t<value_type>>;
 
 template<typename value_type>
 concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
@@ -94,7 +94,7 @@ concept has_size = requires(std::remove_cvref_t<value_type> value) {
 
 template<typename value_type>
 concept string_t =
-	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::is_same_v<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
+	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::same_as<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
 
 template<typename value_type>
 concept copyable = std::copyable<std::remove_cvref_t<value_type>>;
