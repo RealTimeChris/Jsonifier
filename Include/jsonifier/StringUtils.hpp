@@ -245,8 +245,8 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		std::memcpy(string2, string1, sizeof(simd_type));
-		const auto result01 = simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)); 
-		return simd_internal::opTest(result01) ? simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(result01))) : sizeof(simd_type) * 8;
+		return simd_internal::postCmpTzcnt(static_cast<integer_type>(
+			simd_internal::opBitMaskRaw(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)))));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -265,9 +265,9 @@ namespace jsonifier_internal {
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, char* string2, simd_type& simdValue,
 		const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
 		std::memcpy(string2, string1, sizeof(simd_type));
-		const auto result01 = simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
-			simd_internal::opCmpLtRaw(simdValue, simdValues03));
-		return simd_internal::opTest(result01) ? simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(result01))) : sizeof(simd_type) * 8;
+		return simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(
+			simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
+				simd_internal::opCmpLtRaw(simdValue, simdValues03)))));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>

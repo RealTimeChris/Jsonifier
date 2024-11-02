@@ -161,8 +161,8 @@ namespace jsonifier_internal {
 			static_assert(sizeof(float) == 4 && sizeof(double) == 8);
 			static constexpr bool isFloat = std::same_as<float, value_type>;
 			using raw_type				  = std::conditional_t<std::same_as<float, value_type>, uint32_t, uint64_t>;
-
-			if (value != 0.0) {
+			static constexpr auto zeroNew = value_type(0.0);
+			if (value != zeroNew) {
 				using conversion_traits = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;
 				using format_traits		= jsonifier_jkj::dragonbox::ieee754_binary_traits<typename conversion_traits::format, typename conversion_traits::carrier_uint>;
 				static constexpr uint32_t expBitsCount = numbits(std::numeric_limits<value_type>::max_exponent - std::numeric_limits<value_type>::min_exponent + 1);
@@ -176,7 +176,6 @@ namespace jsonifier_internal {
 				}
 
 				*buf						  = '-';
-				static constexpr auto zeroNew = value_type(0.0);
 				buf += (value < zeroNew);
 
 				if constexpr (isFloat) {

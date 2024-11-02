@@ -810,7 +810,7 @@ void testFunction() {
 	newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 	std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + static_cast<std::string>(section002) + section001 +
 		static_cast<std::string>(section01) };
-	auto testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, totalIterationCountCap, "Json Test (Prettified)">::run(jsonDataNew);
+	test_results testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, totalIterationCountCap, "Json Test (Prettified)">::run(jsonDataNew);
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
 	testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, totalIterationCountCap, "Json Test (Minified)">::run(jsonMinifiedData);

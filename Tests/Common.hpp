@@ -72,7 +72,7 @@ bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFile
 struct test_struct {
 	std::vector<std::string> testStrings{};
 	std::vector<uint64_t> testUints{};
-	std::vector<float> testDoubles{};
+	std::vector<double> testDoubles{};
 	std::vector<int64_t> testInts{};
 	std::vector<bool> testBools{};
 };
@@ -143,11 +143,11 @@ template<typename value_type> struct test_generator {
 		return result;
 	}
 
-	static float generateDouble() {
-		float min = std::numeric_limits<float>::min();
-		float max = std::numeric_limits<float>::max();
-		std::uniform_real_distribution<float> dis(log(min), log(max));
-		float logValue = dis(gen);
+	static double generateDouble() {
+		double min = std::numeric_limits<double>::min();
+		double max = std::numeric_limits<double>::max();
+		std::uniform_real_distribution<double> dis(log(min), log(max));
+		double logValue = dis(gen);
 		bool negative{ generateBool() };
 		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
@@ -227,8 +227,8 @@ template<typename value_type> struct test_generator {
 struct test_element_final {
 	std::string libraryName{};
 	std::string resultType{};
-	float iterationCount{};
-	float resultSpeed{};
+	double iterationCount{};
+	double resultSpeed{};
 	std::string color{};
 	bool operator>(const test_element_final& other) const noexcept {
 		return resultSpeed > other.resultSpeed;
@@ -265,11 +265,11 @@ template<result_type type> constexpr auto enumToString() {
 }
 
 template<result_type type> struct result {
-	std::optional<float> iterationCount{};
+	std::optional<double> iterationCount{};
 	std::optional<size_t> byteLength{};
-	std::optional<float> jsonSpeed{};
-	std::optional<float> jsonTime{};
-	std::optional<float> cv{};
+	std::optional<double> jsonSpeed{};
+	std::optional<double> jsonTime{};
+	std::optional<double> cv{};
 	std::string color{};
 
 	result& operator=(result&&) noexcept	  = default;
@@ -279,17 +279,17 @@ template<result_type type> struct result {
 
 	result() noexcept = default;
 
-	float getResultValueMbs(float input01, uint64_t input02) const {
+	double getResultValueMbs(double input01, uint64_t input02) const {
 #if !defined(JSONIFIER_MAC)
 		input01 = bnch_swt::cyclesToTime(input01, bnch_swt::getCpuFrequency());
 #endif
-		auto mbWrittenCount	  = static_cast<float>(input02) / 1e+6l;
+		auto mbWrittenCount	  = static_cast<double>(input02) / 1e+6l;
 		auto writeSecondCount = input01 / 1e+9l;
 		return mbWrittenCount / writeSecondCount;
 	}
 
-	float getResultValueCyclesMb(float input01, uint64_t input02) const {
-		auto mbWrittenCount	  = static_cast<float>(input02) / 1e+6l;
+	double getResultValueCyclesMb(double input01, uint64_t input02) const {
+		auto mbWrittenCount	  = static_cast<double>(input02) / 1e+6l;
 		auto writeSecondCount = input01 / mbWrittenCount;
 		return writeSecondCount;
 	}
