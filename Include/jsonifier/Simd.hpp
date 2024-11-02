@@ -169,7 +169,7 @@ namespace jsonifier_internal {
 			return newBits;
 		}
 
-		template<size_type currentIndex = 0> void prefetchStringValues(string_view_ptr values) noexcept {
+		template<size_type currentIndex = 0> JSONIFIER_ALWAYS_INLINE void prefetchStringValues(string_view_ptr values) noexcept {
 			if constexpr (currentIndex < sixtyFourBitsPerStep) {
 				jsonifierPrefetchImpl(values + (currentIndex * 64));
 				prefetchStringValues<currentIndex + 1>(values);

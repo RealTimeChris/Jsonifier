@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename value_type> constexpr value_type readBitsCt(const char* ptr) {
+	template<typename value_type> constexpr value_type readBitsCt(const char* ptr) noexcept {
 		value_type returnValue{};
 		for (size_t x = 0; x < sizeof(value_type); ++x) {
 			returnValue |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
@@ -90,7 +90,7 @@ namespace jsonifier_internal {
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
-		constexpr ct_key_hasher() {
+		constexpr ct_key_hasher() noexcept {
 			updateSeed();
 		}
 
@@ -99,7 +99,7 @@ namespace jsonifier_internal {
 		 *
 		 * @param seedNew The new seed value.
 		 */
-		constexpr void updateSeed() {
+		constexpr void updateSeed() noexcept {
 			seed = xoshiro256::operator()();
 		}
 

@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);
@@ -861,7 +861,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) {
+		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_UNLIKELY ((*iter == decimal)) {
 				++iter;
 				return parseFraction(value, iter);

@@ -230,11 +230,11 @@ namespace jsonifier_internal {
 		return offset > 0;
 	}
 
-	template<char threshold, typename simd_type> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(simd_type values) {
+	template<char threshold, typename simd_type> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(simd_type values) noexcept {
 		return simd_internal::opCmpLt(values, simd_internal::gatherValue<simd_type>(threshold)) != 0;
 	}
 
-	template<const auto n, typename value_type = uint64_t> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(const char* values) {
+	template<const auto n, typename value_type = uint64_t> JSONIFIER_ALWAYS_INLINE bool hasByteLessThanValue(const char* values) noexcept {
 		value_type x;
 		std::memcpy(&x, values, sizeof(value_type));
 		static constexpr value_type factor	= ~value_type(0) / value_type(255);
@@ -259,7 +259,7 @@ namespace jsonifier_internal {
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
 		const integer_type lo7	= simdValue & mask;
 		const integer_type next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBits;
-		return next == 0 ? sizeof(simd_type) * 8 : static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
+		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
 	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1, char* string2, simd_type& simdValue,
@@ -279,9 +279,9 @@ namespace jsonifier_internal {
 		static constexpr integer_type lowBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		const uint64_t lo7	= simdValue & mask;
-		const uint64_t next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & midBits) + mask)) | simdValue)) & lowBits;
-		return next == 0 ? sizeof(simd_type) * 8 : static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
+		const integer_type lo7	= simdValue & mask;
+		const integer_type next = (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & midBits) + mask)) | simdValue)) & lowBits;
+		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
 	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(iterator_type01& string1, size_t& lengthNew) noexcept {
@@ -770,7 +770,7 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char* context) {
+	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char* context) noexcept {
 		static constexpr auto tempString{ string };
 		static constexpr auto newString{ getStringAsInt<tempString>() };
 		if constexpr (tempString.size() % 2 == 0) {
@@ -784,7 +784,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, context_type& context) {
+	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, context_type& context) noexcept {
 		if (*context == 't' && compareStringAsInt<"true">(context)) {
 			value = true;
 			context += 4;
@@ -800,7 +800,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename context_type> JSONIFIER_ALWAYS_INLINE bool parseNull(context_type& context) {
+	template<typename context_type> JSONIFIER_ALWAYS_INLINE bool parseNull(context_type& context) noexcept {
 		if JSONIFIER_LIKELY ((compareStringAsInt<"null">(context))) {
 			context += 4;
 			return true;
@@ -855,7 +855,7 @@ namespace jsonifier_internal {
 			++iter;
 		}
 
-		template<typename iterator01> JSONIFIER_ALWAYS_INLINE static void skipWs(iterator01& iter) {
+		template<typename iterator01> JSONIFIER_ALWAYS_INLINE static void skipWs(iterator01& iter) noexcept {
 			while (whitespaceTable[static_cast<uint8_t>(*iter)]) {
 				++iter;
 			}

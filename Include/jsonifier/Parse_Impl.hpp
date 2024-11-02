@@ -66,12 +66,12 @@ namespace jsonifier_internal {
 	};
 
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type, size_t... indices>
-	constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) {
+	constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) noexcept {
 		using function_type = decltype(&index_processor<options, minified>::template processIndex<0, value_type, parse_context_type>);
 		return std::array<function_type, sizeof...(indices)>{ { &index_processor<options, minified>::template processIndex<indices, value_type, parse_context_type>... } };
 	}
 
-	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type> constexpr auto generateFunctionPtrs() {
+	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type> constexpr auto generateFunctionPtrs() noexcept {
 		constexpr auto tupleSize = std::tuple_size_v<core_tuple_t<value_type>>;
 		return generateFunctionPtrsImpl<minified, options, value_type, parse_context_type>(std::make_index_sequence<tupleSize>{});
 	}
@@ -83,7 +83,7 @@ namespace jsonifier_internal {
 		static constexpr char leftBrace{ '{' };
 		static constexpr char colon{ ':' };
 		static constexpr char comma{ ',' };
-		JSONIFIER_MAYBE_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY ((*context.iter == leftBrace)) {
@@ -275,7 +275,7 @@ namespace jsonifier_internal {
 		static constexpr char leftBrace{ '{' };
 		static constexpr char colon{ ':' };
 		static constexpr char comma{ ',' };
-		JSONIFIER_MAYBE_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY ((*context.iter == leftBrace)) {
@@ -608,7 +608,7 @@ namespace jsonifier_internal {
 		}
 
 		template<bool newLines>
-		JSONIFIER_MAYBE_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			while
 				JSONIFIER_LIKELY((*context.iter != rightBrace)) {
 					if ((*context.iter == comma)) {

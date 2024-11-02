@@ -61,7 +61,8 @@ namespace jsonifier_internal {
 
 		UC const* const end_of_integer_part = iter;
 		int64_t digit_count					= static_cast<int64_t>(end_of_integer_part - start_digits);
-		answer.integer						= fast_float::span<const UC>(start_digits, static_cast<size_t>(digit_count));
+		answer.integer.length				= static_cast<size_t>(digit_count);
+		answer.integer.ptr					= start_digits;
 
 		if (digit_count == 0 || (start_digits[0] == zeroNew && digit_count > 1)) {
 			return false;
@@ -82,7 +83,8 @@ namespace jsonifier_internal {
 				i = i * 10 + digit;
 			}
 			exponent		= before - iter;
-			answer.fraction = fast_float::span<const UC>(before, static_cast<size_t>(iter - before));
+			answer.fraction.length = static_cast<size_t>(iter - before);
+			answer.fraction.ptr	   = before;
 			digit_count -= exponent;
 		}
 

@@ -627,7 +627,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t keyMaxLength> constexpr auto generateMappingsForLengths(const tuple_references& keys, const std::array<uint8_t, 256>& uniqueIndices) {
+	template<size_t keyMaxLength> constexpr auto generateMappingsForLengths(const tuple_references& keys, const std::array<uint8_t, 256>& uniqueIndices) noexcept {
 		std::array<size_t, (keyMaxLength + 1) * 256> mappings{};
 
 		mappings.fill(static_cast<size_t>(-1));
@@ -648,7 +648,7 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t firstCharCount>
-	constexpr auto generateMappingsForFirstBytes(const std::array<first_bytes, firstCharCount>& keys, const std::array<uint8_t, 256>& uniqueIndices) {
+	constexpr auto generateMappingsForFirstBytes(const std::array<first_bytes, firstCharCount>& keys, const std::array<uint8_t, 256>& uniqueIndices) noexcept {
 		constexpr size_t flattenedSize = 256 * 256;
 		std::array<size_t, flattenedSize> flattenedMappings{};
 		flattenedMappings.fill(flattenedMappings.size() - 1);

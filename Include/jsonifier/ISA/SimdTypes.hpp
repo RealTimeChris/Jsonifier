@@ -25,7 +25,6 @@
 #pragma once
 
 #include <jsonifier/ISA/JsonifierCPUInstructions.hpp>
-
 #include <jsonifier/ISA/CTimeSimdTypes.hpp>
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)

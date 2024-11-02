@@ -33,7 +33,7 @@ namespace simd_internal {
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	#define popcnt(value) vaddv_u8(vcnt_u8(vcreate_u8(value)))
+	#define popcnt(value) __builtin_popcountll(value)
 
 #else
 

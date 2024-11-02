@@ -32,7 +32,7 @@ namespace simd_internal {
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
 	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE value_type postCmpTzcnt(value_type value) {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE value_type postCmpTzcnt(value_type value) noexcept {
 		return tzcnt(value);
 	}
 

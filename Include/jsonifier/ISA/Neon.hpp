@@ -30,7 +30,7 @@ namespace simd_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE value_type postCmpTzcnt(value_type value) {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE value_type postCmpTzcnt(value_type value) noexcept {
 		return tzcnt(value) >> 2;
 	}
 
@@ -105,26 +105,26 @@ namespace simd_internal {
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opXor(const simd_int_t01& value, const simd_int_t02& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opXor(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return veorq_u8(value, other);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAnd(const simd_int_t01& value, const simd_int_t02& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return vandq_u8(value, other);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opOr(const simd_int_t01& value, const simd_int_t02& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opOr(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return vorrq_u8(value, other);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAndNot(const simd_int_t01& value, const simd_int_t02& other) {
+	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opAndNot(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return vbicq_u8(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opTest(const simd_int_t01& value) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opTest(const simd_int_t01& value) noexcept {
 		return vmaxvq_u8(value) != 0;
 	}
 
@@ -132,12 +132,12 @@ namespace simd_internal {
 		return vmvnq_u8(value);
 	}
 
-	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(const simd_int_t01& value, bool valueNew) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(const simd_int_t01& value, bool valueNew) noexcept {
 		static constexpr uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
 	}
 
-	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opGetMSB(const simd_int_t01& value) {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE bool opGetMSB(const simd_int_t01& value) noexcept {
 		return (vgetq_lane_u8(value, 15) & 0x80) != 0;
 	}
 

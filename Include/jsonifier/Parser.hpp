@@ -58,26 +58,26 @@ namespace jsonifier_internal {
 		const char* iter{};
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> const char* getEndIter(value_type value) {
+	template<jsonifier::concepts::pointer_t value_type> const char* getEndIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(char_comparison<'\0'>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) {
+	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) {
+	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) {
+	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data());
 	}
 
 	template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> struct parse_impl;
 
 	template<bool minified, jsonifier::parse_options options> struct parse {
-		template<typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) {
+		template<typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
 			parse_impl<minified, options, std::remove_cvref_t<value_type>, parse_context_type>::impl(value, iter);
 		}
 	};
@@ -154,7 +154,7 @@ namespace jsonifier_internal {
 															: object;
 		}
 
-		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE void reportError(parse_context<derived_type>& context) {
+		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE void reportError(parse_context<derived_type>& context) noexcept {
 			derivedRef.errors.emplace_back(
 				error::constructError<sourceLocation, error_classes::Parsing, parseError>(context.iter - context.rootIter, context.endIter - context.rootIter, context.rootIter));
 		}

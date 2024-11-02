@@ -27,12 +27,10 @@
 #include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Prettifier.hpp>
 #include <jsonifier/Error.hpp>
-#include <jsonifier/Write.hpp>
 
 namespace jsonifier {
 
 	struct serialize_options {
-		bool checkedForSize{ true };
 		size_t indentSize{ 3 };
 		char indentChar{ ' ' };
 		bool prettify{ false };
@@ -41,19 +39,13 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static constexpr jsonifier::serialize_options setCheckedForSize(jsonifier::serialize_options optionsOld, bool enable) {
-		jsonifier::serialize_options returnValues{ optionsOld };
-		returnValues.checkedForSize = enable;
-		return returnValues;
-	}
-
 	enum class serialize_errors { Success = 0 };
 
 	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type> struct serialize_impl;
 
 	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) {
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, serialize_context_type&& iter) noexcept {
 			serialize_impl<options, value_type, std::remove_cvref_t<buffer_type>, serialize_context_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
 				std::forward<serialize_context_type>(iter));
 		}

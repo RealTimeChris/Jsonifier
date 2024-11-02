@@ -130,10 +130,6 @@
 
 #endif
 
-constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) noexcept {
-	return ((fp3 & 0x3) << 6) | ((fp2 & 0x3) << 4) | ((fp1 & 0x3) << 2) | (fp0 & 0x3);
-}
-
 #if defined(__APPLE__) && defined(__arm64__)
 	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
 #elif defined(JSONIFIER_MSVC)
@@ -149,6 +145,3 @@ constexpr int32_t mmShuffle(int32_t fp3, int32_t fp2, int32_t fp1, int32_t fp0) 
 JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
 	JSONIFIER_PREFETCH(ptr)
 }
-
-inline std::atomic_uint64_t sectionInstanceCount{};
-inline std::atomic_uint64_t coreInstanceCount{};
