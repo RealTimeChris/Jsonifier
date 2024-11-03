@@ -111,7 +111,7 @@ template<typename value_type> struct test_generator {
 	static std::string generateString() {
 		auto length{ randomizeNumberUniform(32ull, 64ull) };
 		constexpr size_t charsetSize = charset.size();
-		auto unicodeCount			 = randomizeNumberUniform(1ull, length / 32ull);
+		auto unicodeCount			 = length / 8;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -166,10 +166,10 @@ template<typename value_type> struct test_generator {
 
 	test_generator() {
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberUniform(5ull, 25ull);
+			auto arraySize01 = randomizeNumberUniform(15ull, 25ull);
 			v.resize(arraySize01);
 			for (size_t x = 0; x < arraySize01; ++x) {
-				auto arraySize02 = randomizeNumberUniform(5ull, 35ull);
+				auto arraySize02 = randomizeNumberUniform(15ull, 35ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();

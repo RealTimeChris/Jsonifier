@@ -106,51 +106,13 @@ namespace jsonifier_internal {
 
 #define if_1(n, numMembers) \
 	if constexpr (n < numMembers) { \
-		functionPtrsSerialize<options, value_type, buffer_type, serialize_context_type>[n](std::forward<value_type_new>(value), buffer, serializePair); \
+		static constexpr auto newIndex{ n }; \
+		functionPtrsSerialize<options, value_type, buffer_type, serialize_context_type>[newIndex](std::forward<value_type_new>(value), buffer, serializePair); \
 	}
 
 #define if_10(n, numMembers) \
-if_1(n + 0, numMembers) \
-if_1(n + 1, numMembers) \
-if_1(n + 2, numMembers) \
-if_1(n + 3, numMembers) \
-if_1(n + 4, numMembers) \
-if_1(n + 5, numMembers) \
-if_1(n + 6, numMembers) \
-if_1(n + 7, numMembers) \
-if_1(n + 8, numMembers) \
-if_1(n + 9, numMembers)
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::vector_t value_type, typename size_collect_context_type>
-	struct size_collect_impl<options, value_type, size_collect_context_type> {
-		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size) noexcept {
-			static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>() };
-			return size * paddingSize;
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::raw_array_t value_type, typename size_collect_context_type>
-	struct size_collect_impl<options, value_type, size_collect_context_type> {
-		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size) noexcept {
-			static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>() };
-			return size * paddingSize;
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::map_t value_type, typename size_collect_context_type>
-	struct size_collect_impl<options, value_type, size_collect_context_type> {
-		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size) noexcept {
-			static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::mapped_type>() };
-			return size * paddingSize;
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::string_t value_type, typename size_collect_context_type>
-	struct size_collect_impl<options, value_type, size_collect_context_type> {
-		JSONIFIER_ALWAYS_INLINE static size_t impl(size_t size) noexcept {
-			return (size * 2);
-		}
-	};
+	if_1(n + 0, numMembers) if_1(n + 1, numMembers) if_1(n + 2, numMembers) if_1(n + 3, numMembers) if_1(n + 4, numMembers) if_1(n + 5, numMembers) if_1(n + 6, numMembers) \
+		if_1(n + 7, numMembers) if_1(n + 8, numMembers) if_1(n + 9, numMembers)
 
 	template<jsonifier::serialize_options options, size_t newSize> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename serialize_context_type>
@@ -285,7 +247,8 @@ if_1(n + 9, numMembers)
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto newSize = value.size();
 			if JSONIFIER_LIKELY ((newSize > 0)) {
-				const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(newSize);
+				static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::mapped_type>() };
+				const auto additionalSize = newSize * paddingSize;
 				if (buffer.size() <= serializePair.index + additionalSize) {
 					buffer.resize((serializePair.index + additionalSize) * 2);
 				}
@@ -425,7 +388,8 @@ if_1(n + 9, numMembers)
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto newSize = value.size();
 			if JSONIFIER_LIKELY ((newSize > 0)) {
-				const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(newSize);
+				static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>() };
+				const auto additionalSize = newSize * paddingSize;
 				if (buffer.size() <= serializePair.index + additionalSize) {
 					buffer.resize((serializePair.index + additionalSize) * 2);
 				}
@@ -492,7 +456,8 @@ if_1(n + 9, numMembers)
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type_new<value_type_internal, size>& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto newSize = std::size(value);
 			if JSONIFIER_LIKELY ((newSize > 0)) {
-				const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(newSize);
+				static constexpr auto paddingSize{ getPaddingSize<typename std::remove_cvref_t<value_type>::value_type>() };
+				const auto additionalSize = newSize * paddingSize;
 				if (buffer.size() <= serializePair.index + additionalSize) {
 					buffer.resize((serializePair.index + additionalSize) * 2);
 				}
@@ -551,7 +516,7 @@ if_1(n + 9, numMembers)
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const auto newSize = value.size();
 			if (newSize > 0) {
-				const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(newSize);
+				const auto additionalSize = (newSize * 2);
 				if (buffer.size() <= serializePair.index + additionalSize) {
 					buffer.resize((serializePair.index + additionalSize) * 2);
 				}
