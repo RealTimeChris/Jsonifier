@@ -98,26 +98,30 @@
 		#define JSONIFIER_NO_INLINE __declspec(noinline)
 		#define JSONIFIER_FLATTEN inline [[msvc::flatten]]
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
 		#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
 		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
 		#define JSONIFIER_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
-		#define JSONIFIER_MAYBE_ALWAYS_INLINE inline
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
 	#define JSONIFIER_NO_INLINE
 	#define JSONIFIER_FLATTEN
 	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_MAYBE_ALWAYS_INLINE inline
+	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
+	#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif
 

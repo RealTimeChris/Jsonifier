@@ -789,7 +789,7 @@ void testFunction() {
 	test_generator<test_struct> testJsonData{};
 	std::string jsonDataNew{};
 	jsonifier::jsonifier_core parser{};
-	//parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
+	parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
 	bnch_swt::file_loader::saveFile(jsonDataNew, basePath + "/JsonData-Prettified.json");
 	std::string jsonMinifiedData{ glz::minify_json(jsonDataNew) };
 	bnch_swt::file_loader::saveFile(jsonMinifiedData, std::string{ static_cast<std::string>(basePath) + "/JsonData-Minified.json" });
@@ -810,8 +810,7 @@ void testFunction() {
 	newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 	std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + static_cast<std::string>(section002) + section001 +
 		static_cast<std::string>(section01) };
-	test_results testResults{};//= json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, totalIterationCountCap, "Json Test (Prettified)">::run(jsonDataNew);
-	/*
+	test_results testResults{ json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, totalIterationCountCap, "Json Test (Prettified)">::run(jsonDataNew) };
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
 	testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, totalIterationCountCap, "Json Test (Minified)">::run(jsonMinifiedData);
@@ -825,7 +824,7 @@ void testFunction() {
 	testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, totalIterationCountCap, "Abc Test (Minified)">::run(jsonMinifiedData);
 	newerString += section04;
 	newerString += testResults.markdownResults;
-	benchmark_data.emplace_back(testResults);*/
+	benchmark_data.emplace_back(testResults);
 	testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, false, totalIterationCountCap, "Discord Test (Prettified)">::run(discordData);
 	newerString += section05;
 	newerString += testResults.markdownResults;
@@ -834,7 +833,6 @@ void testFunction() {
 	newerString += section06;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	/*
 	testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, false, totalIterationCountCap, "Canada Test (Prettified)">::run(canadaData);
 	newerString += section07;
 	newerString += testResults.markdownResults;
@@ -871,7 +869,7 @@ void testFunction() {
 	testResults = json_tests_helper<test_type::validate, std::string, false, totalIterationCountCap, "Validate Test">::run(discordData);
 	newerString += section15;
 	newerString += testResults.markdownResults;
-	benchmark_data.emplace_back(testResults);*/
+	benchmark_data.emplace_back(testResults);
 	std::string resultsStringJson{};
 	test_results_final resultsData{};
 	for (auto& value: benchmark_data) {

@@ -109,9 +109,9 @@ template<typename value_type> struct test_generator {
 	}
 
 	static std::string generateString() {
-		auto length{ randomizeNumberUniform(32, 64) };
+		auto length{ randomizeNumberUniform(32ull, 64ull) };
 		constexpr size_t charsetSize = charset.size();
-		auto unicodeCount			 = randomizeNumberUniform(1ull, std::max(1, length / 16));
+		auto unicodeCount			 = randomizeNumberUniform(1ull, length / 32ull);
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {

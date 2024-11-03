@@ -759,9 +759,17 @@ namespace jsonifier_internal {
 						const auto hash			 = hasher.hashKeyRt(iter, length);
 						const size_t group		 = (hash >> 8) & (sizeMask);
 						const size_t resultIndex = group * hashData.bucketSize;
-						const auto simdValues	 = simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex);
-						const auto matches		 = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simdValues);
-						const size_t tz			 = simd_internal::postCmpTzcnt(matches);
+						uint64_t matches{};
+						#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+						uint8x8_t dup				   = vdup_n_u8(hash);
+						auto mask					   = vceq_u8(hashData.controlBytes.data() + resultIndex, dup);
+						static constexpr uint64_t msbs = 0x8080808080808080ULL;
+						matches						   = vget_lane_u64(vreinterpret_u64_u8(mask), 0) & msbs;
+						#else
+						matches = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
+							simd_internal::gatherValues<simd_type>(hashData.controlBytes.data() + resultIndex));
+						#endif
+						const size_t tz = simd_internal::postCmpTzcnt(matches);
 						return hashData.indices[resultIndex + tz];
 					}
 				}

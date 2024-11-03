@@ -76,6 +76,9 @@ namespace jsonifier_internal {
 		return generateFunctionPtrsImpl<minified, options, value_type, parse_context_type>(std::make_index_sequence<tupleSize>{});
 	}
 
+	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type>
+	static constexpr auto functionPtrsParse{ generateFunctionPtrs<minified, options, value_type, parse_context_type>() };
+
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		static constexpr char doubleQuote{ '"' };
@@ -95,7 +98,6 @@ namespace jsonifier_internal {
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
 						bool antihash{ true };
-
 						if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 							const auto keySize = getKeyLength<options>(context);
 							jsonifier::string_view key{ static_cast<const char*>(context.iter) + 1, keySize };
@@ -109,8 +111,7 @@ namespace jsonifier_internal {
 							antihashNew = false;
 							auto index	= hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 							if JSONIFIER_LIKELY ((index < memberCount)) {
-								static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
-								if JSONIFIER_LIKELY ((arrayOfPtrs[index](value, context))) {
+								if JSONIFIER_LIKELY ((functionPtrsParse<false, options, value_type, parse_context_type>[index](value, context))) {
 								}
 								JSONIFIER_UNLIKELY(else) {
 									derailleur<options, parse_context_type>::skipToNextValue(context);
@@ -209,8 +210,7 @@ namespace jsonifier_internal {
 										if JSONIFIER_LIKELY ((auto indexNew =
 																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
-											static constexpr auto arrayOfPtrs = generateFunctionPtrs<false, options, value_type, parse_context_type>();
-											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
+											if JSONIFIER_LIKELY ((functionPtrsParse<false, options, value_type, parse_context_type>[indexNew](value, context))) {
 												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, newLines>{},
 													std::integral_constant<bool, false>{}, parseLambda, value, context, wsStart, wsSize);
 											}
@@ -317,8 +317,7 @@ namespace jsonifier_internal {
 								antihash   = false;
 								auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 								if JSONIFIER_LIKELY ((index < memberCount)) {
-									static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
-									if JSONIFIER_LIKELY ((arrayOfPtrs[index](value, context))) {
+									if JSONIFIER_LIKELY ((functionPtrsParse<true, options, value_type, parse_context_type>[index](value, context))) {
 									}
 									JSONIFIER_UNLIKELY(else) {
 										derailleur<options, parse_context_type>::skipToNextValue(context);
@@ -361,7 +360,7 @@ namespace jsonifier_internal {
 
 									if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 										++context.iter;
-										if constexpr (antiHashNew) {
+										if constexpr (antiHashNew && options.knownOrder) {
 											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
 											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
@@ -386,8 +385,7 @@ namespace jsonifier_internal {
 										if JSONIFIER_LIKELY ((auto indexNew =
 																	 hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 																 indexNew < memberCount)) {
-											static constexpr auto arrayOfPtrs = generateFunctionPtrs<true, options, value_type, parse_context_type>();
-											if JSONIFIER_LIKELY ((arrayOfPtrs[indexNew](value, context))) {
+											if JSONIFIER_LIKELY ((functionPtrsParse<true, options, value_type, parse_context_type>[indexNew](value, context))) {
 												return parseLambda(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, parseLambda, value, context);
 											}
 											JSONIFIER_UNLIKELY(else) {

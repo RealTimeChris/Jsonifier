@@ -33,6 +33,10 @@
 
 namespace jsonifier_internal {
 
+	static constexpr uint64_t falseV{ 435728179558 };
+	static constexpr uint64_t trueV{ 434025983730 };
+	static constexpr uint32_t nullV{ 1819047278 };
+
 	struct serialize_size_values {
 		size_t newLineCount{};
 		size_t ctIndex{};
@@ -83,7 +87,7 @@ namespace jsonifier_internal {
 								   pairNew.ctIndex += std::size(",\n") + 1;
 							   } else {
 								   ++pairNew.ctIndex;
-							   }							   
+							   }
 						   }
 					   }
 				   };
@@ -99,6 +103,23 @@ namespace jsonifier_internal {
 			return newSize.ctIndex;
 		}
 	};
+
+#define if_1(n, numMembers) \
+	if constexpr (n < numMembers) { \
+		functionPtrsSerialize<options, value_type, buffer_type, serialize_context_type>[n](std::forward<value_type_new>(value), buffer, serializePair); \
+	}
+
+#define if_10(n, numMembers) \
+if_1(n + 0, numMembers) \
+if_1(n + 1, numMembers) \
+if_1(n + 2, numMembers) \
+if_1(n + 3, numMembers) \
+if_1(n + 4, numMembers) \
+if_1(n + 5, numMembers) \
+if_1(n + 6, numMembers) \
+if_1(n + 7, numMembers) \
+if_1(n + 8, numMembers) \
+if_1(n + 9, numMembers)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::vector_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
@@ -133,7 +154,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::serialize_options options, size_t newSize> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename serialize_context_type>
-		JSONIFIER_MAYBE_ALWAYS_INLINE static void processIndex(const value_type& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
+		JSONIFIER_NON_GCC_ALWAYS_INLINE static void processIndex(const value_type& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (currentIndex < newSize) {
 				static constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 				static constexpr auto key	   = subTuple.view();
@@ -191,154 +212,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type>
-	static constexpr auto functionPtrs{ generateFunctionPtrs<options, value_type, buffer_type, serialize_context_type>() };
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex, size_t count>
-	struct function_ptr_iterator {};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 0> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {};
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 1> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 2> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 3> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 4> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 5> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 6> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 5](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 7> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 5](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 6](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 8> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 5](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 6](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 7](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 9> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 5](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 6](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 7](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 8](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex>
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, 10> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 1](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 2](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 3](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 4](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 5](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 6](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 7](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 8](std::forward<value_type_new>(value), buffer, serializePair);
-			functionPtrs<options, value_type, buffer_type, serialize_context_type>[startingIndex + 9](std::forward<value_type_new>(value), buffer, serializePair);
-		}
-	};
-
-#define FUNCTION_PTR_ITERATOR(LOWER_BOUND, UPPER_BOUND) \
-	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename serialize_context_type, size_t startingIndex, size_t count> \
-		requires(count > LOWER_BOUND && count <= UPPER_BOUND) \
-	struct function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, count> { \
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept { \
-			function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex, LOWER_BOUND>::impl(std::forward<value_type_new>(value), buffer, \
-				serializePair); \
-			function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, startingIndex + LOWER_BOUND, count - LOWER_BOUND>::impl( \
-				std::forward<value_type_new>(value), buffer, serializePair); \
-		} \
-	};
-
-FUNCTION_PTR_ITERATOR(10, 20)
-FUNCTION_PTR_ITERATOR(20, 30)
-FUNCTION_PTR_ITERATOR(30, 40)
-FUNCTION_PTR_ITERATOR(40, 50)
-FUNCTION_PTR_ITERATOR(50, 60)
-FUNCTION_PTR_ITERATOR(60, 70)
-FUNCTION_PTR_ITERATOR(70, 80)
-FUNCTION_PTR_ITERATOR(90, 100)
-FUNCTION_PTR_ITERATOR(100, 110)
-FUNCTION_PTR_ITERATOR(110, 120)
-FUNCTION_PTR_ITERATOR(120, 128)
+	static constexpr auto functionPtrsSerialize{ generateFunctionPtrs<options, value_type, buffer_type, serialize_context_type>() };
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
@@ -362,7 +236,18 @@ FUNCTION_PTR_ITERATOR(120, 128)
 					buffer[serializePair.index] = '{';
 					++serializePair.index;
 				}
-				function_ptr_iterator<options, value_type, buffer_type, serialize_context_type, 0, numMembers>::impl(std::forward<value_type_new>(value), buffer, serializePair);
+
+				if_10(0, numMembers);
+				if_10(10, numMembers);
+				if_10(20, numMembers);
+				if_10(30, numMembers);
+				if_10(40, numMembers);
+				if_10(50, numMembers);
+				if_10(60, numMembers);
+				if_10(70, numMembers);
+				if_10(80, numMembers);
+				if_10(90, numMembers);
+				if_10(100, numMembers);
 				if constexpr (options.prettify && numMembers > 0) {
 					serializePair.indent -= options.indentSize;
 					buffer[serializePair.index] = '\n';
@@ -474,7 +359,6 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
@@ -589,7 +473,6 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if (value) {
 				serialize<options>::impl(*value, buffer, serializePair);
@@ -666,7 +549,7 @@ FUNCTION_PTR_ITERATOR(120, 128)
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		static constexpr auto packedValues01{ packValues<"\"\"">() };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			const auto newSize		  = value.size();
+			const auto newSize = value.size();
 			if (newSize > 0) {
 				const auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl(newSize);
 				if (buffer.size() <= serializePair.index + additionalSize) {
@@ -745,7 +628,6 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::shared_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
@@ -758,7 +640,6 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if JSONIFIER_LIKELY ((value)) {
 				serialize<options>::impl(*value, buffer, serializePair);
@@ -779,7 +660,6 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint32_t nullV{ 1819047278 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			std::memcpy(&buffer[serializePair.index], &nullV, 4);
 			serializePair.index += 4;
@@ -788,13 +668,10 @@ FUNCTION_PTR_ITERATOR(120, 128)
 
 	template<jsonifier::serialize_options options, jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
-		static constexpr uint64_t falseV{ 435728179558 };
-		static constexpr uint64_t trueV{ 434025983730 };
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			const uint64_t state = falseV - (value * trueV);
-			const auto newSize	 = 5 - value;
-			std::memcpy(&buffer[serializePair.index], &state, newSize);
-			serializePair.index += newSize;
+			std::memcpy(&buffer[serializePair.index], &state, 5);
+			serializePair.index += 5 - value;
 		}
 	};
 
@@ -802,14 +679,14 @@ FUNCTION_PTR_ITERATOR(120, 128)
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (sizeof(value_type) == 8) {
-				serializePair.index = static_cast<size_t>(to_chars<std::remove_cvref_t<value_type>>::impl(&buffer[serializePair.index], value) - buffer.data());
+				serializePair.index = static_cast<size_t>(toChars<std::remove_cvref_t<value_type>>(&buffer[serializePair.index], value) - buffer.data());
 			} else {
 				if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-					serializePair.index = static_cast<size_t>(to_chars<uint64_t>::impl(&buffer[serializePair.index], static_cast<uint64_t>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars<uint64_t>(&buffer[serializePair.index], static_cast<uint64_t>(value)) - buffer.data());
 				} else if constexpr (jsonifier::concepts::signed_type<value_type>) {
-					serializePair.index = static_cast<size_t>(to_chars<int64_t>::impl(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars<int64_t>(&buffer[serializePair.index], static_cast<int64_t>(value)) - buffer.data());
 				} else {
-					serializePair.index = static_cast<size_t>(to_chars<float>::impl(&buffer[serializePair.index], value) - buffer.data());
+					serializePair.index = static_cast<size_t>(toChars<float>(&buffer[serializePair.index], value) - buffer.data());
 				}
 			}
 		}

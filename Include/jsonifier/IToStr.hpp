@@ -142,42 +142,36 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type> struct to_chars;
-
-	template<jsonifier::concepts::uint64_type value_type> struct to_chars<value_type> {
-		JSONIFIER_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
-			if (value == 0) {
-				*buf = '0';
-				return buf + 1;
-			} else if (value < 100000000) {
-				buf = toCharsU64Len18(buf, static_cast<uint32_t>(value));
+	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, VALREFORVAL value) noexcept {
+		if (value == 0) {
+			*buf = '0';
+			return buf + 1;
+		} else if (value < 100000000) {
+			buf = toCharsU64Len18(buf, static_cast<uint32_t>(value));
+			return buf;
+		} else {
+			if (value < 100000000ull * 100000000ull) {
+				const uint64_t hgh = value / 100000000;
+				auto low		   = static_cast<uint32_t>(value - hgh * 100000000);
+				buf				   = toCharsU64Len18(buf, static_cast<uint32_t>(hgh));
+				buf				   = toCharsU64Len8(buf, low);
 				return buf;
 			} else {
-				if (value < 100000000ull * 100000000ull) {
-					const uint64_t hgh = value / 100000000;
-					auto low		   = static_cast<uint32_t>(value - hgh * 100000000);
-					buf				   = toCharsU64Len18(buf, static_cast<uint32_t>(hgh));
-					buf				   = toCharsU64Len8(buf, low);
-					return buf;
-				} else {
-					const uint64_t tmp = value / 100000000;
-					auto low		   = static_cast<uint32_t>(value - tmp * 100000000);
-					auto hgh		   = static_cast<uint32_t>(tmp / 10000);
-					auto mid		   = static_cast<uint32_t>(tmp - hgh * 10000);
-					buf				   = toCharsU64Len58(buf, hgh);
-					buf				   = toCharsU64Len4(buf, mid);
-					buf				   = toCharsU64Len8(buf, low);
-					return buf;
-				}
+				const uint64_t tmp = value / 100000000;
+				auto low		   = static_cast<uint32_t>(value - tmp * 100000000);
+				auto hgh		   = static_cast<uint32_t>(tmp / 10000);
+				auto mid		   = static_cast<uint32_t>(tmp - hgh * 10000);
+				buf				   = toCharsU64Len58(buf, hgh);
+				buf				   = toCharsU64Len4(buf, mid);
+				buf				   = toCharsU64Len8(buf, low);
+				return buf;
 			}
 		}
-	};
+	}
 
-	template<jsonifier::concepts::int64_type value_type> struct to_chars<value_type> {
-		JSONIFIER_ALWAYS_INLINE static char* impl(char* buf, VALREFORVAL value) noexcept {
-			*buf = '-';
-			return to_chars<uint64_t>::impl(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63)) - (value >> 63));
-		}
-	};
+	template<jsonifier::concepts::int64_type value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, VALREFORVAL value) noexcept {
+		*buf = '-';
+		return toChars<uint64_t>(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63)) - (value >> 63));
+	}
 
 }// namespace jsonifier_internal

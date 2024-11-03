@@ -214,7 +214,6 @@ namespace jsonifier_internal {
 						return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), iter) : nullptr)
 											 : ((value / powerExp >= (doubleMin)) ? (divide(value, powerExp), iter) : nullptr);
 					}
-					return iter;
 				}
 				JSONIFIER_UNLIKELY(else) {
 					return nullptr;
@@ -825,7 +824,6 @@ namespace jsonifier_internal {
 						return (expSign > 0) ? ((value <= (doubleMax / powerExp)) ? (multiply(value, powerExp), iter) : nullptr)
 											 : ((value / powerExp >= (doubleMin)) ? (divide(value, powerExp), iter) : nullptr);
 					}
-					return iter;
 				}
 				JSONIFIER_UNLIKELY(else) {
 					return nullptr;
