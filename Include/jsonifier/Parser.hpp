@@ -29,16 +29,6 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
 
-namespace jsonifier {
-
-	struct parse_options {
-		bool validateJson{ false };
-		bool knownOrder{ false };
-		bool minified{ false };
-	};
-
-}
-
 namespace jsonifier_internal {
 
 	template<typename derived_type> class parser;

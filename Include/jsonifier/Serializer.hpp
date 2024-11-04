@@ -28,15 +28,6 @@
 #include <jsonifier/Prettifier.hpp>
 #include <jsonifier/Error.hpp>
 
-namespace jsonifier {
-
-	struct serialize_options {
-		size_t indentSize{ 3 };
-		char indentChar{ ' ' };
-		bool prettify{ false };
-	};
-}
-
 namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
