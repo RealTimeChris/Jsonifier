@@ -258,11 +258,11 @@ namespace jsonifier_internal {
 		return ((( x )-factor * n) & ~( x )&factor * msbMask) != 0;
 	}
 
-	template<jsonifier::parse_options options, typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2,
-		simd_type& simdValue, const simd_type& simdValues01) noexcept {
+	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(const char* string1, char* string2,
+		simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		std::memcpy(string2, string1, sizeof(simd_type));
-		return simd_internal::postCmpTzcnt(
-			static_cast<integer_type>(simd_internal::opBitMaskRaw(simd_internal::opCmpEqRaw(simd_internal::opShuffle(simdValues01, simdValue), simdValue))));
+		return simd_internal::postCmpTzcnt(static_cast<integer_type>(
+			simd_internal::opBitMaskRaw(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)))));
 	}
 
 	template<jsonifier::concepts::unsigned_type simd_type, jsonifier::concepts::unsigned_type integer_type>
@@ -270,17 +270,18 @@ namespace jsonifier_internal {
 		std::memcpy(string2, string1, sizeof(simd_type));
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
-		static constexpr integer_type lowBits{ repeatByte<0b10000000, integer_type>() };
+		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		const integer_type lo7{ simdValue & mask };
-		const integer_type next{ (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue)) & lowBits };
+		const integer_type lo7		 = simdValue & mask;
+		const integer_type quote	 = (lo7 ^ quoteBits) + mask;
+		const integer_type backslash = (lo7 ^ bsBits) + mask;
+		const integer_type next		 = ~((quote & backslash) | simdValue) & hiBits;
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<jsonifier::serialize_options options, typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1,
+	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(const char* string1,
 		char* string2, simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
-		simdValue = simd_internal::gatherValuesU<simd_type>(string1);
 		std::memcpy(string2, string1, sizeof(simd_type));
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(
 			simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
@@ -292,12 +293,15 @@ namespace jsonifier_internal {
 		std::memcpy(string2, string1, sizeof(simd_type));
 		std::memcpy(&simdValue, string1, sizeof(simd_type));
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
-		static constexpr integer_type midBits{ repeatByte<0b01100000, integer_type>() };
-		static constexpr integer_type lowBits{ repeatByte<0b10000000, integer_type>() };
+		static constexpr integer_type less32Bits{ repeatByte<0b01100000, integer_type>() };
+		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		const integer_type lo7{ simdValue & mask };
-		const integer_type next{ (~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & midBits) + mask)) | simdValue)) & lowBits };
+		const integer_type lo7		 = simdValue & mask;
+		const integer_type quote	 = (lo7 ^ quoteBits) + mask;
+		const integer_type backslash = (lo7 ^ bsBits) + mask;
+		const integer_type less32	 = (simdValue & less32Bits) + mask;
+		const integer_type next		 = ~((quote & backslash & less32) | simdValue) & hiBits;
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
@@ -387,12 +391,13 @@ namespace jsonifier_internal {
 				using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 3>::type::type;
 				static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 3>::type::bytesProcessed;
 				static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 3>::type::mask;
-				const simd_type simdValues00		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data());
+				const simd_type simdValues00		   = simd_internal::gatherValue<simd_type>(static_cast<char>('\\'));
+				const simd_type simdValues01		   = simd_internal::gatherValue<simd_type>(static_cast<char>('"'));
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<options, simd_type, integer_type>(string1, string2, simdValue, simdValues00);
+					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -440,12 +445,13 @@ namespace jsonifier_internal {
 				using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 2>::type::type;
 				static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 2>::type::bytesProcessed;
 				static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 2>::type::mask;
-				const simd_type simdValues00		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data());
+				const simd_type simdValues00		   = simd_internal::gatherValue<simd_type>(static_cast<char>('\\'));
+				const simd_type simdValues01		   = simd_internal::gatherValue<simd_type>(static_cast<char>('"'));
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<options, simd_type, integer_type>(string1, string2, simdValue, simdValues00);
+					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -494,12 +500,13 @@ namespace jsonifier_internal {
 				using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
 				static constexpr size_t bytesProcessed = get_type_at_index<simd_internal::avx_integer_list, 1>::type::bytesProcessed;
 				static constexpr integer_type mask	   = get_type_at_index<simd_internal::avx_integer_list, 1>::type::mask;
-				const simd_type simdValues00		   = simd_internal::gatherValues<simd_type>(simd_internal::escapeableArray00<bytesPerStep>.data());
+				const simd_type simdValues00		   = simd_internal::gatherValue<simd_type>(static_cast<char>('\\'));
+				const simd_type simdValues01		   = simd_internal::gatherValue<simd_type>(static_cast<char>('"'));
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<options, simd_type, integer_type>(string1, string2, simdValue, simdValues00);
+					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY ((nextBackslashOrQuote < mask)) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -636,7 +643,8 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextEscapeable = copyAndFindSerialize<options, simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
+					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY ((escapeChar != 0u)) {
@@ -671,7 +679,8 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextEscapeable = copyAndFindSerialize<options, simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
+					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY ((escapeChar != 0u)) {
@@ -707,7 +716,8 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextEscapeable = copyAndFindSerialize<options, simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
+					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY ((nextEscapeable < mask)) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY ((escapeChar != 0u)) {
