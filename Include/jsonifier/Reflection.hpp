@@ -152,9 +152,9 @@ namespace jsonifier_internal {
 	 * @param views Array of member names.
 	 * @return Interleaved tuple of member names and values.
 	 */
-	template<typename... tuple_types, size_t... indices> constexpr auto generateInterleavedTupleImpl(const std::tuple<tuple_types...>& tuple,
+	template<typename... tuple_types, size_t... indices> constexpr auto generateInterleavedTupleImpl(const tuple<tuple_types...>& tuple,
 		const std::array<jsonifier::string_view, sizeof...(indices)>& views, std::index_sequence<indices...>) noexcept {
-		return std::make_tuple(makeDataMemberAuto(views[indices], std::get<indices>(tuple))...);
+		return makeTuple(makeDataMemberAuto(views[indices], get<indices>(tuple))...);
 	}
 
 	/**
@@ -168,7 +168,7 @@ namespace jsonifier_internal {
 	 * @return Interleaved tuple of member names and values.
 	 */
 	template<typename... tuple_types>
-	constexpr auto generateInterleavedTuple(const std::tuple<tuple_types...>& tuple, const std::array<jsonifier::string_view, sizeof...(tuple_types)>& views) noexcept {
+	constexpr auto generateInterleavedTuple(const tuple<tuple_types...>& tuple, const std::array<jsonifier::string_view, sizeof...(tuple_types)>& views) noexcept {
 		return generateInterleavedTupleImpl(tuple, views, std::index_sequence_for<tuple_types...>{});
 	}
 

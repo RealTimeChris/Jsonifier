@@ -1,118 +1,105 @@
 /*
-	MIT License
+	MIT License	
 
 	Copyright (c) 2024 RealTimeChris
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	software and associated documentation files (the "Software"), to deal in the Software 
-	without restriction, including without limitation the rights to use, copy, modify, merge, 
-	publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or 
+	The above copyright notice and this permission notice shall be included in all copies or
 	substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Reflection.hpp>
+#include <type_traits>
+#include <cstdint>
+#include <utility>
 
 namespace jsonifier_internal {
 
-	template<uint64_t currentIndex, uint64_t maxIndex, typename tuple_type, typename arg_type01, typename arg_type02, typename... arg_types>
-	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) noexcept {
-		if constexpr (std::tuple_size_v<tuple_type> > 0) {
-			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
-				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = std::tuple_cat(newTuple, std::make_tuple(newerPair));
-				return newerTuple;
-			}
+	template<typename... types> struct tuple {
+		constexpr tuple() noexcept = default;
+	};
+
+	template<typename first_type, typename... types> struct tuple<first_type, types...> {
+		constexpr tuple() noexcept = default;
+		template<typename first_type_new, typename... types_new> constexpr tuple(first_type_new&& argOne, types_new&&... args)
+			: restVals{ std::forward<types_new>(args)... }, val{ std::forward<first_type_new>(argOne) } {};
+		tuple<types...> restVals{};
+		first_type val{};
+	};
+
+	template<typename first_type> struct tuple<first_type> {
+		constexpr tuple() noexcept = default;
+		template<typename first_type_new> constexpr tuple(first_type_new&& argOne) : val{ std::forward<first_type_new>(argOne) } {
+		}
+		first_type val{};
+	};
+
+	template<typename... types> tuple(types&&...) -> tuple<types...>;
+	template<typename... types, typename first_type> tuple(types&&..., first_type&&) -> tuple<types..., first_type>;
+	template<typename first_type> tuple(first_type&&) -> tuple<first_type>;
+
+	template<size_t index, typename tuple_type>
+		requires(index == 0)
+	JSONIFIER_ALWAYS_INLINE static constexpr auto& get(tuple_type&& t) {
+		return std::forward<tuple_type>(t).val;
+	};
+
+	template<size_t index, typename tuple_type> JSONIFIER_ALWAYS_INLINE static constexpr auto& get(tuple_type&& t) {
+		return get<index - 1>(std::forward<tuple_type>(t).restVals);
+	};
+
+	template<typename... types> struct tuple_size;
+
+	template<typename... types> struct tuple_size<tuple<types...>> {
+		static constexpr size_t value = sizeof...(types);
+	};
+
+	template<typename value_type> constexpr size_t tuple_size_v = tuple_size<std::remove_const_t<value_type>>::value;
+
+	template<typename... types> constexpr auto makeTuple(types&&... args) {
+		return tuple<std::remove_cvref_t<types>...>{ std::forward<types>(args)... };
+	}
+
+	template<typename... tuples> struct concat_tuples;
+
+	template<typename... types1, typename... types2> struct concat_tuples<tuple<types1...>, tuple<types2...>> {
+		using type = tuple<types1..., types2...>;
+	};
+
+	template<typename tuple1, typename tuple2, typename... rest> struct concat_tuples<tuple1, tuple2, rest...> {
+		using type = typename concat_tuples<typename concat_tuples<tuple1, tuple2>::type, rest...>::type;
+	};
+
+	template<typename... tuples> using concat_tuples_t = typename concat_tuples<tuples...>::type;
+
+	template<typename tuple_type01, size_t... indices1, typename tuple_type02, size_t... indices2>
+	constexpr auto tupleCatImpl(tuple_type01&& tuple1, std::index_sequence<indices1...>, tuple_type02&& tuple2, std::index_sequence<indices2...>) noexcept {
+		return concat_tuples_t<std::remove_cvref_t<tuple_type01>, std::remove_cvref_t<tuple_type02>>{ get<indices1>(tuple1)..., get<indices2>(tuple2)... };
+	}
+
+	template<typename tuple_type01, typename tuple_type02, typename... rest_types>
+	constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2, rest_types&&... rest) noexcept {
+		auto combined = tupleCatImpl(std::forward<tuple_type01>(tuple1), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type01>>>{},
+			std::forward<tuple_type02>(tuple2), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type02>>>{});
+
+		if constexpr (sizeof...(rest_types) == 0) {
+			return combined;
 		} else {
-			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = std::make_tuple(newerPair);
-				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = std::make_tuple(newerPair);
-				return newerTuple;
-			}
+			return tupleCat(std::move(combined), std::forward<rest_types>(rest)...);
 		}
 	}
-
-	template<typename member_type, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(member_type&& member_ptr, value_type&& value) noexcept {
-		using value_type02 = std::remove_cvref_t<member_type>;
-		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return std::forward<value_type>(value).*std::forward<member_type>(member_ptr);
-		} else if constexpr (std::is_pointer_v<value_type02>) {
-			return *std::forward<member_type>(member_ptr);
-		} else {
-			return std::forward<member_type>(member_ptr);
-		}
-	}
-
-	template<auto member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) noexcept {
-		using value_type02 = std::remove_cvref_t<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return std::forward<value_type>(value).*member_ptr;
-		} else if constexpr (std::is_pointer_v<value_type02>) {
-			return *member_ptr;
-		} else {
-			return member_ptr;
-		}
-	}
-
-	template<typename... arg_types> constexpr auto createValueArgs(arg_types&&... args) noexcept {
-		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
-			return generateInterleavedTuple<0, sizeof...(arg_types)>(std::make_tuple(), std::forward<arg_types>(args)...);
-		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
-			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
-		} else if constexpr (sizeof...(arg_types) == 1) {
-			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
-			return std::make_tuple(std::forward<arg_types>(args)...);
-		}
-	}
-
-	/*
-	* Function to create a reflected value from member pointers
-	*/
-	template<auto... values> constexpr auto createValueTemplates() noexcept {
-		constexpr auto newTuple	   = std::make_tuple(values...);
-		constexpr auto memberNames = jsonifier_internal::getNames<values...>();
-		return generateInterleavedTuple(newTuple, memberNames);
-	}
-}
-
-namespace jsonifier {
-
-	template<auto... values, typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
-		if constexpr (sizeof...(values) > 0 && sizeof...(args) > 0) {
-			auto newerTuple = jsonifier_internal::createValueTemplates<values...>();
-			auto newTuple	= jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...);
-			return value{ std::tuple_cat(newerTuple, newTuple) };
-		} else if constexpr (sizeof...(values) > 0) {
-			return value{ jsonifier_internal::createValueTemplates<values...>() };
-		} else if constexpr (sizeof...(args) > 0) {
-			if constexpr (sizeof...(args) == 1) {
-				return scalar_value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
-			} else {
-				return value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
-			}
-		} else {
-			return value{ concepts::empty{} };
-		}
-	}
-
 }

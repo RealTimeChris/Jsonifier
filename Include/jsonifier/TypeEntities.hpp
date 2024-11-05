@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/Config.hpp>
+#include <jsonifier/Tuple.hpp>
 #include <type_traits>
 #include <functional>
 #include <optional>
@@ -101,7 +102,7 @@ namespace jsonifier_internal {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY ((variantNew.index() == currentIndex)) {
-				function(std::get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
+				function(get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
 				return;
 			}
 			visit<function, currentIndex + 1>(variantNew, std::forward<arg_types>(args)...);
@@ -173,13 +174,13 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept variant_t = requires(std::remove_cvref_t<value_type> var) {
-			{ var.index() } -> std::same_as<std::size_t>;
+			{ var.index() } -> std::same_as<size_t>;
 			{ var.valueless_by_exception() } -> std::same_as<bool>;
 			{ var.template emplace<0>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
 			{ var.template emplace<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
 			{ var.template holds_alternative<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<bool>;
-			{ std::get<0>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
-			{ std::get<typename std::remove_cvref_t<value_type>::template type<0>>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ get<0>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
+			{ get<typename std::remove_cvref_t<value_type>::template type<0>>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
 			{ std::get_if<0>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
 			{ std::get_if<typename std::remove_cvref_t<value_type>::template type<0>>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
 		};
@@ -335,7 +336,7 @@ namespace jsonifier {
 		template<typename value_type>
 		concept tuple_t = requires(std::remove_cvref_t<value_type> t) {
 			std::tuple_size<std::remove_cvref_t<value_type>>::value;
-			std::get<0>(t);
+			get<0>(t);
 		} && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
@@ -368,7 +369,7 @@ namespace jsonifier {
 		concept convertible_to_string_view = std::convertible_to<std::remove_cvref_t<value_type>, std::string_view>;
 
 		struct empty {
-			static constexpr std::tuple<> val{};
+			static constexpr jsonifier_internal::tuple<> val{};
 		};
 
 		template<typename value_type> constexpr auto coreWrapperV = [] {
@@ -417,11 +418,11 @@ namespace jsonifier {
 
 }// namespace jsonifier_internal
 
-namespace std {
+namespace jsonifier_internal {
 
-	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : integral_constant<uint64_t, sizeof...(value_types)> {};
+	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : std::integral_constant<uint64_t, sizeof...(value_types)> {};
 
-	template<> struct tuple_size<jsonifier::concepts::empty> : integral_constant<uint64_t, 0> {};
+	template<> struct tuple_size<jsonifier::concepts::empty> : std::integral_constant<uint64_t, 0> {};
 }
 
 #if defined(max)

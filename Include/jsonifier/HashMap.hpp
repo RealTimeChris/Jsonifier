@@ -29,6 +29,7 @@
 #include <jsonifier/StringView.hpp>
 #include <jsonifier/Reflection.hpp>
 #include <jsonifier/StringUtils.hpp>
+#include <jsonifier/InterleavedTuple.hpp>
 #include <jsonifier/Tuple.hpp>
 #include <algorithm>
 #include <numeric>
@@ -64,7 +65,7 @@ namespace jsonifier_internal {
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, std::array<tuple_reference, maxIndex>& tupleRefs) {
 		if constexpr (currentIndex < maxIndex) {
-			auto potentialKey = std::get<currentIndex>(tuple);
+			auto potentialKey = get<currentIndex>(tuple);
 			if constexpr (has_view<decltype(potentialKey)>) {
 				tupleRefs[currentIndex].key = potentialKey.view();
 			}
@@ -75,7 +76,7 @@ namespace jsonifier_internal {
 	}
 
 	template<typename tuple_type> constexpr auto collectTupleRefs(const tuple_type& tuple) {
-		constexpr auto tupleSize = std::tuple_size_v<tuple_type>;
+		constexpr auto tupleSize = tuple_size_v<tuple_type>;
 		std::array<tuple_reference, tupleSize> tupleRefs{};
 		return collectTupleRefsImpl<tupleSize>(tuple, tupleRefs);
 	}
@@ -108,7 +109,7 @@ namespace jsonifier_internal {
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
 
 	template<typename value_type, size_t... indices> constexpr auto createNewTupleImpl(std::index_sequence<indices...>) noexcept {
-		return std::make_tuple(std::get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
+		return makeTuple(get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
 	}
 
 	template<typename value_type> constexpr auto createNewTuple() noexcept {

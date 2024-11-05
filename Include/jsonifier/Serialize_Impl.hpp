@@ -37,11 +37,6 @@ namespace jsonifier_internal {
 	static constexpr uint64_t trueV{ 434025983730 };
 	static constexpr uint32_t nullV{ 1819047278 };
 
-	struct serialize_size_values {
-		size_t newLineCount{};
-		size_t ctIndex{};
-	};
-
 	template<class value_type> constexpr size_t getPaddingSize() noexcept {
 		if constexpr (jsonifier::concepts::bool_t<value_type>) {
 			return 8;
@@ -50,11 +45,11 @@ namespace jsonifier_internal {
 		} else if constexpr (jsonifier::concepts::vector_t<value_type>) {
 			return 4;
 		} else if constexpr (jsonifier::concepts::tuple_t<value_type>) {
-			static constexpr auto accumulatePaddingSizesImpl = []<typename tuple, std::size_t... indices>(std::index_sequence<indices...>) noexcept {
+			static constexpr auto accumulatePaddingSizesImpl = []<typename tuple, size_t... indices>(std::index_sequence<indices...>) noexcept {
 				return (jsonifier_internal::getPaddingSize<std::tuple_element_t<indices, tuple>>() + ... + 0);
 			};
 			static constexpr auto accumulatePaddingSizes = []<typename tuple>() {
-				return accumulatePaddingSizesImpl.template operator()<tuple>(std::make_index_sequence<std::tuple_size_v<tuple>>{});
+				return accumulatePaddingSizesImpl.template operator()<tuple>(std::make_index_sequence<tuple_size_v<tuple>>{});
 			};
 			return accumulatePaddingSizes.template operator()<std::remove_cvref_t<value_type>>();
 		} else if constexpr (jsonifier::concepts::raw_array_t<value_type>) {
@@ -85,24 +80,23 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, typename size_collect_context_type>
 	struct size_collect_impl<options, value_type, size_collect_context_type> {
 		constexpr static size_t impl() noexcept {
-			constexpr auto numMembers = std::tuple_size_v<core_tuple_t<value_type>>;
+			constexpr auto numMembers = tuple_size_v<core_tuple_t<value_type>>;
 			constexpr auto newSize	  = []() constexpr {
-				   serialize_size_values pair{};
-				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto newSize, auto& pairNew) {
-					   if constexpr (currentIndex < newSize) {
-						   constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+				   size_t pair{};
+				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& pairNew) {
+					   if constexpr (currentIndex < maxIndex) {
+						   constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 						   constexpr auto key	   = subTuple.view();
 						   using member_type	   = typename std::remove_cvref_t<decltype(subTuple)>::member_type;
-						   pairNew.ctIndex += getPaddingSize<member_type>();
+						   pairNew += getPaddingSize<member_type>();
 						   constexpr auto unQuotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key);
 						   constexpr auto quotedKey	  = unQuotedKey + string_literal{ "\": " };
-						   pairNew.ctIndex += quotedKey.size();
-						   if constexpr (currentIndex < newSize - 1) {
+						   pairNew += quotedKey.size();
+						   if constexpr (currentIndex < maxIndex - 1) {
 							   if constexpr (options.prettify) {
-								   ++pairNew.newLineCount;
-								   pairNew.ctIndex += std::size(",\n") + 1;
+								   pairNew += std::size(",\n") + 1;
 							   } else {
-								   ++pairNew.ctIndex;
+								   ++pairNew;
 							   }
 						   }
 					   }
@@ -110,20 +104,20 @@ namespace jsonifier_internal {
 
 				   forEach<numMembers, make_static<sizeCollectLambda>::value>(pair);
 
-				   ++pair.ctIndex;
-				   ++pair.ctIndex;
+				   ++pair;
+				   ++pair;
 
 				   return pair;
 			}();
 
-			return newSize.ctIndex;
+			return newSize;
 		}
 	};
 
 	template<jsonifier::serialize_options options, size_t maxIndex> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename serialize_context_type>
 		JSONIFIER_CLANG_ALWAYS_INLINE static void processIndex(const value_type& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto subTuple = std::get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+			static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 			static constexpr auto key	   = subTuple.view();
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
@@ -180,7 +174,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues02{ packValues<"{}">() };
 
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto numMembers{ std::tuple_size_v<core_tuple_t<value_type>> };
+			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (numMembers > 0) {
 				static constexpr auto additionalSize = size_collect_impl<options, value_type, std::remove_cvref_t<serialize_context_type>>::impl();
 				if (buffer.size() <= serializePair.index + additionalSize) {
@@ -228,9 +222,9 @@ namespace jsonifier_internal {
 		typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
+			static constexpr auto size{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (size == 1) {
-				static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
+				static constexpr auto newPtr = get<0>(coreTupleV<value_type>);
 				serialize<options>::impl(getMember<newPtr>(value), buffer, serializePair);
 			}
 		}
@@ -333,7 +327,7 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type>
 	struct serialize_impl<options, value_type, buffer_type, serialize_context_type> {
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
-			static constexpr auto size	= std::tuple_size_v<std::remove_reference_t<value_type>>;
+			static constexpr auto size	= tuple_size_v<std::remove_reference_t<value_type>>;
 			buffer[serializePair.index] = '[';
 			++serializePair.index;
 			if constexpr (options.prettify) {
@@ -358,7 +352,7 @@ namespace jsonifier_internal {
 		template<size_t currentIndex, size_t newSize, typename value_type_new>
 		JSONIFIER_ALWAYS_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, serialize_context_type& serializePair) noexcept {
 			if constexpr (currentIndex < newSize) {
-				auto subTuple = std::get<currentIndex>(value);
+				auto subTuple = get<currentIndex>(value);
 				serialize<options>::impl(subTuple, buffer, serializePair);
 				if constexpr (currentIndex < newSize - 1) {
 					if constexpr (options.prettify) {

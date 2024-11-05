@@ -273,10 +273,8 @@ namespace jsonifier_internal {
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		const integer_type lo7		 = simdValue & mask;
-		const integer_type quote	 = (lo7 ^ quoteBits) + mask;
-		const integer_type backslash = (lo7 ^ bsBits) + mask;
-		const integer_type next		 = ~((quote & backslash) | simdValue) & hiBits;
+		const integer_type lo7	= simdValue & mask;
+		const integer_type next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask)) | simdValue) & hiBits;
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
@@ -297,11 +295,8 @@ namespace jsonifier_internal {
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
 		static constexpr integer_type bsBits{ repeatByte<'\\', integer_type>() };
-		const integer_type lo7		 = simdValue & mask;
-		const integer_type quote	 = (lo7 ^ quoteBits) + mask;
-		const integer_type backslash = (lo7 ^ bsBits) + mask;
-		const integer_type less32	 = (simdValue & less32Bits) + mask;
-		const integer_type next		 = ~((quote & backslash & less32) | simdValue) & hiBits;
+		const integer_type lo7	= simdValue & mask;
+		const integer_type next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & less32Bits) + mask)) | simdValue) & hiBits;
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 

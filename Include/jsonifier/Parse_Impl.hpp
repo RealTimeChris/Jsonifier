@@ -35,9 +35,9 @@ namespace jsonifier_internal {
 		static constexpr char colon{ ':' };
 		template<size_t index, typename value_type, typename parse_context_type>
 		JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type& value, parse_context_type& context) noexcept {
-			if constexpr (index < std::tuple_size_v<core_tuple_t<value_type>>) {
-				static constexpr auto ptr			= std::get<index>(coreTupleV<value_type>).ptr();
-				static constexpr auto key			= std::get<index>(coreTupleV<value_type>).view();
+			if constexpr (index < tuple_size_v<core_tuple_t<value_type>>) {
+				static constexpr auto ptr			= get<index>(coreTupleV<value_type>).ptr();
+				static constexpr auto key			= get<index>(coreTupleV<value_type>).view();
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
@@ -72,7 +72,7 @@ namespace jsonifier_internal {
 	}
 
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type> constexpr auto generateFunctionPtrs() noexcept {
-		constexpr auto tupleSize = std::tuple_size_v<core_tuple_t<value_type>>;
+		constexpr auto tupleSize = tuple_size_v<core_tuple_t<value_type>>;
 		return generateFunctionPtrsImpl<minified, options, value_type, parse_context_type>(std::make_index_sequence<tupleSize>{});
 	}
 
@@ -87,7 +87,7 @@ namespace jsonifier_internal {
 		static constexpr char colon{ ':' };
 		static constexpr char comma{ ',' };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY ((*context.iter == leftBrace)) {
 				++context.iter;
@@ -126,8 +126,8 @@ namespace jsonifier_internal {
 						if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 							++context.iter;
 							if constexpr (options.knownOrder) {
-								static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-								static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
+								static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+								static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
 								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 								static constexpr auto keySize		= key.size();
 								static constexpr auto keySizeNew	= keySize + 1;
@@ -184,8 +184,8 @@ namespace jsonifier_internal {
 									if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 										++context.iter;
 										if constexpr (antiHashNew && options.knownOrder) {
-											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
-											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
+											static constexpr auto ptr			= get<index>(jsonifier::concepts::coreV<value_type>).ptr();
+											static constexpr auto key			= get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
@@ -276,7 +276,7 @@ namespace jsonifier_internal {
 		static constexpr char colon{ ':' };
 		static constexpr char comma{ ',' };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			static constexpr auto memberCount = std::tuple_size_v<core_tuple_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY ((*context.iter == leftBrace)) {
 				++context.iter;
@@ -296,8 +296,8 @@ namespace jsonifier_internal {
 
 						if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 							++context.iter;
-							static constexpr auto ptr			= std::get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-							static constexpr auto key			= std::get<0>(jsonifier::concepts::coreV<value_type>).view();
+							static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+							static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
@@ -361,8 +361,8 @@ namespace jsonifier_internal {
 									if JSONIFIER_LIKELY ((*context.iter == doubleQuote)) {
 										++context.iter;
 										if constexpr (antiHashNew && options.knownOrder) {
-											static constexpr auto ptr			= std::get<index>(jsonifier::concepts::coreV<value_type>).ptr();
-											static constexpr auto key			= std::get<index>(jsonifier::concepts::coreV<value_type>).view();
+											static constexpr auto ptr			= get<index>(jsonifier::concepts::coreV<value_type>).ptr();
+											static constexpr auto key			= get<index>(jsonifier::concepts::coreV<value_type>).view();
 											static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 											static constexpr auto keySize		= key.size();
 											static constexpr auto keySizeNew	= keySize + 1;
@@ -431,9 +431,9 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::jsonifier_scalar_value_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			static constexpr auto size{ std::tuple_size_v<core_tuple_t<value_type>> };
+			static constexpr auto size{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (size == 1) {
-				static constexpr auto newPtr = std::get<0>(coreTupleV<value_type>);
+				static constexpr auto newPtr = get<0>(coreTupleV<value_type>);
 				parse<minified, options>::impl(getMember<newPtr>(value), context);
 			}
 		}
@@ -445,7 +445,7 @@ namespace jsonifier_internal {
 		static constexpr char leftBracket{ '[' };
 		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			static constexpr auto memberCount = std::tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
 			if JSONIFIER_LIKELY ((*context.iter == leftBracket)) {
 				++context.iter;
 				++context.currentArrayDepth;
@@ -454,7 +454,7 @@ namespace jsonifier_internal {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						auto newPtr = std::get<0>(value);
+						auto newPtr = get<0>(value);
 						parse<false, options>::impl(getMember(newPtr, value), context);
 
 						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
@@ -483,7 +483,7 @@ namespace jsonifier_internal {
 					if JSONIFIER_LIKELY ((*context.iter == comma)) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
-						auto newPtr = std::get<currentIndex>(value);
+						auto newPtr = get<currentIndex>(value);
 						parse<false, options>::impl(getMember(newPtr, value), context);
 						return parseObjects<n, currentIndex + 1, newLines>(value, context, wsStart, wsSize);
 					} else {
@@ -511,13 +511,13 @@ namespace jsonifier_internal {
 		static constexpr char leftBracket{ '[' };
 		static constexpr char comma{ ',' };
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			static constexpr auto memberCount = std::tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
 			if JSONIFIER_LIKELY ((*context.iter == leftBracket)) {
 				++context.iter;
 				++context.currentArrayDepth;
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					if constexpr (memberCount > 0) {
-						auto newPtr = std::get<0>(value);
+						auto newPtr = get<0>(value);
 						parse<true, options>::impl(getMember(newPtr, value), context);
 						parseObjects<memberCount, 1>(value, context);
 					}
@@ -538,7 +538,7 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((*context.iter != rightBracket)) {
 					if JSONIFIER_LIKELY ((*context.iter == comma)) {
 						++context.iter;
-						auto newPtr = std::get<currentIndex>(value);
+						auto newPtr = get<currentIndex>(value);
 						parse<true, options>::impl(getMember(newPtr, value), context);
 						return parseObjects<n, currentIndex + 1>(value, context);
 					} else {
