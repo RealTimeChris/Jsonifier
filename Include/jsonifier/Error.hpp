@@ -104,8 +104,8 @@ namespace jsonifier_internal {
 		Type_Count	 = 12
 	};
 
-	constexpr std::array<bool, 256> numberTable{ [] {
-		std::array<bool, 256> returnValues{};
+	constexpr array<bool, 256> numberTable{ [] {
+		array<bool, 256> returnValues{};
 		returnValues['-'] = true;
 		returnValues['0'] = true;
 		returnValues['1'] = true;
@@ -124,8 +124,8 @@ namespace jsonifier_internal {
 		return numberTable[c];
 	}
 
-	constexpr std::array<bool, 256> boolTable{ [] {
-		std::array<bool, 256> returnValues{};
+	constexpr array<bool, 256> boolTable{ [] {
+		array<bool, 256> returnValues{};
 		returnValues['t'] = true;
 		returnValues['f'] = true;
 		return returnValues;

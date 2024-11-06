@@ -160,8 +160,8 @@ namespace jsonifier_internal {
 
 	template<string_literal string>
 		requires(string.size() != 0 && string.size() > 8)
-	constexpr std::array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> packValues() {
-		std::array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> returnValues{};
+	constexpr array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> packValues() {
+		array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> returnValues{};
 		for (size_t x = 0; x < string.size(); ++x) {
 			if (x / 8 < (string.size() / 8) + 1) {
 				returnValues[x / 8] |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
@@ -377,7 +377,7 @@ namespace jsonifier_internal {
 			std::memcpy(&data2, &valuesNew, newLength);
 
 			static constexpr auto maskBytes = []() constexpr {
-				alignas(16) std::array<uint8_t, 16> maskBytes{};
+				alignas(16) array<uint8_t, 16> maskBytes{};
 				for (size_t i = 0; i < newLength; ++i) {
 					maskBytes[i] = 0xFF;
 				}
@@ -404,7 +404,7 @@ namespace jsonifier_internal {
 			std::memcpy(&data2, &valuesNew, newLength);
 
 			static constexpr auto maskBytes = []() constexpr {
-				alignas(32) std::array<uint8_t, 32> maskBytes{};
+				alignas(32) array<uint8_t, 32> maskBytes{};
 				for (size_t i = 0; i < newLength; ++i) {
 					maskBytes[i] = 0xFF;
 				}

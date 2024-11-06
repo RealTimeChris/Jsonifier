@@ -27,6 +27,7 @@
 #include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/Hash.hpp>
 #include <jsonifier/StringView.hpp>
+#include <jsonifier/Array.hpp>
 #include <jsonifier/Reflection.hpp>
 #include <jsonifier/StringUtils.hpp>
 #include <jsonifier/InterleavedTuple.hpp>
@@ -37,7 +38,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type, size_t size> std::ostream& operator<<(std::ostream& os, const std::array<value_type, size>& values) {
+	template<typename value_type, size_t size> std::ostream& operator<<(std::ostream& os, const array<value_type, size>& values) {
 		os << "[";
 		for (size_t x = 0; x < size; ++x) {
 			os << values[x];
@@ -63,7 +64,7 @@ namespace jsonifier_internal {
 	concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
 
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
-	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, std::array<tuple_reference, maxIndex>& tupleRefs) {
+	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefs) {
 		if constexpr (currentIndex < maxIndex) {
 			auto potentialKey = get<currentIndex>(tuple);
 			if constexpr (has_view<decltype(potentialKey)>) {
@@ -77,27 +78,27 @@ namespace jsonifier_internal {
 
 	template<typename tuple_type> constexpr auto collectTupleRefs(const tuple_type& tuple) {
 		constexpr auto tupleSize = tuple_size_v<tuple_type>;
-		std::array<tuple_reference, tupleSize> tupleRefs{};
+		array<tuple_reference, tupleSize> tupleRefs{};
 		return collectTupleRefsImpl<tupleSize>(tuple, tupleRefs);
 	}
 
-	template<size_t size> constexpr auto sortTupleRefsByFirstByte(const std::array<tuple_reference, size>& tupleRefs) {
-		std::array<tuple_reference, size> returnValues{ tupleRefs };
+	template<size_t size> constexpr auto sortTupleRefsByFirstByte(const array<tuple_reference, size>& tupleRefs) {
+		array<tuple_reference, size> returnValues{ tupleRefs };
 		std::sort(returnValues.begin(), returnValues.end(), [](const tuple_reference& lhs, const tuple_reference& rhs) {
 			return lhs.key[0] < rhs.key[0];
 		});
 		return returnValues;
 	}
 
-	template<size_t size> constexpr auto sortTupleRefsByLength(const std::array<tuple_reference, size>& tupleRefs) {
-		std::array<tuple_reference, size> returnValues{ tupleRefs };
+	template<size_t size> constexpr auto sortTupleRefsByLength(const array<tuple_reference, size>& tupleRefs) {
+		array<tuple_reference, size> returnValues{ tupleRefs };
 		std::sort(returnValues.begin(), returnValues.end(), [](const tuple_reference& lhs, const tuple_reference& rhs) {
 			return lhs.key.size() < rhs.key.size();
 		});
 		return returnValues;
 	}
 
-	template<size_t size> constexpr auto consolidateTupleRefs(const std::array<tuple_reference, size>& tupleRefs) {
+	template<size_t size> constexpr auto consolidateTupleRefs(const array<tuple_reference, size>& tupleRefs) {
 		tuple_references returnValues{};
 		returnValues.rootPtr = &tupleRefs[0];
 		returnValues.count	 = size;
@@ -168,7 +169,7 @@ namespace jsonifier_internal {
 		constexpr size_t alphabetSize = 256;
 		jsonifier::string_view key{};
 		for (size_t index = startingIndex; index < maxIndex; ++index) {
-			std::array<bool, alphabetSize> seen{};
+			array<bool, alphabetSize> seen{};
 			bool allDifferent = true;
 
 			for (size_t x = 0; x < tupleRefs.count; ++x) {
@@ -193,10 +194,10 @@ namespace jsonifier_internal {
 
 	template<typename value_type> struct hash_map_construction_data {
 		using simd_type = map_simd_t<2048>;
-		std::array<size_t, 2048 / setSimdWidth(2048)> bucketSizes{};
-		JSONIFIER_ALIGN std::array<uint8_t, 2049> controlBytes{};
-		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
-		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
+		array<size_t, 2048 / setSimdWidth(2048)> bucketSizes{};
+		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
+		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
+		JSONIFIER_ALIGN array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
 		ct_key_hasher hasher{};
@@ -239,7 +240,7 @@ namespace jsonifier_internal {
 		static constexpr size_t storageSize{ 256 };
 		constexpr single_byte_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
-		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
+		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -248,7 +249,7 @@ namespace jsonifier_internal {
 		static constexpr size_t storageSize{ 256 };
 		constexpr first_byte_and_unique_index_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
-		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
+		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
 		hash_map_type type{};
 	};
 
@@ -256,7 +257,7 @@ namespace jsonifier_internal {
 		static constexpr size_t storageSize{ 2048 };
 		constexpr unique_byte_and_length_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: indices{ newData.indices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
-		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
+		JSONIFIER_ALIGN array<size_t, 2049> indices{};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -264,7 +265,7 @@ namespace jsonifier_internal {
 	template<typename value_type> struct unique_per_length_data {
 		static constexpr size_t storageSize{ 256 };
 		constexpr unique_per_length_data(const hash_map_construction_data<value_type>& newData) noexcept : uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
-		JSONIFIER_ALIGN std::array<uint8_t, 256> uniqueIndices{};
+		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
 		hash_map_type type{};
 	};
 
@@ -273,8 +274,8 @@ namespace jsonifier_internal {
 		constexpr simd_full_length_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups },
 			  uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, seed{ newData.hasher.seed } {};
-		JSONIFIER_ALIGN std::array<uint8_t, 2049> controlBytes{};
-		JSONIFIER_ALIGN std::array<size_t, 2049> indices{};
+		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
+		JSONIFIER_ALIGN array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
 		size_t uniqueIndex{};
@@ -287,7 +288,7 @@ namespace jsonifier_internal {
 	};
 
 	constexpr auto countUniqueLengths(const tuple_references& tupleRefs) {
-		std::array<size_t, 256> stringLengths{};
+		array<size_t, 256> stringLengths{};
 		size_t returnValue{};
 		for (size_t x = 0; x < tupleRefs.count; ++x) {
 			++stringLengths[tupleRefs.rootPtr[x].key.size()];
@@ -301,8 +302,8 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t stringLengthCount> constexpr auto collectLengths(const tuple_references& values) {
-		std::array<size_t, 256> lengths{};
-		std::array<string_lengths, stringLengthCount> valuesNew{};
+		array<size_t, 256> lengths{};
+		array<string_lengths, stringLengthCount> valuesNew{};
 		size_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
 			if (lengths[values.rootPtr[x].key.size()] == 0) {
@@ -325,7 +326,7 @@ namespace jsonifier_internal {
 	}
 
 	constexpr auto countFirstBytes(const tuple_references& tupleRefs) {
-		std::array<bool, 256> stringLengths{};
+		array<bool, 256> stringLengths{};
 		size_t returnValue = 0;
 		for (size_t x = 0; x < tupleRefs.count; ++x) {
 			if (!tupleRefs.rootPtr[x].key.empty()) {
@@ -344,8 +345,8 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t firstByteCount> constexpr auto collectFirstBytes(const tuple_references& values) {
-		std::array<size_t, 256> lengths{};
-		std::array<first_bytes, firstByteCount> valuesNew{};
+		array<size_t, 256> lengths{};
+		array<first_bytes, firstByteCount> valuesNew{};
 		size_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
 			if (lengths[static_cast<uint8_t>(values.rootPtr[x].key[0])] == 0) {
@@ -383,16 +384,16 @@ namespace jsonifier_internal {
 		return stats;
 	}
 
-	template<size_t size> constexpr auto keyStats(const std::array<first_bytes, size>& tupleRefs) noexcept {
-		std::array<key_stats_t, size> returnValues{};
+	template<size_t size> constexpr auto keyStats(const array<first_bytes, size>& tupleRefs) noexcept {
+		array<key_stats_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = keyStatsImpl(static_cast<const tuple_references&>(tupleRefs[x]));
 		}
 		return returnValues;
 	}
 
-	template<size_t size> constexpr auto keyStats(const std::array<string_lengths, size>& tupleRefs) noexcept {
-		std::array<key_stats_t, size> returnValues{};
+	template<size_t size> constexpr auto keyStats(const array<string_lengths, size>& tupleRefs) noexcept {
+		array<key_stats_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = keyStatsImpl(static_cast<const tuple_references&>(tupleRefs[x]));
 		}
@@ -628,8 +629,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t keyMaxLength> constexpr auto generateMappingsForLengths(const tuple_references& keys, const std::array<uint8_t, 256>& uniqueIndices) noexcept {
-		std::array<size_t, (keyMaxLength + 1) * 256> mappings{};
+	template<size_t keyMaxLength> constexpr auto generateMappingsForLengths(const tuple_references& keys, const array<uint8_t, 256>& uniqueIndices) noexcept {
+		array<size_t, (keyMaxLength + 1) * 256> mappings{};
 
 		mappings.fill(static_cast<size_t>(-1));
 
@@ -649,9 +650,9 @@ namespace jsonifier_internal {
 	}
 
 	template<size_t firstCharCount>
-	constexpr auto generateMappingsForFirstBytes(const std::array<first_bytes, firstCharCount>& keys, const std::array<uint8_t, 256>& uniqueIndices) noexcept {
+	constexpr auto generateMappingsForFirstBytes(const array<first_bytes, firstCharCount>& keys, const array<uint8_t, 256>& uniqueIndices) noexcept {
 		constexpr size_t flattenedSize = 256 * 256;
-		std::array<size_t, flattenedSize> flattenedMappings{};
+		array<size_t, flattenedSize> flattenedMappings{};
 		flattenedMappings.fill(flattenedMappings.size() - 1);
 
 		for (size_t x = 0; x < firstCharCount; ++x) {

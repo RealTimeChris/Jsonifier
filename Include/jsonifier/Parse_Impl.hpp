@@ -68,7 +68,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type, size_t... indices>
 	constexpr auto generateFunctionPtrsImpl(std::index_sequence<indices...>) noexcept {
 		using function_type = decltype(&index_processor<options, minified>::template processIndex<0, value_type, parse_context_type>);
-		return std::array<function_type, sizeof...(indices)>{ { &index_processor<options, minified>::template processIndex<indices, value_type, parse_context_type>... } };
+		return array<function_type, sizeof...(indices)>{ { &index_processor<options, minified>::template processIndex<indices, value_type, parse_context_type>... } };
 	}
 
 	template<bool minified, jsonifier::parse_options options, typename value_type, typename parse_context_type> constexpr auto generateFunctionPtrs() noexcept {

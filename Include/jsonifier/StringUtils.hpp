@@ -122,7 +122,7 @@ namespace jsonifier_internal {
 		return ptr;
 	}
 
-	constexpr std::array<uint32_t, 886> digitToVal32{ { 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+	constexpr array<uint32_t, 886> digitToVal32{ { 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
@@ -321,8 +321,8 @@ namespace jsonifier_internal {
 		}
 	}
 
-	constexpr std::array<char, 256> escapeMap{ [] {
-		std::array<char, 256> returnValues{};
+	constexpr array<char, 256> escapeMap{ [] {
+		array<char, 256> returnValues{};
 		returnValues['"']  = '\"';
 		returnValues['\\'] = '\\';
 		returnValues['b']  = '\b';
@@ -596,8 +596,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	constexpr std::array<uint16_t, 256> escapeTable{ [] {
-		std::array<uint16_t, 256> returnValues{};
+	constexpr array<uint16_t, 256> escapeTable{ [] {
+		array<uint16_t, 256> returnValues{};
 		returnValues['\"'] = 0x225Cu;
 		returnValues['\\'] = 0x5C5Cu;
 		returnValues['\b'] = 0x625Cu;

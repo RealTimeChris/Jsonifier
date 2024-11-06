@@ -69,9 +69,9 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t zero{ '0' };
 	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t nine{ '9' };
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint64_t, 256> rawCompValsPos{ [] {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsPos{ [] {
 		constexpr auto maxValue{ (std::numeric_limits<std::decay_t<value_type>>::max)() };
-		std::array<uint64_t, 256> returnValues{};
+		array<uint64_t, 256> returnValues{};
 		returnValues['0'] = (maxValue - 0) / 10;
 		returnValues['1'] = (maxValue - 1) / 10;
 		returnValues['2'] = (maxValue - 2) / 10;
@@ -85,9 +85,9 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE std::array<uint64_t, 256> rawCompValsNeg{ [] {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsNeg{ [] {
 		constexpr auto maxValue{ uint64_t((std::numeric_limits<int64_t>::max)()) + 1 };
-		std::array<uint64_t, 256> returnValues{};
+		array<uint64_t, 256> returnValues{};
 		returnValues['0'] = (maxValue - 0) / 10;
 		returnValues['1'] = (maxValue - 1) / 10;
 		returnValues['2'] = (maxValue - 2) / 10;

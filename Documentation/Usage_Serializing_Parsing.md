@@ -24,7 +24,7 @@ namespace TestNS {
 	};
 
 	struct nested_object_t {
-		std::vector<std::array<double, 3>> v3s{};
+		std::vector<array<double, 3>> v3s{};
 		jsonifier::string id{};
 	};
 

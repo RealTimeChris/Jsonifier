@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/Array.hpp>
 #include <jsonifier/ISA/Fallback.hpp>
 #include <jsonifier/ISA/Popcount.hpp>
 #include <jsonifier/ISA/AVX.hpp>
@@ -34,7 +35,6 @@
 #include <cstring>
 #include <cstdint>
 #include <bitset>
-#include <array>
 
 namespace simd_internal {
 
@@ -161,36 +161,36 @@ namespace simd_internal {
 		jsonifier_simd_int_t op;
 	};
 
-	template<size_t size> JSONIFIER_ALIGN constexpr std::array<char, size> escapeableArray00{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> escapeableArray00{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
-		std::array<char, size> returnValues{};
+		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr std::array<char, size> escapeableArray01{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> escapeableArray01{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
-		std::array<char, size> returnValues{};
+		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr std::array<char, size> whitespaceArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> whitespaceArray{ [] {
 		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
-		std::array<char, size> returnValues{};
+		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr std::array<char, size> opArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> opArray{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
-		std::array<char, size> returnValues{};
+		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
@@ -255,8 +255,8 @@ namespace simd_internal {
 
 namespace jsonifier_internal {
 
-	constexpr std::array<bool, 256> whitespaceTable{ [] {
-		std::array<bool, 256> returnValues{};
+	constexpr jsonifier_internal::array<bool, 256> whitespaceTable{ [] {
+		jsonifier_internal::array<bool, 256> returnValues{};
 		returnValues['\t'] = true;
 		returnValues[' ']  = true;
 		returnValues['\n'] = true;

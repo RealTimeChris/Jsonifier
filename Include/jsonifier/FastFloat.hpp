@@ -317,7 +317,7 @@ namespace fast_float {
 	}
 
 	// Compares two ASCII strings in a case insensitive manner.
-	template<typename UC> inline constexpr bool fastfloat_strncasecmp(UC const* input1, UC const* input2, size_t length) {
+	template<typename UC> JSONIFIER_ALWAYS_INLINE constexpr bool fastfloat_strncasecmp(UC const* input1, UC const* input2, size_t length) {
 		char running_diff{};
 		for (size_t i = 0; i < length; ++i) {
 			running_diff |= (char(input1[i]) ^ char(input2[i]));
@@ -459,23 +459,23 @@ namespace fast_float {
 	template<typename T> struct binary_format : binary_format_lookup_tables<T> {
 		using equiv_uint = typename std::conditional<sizeof(T) == 4, uint32_t, uint64_t>::type;
 
-		static inline constexpr int32_t mantissa_explicit_bits();
-		static inline constexpr int32_t minimum_exponent();
-		static inline constexpr int32_t infinite_power();
-		static inline constexpr int32_t sign_index();
-		static inline constexpr int32_t min_exponent_fast_path();// used when fegetround() == FE_TONEAREST
-		static inline constexpr int32_t max_exponent_fast_path();
-		static inline constexpr int32_t max_exponent_round_to_even();
-		static inline constexpr int32_t min_exponent_round_to_even();
-		static inline constexpr uint64_t max_mantissa_fast_path(int64_t power);
-		static inline constexpr uint64_t max_mantissa_fast_path();// used when fegetround() == FE_TONEAREST
-		static inline constexpr int32_t largest_power_of_ten();
-		static inline constexpr int32_t smallest_power_of_ten();
-		static inline constexpr T exact_power_of_ten(int64_t power);
-		static inline constexpr size_t max_digits();
-		static inline constexpr equiv_uint exponent_mask();
-		static inline constexpr equiv_uint mantissa_mask();
-		static inline constexpr equiv_uint hidden_bit_mask();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t mantissa_explicit_bits();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t minimum_exponent();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t infinite_power();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t sign_index();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t min_exponent_fast_path();// used when fegetround() == FE_TONEAREST
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t max_exponent_fast_path();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t max_exponent_round_to_even();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t min_exponent_round_to_even();
+		JSONIFIER_ALWAYS_INLINE static constexpr uint64_t max_mantissa_fast_path(int64_t power);
+		JSONIFIER_ALWAYS_INLINE static constexpr uint64_t max_mantissa_fast_path();// used when fegetround() == FE_TONEAREST
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t largest_power_of_ten();
+		JSONIFIER_ALWAYS_INLINE static constexpr int32_t smallest_power_of_ten();
+		JSONIFIER_ALWAYS_INLINE static constexpr T exact_power_of_ten(int64_t power);
+		JSONIFIER_ALWAYS_INLINE static constexpr size_t max_digits();
+		JSONIFIER_ALWAYS_INLINE static constexpr equiv_uint exponent_mask();
+		JSONIFIER_ALWAYS_INLINE static constexpr equiv_uint mantissa_mask();
+		JSONIFIER_ALWAYS_INLINE static constexpr equiv_uint hidden_bit_mask();
 	};
 
 	template<typename U> struct binary_format_lookup_tables<double, U> {
@@ -525,7 +525,7 @@ namespace fast_float {
 
 	#endif
 
-	template<> inline constexpr int32_t binary_format<double>::min_exponent_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::min_exponent_fast_path() {
 	#if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
 		return 0;
 	#else
@@ -533,7 +533,7 @@ namespace fast_float {
 	#endif
 	}
 
-	template<> inline constexpr int32_t binary_format<float>::min_exponent_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::min_exponent_fast_path() {
 	#if (FLT_EVAL_METHOD != 1) && (FLT_EVAL_METHOD != 0)
 		return 0;
 	#else
@@ -541,71 +541,71 @@ namespace fast_float {
 	#endif
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::mantissa_explicit_bits() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::mantissa_explicit_bits() {
 		return 52;
 	}
-	template<> inline constexpr int32_t binary_format<float>::mantissa_explicit_bits() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::mantissa_explicit_bits() {
 		return 23;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::max_exponent_round_to_even() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::max_exponent_round_to_even() {
 		return 23;
 	}
 
-	template<> inline constexpr int32_t binary_format<float>::max_exponent_round_to_even() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::max_exponent_round_to_even() {
 		return 10;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::min_exponent_round_to_even() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::min_exponent_round_to_even() {
 		return -4;
 	}
 
-	template<> inline constexpr int32_t binary_format<float>::min_exponent_round_to_even() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::min_exponent_round_to_even() {
 		return -17;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::minimum_exponent() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::minimum_exponent() {
 		return -1023;
 	}
-	template<> inline constexpr int32_t binary_format<float>::minimum_exponent() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::minimum_exponent() {
 		return -127;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::infinite_power() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::infinite_power() {
 		return 0x7FF;
 	}
-	template<> inline constexpr int32_t binary_format<float>::infinite_power() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::infinite_power() {
 		return 0xFF;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::sign_index() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::sign_index() {
 		return 63;
 	}
-	template<> inline constexpr int32_t binary_format<float>::sign_index() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::sign_index() {
 		return 31;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::max_exponent_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::max_exponent_fast_path() {
 		return 22;
 	}
-	template<> inline constexpr int32_t binary_format<float>::max_exponent_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::max_exponent_fast_path() {
 		return 10;
 	}
 
-	template<> inline constexpr uint64_t binary_format<double>::max_mantissa_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr uint64_t binary_format<double>::max_mantissa_fast_path() {
 		return static_cast<uint64_t>(2) << mantissa_explicit_bits();
 	}
-	template<> inline constexpr uint64_t binary_format<double>::max_mantissa_fast_path(int64_t power) {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr uint64_t binary_format<double>::max_mantissa_fast_path(int64_t power) {
 		// caller is responsible to ensure that
 		// power >= 0 && power <= 22
 		//
 		// Work around clang bug https://godbolt.org/z/zedh7rrhc
 		return ( void )max_mantissa[0], max_mantissa[power];
 	}
-	template<> inline constexpr uint64_t binary_format<float>::max_mantissa_fast_path() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr uint64_t binary_format<float>::max_mantissa_fast_path() {
 		return static_cast<uint64_t>(2) << mantissa_explicit_bits();
 	}
-	template<> inline constexpr uint64_t binary_format<float>::max_mantissa_fast_path(int64_t power) {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr uint64_t binary_format<float>::max_mantissa_fast_path(int64_t power) {
 		// caller is responsible to ensure that
 		// power >= 0 && power <= 10
 		//
@@ -613,54 +613,54 @@ namespace fast_float {
 		return ( void )max_mantissa[0], max_mantissa[power];
 	}
 
-	template<> inline constexpr double binary_format<double>::exact_power_of_ten(int64_t power) {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr double binary_format<double>::exact_power_of_ten(int64_t power) {
 		// Work around clang bug https://godbolt.org/z/zedh7rrhc
 		return ( void )powers_of_ten[0], powers_of_ten[power];
 	}
-	template<> inline constexpr float binary_format<float>::exact_power_of_ten(int64_t power) {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr float binary_format<float>::exact_power_of_ten(int64_t power) {
 		// Work around clang bug https://godbolt.org/z/zedh7rrhc
 		return ( void )powers_of_ten[0], powers_of_ten[power];
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::largest_power_of_ten() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::largest_power_of_ten() {
 		return 308;
 	}
-	template<> inline constexpr int32_t binary_format<float>::largest_power_of_ten() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::largest_power_of_ten() {
 		return 38;
 	}
 
-	template<> inline constexpr int32_t binary_format<double>::smallest_power_of_ten() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<double>::smallest_power_of_ten() {
 		return -342;
 	}
-	template<> inline constexpr int32_t binary_format<float>::smallest_power_of_ten() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr int32_t binary_format<float>::smallest_power_of_ten() {
 		return -64;
 	}
 
-	template<> inline constexpr size_t binary_format<double>::max_digits() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr size_t binary_format<double>::max_digits() {
 		return 769;
 	}
-	template<> inline constexpr size_t binary_format<float>::max_digits() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr size_t binary_format<float>::max_digits() {
 		return 114;
 	}
 
-	template<> inline constexpr binary_format<float>::equiv_uint binary_format<float>::exponent_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<float>::equiv_uint binary_format<float>::exponent_mask() {
 		return 0x7F800000;
 	}
-	template<> inline constexpr binary_format<double>::equiv_uint binary_format<double>::exponent_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<double>::equiv_uint binary_format<double>::exponent_mask() {
 		return 0x7FF0000000000000;
 	}
 
-	template<> inline constexpr binary_format<float>::equiv_uint binary_format<float>::mantissa_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<float>::equiv_uint binary_format<float>::mantissa_mask() {
 		return 0x007FFFFF;
 	}
-	template<> inline constexpr binary_format<double>::equiv_uint binary_format<double>::mantissa_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<double>::equiv_uint binary_format<double>::mantissa_mask() {
 		return 0x000FFFFFFFFFFFFF;
 	}
 
-	template<> inline constexpr binary_format<float>::equiv_uint binary_format<float>::hidden_bit_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<float>::equiv_uint binary_format<float>::hidden_bit_mask() {
 		return 0x00800000;
 	}
-	template<> inline constexpr binary_format<double>::equiv_uint binary_format<double>::hidden_bit_mask() {
+	template<> JSONIFIER_ALWAYS_INLINE constexpr binary_format<double>::equiv_uint binary_format<double>::hidden_bit_mask() {
 		return 0x0010000000000000;
 	}
 
@@ -691,7 +691,7 @@ namespace fast_float {
 
 		#endif
 
-	inline constexpr bool is_space(uint8_t c) {
+	JSONIFIER_ALWAYS_INLINE constexpr bool is_space(uint8_t c) {
 		return space_lut<>::value[c];
 	}
 	#endif
@@ -2008,7 +2008,7 @@ namespace fast_float {
 
 	// add scalar value to bigint starting from offset.
 	// used in grade school multiplication
-	template<uint16_t size> inline constexpr bool small_add_from(stackvec<size>& vec, limb y, size_t start) noexcept {
+	template<uint16_t size> JSONIFIER_ALWAYS_INLINE constexpr bool small_add_from(stackvec<size>& vec, limb y, size_t start) noexcept {
 		size_t index = start;
 		limb carry	 = y;
 		bool overflow;
@@ -2029,7 +2029,7 @@ namespace fast_float {
 	}
 
 	// multiply bigint by scalar value.
-	template<uint16_t size> inline constexpr bool small_mul(stackvec<size>& vec, limb y) noexcept {
+	template<uint16_t size> JSONIFIER_ALWAYS_INLINE constexpr bool small_mul(stackvec<size>& vec, limb y) noexcept {
 		limb carry = 0;
 		for (size_t index = 0; index < vec.len(); index++) {
 			vec[index] = scalar_mul(vec[index], y, carry);
@@ -2554,7 +2554,7 @@ namespace fast_float {
 	}
 
 	// parse the significant digits into a big integer
-	template<typename UC> inline constexpr void parse_mantissa(bigint& result, parsed_number_string_t<UC>& num, size_t max_digits, size_t& digits) noexcept {
+	template<typename UC> JSONIFIER_ALWAYS_INLINE constexpr void parse_mantissa(bigint& result, parsed_number_string_t<UC>& num, size_t max_digits, size_t& digits) noexcept {
 		// try to minimize the number of big integer and scalar multiplication.
 		// therefore, try to parse 8 digits at a time, and multiply by the largest
 		// scalar value (9 or 19 digits) for each step.
@@ -2633,7 +2633,7 @@ namespace fast_float {
 		}
 	}
 
-	template<typename T> inline constexpr adjusted_mantissa positive_digit_comp(bigint& bigmant, int32_t exponent) noexcept {
+	template<typename T> JSONIFIER_ALWAYS_INLINE constexpr adjusted_mantissa positive_digit_comp(bigint& bigmant, int32_t exponent) noexcept {
 		FASTFLOAT_ASSERT(bigmant.pow10(static_cast<uint32_t>(exponent)));
 		adjusted_mantissa answer;
 		bool truncated;
@@ -2655,7 +2655,7 @@ namespace fast_float {
 	// to scale them identically, we do `n * 2^f * 5^-f`, so we now have `m * 2^e`.
 	// we then need to scale by `2^(f- e)`, and then the two significant digits
 	// are of the same magnitude.
-	template<typename T> inline constexpr adjusted_mantissa negative_digit_comp(bigint& bigmant, adjusted_mantissa am, int32_t exponent) noexcept {
+	template<typename T> JSONIFIER_ALWAYS_INLINE constexpr adjusted_mantissa negative_digit_comp(bigint& bigmant, adjusted_mantissa am, int32_t exponent) noexcept {
 		bigint& real_digits = bigmant;
 		int32_t real_exp	= exponent;
 
@@ -2717,7 +2717,7 @@ namespace fast_float {
 	// `b` as a big-integer type, scaled to the same binary exponent as
 	// the actual digits. we then compare the big integer representations
 	// of both, and use that to direct rounding.
-	template<typename T, typename UC> inline constexpr adjusted_mantissa digit_comp(parsed_number_string_t<UC>& num, adjusted_mantissa am) noexcept {
+	template<typename T, typename UC> JSONIFIER_ALWAYS_INLINE constexpr adjusted_mantissa digit_comp(parsed_number_string_t<UC>& num, adjusted_mantissa am) noexcept {
 		// remove the invalid exponent bias
 		am.power2 -= invalid_am_bias;
 
