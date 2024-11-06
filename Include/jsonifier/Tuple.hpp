@@ -91,15 +91,9 @@ namespace jsonifier_internal {
 		return concat_tuples_t<std::remove_cvref_t<tuple_type01>, std::remove_cvref_t<tuple_type02>>{ get<indices1>(tuple1)..., get<indices2>(tuple2)... };
 	}
 
-	template<typename tuple_type01, typename tuple_type02, typename... rest_types>
-	constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2, rest_types&&... rest) noexcept {
-		auto combined = tupleCatImpl(std::forward<tuple_type01>(tuple1), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type01>>>{},
-			std::forward<tuple_type02>(tuple2), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type02>>>{});
-
-		if constexpr (sizeof...(rest_types) == 0) {
-			return combined;
-		} else {
-			return tupleCat(std::move(combined), std::forward<rest_types>(rest)...);
-		}
+	template<typename tuple_type01, typename tuple_type02>
+	constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2) noexcept {
+		return tupleCatImpl(std::forward<tuple_type01>(tuple1), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type01>>>{}, std::forward<tuple_type02>(tuple2),
+			std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type02>>>{});
 	}
 }

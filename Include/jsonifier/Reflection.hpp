@@ -126,7 +126,7 @@ namespace jsonifier_internal {
 #else
 		constexpr auto newString = getNameImpl<p>();
 #endif
-		return newString;
+		return make_static<stringLiteralFromView<newString.size()>(newString)>::value.view();
 	}
 
 	/**

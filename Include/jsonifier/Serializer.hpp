@@ -30,6 +30,12 @@
 
 namespace jsonifier_internal {
 
+	constexpr jsonifier::serialize_options incrementIndentation(jsonifier::serialize_options options) {
+		jsonifier::serialize_options optionsNew{ options };
+		optionsNew.indent += options.indentSize;
+		return optionsNew;
+	}
+
 	enum class serialize_errors { Success = 0 };
 
 	template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename serialize_context_type> struct serialize_impl;
@@ -56,11 +62,10 @@ namespace jsonifier_internal {
 			derivedRef.errors.clear();
 			serializePair.index	 = 0;
 			serializePair.indent = 0;
-			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, serializePair);
+			serialize<optionsFinal>::impl(std::forward<value_type>(object), buffer, serializePair);
 			if JSONIFIER_UNLIKELY ((buffer.size() != serializePair.index)) {
 				buffer.resize(serializePair.index);
 			}
-			std::memcpy(buffer.data(), stringBuffer.data(), serializePair.index);
 			return true;
 		}
 
