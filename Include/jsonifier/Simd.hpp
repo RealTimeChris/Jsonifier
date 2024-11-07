@@ -41,7 +41,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE const char* getRemainder() noexcept {
-			if JSONIFIER_UNLIKELY ((length == index)) {
+			if JSONIFIER_UNLIKELY (length == index) {
 				return nullptr;
 			}
 			std::fill_n(block, bitsPerStep, 0x20);
@@ -82,7 +82,7 @@ namespace jsonifier_internal {
 		template<bool minified = false> JSONIFIER_ALWAYS_INLINE void reset(const void* stringViewNew, size_type size) noexcept {
 			currentParseBuffer = jsonifier::string_view_base{ static_cast<string_view_ptr>(stringViewNew), size };
 			auto newSize	   = roundUpToMultiple<8ull>(static_cast<size_type>(static_cast<double>(currentParseBuffer.size()) * multiplier));
-			if JSONIFIER_UNLIKELY ((structuralIndexCount < newSize)) {
+			if JSONIFIER_UNLIKELY (structuralIndexCount < newSize) {
 				resize(newSize * 2);
 			}
 			resetImpl<minified>();
@@ -143,7 +143,7 @@ namespace jsonifier_internal {
 			while (stringBlockReader.hasFullBlock()) {
 				generateStructurals<false, minified>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
 			}
-			if JSONIFIER_LIKELY ((auto newPtr = stringBlockReader.getRemainder(); newPtr)) {
+			if JSONIFIER_LIKELY (auto newPtr = stringBlockReader.getRemainder(); newPtr) {
 				generateStructurals<true, minified>(newPtr, escaped, nextIsEscaped, rawStructurals);
 			}
 		}
@@ -216,7 +216,7 @@ namespace jsonifier_internal {
 
 		template<size_type index = 0> JSONIFIER_ALWAYS_INLINE void addTapeValues() noexcept {
 			if constexpr (index < sixtyFourBitsPerStep) {
-				if JSONIFIER_UNLIKELY ((!newBits[index])) {
+				if JSONIFIER_UNLIKELY (!newBits[index]) {
 					return addTapeValues<index + 1>();
 				}
 				auto cnt			  = popcnt(newBits[index]);

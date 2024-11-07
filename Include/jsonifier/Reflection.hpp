@@ -32,7 +32,12 @@ namespace jsonifier_internal {
 
 	template<typename member_type, typename class_type> struct member_pointer {
 		member_type class_type::* ptr{};
-		constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p) {};
+
+		constexpr member_pointer() noexcept {
+		}
+
+		constexpr member_pointer(member_type class_type::* p) noexcept : ptr(p) {
+		}
 	};
 
 	template<typename member_type_new, typename class_type_new> struct data_member {
@@ -42,6 +47,12 @@ namespace jsonifier_internal {
 		uint8_t padding[4]{};
 		jsonifier::string_view name{};
 
+		constexpr data_member() noexcept {
+		}
+
+		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str) {
+		}
+
 		constexpr auto& view() const noexcept {
 			return name;
 		}
@@ -49,8 +60,6 @@ namespace jsonifier_internal {
 		constexpr auto& ptr() const noexcept {
 			return memberPtr.ptr;
 		}
-
-		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str) {};
 	};
 
 	template<typename member_type, typename class_type> constexpr auto makeDataMemberAuto(jsonifier::string_view str, member_type class_type::* ptr) noexcept {

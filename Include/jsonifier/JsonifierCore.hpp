@@ -46,7 +46,7 @@ namespace jsonifier {
 		JSONIFIER_ALWAYS_INLINE jsonifier_core() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				errors = std::move(other.errors);
 			}
 			return *this;
@@ -57,7 +57,7 @@ namespace jsonifier {
 		};
 
 		JSONIFIER_ALWAYS_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				errors = other.errors;
 			}
 			return *this;

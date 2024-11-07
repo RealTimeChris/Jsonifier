@@ -42,25 +42,25 @@ namespace simd_internal {
 		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(char_type) == 8)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(char_t) == 8)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return vdupq_n_u64(str);
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(char_type) == 1)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(char_t) == 1)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return vdupq_n_u8(str);
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_t* storageLocation) noexcept {
 		vst1q_u64(storageLocation, vreinterpretq_u64_u8(value));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(char_type) == 1)
-	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_type* storageLocation) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(char_t) == 1)
+	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_t* storageLocation) noexcept {
 		vst1q_u8(storageLocation, value);
 	}
 

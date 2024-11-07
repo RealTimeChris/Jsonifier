@@ -151,7 +151,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, VALREFORVAL value) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 			const auto expBits					   = floatBits.extract_exponent_bits();
 			const auto s						   = floatBits.remove_exponent_bits();
 
-			if JSONIFIER_UNLIKELY ((expBits == (uint32_t(1) << expBitsCount) - 1)) {
+			if JSONIFIER_UNLIKELY (expBits == (uint32_t(1) << expBitsCount) - 1) {
 				std::memcpy(buf, "null", 4);
 				return buf + 4;
 			}

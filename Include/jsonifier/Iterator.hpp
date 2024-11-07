@@ -55,14 +55,6 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr operator pointer&() noexcept {
-			return const_cast<pointer&>(ptr);
-		}
-
-		JSONIFIER_ALWAYS_INLINE constexpr operator const void*() const noexcept {
-			return static_cast<const void*>(ptr);
-		}
-
 		JSONIFIER_ALWAYS_INLINE constexpr iterator_type operator++(int32_t) noexcept {
 			iterator_type temp = *this;
 			++*this;

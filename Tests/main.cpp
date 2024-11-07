@@ -116,9 +116,9 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
-		std::string newerBuffer{};
+		std::string_view newerBuffer{};
 		auto writeResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, jsonifierLibraryName, "steelblue">([&]() {
-			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+			newerBuffer = parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData);
 			bnch_swt::doNotOptimizeAway(newerBuffer);
 		});
 
@@ -209,7 +209,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 		});
 		std::string newerBuffer{};
 		auto writeResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
-			glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
+			auto newResult = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
 			bnch_swt::doNotOptimizeAway(newerBuffer);
 		});
 

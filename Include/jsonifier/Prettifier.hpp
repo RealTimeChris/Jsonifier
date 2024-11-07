@@ -56,17 +56,16 @@ namespace jsonifier_internal {
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
 		JSONIFIER_ALWAYS_INLINE auto prettifyJson(string_type&& in) noexcept {
-			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size() * 5)) {
+			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
-			indent = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
 			section.reset<true>(in.data(), in.size());
 			const char** iter{ section.begin() };
-			if JSONIFIER_UNLIKELY ((!*iter)) {
+			if JSONIFIER_UNLIKELY (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - in.data(),
 					in.end() - in.begin(), in.data()));
@@ -74,7 +73,7 @@ namespace jsonifier_internal {
 			}
 			std::remove_cvref_t<string_type> newString{};
 			auto index = prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
-			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint64_t>::max())) {
+			if JSONIFIER_LIKELY (index != std::numeric_limits<uint64_t>::max()) {
 				newString.resize(index);
 				std::memcpy(newString.data(), stringBuffer.data(), index);
 				return newString;
@@ -85,25 +84,24 @@ namespace jsonifier_internal {
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
 		JSONIFIER_ALWAYS_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
-			if JSONIFIER_UNLIKELY ((stringBuffer.size() < in.size() * 5)) {
+			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
-			indent = 0;
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
 			section.reset<true>(in.data(), in.size());
 			const char** iter{ section.begin() };
-			if JSONIFIER_UNLIKELY ((!*iter)) {
+			if JSONIFIER_UNLIKELY (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - in.data(),
 					in.end() - in.begin(), in.data()));
 				return false;
 			}
 			auto index = prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);
-			if JSONIFIER_LIKELY ((index != std::numeric_limits<uint64_t>::max())) {
-				if JSONIFIER_LIKELY ((buffer.size() != index)) {
+			if JSONIFIER_LIKELY (index != std::numeric_limits<uint64_t>::max()) {
+				if JSONIFIER_LIKELY (buffer.size() != index) {
 					buffer.resize(index);
 				}
 				std::memcpy(buffer.data(), stringBuffer.data(), index);
@@ -118,7 +116,6 @@ namespace jsonifier_internal {
 		jsonifier::vector<json_structural_type> state{};
 		const char* rootIter{};
 		const char* endIter{};
-		size_t indent{};
 
 		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
 			state.resize(64);

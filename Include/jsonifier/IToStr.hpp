@@ -142,7 +142,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::uint64_type value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, VALREFORVAL value) noexcept {
+	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, value_type value) noexcept {
 		if (value == 0) {
 			*buf = '0';
 			return buf + 1;
@@ -169,7 +169,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::int64_type value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, VALREFORVAL value) noexcept {
+	template<jsonifier::concepts::sig64_t value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, value_type value) noexcept {
 		*buf = '-';
 		return toChars<uint64_t>(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63)) - (value >> 63));
 	}

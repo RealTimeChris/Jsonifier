@@ -41,7 +41,7 @@ class test_base {
 	std::string testName{};
 };
 
-bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFileContents, const std::string &testType) noexcept {
+bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFileContents, const std::string& testType) noexcept {
 	try {
 		for (const auto& entry: std::filesystem::directory_iterator(std::string{ JSON_TEST_PATH } + testType)) {
 			if (entry.is_regular_file()) {
@@ -98,7 +98,8 @@ template<typename value_type> struct test_generator {
 		return dis(gen);
 	}
 
-	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02> static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
+	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02>
+	static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
 		std::uniform_int_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
 		return dis(gen);
 	}
@@ -111,7 +112,7 @@ template<typename value_type> struct test_generator {
 	static std::string generateString() {
 		auto length{ randomizeNumberUniform(32ull, 64ull) };
 		constexpr size_t charsetSize = charset.size();
-		auto unicodeCount			 = length / 8;
+		auto unicodeCount			 = length / 4ull;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -377,7 +378,7 @@ struct results_data {
 		}
 		if (writeResult.byteLength.has_value() && writeResult.jsonSpeed.has_value()) {
 			std::cout << enumToString<result_type::write>() + " Speed (MB/S): " << std::setprecision(6) << writeResult.jsonSpeed.value() << std::endl;
-#if !defined(JSONIFIER_MAC) 
+#if !defined(JSONIFIER_MAC)
 			std::cout << enumToString<result_type::write>() + " Speed (Cycles/MB): " << std::setprecision(6)
 					  << writeResult.getResultValueCyclesMb(writeResult.jsonTime.value(), writeResult.byteLength.value()) << std::endl;
 #endif
@@ -427,8 +428,8 @@ struct results_data {
 #endif
 			finalString += readLength + " | " + readTime + " | " + readIterationCount + " | ";
 		}
-		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {			
-#if !defined(JSONIFIER_MAC) 
+		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
+#if !defined(JSONIFIER_MAC)
 			std::stringstream stream00{};
 			stream00 << std::setprecision(6) << writeResult.getResultValueCyclesMb(writeResult.jsonTime.value(), writeResult.byteLength.value());
 			write02 = stream00.str();
@@ -460,4 +461,3 @@ struct test_results {
 	std::string markdownResults{};
 	std::string testName{};
 };
-

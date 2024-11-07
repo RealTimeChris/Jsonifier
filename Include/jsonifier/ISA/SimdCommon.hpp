@@ -58,7 +58,7 @@ namespace simd_internal {
 			jsonifier_internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, jsonifier_internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
 #endif
 
-	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle);
+	template<jsonifier::concepts::unsigned_t value_type> void printBits(value_type values, const std::string& valuesTitle);
 
 	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
 

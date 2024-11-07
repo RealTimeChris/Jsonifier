@@ -29,8 +29,8 @@ namespace jsonifier_internal {
 
 	template<typename T, typename UC> constexpr bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
 		using namespace fast_float;
-		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
-		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+		static_assert(is_supported_float_t<T>(), "only some floating-point types are supported");
+		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		static constexpr UC decimalNew = '.';
 		static constexpr UC smallE	   = 'e';
@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		if (answer.negative) {
 			++iter;
 
-			if JSONIFIER_UNLIKELY ((!is_integer(*iter))) {
+			if JSONIFIER_UNLIKELY (!is_integer(*iter)) {
 				return false;
 			}
 		}
@@ -158,7 +158,7 @@ namespace jsonifier_internal {
 		}
 		answer.exponent = exponent;
 		answer.mantissa = i;
-		if JSONIFIER_LIKELY ((answer.valid)) {
+		if JSONIFIER_LIKELY (answer.valid) {
 			iter = answer.lastmatch;
 			return from_chars_advanced(answer, value).ptr != nullptr;
 		} else {

@@ -52,8 +52,6 @@ namespace jsonifier_internal {
 
 	template<template<typename...> class value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
 
-	template<uint64_t index> using tag = std::integral_constant<uint64_t, index>;
-
 	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
 		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
 		static constexpr integer_type_new mask{ maskNew };
@@ -101,7 +99,7 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
-			if JSONIFIER_UNLIKELY ((variantNew.index() == currentIndex)) {
+			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
 				function(std::get<currentIndex>(std::forward<variant_type>(variantNew)), std::forward<arg_types>(args)...);
 				return;
 			}
@@ -144,8 +142,8 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_range = requires(std::remove_cvref_t<value_type> value) {
-			{ value.begin() } -> std::forward_iterator;
-			{ value.end() } -> std::forward_iterator;
+			{ value.begin() };
+			{ value.end() };
 		};
 
 		template<typename value_type>
@@ -212,44 +210,47 @@ namespace jsonifier {
 			!always_null_t<value_type>;
 
 		template<typename value_type>
-		concept signed_type = std::signed_integral<std::remove_cvref_t<value_type>> && !bool_t<value_type>;
+		concept signed_t = std::signed_integral<std::remove_cvref_t<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
-		concept unsigned_type = std::unsigned_integral<std::remove_cvref_t<value_type>> && !bool_t<value_type>;
+		concept unsigned_t = std::unsigned_integral<std::remove_cvref_t<value_type>> && !bool_t<value_type>;
 
 		template<typename value_type>
-		concept uint8_type = sizeof(std::remove_cvref_t<value_type>) == 1 && unsigned_type<value_type>;
+		concept uns8_t = sizeof(std::remove_cvref_t<value_type>) == 1 && unsigned_t<value_type>;
 
 		template<typename value_type>
-		concept uint16_type = sizeof(std::remove_cvref_t<value_type>) == 2 && unsigned_type<value_type>;
+		concept uns16_t = sizeof(std::remove_cvref_t<value_type>) == 2 && unsigned_t<value_type>;
 
 		template<typename value_type>
-		concept uint32_type = sizeof(std::remove_cvref_t<value_type>) == 4 && unsigned_type<value_type>;
+		concept uns32_t = sizeof(std::remove_cvref_t<value_type>) == 4 && unsigned_t<value_type>;
 
 		template<typename value_type>
-		concept uint64_type = sizeof(std::remove_cvref_t<value_type>) == 8 && unsigned_type<value_type>;
+		concept uns64_t = sizeof(std::remove_cvref_t<value_type>) == 8 && unsigned_t<value_type>;
 
 		template<typename value_type>
-		concept int8_type = sizeof(std::remove_cvref_t<value_type>) == 1 && signed_type<value_type>;
+		concept sig8_t = sizeof(std::remove_cvref_t<value_type>) == 1 && signed_t<value_type>;
 
 		template<typename value_type>
-		concept int16_type = sizeof(std::remove_cvref_t<value_type>) == 2 && signed_type<value_type>;
+		concept sig16_t = sizeof(std::remove_cvref_t<value_type>) == 2 && signed_t<value_type>;
 
 		template<typename value_type>
-		concept int32_type = sizeof(std::remove_cvref_t<value_type>) == 4 && signed_type<value_type>;
+		concept sig32_t = sizeof(std::remove_cvref_t<value_type>) == 4 && signed_t<value_type>;
 
 		template<typename value_type>
-		concept int64_type = sizeof(std::remove_cvref_t<value_type>) == 8 && signed_type<value_type>;
+		concept sig64_t = sizeof(std::remove_cvref_t<value_type>) == 8 && signed_t<value_type>;
 
 		template<typename value_type>
-		concept float_type = std::floating_point<std::remove_cvref_t<value_type>> && (std::numeric_limits<std::remove_cvref_t<value_type>>::radix == 2) &&
+		concept float_t = std::floating_point<std::remove_cvref_t<value_type>> && (std::numeric_limits<std::remove_cvref_t<value_type>>::radix == 2) &&
 			std::numeric_limits<std::remove_cvref_t<value_type>>::is_iec559;
 
 		template<typename value_type>
-		concept char_type = std::same_as<std::remove_cvref_t<value_type>, char>;
+		concept void_t = std::is_void_v<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept num_t = (float_type<value_type> || unsigned_type<value_type> || signed_type<value_type>) && !char_type<value_type>;
+		concept char_t = std::same_as<std::remove_cvref_t<value_type>, char>;
+
+		template<typename value_type>
+		concept num_t = (float_t<value_type> || unsigned_t<value_type> || signed_t<value_type>) && !char_t<value_type>;
 
 		template<typename value_type>
 		concept has_substr = requires(std::remove_cvref_t<value_type> value) {
@@ -364,7 +365,7 @@ namespace jsonifier {
 		concept jsonifier_t = requires { jsonifier::core<std::remove_cvref_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept is_core_type = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type> || shared_ptr_t<value_type>;
+		concept is_core_t = jsonifier_t<value_type> || vector_t<value_type> || map_t<value_type> || tuple_t<value_type> || shared_ptr_t<value_type>;
 
 		template<typename value_type>
 		concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
@@ -406,15 +407,12 @@ namespace jsonifier {
 			return false;
 		}
 
-		template<is_core_type value_type> constexpr bool printErrorFunction() noexcept {
+		template<is_core_t value_type> constexpr bool printErrorFunction() noexcept {
 			return true;
 		}
 
 		template<typename value_type>
-		concept time_type = jsonifier_internal::is_specialization_v<std::chrono::duration<std::remove_cvref_t<value_type>>, std::chrono::duration>;
-
-		template<typename value_type>
-		concept char_t = uint8_type<value_type> || char_type<value_type>;
+		concept time_t = jsonifier_internal::is_specialization_v<std::chrono::duration<std::remove_cvref_t<value_type>>, std::chrono::duration>;
 
 		template<typename value_type>
 		concept integer_t = std::integral<std::remove_cvref_t<value_type>> && !bool_t<value_type> && !std::floating_point<std::remove_cvref_t<value_type>>;
@@ -447,7 +445,7 @@ namespace jsonifier_internal {
 		return value1 < static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
-	template<jsonifier::concepts::unsigned_type value_type> void printBits(value_type values, const std::string& valuesTitle) noexcept {
+	template<jsonifier::concepts::unsigned_t value_type> void printBits(value_type values, const std::string& valuesTitle) noexcept {
 		std::cout << valuesTitle;
 		std::cout << std::bitset<sizeof(value_type) * 8>{ values };
 		std::cout << std::endl;
@@ -459,7 +457,7 @@ namespace jsonifier_internal {
 		return theStream.str();
 	}
 
-	template<jsonifier::concepts::time_type value_type> class stop_watch {
+	template<jsonifier::concepts::time_t value_type> class stop_watch {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
@@ -472,7 +470,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(stop_watch&& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			}
@@ -484,7 +482,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE stop_watch& operator=(const stop_watch& other) noexcept {
-			if JSONIFIER_LIKELY ((this != &other)) {
+			if JSONIFIER_LIKELY (this != &other) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 			}
@@ -496,8 +494,8 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE bool hasTimeElapsed() noexcept {
-			if JSONIFIER_LIKELY ((std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
-									 totalNumberOfTimeUnits.load(std::memory_order_acquire))) {
+			if JSONIFIER_LIKELY (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
+				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
 			} else {
 				return false;
@@ -505,7 +503,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void reset(value_type newTimeValue = value_type{}) noexcept {
-			if JSONIFIER_LIKELY ((newTimeValue != value_type{})) {
+			if JSONIFIER_LIKELY (newTimeValue != value_type{}) {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
 			} else {
@@ -526,7 +524,7 @@ namespace jsonifier_internal {
 		std::atomic<value_type> startTimeInTimeUnits{};
 	};
 
-	template<jsonifier::concepts::time_type value_type> stop_watch(value_type) -> stop_watch<value_type>;
+	template<jsonifier::concepts::time_t value_type> stop_watch(value_type) -> stop_watch<value_type>;
 }
 
 #include <jsonifier/ISA/Lzcount.hpp>

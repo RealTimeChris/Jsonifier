@@ -42,15 +42,15 @@ namespace simd_internal {
 		return _mm_loadu_si128(static_cast<const __m128i*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 8)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return _mm_set1_epi64x(static_cast<int64_t>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 1)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return _mm_set1_epi8(static_cast<char>(str));
 	}
 
@@ -125,7 +125,7 @@ namespace simd_internal {
 		return !_mm_testz_si128(result, result);
 	}
 
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
 	template<simd_int_256_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
 		return _mm256_load_si256(static_cast<const __m256i*>(str));
@@ -135,15 +135,15 @@ namespace simd_internal {
 		return _mm256_loadu_si256(static_cast<const __m256i*>(str));
 	}
 
-	template<simd_int_256_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 8)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type value) noexcept {
+	template<simd_int_256_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t value) noexcept {
 		return _mm256_set1_epi64x(static_cast<int64_t>(value));
 	}
 
-	template<simd_int_256_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 1)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type value) noexcept {
+	template<simd_int_256_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t value) noexcept {
 		return _mm256_set1_epi8(static_cast<char>(value));
 	}
 
@@ -228,15 +228,15 @@ namespace simd_internal {
 		return _mm512_loadu_si512(static_cast<const __m512i*>(str));
 	}
 
-	template<simd_int_512_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 8)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type value) noexcept {
+	template<simd_int_512_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t value) noexcept {
 		return _mm512_set1_epi64(static_cast<int64_t>(value));
 	}
 
-	template<simd_int_512_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 1)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type value) noexcept {
+	template<simd_int_512_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t value) noexcept {
 		return _mm512_set1_epi8(static_cast<char>(value));
 	}
 

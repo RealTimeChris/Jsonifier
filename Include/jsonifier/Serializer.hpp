@@ -44,8 +44,8 @@ namespace jsonifier_internal {
 	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, indent_type&& indent) noexcept {
-			serialize_impl<options, value_type, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(std::forward<value_type>(value), std::forward<buffer_type>(buffer),
-				std::forward<index_type>(index), std::forward<indent_type>(indent));
+			serialize_impl<options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(std::forward<value_type>(value),
+				std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<indent_type>(indent));
 		}
 	};
 
@@ -70,16 +70,13 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_ALWAYS_INLINE std::string serializeJson(value_type&& object) noexcept {
+		JSONIFIER_ALWAYS_INLINE std::string_view serializeJson(value_type&& object) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			index  = 0;
 			indent = 0;
-			std::string newString{};
 			serialize<optionsFinal>::impl(std::forward<value_type>(object), stringBuffer, index, indent);
-			newString.resize(index);
-			std::memcpy(newString.data(), stringBuffer.data(), index);
-			return newString;
+			return std::string_view{ stringBuffer.data(), index };
 		}
 
 	  protected:

@@ -1,5 +1,5 @@
 /*
-	MIT License	
+	MIT License
 
 	Copyright (c) 2024 RealTimeChris
 
@@ -19,84 +19,196 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// Taken mostly from: https://github.com/codeinred/tuplet
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 3, 2023
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
-#include <cstdint>
 #include <utility>
+
+#if defined(TUPLET_NO_UNIQUE_ADDRESS) && !TUPLET_NO_UNIQUE_ADDRESS
+	#define TUPLET_NO_UNIQUE_ADDRESS
+#else
+	#if _MSVC_LANG >= 202002L && (!defined __clang__)
+
+		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+
+	#elif _MSC_VER
+		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define TUPLET_NO_UNIQUE_ADDRESS
+
+	#elif __cplusplus > 201703L && (__has_cpp_attribute(no_unique_address))
+
+		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define TUPLET_NO_UNIQUE_ADDRESS [[no_unique_address]]
+
+	#else
+		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define TUPLET_NO_UNIQUE_ADDRESS
+	#endif
+#endif
 
 namespace jsonifier_internal {
 
-	template<typename... types> struct tuple {
-		constexpr tuple() noexcept = default;
+	template<typename... value_type> struct type_list {};
+
+	template<typename... Ls, typename... Rs> constexpr auto operator+(type_list<Ls...>, type_list<Rs...>) {
+		return type_list<Ls..., Rs...>{};
+	}
+
+	template<typename tup, typename B> struct forward_as {
+		using type = B&&;
 	};
 
-	template<typename first_type, typename... types> struct tuple<first_type, types...> {
-		constexpr tuple() noexcept = default;
-		template<typename first_type_new, typename... types_new> constexpr tuple(first_type_new&& argOne, types_new&&... args)
-			: restVals{ std::forward<types_new>(args)... }, val{ std::forward<first_type_new>(argOne) } {};
-		tuple<types...> restVals{};
-		first_type val{};
+	template<typename tup, typename B> struct forward_as<tup&, B> {
+		using type = B&;
 	};
 
-	template<typename first_type> struct tuple<first_type> {
-		constexpr tuple() noexcept = default;
-		template<typename first_type_new> constexpr tuple(first_type_new&& argOne) : val{ std::forward<first_type_new>(argOne) } {
+	template<typename tup, typename B> struct forward_as<tup const&, B> {
+		using type = B const&;
+	};
+
+	template<typename tup, typename B> using forward_as_t = typename forward_as<tup, B>::type;
+
+	template<typename value_type> using identity_t = value_type;
+
+	template<typename first, typename...> using first_t = first;
+
+	template<typename value_type> using type_t = typename value_type::type;
+
+	template<size_t I> using tag = std::integral_constant<size_t, I>;
+
+	template<size_t I> constexpr tag<I> tag_v{};
+
+	template<size_t N> using tag_range = std::make_index_sequence<N>;
+
+	template<typename tup> using base_list_t = typename std::decay_t<tup>::base_list;
+
+	template<typename tuple>
+	concept base_list_tuple = requires() { typename std::decay_t<tuple>::base_list; };
+
+	template<typename value_type>
+	concept stateless = std::is_empty_v<std::decay_t<value_type>>;
+
+	template<typename value_type>
+	concept indexable = stateless<value_type> || requires(value_type t) { t[tag<0>()]; };
+
+	template<typename... Bases> struct type_map : Bases... {
+		using base_list = type_list<Bases...>;
+		using Bases::operator[]...;
+	};
+
+	template<size_t I, typename value_type> struct tuple_elem {
+		using type = value_type;
+
+		TUPLET_NO_UNIQUE_ADDRESS value_type value;
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) & {
+			return (value);
 		}
-		first_type val{};
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) const& {
+			return (value);
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) && {
+			return (static_cast<tuple_elem&&>(*this).value);
+		}
 	};
 
-	template<typename... types> tuple(types&&...) -> tuple<types...>;
-	template<typename... types, typename first_type> tuple(types&&..., first_type&&) -> tuple<types..., first_type>;
-	template<typename first_type> tuple(first_type&&) -> tuple<first_type>;
+	template<typename index_sequence, typename... value_type> struct get_tuple_base;
 
-	template<size_t index, typename tuple_type>
-		requires(index == 0)
-	JSONIFIER_ALWAYS_INLINE static constexpr auto& get(tuple_type&& t) {
-		return std::forward<tuple_type>(t).val;
+	template<size_t... I, typename... value_type> struct get_tuple_base<std::index_sequence<I...>, value_type...> {
+		using type = type_map<tuple_elem<I, value_type>...>;
 	};
 
-	template<size_t index, typename tuple_type> JSONIFIER_ALWAYS_INLINE static constexpr auto& get(tuple_type&& t) {
-		return get<index - 1>(std::forward<tuple_type>(t).restVals);
+	template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
+
+	template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
+		constexpr static size_t N = sizeof...(value_type);
+		using super				  = tuple_base_t<value_type...>;
+		using super::operator[];
+		using base_list = typename super::base_list;
 	};
 
-	template<typename... types> struct tuple_size;
-
-	template<typename... types> struct tuple_size<tuple<types...>> {
-		static constexpr size_t value = sizeof...(types);
+	template<> struct tuple<> : tuple_base_t<> {
+		constexpr static size_t N = 0;
+		using super				  = tuple_base_t<>;
+		using base_list			  = type_list<>;
 	};
 
-	template<typename... types> struct tuple_size<std::tuple<types...>> {
-		static constexpr size_t value = sizeof...(types);
-	};
+	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
 
-	template<typename value_type> constexpr size_t tuple_size_v = tuple_size<std::remove_const_t<value_type>>::value;
+	template<size_t I, indexable tup> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) get(tup&& tupleVal) {
+		return static_cast<tup&&>(tupleVal)[tag<I>()];
+	}
 
 	template<typename... types> constexpr auto makeTuple(types&&... args) {
-		return tuple<std::remove_cvref_t<types>...>{ std::forward<types>(args)... };
+		return tuple<std::remove_cvref_t<types>...>{ { { static_cast<types&&>(args) }... } };
 	}
 
-	template<typename... tuples> struct concat_tuples;
+	template<typename value_type, typename... Q> constexpr auto repeatType(type_list<Q...>) {
+		return type_list<first_t<value_type, Q>...>{};
+	}
 
-	template<typename... types1, typename... types2> struct concat_tuples<tuple<types1...>, tuple<types2...>> {
-		using type = tuple<types1..., types2...>;
+	template<typename... outer> constexpr auto getOuterBases(type_list<outer...>) {
+		return (repeatType<outer>(base_list_t<type_t<outer>>{}) + ...);
+	}
+
+	template<typename... inner> constexpr auto getInnerBases(type_list<inner...>) {
+		return (base_list_t<type_t<inner>>{} + ...);
+	}
+
+	template<typename value_type, typename... outer, typename... inner> constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
+		-> tuple<type_t<inner>...> {
+		return { { { static_cast<forward_as_t<type_t<outer>&&, inner>>(tupleVal.identity_t<outer>::value).value }... } };
+	}
+
+	template<base_list_tuple... value_type> constexpr auto tupleCat(value_type&&... ts) {
+		if constexpr (sizeof...(value_type) == 0) {
+			return tuple<>{};
+		} else {
+#if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
+	#if defined(__clang__)
+		#define TUPLET_CAT_BY_FORWARDING_TUPLE 0
+	#else
+		#define TUPLET_CAT_BY_FORWARDING_TUPLE 1
+	#endif
+#endif
+#if TUPLET_CAT_BY_FORWARDING_TUPLE
+			using big_tuple = tuple<value_type&&...>;
+#else
+			using big_tuple = tuple<std::decay_t<value_type>...>;
+#endif
+			using outer_bases	 = base_list_t<big_tuple>;
+			constexpr auto outer = getOuterBases(outer_bases{});
+			constexpr auto inner = getInnerBases(outer_bases{});
+			return tupleCatImpl(big_tuple{ { { static_cast<value_type&&>(ts) }... } }, outer, inner);
+		}
+	}
+
+	template<typename... value_type> struct tuple_size;
+
+	template<size_t I, typename... value_type> struct tuple_element;
+
+	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+
+	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+
+	template<size_t I, typename... value_type> struct tuple_element<I, tuple<value_type...>> {
+		using type = decltype(tuple<value_type...>::decl_elem(tag<I>()));
 	};
 
-	template<typename tuple1, typename tuple2, typename... rest> struct concat_tuples<tuple1, tuple2, rest...> {
-		using type = typename concat_tuples<typename concat_tuples<tuple1, tuple2>::type, rest...>::type;
+	template<typename... value_type> static constexpr auto tuple_size_v = tuple_size<std::remove_cvref_t<value_type>...>::value;
+}
+
+namespace std {
+	template<typename... value_type> struct tuple_size<jsonifier_internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+
+	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuple<value_type...>> {
+		using type = decltype(jsonifier_internal::tuple<value_type...>::decl_elem(jsonifier_internal::tag<I>()));
 	};
-
-	template<typename... tuples> using concat_tuples_t = typename concat_tuples<tuples...>::type;
-
-	template<typename tuple_type01, size_t... indices1, typename tuple_type02, size_t... indices2>
-	constexpr auto tupleCatImpl(tuple_type01&& tuple1, std::index_sequence<indices1...>, tuple_type02&& tuple2, std::index_sequence<indices2...>) noexcept {
-		return concat_tuples_t<std::remove_cvref_t<tuple_type01>, std::remove_cvref_t<tuple_type02>>{ get<indices1>(tuple1)..., get<indices2>(tuple2)... };
-	}
-
-	template<typename tuple_type01, typename tuple_type02> constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2) noexcept {
-		return tupleCatImpl(std::forward<tuple_type01>(tuple1), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type01>>>{}, std::forward<tuple_type02>(tuple2),
-			std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type02>>>{});
-	}
 }

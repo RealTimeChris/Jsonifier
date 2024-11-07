@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
 						++currentDistance;
-						if JSONIFIER_LIKELY ((currentDistance > 0)) {
+						if JSONIFIER_LIKELY (currentDistance > 0) {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 						break;
 					}
 					case ',': {
-						std::memcpy(&out[index], ",", 1);
+						out[index] = ',';
 						++index;
 						break;
 					}
@@ -83,7 +83,7 @@ namespace jsonifier_internal {
 						currentDistance = 0;
 						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
 						}
-						if JSONIFIER_LIKELY ((currentDistance > 0)) {
+						if JSONIFIER_LIKELY (currentDistance > 0) {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
@@ -95,17 +95,17 @@ namespace jsonifier_internal {
 						break;
 					}
 					case ':': {
-						std::memcpy(&out[index], ":", 1);
+						out[index] = ':';
 						++index;
 						break;
 					}
 					case '[': {
-						std::memcpy(&out[index], "[", 1);
+						out[index] = '[';
 						++index;
 						break;
 					}
 					case ']': {
-						std::memcpy(&out[index], "]", 1);
+						out[index] = ']';
 						++index;
 						break;
 					}
@@ -125,12 +125,12 @@ namespace jsonifier_internal {
 						break;
 					}
 					case '{': {
-						std::memcpy(&out[index], "{", 1);
+						out[index] = '{';
 						++index;
 						break;
 					}
 					case '}': {
-						std::memcpy(&out[index], "}", 1);
+						out[index] = '}';
 						++index;
 						break;
 					}

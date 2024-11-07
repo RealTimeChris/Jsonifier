@@ -33,7 +33,7 @@ The `serialize_impl` structure complements parsing by defining how JSON data sho
 ```cpp
 template<jsonifier::concepts::bool_t value_type_new, typename derived_type>
 struct serialize_impl<value_type_new, derived_type> {
-    template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uint64_type index_type>
+    template<jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, jsonifier::concepts::uns64_t index_type>
      void impl(value_type&& value, buffer_type&& buffer, index_type&& index) {
         // Custom serialization logic goes here
     }

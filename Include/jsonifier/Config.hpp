@@ -29,18 +29,12 @@
 
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
-	#define UINT64REFORVAL const uint64_t&
-	#define VALREFORVAL const value_type&
 #elif defined(_MSC_VER)
-	#define UINT64REFORVAL uint64_t
-	#define VALREFORVAL value_type
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 4371)
 	#pragma warning(disable : 4324)
 	#define JSONIFIER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
-	#define UINT64REFORVAL uint64_t
-	#define VALREFORVAL value_type
 	#define JSONIFIER_GNUCXX 1
 #endif
 
@@ -70,11 +64,15 @@
 #endif
 
 #if !defined(JSONIFIER_LIKELY)
-	#define JSONIFIER_LIKELY(...) __VA_ARGS__ [[likely]]
+	#define JSONIFIER_LIKELY(...) (__VA_ARGS__) [[likely]]
 #endif
 
 #if !defined(JSONIFIER_UNLIKELY)
-	#define JSONIFIER_UNLIKELY(...) __VA_ARGS__ [[unlikely]]
+	#define JSONIFIER_UNLIKELY(...) (__VA_ARGS__) [[unlikely]]
+#endif
+
+#if !defined(JSONIFIER_ELSE_UNLIKELY)
+	#define JSONIFIER_ELSE_UNLIKELY(...) __VA_ARGS__ [[unlikely]]
 #endif
 
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
@@ -95,36 +93,20 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_NO_INLINE __declspec(noinline)
-		#define JSONIFIER_FLATTEN [[msvc::flatten]] inline
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
-		#define JSONIFIER_NO_INLINE __attribute__((__noinline__))
-		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_FLATTEN inline __attribute__((flatten))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
-	#define JSONIFIER_NO_INLINE
-	#define JSONIFIER_FLATTEN
 	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
 	#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif

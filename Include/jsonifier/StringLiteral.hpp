@@ -206,159 +206,51 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<string_literal stringNew> struct string_literal_comparitor_old {
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			return true;
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 1)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			return valuesNew == *str;
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 2)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint16_t v;
-			std::memcpy(&v, str, newCount);
-			return v == valuesNew;
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 3)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		static constexpr uint32_t mask = 0xFFFFFF;
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint32_t v;
-			std::memcpy(&v, str, newCount);
-			return (v & mask) == (valuesNew & mask);
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 4)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint32_t v;
-			std::memcpy(&v, str, newCount);
-			return v == valuesNew;
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 5)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		static constexpr size_t mask = 0x000000FFFFFFFFFF;
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint64_t v;
-			std::memcpy(&v, str, newCount);
-			return (v & mask) == (valuesNew & mask);
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 6)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		static constexpr size_t mask = 0x0000FFFFFFFFFFFF;
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint64_t v;
-			std::memcpy(&v, str, newCount);
-			return (v & mask) == (valuesNew & mask);
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 7)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		static constexpr size_t mask = 0x00FFFFFFFFFFFFFF;
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint64_t v;
-			std::memcpy(&v, str, newCount);
-			return (v & mask) == (valuesNew & mask);
-		}
-	};
-
-	template<string_literal stringNew>
-		requires(stringNew.size() == 8)
-	struct string_literal_comparitor_old<stringNew> {
-		static constexpr auto stringLiteral{ stringNew };
-		static constexpr auto newCount{ stringLiteral.size() };
-		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			uint64_t v;
-			std::memcpy(&v, str, newCount);
-			return v == valuesNew;
-		}
-	};
-
 	template<string_literal stringNew>
 		requires(stringNew.size() > 0 && stringNew.size <= 8)
 	struct string_literal_comparitor<stringNew> {
+		static constexpr auto stringLiteral{ stringNew };
+		static constexpr auto valuesNew{ packValues<stringLiteral>() };
 		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			static constexpr auto stringLiteral{ stringNew };
 			static constexpr auto newCount{ stringLiteral.size() };
-			static constexpr auto valuesNew{ packValues<stringLiteral>() };
 			if constexpr (newCount == 8) {
-				size_t v;
-				std::memcpy(&v, str, newCount);
-				return v == valuesNew;
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint64_t l;
+				std::memcpy(&l, str, 8);
+				return l == valuesNew;
 			} else if constexpr (newCount == 7) {
-				static constexpr size_t mask = 0x00FFFFFFFFFFFFFF;
-				size_t v;
-				std::memcpy(&v, str, newCount);
-				return (v & mask) == (valuesNew & mask);
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint64_t l{};
+				std::memcpy(&l, str, 7);
+				return (valuesNew == l);
 			} else if constexpr (newCount == 6) {
-				static constexpr size_t mask = 0x0000FFFFFFFFFFFF;
-				size_t v;
-				std::memcpy(&v, str, newCount);
-				return (v & mask) == (valuesNew & mask);
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint64_t l{};
+				std::memcpy(&l, str, 6);
+				return (valuesNew == l);
 			} else if constexpr (newCount == 5) {
-				static constexpr size_t mask = 0x000000FFFFFFFFFF;
-				size_t v;
-				std::memcpy(&v, str, newCount);
-				return (v & mask) == (valuesNew & mask);
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint32_t l;
+				std::memcpy(&l, str, 4);
+				return (l == valuesNew) && (str[4] == stringLiteral[4]);
 			} else if constexpr (newCount == 4) {
-				uint32_t v;
-				std::memcpy(&v, str, newCount);
-				return v == valuesNew;
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint32_t l;
+				std::memcpy(&l, str, 4);
+				return l == valuesNew;
 			} else if constexpr (newCount == 3) {
-				static constexpr uint32_t mask = 0xFFFFFF;
-				uint32_t v;
-				std::memcpy(&v, str, newCount);
-				return (v & mask) == (valuesNew & mask);
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint16_t l;
+				std::memcpy(&l, str, 2);
+				return (l == valuesNew) && (str[2] == stringLiteral[2]);
 			} else if constexpr (newCount == 2) {
-				uint16_t v;
-				std::memcpy(&v, str, newCount);
-				return v == valuesNew;
+				static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				uint16_t l;
+				std::memcpy(&l, str, 2);
+				return l == valuesNew;
 			} else if constexpr (newCount == 1) {
-				return valuesNew == *str;
-			} else {
+				return *str == stringLiteral[0];
+			} else if constexpr (newCount == 0) {
 				return true;
 			}
 		}
@@ -390,7 +282,7 @@ namespace jsonifier_internal {
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};
- 
+
 #endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
@@ -451,7 +343,7 @@ namespace jsonifier_internal {
 	};
 
 #endif
-	
+
 	template<string_literal stringNew>
 		requires(stringNew.size() > bytesPerStep)
 	struct string_literal_comparitor<stringNew> {

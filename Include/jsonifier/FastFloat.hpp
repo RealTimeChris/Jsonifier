@@ -184,10 +184,10 @@ namespace fast_float {
 	#elif (defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM) || defined(__ppc__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__))
 		#define FASTFLOAT_32BIT 1
 	#else
-	// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
-	// We can never tell the register width, but the SIZE_MAX is a good
-	// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
-	// portability.
+// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
+// We can never tell the register width, but the SIZE_MAX is a good
+// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
+// portability.
 		#if SIZE_MAX == 0xffff
 			#error Unknown platform (16-bit, unsupported)
 		#elif SIZE_MAX == 0xffffffff
@@ -227,12 +227,12 @@ namespace fast_float {
 		#endif
 		#
 		#ifndef __BYTE_ORDER__
-// safe choice
+		// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
 		#ifndef __ORDER_LITTLE_ENDIAN__
-// safe choice
+		// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
@@ -256,7 +256,7 @@ namespace fast_float {
 	#endif
 
 	#if defined(__GNUC__)
-// disable -Wcast-align=strict (GCC only)
+	// disable -Wcast-align=strict (GCC only)
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 	#else
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS
@@ -301,7 +301,7 @@ namespace fast_float {
 	#endif
 	}
 
-	template<typename T> JSONIFIER_ALWAYS_INLINE constexpr bool is_supported_float_type() {
+	template<typename T> JSONIFIER_ALWAYS_INLINE constexpr bool is_supported_float_t() {
 		return std::is_same<T, float>::value || std::is_same<T, double>::value
 	#if defined(__STDCPP_FLOAT32_T__)
 			|| std::is_same<T, std::float32_t>::value
@@ -312,7 +312,7 @@ namespace fast_float {
 			;
 	}
 
-	template<typename UC> JSONIFIER_ALWAYS_INLINE constexpr bool is_supported_char_type() {
+	template<typename UC> JSONIFIER_ALWAYS_INLINE constexpr bool is_supported_char_t() {
 		return std::is_same<UC, char>::value || std::is_same<UC, wchar_t>::value || std::is_same<UC, char16_t>::value || std::is_same<UC, char32_t>::value;
 	}
 
@@ -449,7 +449,7 @@ namespace fast_float {
 	};
 
 	// Bias so we can get the real exponent with an invalid adjusted_mantissa.
-	constexpr static int32_t invalid_am_bias = -0x8000;
+	static constexpr int32_t invalid_am_bias = -0x8000;
 
 	// used for binary_format_lookup_tables<T>::max_mantissa
 	constexpr uint64_t constant_55555 = 5 * 5 * 5 * 5 * 5;
@@ -816,7 +816,7 @@ namespace fast_float {
  * `fast_float::chars_format::general` which allows both `fixed` and
  * `scientific`.
  */
-	template<typename T, typename UC = char, typename = FASTFLOAT_ENABLE_IF(is_supported_float_type<T>())>
+	template<typename T, typename UC = char, typename = FASTFLOAT_ENABLE_IF(is_supported_float_t<T>())>
 	constexpr from_chars_result_t<UC> from_chars(UC const* first, UC const* last, T& value, chars_format fmt = chars_format::general) noexcept;
 
 	/**
@@ -826,7 +826,7 @@ namespace fast_float {
 	/**
  * from_chars for integer types.
  */
-	template<typename T, typename UC = char, typename = FASTFLOAT_ENABLE_IF(!is_supported_float_type<T>())>
+	template<typename T, typename UC = char, typename = FASTFLOAT_ENABLE_IF(!is_supported_float_t<T>())>
 	constexpr from_chars_result_t<UC> from_chars(UC const* first, UC const* last, T& value, int32_t base = 10) noexcept;
 
 }// namespace fast_float
@@ -1396,11 +1396,11 @@ namespace fast_float {
  * of 5 greater than 308.
  */
 	template<typename unused = void> struct powers_template {
-		constexpr static int32_t smallest_power_of_five = binary_format<double>::smallest_power_of_ten();
-		constexpr static int32_t largest_power_of_five	= binary_format<double>::largest_power_of_ten();
-		constexpr static int32_t number_of_entries		= 2 * (largest_power_of_five - smallest_power_of_five + 1);
+		static constexpr int32_t smallest_power_of_five = binary_format<double>::smallest_power_of_ten();
+		static constexpr int32_t largest_power_of_five	= binary_format<double>::largest_power_of_ten();
+		static constexpr int32_t number_of_entries		= 2 * (largest_power_of_five - smallest_power_of_five + 1);
 		// Powers of five from 5^-342 all the way to 5^308 rounded toward one.
-		constexpr static uint64_t power_of_five_128[number_of_entries] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
+		static constexpr uint64_t power_of_five_128[number_of_entries] = { 0xeef453d6923bd65a, 0x113faa2906a13b3f, 0x9558b4661b6565f8, 0x4ac7ca59a424c507, 0xbaaee17fa23ebf76,
 			0x5d79bcf00d2df649, 0xe95a99df8ace6f53, 0xf4d82c2c107973dc, 0x91d8a02bb6c10594, 0x79071b9b8a4be869, 0xb64ec836a47146f9, 0x9748e2826cdee284, 0xe3e27a444d8d98b7,
 			0xfd1b1b2308169b25, 0x8e6d8c6ab0787f72, 0xfe30f0f5e50e20f7, 0xb208ef855c969f4f, 0xbdbd2d335e51a935, 0xde8b2b66b3bc4723, 0xad2c788035e61382, 0x8b16fb203055ac76,
 			0x4c3bcb5021afcc31, 0xaddcb9e83c6b1793, 0xdf4abe242a1bbf3d, 0xd953e8624b85dd78, 0xd71d6dad34a2af0d, 0x87d4713d6f33aa6b, 0x8672648c40e5ad68, 0xa9c98d8ccb009506,
@@ -2115,9 +2115,9 @@ namespace fast_float {
 			1220703125UL, 6103515625UL, 30517578125UL, 152587890625UL, 762939453125UL, 3814697265625UL, 19073486328125UL, 95367431640625UL, 476837158203125UL, 2384185791015625UL,
 			11920928955078125UL, 59604644775390625UL, 298023223876953125UL, 1490116119384765625UL, 7450580596923828125UL };
 	#ifdef FASTFLOAT_64BIT_LIMB
-		constexpr static limb large_power_of_5[] = { 1414648277510068013UL, 9180637584431281687UL, 4539964771860779200UL, 10482974169319127550UL, 198276706040285095UL };
+		static constexpr limb large_power_of_5[] = { 1414648277510068013UL, 9180637584431281687UL, 4539964771860779200UL, 10482974169319127550UL, 198276706040285095UL };
 	#else
-		constexpr static limb large_power_of_5[] = { 4279965485U, 329373468U, 4020270615U, 2137533757U, 4287402176U, 1057042919U, 1071430142U, 2440757623U, 381945767U, 46164893U };
+		static constexpr limb large_power_of_5[] = { 4279965485U, 329373468U, 4020270615U, 2137533757U, 4287402176U, 1057042919U, 1071430142U, 2440757623U, 381945767U, 46164893U };
 	#endif
 	};
 
@@ -2357,7 +2357,7 @@ namespace fast_float {
 namespace fast_float {
 
 	// 1e0 to 1e19
-	constexpr static uint64_t powers_of_ten_uint64[] = { 1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL, 100000000UL, 1000000000UL, 10000000000UL,
+	static constexpr uint64_t powers_of_ten_uint64[] = { 1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL, 100000000UL, 1000000000UL, 10000000000UL,
 		100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL,
 		10000000000000000000UL };
 
@@ -2866,14 +2866,14 @@ namespace fast_float {
 	}// namespace detail
 
 	template<typename T> struct from_chars_caller {
-		template<typename UC> constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept {
+		template<typename UC> static constexpr from_chars_result_t<UC> call(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept {
 			return from_chars_advanced(first, last, value, options);
 		}
 	};
 
 	#if defined(__STDCPP_FLOAT32_T__) && __STDCPP_FLOAT32_T__ == 1
 	template<> struct from_chars_caller<std::float32_t> {
-		template<typename UC> constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float32_t& value, parse_options_t<UC> options) noexcept {
+		template<typename UC> static constexpr from_chars_result_t<UC> call(UC const* first, UC const* last, std::float32_t& value, parse_options_t<UC> options) noexcept {
 			// if std::float32_t is defined, and we are in C++23 mode; macro set for
 			// float32; set value to float due to equivalence between float and
 			// float32_t
@@ -2887,7 +2887,7 @@ namespace fast_float {
 
 	#if defined(__STDCPP_FLOAT64_T__) && __STDCPP_FLOAT64_T__ == 1
 	template<> struct from_chars_caller<std::float64_t> {
-		template<typename UC> constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float64_t& value, parse_options_t<UC> options) noexcept {
+		template<typename UC> static constexpr from_chars_result_t<UC> call(UC const* first, UC const* last, std::float64_t& value, parse_options_t<UC> options) noexcept {
 			// if std::float64_t is defined, and we are in C++23 mode; macro set for
 			// float64; set value as double due to equivalence between double and
 			// float64_t
@@ -2910,8 +2910,8 @@ namespace fast_float {
  * parsing options or other parsing custom function implemented by user.
  */
 	template<typename T, typename UC> JSONIFIER_ALWAYS_INLINE constexpr from_chars_result_t<UC> from_chars_advanced(parsed_number_string_t<UC>& pns, T& value) noexcept {
-		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
-		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+		static_assert(is_supported_float_t<T>(), "only some floating-point types are supported");
+		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		from_chars_result_t<UC> answer;
 
@@ -2987,8 +2987,8 @@ namespace fast_float {
 
 	template<typename T, typename UC>
 	JSONIFIER_ALWAYS_INLINE constexpr from_chars_result_t<UC> from_chars_advanced(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept {
-		static_assert(is_supported_float_type<T>(), "only some floating-point types are supported");
-		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+		static_assert(is_supported_float_t<T>(), "only some floating-point types are supported");
+		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		from_chars_result_t<UC> answer;
 	#ifdef FASTFLOAT_SKIP_WHITE_SPACE// disabled by default
@@ -3017,7 +3017,7 @@ namespace fast_float {
 	}
 
 	template<typename T, typename UC, typename> constexpr from_chars_result_t<UC> from_chars(UC const* first, UC const* last, T& value, int32_t base) noexcept {
-		static_assert(is_supported_char_type<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
 
 		from_chars_result_t<UC> answer;
 	#ifdef FASTFLOAT_SKIP_WHITE_SPACE// disabled by default

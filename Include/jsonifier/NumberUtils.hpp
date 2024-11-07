@@ -44,11 +44,11 @@ namespace jsonifier {
 			auto newPtr = jsonifier_internal::toChars<value_type01>(returnstring.data(), value);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		} else {
-			if constexpr (jsonifier::concepts::unsigned_type<value_type01>) {
+			if constexpr (jsonifier::concepts::unsigned_t<value_type01>) {
 				uint64_t newValue{ static_cast<uint64_t>(value) };
 				auto newPtr = jsonifier_internal::toChars<uint64_t>(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
-			} else if constexpr (jsonifier::concepts::signed_type<value_type01>) {
+			} else if constexpr (jsonifier::concepts::signed_t<value_type01>) {
 				int64_t newValue{ static_cast<int64_t>(value) };
 				auto newPtr = jsonifier_internal::toChars<int64_t>(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
@@ -63,7 +63,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto currentIter = static_cast<const char*>(string.data());
 			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
 			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
@@ -73,7 +73,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE double strToDouble<16>(const jsonifier::string& string) noexcept {
 		double newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtod(string.data(), nullptr);
 		}
 		return newValue;
@@ -81,7 +81,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			const char* newPtr = string.data();
 			jsonifier_internal::integer_parser<int64_t>::parseInt(newValue, newPtr);
 		}
@@ -90,7 +90,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtoll(string.data(), nullptr, 16);
 		}
 		return newValue;
@@ -98,7 +98,7 @@ namespace jsonifier {
 
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			const char* newPtr = string.data();
 			jsonifier_internal::integer_parser<uint64_t>::parseInt(newValue, newPtr);
 		}
@@ -107,7 +107,7 @@ namespace jsonifier {
 
 	template<> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
-		if JSONIFIER_LIKELY ((string.size() > 0)) {
+		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtoull(string.data(), nullptr, 16);
 		}
 		return newValue;
@@ -120,15 +120,15 @@ namespace jsonifier_internal {
 		using value_type = std::remove_cvref_t<value_type_new>;
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
-			if constexpr (jsonifier::concepts::unsigned_type<value_type>) {
-				if constexpr (jsonifier::concepts::uint64_type<value_type>) {
+			if constexpr (jsonifier::concepts::unsigned_t<value_type>) {
+				if constexpr (jsonifier::concepts::uns64_t<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter);
 				} else {
 					uint64_t i;
 					return integer_parser<uint64_t>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
-				if constexpr (jsonifier::concepts::int64_type<value_type>) {
+				if constexpr (jsonifier::concepts::sig64_t<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter);
 				} else {
 					int64_t i;

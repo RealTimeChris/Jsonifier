@@ -44,15 +44,15 @@ namespace simd_internal {
 		return mm128LoadUSi128(static_cast<const __m128x*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 8)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi64x(static_cast<int64_t>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_type>
-		requires(sizeof(std::remove_cvref_t<char_type>) == 1)
-	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_type str) noexcept {
+	template<simd_int_128_type simd_int_type_new, typename char_t>
+		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+	JSONIFIER_ALWAYS_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi8(static_cast<char>(str));
 	}
 
