@@ -35,17 +35,17 @@ namespace jsonifier_internal {
 				auto newerTuple = tupleCat(newTuple, makeTuple(newerPair));
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = tupleCat(newTuple, makeTuple(newerPair));
 				return newerTuple;
 			}
 		} else {
 			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = makeTuple(newerPair);
 				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
 			} else {
-				auto newerPair = makeDataMemberAuto(arg01, arg02);
+				auto newerPair	= makeDataMemberAuto(arg01, arg02);
 				auto newerTuple = makeTuple(newerPair);
 				return newerTuple;
 			}
@@ -91,7 +91,7 @@ namespace jsonifier_internal {
 	template<auto... values>
 		requires(sizeof...(values) > 0)
 	constexpr auto createValueTemplates() noexcept {
-		auto newTuple	   = makeTuple(values...);
+		auto newTuple			   = makeTuple(values...);
 		constexpr auto memberNames = jsonifier_internal::getNames<values...>();
 		return generateInterleavedTuple(newTuple, memberNames);
 	}

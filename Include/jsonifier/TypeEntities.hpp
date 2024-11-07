@@ -102,10 +102,10 @@ namespace jsonifier_internal {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = std::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY ((variantNew.index() == currentIndex)) {
-				function(get<currentIndex>(variantNew), std::forward<arg_types>(args)...);
+				function(std::get<currentIndex>(std::forward<variant_type>(variantNew)), std::forward<arg_types>(args)...);
 				return;
 			}
-			visit<function, currentIndex + 1>(variantNew, std::forward<arg_types>(args)...);
+			visit<function, currentIndex + 1>(std::forward<variant_type>(variantNew), std::forward<arg_types>(args)...);
 		}
 	}
 
@@ -269,6 +269,10 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept string_t = has_substr<value_type> && has_data<value_type> && has_size<value_type> && vector_subscriptable<value_type> && has_find<value_type>;
+
+		template<typename value_type>
+		concept string_view_t =
+			has_substr<value_type> && has_data<value_type> && has_size<value_type> && vector_subscriptable<value_type> && has_find<value_type> && !has_resize<value_type>;
 
 		template<typename value_type>
 		concept map_t = map_subscriptable<value_type> && has_range<value_type> && has_size<value_type> && has_find<value_type> && has_empty<value_type>;

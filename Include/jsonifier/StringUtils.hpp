@@ -497,8 +497,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			{
 				using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 				using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -707,8 +706,7 @@ namespace jsonifier_internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			{
 				using integer_type					   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::integer_type;
 				using simd_type						   = typename get_type_at_index<simd_internal::avx_integer_list, 1>::type::type;
@@ -863,7 +861,9 @@ namespace jsonifier_internal {
 				if JSONIFIER_LIKELY ((newPtr)) {
 					const auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
 					if (value.size() != newSize) {
-						value.resize(newSize);
+						if constexpr (jsonifier::concepts::has_resize<value_type>) {
+							value.resize(newSize);
+						}
 					}
 					std::memcpy(value.data(), stringBuffer.data(), newSize);
 					++context.iter;
@@ -887,23 +887,6 @@ namespace jsonifier_internal {
 			auto newLength = static_cast<size_t>(context.endIter - context.iter);
 			skipStringImpl(context.iter, newLength);
 			++context.iter;
-		}
-
-		template<typename iterator>
-			requires(!std::same_as<context_type, iterator>)
-		JSONIFIER_ALWAYS_INLINE static void skipString(iterator&& iter, iterator&& endIter) noexcept {
-			++iter;
-			auto newLength = static_cast<size_t>(endIter - iter);
-			auto newIter   = static_cast<const char*&>(iter);
-			skipStringImpl(newIter, newLength);
-			iter = newIter;
-			++iter;
-		}
-
-		template<typename iterator01> JSONIFIER_ALWAYS_INLINE static void skipWs(iterator01& iter) noexcept {
-			while (whitespaceTable[static_cast<uint8_t>(*iter)]) {
-				++iter;
-			}
 		}
 
 		JSONIFIER_ALWAYS_INLINE static void skipKey(context_type& context) noexcept {
@@ -965,184 +948,6 @@ namespace jsonifier_internal {
 			if (*context.iter == ']') {
 				++context.iter;
 				return;
-			}
-		}
-
-		template<typename iterator>
-			requires(!std::same_as<context_type, iterator>)
-		JSONIFIER_INLINE static void skipObject(iterator&& iter, iterator&& endIter) noexcept {
-			++iter;
-			if constexpr (!options.minified) {
-				if (!skipWs(iter, endIter)) {
-					return;
-				}
-			}
-			if (*iter == '}') {
-				++iter;
-				return;
-			}
-			while (true) {
-				if (*iter != '"') {
-					return;
-				}
-				skipString(iter, endIter);
-				skipToNextValue(iter, endIter);
-				if (*iter != ',') {
-					break;
-				}
-				++iter;
-				if constexpr (!options.minified) {
-					if (!skipWs(iter, endIter)) {
-						return;
-					}
-				}
-			}
-			if (*iter == '}') {
-				++iter;
-				return;
-			}
-		}
-
-		template<typename iterator>
-			requires(!std::same_as<context_type, iterator>)
-		JSONIFIER_INLINE static void skipArray(iterator&& iter, iterator&& endIter) noexcept {
-			++iter;
-			if constexpr (!options.minified) {
-				if (!skipWs(iter, endIter)) {
-					return;
-				}
-			}
-			if (*iter == ']') {
-				++iter;
-				return;
-			}
-			while (true) {
-				skipToNextValue(iter, endIter);
-				if (*iter != ',') {
-					break;
-				}
-				++iter;
-				if constexpr (!options.minified) {
-					if (!skipWs(iter, endIter)) {
-						return;
-					}
-				}
-			}
-			if (*iter == ']') {
-				++iter;
-				return;
-			}
-		}
-
-		template<typename iterator>
-			requires(!std::same_as<context_type, iterator>)
-		JSONIFIER_INLINE static void skipToNextValue(iterator&& iter, iterator&& endIter) noexcept {
-			if constexpr (!options.minified) {
-				if (!skipWs(iter, endIter)) {
-					return;
-				}
-			}
-			switch (*iter) {
-				case '{': {
-					skipObject(iter, endIter);
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					break;
-				}
-				case '[': {
-					skipArray(iter, endIter);
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					break;
-				}
-				case '"': {
-					skipString(iter, endIter);
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					if (*iter == ':') {
-						++iter;
-						if constexpr (!options.minified) {
-							if (!skipWs(iter, endIter)) {
-								return;
-							}
-						}
-						skipToNextValue(iter, endIter);
-					}
-					break;
-				}
-				case ':': {
-					++iter;
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					skipToNextValue(iter, endIter);
-					break;
-				}
-				case 'n': {
-					iter += 4;
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					break;
-				}
-				case 'f': {
-					iter += 5;
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					break;
-				}
-				case 't': {
-					iter += 4;
-					if constexpr (!options.minified) {
-						if (!skipWs(iter, endIter)) {
-							return;
-						}
-					}
-					break;
-				}
-				case '0':
-					[[fallthrough]];
-				case '1':
-					[[fallthrough]];
-				case '2':
-					[[fallthrough]];
-				case '3':
-					[[fallthrough]];
-				case '4':
-					[[fallthrough]];
-				case '5':
-					[[fallthrough]];
-				case '6':
-					[[fallthrough]];
-				case '7':
-					[[fallthrough]];
-				case '8':
-					[[fallthrough]];
-				case '9':
-					[[fallthrough]];
-				case '-': {
-					skipNumber(iter, endIter);
-					break;
-				}
-				default: {
-					break;
-				}
 			}
 		}
 
@@ -1238,88 +1043,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<char startChar, char endChar, typename iterator>
-			requires(!std::same_as<context_type, iterator>)
-		JSONIFIER_ALWAYS_INLINE static size_t countValueElements(iterator iter, iterator endIter) noexcept {
-			auto newValue = *iter;
-			if JSONIFIER_UNLIKELY ((newValue == ']' || newValue == '}')) {
-				return 0;
-			}
-			size_t currentCount{ 1 };
-			while (iter != endIter) {
-				switch (*iter) {
-					[[unlikely]] case ',': {
-						++currentCount;
-						++iter;
-						break;
-					}
-					[[unlikely]] case '{':
-					[[unlikely]] case '[': {
-						skipToNextValue(iter, endIter);
-						break;
-					}
-					[[unlikely]] case endChar: { return currentCount; }
-					[[likely]] case '"': {
-						skipString(iter, endIter);
-						break;
-					}
-					[[unlikely]] case '\\': {
-						++iter;
-						++iter;
-						break;
-					}
-					[[unlikely]] case 't': {
-						iter += 4;
-						break;
-					}
-					[[unlikely]] case 'f': {
-						iter += 5;
-						break;
-					}
-					[[unlikely]] case 'n': {
-						iter += 4;
-						break;
-					}
-					[[unlikely]] case ':': {
-						++iter;
-						break;
-					}
-					[[unlikely]] case '0':
-					[[unlikely]] case '1':
-					[[unlikely]] case '2':
-					[[unlikely]] case '3':
-					[[unlikely]] case '4':
-					[[unlikely]] case '5':
-					[[unlikely]] case '6':
-					[[unlikely]] case '7':
-					[[unlikely]] case '8':
-					[[unlikely]] case '9':
-					[[unlikely]] case '-': {
-						skipNumber(iter, endIter);
-						break;
-					}
-						[[likely]] default : {
-							++iter;
-							break;
-						}
-				}
-			}
-			return currentCount;
-		}
-
-		template<typename iterator01, typename iterator02> JSONIFIER_ALWAYS_INLINE static bool skipWs(iterator01& iter, iterator02 end) noexcept {
-			while (iter < end && whitespaceTable[static_cast<uint8_t>(*iter)]) {
-				++iter;
-			}
-			if (iter >= end) {
-				return false;
-			}
-			return true;
-		}
-
-		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipNumber(iterator&& iter, iterator&& endIter) noexcept {
-			while (numericTable[uint8_t(*iter)]) {
-				++iter;
+		template<typename iterator> JSONIFIER_ALWAYS_INLINE static void skipWs(iterator& context) noexcept {
+			while (whitespaceTable[uint8_t(*context)]) {
+				++context;
 			}
 		}
 

@@ -37,6 +37,12 @@ namespace std {
 
 namespace jsonifier {
 
+	struct unset {
+		JSONIFIER_ALWAYS_INLINE bool operator==(const unset&) const {
+			return true;
+		}
+	};
+
 	enum class json_type : uint8_t {
 		Unset  = 0,
 		Object = '{',
@@ -55,7 +61,7 @@ namespace jsonifier_internal {
 	using object_type = std::unordered_map<jsonifier::string, jsonifier::raw_json_data>;
 	using string_type = jsonifier::string;
 	using array_type  = jsonifier::vector<jsonifier::raw_json_data>;
-	using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t>;
+	using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t, jsonifier::unset>;
 
 	value_type constructValueFromRawJsonData(const jsonifier::string& newData) noexcept;
 
@@ -93,38 +99,24 @@ namespace jsonifier {
 
 	class raw_json_data {
 	  public:
-		template<typename value_type> friend value_type constructValueFromRawJsonData(const jsonifier::string& newData);
-		using object_type = std::unordered_map<jsonifier::string, raw_json_data>;
+		template<typename value_type> friend value_type constructValueFromRawJsonData(const string& newData);
+		using object_type = std::unordered_map<string, raw_json_data>;
 		using string_type = string;
-		using array_type  = jsonifier::vector<raw_json_data>;
-		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t>;
+		using array_type  = vector<raw_json_data>;
+		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t, unset>;
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data() = default;
+		JSONIFIER_ALWAYS_INLINE raw_json_data() {
+			value = unset{};
+		};
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const jsonifier::string& valueNew) noexcept {
-			jsonData = valueNew;
+		JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const string& valueNew) noexcept {
 			value	 = constructValueFromRawJsonData(valueNew);
+			jsonData = valueNew;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data(const jsonifier::string& valueNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE raw_json_data(const string& valueNew) noexcept {
 			*this = valueNew;
-		}
-
-		JSONIFIER_ALWAYS_INLINE const raw_json_data& operator[](size_t index) const {
-			return operator const array_type&()[index];
-		}
-
-		JSONIFIER_ALWAYS_INLINE const raw_json_data& operator[](jsonifier::string_view key) const {
-			return operator const object_type&().at(key);
-		}
-
-		JSONIFIER_ALWAYS_INLINE const char* data() const noexcept {
-			return jsonData.data();
-		}
-
-		JSONIFIER_ALWAYS_INLINE char* data() noexcept {
-			return jsonData.data();
 		}
 
 		JSONIFIER_ALWAYS_INLINE json_type getType() const noexcept {
@@ -145,63 +137,52 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const object_type&() const noexcept {
-			if (std::holds_alternative<object_type>(value)) {
-				return std::get<object_type>(value);
-			} else {
-				return {};
-			}
+		template<class value_type> [[nodiscard]] value_type& get() {
+			return std::get<value_type>(value);
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const array_type&() const noexcept {
-			if (std::holds_alternative<array_type>(value)) {
-				return std::get<array_type>(value);
-			} else {
-				return {};
-			}
+		template<class value_type> [[nodiscard]] const value_type& get() const {
+			return std::get<value_type>(value);
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const string&() const noexcept {
-			if (std::holds_alternative<string_type>(value)) {
-				return std::get<string_type>(value);
-			} else {
-				return {};
-			}
+		template<std::integral index_type> raw_json_data& operator[](index_type&& index) {
+			return std::get<array_type>(value)[index];
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const double&() const noexcept {
-			if (std::holds_alternative<double>(value)) {
-				return std::get<double>(value);
-			} else {
-				return {};
-			}
+		template<std::integral index_type> const raw_json_data& operator[](index_type&& index) const {
+			return std::get<array_type>(value)[index];
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const size_t&() const noexcept {
-			if (std::holds_alternative<double>(value)) {
-				return static_cast<size_t>(std::get<double>(value));
-			} else {
-				return {};
+		template<std::convertible_to<std::string_view> key_type> raw_json_data& operator[](key_type&& key) {
+			if (std::holds_alternative<std::nullptr_t>(value)) {
+				value = object_type{};
 			}
+			auto& object = std::get<object_type>(value);
+			auto iter	 = object.find(static_cast<string_type>(key));
+			if (iter == object.end()) {
+				iter = object.insert(std::make_pair(static_cast<string_type>(key), raw_json_data{})).first;
+			}
+			return iter->second;
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const int64_t&() const noexcept {
-			if (std::holds_alternative<double>(value)) {
-				return static_cast<int64_t>(std::get<double>(value));
-			} else {
-				return {};
+		template<std::convertible_to<std::string_view> key_type> const raw_json_data& operator[](key_type&& key) const {
+			auto& object = std::get<object_type>(value);
+			auto iter	 = object.find(static_cast<string_type>(key));
+			if (iter == object.end()) {
 			}
+			return iter->second;
 		}
 
-		JSONIFIER_ALWAYS_INLINE explicit operator const bool&() const noexcept {
-			if (std::holds_alternative<bool>(value)) {
-				return std::get<bool>(value);
-			} else {
-				return {};
+		template<std::convertible_to<std::string_view> key_type> [[nodiscard]] bool contains(key_type&& key) const {
+			if (!std::holds_alternative<object_type>(value)) {
+				return false;
 			}
+			auto& object = std::get<object_type>(value);
+			auto iter	 = object.find(static_cast<string_type>(key));
+			return iter != object.end();
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::string_view rawJson() const noexcept {
+		JSONIFIER_ALWAYS_INLINE string_view rawJson() const noexcept {
 			return jsonData;
 		}
 
@@ -260,6 +241,9 @@ namespace jsonifier_internal {
 				case 'f': {
 					return false;
 				}
+				case 'n': {
+					return std::nullptr_t{};
+				}
 				case '0':
 					[[fallthrough]];
 				case '1':
@@ -284,11 +268,11 @@ namespace jsonifier_internal {
 					return strToDouble(jsonData);
 				}
 				default: {
-					return std::nullptr_t{};
+					return jsonifier::unset{};
 				}
 			}
 		} else {
-			return std::nullptr_t{};
+			return jsonifier::unset{};
 		}
 	}
 }

@@ -364,30 +364,34 @@ namespace jsonifier_internal {
 		}
 	};
 
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+
 	template<string_literal stringNew>
-		requires(stringNew.size() > 8 && stringNew.size <= 16)
+		requires(stringNew.size() > 32 && stringNew.size <= 64)
 	struct string_literal_comparitor<stringNew> {
 		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
-			jsonifier_simd_int_128 data1{};
+			jsonifier_simd_int_512 data1{};
 			std::memcpy(&data1, str, newLength);
-			jsonifier_simd_int_128 data2{};
+			jsonifier_simd_int_512 data2{};
 			std::memcpy(&data2, &valuesNew, newLength);
 
 			static constexpr auto maskBytes = []() constexpr {
-				alignas(16) array<uint8_t, 16> maskBytes{};
+				alignas(64) array<uint8_t, 64> maskBytes{};
 				for (size_t i = 0; i < newLength; ++i) {
 					maskBytes[i] = 0xFF;
 				}
 				return maskBytes;
 			}();
 
-			jsonifier_simd_int_128 mask = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytes.data());
+			jsonifier_simd_int_512 mask = simd_internal::gatherValues<jsonifier_simd_int_512>(maskBytes.data());
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};
+ 
+#endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
@@ -416,46 +420,57 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<string_literal stringNew>
-		requires(stringNew.size() > 32)
-	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			if constexpr (stringNew.size() > 32) {
-				static constexpr auto string{ offSetIntoLiteral<stringNew, 32>() };
-				if (!string_literal_comparitor<string>::impl(str)) {
-					return false;
-				} else {
-					str += string.size();
-					static constexpr auto stringNewer{ offSetNewLiteral<stringNew, 32>() };
-					return string_literal_comparitor<stringNewer>::impl(str);
-				}
-			} else {
-				static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringNew.size()>() };
-				return string_literal_comparitor<stringNewer>::impl(str);
-			}
-		}
-	};
-#else
-	template<string_literal stringNew>
-		requires(stringNew.size() > 16)
-	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
-			if constexpr (stringNew.size() > 16) {
-				static constexpr auto string{ offSetIntoLiteral<stringNew, 16>() };
-				if (!string_literal_comparitor<string>::impl(str)) {
-					return false;
-				} else {
-					str += string.size();
-					static constexpr auto stringNewer{ offSetNewLiteral<stringNew, 16>() };
-					return string_literal_comparitor<stringNewer>::impl(str);
-				}
-			} else {
-				static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringNew.size()>() };
-				return string_literal_comparitor<stringNewer>::impl(str);
-			}
-		}
-	};
 #endif
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
+	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	template<string_literal stringNew>
+		requires(stringNew.size() > 8 && stringNew.size <= 16)
+	struct string_literal_comparitor<stringNew> {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			static constexpr auto newLiteral{ stringNew };
+			static constexpr auto newLength{ stringNew.size() };
+			static constexpr auto valuesNew{ packValues<newLiteral>() };
+			jsonifier_simd_int_128 data1{};
+			std::memcpy(&data1, str, newLength);
+			jsonifier_simd_int_128 data2{};
+			std::memcpy(&data2, &valuesNew, newLength);
+
+			static constexpr auto maskBytes = []() constexpr {
+				alignas(16) array<uint8_t, 16> maskBytes{};
+				for (size_t i = 0; i < newLength; ++i) {
+					maskBytes[i] = 0xFF;
+				}
+				return maskBytes;
+			}();
+
+			jsonifier_simd_int_128 mask = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytes.data());
+			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
+		}
+	};
+
+#endif
+	
+	template<string_literal stringNew>
+		requires(stringNew.size() > bytesPerStep)
+	struct string_literal_comparitor<stringNew> {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
+			if constexpr (stringNew.size() > bytesPerStep) {
+				static constexpr auto string{ offSetIntoLiteral<stringNew, bytesPerStep>() };
+				if (!string_literal_comparitor<string>::impl(str)) {
+					return false;
+				} else {
+					str += string.size();
+					static constexpr auto stringNewer{ offSetNewLiteral<stringNew, bytesPerStep>() };
+					return string_literal_comparitor<stringNewer>::impl(str);
+				}
+			} else {
+				static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringNew.size()>() };
+				return string_literal_comparitor<stringNewer>::impl(str);
+			}
+		}
+	};
 
 	template<size_t size, typename value_type_new> JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
 		os << input.view();

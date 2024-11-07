@@ -130,7 +130,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 		auto writtenSize = newerBuffer.size();
 		r.readResult	 = result<result_type::read>{ "teal", readSize, readResult };
 		r.writeResult	 = result<result_type::write>{ "steelblue", writtenSize, writeResult };
-		bnch_swt::file_loader::saveFile(newerBuffer, basePath + "/" + testName + "-jsonifier.json");
+		bnch_swt::file_loader::saveFile(static_cast<std::string>(newerBuffer), basePath + "/" + testName + "-jsonifier.json");
 		return r;
 	}
 };
@@ -209,7 +209,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 		});
 		std::string newerBuffer{};
 		auto writeResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
-			bnch_swt::doNotOptimizeAway(glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer));
+			glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
 			bnch_swt::doNotOptimizeAway(newerBuffer);
 		});
 
@@ -217,7 +217,7 @@ struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, tes
 		auto writtenSize = newerBuffer.size();
 		r.readResult	 = result<result_type::read>{ "dodgerblue", readSize, readResult };
 		r.writeResult	 = result<result_type::write>{ "skyblue", writtenSize, writeResult };
-		bnch_swt::file_loader::saveFile(newerBuffer, basePath + "/" + testName + "-glaze.json");
+		bnch_swt::file_loader::saveFile(static_cast<std::string>(newerBuffer), basePath + "/" + testName + "-glaze.json");
 
 		return r;
 	}

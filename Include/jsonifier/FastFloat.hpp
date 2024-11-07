@@ -184,10 +184,10 @@ namespace fast_float {
 	#elif (defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM) || defined(__ppc__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__))
 		#define FASTFLOAT_32BIT 1
 	#else
-// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
-// We can never tell the register width, but the SIZE_MAX is a good
-// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
-// portability.
+	// Need to check incrementally, since SIZE_MAX is a size_t, avoid overflow.
+	// We can never tell the register width, but the SIZE_MAX is a good
+	// approximation. UINTPTR_MAX and INTPTR_MAX are optional, so avoid them for max
+	// portability.
 		#if SIZE_MAX == 0xffff
 			#error Unknown platform (16-bit, unsupported)
 		#elif SIZE_MAX == 0xffffffff
@@ -227,12 +227,12 @@ namespace fast_float {
 		#endif
 		#
 		#ifndef __BYTE_ORDER__
-		// safe choice
+// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
 		#ifndef __ORDER_LITTLE_ENDIAN__
-		// safe choice
+// safe choice
 			#define FASTFLOAT_IS_BIG_ENDIAN 0
 		#endif
 		#
@@ -256,7 +256,7 @@ namespace fast_float {
 	#endif
 
 	#if defined(__GNUC__)
-	// disable -Wcast-align=strict (GCC only)
+// disable -Wcast-align=strict (GCC only)
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 	#else
 		#define FASTFLOAT_SIMD_DISABLE_WARNINGS
@@ -822,8 +822,7 @@ namespace fast_float {
 	/**
  * Like from_chars, but accepts an `options` argument to govern number parsing.
  */
-	template<typename T, typename UC = char>
-	constexpr from_chars_result_t<UC> from_chars_advanced(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept;
+	template<typename T, typename UC = char> constexpr from_chars_result_t<UC> from_chars_advanced(UC const* first, UC const* last, T& value, parse_options_t<UC> options) noexcept;
 	/**
  * from_chars for integer types.
  */
@@ -1088,8 +1087,7 @@ namespace fast_float {
 
 	// Assuming that you use no more than 19 digits, this will
 	// parse an ASCII string.
-	template<typename UC>
-	JSONIFIER_ALWAYS_INLINE constexpr parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend, parse_options_t<UC> options) noexcept {
+	template<typename UC> JSONIFIER_ALWAYS_INLINE constexpr parsed_number_string_t<UC> parse_number_string(UC const* p, UC const* pend, parse_options_t<UC> options) noexcept {
 		chars_format const fmt = options.format;
 		UC const decimal	   = options.decimal;
 
@@ -1878,8 +1876,7 @@ namespace fast_float {
 		// resize the vector, without bounds checking
 		// if the new size is longer than the vector, assign value to each
 		// appended item.
-		constexpr
-		void resize_unchecked(size_t new_len, limb value) noexcept {
+		constexpr void resize_unchecked(size_t new_len, limb value) noexcept {
 			if (new_len > len()) {
 				size_t count = new_len - len();
 				limb* first	 = data + len();
@@ -2876,8 +2873,7 @@ namespace fast_float {
 
 	#if defined(__STDCPP_FLOAT32_T__) && __STDCPP_FLOAT32_T__ == 1
 	template<> struct from_chars_caller<std::float32_t> {
-		template<typename UC>
-		constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float32_t& value, parse_options_t<UC> options) noexcept {
+		template<typename UC> constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float32_t& value, parse_options_t<UC> options) noexcept {
 			// if std::float32_t is defined, and we are in C++23 mode; macro set for
 			// float32; set value to float due to equivalence between float and
 			// float32_t
@@ -2891,8 +2887,7 @@ namespace fast_float {
 
 	#if defined(__STDCPP_FLOAT64_T__) && __STDCPP_FLOAT64_T__ == 1
 	template<> struct from_chars_caller<std::float64_t> {
-		template<typename UC>
-		constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float64_t& value, parse_options_t<UC> options) noexcept {
+		template<typename UC> constexpr static from_chars_result_t<UC> call(UC const* first, UC const* last, std::float64_t& value, parse_options_t<UC> options) noexcept {
 			// if std::float64_t is defined, and we are in C++23 mode; macro set for
 			// float64; set value as double due to equivalence between double and
 			// float64_t

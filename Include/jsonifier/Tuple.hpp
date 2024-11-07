@@ -68,6 +68,10 @@ namespace jsonifier_internal {
 		static constexpr size_t value = sizeof...(types);
 	};
 
+	template<typename... types> struct tuple_size<std::tuple<types...>> {
+		static constexpr size_t value = sizeof...(types);
+	};
+
 	template<typename value_type> constexpr size_t tuple_size_v = tuple_size<std::remove_const_t<value_type>>::value;
 
 	template<typename... types> constexpr auto makeTuple(types&&... args) {
@@ -91,8 +95,7 @@ namespace jsonifier_internal {
 		return concat_tuples_t<std::remove_cvref_t<tuple_type01>, std::remove_cvref_t<tuple_type02>>{ get<indices1>(tuple1)..., get<indices2>(tuple2)... };
 	}
 
-	template<typename tuple_type01, typename tuple_type02>
-	constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2) noexcept {
+	template<typename tuple_type01, typename tuple_type02> constexpr auto tupleCat(tuple_type01&& tuple1, tuple_type02&& tuple2) noexcept {
 		return tupleCatImpl(std::forward<tuple_type01>(tuple1), std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type01>>>{}, std::forward<tuple_type02>(tuple2),
 			std::make_index_sequence<tuple_size_v<std::remove_cvref_t<tuple_type02>>>{});
 	}

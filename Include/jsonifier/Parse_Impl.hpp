@@ -605,8 +605,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool newLines>
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			while
 				JSONIFIER_LIKELY((*context.iter != rightBrace)) {
 					if ((*context.iter == comma)) {

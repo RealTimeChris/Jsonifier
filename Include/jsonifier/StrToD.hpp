@@ -82,7 +82,7 @@ namespace jsonifier_internal {
 				++iter;
 				i = i * 10 + digit;
 			}
-			exponent		= before - iter;
+			exponent			   = before - iter;
 			answer.fraction.length = static_cast<size_t>(iter - before);
 			answer.fraction.ptr	   = before;
 			digit_count -= exponent;

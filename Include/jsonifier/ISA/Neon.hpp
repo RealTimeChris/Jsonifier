@@ -88,9 +88,9 @@ namespace simd_internal {
 
 	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint64_t opBitMask(const simd_int_t01& value) noexcept {
 		uint16x8_t highBits = vreinterpretq_u16_u8(vshrq_n_u8(value, 7));
-		uint32x4_t paired16	 = vreinterpretq_u32_u16(vsraq_n_u16(highBits, highBits, 7));
-		uint64x2_t paired32	 = vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
-		uint8x16_t paired64	 = vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));
+		uint32x4_t paired16 = vreinterpretq_u32_u16(vsraq_n_u16(highBits, highBits, 7));
+		uint64x2_t paired32 = vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
+		uint8x16_t paired64 = vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));
 		return vgetq_lane_u8(paired64, 0) | (( int32_t )vgetq_lane_u8(paired64, 8) << 8);
 	}
 
