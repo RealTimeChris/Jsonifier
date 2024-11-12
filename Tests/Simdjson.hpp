@@ -809,4 +809,9 @@ void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData
 	getValue(returnValue.z, obj, "z");
 }
 
+void getValue(partial_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.m, obj, "m");
+}
+
 #endif

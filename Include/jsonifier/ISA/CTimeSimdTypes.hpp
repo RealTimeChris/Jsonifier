@@ -190,29 +190,6 @@ namespace simd_internal {
 		return returnValue;
 	}
 
-	constexpr __m128x mm128BlendVEpi8(const __m128x& a, const __m128x& b, const __m128x& mask) noexcept {
-		__m128x result;
-		for (int32_t i = 0; i < 2; ++i) {
-			result.m128x_uint64[i] = 0;
-			for (int32_t j = 0; j < 8; ++j) {
-				uint8_t maskByte	= (mask.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t aByte		= (a.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t bByte		= (b.m128x_uint64[1 - i] >> (j * 8)) & 0xFF;
-				uint8_t blendedByte = (maskByte ? bByte : aByte);
-				result.m128x_uint64[i] |= (static_cast<size_t>(blendedByte) << (j * 8));
-			}
-		}
-		return result;
-	}
-
-	constexpr __m128x mm128AddEpi64(const __m128x& value01, const __m128x& value02) noexcept {
-		__m128x returnValue{};
-		__m128x value01New{ value01 }, value02New{ value02 };
-		returnValue.m128x_uint64[0] = value01New.m128x_uint64[0] + value02New.m128x_uint64[0];
-		returnValue.m128x_uint64[1] = value01New.m128x_uint64[1] + value02New.m128x_uint64[1];
-		return returnValue;
-	}
-
 	constexpr void mm128StoreUSi128(uint8_t* ptr, const __m128x& data) noexcept {
 		for (int32_t i = 0; i < 8; ++i) {
 			ptr[i] = static_cast<uint8_t>(data.m128x_uint64[0] >> (i * 8));
@@ -251,49 +228,6 @@ namespace simd_internal {
 		return result;
 	}
 
-	constexpr __m128x mm128MulEpi32(const __m128x& a, const __m128x& b) noexcept {
-		__m128x result{};
-
-		uint32_t aVal[4];
-		uint32_t bVal[4];
-
-		for (int32_t i = 0; i < 4; ++i) {
-			aVal[i] = get32(a.m128x_uint64, i);
-			bVal[i] = get32(b.m128x_uint64, i);
-		}
-
-		set64(result.m128x_uint64, 0, static_cast<size_t>(aVal[0]) * static_cast<size_t>(bVal[0]) | static_cast<size_t>(aVal[1]) * static_cast<size_t>(bVal[1]));
-		set64(result.m128x_uint64, 1, static_cast<size_t>(aVal[2]) * static_cast<size_t>(bVal[2]) | static_cast<size_t>(aVal[3]) * static_cast<size_t>(bVal[3]));
-
-		return result;
-	}
-
-	constexpr __m128x mm128SubEpi64(const __m128x& value01, const __m128x& value02) noexcept {
-		__m128x returnValue{};
-		returnValue.m128x_uint64[0] = value01.m128x_uint64[0] - value02.m128x_uint64[0];
-		returnValue.m128x_uint64[1] = value01.m128x_uint64[1] - value02.m128x_uint64[1];
-		return returnValue;
-	}
-
-	constexpr __m128x mm128SrliEpi64(const __m128x& a, uint32_t imm8) noexcept {
-		__m128x result{};
-		result.m128x_uint64[0] = a.m128x_uint64[0] >> imm8;
-		result.m128x_uint64[1] = a.m128x_uint64[1] >> imm8;
-		return result;
-	}
-
-	constexpr __m128x mm128SlliEpi64(const __m128x& a, uint32_t imm8) noexcept {
-		__m128x result{};
-		result.m128x_uint64[0] = a.m128x_uint64[0] << imm8;
-		result.m128x_uint64[1] = a.m128x_uint64[1] << imm8;
-		return result;
-	}
-
-	constexpr __m128x mm128Set1Epi32(uint32_t value) noexcept {
-		size_t extendedValue = (static_cast<size_t>(value) << 32) | value;
-		return __m128x{ extendedValue, extendedValue };
-	}
-
 	template<typename value_type> constexpr __m128x mm128LoadUSi128(const __m128x* ptr) noexcept {
 		return *ptr;
 	}
@@ -310,10 +244,6 @@ namespace simd_internal {
 	constexpr __m128x mm128LoadUSi128(const __m128x* ptr) noexcept {
 		__m128x returnValues{ *ptr };
 		return returnValues;
-	}
-
-	constexpr __m128x mm128SetZero() noexcept {
-		return __m128x{};
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>

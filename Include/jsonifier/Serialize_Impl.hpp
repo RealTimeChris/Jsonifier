@@ -150,46 +150,6 @@ namespace jsonifier_internal {
 		}
 	};
 
-#define INVOKE_1(x) index_processor_serialize<options, maxIndex>::template processIndex<x>(std::forward<value_type_new>(value), buffer, index, indent);
-
-#define INVOKE_RANGE(from) \
-	INVOKE_1(from + 0) \
-	INVOKE_1(from + 1) \
-	INVOKE_1(from + 2) \
-	INVOKE_1(from + 3) \
-	INVOKE_1(from + 4) \
-	INVOKE_1(from + 5) \
-	INVOKE_1(from + 6) \
-	INVOKE_1(from + 7) \
-	INVOKE_1(from + 8) \
-	INVOKE_1(from + 9)
-
-#define INVOKE_10() INVOKE_RANGE(0)
-
-#define INVOKE_20() \
-	INVOKE_10() \
-	INVOKE_RANGE(10)
-
-#define INVOKE_30() \
-	INVOKE_20() \
-	INVOKE_RANGE(20)
-
-#define INVOKE_40() \
-	INVOKE_30() \
-	INVOKE_RANGE(30)
-
-#define INVOKE_50() \
-	INVOKE_40() \
-	INVOKE_RANGE(40)
-
-#define INVOKE_60() \
-	INVOKE_50() \
-	INVOKE_RANGE(50)
-
-#define INVOKE_70() \
-	INVOKE_60() \
-	INVOKE_RANGE(60)
-
 	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
 		typename indent_type>
 	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
@@ -201,32 +161,29 @@ namespace jsonifier_internal {
 			(index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + indices>(std::forward<value_type_new>(value), buffer, index, indent), ...);
 		}
 
+		template<size_t startingIndex, size_t maxIndex, typename value_type_new>
+		JSONIFIER_INLINE static void impl10Internal(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 0>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 1>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 2>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 3>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 4>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 5>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 6>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 7>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 8>(std::forward<value_type_new>(value), buffer, index, indent);
+			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 9>(std::forward<value_type_new>(value), buffer, index, indent);
+		}
+
+		template<size_t startingIndex, size_t maxIndex, typename value_type_new, size_t... indices>
+		JSONIFIER_INLINE static void impl10(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent, std::index_sequence<indices...>) noexcept {
+			(impl10Internal<indices * 10, maxIndex>(std::forward<value_type_new>(value), buffer, index, indent), ...);
+		}
+
 		template<size_t maxIndex, typename value_type_new>
 		JSONIFIER_INLINE static void implInternal(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if constexpr (maxIndex > 70) {
-				INVOKE_70()
-				implInternal<70, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 70>{});
-			} else if constexpr (maxIndex > 60) {
-				INVOKE_60()
-				implInternal<60, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 60>{});
-			} else if constexpr (maxIndex > 50) {
-				INVOKE_50()
-				implInternal<50, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 50>{});
-			} else if constexpr (maxIndex > 40) {
-				INVOKE_40()
-				implInternal<40, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 40>{});
-			} else if constexpr (maxIndex > 30) {
-				INVOKE_30()
-				implInternal<30, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 30>{});
-			} else if constexpr (maxIndex > 20) {
-				INVOKE_20()
-				implInternal<20, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 20>{});
-			} else if constexpr (maxIndex > 10) {
-				INVOKE_10()
-				implInternal<10, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 10>{});
-			} else {
-				implInternal<0, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex>{});
-			}
+			impl10<0, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex / 10>{});
+			implInternal<(maxIndex / 10) * 10, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 10>{});
 		}
 
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {

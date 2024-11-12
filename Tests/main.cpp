@@ -106,11 +106,15 @@ template<typename test_data_type, bool minified, size_t iterations, jsonifier_in
 struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize, test_data_type, minified, iterations, testNameNew> {
 	static auto run(const std::string& newBuffer) {
 		static constexpr jsonifier_internal::string_literal testName{ testNameNew };
+		static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> };
 		results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
 		jsonifier::jsonifier_core parser{};
 		test_data_type testData{};
+		if constexpr (partialRead) {
+			parser.parseJson(testData, newBuffer);
+		}
 		auto readResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, jsonifierLibraryName, "teal">([&]() {
-			parser.parseJson<jsonifier::parse_options{ .knownOrder = true, .minified = minified }>(testData, newBuffer);
+			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = !partialRead, .minified = minified }>(testData, newBuffer);
 			bnch_swt::doNotOptimizeAway(testData);
 		});
 		for (auto& value: parser.getErrors()) {
@@ -199,10 +203,24 @@ template<typename test_data_type, bool minified, size_t iterations, jsonifier_in
 struct json_test_helper<json_library::glaze, test_type::parse_and_serialize, test_data_type, minified, iterations, testNameNew> {
 	static auto run(const std::string& newBuffer) {
 		static constexpr jsonifier_internal::string_literal testName{ testNameNew };
+		static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> };
 		results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
 		test_data_type testData{};
+		if constexpr (partialRead) {
+			if (auto error =
+					glz::read<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newBuffer);
+				error) {
+				std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
+			}
+		}
 		auto readResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, glazeLibraryName, "dodgerblue">([&]() {
-			if (auto error = glz::read<glz::opts{ .skip_null_members = false, .minified = minified }>(testData, newBuffer); error) {
+			if (auto error = glz::read<glz::opts{ .error_on_unknown_keys = !partialRead,
+					.skip_null_members									 = false,
+					.prettify											 = !minified,
+					.minified											 = minified,
+					.partial_read										 = partialRead,
+					.partial_read_nested								 = partialRead }>(testData, newBuffer);
+				error) {
 				std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
 			}
 			bnch_swt::doNotOptimizeAway(testData);
@@ -466,7 +484,33 @@ alt="" width="400"/></p>
 constexpr jsonifier_internal::string_literal section03{
 	R"(
 
-### ABC Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" +
+### Partial Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" +
+	getCurrentPathImpl() + R"(/JsonData-Prettified.json):
+
+----
+<p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/Partial%20Test%20(Prettified)_Results.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/Partial%20Test%20(Prettified)_Results.png?raw=true" 
+alt="" width="400"/></p>
+
+)"
+};
+
+constexpr jsonifier_internal::string_literal section04{
+	R"(
+
+### Partial Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" +
+	getCurrentPathImpl() + R"(/JsonData-Minified.json):
+
+----
+<p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/Partial%20Test%20(Minified)_Results.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/Partial%20Test%20(Minified)_Results.png?raw=true" 
+alt="" width="400"/></p>
+
+)"
+};
+
+constexpr jsonifier_internal::string_literal section05{
+	R"(
+
+### Abc Test (Out of Sequence Performance - Prettified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" +
 	getCurrentPathImpl() + R"(/JsonData-Prettified.json):
 
 ----
@@ -481,7 +525,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 )"
 };
 
-constexpr jsonifier_internal::string_literal section04{ R"(
+constexpr jsonifier_internal::string_literal section06{ R"(
 
 ### ABC Test (Out of Sequence Performance - Minified) [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" +
 	getCurrentPathImpl() + R"(/JsonData-Minified.json):
@@ -492,7 +536,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section05{ R"(
+constexpr jsonifier_internal::string_literal section07{ R"(
 
 ### Discord Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
 
@@ -502,7 +546,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section06{ R"(
+constexpr jsonifier_internal::string_literal section08{ R"(
 
 ### Discord Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
 
@@ -512,7 +556,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section07{ R"(
+constexpr jsonifier_internal::string_literal section09{ R"(
 
 ### Canada Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Prettified.json):
 
@@ -522,7 +566,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section08{ R"(
+constexpr jsonifier_internal::string_literal section10{ R"(
 
 ### Canada Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CanadaData-Minified.json):
 
@@ -532,7 +576,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section09{ R"(
+constexpr jsonifier_internal::string_literal section11{ R"(
 
 ### CitmCatalog Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CitmCatalogData-Prettified.json):
 
@@ -542,7 +586,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section10{ R"(
+constexpr jsonifier_internal::string_literal section12{ R"(
 
 ### CitmCatalog Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/CitmCatalogData-Minified.json):
 
@@ -552,7 +596,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section11{ R"(
+constexpr jsonifier_internal::string_literal section13{ R"(
 
 ### Twitter Test (Prettified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Prettified.json):
 
@@ -562,7 +606,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section12{ R"(
+constexpr jsonifier_internal::string_literal section14{ R"(
 
 ### Twitter Test (Minified) Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/TwitterData-Minified.json):
 
@@ -572,7 +616,7 @@ alt="" width="400"/></p>
 
 )" };
 
-constexpr jsonifier_internal::string_literal section13{
+constexpr jsonifier_internal::string_literal section15{
 	R"(
 
 ### Minify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -584,7 +628,7 @@ alt="" width="400"/></p>
 )"
 };
 
-constexpr jsonifier_internal::string_literal section14{
+constexpr jsonifier_internal::string_literal section16{
 	R"(
 
 ### Prettify Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Minified.json):
@@ -596,7 +640,7 @@ alt="" width="400"/></p>
 )"
 };
 
-constexpr jsonifier_internal::string_literal section15{
+constexpr jsonifier_internal::string_literal section17{
 	R"(
 
 ### Validation Test Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/DiscordData-Prettified.json):
@@ -817,57 +861,65 @@ void testFunction() {
 	newerString += section02;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, false, totalIterationCountCap, "Abc Test (Prettified)">::run(jsonDataNew);
+	testResults = json_tests_helper<test_type::parse_and_serialize, partial_test<test_struct>, false, totalIterationCountCap, "Partial Test (Prettified)">::run(jsonDataNew);
 	newerString += section03;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, totalIterationCountCap, "Abc Test (Minified)">::run(jsonMinifiedData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, partial_test<test_struct>, true, totalIterationCountCap, "Partial Test (Minified)">::run(jsonMinifiedData);
 	newerString += section04;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, false, totalIterationCountCap, "Discord Test (Prettified)">::run(discordData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, false, totalIterationCountCap, "Abc Test (Prettified)">::run(jsonDataNew);
 	newerString += section05;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, true, totalIterationCountCap, "Discord Test (Minified)">::run(discordMinifiedData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, abc_test<test_struct>, true, totalIterationCountCap, "Abc Test (Minified)">::run(jsonMinifiedData);
 	newerString += section06;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, false, totalIterationCountCap, "Canada Test (Prettified)">::run(canadaData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, false, totalIterationCountCap, "Discord Test (Prettified)">::run(discordData);
 	newerString += section07;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, totalIterationCountCap, "Canada Test (Minified)">::run(canadaMinifiedData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, discord_message, true, totalIterationCountCap, "Discord Test (Minified)">::run(discordMinifiedData);
 	newerString += section08;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_message, false, totalIterationCountCap, "CitmCatalog Test (Prettified)">::run(citmCatalogData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, false, totalIterationCountCap, "Canada Test (Prettified)">::run(canadaData);
 	newerString += section09;
+	newerString += testResults.markdownResults;
+	benchmark_data.emplace_back(testResults);
+	testResults = json_tests_helper<test_type::parse_and_serialize, canada_message, true, totalIterationCountCap, "Canada Test (Minified)">::run(canadaMinifiedData);
+	newerString += section10;
+	newerString += testResults.markdownResults;
+	benchmark_data.emplace_back(testResults);
+	testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_message, false, totalIterationCountCap, "CitmCatalog Test (Prettified)">::run(citmCatalogData);
+	newerString += section11;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
 	testResults =
 		json_tests_helper<test_type::parse_and_serialize, citm_catalog_message, true, totalIterationCountCap, "CitmCatalog Test (Minified)">::run(citmCatalogMinifiedData);
-	newerString += section10;
-	newerString += testResults.markdownResults;
-	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, totalIterationCountCap, "Twitter Test (Prettified)">::run(twitterData);
-	newerString += section11;
-	newerString += testResults.markdownResults;
-	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, totalIterationCountCap, "Twitter Test (Minified)">::run(twitterMinifiedData);
 	newerString += section12;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::minify, std::string, false, totalIterationCountCap, "Minify Test">::run(discordData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, totalIterationCountCap, "Twitter Test (Prettified)">::run(twitterData);
 	newerString += section13;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::prettify, std::string, false, totalIterationCountCap, "Prettify Test">::run(jsonMinifiedData);
+	testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, totalIterationCountCap, "Twitter Test (Minified)">::run(twitterMinifiedData);
 	newerString += section14;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
-	testResults = json_tests_helper<test_type::validate, std::string, false, totalIterationCountCap, "Validate Test">::run(discordData);
+	testResults = json_tests_helper<test_type::minify, std::string, false, totalIterationCountCap, "Minify Test">::run(discordData);
 	newerString += section15;
+	newerString += testResults.markdownResults;
+	benchmark_data.emplace_back(testResults);
+	testResults = json_tests_helper<test_type::prettify, std::string, false, totalIterationCountCap, "Prettify Test">::run(jsonMinifiedData);
+	newerString += section16;
+	newerString += testResults.markdownResults;
+	benchmark_data.emplace_back(testResults);
+	testResults = json_tests_helper<test_type::validate, std::string, false, totalIterationCountCap, "Validate Test">::run(discordData);
+	newerString += section17;
 	newerString += testResults.markdownResults;
 	benchmark_data.emplace_back(testResults);
 	std::string resultsStringJson{};

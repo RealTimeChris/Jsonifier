@@ -66,7 +66,7 @@ namespace simd_internal {
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_ALWAYS_INLINE auto opCmpLt(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		jsonifier_simd_int_128 offset = mm128Set1Epi8(static_cast<char>(0x80));
-		return static_cast<uint32_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset))));
+		return static_cast<uint32_t>(mm128MovemaskEpi8(mm128CmpGtEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset))));
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>

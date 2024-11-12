@@ -27,6 +27,7 @@
 - ## [Installation](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Installation.md)
 - ## [Reflection](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Reflection.md)
 - ## [Optimizing For Minified Json](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Optimizing_For_Minified_Json.md)
+- ## [Partial Reading](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/PartialReading.md)
 - ## [Serializing-Parsing](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Usage_Serializing_Parsing.md)
 - ## [Validating](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Validating.md)
 - ## [Prettifying](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Prettifying.md)

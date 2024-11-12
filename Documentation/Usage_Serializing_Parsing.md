@@ -133,12 +133,14 @@ The `parse_options` struct allows customization of parsing behavior. Here's the 
 ```cpp
 struct parse_options {
 	bool validateJson{ false };
+	bool partialRead{ false };
 	bool knownOrder{ false };
 	bool minified{ false };
 };
 ```
 
 - `validateJson`: Indicates whether to call validateJson to validate the Json in compliance with RFC standards before parsing it.
+- `partialRead`: Indicates whether to the input is only being partially read from.
 - `knownOrder`: Indicates whether or not the registration core-tuple had its members set up in the order that the json data will be coming in as, which will significantly improve performance.
 - `minified`: Indicates whether the input JSON string is minified (default: `false`).
 

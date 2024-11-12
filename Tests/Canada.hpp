@@ -26,21 +26,21 @@
 #include <vector>
 
 struct geometry_data {
-	std::string type;
-	std::vector<std::vector<std::vector<double>>> coordinates;
+	std::string type{};
+	std::vector<std::vector<std::vector<double>>> coordinates{};
 };
 
 struct properties_data {
-	std::string name;
+	std::string name{};
 };
 
 struct feature {
-	properties_data properties;
-	std::string type;
-	geometry_data geometry;
+	properties_data properties{};
+	std::string type{};
+	geometry_data geometry{};
 };
 
 struct canada_message {
-	std::string type;
-	std::vector<feature> features;
+	std::string type{};
+	std::vector<feature> features{};
 };

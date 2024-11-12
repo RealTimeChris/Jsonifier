@@ -87,11 +87,16 @@ template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 };
 
+template<typename value_type> struct partial_test {
+	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o;
+};
+
+inline static std::random_device randomEngine{};
+inline static std::mt19937_64 gen{ randomEngine() };
+static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
+
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-	inline static std::random_device randomEngine{};
-	inline static std::mt19937_64 gen{ randomEngine() };
-	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 
 	template<typename value_type01, typename value_type02> static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
 		std::uniform_real_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };

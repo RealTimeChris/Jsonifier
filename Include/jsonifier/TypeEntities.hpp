@@ -50,7 +50,7 @@ namespace jsonifier_internal {
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
 
-	template<template<typename...> class value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
+	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
 
 	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
 		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
@@ -78,12 +78,12 @@ namespace jsonifier_internal {
 		using type = value_type;
 	};
 
-	template<typename value_type> struct get_int_type {
-		using type = std::conditional_t<std::is_unsigned_v<std::remove_cvref_t<value_type>>, uint8_t, int8_t>;
-	};
-
 	template<typename value_type, typename... rest, uint64_t index> struct get_type_at_index<type_list<value_type, rest...>, index> {
 		using type = typename get_type_at_index<type_list<rest...>, index - 1>::type;
+	};
+
+	template<typename value_type> struct get_int_type {
+		using type = std::conditional_t<std::is_unsigned_v<std::remove_cvref_t<value_type>>, uint8_t, int8_t>;
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices>
