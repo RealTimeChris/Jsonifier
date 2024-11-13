@@ -257,8 +257,9 @@ template<> struct glz::meta<test<test_struct>> {
 };
 
 template<> struct glz::meta<partial_test<test_struct>> {
-	using value_type			= partial_test<test_struct>;
-	static constexpr auto value = object(&value_type::m);
+	using value_type				   = partial_test<test_struct>;
+	static constexpr auto value		   = object(&value_type::m);
+	static constexpr auto partial_read = true;
 };
 
 template<> struct glz::meta<test_generator<test_struct>> {

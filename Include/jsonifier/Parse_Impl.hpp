@@ -102,6 +102,52 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<typename... bases> struct index_processor : bases... {
+		using bases::operator[]...;
+
+		template<typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE auto executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... value) const {
+			return (executeIndex<indices>(std::forward<arg_types>(value)...) && ...);
+		}
+
+		template<size_t index, typename... arg_types> JSONIFIER_ALWAYS_INLINE auto executeIndex(arg_types&&... value) const {
+			return operator[](std::integral_constant<size_t, index>{}).processIndex(std::forward<arg_types>(value)...);
+		}
+
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE auto executeIndices(arg_types&&... value) const {
+			return executeIndicesImpl(std::make_index_sequence<sizeof...(bases)>{}, std::forward<arg_types>(value)...);
+		}
+	};
+
+	template<size_t I, typename lambda_type> struct index_processor_elem : public lambda_type {
+		using lambda_type::operator();
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE auto processIndex(arg_types&&... args) const noexcept {
+			return lambda_type::template operator()<I>(std::forward<arg_types>(args)...);
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) & {
+			return *this;
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) const& {
+			return *this;
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) && {
+			return static_cast<index_processor_elem&&>(*this);
+		}
+	};
+
+	template<typename index_sequence, typename lambda_type, template<typename...> typename index_processor_type, template<size_t, typename> typename element_type>
+	struct get_index_executor;
+
+	template<size_t... I, typename lambda_type, template<typename...> typename index_processor_type, template<size_t, typename> typename element_type>
+	struct get_index_executor<std::index_sequence<I...>, lambda_type, index_processor_type, element_type> {
+		using type = index_processor_type<element_type<I, lambda_type>...>;
+	};
+
+	template<size_t currentCount, typename lambda_type, template<typename...> typename index_processor_type, template<size_t, typename> typename element_type>
+	using index_executor_t = typename get_index_executor<std::make_index_sequence<currentCount>, lambda_type, index_processor_type, element_type>::type;
+
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {

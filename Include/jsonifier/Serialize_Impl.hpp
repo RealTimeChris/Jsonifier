@@ -108,10 +108,11 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::serialize_options options, size_t maxIndex> struct index_processor_serialize {
+	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_NON_MSVC_ALWAYS_INLINE static void processIndex(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_NON_GCC_ALWAYS_INLINE static constexpr auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
 			static constexpr auto key	   = subTuple.view();
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
@@ -134,7 +135,7 @@ namespace jsonifier_internal {
 			}
 
 			serialize<options>::impl(value.*memberPtr, buffer, index, indent);
-			if constexpr (currentIndex < maxIndex - 1) {
+			if constexpr (currentIndex < numMembers - 1) {
 				if constexpr (options.prettify) {
 					static constexpr auto packedValues{ ",\n" };
 					std::memcpy(buffer.data() + index, packedValues, 2);
@@ -147,6 +148,14 @@ namespace jsonifier_internal {
 				}
 			}
 			return;
+		};
+
+		template<typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
+			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
+		}
+
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE static void executeIndices(arg_types&&... args) {
+			executeIndicesImpl(std::make_index_sequence<maxIndex>{}, std::forward<arg_types>(args)...);
 		}
 	};
 
@@ -155,36 +164,6 @@ namespace jsonifier_internal {
 	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
 		static constexpr auto packedValues01{ "{\n" };
 		static constexpr auto packedValues02{ "{}" };
-
-		template<size_t startingIndex, size_t maxIndex, typename value_type_new, size_t... indices>
-		JSONIFIER_INLINE static void implInternal(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent, std::index_sequence<indices...>) noexcept {
-			(index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + indices>(std::forward<value_type_new>(value), buffer, index, indent), ...);
-		}
-
-		template<size_t startingIndex, size_t maxIndex, typename value_type_new>
-		JSONIFIER_INLINE static void impl10Internal(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 0>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 1>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 2>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 3>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 4>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 5>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 6>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 7>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 8>(std::forward<value_type_new>(value), buffer, index, indent);
-			index_processor_serialize<options, maxIndex>::template processIndex<startingIndex + 9>(std::forward<value_type_new>(value), buffer, index, indent);
-		}
-
-		template<size_t startingIndex, size_t maxIndex, typename value_type_new, size_t... indices>
-		JSONIFIER_INLINE static void impl10(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent, std::index_sequence<indices...>) noexcept {
-			(impl10Internal<indices * 10, maxIndex>(std::forward<value_type_new>(value), buffer, index, indent), ...);
-		}
-
-		template<size_t maxIndex, typename value_type_new>
-		JSONIFIER_INLINE static void implInternal(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			impl10<0, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex / 10>{});
-			implInternal<(maxIndex / 10) * 10, maxIndex>(value, buffer, index, indent, std::make_index_sequence<maxIndex % 10>{});
-		}
 
 		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
@@ -208,7 +187,7 @@ namespace jsonifier_internal {
 					++index;
 				}
 
-				implInternal<numMembers>(value, buffer, index, indent);
+				index_processor_serialize<numMembers, options>::executeIndices(value, buffer, index, indent);
 
 				if constexpr (options.prettify) {
 					indent -= options.indentSize;
@@ -609,10 +588,10 @@ namespace jsonifier_internal {
 					index += 2;
 					break;
 				}
-				[[likely]] default: {
-					buffer[index] = value;
-					++index;
-				}
+					[[likely]] default : {
+						buffer[index] = value;
+						++index;
+					}
 			}
 			buffer[index] = quote;
 			++index;
@@ -687,5 +666,4 @@ namespace jsonifier_internal {
 			}
 		}
 	};
-
 }
