@@ -111,40 +111,42 @@ namespace jsonifier_internal {
 	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
 		JSONIFIER_NON_GCC_ALWAYS_INLINE static constexpr auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
-			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
-			static constexpr auto key	   = subTuple.view();
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				auto& keys = value.jsonifierExcludedKeys;
-				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-					return;
+			if constexpr (currentIndex < maxIndex) {
+				static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+				static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
+				static constexpr auto key = subTuple.view();
+				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+					auto& keys = value.jsonifierExcludedKeys;
+					if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						return;
+					}
 				}
-			}
-			static constexpr auto memberPtr = subTuple.ptr();
-			static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
-			if constexpr (options.prettify) {
-				static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
-				static constexpr auto size		= quotedKey.size();
-				std::memcpy(buffer.data() + index, quotedKey.data(), size);
-				index += size;
-			} else {
-				static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
-				static constexpr auto size		= quotedKey.size();
-				std::memcpy(buffer.data() + index, quotedKey.data(), size);
-				index += size;
-			}
-
-			serialize<options>::impl(value.*memberPtr, buffer, index, indent);
-			if constexpr (currentIndex < numMembers - 1) {
+				static constexpr auto memberPtr = subTuple.ptr();
+				static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
 				if constexpr (options.prettify) {
-					static constexpr auto packedValues{ ",\n" };
-					std::memcpy(buffer.data() + index, packedValues, 2);
-					index += 2;
-					std::memset(buffer.data() + index, ' ', indent * options.indentSize);
-					index += indent;
+					static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
+					static constexpr auto size		= quotedKey.size();
+					std::memcpy(buffer.data() + index, quotedKey.data(), size);
+					index += size;
 				} else {
-					buffer[index] = comma;
-					++index;
+					static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
+					static constexpr auto size		= quotedKey.size();
+					std::memcpy(buffer.data() + index, quotedKey.data(), size);
+					index += size;
+				}
+
+				serialize<options>::impl(value.*memberPtr, buffer, index, indent);
+				if constexpr (currentIndex < numMembers - 1) {
+					if constexpr (options.prettify) {
+						static constexpr auto packedValues{ ",\n" };
+						std::memcpy(buffer.data() + index, packedValues, 2);
+						index += 2;
+						std::memset(buffer.data() + index, ' ', indent * options.indentSize);
+						index += indent;
+					} else {
+						buffer[index] = comma;
+						++index;
+					}
 				}
 			}
 			return;
