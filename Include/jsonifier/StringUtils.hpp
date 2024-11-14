@@ -886,7 +886,7 @@ namespace jsonifier_internal {
 			skipStringImpl(context.iter, newLength);
 		}
 
-		template<typename value_type> JSONIFIER_NON_GCC_ALWAYS_INLINE static void skipKey(context_type& context) noexcept {
+		template<typename value_type> JSONIFIER_INLINE static void skipKey(context_type& context) noexcept {
 			static constexpr auto keyLength{ keyStatsVal<value_type>.minLength - 1 };
 			context.iter += keyLength;
 			skipString(context);

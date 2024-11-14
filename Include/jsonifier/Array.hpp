@@ -41,11 +41,8 @@ namespace jsonifier_internal {
 		constexpr array() noexcept = default;
 
 		constexpr array(std::initializer_list<value_type> initList) {
-			size_t i = 0;
-			for (auto& elem: initList) {
-				if (i < sizeNew) {
-					values[i++] = elem;
-				}
+			for (size_t i = 0; i < initList.size() && i < sizeNew; ++i) {
+				values[i] = initList.begin()[i];
 			}
 		}
 

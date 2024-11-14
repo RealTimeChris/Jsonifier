@@ -138,8 +138,7 @@ namespace jsonifier_internal {
 		return make_static<stringLiteralFromView<newString.size()>(newString)>::value.view();
 	}
 
-	template<size_t count>
-	constexpr auto collectStringLiteralSize(const array<jsonifier::string_view, count>& strings) {
+	template<size_t count> constexpr auto collectStringLiteralSize(const array<jsonifier::string_view, count>& strings) {
 		size_t currentSize{};
 		for (auto& value: strings) {
 			currentSize += value.size();
@@ -151,7 +150,7 @@ namespace jsonifier_internal {
 		array<char, newSize> returnValues01{};
 		size_t currentOffset{};
 		for (auto& value: strings) {
-			std::copy(value.data(), value.data() + value.size(), returnValues01.data() + currentOffset);
+			std::copy(value.begin(), value.end(), returnValues01.data() + currentOffset);
 			currentOffset += value.size();
 		}
 		return returnValues01;
@@ -160,7 +159,7 @@ namespace jsonifier_internal {
 	template<size_t count, size_t newSize> constexpr auto collectStringViews(const array<jsonifier::string_view, count>& strings, const array<char, newSize>& values) {
 		array<jsonifier::string_view, count> returnValues02{};
 		size_t currentOffset{};
-		for (size_t x = 0; x < strings.size();++x) {
+		for (size_t x = 0; x < strings.size(); ++x) {
 			returnValues02[x] = jsonifier::string_view{ values.data() + currentOffset, strings[x].size() };
 			currentOffset += strings[x].size();
 		}

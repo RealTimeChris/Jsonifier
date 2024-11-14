@@ -1,152 +1,59 @@
 [
    {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
-      "results": [],
-      "testName": ""
-   },
-   {
       "results": [
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 0.08551803922416348,
-            "iterationCount": 193,
-            "color": "teal"
-         },
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Write",
-            "resultSpeed": 536.2325874538744,
-            "iterationCount": 300,
-            "color": "steelblue"
-         }
-      ],
-      "testName": "Twitter Test (Prettified)"
-   },
-   {
-      "results": [
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Read",
-            "resultSpeed": 34.28907413240089,
+            "resultSpeed": 56.13977227973448,
             "iterationCount": 300,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 424.36277942281845,
-            "iterationCount": 300,
+            "resultSpeed": 302.9696881891602,
+            "iterationCount": 292,
             "color": "steelblue"
          }
       ],
-      "testName": "Twitter Test (Minified)"
-   },
-   {
-      "results": [
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Write",
-            "resultSpeed": 137.95331850213884,
-            "iterationCount": 300,
-            "color": "steelblue"
-         },
-         {
-            "libraryName": "glaze",
-            "resultType": "Write",
-            "resultSpeed": 71.27294328368586,
-            "iterationCount": 300,
-            "color": "skyblue"
-         },
-         {
-            "libraryName": "simdjson",
-            "resultType": "Write",
-            "resultSpeed": 8.405202980699032,
-            "iterationCount": 300,
-            "color": "cornflowerblue"
-         }
-      ],
-      "testName": "Minify Test"
-   },
-   {
-      "results": [
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Write",
-            "resultSpeed": 456.0145415146091,
-            "iterationCount": 300,
-            "color": "steelblue"
-         },
-         {
-            "libraryName": "glaze",
-            "resultType": "Write",
-            "resultSpeed": 391.01685444714803,
-            "iterationCount": 300,
-            "color": "skyblue"
-         }
-      ],
-      "testName": "Prettify Test"
+      "testName": "Partial Test (Prettified)"
    },
    {
       "results": [
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 313.87055776999443,
+            "resultSpeed": 38.83548903743322,
             "iterationCount": 300,
             "color": "teal"
          },
          {
-            "libraryName": "glaze",
-            "resultType": "Read",
-            "resultSpeed": 175.20587336464115,
-            "iterationCount": 300,
-            "color": "skyblue"
+            "libraryName": "jsonifier",
+            "resultType": "Write",
+            "resultSpeed": 245.70159099489493,
+            "iterationCount": 295,
+            "color": "steelblue"
          }
       ],
-      "testName": "Validate Test"
+      "testName": "Partial Test (Minified)"
+   },
+   {
+      "results": [
+         {
+            "libraryName": "jsonifier",
+            "resultType": "Read",
+            "resultSpeed": 38.83548903743322,
+            "iterationCount": 300,
+            "color": "teal"
+         },
+         {
+            "libraryName": "jsonifier",
+            "resultType": "Write",
+            "resultSpeed": 245.70159099489493,
+            "iterationCount": 295,
+            "color": "steelblue"
+         }
+      ],
+      "testName": "Partial Test (Minified)"
    }
 ]

@@ -94,24 +94,20 @@
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
+		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
 	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_NON_MSVC_ALWAYS_INLINE inline
-	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
+	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif
 

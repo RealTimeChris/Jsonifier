@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 
 	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_NON_GCC_ALWAYS_INLINE static constexpr auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_ALWAYS_INLINE static constexpr auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			if constexpr (currentIndex < maxIndex) {
 				static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 				static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
@@ -152,11 +152,11 @@ namespace jsonifier_internal {
 			return;
 		};
 
-		template<typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
+		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
 			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
 		}
 
-		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE static void executeIndices(arg_types&&... args) {
+		template<typename... arg_types> JSONIFIER_INLINE static void executeIndices(arg_types&&... args) {
 			executeIndicesImpl(std::make_index_sequence<maxIndex>{}, std::forward<arg_types>(args)...);
 		}
 	};
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues01{ "{\n" };
 		static constexpr auto packedValues02{ "{}" };
 
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
 			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			if constexpr (numMembers > 0) {
@@ -590,10 +590,10 @@ namespace jsonifier_internal {
 					index += 2;
 					break;
 				}
-					[[likely]] default : {
-						buffer[index] = value;
-						++index;
-					}
+				[[likely]] default: {
+					buffer[index] = value;
+					++index;
+				}
 			}
 			buffer[index] = quote;
 			++index;

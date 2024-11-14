@@ -88,7 +88,7 @@ template<typename value_type> struct test {
 };
 
 template<typename value_type> struct partial_test {
-	std::vector<value_type> m;
+	std::vector<value_type> m, s;
 };
 
 inline static std::random_device randomEngine{};

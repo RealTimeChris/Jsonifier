@@ -107,6 +107,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 	static auto run(const std::string& newBuffer) {
 		static constexpr jsonifier_internal::string_literal testName{ testNameNew };
 		static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> };
+		static constexpr bool knownOrder{ !std::is_same_v<test_data_type, abc_test<test_struct>> };
 		results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
 		jsonifier::jsonifier_core parser{};
 		test_data_type testData{};
@@ -114,7 +115,7 @@ struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize,
 			parser.parseJson(testData, newBuffer);
 		}
 		auto readResult = bnch_swt::benchmark_stage<"Json-Tests", bnch_swt::bench_options{ .type = resultType }>::runBenchmark<testName, jsonifierLibraryName, "teal">([&]() {
-			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = !partialRead, .minified = minified }>(testData, newBuffer);
+			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 			bnch_swt::doNotOptimizeAway(testData);
 		});
 		for (auto& value: parser.getErrors()) {
