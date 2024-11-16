@@ -51,11 +51,11 @@ namespace jsonifier_internal {
 	  public:
 		template<jsonifier::prettify_options, typename derived_type_new> friend struct prettify_impl;
 
-		prettifier& operator=(const prettifier& other) = delete;
-		prettifier(const prettifier& other)			   = delete;
+		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
+		JSONIFIER_INLINE prettifier(const prettifier& other)			   = delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
-		auto prettifyJson(string_type&& in) noexcept {
+		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -83,7 +83,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -117,19 +117,19 @@ namespace jsonifier_internal {
 		const char* rootIter{};
 		const char* endIter{};
 
-		prettifier() noexcept : derivedRef{ initializeSelfRef() } {
+		JSONIFIER_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
 			state.resize(64);
 		};
 
-		derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		jsonifier::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		~prettifier() noexcept = default;
+		JSONIFIER_INLINE ~prettifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

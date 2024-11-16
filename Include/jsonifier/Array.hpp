@@ -46,51 +46,51 @@ namespace jsonifier_internal {
 			}
 		}
 
-		constexpr iterator begin() noexcept {
+		JSONIFIER_INLINE constexpr iterator begin() noexcept {
 			return iterator(values);
 		}
 
-		constexpr const_iterator begin() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
 			return const_iterator(values);
 		}
 
-		constexpr iterator end() noexcept {
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
 			return iterator(values + sizeNew);
 		}
 
-		constexpr const_iterator end() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
 			return const_iterator(values + sizeNew);
 		}
 
-		constexpr reverse_iterator rbegin() noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator(end());
 		}
 
-		constexpr const_reverse_iterator rbegin() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator(end());
 		}
 
-		constexpr reverse_iterator rend() noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator(begin());
 		}
 
-		constexpr const_reverse_iterator rend() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator(begin());
 		}
 
-		constexpr const_reference operator[](size_type index) const noexcept {
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type index) const noexcept {
 			return values[index];
 		}
 
-		constexpr reference operator[](size_type index) noexcept {
+		JSONIFIER_INLINE constexpr reference operator[](size_type index) noexcept {
 			return values[index];
 		}
 
-		constexpr const value_type* data() const noexcept {
+		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
 			return values;
 		}
 
-		constexpr value_type* data() noexcept {
+		JSONIFIER_INLINE constexpr value_type* data() noexcept {
 			return values;
 		}
 
@@ -100,7 +100,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		constexpr size_type size() const noexcept {
+		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return sizeNew;
 		}
 
@@ -120,31 +120,31 @@ namespace jsonifier_internal {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using difference_type		 = std::ptrdiff_t;
 
-		constexpr const_pointer data() const noexcept {
+		JSONIFIER_INLINE constexpr const_pointer data() const noexcept {
 			return nullptr;
 		}
 
-		constexpr pointer data() noexcept {
+		JSONIFIER_INLINE constexpr pointer data() noexcept {
 			return nullptr;
 		}
 
-		constexpr size_type size() const noexcept {
+		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return 0;
 		}
 
-		constexpr iterator begin() noexcept {
+		JSONIFIER_INLINE constexpr iterator begin() noexcept {
 			return nullptr;
 		}
 
-		constexpr iterator end() noexcept {
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
 			return nullptr;
 		}
 
-		constexpr const_iterator begin() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
 			return nullptr;
 		}
 
-		constexpr const_iterator end() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
 			return nullptr;
 		}
 	};

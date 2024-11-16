@@ -67,7 +67,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> struct parse_impl;
 
 	template<bool minified, jsonifier::parse_options options> struct parse {
-		template<typename value_type, typename parse_context_type> static void impl(value_type&& value, parse_context_type&& iter) noexcept {
+		template<typename value_type, typename parse_context_type> JSONIFIER_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
 			parse_impl<minified, options, std::remove_cvref_t<value_type>, parse_context_type>::impl(value, iter);
 		}
 	};
@@ -76,11 +76,11 @@ namespace jsonifier_internal {
 	  public:
 		template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> friend struct parse_impl;
 
-		parser& operator=(const parser& other) = delete;
-		parser(const parser& other)			   = delete;
+		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
+		JSONIFIER_INLINE parser(const parser& other)			   = delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
-		bool parseJson(value_type&& object, buffer_type&& in) noexcept {
+		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
 			parse_context<derived_type> optionsReal{};
 			optionsReal.rootIter  = getBeginIter(in);
@@ -112,7 +112,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		value_type parseJson(buffer_type&& in) noexcept {
+		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
 			parse_context<derived_type> optionsReal{};
 			optionsReal.rootIter  = getBeginIter(in);
@@ -145,7 +145,7 @@ namespace jsonifier_internal {
 											   : object;
 		}
 
-		template<const auto& sourceLocation, auto parseError> void reportError(parse_context<derived_type>& context) noexcept {
+		template<const auto& sourceLocation, auto parseError> JSONIFIER_INLINE void reportError(parse_context<derived_type>& context) noexcept {
 			derivedRef.errors.emplace_back(
 				error::constructError<sourceLocation, error_classes::Parsing, parseError>(context.iter - context.rootIter, context.endIter - context.rootIter, context.rootIter));
 		}
@@ -153,12 +153,12 @@ namespace jsonifier_internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 
-		parser() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		~parser() noexcept = default;
+		JSONIFIER_INLINE ~parser() noexcept = default;
 	};
 };

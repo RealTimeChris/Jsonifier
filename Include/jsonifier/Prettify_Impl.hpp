@@ -29,7 +29,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::prettify_options options, typename derived_type> struct prettify_impl {
 		template<jsonifier::concepts::string_t string_type, typename prettifier_type, typename iterator>
-		static uint64_t impl(iterator& iter, string_type&& out, prettifier_type& prettifier) noexcept {
+		JSONIFIER_INLINE static uint64_t impl(iterator& iter, string_type&& out, prettifier_type& prettifier) noexcept {
 			const char* newPtr{};
 			uint64_t newSize{};
 			uint64_t indent{};

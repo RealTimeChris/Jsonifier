@@ -98,12 +98,12 @@ namespace jsonifier_internal {
 			return length;
 		}
 
-		operator std::string() const noexcept {
+		JSONIFIER_INLINE operator std::string() const noexcept {
 			JSONIFIER_ALIGN std::string returnValues{ values, length };
 			return returnValues;
 		}
 
-		operator jsonifier::string() const noexcept {
+		JSONIFIER_INLINE operator jsonifier::string() const noexcept {
 			JSONIFIER_ALIGN jsonifier::string returnValues{ values, length };
 			return returnValues;
 		}
@@ -200,7 +200,7 @@ namespace jsonifier_internal {
 	}
 
 	template<string_literal stringNew> struct string_literal_comparitor {
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			return newLiteral[0] == str[0];
 		}
@@ -211,7 +211,7 @@ namespace jsonifier_internal {
 	struct string_literal_comparitor<stringNew> {
 		static constexpr auto stringLiteral{ stringNew };
 		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount == 8) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
@@ -261,7 +261,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 32 && stringNew.size <= 64)
 	struct string_literal_comparitor<stringNew> {
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -290,7 +290,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 16 && stringNew.size <= 32)
 	struct string_literal_comparitor<stringNew> {
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -320,7 +320,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 8 && stringNew.size <= 16)
 	struct string_literal_comparitor<stringNew> {
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -347,7 +347,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > bytesPerStep)
 	struct string_literal_comparitor<stringNew> {
-		static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
 			if constexpr (stringNew.size() > bytesPerStep) {
 				static constexpr auto string{ offSetIntoLiteral<stringNew, bytesPerStep>() };
 				if (!string_literal_comparitor<string>::impl(str)) {
@@ -364,7 +364,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t size, typename value_type_new> std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
+	template<size_t size, typename value_type_new> JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
 		os << input.view();
 		return os;
 	}
