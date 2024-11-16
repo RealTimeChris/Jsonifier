@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, bool minified> struct index_processor_parse {
 		template<size_t index, typename value_type, typename parse_context_type>
-		 JSONIFIER_INLINE static bool processIndex(value_type& value, parse_context_type& context) noexcept {
+		 static bool processIndex(value_type& value, parse_context_type& context) noexcept {
 			if constexpr (index < tuple_size_v<core_tuple_t<value_type>>) {
 				static constexpr auto ptr			= get<index>(coreTupleV<value_type>).ptr();
 				static constexpr auto key			= get<index>(coreTupleV<value_type>).view();
@@ -114,7 +114,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY (*context.iter == lBrace) {
@@ -317,7 +317,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_value_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
 
 			if JSONIFIER_LIKELY (*context.iter == lBrace) {
@@ -494,7 +494,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::jsonifier_scalar_value_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto size{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (size == 1) {
 				static constexpr auto newPtr = get<0>(coreTupleV<value_type>);
@@ -505,7 +505,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.iter;
@@ -537,7 +537,7 @@ namespace jsonifier_internal {
 		}
 
 		template<size_t maxIndex, size_t currentIndex, bool newLines>
-		JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if constexpr (currentIndex < maxIndex) {
 				if JSONIFIER_LIKELY (*context.iter != rBracket) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
@@ -564,7 +564,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::tuple_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.iter;
@@ -586,7 +586,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<size_t maxIndex, size_t currentIndex> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context) {
+		template<size_t maxIndex, size_t currentIndex> static void parseObjects(value_type& value, parse_context_type& context) {
 			if constexpr (currentIndex < maxIndex) {
 				if JSONIFIER_LIKELY (*context.iter != rBracket) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
@@ -610,7 +610,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBrace) {
 				++context.iter;
 				++context.currentObjectDepth;
@@ -651,7 +651,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		template<bool newLines> static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			while
 				JSONIFIER_LIKELY(*context.iter != rBrace) {
 					if ((*context.iter == comma)) {
@@ -685,7 +685,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBrace) {
 				++context.iter;
 				++context.currentObjectDepth;
@@ -744,7 +744,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::variant_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto lambda = [](auto&& valueNew, auto&& value, auto&& context) {
 				return parse<minified, options>::impl(value, context);
 			};
@@ -754,7 +754,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::optional_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter != n) {
 				parse<minified, options>::impl(value.emplace(), context);
 			} else {
@@ -774,11 +774,11 @@ namespace jsonifier_internal {
 		}
 	};
 
-	JSONIFIER_ALWAYS_INLINE void noop() noexcept {};
+	void noop() noexcept {};
 
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -800,7 +800,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		template<bool newLines> static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if JSONIFIER_LIKELY (const size_t size = value.size(); size > 0) {
 				auto iterNew = value.begin();
 
@@ -853,14 +853,14 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE static void reportError(parse_context_type context) {
+		template<const auto& sourceLocation, auto parseError> static void reportError(parse_context_type context) {
 			context.parserPtr->template reportError<sourceLocation, parseError>(context);
 		}
 	};
 
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -923,7 +923,7 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE static void reportError(parse_context_type context) {
+		template<const auto& sourceLocation, auto parseError> static void reportError(parse_context_type context) {
 			context.parserPtr->template reportError<sourceLocation, parseError>(context);
 		}
 	};
@@ -933,7 +933,7 @@ namespace jsonifier_internal {
 		static constexpr char rBracket{ ']' };
 		static constexpr char lBracket{ '[' };
 		static constexpr char comma{ ',' };
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -959,7 +959,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
+		template<bool newLines> static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if JSONIFIER_LIKELY (const size_t n = std::size(value); n > 0) {
 				auto iterNew = std::begin(value);
 
@@ -989,14 +989,14 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE static void reportError(parse_context_type context) {
+		template<const auto& sourceLocation, auto parseError> static void reportError(parse_context_type context) {
 			context.parserPtr->template reportError<sourceLocation, parseError>(context);
 		}
 	};
 
 	template<jsonifier::parse_options options, jsonifier::concepts::raw_array_t value_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter == lBracket) {
 				++context.currentArrayDepth;
 				++context.iter;
@@ -1036,14 +1036,14 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		template<const auto& sourceLocation, auto parseError> JSONIFIER_ALWAYS_INLINE static void reportError(parse_context_type context) {
+		template<const auto& sourceLocation, auto parseError> static void reportError(parse_context_type context) {
 			context.parserPtr->template reportError<sourceLocation, parseError>(context);
 		}
 	};
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::string_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			derailleur<options, parse_context_type>::parseString(value, context);
 			if constexpr (!minified) {
 				JSONIFIER_SKIP_WS();
@@ -1053,7 +1053,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::char_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			value = static_cast<value_type>(*(static_cast<const char*>(context.iter) + 1));
 			++context.iter;
 			if constexpr (!minified) {
@@ -1064,7 +1064,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::raw_json_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			auto newPtr = static_cast<const char*>(context.iter);
 			derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 			int64_t newSize = static_cast<const char*>(context.iter) - newPtr;
@@ -1080,7 +1080,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::shared_ptr_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
@@ -1106,7 +1106,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::unique_ptr_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
@@ -1132,7 +1132,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::pointer_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (*context.iter != n) {
 				if JSONIFIER_UNLIKELY (!value) {
 					value = new std::remove_pointer_t<std::remove_cvref_t<value_type>>{};
@@ -1157,7 +1157,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::always_null_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type&, parse_context_type& context) noexcept {
+		static void impl(value_type&, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (parseNull(context.iter)) {
 				if constexpr (!minified) {
 					JSONIFIER_SKIP_WS();
@@ -1175,7 +1175,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::enum_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			size_t newValue{};
 			if JSONIFIER_LIKELY (parseNumber(newValue, context.iter, context.endIter)) {
 				value = static_cast<value_type>(newValue);
@@ -1195,7 +1195,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::num_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (parseNumber(value, context.iter, context.endIter)) {
 				if constexpr (!minified) {
 					JSONIFIER_SKIP_WS();
@@ -1213,7 +1213,7 @@ namespace jsonifier_internal {
 
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::bool_t value_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, parse_context_type> {
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
+		static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (parseBool(value, context.iter)) {
 				if constexpr (!minified) {
 					JSONIFIER_SKIP_WS();

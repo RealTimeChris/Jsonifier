@@ -156,7 +156,7 @@ namespace jsonifier_internal {
 		simd_full_length			= 9,
 	};
 
-	JSONIFIER_ALWAYS_INLINE static constexpr size_t setSimdWidth(size_t length) noexcept {
+	static constexpr size_t setSimdWidth(size_t length) noexcept {
 		return length >= 64ull && bytesPerStep >= 64ull ? 64ull : length >= 32ull && bytesPerStep >= 32ull ? 32ull : 16ull;
 	}
 
@@ -166,7 +166,7 @@ namespace jsonifier_internal {
 		size_t maxLength{};
 	};
 
-	JSONIFIER_ALWAYS_INLINE static constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, size_t maxIndex, size_t startingIndex = 0) noexcept {
+	static constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, size_t maxIndex, size_t startingIndex = 0) noexcept {
 		constexpr size_t alphabetSize = 256;
 		jsonifier::string_view key{};
 		for (size_t index = startingIndex; index < maxIndex; ++index) {
@@ -691,7 +691,7 @@ namespace jsonifier_internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
+		static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
 			static constexpr auto checkForEnd = [](const auto* iter, const auto* end, const auto distance) {
 				return (iter + distance) < end;
 			};

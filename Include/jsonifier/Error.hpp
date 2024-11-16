@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 		Unexpected_String_End		= 1 << 16,
 	};
 
-	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, parse_errors error) {
+	std::ostream& operator<<(std::ostream& os, parse_errors error) {
 		os << simd_internal::tzcnt(static_cast<uint64_t>(error));
 		return os;
 	}
@@ -120,7 +120,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE bool isNumberType(uint8_t c) noexcept {
+	bool isNumberType(uint8_t c) noexcept {
 		return numberTable[c];
 	}
 
@@ -133,7 +133,7 @@ namespace jsonifier_internal {
 
 	class error {
 	  public:
-		JSONIFIER_ALWAYS_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew,
+		error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew,
 			uint64_t typeNew) noexcept {
 			stringLength = static_cast<uint64_t>(stringLengthNew);
 			errorIndex	 = static_cast<uint64_t>(errorIndexNew);
@@ -147,27 +147,27 @@ namespace jsonifier_internal {
 		}
 
 		template<const std::source_location& sourceLocation, error_classes errorClassNew, auto typeNew>
-		JSONIFIER_ALWAYS_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew) noexcept {
+		static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
 		}
 
-		JSONIFIER_ALWAYS_INLINE operator uint64_t() const noexcept {
+		operator uint64_t() const noexcept {
 			return errorType;
 		}
 
-		JSONIFIER_ALWAYS_INLINE operator parse_errors() const noexcept {
+		operator parse_errors() const noexcept {
 			return static_cast<parse_errors>(errorType);
 		}
 
-		JSONIFIER_ALWAYS_INLINE operator bool() const noexcept {
+		operator bool() const noexcept {
 			return errorType != 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool operator==(const error& rhs) const noexcept {
+		bool operator==(const error& rhs) const noexcept {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void formatError(const jsonifier::string_view& errorString) noexcept {
+		void formatError(const jsonifier::string_view& errorString) noexcept {
 			if (errorIndex >= errorString.size() || errorString.size() == 0) {
 				return;
 			}
@@ -205,7 +205,7 @@ namespace jsonifier_internal {
 			context = jsonifier::string{ contextBegin, static_cast<uint64_t>(contextEnd - contextBegin) };
 		}
 
-		JSONIFIER_ALWAYS_INLINE jsonifier::string reportError() const noexcept {
+		jsonifier::string reportError() const noexcept {
 			jsonifier::string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) +
 				", on line: " + std::to_string(line) + ", at local index: " + std::to_string(localIndex) };
 			if (stringView) {
@@ -229,7 +229,7 @@ namespace jsonifier_internal {
 		uint8_t padding01[7]{};
 	};
 
-	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
+	std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
 		os << errorNew.reportError();
 		return os;
 	}

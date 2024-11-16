@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
+		pointer allocate(size_type count) noexcept {
 			if JSONIFIER_UNLIKELY (count == 0) {
 				return nullptr;
 			}
@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
+		void deallocate(pointer ptr, size_t = 0) noexcept {
 			if JSONIFIER_LIKELY (ptr) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
@@ -73,15 +73,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
+		template<typename... arg_types> void construct(pointer ptr, arg_types&&... args) noexcept {
 			new (ptr) value_type(std::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_ALWAYS_INLINE static size_type maxSize() noexcept {
+		static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
-		JSONIFIER_ALWAYS_INLINE void destroy(pointer ptr) noexcept {
+		void destroy(pointer ptr) noexcept {
 			ptr->~value_type();
 		}
 	};

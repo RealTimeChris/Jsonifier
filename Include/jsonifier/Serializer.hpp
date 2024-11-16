@@ -43,7 +43,7 @@ namespace jsonifier_internal {
 
 	template<const auto options> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, indent_type&& indent) noexcept {
+		static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, indent_type&& indent) noexcept {
 			serialize_impl<options, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(std::forward<value_type>(value),
 				std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<indent_type>(indent));
 		}
@@ -54,11 +54,11 @@ namespace jsonifier_internal {
 		template<jsonifier::serialize_options options, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
 		friend struct serialize_impl;
 
-		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
+		serializer& operator=(const serializer& other) = delete;
+		serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			index  = 0;
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_ALWAYS_INLINE std::string_view serializeJson(value_type&& object) noexcept {
+		std::string_view serializeJson(value_type&& object) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			index  = 0;
@@ -84,13 +84,13 @@ namespace jsonifier_internal {
 		size_t indent{};
 		size_t index{};
 
-		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+		serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
+		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE ~serializer() noexcept = default;
+		~serializer() noexcept = default;
 	};
 
 }

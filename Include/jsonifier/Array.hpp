@@ -46,51 +46,51 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return iterator(values);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return const_iterator(values);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return iterator(values + sizeNew);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return const_iterator(values + sizeNew);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rbegin() noexcept {
+		constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator(end());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+		constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator(end());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rend() noexcept {
+		constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator(begin());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rend() const noexcept {
+		constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator(begin());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reference operator[](size_type index) const noexcept {
+		constexpr const_reference operator[](size_type index) const noexcept {
 			return values[index];
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) noexcept {
+		constexpr reference operator[](size_type index) noexcept {
 			return values[index];
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const value_type* data() const noexcept {
+		constexpr const value_type* data() const noexcept {
 			return values;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr value_type* data() noexcept {
+		constexpr value_type* data() noexcept {
 			return values;
 		}
 
@@ -100,7 +100,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return sizeNew;
 		}
 
@@ -120,31 +120,31 @@ namespace jsonifier_internal {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using difference_type		 = std::ptrdiff_t;
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
+		constexpr const_pointer data() const noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr pointer data() noexcept {
+		constexpr pointer data() noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept {
 			return nullptr;
 		}
 	};

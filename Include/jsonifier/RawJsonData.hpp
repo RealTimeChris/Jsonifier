@@ -29,7 +29,7 @@
 namespace std {
 
 	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public std::hash<std::string_view> {
-		JSONIFIER_ALWAYS_INLINE uint64_t operator()(const string_type& string) const noexcept {
+		uint64_t operator()(const string_type& string) const noexcept {
 			return std::hash<std::string_view>::operator()(std::string_view{ string });
 		}
 	};
@@ -38,7 +38,7 @@ namespace std {
 namespace jsonifier {
 
 	struct unset {
-		JSONIFIER_ALWAYS_INLINE bool operator==(const unset&) const {
+		bool operator==(const unset&) const {
 			return true;
 		}
 	};
@@ -65,21 +65,21 @@ namespace jsonifier {
 		using array_type  = vector<raw_json_data>;
 		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t, unset>;
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data() noexcept {
+		raw_json_data() noexcept {
 			value = unset{};
 		}
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data& operator=(const string& valueNew) noexcept {
+		raw_json_data& operator=(const string& valueNew) noexcept {
 			value	 = constructValueFromRawJsonData(valueNew);
 			jsonData = valueNew;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE raw_json_data(const string& valueNew) noexcept {
+		raw_json_data(const string& valueNew) noexcept {
 			*this = valueNew;
 		}
 
-		JSONIFIER_ALWAYS_INLINE json_type getType() const noexcept {
+		json_type getType() const noexcept {
 			if (std::holds_alternative<object_type>(value)) {
 				return json_type::Object;
 			} else if (std::holds_alternative<array_type>(value)) {
@@ -150,11 +150,11 @@ namespace jsonifier {
 			return object.contains(key);
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_view rawJson() const noexcept {
+		string_view rawJson() const noexcept {
 			return jsonData;
 		}
 
-		JSONIFIER_ALWAYS_INLINE bool operator==(const raw_json_data& other) const noexcept {
+		bool operator==(const raw_json_data& other) const noexcept {
 			return jsonData == other.jsonData && value == other.value;
 		}
 
@@ -162,7 +162,7 @@ namespace jsonifier {
 		value_type value{};
 		string jsonData{};
 
-		JSONIFIER_ALWAYS_INLINE typename jsonifier::raw_json_data::value_type constructValueFromRawJsonData(const jsonifier::string& jsonDataNew) noexcept {
+		typename jsonifier::raw_json_data::value_type constructValueFromRawJsonData(const jsonifier::string& jsonDataNew) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{};
 			jsonifier::jsonifier_core<false> parser{};
 			if (jsonDataNew.size() > 0) {
@@ -237,7 +237,7 @@ namespace jsonifier {
 		}
 	};
 
-	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
+	std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
 		os << jsonValue.rawJson();
 		return os;
 	}
