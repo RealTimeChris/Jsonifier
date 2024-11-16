@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 		34349738368, 34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
-	JSONIFIER_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
+	JSONIFIER_ALWAYS_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
 		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 		0, 0, 0, 0, 0, 0 };
 
-	JSONIFIER_INLINE char* writeU64Len15To17Trim(char* buf, uint64_t sig) noexcept {
+	JSONIFIER_ALWAYS_INLINE char* writeU64Len15To17Trim(char* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
 
 		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
@@ -115,7 +115,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	JSONIFIER_INLINE char* writeU32Len1To9(char* buf, uint32_t value) noexcept {
+	JSONIFIER_ALWAYS_INLINE char* writeU32Len1To9(char* buf, uint32_t value) noexcept {
 		if (value < 10) {
 			*buf = static_cast<char>(value + '0');
 			return buf + 1;
@@ -147,11 +147,11 @@ namespace jsonifier_internal {
 		return end;
 	}
 
-	JSONIFIER_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
+	JSONIFIER_ALWAYS_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars(char* buf, value_type value) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE static char* toChars(char* buf, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);

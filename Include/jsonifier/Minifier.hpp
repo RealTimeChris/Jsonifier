@@ -42,21 +42,21 @@ namespace jsonifier_internal {
 		template<typename derived_type_new> friend struct minify_impl;
 
 		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_INLINE minifier(const minifier& other)			   = delete;
+		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset<false>(in.data(), in.size());
+			const auto* dataPtr = in.data();
+			rootIter			= dataPtr;
+			endIter				= dataPtr + in.size();
+			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return std::remove_cvref_t<string_type>{};
 			}
 			std::remove_cvref_t<string_type> newString{};
@@ -76,14 +76,14 @@ namespace jsonifier_internal {
 				stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset<false>(in.data(), in.size());
+			const auto* dataPtr = in.data();
+			rootIter			= dataPtr;
+			endIter				= dataPtr + in.size();
+			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - in.data(), in.end() - in.begin(), in.data()));
+				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
 			}
 			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);

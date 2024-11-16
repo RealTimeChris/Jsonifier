@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename T, typename UC> constexpr bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
+	template<typename T, typename UC> JSONIFIER_ALWAYS_INLINE bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
 		using namespace fast_float;
 		static_assert(is_supported_float_t<T>(), "only some floating-point types are supported");
 		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");

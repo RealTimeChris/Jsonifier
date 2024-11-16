@@ -156,7 +156,7 @@ namespace jsonifier_internal {
 		simd_full_length			= 9,
 	};
 
-	JSONIFIER_INLINE static constexpr size_t setSimdWidth(size_t length) noexcept {
+	static constexpr size_t setSimdWidth(size_t length) noexcept {
 		return length >= 64ull && bytesPerStep >= 64ull ? 64ull : length >= 32ull && bytesPerStep >= 32ull ? 32ull : 16ull;
 	}
 
@@ -166,7 +166,7 @@ namespace jsonifier_internal {
 		size_t maxLength{};
 	};
 
-	JSONIFIER_INLINE static constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, size_t maxIndex, size_t startingIndex = 0) noexcept {
+	static constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefs, size_t maxIndex, size_t startingIndex = 0) noexcept {
 		constexpr size_t alphabetSize = 256;
 		jsonifier::string_view key{};
 		for (size_t index = startingIndex; index < maxIndex; ++index) {
@@ -756,6 +756,7 @@ namespace jsonifier_internal {
 				using simd_type = map_simd_t<hashData<value_type>.storageSize>;
 				static constexpr rt_key_hasher<hashData<value_type>.seed> hasher{};
 				static constexpr auto sizeMask{ hashData<value_type>.numGroups - 1u };
+				static constexpr auto ctrlBytesPtr{ hashData<value_type>.controlBytes.data() };
 				const auto newPtr = char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					size_t length = static_cast<size_t>(newPtr - iter);
@@ -767,12 +768,12 @@ namespace jsonifier_internal {
 						uint64_t matches;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 						uint8x8_t dup				   = vdup_n_u8(hash);
-						auto mask					   = vceq_u8(hashData<value_type>.controlBytes.data() + resultIndex, dup);
+						auto mask					   = vceq_u8(ctrlBytesPtr + resultIndex, dup);
 						static constexpr uint64_t msbs = 0x8080808080808080ULL;
 						matches						   = vget_lane_u64(vreinterpret_u64_u8(mask), 0) & msbs;
 #else
 						matches = simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-							simd_internal::gatherValues<simd_type>(hashData<value_type>.controlBytes.data() + resultIndex));
+							simd_internal::gatherValues<simd_type>(ctrlBytesPtr + resultIndex));
 #endif
 						const size_t tz = simd_internal::postCmpTzcnt(matches);
 						return hashData<value_type>.indices[resultIndex + tz];

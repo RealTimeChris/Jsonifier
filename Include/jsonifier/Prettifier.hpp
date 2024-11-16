@@ -52,7 +52,7 @@ namespace jsonifier_internal {
 		template<jsonifier::prettify_options, typename derived_type_new> friend struct prettify_impl;
 
 		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_INLINE prettifier(const prettifier& other)			   = delete;
+		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
 		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
@@ -60,15 +60,16 @@ namespace jsonifier_internal {
 				stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
+			const auto* dataPtr = in.data();
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset<true>(in.data(), in.size());
+			rootIter = dataPtr;
+			endIter	 = dataPtr + in.size();
+			section.reset<true>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - in.data(),
-					in.end() - in.begin(), in.data()));
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
 				return std::remove_cvref_t<string_type>{};
 			}
 			std::remove_cvref_t<string_type> newString{};
@@ -89,14 +90,15 @@ namespace jsonifier_internal {
 			}
 			static constexpr jsonifier::prettify_options optionsFinal{ options };
 			derivedRef.errors.clear();
-			rootIter = in.data();
-			endIter	 = in.data() + in.size();
-			section.reset<true>(in.data(), in.size());
+			const auto* dataPtr = in.data();
+			rootIter			= dataPtr;
+			endIter				= dataPtr + in.size();
+			section.reset<true>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - in.data(),
-					in.end() - in.begin(), in.data()));
+				getErrors().emplace_back(
+					error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
 			}
 			auto index = prettify_impl<optionsFinal, derived_type>::impl(iter, stringBuffer, *this);

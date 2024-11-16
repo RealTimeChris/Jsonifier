@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::signed_t value_type> struct integer_parser<value_type> {
 		constexpr integer_parser() noexcept = default;
 
-		JSONIFIER_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
+		JSONIFIER_ALWAYS_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
 			value_type aLow	 = ab & 0xFFFFFFFF;
 			value_type bHigh = cd >> 32;
@@ -124,7 +124,7 @@ namespace jsonifier_internal {
 			return lo;
 		}
 
-		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
 #if defined(__SIZEOF_INT128__)
 			const __int128_t res = static_cast<__int128_t>(value) * static_cast<__int128_t>(expValue);
 			value				 = static_cast<value_type>(res);
@@ -145,7 +145,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
 #if defined(__SIZEOF_INT128__)
 			const __int128_t dividend = static_cast<__int128_t>(value);
 			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
@@ -162,7 +162,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				value_type fracValue{ static_cast<value_type>(*iter - zero) };
 				typename get_int_type<value_type>::type fracDigits{ 1 };
@@ -191,7 +191,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseExponentPostFrac(value_type& value, const uint8_t* iter, int8_t expSign, value_type fracValue,
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseExponentPostFrac(value_type& value, const uint8_t* iter, int8_t expSign, value_type fracValue,
 			typename get_int_type<value_type>::type fracDigits) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				value_type expValue{ static_cast<value_type>(*iter - zero) };
@@ -226,7 +226,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseExponent(value_type& value, const uint8_t* iter, int8_t expSign) noexcept {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseExponent(value_type& value, const uint8_t* iter, int8_t expSign) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				value_type expValue{ static_cast<value_type>(*iter - zero) };
 				++iter;
@@ -273,7 +273,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<bool negative> JSONIFIER_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
+		template<bool negative> JSONIFIER_ALWAYS_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
 			uint8_t numTmp{ *iter };
 			if JSONIFIER_LIKELY (isDigit(numTmp)) {
 				value = numTmp - zero;
@@ -693,7 +693,7 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
 			if (*iter == minus) {
 				++iter;
 				const uint8_t* resultPtr{ parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter)) };
@@ -720,7 +720,7 @@ namespace jsonifier_internal {
 	template<jsonifier::concepts::unsigned_t value_type> struct integer_parser<value_type> {
 		constexpr integer_parser() noexcept = default;
 
-		JSONIFIER_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
+		JSONIFIER_ALWAYS_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
 			value_type aLow	 = ab & 0xFFFFFFFF;
 			value_type bHigh = cd >> 32;
@@ -734,7 +734,7 @@ namespace jsonifier_internal {
 			return lo;
 		}
 
-		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
 #if defined(__SIZEOF_INT128__)
 			const __uint128_t res = static_cast<__uint128_t>(value) * static_cast<__uint128_t>(expValue);
 			value				  = static_cast<value_type>(res);
@@ -755,7 +755,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
 #if defined(__SIZEOF_INT128__)
 			const __uint128_t dividend = static_cast<__uint128_t>(value);
 			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
@@ -772,7 +772,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				value_type fracValue{ static_cast<value_type>(*iter - zero) };
 				typename get_int_type<value_type>::type fracDigits{ 1 };
@@ -801,7 +801,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseExponentPostFrac(value_type& value, const uint8_t* iter, int8_t expSign, value_type fracValue,
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseExponentPostFrac(value_type& value, const uint8_t* iter, int8_t expSign, value_type fracValue,
 			typename get_int_type<value_type>::type fracDigits) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				int64_t expValue{ *iter - zero };
@@ -836,7 +836,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseExponent(value_type& value, const uint8_t* iter, int8_t expSign) noexcept {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseExponent(value_type& value, const uint8_t* iter, int8_t expSign) noexcept {
 			if JSONIFIER_LIKELY (isDigit(*iter)) {
 				value_type expValue{ static_cast<value_type>(*iter - zero) };
 				++iter;
@@ -883,7 +883,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
 			uint8_t numTmp{ *iter };
 			if JSONIFIER_LIKELY (isDigit(numTmp)) {
 				value = static_cast<value_type>(numTmp - zero);
@@ -1141,7 +1141,7 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
 			auto resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
 			if JSONIFIER_LIKELY (resultPtr) {
 				iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);

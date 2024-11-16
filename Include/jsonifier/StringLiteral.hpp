@@ -98,12 +98,12 @@ namespace jsonifier_internal {
 			return length;
 		}
 
-		JSONIFIER_INLINE operator std::string() const noexcept {
+		JSONIFIER_ALWAYS_INLINE operator std::string() const noexcept {
 			JSONIFIER_ALIGN std::string returnValues{ values, length };
 			return returnValues;
 		}
 
-		JSONIFIER_INLINE operator jsonifier::string() const noexcept {
+		JSONIFIER_ALWAYS_INLINE operator jsonifier::string() const noexcept {
 			JSONIFIER_ALIGN jsonifier::string returnValues{ values, length };
 			return returnValues;
 		}
@@ -131,7 +131,7 @@ namespace jsonifier_internal {
 	template<string_literal string>
 		requires(string.size() == 2)
 	constexpr auto packValues() {
-		uint16_t returnValues{};
+		JSONIFIER_ALIGN uint16_t returnValues{};
 		for (size_t x = 0; x < 2; ++x) {
 			returnValues |= (static_cast<uint16_t>(string[x]) << ((x % 8) * 8));
 		}
@@ -141,7 +141,7 @@ namespace jsonifier_internal {
 	template<string_literal string>
 		requires(string.size() > 2 && string.size() <= 4)
 	constexpr auto packValues() {
-		uint32_t returnValues{};
+		JSONIFIER_ALIGN uint32_t returnValues{};
 		for (size_t x = 0; x < string.size(); ++x) {
 			returnValues |= (static_cast<uint32_t>(string[x]) << ((x % 8) * 8));
 		}
@@ -151,7 +151,7 @@ namespace jsonifier_internal {
 	template<string_literal string>
 		requires(string.size() > 4 && string.size() <= 8)
 	constexpr auto packValues() {
-		uint64_t returnValues{};
+		JSONIFIER_ALIGN uint64_t returnValues{};
 		for (size_t x = 0; x < string.size(); ++x) {
 			returnValues |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
 		}
@@ -161,7 +161,7 @@ namespace jsonifier_internal {
 	template<string_literal string>
 		requires(string.size() != 0 && string.size() > 8)
 	constexpr array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> packValues() {
-		array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> returnValues{};
+		JSONIFIER_ALIGN array<uint64_t, ((string.size() / 8 > 0) ? (string.size() / 8) + 1 : 1)> returnValues{};
 		for (size_t x = 0; x < string.size(); ++x) {
 			if (x / 8 < (string.size() / 8) + 1) {
 				returnValues[x / 8] |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
@@ -200,7 +200,7 @@ namespace jsonifier_internal {
 	}
 
 	template<string_literal stringNew> struct string_literal_comparitor {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			return newLiteral[0] == str[0];
 		}
@@ -211,7 +211,7 @@ namespace jsonifier_internal {
 	struct string_literal_comparitor<stringNew> {
 		static constexpr auto stringLiteral{ stringNew };
 		static constexpr auto valuesNew{ packValues<stringLiteral>() };
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount == 8) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
@@ -261,7 +261,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 32 && stringNew.size <= 64)
 	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -278,7 +278,8 @@ namespace jsonifier_internal {
 				return maskBytes;
 			}();
 
-			jsonifier_simd_int_512 mask = simd_internal::gatherValues<jsonifier_simd_int_512>(maskBytes.data());
+			static constexpr auto maskBytesPtr = maskBytes.data();
+			jsonifier_simd_int_512 mask		   = simd_internal::gatherValues<jsonifier_simd_int_512>(maskBytesPtr);
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};
@@ -290,7 +291,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 16 && stringNew.size <= 32)
 	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -307,7 +308,8 @@ namespace jsonifier_internal {
 				return maskBytes;
 			}();
 
-			jsonifier_simd_int_256 mask = simd_internal::gatherValues<jsonifier_simd_int_256>(maskBytes.data());
+			static constexpr auto maskBytesPtr = maskBytes.data();
+			jsonifier_simd_int_256 mask = simd_internal::gatherValues<jsonifier_simd_int_256>(maskBytesPtr);
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};
@@ -320,7 +322,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > 8 && stringNew.size <= 16)
 	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			static constexpr auto newLength{ stringNew.size() };
 			static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -337,7 +339,8 @@ namespace jsonifier_internal {
 				return maskBytes;
 			}();
 
-			jsonifier_simd_int_128 mask = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytes.data());
+			static constexpr auto maskBytesPtr = maskBytes.data();
+			jsonifier_simd_int_128 mask		   = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytesPtr);
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};
@@ -347,13 +350,14 @@ namespace jsonifier_internal {
 	template<string_literal stringNew>
 		requires(stringNew.size() > bytesPerStep)
 	struct string_literal_comparitor<stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			if constexpr (stringNew.size() > bytesPerStep) {
 				static constexpr auto string{ offSetIntoLiteral<stringNew, bytesPerStep>() };
 				if (!string_literal_comparitor<string>::impl(str)) {
 					return false;
 				} else {
-					str += string.size();
+					static constexpr auto stringSize = string.size();
+					str += stringSize;
 					static constexpr auto stringNewer{ offSetNewLiteral<stringNew, bytesPerStep>() };
 					return string_literal_comparitor<stringNewer>::impl(str);
 				}
@@ -364,7 +368,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t size, typename value_type_new> JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
+	template<size_t size, typename value_type_new> JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
 		os << input.view();
 		return os;
 	}
