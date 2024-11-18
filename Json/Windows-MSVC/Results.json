@@ -4,75 +4,56 @@
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 28.025139605742233,
-            "iterationCount": 297,
+            "resultSpeed": 1889.966178657134,
+            "iterationCount": 180,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 255.9014408714308,
+            "resultSpeed": 1627.8682022420833,
             "iterationCount": 300,
             "color": "steelblue"
          }
       ],
-      "testName": "Json Test (Prettified)"
+      "testName": "Canada Test (Prettified)"
    },
    {
       "results": [
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 15.17343741969572,
-            "iterationCount": 300,
+            "resultSpeed": 595.4971147248833,
+            "iterationCount": 99,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 131.28819258735214,
+            "resultSpeed": 553.5866402463249,
             "iterationCount": 300,
             "color": "steelblue"
          }
       ],
-      "testName": "Partial Test (Prettified)"
+      "testName": "Canada Test (Minified)"
    },
    {
       "results": [
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 3.16867524629174,
-            "iterationCount": 297,
+            "resultSpeed": 595.4971147248833,
+            "iterationCount": 99,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 217.6937091856313,
+            "resultSpeed": 553.5866402463249,
             "iterationCount": 300,
             "color": "steelblue"
          }
       ],
-      "testName": "Partial Test (Minified)"
-   },
-   {
-      "results": [
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Read",
-            "resultSpeed": 3.16867524629174,
-            "iterationCount": 297,
-            "color": "teal"
-         },
-         {
-            "libraryName": "jsonifier",
-            "resultType": "Write",
-            "resultSpeed": 217.6937091856313,
-            "iterationCount": 300,
-            "color": "steelblue"
-         }
-      ],
-      "testName": "Partial Test (Minified)"
+      "testName": "Canada Test (Minified)"
    }
 ]

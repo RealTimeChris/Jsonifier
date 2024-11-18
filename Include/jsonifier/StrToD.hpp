@@ -121,7 +121,7 @@ namespace jsonifier_internal {
 				}
 			}
 			if JSONIFIER_LIKELY (pack.answer.valid) {
-				return from_chars_advanced(pack.answer, value);
+				return from_chars_advanced(pack.answer, value).ptr;
 			} else {
 				return nullptr;
 			}
@@ -156,8 +156,6 @@ namespace jsonifier_internal {
 
 		template<typename char_type> JSONIFIER_ALWAYS_INLINE static char_type const* parseFloatImpl(char_type const* iter, value_type& value) noexcept {
 			using namespace jsonifier_fast_float;
-			static_assert(is_supported_float_t<value_type>(), "only some floating-point types are supported");
-			static_assert(is_supported_char_t<char_type>(), "only char, wchar_t, char16_t and char32_t are supported");
 			parsing_pack<char_type> pack;
 			pack.answer.valid			= false;
 			pack.answer.too_many_digits = false;
