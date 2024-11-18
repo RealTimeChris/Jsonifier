@@ -65,12 +65,6 @@ namespace jsonifier_internal {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decimal{ '.' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t minus{ '-' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t plus{ '+' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t zero{ '0' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t nine{ '9' };
-
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsPos{ [] {
 		constexpr auto maxValue{ (std::numeric_limits<std::decay_t<value_type>>::max)() };
 		array<uint64_t, 256> returnValues{};
@@ -102,8 +96,6 @@ namespace jsonifier_internal {
 		returnValues['9'] = (maxValue - 9) / 10;
 		return returnValues;
 	}() };
-
-#define isDigit(x) ((x <= nine) && (x >= zero))
 
 	template<typename value_type> struct integer_parser;
 

@@ -66,7 +66,7 @@ namespace jsonifier {
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto currentIter = static_cast<const char*>(string.data());
 			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
-			jsonifier_internal::parseFloat(currentIter, endIter, newValue);
+			jsonifier_internal::float_parser<double>::parseFloat(currentIter, newValue);
 		}
 		return newValue;
 	}
@@ -138,9 +138,9 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				double temp;
-				return parseFloat(iter, end, temp) ? (value = static_cast<value_type>(temp), true) : false;
+				return float_parser<double>::parseFloat(iter, temp) ? (value = static_cast<value_type>(temp), true) : false;
 			} else {
-				return parseFloat(iter, end, value);
+				return float_parser<value_type>::parseFloat(iter, value);
 			}
 		}
 		return true;

@@ -4,14 +4,33 @@
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 128.03064268510562,
+            "resultSpeed": 28.025139605742233,
+            "iterationCount": 297,
+            "color": "teal"
+         },
+         {
+            "libraryName": "jsonifier",
+            "resultType": "Write",
+            "resultSpeed": 255.9014408714308,
+            "iterationCount": 300,
+            "color": "steelblue"
+         }
+      ],
+      "testName": "Json Test (Prettified)"
+   },
+   {
+      "results": [
+         {
+            "libraryName": "jsonifier",
+            "resultType": "Read",
+            "resultSpeed": 15.17343741969572,
             "iterationCount": 300,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 2890.124319114212,
+            "resultSpeed": 131.28819258735214,
             "iterationCount": 300,
             "color": "steelblue"
          }
@@ -23,14 +42,14 @@
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 123.60068258834706,
-            "iterationCount": 300,
+            "resultSpeed": 3.16867524629174,
+            "iterationCount": 297,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 2573.6875733543584,
+            "resultSpeed": 217.6937091856313,
             "iterationCount": 300,
             "color": "steelblue"
          }
@@ -42,14 +61,14 @@
          {
             "libraryName": "jsonifier",
             "resultType": "Read",
-            "resultSpeed": 123.60068258834706,
-            "iterationCount": 300,
+            "resultSpeed": 3.16867524629174,
+            "iterationCount": 297,
             "color": "teal"
          },
          {
             "libraryName": "jsonifier",
             "resultType": "Write",
-            "resultSpeed": 2573.6875733543584,
+            "resultSpeed": 217.6937091856313,
             "iterationCount": 300,
             "color": "steelblue"
          }

@@ -27,142 +27,177 @@
 
 namespace jsonifier_internal {
 
-	template<typename T, typename UC> JSONIFIER_ALWAYS_INLINE bool parseFloat(UC const*& iter, UC const* end, T& value) noexcept {
-		using namespace fast_float;
-		static_assert(is_supported_float_t<T>(), "only some floating-point types are supported");
-		static_assert(is_supported_char_t<UC>(), "only char, wchar_t, char16_t and char32_t are supported");
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decimal{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t minus{ '-' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t plus{ '+' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t zero{ '0' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t nine{ '9' };
 
-		static constexpr UC decimalNew = '.';
-		static constexpr UC smallE	   = 'e';
-		static constexpr UC bigE	   = 'E';
-		static constexpr UC minusNew   = '-';
-		static constexpr UC plusNew	   = '+';
-		static constexpr UC zeroNew	   = '0';
+#define isDigit(x) ((x <= nine) && (x >= zero))
 
-		parsed_number_string_t<UC> answer;
-		answer.valid		   = false;
-		answer.too_many_digits = false;
-		answer.negative		   = (*iter == minusNew);
-		if (answer.negative) {
+	template<jsonifier::concepts::float_t value_type> struct float_parser {
+		static constexpr uint64_t minimalNineteenDigitInteger{ 1000000000000000000 };
+		static constexpr char decimalNew = '.';
+		static constexpr char smallE	 = 'e';
+		static constexpr char bigE		 = 'E';
+		static constexpr char minusNew	 = '-';
+		static constexpr char plusNew	 = '+';
+		static constexpr char zeroNew	 = '0';
+
+		template<typename char_type> struct parsing_pack {
+			jsonifier_fast_float::parsed_number_string_t<char_type> answer;
+			char_type const* loactionOfE;
+			char_type const* startDigits;
+			char_type const* fracPtr;
+			char_type const* fracEnd;
+			char_type const* intPtr;
+			char_type const* intEnd;
+			size_t digitCount;
+			int64_t expNumber;
+			uint8_t digit;
+		};
+
+		template<typename char_type>
+		JSONIFIER_ALWAYS_INLINE static char_type const* parseExponent(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
+			using namespace jsonifier_fast_float;
+			pack.loactionOfE = iter;
 			++iter;
-
-			if JSONIFIER_UNLIKELY (!is_integer(*iter)) {
-				return false;
-			}
-		}
-		UC const* const start_digits = iter;
-
-		uint64_t i = 0;
-
-		while (is_integer(*iter)) {
-			i = 10 * i + static_cast<uint64_t>(*iter - zeroNew);
-			++iter;
-		}
-
-		UC const* const end_of_integer_part = iter;
-		int64_t digit_count					= static_cast<int64_t>(end_of_integer_part - start_digits);
-		answer.integer.length				= static_cast<size_t>(digit_count);
-		answer.integer.ptr					= start_digits;
-
-		if (digit_count == 0 || (start_digits[0] == zeroNew && digit_count > 1)) {
-			return false;
-		}
-
-		int64_t exponent			 = 0;
-		const bool has_decimal_point = [&] {
-			return (*iter == decimalNew);
-		}();
-		if (has_decimal_point) {
-			++iter;
-			UC const* before = iter;
-			loop_parse_if_eight_digits(iter, end, i);
-
-			while (is_integer(*iter)) {
-				uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
-				++iter;
-				i = i * 10 + digit;
-			}
-			exponent			   = before - iter;
-			answer.fraction.length = static_cast<size_t>(iter - before);
-			answer.fraction.ptr	   = before;
-			digit_count -= exponent;
-		}
-
-		if (has_decimal_point && exponent == 0) {
-			return false;
-		}
-
-		int64_t exp_number = 0;
-
-		if ((smallE == *iter) || (bigE == *iter)) {
-			UC const* location_of_e = iter;
-			++iter;
-			bool neg_exp = false;
+			bool negExp = false;
 			if (minusNew == *iter) {
-				neg_exp = true;
+				negExp = true;
 				++iter;
 			} else if (plusNew == *iter) {
 				++iter;
 			}
-			if (!is_integer(*iter)) {
-				iter = location_of_e;
+			if (!isDigit(*iter)) {
+				iter = pack.loactionOfE;
 			} else {
-				while (is_integer(*iter)) {
-					uint8_t digit = static_cast<uint8_t>(*iter - zeroNew);
-					if (exp_number < 0x10000000) {
-						exp_number = 10 * exp_number + digit;
+				while (isDigit(*iter)) {
+					pack.digit = static_cast<uint8_t>(*iter - zeroNew);
+					if (pack.expNumber < 0x10000000) {
+						pack.expNumber = 10 * pack.expNumber + pack.digit;
 					}
 					++iter;
 				}
-				if (neg_exp) {
-					exp_number = -exp_number;
+				if (negExp) {
+					pack.expNumber = -pack.expNumber;
 				}
-				exponent += exp_number;
+				pack.answer.exponent += pack.expNumber;
 			}
+			return finishParse(iter, value, pack);
 		}
 
-		answer.lastmatch = iter;
-		answer.valid	 = true;
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static char_type const* finishParse(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
+			using namespace jsonifier_fast_float;
+			pack.answer.lastmatch = iter;
+			pack.answer.valid	  = true;
 
-		if (digit_count > 19) {
-			UC const* start = start_digits;
-			while ((*start == zeroNew || *start == decimalNew)) {
-				if (*start == zeroNew) {
-					--digit_count;
-				}
-				++start;
-			}
-
-			if (digit_count > 19) {
-				answer.too_many_digits = true;
-				i					   = 0;
-				iter				   = answer.integer.ptr;
-				UC const* int_end	   = iter + answer.integer.len();
-				static constexpr uint64_t minimal_nineteen_digit_integer{ 1000000000000000000 };
-				while ((i < minimal_nineteen_digit_integer) && (iter != int_end)) {
-					i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
-					++iter;
-				}
-				if (i >= minimal_nineteen_digit_integer) {
-					exponent = end_of_integer_part - iter + exp_number;
-				} else {
-					iter			   = answer.fraction.ptr;
-					UC const* frac_end = iter + answer.fraction.len();
-					while ((i < minimal_nineteen_digit_integer) && (iter != frac_end)) {
-						i = i * 10 + static_cast<uint64_t>(*iter - zeroNew);
-						++iter;
+			if (pack.digitCount > 19) {
+				char_type const* start = pack.startDigits;
+				while ((*start == zeroNew || *start == decimalNew)) {
+					if (*start == zeroNew) {
+						--pack.digitCount;
 					}
-					exponent = answer.fraction.ptr - iter + exp_number;
+					++start;
+				}
+
+				if (pack.digitCount > 19) {
+					pack.answer.too_many_digits = true;
+					pack.answer.mantissa		= 0;
+					while ((pack.answer.mantissa < minimalNineteenDigitInteger) && (pack.intPtr != pack.intEnd)) {
+						pack.answer.mantissa = pack.answer.mantissa * 10 + static_cast<uint64_t>(*pack.intPtr - zeroNew);
+						++pack.intPtr;
+					}
+					if (pack.answer.mantissa >= minimalNineteenDigitInteger) {
+						pack.answer.exponent = pack.intEnd - pack.intPtr + pack.expNumber;
+					} else {
+						pack.intPtr = pack.fracPtr;
+						while ((pack.answer.mantissa < minimalNineteenDigitInteger) && (pack.intPtr != pack.fracEnd)) {
+							pack.answer.mantissa = pack.answer.mantissa * 10 + static_cast<uint64_t>(*pack.intPtr - zeroNew);
+							++pack.intPtr;
+						}
+						pack.answer.exponent = pack.fracPtr - pack.intPtr + pack.expNumber;
+					}
 				}
 			}
+			if JSONIFIER_LIKELY (pack.answer.valid) {
+				return from_chars_advanced(pack.answer, value);
+			} else {
+				return nullptr;
+			}
 		}
-		answer.exponent = exponent;
-		answer.mantissa = i;
-		if JSONIFIER_LIKELY (answer.valid) {
-			iter = answer.lastmatch;
-			return from_chars_advanced(answer, value).ptr != nullptr;
-		} else {
-			return false;
+
+		template<typename char_type>
+		JSONIFIER_ALWAYS_INLINE static char_type const* parseFractional(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
+			using namespace jsonifier_fast_float;
+			++iter;
+
+			while (isDigit(*iter)) {
+				pack.digit = static_cast<uint8_t>(*iter - zeroNew);
+				++iter;
+				pack.answer.mantissa = pack.answer.mantissa * 10 + pack.digit;
+			}
+			pack.answer.exponent = (pack.intEnd + 1) - iter;
+			pack.fracEnd		 = iter;
+			pack.fracPtr		 = pack.intEnd + 1;
+			pack.digitCount -= pack.answer.exponent;
+
+			if (pack.answer.exponent == 0) {
+				return nullptr;
+			}
+			pack.expNumber = 0;
+
+			if ((smallE == *iter) || (bigE == *iter)) {
+				return parseExponent(iter, value, pack);
+			}
+
+			return finishParse(iter, value, pack);
 		}
-	}
+
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static char_type const* parseFloatImpl(char_type const* iter, value_type& value) noexcept {
+			using namespace jsonifier_fast_float;
+			static_assert(is_supported_float_t<value_type>(), "only some floating-point types are supported");
+			static_assert(is_supported_char_t<char_type>(), "only char, wchar_t, char16_t and char32_t are supported");
+			parsing_pack<char_type> pack;
+			pack.answer.valid			= false;
+			pack.answer.too_many_digits = false;
+			pack.answer.negative		= (*iter == minusNew);
+			pack.expNumber				= 0;
+			if (pack.answer.negative) {
+				++iter;
+
+				if JSONIFIER_UNLIKELY (!isDigit(*iter)) {
+					return nullptr;
+				}
+			}
+			pack.startDigits = iter;
+
+			while (isDigit(*iter)) {
+				pack.digit = static_cast<uint64_t>(*iter - zeroNew);
+				++iter;
+				pack.answer.mantissa = 10 * pack.answer.mantissa + pack.digit;
+			}
+
+			pack.intEnd		= iter;
+			pack.digitCount = static_cast<int64_t>(pack.intEnd - pack.startDigits);
+			pack.intPtr		= pack.startDigits;
+
+			if (pack.digitCount == 0 || (pack.startDigits[0] == zeroNew && pack.digitCount > 1)) {
+				return nullptr;
+			}
+
+			if (*iter == decimalNew) {
+				return parseFractional(iter, value, pack);
+			}
+			if ((smallE == *iter) || (bigE == *iter)) {
+				return parseExponent(iter, value, pack);
+			}
+			return finishParse(iter, value, pack);
+		}
+
+		template<typename char_type> JSONIFIER_ALWAYS_INLINE static bool parseFloat(char_type const*& iter, value_type& value) noexcept {
+			auto iterNew = parseFloatImpl(iter, value);
+			return (iterNew) ? (iter = iterNew, true) : false;
+		}
+	};
 }
