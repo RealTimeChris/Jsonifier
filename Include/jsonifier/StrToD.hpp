@@ -27,175 +27,211 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t decimal{ '.' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t minus{ '-' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t plus{ '+' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t zero{ '0' };
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint8_t nine{ '9' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-#define isDigit(x) ((x <= nine) && (x >= zero))
+	JSONIFIER_ALWAYS_INLINE_VARIABLE bool expFracTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-	template<jsonifier::concepts::float_t value_type> struct float_parser {
-		static constexpr uint64_t minimalNineteenDigitInteger{ 1000000000000000000 };
-		static constexpr char decimalNew = '.';
-		static constexpr char smallE	 = 'e';
-		static constexpr char bigE		 = 'E';
-		static constexpr char minusNew	 = '-';
-		static constexpr char plusNew	 = '+';
-		static constexpr char zeroNew	 = '0';
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char decimal{ '.' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char minus{ '-' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char plus{ '+' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE char nine{ '9' };
 
-		template<typename char_type> struct parsing_pack {
-			jsonifier_fast_float::parsed_number_string_t<char_type> answer;
-			char_type const* loactionOfE;
-			char_type const* startDigits;
-			char_type const* fracPtr;
-			char_type const* fracEnd;
-			char_type const* intPtr;
-			char_type const* intEnd;
-			size_t digitCount;
-			int64_t expNumber;
-			uint8_t digit;
-		};
+#define JSONIFIER_IS_DIGIT(x) ((static_cast<size_t>(x - '0')) <= 9)
 
-		template<typename char_type>
-		JSONIFIER_ALWAYS_INLINE static char_type const* parseExponent(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
-			using namespace jsonifier_fast_float;
-			pack.loactionOfE = iter;
+	template<typename value_type, typename char_t> JSONIFIER_ALWAYS_INLINE bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
+		using namespace jsonifier_fast_float;
+		span<const char_t> fraction;
+		int64_t digitCount;
+		int64_t expNumber{};
+		int64_t exponent{};
+		size_t mantissa{};
+		const bool negative{ *iter == minus };
+		bool tooManyDigits{ false };
+
+		if (negative) {
 			++iter;
-			bool negExp = false;
-			if (minusNew == *iter) {
-				negExp = true;
-				++iter;
-			} else if (plusNew == *iter) {
+
+			if JSONIFIER_UNLIKELY (!JSONIFIER_IS_DIGIT(*iter)) {
+				return false;
+			}
+		}
+
+		span<const char_t> integer{ iter };
+#if defined(JSONIFIER_MAC)
+		size_t newVal64{ read8_to_u64(iter) };
+		while (end - iter >= 8 && is_made_of_eight_digits_fast(newVal64)) {
+			mantissa = mantissa * 100000000 + parse_eight_digits_unrolled(newVal64);
+			iter += 8;
+			newVal64 = read8_to_u64(iter);
+		}
+#endif
+
+		while (JSONIFIER_IS_DIGIT(*iter)) {
+			mantissa = 10 * mantissa + static_cast<size_t>(*iter - zero);
+			++iter;
+		}
+
+		digitCount	= static_cast<int64_t>(iter - integer.ptr);
+		integer.end = integer.ptr + static_cast<size_t>(digitCount);
+
+		if JSONIFIER_UNLIKELY (digitCount == 0 || (integer.ptr[0] == zero && digitCount > 1)) {
+			return false;
+		}
+
+		if (*iter == decimal) {
+			++iter;
+			char_t const* before = iter;
+
+			if (auto valid = end - iter >= 8; valid) {
+#if defined(JSONIFIER_MAC)
+				newVal64 = read8_to_u64(iter);
+#else
+				size_t newVal64{ read8_to_u64(iter) };
+#endif
+				valid &= is_made_of_eight_digits_fast(newVal64);
+				while (valid) {
+					mantissa = mantissa * 100000000 + parse_eight_digits_unrolled(newVal64);
+					iter += 8;
+					newVal64 = read8_to_u64(iter);
+					valid	 = end - iter >= 8 && is_made_of_eight_digits_fast(newVal64);
+				} 
+			}
+
+			while (JSONIFIER_IS_DIGIT(*iter)) {
+				mantissa = mantissa * 10 + static_cast<size_t>(*iter - zero);
 				++iter;
 			}
-			if (!isDigit(*iter)) {
-				iter = pack.loactionOfE;
+			exponent	 = before - iter;
+			fraction.ptr = before;
+			fraction.end = fraction.ptr + static_cast<size_t>(iter - before);
+			digitCount -= exponent;
+
+			if JSONIFIER_UNLIKELY (exponent == 0) {
+				return false;
+			}
+		}
+
+		if (expTable[*iter]) {
+			char_t const* locationOfE = iter;
+			++iter;
+			bool negExp = false;
+			if (minus == *iter) {
+				negExp = true;
+				++iter;
+			} else if (plus == *iter) {
+				++iter;
+			}
+			if (!JSONIFIER_IS_DIGIT(*iter)) {
+				iter = locationOfE;
 			} else {
-				while (isDigit(*iter)) {
-					pack.digit = static_cast<uint8_t>(*iter - zeroNew);
-					if (pack.expNumber < 0x10000000) {
-						pack.expNumber = 10 * pack.expNumber + pack.digit;
+				while (JSONIFIER_IS_DIGIT(*iter)) {
+					if (expNumber < 0x10000000) {
+						expNumber = 10 * expNumber + static_cast<size_t>(*iter - zero);
 					}
 					++iter;
 				}
 				if (negExp) {
-					pack.expNumber = -pack.expNumber;
+					expNumber = -expNumber;
 				}
-				pack.answer.exponent += pack.expNumber;
+				exponent += expNumber;
 			}
-			return finishParse(iter, value, pack);
 		}
 
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE static char_type const* finishParse(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
-			using namespace jsonifier_fast_float;
-			pack.answer.lastmatch = iter;
-			pack.answer.valid	  = true;
+		if (digitCount > 19) {
+			char_t const* start = integer.ptr;
+			while ((*start == zero || *start == decimal)) {
+				if (*start == zero) {
+					--digitCount;
+				}
+				++start;
+			}
 
-			if (pack.digitCount > 19) {
-				char_type const* start = pack.startDigits;
-				while ((*start == zeroNew || *start == decimalNew)) {
-					if (*start == zeroNew) {
-						--pack.digitCount;
-					}
+			if (digitCount > 19) {
+				tooManyDigits = true;
+				mantissa	  = 0;
+				start		  = integer.ptr;
+				static constexpr size_t minNineteenDigitInteger{ 1000000000000000000 };
+				while ((mantissa < minNineteenDigitInteger) && (start != integer.end)) {
+					mantissa = mantissa * 10 + static_cast<size_t>(*start - zero);
 					++start;
 				}
-
-				if (pack.digitCount > 19) {
-					pack.answer.too_many_digits = true;
-					pack.answer.mantissa		= 0;
-					while ((pack.answer.mantissa < minimalNineteenDigitInteger) && (pack.intPtr != pack.intEnd)) {
-						pack.answer.mantissa = pack.answer.mantissa * 10 + static_cast<uint64_t>(*pack.intPtr - zeroNew);
-						++pack.intPtr;
+				if (mantissa >= minNineteenDigitInteger) {
+					exponent = integer.end - start + expNumber;
+				} else {
+					start = fraction.ptr;
+					while ((mantissa < minNineteenDigitInteger) && (start != fraction.end)) {
+						mantissa = mantissa * 10 + static_cast<size_t>(*start - zero);
+						++start;
 					}
-					if (pack.answer.mantissa >= minimalNineteenDigitInteger) {
-						pack.answer.exponent = pack.intEnd - pack.intPtr + pack.expNumber;
+					exponent = fraction.ptr - start + expNumber;
+				}
+			}
+		}
+
+		if (binary_format<value_type>::min_exponent_fast_path <= exponent && exponent <= binary_format<value_type>::max_exponent_fast_path && !tooManyDigits) {
+			if (rounds_to_nearest::roundsToNearest) {
+				if (mantissa <= binary_format<value_type>::max_mantissa_fast_path_value) {
+					value = value_type(mantissa);
+					if (exponent < 0) {
+						value = value / binary_format<value_type>::exact_power_of_ten(-exponent);
 					} else {
-						pack.intPtr = pack.fracPtr;
-						while ((pack.answer.mantissa < minimalNineteenDigitInteger) && (pack.intPtr != pack.fracEnd)) {
-							pack.answer.mantissa = pack.answer.mantissa * 10 + static_cast<uint64_t>(*pack.intPtr - zeroNew);
-							++pack.intPtr;
-						}
-						pack.answer.exponent = pack.fracPtr - pack.intPtr + pack.expNumber;
+						value = value * binary_format<value_type>::exact_power_of_ten(exponent);
 					}
+					if (negative) {
+						value = -value;
+					}
+					return true;
 				}
-			}
-			if JSONIFIER_LIKELY (pack.answer.valid) {
-				return from_chars_advanced(pack.answer, value).ptr;
 			} else {
-				return nullptr;
-			}
-		}
-
-		template<typename char_type>
-		JSONIFIER_ALWAYS_INLINE static char_type const* parseFractional(char_type const* iter, value_type& value, parsing_pack<char_type>& pack) noexcept {
-			using namespace jsonifier_fast_float;
-			++iter;
-
-			while (isDigit(*iter)) {
-				pack.digit = static_cast<uint8_t>(*iter - zeroNew);
-				++iter;
-				pack.answer.mantissa = pack.answer.mantissa * 10 + pack.digit;
-			}
-			pack.answer.exponent = (pack.intEnd + 1) - iter;
-			pack.fracEnd		 = iter;
-			pack.fracPtr		 = pack.intEnd + 1;
-			pack.digitCount -= pack.answer.exponent;
-
-			if (pack.answer.exponent == 0) {
-				return nullptr;
-			}
-			pack.expNumber = 0;
-
-			if ((smallE == *iter) || (bigE == *iter)) {
-				return parseExponent(iter, value, pack);
-			}
-
-			return finishParse(iter, value, pack);
-		}
-
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE static char_type const* parseFloatImpl(char_type const* iter, value_type& value) noexcept {
-			using namespace jsonifier_fast_float;
-			parsing_pack<char_type> pack;
-			pack.answer.valid			= false;
-			pack.answer.too_many_digits = false;
-			pack.answer.negative		= (*iter == minusNew);
-			pack.expNumber				= 0;
-			if (pack.answer.negative) {
-				++iter;
-
-				if JSONIFIER_UNLIKELY (!isDigit(*iter)) {
-					return nullptr;
+				if (exponent >= 0 && mantissa <= binary_format<value_type>::max_mantissa_fast_path(exponent)) {
+#if defined(__clang__) || defined(JSONIFIER_FASTFLOAT_32BIT)
+					if (mantissa == 0) {
+						value = negative ? value_type(-0.) : value_type(0.);
+						return true;
+					}
+#endif
+					value = value_type(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
+					if (negative) {
+						value = -value;
+					}
+					return true;
 				}
 			}
-			pack.startDigits = iter;
-
-			while (isDigit(*iter)) {
-				pack.digit = static_cast<uint64_t>(*iter - zeroNew);
-				++iter;
-				pack.answer.mantissa = 10 * pack.answer.mantissa + pack.digit;
-			}
-
-			pack.intEnd		= iter;
-			pack.digitCount = static_cast<int64_t>(pack.intEnd - pack.startDigits);
-			pack.intPtr		= pack.startDigits;
-
-			if (pack.digitCount == 0 || (pack.startDigits[0] == zeroNew && pack.digitCount > 1)) {
-				return nullptr;
-			}
-
-			if (*iter == decimalNew) {
-				return parseFractional(iter, value, pack);
-			}
-			if ((smallE == *iter) || (bigE == *iter)) {
-				return parseExponent(iter, value, pack);
-			}
-			return finishParse(iter, value, pack);
 		}
-
-		template<typename char_type> JSONIFIER_ALWAYS_INLINE static bool parseFloat(char_type const*& iter, value_type& value) noexcept {
-			auto iterNew = parseFloatImpl(iter, value);
-			return (iterNew) ? (iter = iterNew, true) : false;
+		adjusted_mantissa am = compute_float<binary_format<value_type>>(exponent, mantissa);
+		if (tooManyDigits && am.power2 >= 0) {
+			if (am != compute_float<binary_format<value_type>>(exponent, mantissa + 1)) {
+				am = compute_error<binary_format<value_type>>(exponent, mantissa);
+			}
 		}
-	};
+		if JSONIFIER_UNLIKELY (am.power2 < 0) {
+			am = digit_comp<value_type>(integer, fraction, mantissa, exponent, am);
+		}
+		to_float(negative, am, value);
+		if JSONIFIER_UNLIKELY ((mantissa != 0 && am.mantissa == 0 && am.power2 == 0) || am.power2 == binary_format<value_type>::infinite_power) {
+			return false;
+		}
+		return true;
+	}
 }

@@ -57,7 +57,7 @@ namespace jsonifier_internal {
 		template<json_structural_type typeNew, typename derived_type_new> friend struct validate_impl;
 
 		JSONIFIER_INLINE validator& operator=(const validator& other) = delete;
-		JSONIFIER_INLINE validator(const validator& other)			 = delete;
+		JSONIFIER_INLINE validator(const validator& other)			  = delete;
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();

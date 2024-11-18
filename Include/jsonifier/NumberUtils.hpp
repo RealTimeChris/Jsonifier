@@ -64,9 +64,9 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
-			auto currentIter = static_cast<const char*>(string.data());
-			auto endIter	 = static_cast<const char*>(string.data()) + string.size();
-			jsonifier_internal::float_parser<double>::parseFloat(currentIter, newValue);
+			auto iter = static_cast<const char*>(string.data());
+			auto end  = static_cast<const char*>(string.data()) + string.size();
+			jsonifier_internal::parseFloat(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -138,9 +138,17 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				double temp;
-				return float_parser<double>::parseFloat(iter, temp) ? (value = static_cast<value_type>(temp), true) : false;
+#if !defined(JSONIFIER_CLANG) && !defined(JSONIFIER_MSVC) && !defined(JSONIFIER_MAC)
+				return parseFloat(temp, iter, end) ? (value = static_cast<value_type>(temp), true) : false;
+#else
+				return parseFloat(value, iter) ? (value = static_cast<value_type>(temp), true) : false;
+#endif
 			} else {
-				return float_parser<value_type>::parseFloat(iter, value);
+#if !defined(JSONIFIER_CLANG) && !defined(JSONIFIER_MSVC) && !defined(JSONIFIER_MAC)
+				return parseFloat(value, iter, end);
+#else
+				return parseFloat(value, iter);
+#endif
 			}
 		}
 		return true;

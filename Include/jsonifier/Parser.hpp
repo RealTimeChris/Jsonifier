@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 		template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
-		JSONIFIER_INLINE parser(const parser& other)			   = delete;
+		JSONIFIER_INLINE parser(const parser& other)			= delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {

@@ -55,7 +55,7 @@ namespace jsonifier_internal {
 		friend struct serialize_impl;
 
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_INLINE serializer(const serializer& other)			   = delete;
+		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {

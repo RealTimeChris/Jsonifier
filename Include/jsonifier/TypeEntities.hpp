@@ -187,6 +187,9 @@ namespace jsonifier {
 		concept has_resize = requires(std::remove_cvref_t<value_type> value) { value.resize(typename std::remove_cvref_t<value_type>::size_type{}); };
 
 		template<typename value_type>
+		concept has_reserve = requires(std::remove_cvref_t<value_type> value) { value.reserve(typename std::remove_cvref_t<value_type>::size_type{}); };
+
+		template<typename value_type>
 		concept has_data = requires(std::remove_cvref_t<value_type> value) {
 			{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_pointer>;
 		} || requires(std::remove_cvref_t<value_type> value) {

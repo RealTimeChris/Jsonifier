@@ -95,7 +95,7 @@ namespace simd_internal {
 
 	constexpr __m128x mm128AddEpi8(const __m128x& a, const __m128x& b) noexcept {
 		__m128x result;
-		for (int i = 0; i < 16; ++i) {
+		for (int32_t i = 0; i < 16; ++i) {
 			result.m128x_int8[i] = static_cast<int8_t>(a.m128x_int8[i] + b.m128x_int8[i]);
 		}
 		return result;

@@ -49,12 +49,14 @@
 
 #define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 
-#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__)) || defined(TARGET_OS_MAC)
 	#define JSONIFIER_MAC 1
 #elif defined(linux) || defined(__linux) || defined(__linux__) || defined(__gnu_linux__)
 	#define JSONIFIER_LINUX 1
 #elif defined(WIN32) || defined(_WIN32) || defined(_WIN64)
 	#define JSONIFIER_WIN 1
+#else
+	#error "Undetected platform."
 #endif
 
 #if defined(__has_builtin)

@@ -276,7 +276,7 @@ namespace jsonifier_internal {
 							}
 						}
 						if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-											 indexNew < memberCount) {
+							indexNew < memberCount) {
 							if JSONIFIER_LIKELY (index_processor_parse_map<value_type, parse_context_type, options, false>::bases[indexNew](value, context)) {
 								return impl(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, newLines>{}, value,
 									context, wsStart, wsSize);
@@ -457,7 +457,7 @@ namespace jsonifier_internal {
 							}
 						}
 						if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-											 indexNew < memberCount) {
+							indexNew < memberCount) {
 							if JSONIFIER_LIKELY (index_processor_parse_map<value_type, parse_context_type, options, true>::bases[indexNew](value, context)) {
 								return impl(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, value, context);
 							}

@@ -309,7 +309,7 @@ namespace jsonifier_internal {
 			}();
 
 			static constexpr auto maskBytesPtr = maskBytes.data();
-			jsonifier_simd_int_256 mask = simd_internal::gatherValues<jsonifier_simd_int_256>(maskBytesPtr);
+			jsonifier_simd_int_256 mask		   = simd_internal::gatherValues<jsonifier_simd_int_256>(maskBytesPtr);
 			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
 		}
 	};

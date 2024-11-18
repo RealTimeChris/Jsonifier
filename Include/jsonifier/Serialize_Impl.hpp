@@ -125,14 +125,14 @@ namespace jsonifier_internal {
 				static constexpr auto memberPtr = subTuple.ptr();
 				static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
 				if constexpr (options.prettify) {
-					static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
-					static constexpr auto size		= quotedKey.size();
+					static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\": " };
+					static constexpr auto size		   = quotedKey.size();
 					static constexpr auto quotedKeyPtr = quotedKey.data();
 					std::memcpy(dataPtr + index, quotedKeyPtr, size);
 					index += size;
 				} else {
-					static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
-					static constexpr auto size		= quotedKey.size();
+					static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\":" };
+					static constexpr auto size		   = quotedKey.size();
 					static constexpr auto quotedKeyPtr = quotedKey.data();
 					std::memcpy(dataPtr + index, quotedKeyPtr, size);
 					index += size;
