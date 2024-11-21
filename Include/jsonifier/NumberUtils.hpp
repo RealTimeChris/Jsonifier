@@ -138,17 +138,9 @@ namespace jsonifier_internal {
 		} else {
 			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
 				double temp;
-#if !defined(JSONIFIER_CLANG) && !defined(JSONIFIER_MSVC) && !defined(JSONIFIER_MAC)
 				return parseFloat(temp, iter, end) ? (value = static_cast<value_type>(temp), true) : false;
-#else
-				return parseFloat(value, iter) ? (value = static_cast<value_type>(temp), true) : false;
-#endif
 			} else {
-#if !defined(JSONIFIER_CLANG) && !defined(JSONIFIER_MSVC) && !defined(JSONIFIER_MAC)
 				return parseFloat(value, iter, end);
-#else
-				return parseFloat(value, iter);
-#endif
 			}
 		}
 		return true;

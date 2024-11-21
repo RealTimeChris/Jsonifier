@@ -1072,7 +1072,7 @@ namespace jsonifier_internal {
 				jsonifier::string newString{};
 				newString.resize(static_cast<size_t>(newSize));
 				std::memcpy(newString.data(), newPtr, static_cast<size_t>(newSize));
-				value = newString;
+				value = value_type{ *context.parserPtr, newString };
 			}
 			return;
 		}

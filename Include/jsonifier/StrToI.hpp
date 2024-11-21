@@ -76,7 +76,6 @@ namespace jsonifier_internal {
 	template<typename value_type> struct integer_parser;
 
 	template<jsonifier::concepts::signed_t value_type> struct integer_parser<value_type> {
-
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
@@ -687,7 +686,6 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::concepts::unsigned_t value_type> struct integer_parser<value_type> {
-
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_ALWAYS_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {

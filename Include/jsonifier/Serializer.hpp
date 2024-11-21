@@ -58,7 +58,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			index  = 0;
@@ -70,7 +70,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::serialize_options options = jsonifier::serialize_options{}, typename value_type>
-		JSONIFIER_INLINE std::string_view serializeJson(value_type&& object) noexcept {
+		JSONIFIER_ALWAYS_INLINE std::string_view serializeJson(value_type&& object) noexcept {
 			static constexpr jsonifier::serialize_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			index  = 0;

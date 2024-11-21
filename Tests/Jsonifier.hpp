@@ -252,7 +252,7 @@ template<> struct jsonifier::core<canada_message> {
 
 template<> struct jsonifier::core<test_element_final> {
 	using value_type				 = test_element_final;
-	static constexpr auto parseValue = createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::iterationCount, &value_type::color>();
+	static constexpr auto parseValue = createValue<&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::color>();
 };
 
 template<> struct jsonifier::core<test_elements_final> {

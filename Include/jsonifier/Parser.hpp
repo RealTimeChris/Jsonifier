@@ -34,8 +34,8 @@ namespace jsonifier_internal {
 	template<typename derived_type> class parser;
 
 	template<typename derived_type> struct parse_context {
-		constexpr parse_context() noexcept = default;
-		constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr parse_context() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
 			rootIter = iterNew;
 			iter	 = iterNew;
 			endIter	 = endNew;
@@ -48,19 +48,19 @@ namespace jsonifier_internal {
 		const char* iter{};
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> const char* getEndIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> const char* getBeginIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> const char* getEndIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> const char* getBeginIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data());
 	}
 
@@ -72,8 +72,9 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<typename derived_type> class parser {
+	template<typename derived_type_new> class parser {
 	  public:
+		using derived_type = derived_type_new;
 		template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;

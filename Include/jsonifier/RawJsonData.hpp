@@ -37,12 +37,6 @@ namespace std {
 
 namespace jsonifier {
 
-	struct unset {
-		JSONIFIER_INLINE bool operator==(const unset&) const {
-			return true;
-		}
-	};
-
 	enum class json_type : uint8_t {
 		Unset  = 0,
 		Object = '{',
@@ -63,20 +57,15 @@ namespace jsonifier {
 		using object_type = std::unordered_map<string, raw_json_data>;
 		using string_type = string;
 		using array_type  = vector<raw_json_data>;
-		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t, unset>;
+		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t>;
 
 		JSONIFIER_INLINE raw_json_data() noexcept {
-			value = unset{};
+			value = std::nullptr_t{};
 		}
 
-		JSONIFIER_INLINE raw_json_data& operator=(const string& valueNew) noexcept {
-			value	 = constructValueFromRawJsonData(valueNew);
-			jsonData = valueNew;
-			return *this;
-		}
-
-		JSONIFIER_INLINE raw_json_data(const string& valueNew) noexcept {
-			*this = valueNew;
+		template<typename parser_type> JSONIFIER_INLINE raw_json_data(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
+			value	 = constructValueFromRawJsonData(parser, jsonDataNew);
+			jsonData = jsonDataNew;
 		}
 
 		JSONIFIER_INLINE json_type getType() const noexcept {
@@ -130,7 +119,7 @@ namespace jsonifier {
 		}
 
 		template<std::convertible_to<std::string_view> key_type> raw_json_data& operator[](key_type&& key) noexcept {
-			if (std::holds_alternative<std::nullptr_t>(value) || std::holds_alternative<unset>(value)) {
+			if (std::holds_alternative<std::nullptr_t>(value)) {
 				value = object_type{};
 			}
 			auto& object = std::get<object_type>(value);
@@ -162,31 +151,31 @@ namespace jsonifier {
 		value_type value{};
 		string jsonData{};
 
-		JSONIFIER_INLINE typename jsonifier::raw_json_data::value_type constructValueFromRawJsonData(const jsonifier::string& jsonDataNew) noexcept {
+		template<typename parser_type>
+		JSONIFIER_INLINE typename jsonifier::raw_json_data::value_type constructValueFromRawJsonData(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{};
-			jsonifier::jsonifier_core<false> parser{};
 			if (jsonDataNew.size() > 0) {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						typename jsonifier::raw_json_data::object_type results{};
-						jsonifier_internal::parse_context<jsonifier::jsonifier_core<false>> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::object_type,
-							jsonifier_internal::parse_context<jsonifier::jsonifier_core<false>>>::impl(results, testContext);
+							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
 						return results;
 					}
 					case '[': {
 						typename jsonifier::raw_json_data::array_type results{};
-						jsonifier_internal::parse_context<jsonifier::jsonifier_core<false>> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::array_type,
-							jsonifier_internal::parse_context<jsonifier::jsonifier_core<false>>>::impl(results, testContext);
+							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
 						return results;
 					}
 					case '"': {
@@ -228,11 +217,11 @@ namespace jsonifier {
 						return strToDouble(jsonDataNew);
 					}
 					default: {
-						return jsonifier::unset{};
+						return std::nullptr_t{};
 					}
 				}
 			} else {
-				return jsonifier::unset{};
+				return std::nullptr_t{};
 			}
 		}
 	};
