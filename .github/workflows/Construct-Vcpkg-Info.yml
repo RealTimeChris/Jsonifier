@@ -15,7 +15,7 @@ jobs:
              php-version: '8.1'
 
          - name: Checkout Jsonifier
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
            with:
              submodules: recursive
 

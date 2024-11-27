@@ -1,4 +1,4 @@
-## Serialization/Parsing with Jsonifier
+## Serialization/parsing with Jsonifier
 ----
 - Create a specialization of the `jsonifier::core` class template for whichever data structure you would like to parse/serialize, within the jsonifier namespace as follows...
 - 
@@ -80,7 +80,7 @@ namespace jsonifier {
 
 ```
 
-### Usage - Parsing
+### Usage - parsing
 ----
 Jsonifier provides flexible JSON parsing capabilities through the `parseJson` function, which now supports two overloads.
 
@@ -97,11 +97,11 @@ template<typename value_type, jsonifier::parse_options options = jsonifier::pars
 
 These overloads provide flexibility in parsing JSON data, allowing you to choose between parsing directly into an existing object or creating a new object and returning it.
 
-#### Example - Parsing into an Existing Object
+#### Example - parsing into an Existing Object
 Here's an example demonstrating how to use `parseJson` to parse JSON data directly into an existing object:
 
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer{ json_data };
 
@@ -114,11 +114,11 @@ jsonifier::jsonifier_core<> parser{};
 parser.parseJson(obj, buffer);
 ```
 
-#### Example - Parsing into a New Object
+#### Example - parsing into a New Object
 Here's an example demonstrating how to use `parseJson` to parse JSON data into a new object:
 
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer{ json_data };
 
@@ -163,11 +163,11 @@ template<jsonifier::serialize_options options = jsonifier::serialize_options{}, 
 
 These overloads provide flexibility in how you handle serialization output, allowing you to choose between directly serializing into a buffer or obtaining the serialized JSON string as a return value.
 
-#### Example - Serializing into a Buffer
+#### Example - serializing into a Buffer
 Here's an example demonstrating how to use `serializeJson` to serialize data directly into a buffer:
 
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 obj_t obj{};
 
@@ -183,7 +183,7 @@ serializer.serializeJson(obj, buffer);
 Here's an example demonstrating how to use `serializeJson` to obtain the serialized JSON string:
 
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 obj_t obj{};
 
@@ -197,7 +197,7 @@ The `serialize_options` struct allows customization of serialization behavior. H
 
 ```cpp
 struct serialize_options {
-	size_t indentSize{ 3 };
+	uint64_t indentSize{ 3 };
 	char indentChar{ ' ' };
 	bool prettify{ false };
 };

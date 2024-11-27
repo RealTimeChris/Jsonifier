@@ -9,7 +9,7 @@ Jsonifier allows you to optimize parsing speed if you know that the data will be
 Here's a complete example of parsing JSON data with minified optimization enabled:
 
 ```cpp
-#include <jsonifier/Index.hpp>
+#include <jsonifier>
 #include <iostream>
 
 int32_t main() {

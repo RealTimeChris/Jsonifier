@@ -4,7 +4,7 @@ To exclude certain keys from being serialized at runtime using the Jsonifier lib
 
 Here's an example of how you can do this:
 ```c++
-#include <jsonifier/Index.hpp>
+#include <jsonifier>
 #include <set>
 
 class MyObject {

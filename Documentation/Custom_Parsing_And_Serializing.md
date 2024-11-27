@@ -1,10 +1,10 @@
-# Custom JSON Parsing/Serializing Behavior
+# Custom JSON parsing/serializing Behavior
 
 ## Overview
 
 The `jsonifier` library provides a flexible approach to customizing JSON parsing and serialization. This is achieved through the `parser::impl` and `serialize_impl` structures, allowing developers to define specific behaviors based on their requirements.
 
-## Parsing with `parser::impl`
+## parsing with `parser::impl`
 
 ### Structure
 
@@ -63,7 +63,7 @@ struct serialize_impl<value_type_new, derived_type> {
 
 Here, the `serialize_impl` specialization is created for the `time_stamp_t` concept. The `impl` method inside this specialization is where you can define how time stamps should be serialized. This allows you to have precise control over the JSON representation of time stamp data.
 
-#### Parsing Specialization
+#### parsing Specialization
 
 Similarly, the `parser::impl` specialization for time stamps is structured as follows:
 

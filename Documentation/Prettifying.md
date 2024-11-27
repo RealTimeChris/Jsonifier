@@ -20,7 +20,7 @@ Here are examples demonstrating the usage of the `prettifyJson` function:
 
 #### Example 1: Prettifying JSON data
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer = "{\"key\": \"value\"}";
 
@@ -30,7 +30,7 @@ auto prettifiedBuffer = jsonifier::prettifyJson(buffer);
 
 #### Example 2: Prettifying JSON data and outputting to another string
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer = "{\"key\": \"value\"}";
 jsonifier::string prettifiedBuffer;

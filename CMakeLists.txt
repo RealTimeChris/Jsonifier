@@ -19,141 +19,21 @@
 #	DEALINGS IN THE SOFTWARE.
 #
 # CMakeLists.txt - The CMake script for building this library.
-# Dec 17, 2022
 # https://github.com/RealTimeChris/Jsonifier
+cmake_minimum_required(VERSION 3.28)
 
-cmake_minimum_required(VERSION 3.18)
-
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
-include("CollectVersion")
-collect_version("jsonifier")
-
-set(PROJECT_NAME "Jsonifier")
-set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(
-  "${PROJECT_NAME}"
-  VERSION "${PRODUCT_VERSION}"
-  LANGUAGES CXX
+project(Jsonifier
+    DESCRIPTION "A few classes for parsing and serializing json - very rapidly."
+    LANGUAGES CXX
 )
 
-add_library("${PROJECT_NAME}" INTERFACE)
+include(cmake/library_setup.cmake)
 
-add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+include(cmake/installation_setup.cmake)
 
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/*.hpp")
-
-set(JSONIFIER-POPCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-LZCNT_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-BMI_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-BMI2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-AVX_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-AVX2_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
-
- set_target_properties(
-     "${PROJECT_NAME}" PROPERTIES
-     OUTPUT_NAME "jsonifier"
-     CXX_STANDARD_REQUIRED ON
-     CXX_EXTENSIONS OFF
- )
- 
- target_link_options(
-     "${PROJECT_NAME}" INTERFACE
-	 "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-     "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
-     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-     "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
-	 "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-     "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
- )
- 
-set(JSONIFIER_CPU_FLAGS
-    "$<IF:$<BOOL:${JSONIFIER_CPU_FLAGS}>,${JSONIFIER_CPU_FLAGS},$<IF:$<CXX_COMPILER_ID:MSVC>,/arch:AVX512,-march=native>>"
-)
- 
- target_include_directories(
-     "${PROJECT_NAME}" INTERFACE
-     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
-    "$<INSTALL_INTERFACE:include/>"
- )
-
-target_compile_options(
-	"${PROJECT_NAME}" INTERFACE
-	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wno-ignored-attributes>"	
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
-	"$<$<CXX_COMPILER_ID:CLANG>:-std=c++23>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
-	"$<$<CXX_COMPILER_ID:GNU>:-std=c++23>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
-	"${JSONIFIER_CPU_FLAGS}"
-)
-
-target_compile_definitions(
-	"${PROJECT_NAME}" INTERFACE 
-	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN_ENABLED>"
-)
-
-set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")
-set(EXPORTED_TARGETS_NAME "${PROJECT_NAME}Targets")
-set(EXPORTED_TARGETS_FILE_NAME "${EXPORTED_TARGETS_NAME}.cmake")
-set(EXPORTED_TARGETS_FILE_PATH "share/jsonifier/${EXPORTED_TARGETS_FILE_NAME}")
-
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/CMake/${CONFIG_FILE_NAME}.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
-	INSTALL_DESTINATION "share/jsonifier"
-	PATH_VARS
-	EXPORTED_TARGETS_FILE_PATH
-)
-
-set(VERSION_FILE_NAME "${PROJECT_NAME}ConfigVersion.cmake")
-
-write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
-	VERSION "${PRODUCT_VERSION}"
-	COMPATIBILITY AnyNewerVersion
-)
-
-install(
-	FILES
-	"${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILE_NAME}"
-	"${CMAKE_CURRENT_BINARY_DIR}/${VERSION_FILE_NAME}"
-	DESTINATION "share/jsonifier"
-)
-
-install(
-	DIRECTORY
-	"${CMAKE_CURRENT_SOURCE_DIR}/Include/"
-	DESTINATION "include"
-)
-
-install(
-	TARGETS "${PROJECT_NAME}"
-	EXPORT "${EXPORTED_TARGETS_NAME}"
-)
-
-install(
-	EXPORT "${EXPORTED_TARGETS_NAME}"
-	FILE "${EXPORTED_TARGETS_FILE_NAME}"
-	NAMESPACE "${PROJECT_NAME}::"
-	DESTINATION "share/jsonifier"
-)
-
-if("${JSONIFIER_TEST}" STREQUAL "TRUE")
-	add_subdirectory("./Tests")
+if(JSONIFIER_UNIT_TESTS)
+    add_subdirectory(unit-tests)
 endif()

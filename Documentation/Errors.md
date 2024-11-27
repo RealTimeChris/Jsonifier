@@ -1,4 +1,4 @@
-## Handling Parsing Errors with Jsonifier
+## Handling parsing Errors with Jsonifier
 
 Jsonifier allows you to collect and handle possible parsing errors during the JSON parsing process. To check for and display these errors, follow these steps:
 
@@ -23,7 +23,7 @@ This code snippet iterates through the error objects and prints a description of
 Here's a complete example of parsing JSON data and handling errors:
 
 ```cpp
-#include <jsonifier/Index.hpp>
+#include <jsonifier>
 #include <iostream>
 
 int32_t main() {
@@ -49,7 +49,7 @@ int32_t main() {
 With error message output enabled, Jsonifier will provide detailed information about parsing errors encountered during the process. When a parsing error occurs, Jsonifier will output an error message similar to the following:
 
 ```ruby
-Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierImpl::ParseNoKeys::impl<true,struct DiscordCoreImpl::WebSocketMessage>(struct DiscordCoreImpl::WebSocketMessage &,class JsonifierImpl::SimdStructuralIterator &)().
+Failed to collect a 0x2Du, at index: 486 instead found a 'i', in file: C:\Users\Chris\source\repos\Jsonifier\Build\Windows-Release-Dev\_deps\jsonifier-src\Include\jsonifier-incl/Parse_Impl.hpp, at: 182:44, in function: void __cdecl JsonifierImpl::ParseNoKeys::impl<true,struct DiscordcoreImpl::WebSocketMessage>(struct DiscordcoreImpl::WebSocketMessage &,class JsonifierImpl::simdStructuralIterator &)().
 ```
 In the provided error message:
 

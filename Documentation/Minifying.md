@@ -19,7 +19,7 @@ Here are examples demonstrating the usage of the `minifyJson` function:
 
 #### Example 1: Minifying JSON data
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer = "{ \"key\": \"value\" }";
 
@@ -29,7 +29,7 @@ auto minifiedBuffer = jsonifier::minifyJson(buffer);
 
 #### Example 2: Minifying JSON data and outputting to another string
 ```cpp
-#include "jsonifier/Index.hpp"
+#include "jsonifier-incl/Index.hpp"
 
 jsonifier::string buffer = "{ \"key\": \"value\" }";
 jsonifier::string minifiedBuffer;

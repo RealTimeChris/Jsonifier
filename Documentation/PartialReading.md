@@ -15,10 +15,10 @@ To enable partial reading in Jsonifier, you set the `partialRead` option in the 
 Here is an example demonstrating how to configure these options when setting up Jsonifier for partial reading:
 
 ```cpp
-#include <jsonifier/Index.hpp>
+#include <jsonifier>
 
 int32_t main() {
-    jsonifier::jsonifier_core parser{};
+    jsonifier::jsonifier_core<> parser{};
     test_data_type testData{};
     jsonifier::string newBuffer{ your_json_string };
 

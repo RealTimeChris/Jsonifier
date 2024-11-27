@@ -9,7 +9,7 @@
 	1. Install vcpkg, if need be.
 	2. Make sure to run vcpkg integrate install.
 	3. Enter within a terminal vcpkg install jsonifier:x64-windows_OR_linux.
-	4. Set up a project in your IDE and make sure to set the C++ standard to C++20 or later - and include `<jsonifier/Index.hpp>`.
+	4. Set up a project in your IDE and make sure to set the C++ standard to C++20 or later - and include `<jsonifier>`.
 	5. Build and run!
 	
 ### Installation (CMake-FetchContent)
