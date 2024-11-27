@@ -24,19 +24,19 @@ AVX-512 is an extension of the AVX instruction set architecture, designed to pro
 
 ### Manual Configuration
 ----
-In addition to automatic CPU architecture detection, Jsonifier's CMake configuration also allows for manual control over specific CPU instructions. You can manually set the JSONIFIER_CPU_INSTRUCTIONS variable in the CMake configuration to fine-tune the instruction sets used. Here are the values you can use for different instruction sets:
+In addition to automatic CPU architecture detection, Jsonifier's CMake configuration also allows for manual control over specific CPU instructions. You can manually set the `JSONIFIER_CPU_FLAGS` variable in the CMake configuration to fine-tune the instruction sets used. This variable can be set to one of the following options, or combined for optimal performance:
 
-- JSONIFIER_CPU_INSTRUCTIONS for AVX-512: Set to 1 << 7
-- JSONIFIER_CPU_INSTRUCTIONS for AVX2: Set to 1 << 6
-- JSONIFIER_CPU_INSTRUCTIONS for AVX: Set to 1 << 5
-- JSONIFIER_CPU_INSTRUCTIONS for ARM-NEON: Set to 1 << 4
-- JSONIFIER_CPU_INSTRUCTIONS for BMI2: Set to 1 << 3
-- JSONIFIER_CPU_INSTRUCTIONS for BMI: Set to 1 << 2
-- JSONIFIER_CPU_INSTRUCTIONS for POPCNT: Set to 1 << 1
-- JSONIFIER_CPU_INSTRUCTIONS for LZCOUNT: Set to 1 << 0
+#### Setting `JSONIFIER_CPU_FLAGS`
+You can configure the instruction sets by specifying the `JSONIFIER_CPU_FLAGS` in your CMake build configuration:
 
-You can combine LZCNT, BMI, BMI2, and POPCNT with each other or any of the AVX types (AVX, AVX2, AVX-512, ARM-NEON) to optimize Jsonifier for your specific use case. However, please note that you cannot combine multiple AVX/ARM-NEON types together, as they are distinct and cannot be used simultaneously. This flexibility in instruction set configuration allows you to tailor Jsonifier's performance to your target CPU architecture and application requirements effectively.
+- **For AVX-512**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=/arch:AVX512`  OR `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-march=avx512`
+- **For AVX2**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=/arch:AVX2`  OR `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-march=avx2`
+- **For AVX**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=/arch:AVX`  OR `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-march=avx`
+- **For ARM-NEON**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-mfpu=neon`
+- **For BMI1**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-mbmi`
+- **For LZCNT**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-mlzcnt`
+- **For POPCNT**: Set `JSONIFIER_CPU_FLAGS=-DJSONIFIER_CPU_FLAGS=-mpopcnt`
 
-### Configuration Explanation
-----
-The configuration script in Jsonifier's CMakeLists.txt file detects the CPU architecture and sets the appropriate compiler flags based on the supported architectures. It ensures that the generated code takes full advantage of the available instruction sets and achieves the best possible performance on the target CPU. Additionally, the manual configuration option allows you to customize the instruction sets for further optimization according to your specific needs.
+NOTE: BMI1, LZCNT, and POPCNT can be combined with any of themselves or the other flags here, however, AVX, AVX2, and AVX512 cannot be combined with NEON.
+
+This configuration allows you to manually or automatically optimize Jsonifier for your specific CPU architecture, ensuring that the code generated will make the best use of the available hardware features for maximum performance.

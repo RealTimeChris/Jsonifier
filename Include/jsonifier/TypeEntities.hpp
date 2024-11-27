@@ -174,13 +174,10 @@ namespace jsonifier {
 		concept variant_t = requires(std::remove_cvref_t<value_type> var) {
 			{ var.index() } -> std::same_as<size_t>;
 			{ var.valueless_by_exception() } -> std::same_as<bool>;
-			{ var.template emplace<0>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
-			{ var.template emplace<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
-			{ var.template holds_alternative<typename std::remove_cvref_t<value_type>::template type<0>>() } -> std::same_as<bool>;
-			{ get<0>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
-			{ get<typename std::remove_cvref_t<value_type>::template type<0>>(var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>&>;
-			{ std::get_if<0>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
-			{ std::get_if<typename std::remove_cvref_t<value_type>::template type<0>>(&var) } -> std::same_as<typename std::remove_cvref_t<value_type>::template type<0>*>;
+			{ var.emplace<0>(std::declval<decltype(std::get<0>(var))>()) } -> std::same_as<decltype(std::get<0>(var))&>;
+			{ std::holds_alternative<decltype(std::get<0>(var))>(var) } -> std::same_as<bool>;
+			{ std::get<0>(var) } -> std::same_as<decltype(std::get<0>(var))&>;
+			{ std::get_if<0>(&var) } -> std::same_as<std::remove_cvref_t<decltype(std::get<0>(var))>*>;
 		};
 
 		template<typename value_type>
