@@ -418,7 +418,7 @@ template<result_type type> struct result {
 
 	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::performance_metrics& results) {
 		byteLength.emplace(byteLengthNew);
-		jsonTime.emplace(results.timeInns);
+		jsonTime.emplace(results.timeInNs);
 		jsonSpeedVariation.emplace(results.throughputVariation.value());
 		jsonSpeed.emplace(results.throughputMbPerSec.value());
 		if (results.cyclesPerByte.has_value()) {

@@ -23,6 +23,7 @@
 #pragma once
 
 #include "Conformance.hpp"
+#include "BoundsTest.hpp"
 #include "RoundTrip.hpp"
 #include "Jsonifier.hpp"
 #include "Simdjson.hpp"
@@ -338,19 +339,17 @@ namespace tests {
 	};
 #else
 	constexpr jsonifier_internal::string_literal table_header = jsonifier_internal::string_literal{
-		"\n| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |\n\
+		"\n| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |  \n\
 | ------- | ----------- | --------------------- | -----------------| ------------------- | -------------- | ------------ | ---------------------- | ------------------| -------------------- | --------------- |  \n"
 	};
 
-	constexpr jsonifier_internal::string_literal read_table_header = jsonifier_internal::string_literal{ R"(
-| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) |
-| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  )" };
+	constexpr jsonifier_internal::string_literal read_table_header =
+		jsonifier_internal::string_literal{ "| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) |  \n\
+| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  \n" };
 
-	constexpr jsonifier_internal::string_literal write_table_header = jsonifier_internal::string_literal{
-		R"(
-| Library | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |
-| ------- | ------------ | ---------------------- | ----------------- | -------------------- | --------------- |  )"
-	};
+	constexpr jsonifier_internal::string_literal write_table_header =
+		jsonifier_internal::string_literal{ "| Library | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |  \n\
+| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  \n" };
 #endif
 
 	static std::string section001{ "\n>" + jsonifier::toString(100) + " iterations on a (" + getCPUInfo() + "(.\n\n" };
@@ -511,6 +510,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 	};
 
 	void testFunction() {
+		bounds_tests::boundsTests();
 		conformance_tests::conformanceTests();
 		round_trip_tests::roundTripTests();
 		string_validation_tests::stringTests();

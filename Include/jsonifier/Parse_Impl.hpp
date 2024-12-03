@@ -64,7 +64,8 @@ namespace jsonifier_internal {
 	static constexpr char quote{ '"' };
 	static constexpr char n{ 'n' };
 
-	template<typename buffer_type, string_literal sl, typename context_type> bool compareKey(context_type& context) noexcept {
+	template<typename buffer_type, string_literal slNew, typename context_type> bool compareKey(context_type& context) noexcept {
+		static constexpr string_literal sl{ slNew };
 		if constexpr (jsonifier::concepts::is_resizable<buffer_type>) {
 			return *(context.iter + sl.size()) == quote && string_literal_comparitor<sl>::impl(context.iter);
 		} else {

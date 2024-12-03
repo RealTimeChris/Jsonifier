@@ -201,7 +201,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const noexcept {
+		JSONIFIER_ALWAYS_INLINE string_base substr(size_type position, size_type count = std::numeric_limits<size_type>::max()) const {
 			if JSONIFIER_UNLIKELY (static_cast<int64_t>(position) >= static_cast<int64_t>(sizeVal)) {
 				throw std::out_of_range("Substring position is out of range.");
 			}
