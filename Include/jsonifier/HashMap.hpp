@@ -127,6 +127,9 @@ namespace jsonifier_internal {
 
 	template<typename value_type> using core_tuple_t = decltype(coreTupleV<value_type>);
 
+	template<typename value_type>
+	concept core_tuple_type = std::tuple_size_v<core_tuple_t<std::remove_cvref_t<value_type>>> > 0;
+
 	template<typename value_type01, typename value_type02> constexpr bool contains(const value_type01* hashData, value_type02 byteToCheckFor, size_t size) noexcept {
 		for (size_t x = 0; x < size; ++x) {
 			if (hashData[x] == byteToCheckFor) {

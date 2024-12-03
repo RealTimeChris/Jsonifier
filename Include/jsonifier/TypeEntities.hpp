@@ -390,6 +390,12 @@ namespace jsonifier {
 			}
 		}();
 
+		template<typename value_type>
+		concept has_member_t = requires { typename std::remove_cvref_t<value_type>::member_type; };
+
+		template<typename value_type>
+		concept is_resizable = has_resize<value_type> && has_reserve<value_type> && !std::is_const_v<std::remove_reference_t<value_type>>;
+
 		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
 
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;

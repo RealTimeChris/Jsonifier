@@ -30,7 +30,7 @@
 
 namespace simdjson {
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<int64_t>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<int64_t>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -40,7 +40,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			int64_t newVal;
-			if (error = iter.operator*().template get<int64_t>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -49,7 +49,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			int64_t newVal;
 
-			if (error = iter.operator*().template get<int64_t>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -58,7 +58,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::string>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::string>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -86,7 +86,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<uint64_t>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<uint64_t>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -96,7 +96,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			uint64_t newVal;
-			if (error = iter.operator*().template get<uint64_t>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -105,7 +105,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			uint64_t newVal;
 
-			if (error = iter.operator*().template get<uint64_t>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -114,7 +114,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<bool>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<bool>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -124,7 +124,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			bool newVal;
-			if (error = iter.operator*().template get<bool>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -133,7 +133,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			bool newVal;
 
-			if (error = iter.operator*().template get<bool>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -142,7 +142,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<double>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<double>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -152,7 +152,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			double newVal;
-			if (error = iter.operator*().template get<double>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -161,7 +161,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			double newVal;
 
-			if (error = iter.operator*().template get<double>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -170,7 +170,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, test_struct& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, test_struct& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -200,7 +200,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test_struct& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test_struct& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -230,7 +230,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<test_struct>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<test_struct>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -240,7 +240,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			test_struct newVal;
-			if (error = iter.operator*().template get<test_struct>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -249,7 +249,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			test_struct newVal;
 
-			if (error = iter.operator*().template get<test_struct>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -258,7 +258,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<abc_test_struct>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<abc_test_struct>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -268,7 +268,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			abc_test_struct newVal;
-			if (error = iter.operator*().template get<abc_test_struct>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -277,7 +277,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			abc_test_struct newVal;
 
-			if (error = iter.operator*().template get<abc_test_struct>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -286,7 +286,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value, typename value_type> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, test<value_type>& t) {
+	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, test<value_type>& t) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -400,7 +400,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value, typename value_type> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test<value_type>& t) {
+	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test<value_type>& t) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -514,7 +514,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value, typename value_type> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, partial_test<value_type>& t) {
+	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, partial_test<value_type>& t) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -532,7 +532,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::nullptr_t>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::nullptr_t>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -556,7 +556,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::string>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::string>& car) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -583,7 +583,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::vector<int64_t>>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::vector<int64_t>>& car) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -601,7 +601,7 @@ namespace simdjson {
 
 			ondemand::value field_value = field.value();
 			std::vector<int64_t> newValue;
-			if (error = field_value.template get<std::vector<int64_t>>(newValue); error) {
+			if (error = field_value.get(newValue); error) {
 				return error;
 			}
 			car[key] = std::move(newValue);
@@ -610,7 +610,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<double>>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<double>>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -620,7 +620,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			std::vector<double> newVal;
-			if (error = iter.operator*().template get<std::vector<double>>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -629,7 +629,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			std::vector<double> newVal;
 
-			if (error = iter.operator*().template get<std::vector<double>>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -638,7 +638,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<std::vector<double>>>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<std::vector<double>>>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -648,7 +648,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			std::vector<std::vector<double>> newVal;
-			if (error = iter.operator*().template get<std::vector<std::vector<double>>>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -657,7 +657,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			std::vector<std::vector<double>> newVal;
 
-			if (error = iter.operator*().template get<std::vector<std::vector<double>>>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -666,7 +666,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, geometry_data& geom) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, geometry_data& geom) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -677,14 +677,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["coordinates"].template get<std::vector<std::vector<std::vector<double>>>>(geom.coordinates); error) {
+		if (error = obj["coordinates"].get(geom.coordinates); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, properties_data& props) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, properties_data& props) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -698,7 +698,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, feature& feat) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, feature& feat) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -720,7 +720,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<feature>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<feature>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -730,7 +730,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			feature newVal;
-			if (error = iter.operator*().template get<feature>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -739,7 +739,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			feature newVal;
 
-			if (error = iter.operator*().template get<feature>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -748,7 +748,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, canada_message& msg) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, canada_message& msg) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -759,14 +759,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["features"].template get<std::vector<feature>>(msg.features); error) {
+		if (error = obj["features"].get(msg.features); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, audience_sub_category_names& names) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, audience_sub_category_names& names) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -780,7 +780,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, event& ev) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, event& ev) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -803,7 +803,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["subTopicIds"].template get<std::vector<int64_t>>(ev.subTopicIds); error) {
+		if (error = obj["subTopicIds"].get(ev.subTopicIds); error) {
 			return error;
 		}
 
@@ -815,14 +815,14 @@ namespace simdjson {
 			return simdjson::UNEXPECTED_ERROR;
 		}
 
-		if (error = obj["topicIds"].template get<std::vector<int64_t>>(ev.topicIds); error) {
+		if (error = obj["topicIds"].get(ev.topicIds); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, event>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, event>& car) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -840,7 +840,7 @@ namespace simdjson {
 
 			ondemand::value field_value = field.value();
 			event newValue;
-			if (error = field_value.template get<event>(newValue); error) {
+			if (error = field_value.get(newValue); error) {
 				return error;
 			}
 			car[key] = std::move(newValue);
@@ -849,7 +849,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, price& pr) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, price& pr) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -860,7 +860,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["audienceSubCategoryId"].template get<int64_t>(pr.audienceSubCategoryId); error) {
+		if (error = obj["audienceSubCategoryId"].get(pr.audienceSubCategoryId); error) {
 			return error;
 		}
 
@@ -871,25 +871,25 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, area& ar) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, area& ar) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
 			return error;
 		}
 
-		if (error = obj["areaId"].template get<int64_t>(ar.areaId); error) {
+		if (error = obj["areaId"].get(ar.areaId); error) {
 			return error;
 		}
 
-		if (error = obj["blockIds"].template get<std::vector<std::nullptr_t>>(ar.blockIds); error) {
+		if (error = obj["blockIds"].get(ar.blockIds); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<area>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<area>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -899,7 +899,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			area newVal;
-			if (error = iter.operator*().template get<area>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -908,7 +908,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			area newVal;
 
-			if (error = iter.operator*().template get<area>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -917,14 +917,14 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, seat_category& sc) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, seat_category& sc) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
 			return error;
 		}
 
-		if (error = obj["areas"].template get<std::vector<area>>(sc.areas); error) {
+		if (error = obj["areas"].get(sc.areas); error) {
 			return error;
 		}
 
@@ -935,7 +935,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<seat_category>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<seat_category>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -945,7 +945,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			seat_category newVal;
-			if (error = iter.operator*().template get<seat_category>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -954,7 +954,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			seat_category newVal;
 
-			if (error = iter.operator*().template get<seat_category>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -963,7 +963,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::string>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::string>& car) {
 		if (auto error = val.get_string(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
@@ -971,7 +971,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<bool>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<bool>& car) {
 		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
@@ -979,7 +979,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value, jsonifier::concepts::optional_t optional_type> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, optional_type& car) {
+	template<typename simdjson_value, jsonifier::concepts::optional_t optional_type> auto tag_invoke(deserialize_tag, simdjson_value& val, optional_type& car) {
 		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
@@ -987,7 +987,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<int64_t>& car) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<int64_t>& car) {
 		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
@@ -995,7 +995,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<price>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<price>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1005,7 +1005,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			price newVal;
-			if (error = iter.operator*().template get<price>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1014,7 +1014,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			price newVal;
 
-			if (error = iter.operator*().template get<price>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1023,7 +1023,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, performance& perf) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, performance& perf) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1038,7 +1038,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["logo"].template get<std::optional<std::string>>(perf.logo); error != simdjson::NO_SUCH_FIELD && error != simdjson::SUCCESS) {
+		if (error = obj["logo"].get(perf.logo); error != simdjson::NO_SUCH_FIELD && error != simdjson::SUCCESS) {
 			return error;
 		}
 
@@ -1046,11 +1046,11 @@ namespace simdjson {
 			return simdjson::UNEXPECTED_ERROR;
 		}
 
-		if (error = obj["prices"].template get<std::vector<price>>(perf.prices); error) {
+		if (error = obj["prices"].get(perf.prices); error) {
 			return error;
 		}
 
-		if (error = obj["seatCategories"].template get<std::vector<seat_category>>(perf.seatCategories); error) {
+		if (error = obj["seatCategories"].get(perf.seatCategories); error) {
 			return error;
 		}
 
@@ -1069,7 +1069,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<performance>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<performance>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1079,7 +1079,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			performance newVal;
-			if (error = iter.operator*().template get<performance>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1088,7 +1088,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			performance newVal;
 
-			if (error = iter.operator*().template get<performance>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1097,7 +1097,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, names&) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, names&) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1107,7 +1107,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, venue_names& vnames) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, venue_names& vnames) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1121,14 +1121,14 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, citm_catalog_message& msg) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, citm_catalog_message& msg) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
 			return error;
 		}
 
-		if (error = obj["areaNames"].template get<std::unordered_map<std::string, std::string>>(msg.areaNames); error) {
+		if (error = obj["areaNames"].get(msg.areaNames); error) {
 			return error;
 		}
 
@@ -1140,19 +1140,19 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["events"].template get<std::unordered_map<std::string, event>>(msg.events); error) {
+		if (error = obj["events"].get(msg.events); error) {
 			return error;
 		}
 
-		if (error = obj["performances"].template get<std::vector<performance>>(msg.performances); error) {
+		if (error = obj["performances"].get(msg.performances); error) {
 			return error;
 		}
 
-		if (error = obj["seatCategoryNames"].template get<std::unordered_map<std::string, std::string>>(msg.seatCategoryNames); error) {
+		if (error = obj["seatCategoryNames"].get(msg.seatCategoryNames); error) {
 			return error;
 		}
 
-		if (error = obj["subTopicNames"].template get<std::unordered_map<std::string, std::string>>(msg.subTopicNames); error) {
+		if (error = obj["subTopicNames"].get(msg.subTopicNames); error) {
 			return error;
 		}
 
@@ -1160,11 +1160,11 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["topicNames"].template get<std::unordered_map<std::string, std::string>>(msg.topicNames); error) {
+		if (error = obj["topicNames"].get(msg.topicNames); error) {
 			return error;
 		}
 
-		if (error = obj["topicSubTopics"].template get<std::unordered_map<std::string, std::vector<int64_t>>>(msg.topicSubTopics); error) {
+		if (error = obj["topicSubTopics"].get(msg.topicSubTopics); error) {
 			return error;
 		}
 
@@ -1175,7 +1175,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, icon_emoji_data& emoji) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, icon_emoji_data& emoji) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1193,7 +1193,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, permission_overwrite& perm) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, permission_overwrite& perm) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1219,7 +1219,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<permission_overwrite>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<permission_overwrite>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1229,7 +1229,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			permission_overwrite newVal;
-			if (error = iter.operator*().template get<permission_overwrite>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1238,7 +1238,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			permission_overwrite newVal;
 
-			if (error = iter.operator*().template get<permission_overwrite>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1247,7 +1247,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, channel_data& channel) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, channel_data& channel) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1262,7 +1262,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["permission_overwrites"].template get<std::vector<permission_overwrite>>(channel.permission_overwrites); error) {
+		if (error = obj["permission_overwrites"].get(channel.permission_overwrites); error) {
 			return error;
 		}
 
@@ -1298,7 +1298,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["applied_tags"].template get<std::vector<std::nullptr_t>>(channel.applied_tags); error) {
+		if (error = obj["applied_tags"].get(channel.applied_tags); error) {
 			return error;
 		}
 
@@ -1314,7 +1314,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["recipients"].template get<std::vector<std::nullptr_t>>(channel.recipients); error) {
+		if (error = obj["recipients"].get(channel.recipients); error) {
 			return error;
 		}
 
@@ -1381,7 +1381,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<channel_data>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<channel_data>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1391,7 +1391,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			channel_data newVal;
-			if (error = iter.operator*().template get<channel_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1400,7 +1400,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			channel_data newVal;
 
-			if (error = iter.operator*().template get<channel_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1409,7 +1409,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, user_data& user) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_data& user) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1468,7 +1468,7 @@ namespace simdjson {
 			return simdjson::UNEXPECTED_ERROR;
 		}
 
-		if (error = obj["avatar"].template get<std::optional<std::string>>(user.avatar); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["avatar"].get(user.avatar); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
@@ -1491,7 +1491,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, member_data& member) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, member_data& member) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1530,7 +1530,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["roles"].template get<std::vector<std::string>>(member.roles); error) {
+		if (error = obj["roles"].get(member.roles); error) {
 			return error;
 		}
 
@@ -1553,7 +1553,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<member_data>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<member_data>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1563,7 +1563,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			member_data newVal;
-			if (error = iter.operator*().template get<member_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1572,7 +1572,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			member_data newVal;
 
-			if (error = iter.operator*().template get<member_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1581,7 +1581,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, tags_data& tags) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, tags_data& tags) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1599,7 +1599,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, role_data& role) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, role_data& role) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1661,7 +1661,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<role_data>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<role_data>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -1671,7 +1671,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			role_data newVal;
-			if (error = iter.operator*().template get<role_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -1680,7 +1680,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			role_data newVal;
 
-			if (error = iter.operator*().template get<role_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -1689,7 +1689,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, guild_data& guild) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, guild_data& guild) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1740,7 +1740,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["guild_scheduled_events"].template get<std::vector<std::nullptr_t>>(guild.guild_scheduled_events); error) {
+		if (error = obj["guild_scheduled_events"].get(guild.guild_scheduled_events); error) {
 			return error;
 		}
 
@@ -1804,7 +1804,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["voice_states"].template get<std::vector<std::nullptr_t>>(guild.voice_states); error) {
+		if (error = obj["voice_states"].get(guild.voice_states); error) {
 			return error;
 		}
 
@@ -1852,23 +1852,23 @@ namespace simdjson {
 			return simdjson::UNEXPECTED_ERROR;
 		}
 
-		if (error = obj["stickers"].template get<std::vector<std::string>>(guild.stickers); error) {
+		if (error = obj["stickers"].get(guild.stickers); error) {
 			return error;
 		}
 
-		if (error = obj["features"].template get<std::vector<std::string>>(guild.features); error) {
+		if (error = obj["features"].get(guild.features); error) {
 			return error;
 		}
 
-		if (error = obj["channels"].template get<std::vector<channel_data>>(guild.channels); error) {
+		if (error = obj["channels"].get(guild.channels); error) {
 			return error;
 		}
 
-		if (error = obj["members"].template get<std::vector<member_data>>(guild.members); error) {
+		if (error = obj["members"].get(guild.members); error) {
 			return error;
 		}
 
-		if (error = obj["threads"].template get<std::vector<std::nullptr_t>>(guild.threads); error) {
+		if (error = obj["threads"].get(guild.threads); error) {
 			return error;
 		}
 
@@ -1896,7 +1896,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["roles"].template get<std::vector<role_data>>(guild.roles); error) {
+		if (error = obj["roles"].get(guild.roles); error) {
 			return error;
 		}
 
@@ -1923,7 +1923,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, discord_message& msg) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, discord_message& msg) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1938,7 +1938,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["d"].template get<guild_data>(msg.d); error) {
+		if (error = obj["d"].get(msg.d); error) {
 			return error;
 		}
 
@@ -1949,7 +1949,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, search_metadata_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, search_metadata_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -1995,7 +1995,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, hashtag_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, hashtag_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2006,14 +2006,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["indices"].template get<std::vector<int64_t>>(data.indices); error) {
+		if (error = obj["indices"].get(data.indices); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, large_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, large_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2035,7 +2035,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, sizes_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, sizes_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2061,7 +2061,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, media_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, media_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2076,7 +2076,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["indices"].template get<std::vector<int64_t>>(data.indices); error) {
+		if (error = obj["indices"].get(data.indices); error) {
 			return error;
 		}
 
@@ -2119,7 +2119,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, url_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, url_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2138,14 +2138,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["indices"].template get<std::vector<int64_t>>(data.indices); error) {
+		if (error = obj["indices"].get(data.indices); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, user_mention& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_mention& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2168,14 +2168,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["indices"].template get<std::vector<int64_t>>(data.indices); error) {
+		if (error = obj["indices"].get(data.indices); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<media_data>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<media_data>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -2185,7 +2185,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			media_data newVal;
-			if (error = iter.operator*().template get<media_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -2194,7 +2194,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			media_data newVal;
 
-			if (error = iter.operator*().template get<media_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -2203,45 +2203,45 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::vector<media_data>>& car) {
-		if (auto error = val.template get<std::vector<media_data>>(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::vector<media_data>>& car) {
+		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, status_entities& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, status_entities& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
 			return error;
 		}
 
-		if (error = obj["hashtags"].template get<std::vector<hashtag_data>>(data.hashtags); error) {
+		if (error = obj["hashtags"].get(data.hashtags); error) {
 			return error;
 		}
 
-		if (error = obj["symbols"].template get<std::vector<std::nullptr_t>>(data.symbols); error) {
+		if (error = obj["symbols"].get(data.symbols); error) {
 			return error;
 		}
 
-		if (error = obj["urls"].template get<std::vector<url_data>>(data.urls); error) {
+		if (error = obj["urls"].get(data.urls); error) {
 			return error;
 		}
 
-		if (error = obj["user_mentions"].template get<std::vector<user_mention>>(data.user_mentions); error) {
+		if (error = obj["user_mentions"].get(data.user_mentions); error) {
 			return error;
 		}
 
-		if (error = obj["media"].template get<std::optional<std::vector<media_data>>>(data.media); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["media"].get(data.media); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, metadata_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, metadata_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2259,29 +2259,29 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, description_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, description_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
 			return error;
 		}
 
-		if (error = obj["urls"].template get<std::vector<url_data>>(data.urls); error) {
+		if (error = obj["urls"].get(data.urls); error) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<description_data>& car) {
-		if (auto error = val.template get<description_data>(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<description_data>& car) {
+		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, user_entities& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_entities& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2292,14 +2292,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["url"].template get<std::optional<description_data>>(data.url); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["url"].get(data.url); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_user_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_user_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2469,7 +2469,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, status_data& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, status_data& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {
@@ -2504,31 +2504,31 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_status_id"].template get<std::optional<int64_t>>(data.in_reply_to_status_id);
+		if (error = obj["in_reply_to_status_id"].get(data.in_reply_to_status_id);
 			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_status_id_str"].template get<std::optional<std::string>>(data.in_reply_to_status_id_str);
+		if (error = obj["in_reply_to_status_id_str"].get(data.in_reply_to_status_id_str);
 			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_user_id"].template get<std::optional<int64_t>>(data.in_reply_to_user_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["in_reply_to_user_id"].get(data.in_reply_to_user_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_user_id_str"].template get<std::optional<std::string>>(data.in_reply_to_user_id_str);
+		if (error = obj["in_reply_to_user_id_str"].get(data.in_reply_to_user_id_str);
 			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_screen_name"].template get<std::optional<std::string>>(data.in_reply_to_screen_name);
+		if (error = obj["in_reply_to_screen_name"].get(data.in_reply_to_screen_name);
 			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["user"].template get<twitter_user_data>(data.user); error) {
+		if (error = obj["user"].get(data.user); error) {
 			return error;
 		}
 
@@ -2556,7 +2556,7 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["entities"].template get<status_entities>(data.entities); error) {
+		if (error = obj["entities"].get(data.entities); error) {
 			return error;
 		}
 
@@ -2576,14 +2576,14 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["possibly_sensitive"].template get<std::optional<bool>>(data.possibly_sensitive); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["possibly_sensitive"].get(data.possibly_sensitive); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<status_data>& vector) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<status_data>& vector) {
 		ondemand::array arr;
 		auto error = val.get_array().get(arr);
 		if (error) {
@@ -2593,7 +2593,7 @@ namespace simdjson {
 		auto iter = arr.begin();
 		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
 			status_data newVal;
-			if (error = iter.operator*().template get<status_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector[currentIndex] = std::move(newVal);
@@ -2602,7 +2602,7 @@ namespace simdjson {
 		for (; iter != arr.end(); ++iter) {
 			status_data newVal;
 
-			if (error = iter.operator*().template get<status_data>(newVal); error) {
+			if (error = iter.operator*().get(newVal); error) {
 				return error;
 			}
 			vector.emplace_back(std::move(newVal));
@@ -2611,7 +2611,7 @@ namespace simdjson {
 		return simdjson::SUCCESS;
 	}
 
-	template<typename simdjson_value> JSONIFIER_INLINE auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_message& data) {
+	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_message& data) {
 		ondemand::object obj;
 		auto error = val.get_object().get(obj);
 		if (error) {

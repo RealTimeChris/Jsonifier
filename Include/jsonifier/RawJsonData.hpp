@@ -163,7 +163,7 @@ namespace jsonifier {
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::object_type,
+						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::object_type, jsonifier::string,
 							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
 						return results;
 					}
@@ -174,7 +174,7 @@ namespace jsonifier {
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::array_type,
+						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::array_type, jsonifier::string,
 							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
 						return results;
 					}

@@ -31,6 +31,30 @@
 
 namespace jsonifier_internal {
 
+	template<size_t currentIndex, size_t maxIndex, typename value_type> constexpr size_t collectLongestStringLengthImpl(size_t currentMax = 0) {
+		if constexpr (currentIndex < maxIndex) {
+			auto newMember = get<currentIndex>(coreTupleV<value_type>);
+			if constexpr (jsonifier::concepts::has_member_t<decltype(newMember)>) {
+				using member_type = decltype(newMember)::member_type;
+				if constexpr (core_tuple_type<std::remove_cvref_t<member_type>>) {
+					constexpr auto tupleSize = std::tuple_size_v<core_tuple_t<std::remove_cvref_t<member_type>>>;
+					currentMax				 = collectLongestStringLengthImpl<0, tupleSize, std::remove_cvref_t<member_type>>(currentMax);
+				}
+			}
+			currentMax = currentMax > keyStatsVal<value_type>.maxLength ? currentMax : keyStatsVal<value_type>.maxLength;
+			return collectLongestStringLengthImpl<currentIndex + 1, maxIndex, value_type>(currentMax);
+		}
+		return currentMax;
+	}
+
+	template<typename value_type> constexpr size_t collectLongestStringLength(size_t currentMax = 0) {
+		if constexpr (core_tuple_type<std::remove_cvref_t<value_type>>) {
+			constexpr auto tupleSize = std::tuple_size_v<core_tuple_t<value_type>>;
+			currentMax				 = collectLongestStringLengthImpl<0, tupleSize, value_type>(currentMax);
+		}
+		return currentMax;
+	}
+
 	template<typename derived_type> class parser;
 
 	template<typename derived_type> struct parse_context {
@@ -64,18 +88,19 @@ namespace jsonifier_internal {
 		return reinterpret_cast<const char*>(value.data());
 	}
 
-	template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> struct parse_impl;
+	template<bool minified, jsonifier::parse_options, typename value_type, typename buffer_type, typename parse_context_type> struct parse_impl;
 
 	template<bool minified, jsonifier::parse_options options> struct parse {
-		template<typename value_type, typename parse_context_type> JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
-			parse_impl<minified, options, std::remove_cvref_t<value_type>, parse_context_type>::impl(value, iter);
+		template<typename buffer_type, typename value_type, typename parse_context_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
+			parse_impl<minified, options, std::remove_cvref_t<value_type>, buffer_type, parse_context_type>::impl(value, iter);
 		}
 	};
 
 	template<typename derived_type_new> class parser {
 	  public:
 		using derived_type = derived_type_new;
-		template<bool minified, jsonifier::parse_options, typename value_type, typename parse_context_type> friend struct parse_impl;
+		template<bool minified, jsonifier::parse_options, typename value_type, typename buffer_type, typename parse_context_type> friend struct parse_impl;
 
 		JSONIFIER_INLINE parser& operator=(const parser& other) = delete;
 		JSONIFIER_INLINE parser(const parser& other)			= delete;
@@ -83,6 +108,7 @@ namespace jsonifier_internal {
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ options };
+			static constexpr auto longestKeyLength{ collectLongestStringLength<value_type>() };
 			parse_context<derived_type> optionsReal{};
 			optionsReal.rootIter  = getBeginIter(in);
 			optionsReal.iter	  = optionsReal.rootIter;
@@ -103,13 +129,51 @@ namespace jsonifier_internal {
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return false;
 			}
-			parse<options.minified, optionsNew>::impl(object, optionsReal);
+			parse<options.minified, optionsNew>::template impl<buffer_type>(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (optionsReal.currentObjectDepth != 0)							  ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), false)
 				: (optionsReal.currentArrayDepth != 0)								  ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), false)
 				: (optionsReal.iter < optionsReal.endIter && !optionsNew.partialRead) ? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), false)
 				: derivedRef.errors.size() > 0										  ? false
 																					  : true;
+		}
+		
+		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, jsonifier::concepts::is_resizable buffer_type>
+		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
+			static constexpr jsonifier::parse_options optionsNew{ options };
+			static constexpr auto longestKeyLength{ collectLongestStringLength<value_type>() };
+			size_t originalSize{ in.size() };
+			in.reserve(in.size() + longestKeyLength);
+			parse_context<derived_type> optionsReal{};
+			optionsReal.rootIter  = getBeginIter(in);
+			optionsReal.iter	  = optionsReal.rootIter;
+			optionsReal.endIter	  = getEndIter(in);
+			optionsReal.parserPtr = this;
+			auto newSize		  = static_cast<uint64_t>((optionsReal.endIter - optionsReal.iter) / 2);
+			if (stringBuffer.size() < newSize) {
+				stringBuffer.resize(newSize);
+			}
+			if constexpr (options.validateJson) {
+				if (!derivedRef.validateJson(in)) {
+					in.resize(originalSize);
+					return false;
+				}
+			}
+			derivedRef.errors.clear();
+			if JSONIFIER_UNLIKELY (!optionsReal.iter) {
+				static constexpr auto sourceLocation{ std::source_location::current() };
+				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
+				in.resize(originalSize);
+				return false;
+			}
+			parse<options.minified, optionsNew>::template impl<buffer_type>(object, optionsReal);
+			static constexpr auto sourceLocation{ std::source_location::current() };
+			return (optionsReal.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), in.resize(originalSize), false)
+				: (optionsReal.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), in.resize(originalSize), false)
+				: (optionsReal.iter < optionsReal.endIter && !optionsNew.partialRead)
+				? (reportError<sourceLocation, parse_errors::Unfinished_Input>(optionsReal), in.resize(originalSize), false)
+				: derivedRef.errors.size() > 0 ? (in.resize(originalSize), false)
+											   : (in.resize(originalSize), true);
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
@@ -136,7 +200,7 @@ namespace jsonifier_internal {
 				reportError<sourceLocation, parse_errors::No_Input>(optionsReal);
 				return std::move(object);
 			}
-			parse<options.minified, optionsNew>::impl(object, optionsReal);
+			parse<options.minified, optionsNew>::template impl<buffer_type>(object, optionsReal);
 			static constexpr auto sourceLocation{ std::source_location::current() };
 			return (optionsReal.currentObjectDepth != 0) ? (reportError<sourceLocation, parse_errors::Imbalanced_Object_Braces>(optionsReal), std::remove_cvref_t<value_type>{})
 				: (optionsReal.currentArrayDepth != 0)	 ? (reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(optionsReal), std::remove_cvref_t<value_type>{})
