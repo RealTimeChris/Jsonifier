@@ -65,6 +65,10 @@ namespace jsonifier_internal {
 		int64_t exponent{};
 		uint64_t mantissa{};
 
+		if (iter >= end) {
+			return false;
+		}
+
 		const bool negative{ *iter == minus };
 		bool tooManyDigits{ false };
 

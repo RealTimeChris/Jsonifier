@@ -37,7 +37,7 @@ namespace jsonifier_internal {
 	if constexpr (!options.minified) { \
 		JSONIFIER_SKIP_WS(); \
 	} \
-	if JSONIFIER_LIKELY (*context.iter == ':') { \
+	if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') { \
 		++context.iter; \
 		if constexpr (!options.minified) { \
 			JSONIFIER_SKIP_WS(); \
@@ -64,15 +64,6 @@ namespace jsonifier_internal {
 	static constexpr char quote{ '"' };
 	static constexpr char n{ 'n' };
 
-	template<typename buffer_type, string_literal slNew, typename context_type> bool compareKey(context_type& context) noexcept {
-		static constexpr string_literal sl{ slNew };
-		if constexpr (jsonifier::concepts::is_resizable<buffer_type>) {
-			return *(context.iter + sl.size()) == quote && string_literal_comparitor<sl>::impl(context.iter);
-		} else {
-			return (context.iter + sl.size() > context.endIter) && *(context.iter + sl.size()) == quote && string_literal_comparitor<sl>::impl(context.iter);
-		}
-	}
-
 	template<jsonifier::parse_options options, bool minified> struct index_processor_parse {
 		template<size_t index, typename value_type, typename buffer_type, typename parse_context_type>
 		JSONIFIER_ALWAYS_INLINE static bool processIndex(value_type& value, parse_context_type& context) noexcept {
@@ -82,12 +73,12 @@ namespace jsonifier_internal {
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY (compareKey<buffer_type, stringLiteral>(context)) {
+				if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
 					context.iter += keySizeNew;
 					if constexpr (!minified) {
 						JSONIFIER_SKIP_WS();
 					}
-					if JSONIFIER_LIKELY (*context.iter == colon) {
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 						++context.iter;
 						if constexpr (!minified) {
 							JSONIFIER_SKIP_WS();
@@ -125,110 +116,124 @@ namespace jsonifier_internal {
 
 	template<jsonifier::parse_options options, jsonifier::concepts::jsonifier_object_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> {
+		inline static bool antihash{ true };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
-
-			if JSONIFIER_LIKELY (*context.iter == lBrace) {
-				++context.iter;
-				++context.currentObjectDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
-					if constexpr (memberCount > 0) {
-						const auto wsStart = context.iter;
-						JSONIFIER_SKIP_WS();
-						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						bool antihash{ false };
-						if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-							const auto keySize = getKeyLength<options>(context);
-							jsonifier::string_view key{ static_cast<const char*>(context.iter) + 1, keySize };
-							auto& keys = value.jsonifierExcludedKeys;
-							if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-							}
-						}
-
-						static constexpr auto parseLambda01 = [](value_type& value, parse_context_type& context) {
-							auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-							if JSONIFIER_LIKELY (index < memberCount) {
-								if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, false>::bases[index](value, context)) {
-									return;
-								}
-								JSONIFIER_ELSE_UNLIKELY(else) {
-									if JSONIFIER_LIKELY (*context.iter == ':') {
-										++context.iter;
-										JSONIFIER_SKIP_WS();
-									}
-									JSONIFIER_ELSE_UNLIKELY(else) {
-										static constexpr auto sourceLocation{ std::source_location::current() };
-										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
-										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-										return;
-									}
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBrace) {
+					++context.iter;
+					++context.currentObjectDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBrace) {
+						if constexpr (memberCount > 0) {
+							const auto wsStart = context.iter;
+							JSONIFIER_SKIP_WS();
+							size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
+							if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+								const auto keySize = getKeyLength<options>(context);
+								jsonifier::string_view key{ static_cast<const char*>(context.iter) + 1, keySize };
+								auto& keys = value.jsonifierExcludedKeys;
+								if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 									derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 								}
-							} else {
-								JSONIFIER_SKIP_KEY_VALUE();
 							}
-						};
 
-						if JSONIFIER_LIKELY (*context.iter == quote) {
-							++context.iter;
-							if constexpr (options.knownOrder) {
-								static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-								static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
-								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
-								static constexpr auto keySize		= key.size();
-								static constexpr auto keySizeNew	= keySize + 1;
-								if JSONIFIER_LIKELY (compareKey<buffer_type, stringLiteral>(context)) {
-									context.iter += keySizeNew;
-									JSONIFIER_SKIP_WS();
-									if JSONIFIER_LIKELY (*context.iter == colon) {
-										++context.iter;
-										JSONIFIER_SKIP_WS();
-										parse<false, options>::template impl<buffer_type>(value.*ptr, context);
-										antihash = true;
+							static constexpr auto parseLambda01 = [](value_type& value, parse_context_type& context) {
+								auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+								if JSONIFIER_LIKELY (index < memberCount) {
+									if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, false>::bases[index](value, context)) {
+										return;
 									}
 									JSONIFIER_ELSE_UNLIKELY(else) {
-										static constexpr auto sourceLocation{ std::source_location::current() };
-										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+										if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
+											++context.iter;
+											JSONIFIER_SKIP_WS();
+										}
+										JSONIFIER_ELSE_UNLIKELY(else) {
+											static constexpr auto sourceLocation{ std::source_location::current() };
+											context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+											derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+											return;
+										}
 										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 									}
 								} else {
+									JSONIFIER_SKIP_KEY_VALUE();
+								}
+							};
+
+							if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
+								++context.iter;
+								if (antihash) {
+									if constexpr (options.knownOrder) {
+										static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+										static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
+										static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
+										static constexpr auto keySize		= key.size();
+										static constexpr auto keySizeNew	= keySize + 1;
+										if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
+											string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+											context.iter += keySizeNew;
+											JSONIFIER_SKIP_WS();
+											if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
+												++context.iter;
+												JSONIFIER_SKIP_WS();
+												parse<false, options>::template impl<buffer_type>(value.*ptr, context);
+											}
+											JSONIFIER_ELSE_UNLIKELY(else) {
+												static constexpr auto sourceLocation{ std::source_location::current() };
+												context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+												derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+											}
+										} else {
+											antihash = false;
+											parseLambda01(value, context);
+										}
+									} else {
+										antihash = false;
+										parseLambda01(value, context);
+									}
+								} else {
+									antihash = false;
 									parseLambda01(value, context);
 								}
-							} else {
-								parseLambda01(value, context);
 							}
-						}
-						JSONIFIER_ELSE_UNLIKELY(else) {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
-							derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-						}
+							JSONIFIER_ELSE_UNLIKELY(else) {
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
+								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+							}
 
-						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-							if (antihash) {
-								impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, value, context, wsStart,
-									wsSize);
+							if ((context.iter + wsSize < context.endIter) && whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
+								if (antihash) {
+									impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, true>{}, value, context, wsStart,
+										wsSize);
+								} else {
+									impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, true>{}, value, context, wsStart,
+										wsSize);
+								}
 							} else {
-								impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, true>{}, value, context, wsStart,
-									wsSize);
-							}
-						} else {
-							if (antihash) {
-								impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, value, context);
-							} else {
-								impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, false>{}, value, context);
+								if (antihash) {
+									impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, std::integral_constant<bool, false>{}, value, context);
+								} else {
+									impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, false>{}, value, context);
+								}
 							}
 						}
 					}
+					++context.iter;
+					--context.currentObjectDepth;
+					JSONIFIER_SKIP_WS();
 				}
-				++context.iter;
-				--context.currentObjectDepth;
-				JSONIFIER_SKIP_WS();
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
+				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -238,7 +243,7 @@ namespace jsonifier_internal {
 			const char* wsStart = nullptr, size_t wsSize = 0) {
 			static constexpr auto memberCount{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (index < memberCount) {
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBrace) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
@@ -260,7 +265,7 @@ namespace jsonifier_internal {
 						}
 					}
 
-					if JSONIFIER_LIKELY (*context.iter == quote) {
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
 						++context.iter;
 						if constexpr (antiHashNew) {
 							static constexpr auto ptr			= get<index>(jsonifier::concepts::coreV<value_type>).ptr();
@@ -268,10 +273,11 @@ namespace jsonifier_internal {
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
-							if JSONIFIER_LIKELY (compareKey<buffer_type, stringLiteral>(context)) {
+							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
+								string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
 								context.iter += keySizeNew;
 								JSONIFIER_SKIP_WS();
-								if JSONIFIER_LIKELY (*context.iter == colon) {
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 									++context.iter;
 									JSONIFIER_SKIP_WS();
 									parse<false, options>::template impl<buffer_type>(value.*ptr, context);
@@ -287,13 +293,13 @@ namespace jsonifier_internal {
 							}
 						}
 						if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-							indexNew < memberCount) {
+											 indexNew < memberCount) {
 							if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, false>::bases[indexNew](value, context)) {
 								return impl(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, std::integral_constant<bool, newLines>{}, value,
 									context, wsStart, wsSize);
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
-								if JSONIFIER_LIKELY (*context.iter == ':') {
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
 									++context.iter;
 									JSONIFIER_SKIP_WS();
 								}
@@ -331,90 +337,99 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<core_tuple_t<value_type>>;
 
-			if JSONIFIER_LIKELY (*context.iter == lBrace) {
-				++context.iter;
-				++context.currentObjectDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
-					if constexpr (memberCount > 0) {
-						bool antihash{ false };
-						if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-							const auto keySize = getKeyLength<options>(context);
-							jsonifier::string_view key{ static_cast<const char*>(context.iter) + 1, keySize };
-							auto& keys = value.jsonifierExcludedKeys;
-							if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-							}
-						}
-
-						static constexpr auto parseLambda01 = [](value_type& value, parse_context_type& context) {
-							auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-							if JSONIFIER_LIKELY (index < memberCount) {
-								if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, true>::bases[index](value, context)) {
-									return;
-								}
-								JSONIFIER_ELSE_UNLIKELY(else) {
-									if JSONIFIER_LIKELY (*context.iter == ':') {
-										++context.iter;
-									}
-									JSONIFIER_ELSE_UNLIKELY(else) {
-										static constexpr auto sourceLocation{ std::source_location::current() };
-										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
-										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-										return;
-									}
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBrace) {
+					++context.iter;
+					++context.currentObjectDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBrace) {
+						if constexpr (memberCount > 0) {
+							bool antihash{ false };
+							if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+								const auto keySize = getKeyLength<options>(context);
+								jsonifier::string_view key{ static_cast<const char*>(context.iter) + 1, keySize };
+								auto& keys = value.jsonifierExcludedKeys;
+								if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 									derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 								}
-							} else {
-								JSONIFIER_SKIP_KEY_VALUE();
 							}
-						};
 
-						if JSONIFIER_LIKELY (*context.iter == quote) {
-							++context.iter;
-							if constexpr (options.knownOrder) {
-								static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
-								static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
-								static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
-								static constexpr auto keySize		= key.size();
-								static constexpr auto keySizeNew	= keySize + 1;
-								if JSONIFIER_LIKELY (compareKey<buffer_type, stringLiteral>(context)) {
-									context.iter += keySizeNew;
-									if JSONIFIER_LIKELY (*context.iter == colon) {
-										++context.iter;
-										parse<true, options>::template impl<buffer_type>(value.*ptr, context);
-										antihash = true;
+							static constexpr auto parseLambda01 = [](value_type& value, parse_context_type& context) {
+								auto index = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+								if JSONIFIER_LIKELY (index < memberCount) {
+									if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, true>::bases[index](value, context)) {
+										return;
 									}
 									JSONIFIER_ELSE_UNLIKELY(else) {
-										static constexpr auto sourceLocation{ std::source_location::current() };
-										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+										if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
+											++context.iter;
+										}
+										JSONIFIER_ELSE_UNLIKELY(else) {
+											static constexpr auto sourceLocation{ std::source_location::current() };
+											context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+											derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+											return;
+										}
 										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+									}
+								} else {
+									JSONIFIER_SKIP_KEY_VALUE();
+								}
+							};
+
+							if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
+								++context.iter;
+								if constexpr (options.knownOrder) {
+									static constexpr auto ptr			= get<0>(jsonifier::concepts::coreV<value_type>).ptr();
+									static constexpr auto key			= get<0>(jsonifier::concepts::coreV<value_type>).view();
+									static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
+									static constexpr auto keySize		= key.size();
+									static constexpr auto keySizeNew	= keySize + 1;
+									if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
+										string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+										context.iter += keySizeNew;
+										if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
+											++context.iter;
+											parse<true, options>::template impl<buffer_type>(value.*ptr, context);
+											antihash = true;
+										}
+										JSONIFIER_ELSE_UNLIKELY(else) {
+											static constexpr auto sourceLocation{ std::source_location::current() };
+											context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+											derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+										}
+									} else {
+										parseLambda01(value, context);
 									}
 								} else {
 									parseLambda01(value, context);
 								}
+							}
+							JSONIFIER_ELSE_UNLIKELY(else) {
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
+								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+							}
+
+							if (antihash) {
+								impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, value, context);
 							} else {
-								parseLambda01(value, context);
+								impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, value, context);
 							}
 						}
-						JSONIFIER_ELSE_UNLIKELY(else) {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_String_Start>(context);
-							derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-						}
-
-						if (antihash) {
-							impl(std::integral_constant<size_t, 1>{}, std::integral_constant<bool, true>{}, value, context);
-						} else {
-							impl(std::integral_constant<size_t, 0>{}, std::integral_constant<bool, false>{}, value, context);
-						}
 					}
+					++context.iter;
+					--context.currentObjectDepth;
 				}
-				++context.iter;
-				--context.currentObjectDepth;
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
+				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -423,7 +438,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static void impl(const auto index, const auto antihashNew, value_type& value, parse_context_type& context) {
 			static constexpr auto memberCount{ tuple_size_v<core_tuple_t<value_type>> };
 			if constexpr (index < memberCount) {
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBrace) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
 						++context.iter;
 					}
@@ -444,7 +459,7 @@ namespace jsonifier_internal {
 						}
 					}
 
-					if JSONIFIER_LIKELY (*context.iter == quote) {
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
 						++context.iter;
 						if constexpr (antihashNew) {
 							static constexpr auto ptr			= get<index>(jsonifier::concepts::coreV<value_type>).ptr();
@@ -452,9 +467,10 @@ namespace jsonifier_internal {
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
-							if JSONIFIER_LIKELY (compareKey<buffer_type, stringLiteral>(context)) {
+							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
+								string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
 								context.iter += keySizeNew;
-								if JSONIFIER_LIKELY (*context.iter == colon) {
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 									++context.iter;
 									parse<true, options>::template impl<buffer_type>(value.*ptr, context);
 									return impl(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, true>{}, value, context);
@@ -468,12 +484,12 @@ namespace jsonifier_internal {
 							}
 						}
 						if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
-							indexNew < memberCount) {
+											 indexNew < memberCount) {
 							if JSONIFIER_LIKELY (index_processor_parse_map<value_type, buffer_type, parse_context_type, options, true>::bases[indexNew](value, context)) {
 								return impl(std::integral_constant<size_t, index + 1>{}, std::integral_constant<bool, false>{}, value, context);
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
-								if JSONIFIER_LIKELY (*context.iter == ':') {
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
 									++context.iter;
 								}
 								JSONIFIER_ELSE_UNLIKELY(else) {
@@ -518,30 +534,38 @@ namespace jsonifier_internal {
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.iter;
-				++context.currentArrayDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					if constexpr (memberCount > 0) {
-						const auto wsStart = context.iter;
-						JSONIFIER_SKIP_WS();
-						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						parse<false, options>::template impl<buffer_type>(get<0>(value), context);
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBracket) {
+					++context.iter;
+					++context.currentArrayDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBracket) {
+						if constexpr (memberCount > 0) {
+							const auto wsStart = context.iter;
+							JSONIFIER_SKIP_WS();
+							size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
+							parse<false, options>::template impl<buffer_type>(get<0>(value), context);
 
-						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-							parseObjects<memberCount, 1, true>(value, context, wsStart, wsSize);
-						} else {
-							parseObjects<memberCount, 1, false>(value, context, wsStart, wsSize);
+							if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
+								parseObjects<memberCount, 1, true>(value, context, wsStart, wsSize);
+							} else {
+								parseObjects<memberCount, 1, false>(value, context, wsStart, wsSize);
+							}
 						}
 					}
+					++context.iter;
+					JSONIFIER_SKIP_WS();
+					--context.currentArrayDepth;
 				}
-				++context.iter;
-				JSONIFIER_SKIP_WS();
-				--context.currentArrayDepth;
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
+				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -550,7 +574,7 @@ namespace jsonifier_internal {
 		template<size_t maxIndex, size_t currentIndex, bool newLines>
 		JSONIFIER_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if constexpr (currentIndex < maxIndex) {
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBracket) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
@@ -577,21 +601,29 @@ namespace jsonifier_internal {
 	struct parse_impl<true, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.iter;
-				++context.currentArrayDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					if constexpr (memberCount > 0) {
-						parse<true, options>::template impl<buffer_type>(get<0>(value), context);
-						parseObjects<memberCount, 1>(value, context);
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBracket) {
+					++context.iter;
+					++context.currentArrayDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBracket) {
+						if constexpr (memberCount > 0) {
+							parse<true, options>::template impl<buffer_type>(get<0>(value), context);
+							parseObjects<memberCount, 1>(value, context);
+						}
 					}
+					++context.iter;
+					--context.currentArrayDepth;
 				}
-				++context.iter;
-				--context.currentArrayDepth;
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
+				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -599,7 +631,7 @@ namespace jsonifier_internal {
 
 		template<size_t maxIndex, size_t currentIndex> JSONIFIER_INLINE static void parseObjects(value_type& value, parse_context_type& context) {
 			if constexpr (currentIndex < maxIndex) {
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBracket) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
 						++context.iter;
 						parse<true, options>::template impl<buffer_type>(get<currentIndex>(value), context);
@@ -622,41 +654,49 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBrace) {
-				++context.iter;
-				++context.currentObjectDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
-					const auto wsStart = context.iter;
-					JSONIFIER_SKIP_WS();
-					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-					static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
-					parse<false, options>::template impl<buffer_type>(key, context);
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBrace) {
+					++context.iter;
+					++context.currentObjectDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBrace) {
+						const auto wsStart = context.iter;
+						JSONIFIER_SKIP_WS();
+						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
+						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+						parse<false, options>::template impl<buffer_type>(key, context);
 
-					if JSONIFIER_LIKELY (*context.iter == colon) {
+						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
+							++context.iter;
+							JSONIFIER_SKIP_WS();
+							parse<false, options>::template impl<buffer_type>(value[key], context);
+						}
+						JSONIFIER_ELSE_UNLIKELY(else) {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+							derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+							return;
+						}
+						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
+							return parseObjects<true>(value, context, wsStart, wsSize);
+						} else {
+							return parseObjects<false>(value, context, wsStart, wsSize);
+						}
+					} else {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
-						parse<false, options>::template impl<buffer_type>(value[key], context);
+						--context.currentObjectDepth;
 					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
-						derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-						return;
-					}
-					if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-						return parseObjects<true>(value, context, wsStart, wsSize);
-					} else {
-						return parseObjects<false>(value, context, wsStart, wsSize);
-					}
-				} else {
-					++context.iter;
-					JSONIFIER_SKIP_WS();
-					--context.currentObjectDepth;
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -664,14 +704,14 @@ namespace jsonifier_internal {
 
 		template<bool newLines> JSONIFIER_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			while
-				JSONIFIER_LIKELY(*context.iter != rBrace) {
-					if ((*context.iter == comma)) {
+				JSONIFIER_LIKELY((context.iter < context.endIter) && *context.iter != rBrace) {
+					if (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
 						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 						parse<false, options>::template impl<buffer_type>(key, context);
 
-						if JSONIFIER_LIKELY (*context.iter == colon) {
+						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 							++context.iter;
 							JSONIFIER_SKIP_WS();
 							parse<false, options>::template impl<buffer_type>(value[key], context);
@@ -697,56 +737,64 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBrace) {
-				++context.iter;
-				++context.currentObjectDepth;
-				if JSONIFIER_LIKELY (*context.iter != rBrace) {
-					static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
-					parse<true, options>::template impl<buffer_type>(key, context);
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBrace) {
+					++context.iter;
+					++context.currentObjectDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBrace) {
+						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+						parse<true, options>::template impl<buffer_type>(key, context);
 
-					if JSONIFIER_LIKELY (*context.iter == colon) {
-						++context.iter;
-						parse<true, options>::template impl<buffer_type>(value[key], context);
-					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
-						derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-						return;
-					}
+						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
+							++context.iter;
+							parse<true, options>::template impl<buffer_type>(value[key], context);
+						}
+						JSONIFIER_ELSE_UNLIKELY(else) {
+							static constexpr auto sourceLocation{ std::source_location::current() };
+							context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+							derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+							return;
+						}
 
-					while
-						JSONIFIER_LIKELY(*context.iter != rBrace) {
-							if JSONIFIER_LIKELY (*context.iter == comma) {
-								++context.iter;
-								parse<true, options>::template impl<buffer_type>(key, context);
-
-								if JSONIFIER_LIKELY (*context.iter == colon) {
+						while
+							JSONIFIER_LIKELY((context.iter < context.endIter) && *context.iter != rBrace) {
+								if JSONIFIER_LIKELY (*context.iter == comma) {
 									++context.iter;
-									parse<true, options>::template impl<buffer_type>(value[key], context);
+									parse<true, options>::template impl<buffer_type>(key, context);
+
+									if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
+										++context.iter;
+										parse<true, options>::template impl<buffer_type>(value[key], context);
+									} else {
+										static constexpr auto sourceLocation{ std::source_location::current() };
+										context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+										return;
+									}
 								} else {
 									static constexpr auto sourceLocation{ std::source_location::current() };
-									context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Colon>(context);
+									context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Comma_Or_Object_End>(context);
 									derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 									return;
 								}
-							} else {
-								static constexpr auto sourceLocation{ std::source_location::current() };
-								context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Comma_Or_Object_End>(context);
-								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-								return;
 							}
-						}
-					++context.iter;
-					--context.currentObjectDepth;
-				} else {
-					++context.iter;
-					--context.currentObjectDepth;
+						++context.iter;
+						--context.currentObjectDepth;
+					} else {
+						++context.iter;
+						--context.currentObjectDepth;
+					}
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				context.parserPtr->template reportError<sourceLocation, parse_errors::Missing_Object_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				return;
 			}
@@ -766,7 +814,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::optional_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter != n) {
+			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				parse<minified, options>::template impl<buffer_type>(value.emplace(), context);
 			} else {
 				if JSONIFIER_LIKELY (parseNull(context.iter)) {
@@ -790,24 +838,32 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.currentArrayDepth;
-				++context.iter;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					const auto wsStart = context.iter;
-					JSONIFIER_SKIP_WS();
-					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-					parseObjects<true>(value, context, wsStart, wsSize);
-				} else {
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBracket) {
+					++context.currentArrayDepth;
 					++context.iter;
-					JSONIFIER_SKIP_WS();
-					--context.currentArrayDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBracket) {
+						const auto wsStart = context.iter;
+						JSONIFIER_SKIP_WS();
+						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
+						parseObjects<true>(value, context, wsStart, wsSize);
+					} else {
+						++context.iter;
+						JSONIFIER_SKIP_WS();
+						--context.currentArrayDepth;
+					}
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+				return;
 			}
 		}
 
@@ -818,6 +874,38 @@ namespace jsonifier_internal {
 				for (size_t i = 0; i < size; ++i) {
 					parse<false, options>::template impl<buffer_type>(*(iterNew++), context);
 
+					if JSONIFIER_LIKELY (context.iter < context.endIter) {
+						if JSONIFIER_LIKELY (*context.iter == comma) {
+							++context.iter;
+							JSONIFIER_SKIP_MATCHING_WS()
+						}
+						JSONIFIER_ELSE_UNLIKELY(else) {
+							if JSONIFIER_LIKELY (*context.iter == rBracket) {
+								++context.iter;
+								JSONIFIER_SKIP_WS()
+								--context.currentArrayDepth;
+								return (value.size() == i + 1) ? noop() : value.resize(i + 1);
+							}
+							JSONIFIER_ELSE_UNLIKELY(else) {
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+								return;
+							}
+						}
+					}
+					JSONIFIER_ELSE_UNLIKELY(else) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
+						derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+						return;
+					}
+				}
+			}
+
+			while (true) {
+				parse<false, options>::template impl<buffer_type>(value.emplace_back(), context);
+				if JSONIFIER_LIKELY (context.iter < context.endIter) {
 					if JSONIFIER_LIKELY (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
@@ -825,9 +913,9 @@ namespace jsonifier_internal {
 					JSONIFIER_ELSE_UNLIKELY(else) {
 						if JSONIFIER_LIKELY (*context.iter == rBracket) {
 							++context.iter;
-							JSONIFIER_SKIP_WS()
+							JSONIFIER_SKIP_WS();
 							--context.currentArrayDepth;
-							return (value.size() == i + 1) ? noop() : value.resize(i + 1);
+							return;
 						}
 						JSONIFIER_ELSE_UNLIKELY(else) {
 							static constexpr auto sourceLocation{ std::source_location::current() };
@@ -837,28 +925,11 @@ namespace jsonifier_internal {
 						}
 					}
 				}
-			}
-
-			while (true) {
-				parse<false, options>::template impl<buffer_type>(value.emplace_back(), context);
-
-				if JSONIFIER_LIKELY (*context.iter == comma) {
-					++context.iter;
-					JSONIFIER_SKIP_MATCHING_WS();
-				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
-					if JSONIFIER_LIKELY (*context.iter == rBracket) {
-						++context.iter;
-						JSONIFIER_SKIP_WS();
-						--context.currentArrayDepth;
-						return;
-					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
-						derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-						return;
-					}
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+					return;
 				}
 			}
 		}
@@ -872,64 +943,79 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::vector_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.currentArrayDepth;
-				++context.iter;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					if JSONIFIER_LIKELY (const size_t size = value.size(); size > 0) {
-						auto iterNew = value.begin();
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == lBracket) {
+					++context.currentArrayDepth;
+					++context.iter;
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBracket) {
+						if JSONIFIER_LIKELY (const size_t size = value.size(); size > 0) {
+							auto iterNew = value.begin();
 
-						for (size_t i = 0; i < size; ++i) {
-							parse<true, options>::template impl<buffer_type>(*(iterNew++), context);
+							for (size_t i = 0; i < size; ++i) {
+								parse<true, options>::template impl<buffer_type>(*(iterNew++), context);
 
-							if JSONIFIER_LIKELY (*context.iter == comma) {
-								++context.iter;
-							}
-							JSONIFIER_ELSE_UNLIKELY(else) {
-								if JSONIFIER_LIKELY (*context.iter == rBracket) {
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == comma) {
 									++context.iter;
-									--context.currentArrayDepth;
-									return (value.size() == i + 1) ? noop() : value.resize(i + 1);
 								}
 								JSONIFIER_ELSE_UNLIKELY(else) {
-									static constexpr auto sourceLocation{ std::source_location::current() };
-									reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
-									derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-									return;
+									if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == rBracket) {
+										++context.iter;
+										--context.currentArrayDepth;
+										return (value.size() == i + 1) ? noop() : value.resize(i + 1);
+									}
+									JSONIFIER_ELSE_UNLIKELY(else) {
+										static constexpr auto sourceLocation{ std::source_location::current() };
+										reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+										return;
+									}
 								}
 							}
 						}
-					}
 
-					while (true) {
-						parse<true, options>::template impl<buffer_type>(value.emplace_back(), context);
-
-						if JSONIFIER_LIKELY (*context.iter == comma) {
-							++context.iter;
-						}
-						JSONIFIER_ELSE_UNLIKELY(else) {
-							if JSONIFIER_LIKELY (*context.iter == rBracket) {
-								++context.iter;
-								--context.currentArrayDepth;
-								return;
+						while (true) {
+							parse<true, options>::template impl<buffer_type>(value.emplace_back(), context);
+							if JSONIFIER_LIKELY (context.iter < context.endIter) {
+								if JSONIFIER_LIKELY (*context.iter == comma) {
+									++context.iter;
+								}
+								JSONIFIER_ELSE_UNLIKELY(else) {
+									if JSONIFIER_LIKELY (*context.iter == rBracket) {
+										++context.iter;
+										--context.currentArrayDepth;
+										return;
+									}
+									JSONIFIER_ELSE_UNLIKELY(else) {
+										static constexpr auto sourceLocation{ std::source_location::current() };
+										reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+										derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+										return;
+									}
+								}
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
 								static constexpr auto sourceLocation{ std::source_location::current() };
-								reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+								context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 								return;
 							}
 						}
+					} else {
+						++context.iter;
+						--context.currentArrayDepth;
 					}
-				} else {
-					++context.iter;
-					--context.currentArrayDepth;
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+				return;
 			}
 		}
 
@@ -945,28 +1031,36 @@ namespace jsonifier_internal {
 		static constexpr char lBracket{ '[' };
 		static constexpr char comma{ ',' };
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.currentArrayDepth;
-				++context.iter;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					const auto wsStart = context.iter;
-					JSONIFIER_SKIP_WS();
-					size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-					if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
-						return parseObjects<true>(value, context, wsStart, wsSize);
-					} else {
-						return parseObjects<false>(value, context, wsStart, wsSize);
-					}
-				} else {
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBracket) {
+					++context.currentArrayDepth;
 					++context.iter;
-					JSONIFIER_SKIP_WS();
-					--context.currentArrayDepth;
+					if JSONIFIER_LIKELY (*context.iter != rBracket) {
+						const auto wsStart = context.iter;
+						JSONIFIER_SKIP_WS();
+						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
+						if (whitespaceTable[static_cast<uint8_t>(*(context.iter + wsSize))]) {
+							return parseObjects<true>(value, context, wsStart, wsSize);
+						} else {
+							return parseObjects<false>(value, context, wsStart, wsSize);
+						}
+					} else {
+						++context.iter;
+						JSONIFIER_SKIP_WS();
+						--context.currentArrayDepth;
+					}
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+				return;
 			}
 		}
 
@@ -977,23 +1071,31 @@ namespace jsonifier_internal {
 				for (size_t i = 0; i < n; ++i) {
 					parse<false, options>::template impl<buffer_type>(*(iterNew++), context);
 
-					if JSONIFIER_LIKELY (*context.iter == comma) {
-						++context.iter;
-						JSONIFIER_SKIP_MATCHING_WS();
-					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						if JSONIFIER_LIKELY (*context.iter == rBracket) {
+					if JSONIFIER_LIKELY (context.iter < context.endIter) {
+						if JSONIFIER_LIKELY (*context.iter == comma) {
 							++context.iter;
-							JSONIFIER_SKIP_WS()
-							--context.currentArrayDepth;
-							return;
+							JSONIFIER_SKIP_MATCHING_WS();
 						}
 						JSONIFIER_ELSE_UNLIKELY(else) {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
-							derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-							return;
+							if JSONIFIER_LIKELY (*context.iter == rBracket) {
+								++context.iter;
+								JSONIFIER_SKIP_WS()
+								--context.currentArrayDepth;
+								return;
+							}
+							JSONIFIER_ELSE_UNLIKELY(else) {
+								static constexpr auto sourceLocation{ std::source_location::current() };
+								reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+								return;
+							}
 						}
+					}
+					JSONIFIER_ELSE_UNLIKELY(else) {
+						static constexpr auto sourceLocation{ std::source_location::current() };
+						context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
+						derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+						return;
 					}
 				}
 			}
@@ -1008,41 +1110,49 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::raw_array_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<true, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter == lBracket) {
-				++context.currentArrayDepth;
-				++context.iter;
-				if JSONIFIER_LIKELY (*context.iter != rBracket) {
-					auto iterNew = std::begin(value);
+			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
+				if JSONIFIER_LIKELY (*context.iter == lBracket) {
+					++context.currentArrayDepth;
+					++context.iter;
+					if JSONIFIER_LIKELY (*context.iter != rBracket) {
+						auto iterNew = std::begin(value);
 
-					for (size_t i = 0; i < value.size(); ++i) {
-						parse<true, options>::template impl<buffer_type>(*(iterNew++), context);
+						for (size_t i = 0; i < value.size(); ++i) {
+							parse<true, options>::template impl<buffer_type>(*(iterNew++), context);
 
-						if JSONIFIER_LIKELY (*context.iter == comma) {
-							++context.iter;
-						}
-						JSONIFIER_ELSE_UNLIKELY(else) {
-							if JSONIFIER_LIKELY (*context.iter == rBracket) {
+							if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == comma) {
 								++context.iter;
-								--context.currentArrayDepth;
-								return;
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
-								static constexpr auto sourceLocation{ std::source_location::current() };
-								reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
-								derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
-								return;
+								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == rBracket) {
+									++context.iter;
+									--context.currentArrayDepth;
+									return;
+								}
+								JSONIFIER_ELSE_UNLIKELY(else) {
+									static constexpr auto sourceLocation{ std::source_location::current() };
+									reportError<sourceLocation, parse_errors::Imbalanced_Array_Brackets>(context);
+									derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+									return;
+								}
 							}
 						}
+					} else {
+						++context.iter;
+						--context.currentArrayDepth;
 					}
-				} else {
-					++context.iter;
-					--context.currentArrayDepth;
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					static constexpr auto sourceLocation{ std::source_location::current() };
+					reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+					derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				static constexpr auto sourceLocation{ std::source_location::current() };
-				reportError<sourceLocation, parse_errors::Missing_Array_Start>(context);
+				context.parserPtr->template reportError<sourceLocation, parse_errors::Unexpected_String_End>(context);
 				derailleur<options, parse_context_type>::template skipToNextValue<value_type>(context);
+				return;
 			}
 		}
 
@@ -1092,7 +1202,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::shared_ptr_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter != n) {
+			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
 					value = std::make_shared<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
@@ -1118,7 +1228,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::unique_ptr_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter != n) {
+			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
 					value = std::make_unique<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
@@ -1144,7 +1254,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::pointer_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (*context.iter != n) {
+			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				if JSONIFIER_UNLIKELY (!value) {
 					value = new std::remove_pointer_t<std::remove_cvref_t<value_type>>{};
 				}
@@ -1225,7 +1335,7 @@ namespace jsonifier_internal {
 	template<bool minified, jsonifier::parse_options options, jsonifier::concepts::bool_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<minified, options, value_type, buffer_type, parse_context_type> {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY (parseBool(value, context.iter)) {
+			if JSONIFIER_LIKELY ((context.iter + 4) < context.endIter && parseBool(value, context.iter)) {
 				if constexpr (!minified) {
 					JSONIFIER_SKIP_WS();
 				}
@@ -1239,5 +1349,4 @@ namespace jsonifier_internal {
 			}
 		}
 	};
-
 }

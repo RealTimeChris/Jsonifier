@@ -662,26 +662,30 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
-			if (*iter == minus) {
-				++iter;
-				const uint8_t* resultPtr{ parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter)) };
-				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-					return true;
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
+			if (iter < end) {
+				if (*iter == minus) {
+					++iter;
+					const uint8_t* resultPtr = parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter));
+					if JSONIFIER_LIKELY (resultPtr) {
+						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						return true;
+					} else {
+						value = 0;
+						return false;
+					}
 				} else {
-					value = 0;
-					return false;
+					const uint8_t* resultPtr = parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter));
+					if JSONIFIER_LIKELY (resultPtr) {
+						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						return true;
+					} else {
+						value = 0;
+						return false;
+					}
 				}
 			} else {
-				const uint8_t* resultPtr{ parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter)) };
-				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-					return true;
-				} else {
-					value = 0;
-					return false;
-				}
+				return false;
 			}
 		}
 	};
@@ -1110,13 +1114,17 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
-			auto resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
-			if JSONIFIER_LIKELY (resultPtr) {
-				iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-				return true;
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
+			if (iter < end) {
+				const uint8_t* resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
+				if JSONIFIER_LIKELY (resultPtr) {
+					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+					return true;
+				} else {
+					value = 0;
+					return false;
+				}
 			} else {
-				value = 0;
 				return false;
 			}
 		}

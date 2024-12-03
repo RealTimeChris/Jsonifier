@@ -82,8 +82,9 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
-			const char* newPtr = string.data();
-			jsonifier_internal::integer_parser<int64_t>::parseInt(newValue, newPtr);
+			auto iter = static_cast<const char*>(string.data());
+			auto end  = static_cast<const char*>(string.data()) + string.size();
+			jsonifier_internal::integer_parser<int64_t>::parseInt(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -99,8 +100,9 @@ namespace jsonifier {
 	template<uint64_t base = 10> JSONIFIER_ALWAYS_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
-			const char* newPtr = string.data();
-			jsonifier_internal::integer_parser<uint64_t>::parseInt(newValue, newPtr);
+			auto iter = static_cast<const char*>(string.data());
+			auto end  = static_cast<const char*>(string.data()) + string.size();
+			jsonifier_internal::integer_parser<uint64_t>::parseInt(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -122,17 +124,17 @@ namespace jsonifier_internal {
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {
 			if constexpr (jsonifier::concepts::unsigned_t<value_type>) {
 				if constexpr (jsonifier::concepts::uns64_t<value_type>) {
-					return integer_parser<value_type>::parseInt(value, iter);
+					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					uint64_t i;
-					return integer_parser<uint64_t>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
+					return integer_parser<uint64_t>::parseInt(i, iter, end) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
 				if constexpr (jsonifier::concepts::sig64_t<value_type>) {
-					return integer_parser<value_type>::parseInt(value, iter);
+					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					int64_t i;
-					return integer_parser<int64_t>::parseInt(i, iter) ? (value = static_cast<value_type>(i), true) : false;
+					return integer_parser<int64_t>::parseInt(i, iter, end) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			}
 		} else {
