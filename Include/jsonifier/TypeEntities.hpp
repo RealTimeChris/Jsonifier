@@ -88,6 +88,7 @@ namespace jsonifier_internal {
 
 	template<const auto& function, typename... arg_types, size_t... indices>
 	JSONIFIER_ALWAYS_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
+		void(args...);
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
 	}
 
@@ -174,7 +175,6 @@ namespace jsonifier {
 		concept variant_t = requires(std::remove_cvref_t<value_type> var) {
 			{ var.index() } -> std::same_as<size_t>;
 			{ var.valueless_by_exception() } -> std::same_as<bool>;
-			{ var.emplace<0>(std::declval<decltype(std::get<0>(var))>()) } -> std::same_as<decltype(std::get<0>(var))&>;
 			{ std::holds_alternative<decltype(std::get<0>(var))>(var) } -> std::same_as<bool>;
 			{ std::get<0>(var) } -> std::same_as<decltype(std::get<0>(var))&>;
 			{ std::get_if<0>(&var) } -> std::same_as<std::remove_cvref_t<decltype(std::get<0>(var))>*>;
@@ -338,11 +338,16 @@ namespace jsonifier {
 			sizeof(typename std::remove_cvref_t<value_type01>::value_type) == sizeof(typename std::remove_cvref_t<value_type02>::value_type);
 		} && string_t<value_type01> && string_t<value_type02>;
 
+		template<typename value_type> constexpr bool hasSizeEqualToZero{ std::tuple_size_v<std::remove_cvref_t<value_type>> == 0 };
+
 		template<typename value_type>
-		concept tuple_t = requires(std::remove_cvref_t<value_type> t) {
-			std::tuple_size<std::remove_cvref_t<value_type>>::value;
-			get<0>(t);
-		} && !has_data<value_type>;
+		concept has_get_template = requires(std::remove_cvref_t<value_type> value) {
+			{ std::get<0>(value) } -> std::same_as<decltype(std::get<0>(value))&>;
+		};
+
+		template<typename value_type>
+		concept tuple_t = requires(std::remove_cvref_t<value_type> t) { std::tuple_size<std::remove_cvref_t<value_type>>::value; } &&
+			(hasSizeEqualToZero<value_type> || has_get_template<value_type>) && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 

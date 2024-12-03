@@ -85,17 +85,12 @@ target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wno-ignored-attributes>"	
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
 	"$<$<CXX_COMPILER_ID:CLANG>:-std=c++23>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:GNU>:-std=c++23>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
@@ -155,5 +150,5 @@ install(
 )
 
 if("${JSONIFIER_TEST}" STREQUAL "TRUE")
-	add_subdirectory("./Tests")
+	add_subdirectory("./Source")
 endif()

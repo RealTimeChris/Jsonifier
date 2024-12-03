@@ -143,6 +143,5 @@ namespace jsonifier_internal {
 				return parseFloat(value, iter, end);
 			}
 		}
-		return true;
 	}
 }

@@ -267,7 +267,7 @@ namespace jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_ALWAYS_INLINE reference at(size_type index) noexcept {
+		JSONIFIER_ALWAYS_INLINE reference at(size_type index) {
 			if (index >= sizeVal) {
 				throw std::out_of_range{ "Sorry, but that index is beyond the end of this vector's bounds." };
 			}
@@ -389,7 +389,7 @@ namespace jsonifier {
 			return (jsonifier_internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
-		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
+		JSONIFIER_INLINE void resize(size_type newSize) {
 			if JSONIFIER_LIKELY (newSize > capacityVal) {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
@@ -418,7 +418,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
+		JSONIFIER_INLINE void reserve(size_type capacityNew) {
 			if JSONIFIER_LIKELY (capacityNew > capacityVal) {
 				pointer newPtr = allocator::allocate(capacityNew);
 				try {

@@ -197,8 +197,9 @@ namespace jsonifier_internal {
 		using simd_type = map_simd_t<2048>;
 		array<size_t, 2048 / setSimdWidth(2048)> bucketSizes{};
 		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
-		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
-		JSONIFIER_ALIGN array<size_t, 2049> indices{};
+		char padding[2049 % bytesPerStep]{};
+		array<uint8_t, 256> uniqueIndices{};
+		array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
 		ct_key_hasher hasher{};

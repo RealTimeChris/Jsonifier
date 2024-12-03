@@ -47,7 +47,7 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
+      working-directory: ./Build/Source
       run: |
            ./Json-Performance
       continue-on-error: true
@@ -91,7 +91,7 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
+      working-directory: ./Build/Source
       run: |
            ./Json-Performance
       continue-on-error: true

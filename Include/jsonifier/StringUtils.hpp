@@ -75,28 +75,28 @@ namespace jsonifier_internal {
 			return;
 		}
 		{
-			static constexpr uint64_t n{ sizeof(uint32_t) };
-			if (length >= n) {
+			static constexpr uint64_t nBytes{ sizeof(uint32_t) };
+			if (length >= nBytes) {
 				uint32_t v[2];
-				std::memcpy(v, wsStart, n);
-				std::memcpy(v + 1, context, n);
+				std::memcpy(v, wsStart, nBytes);
+				std::memcpy(v + 1, context, nBytes);
 				if JSONIFIER_LIKELY (v[0] == v[1]) {
-					wsStart += n;
-					length -= n;
-					context += n;
+					wsStart += nBytes;
+					length -= nBytes;
+					context += nBytes;
 				} else {
 					return;
 				}
 			}
 		}
 		{
-			static constexpr uint64_t n{ sizeof(uint16_t) };
-			if (length >= n) {
+			static constexpr uint64_t nBytes{ sizeof(uint16_t) };
+			if (length >= nBytes) {
 				uint16_t v[2];
-				std::memcpy(v, wsStart, n);
-				std::memcpy(v + 1, context, n);
+				std::memcpy(v, wsStart, nBytes);
+				std::memcpy(v + 1, context, nBytes);
 				if JSONIFIER_LIKELY (v[0] == v[1]) {
-					context += n;
+					context += nBytes;
 				} else {
 					return;
 				}

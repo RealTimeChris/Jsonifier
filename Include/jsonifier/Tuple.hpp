@@ -102,9 +102,9 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t I, typename value_type> struct tuple_elem {
-		using type = value_type;
+		using type = std::remove_cvref_t<value_type>;
 
-		TUPLET_NO_UNIQUE_ADDRESS value_type value;
+		TUPLET_NO_UNIQUE_ADDRESS type value;
 
 		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) & {
 			return (value);

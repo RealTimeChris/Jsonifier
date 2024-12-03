@@ -27,6 +27,10 @@
 
 namespace jsonifier_internal {
 
+	template<size_t size> struct get_int_type_and_count {
+		using type = std::conditional_t<(size >= 5), uint64_t, std::conditional_t<(size >= 3), uint32_t, std::conditional_t<(size == 2), uint16_t, uint8_t>>>;
+	};
+
 	template<size_t sizeVal, typename value_type_new> struct string_literal {
 		using value_type	  = value_type_new;
 		using const_reference = const value_type&;
@@ -202,7 +206,7 @@ namespace jsonifier_internal {
 	template<string_literal stringNew> struct string_literal_comparitor {
 		JSONIFIER_ALWAYS_INLINE static bool impl(const char* str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			return newLiteral[0] == str[0];
+			return (newLiteral[0] ^ str[0]) == 0;
 		}
 	};
 
@@ -217,37 +221,37 @@ namespace jsonifier_internal {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l;
 				std::memcpy(&l, str, 8);
-				return l == valuesNew;
+				return (l ^ valuesNew) == 0;
 			} else if constexpr (newCount == 7) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 7);
-				return (valuesNew == l);
+				return (l ^ valuesNew) == 0;
 			} else if constexpr (newCount == 6) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 6);
-				return (valuesNew == l);
+				return (l ^ valuesNew) == 0;
 			} else if constexpr (newCount == 5) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (l == valuesNew) && (str[4] == stringLiteral[4]);
+				return ((l ^ valuesNew) == 0) && (str[4] == stringLiteral[4]);
 			} else if constexpr (newCount == 4) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return l == valuesNew;
+				return (l ^ valuesNew) == 0;
 			} else if constexpr (newCount == 3) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (l == valuesNew) && (str[2] == stringLiteral[2]);
+				return ((l ^ valuesNew) == 0) && (str[2] == stringLiteral[2]);
 			} else if constexpr (newCount == 2) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return l == valuesNew;
+				return (l ^ valuesNew) == 0;
 			} else if constexpr (newCount == 1) {
 				return *str == stringLiteral[0];
 			} else if constexpr (newCount == 0) {
@@ -269,18 +273,7 @@ namespace jsonifier_internal {
 			std::memcpy(&data1, str, newLength);
 			jsonifier_simd_int_512 data2{};
 			std::memcpy(&data2, &valuesNew, newLength);
-
-			static constexpr auto maskBytes = []() constexpr {
-				alignas(64) array<uint8_t, 64> maskBytes{};
-				for (size_t i = 0; i < newLength; ++i) {
-					maskBytes[i] = 0xFF;
-				}
-				return maskBytes;
-			}();
-
-			static constexpr auto maskBytesPtr = maskBytes.data();
-			jsonifier_simd_int_512 mask		   = simd_internal::gatherValues<jsonifier_simd_int_512>(maskBytesPtr);
-			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
+			return simd_internal::opTest(simd_internal::opXor(data1, data2));
 		}
 	};
 
@@ -299,18 +292,7 @@ namespace jsonifier_internal {
 			std::memcpy(&data1, str, newLength);
 			jsonifier_simd_int_256 data2{};
 			std::memcpy(&data2, &valuesNew, newLength);
-
-			static constexpr auto maskBytes = []() constexpr {
-				alignas(32) array<uint8_t, 32> maskBytes{};
-				for (size_t i = 0; i < newLength; ++i) {
-					maskBytes[i] = 0xFF;
-				}
-				return maskBytes;
-			}();
-
-			static constexpr auto maskBytesPtr = maskBytes.data();
-			jsonifier_simd_int_256 mask		   = simd_internal::gatherValues<jsonifier_simd_int_256>(maskBytesPtr);
-			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
+			return simd_internal::opTest(simd_internal::opXor(data1, data2));
 		}
 	};
 
@@ -330,18 +312,7 @@ namespace jsonifier_internal {
 			std::memcpy(&data1, str, newLength);
 			jsonifier_simd_int_128 data2{};
 			std::memcpy(&data2, &valuesNew, newLength);
-
-			static constexpr auto maskBytes = []() constexpr {
-				alignas(16) array<uint8_t, 16> maskBytes{};
-				for (size_t i = 0; i < newLength; ++i) {
-					maskBytes[i] = 0xFF;
-				}
-				return maskBytes;
-			}();
-
-			static constexpr auto maskBytesPtr = maskBytes.data();
-			jsonifier_simd_int_128 mask		   = simd_internal::gatherValues<jsonifier_simd_int_128>(maskBytesPtr);
-			return simd_internal::opTest(simd_internal::opXor(simd_internal::opAnd(data1, mask), simd_internal::opAnd(data2, mask)));
+			return simd_internal::opTest(simd_internal::opXor(data1, data2));
 		}
 	};
 

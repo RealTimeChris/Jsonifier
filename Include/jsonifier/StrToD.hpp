@@ -119,7 +119,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		if (expTable[*iter]) {
+		if (expTable[static_cast<uint8_t>(*iter)]) {
 			before = iter;
 			++iter;
 			bool negExp = false;

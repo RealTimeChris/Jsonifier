@@ -104,13 +104,13 @@ namespace jsonifier_internal {
 			}
 #endif
 			{
-				static constexpr size_t n{ sizeof(size_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(size_t) };
+				if (lengthNew >= nBytes) {
 					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, size_t>() };
 					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, size_t>() };
 					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, size_t>() };
 					size_t simdValue;
-					while (lengthNew >= n) {
+					while (lengthNew >= nBytes) {
 						std::memcpy(&simdValue, data, sizeof(size_t));
 						const auto chunk = simdValue ^ valueNew;
 						auto next		 = ((chunk - lowBits) & ~chunk) & highBits;
@@ -119,15 +119,15 @@ namespace jsonifier_internal {
 							data += next;
 							return data;
 						} else {
-							lengthNew -= n;
-							data += n;
+							lengthNew -= nBytes;
+							data += nBytes;
 						}
 					}
 				}
 			}
 			{
-				static constexpr size_t n{ sizeof(uint32_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(uint32_t) };
+				if (lengthNew >= nBytes) {
 					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint32_t>() };
 					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint32_t>() };
 					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint32_t>() };
@@ -140,14 +140,14 @@ namespace jsonifier_internal {
 						data += next;
 						return data;
 					} else {
-						lengthNew -= n;
-						data += n;
+						lengthNew -= nBytes;
+						data += nBytes;
 					}
 				}
 			}
 			{
-				static constexpr size_t n{ sizeof(uint16_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(uint16_t) };
+				if (lengthNew >= nBytes) {
 					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint16_t>() };
 					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint16_t>() };
 					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint16_t>() };
@@ -160,8 +160,8 @@ namespace jsonifier_internal {
 						data += next;
 						return data;
 					} else {
-						lengthNew -= n;
-						data += n;
+						lengthNew -= nBytes;
+						data += nBytes;
 					}
 				}
 			}
@@ -232,47 +232,47 @@ namespace jsonifier_internal {
 			}
 #endif
 			{
-				static constexpr size_t n{ sizeof(size_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(size_t) };
+				if (lengthNew >= nBytes) {
 					size_t v[2];
-					while (lengthNew >= n) {
-						std::memcpy(v, lhs, n);
-						std::memcpy(v + 1, rhs, n);
-						if (v[0] != v[1]) {
+					while (lengthNew >= nBytes) {
+						std::memcpy(v, lhs, nBytes);
+						std::memcpy(v + 1, rhs, nBytes);
+						if ((v[0] ^ v[1]) != 0) {
 							return false;
 						}
-						lengthNew -= n;
-						lhs += n;
-						rhs += n;
+						lengthNew -= nBytes;
+						lhs += nBytes;
+						rhs += nBytes;
 					}
 				}
 			}
 			{
-				static constexpr size_t n{ sizeof(uint32_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(uint32_t) };
+				if (lengthNew >= nBytes) {
 					uint32_t v[2];
-					std::memcpy(v, lhs, n);
-					std::memcpy(v + 1, rhs, n);
-					if (v[0] != v[1]) {
+					std::memcpy(v, lhs, nBytes);
+					std::memcpy(v + 1, rhs, nBytes);
+					if ((v[0] ^ v[1]) != 0) {
 						return false;
 					}
-					lengthNew -= n;
-					lhs += n;
-					rhs += n;
+					lengthNew -= nBytes;
+					lhs += nBytes;
+					rhs += nBytes;
 				}
 			}
 			{
-				static constexpr size_t n{ sizeof(uint16_t) };
-				if (lengthNew >= n) {
+				static constexpr size_t nBytes{ sizeof(uint16_t) };
+				if (lengthNew >= nBytes) {
 					uint16_t v[2];
-					std::memcpy(v, lhs, n);
-					std::memcpy(v + 1, rhs, n);
-					if (v[0] != v[1]) {
+					std::memcpy(v, lhs, nBytes);
+					std::memcpy(v + 1, rhs, nBytes);
+					if ((v[0] ^ v[1]) != 0) {
 						return false;
 					}
-					lengthNew -= n;
-					lhs += n;
-					rhs += n;
+					lengthNew -= nBytes;
+					lhs += nBytes;
+					rhs += nBytes;
 				}
 			}
 			if (lengthNew && *lhs != *rhs) {

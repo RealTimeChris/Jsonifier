@@ -47,7 +47,6 @@ namespace jsonifier_internal {
 					   if constexpr (currentIndex < maxIndex) {
 						   constexpr auto subTuple	  = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 						   constexpr auto key		  = subTuple.view();
-						   using member_type		  = typename std::remove_cvref_t<decltype(subTuple)>::member_type;
 						   constexpr auto unQuotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key);
 						   constexpr auto quotedKey	  = unQuotedKey + string_literal{ "\": " };
 						   pairNew += quotedKey.size();
@@ -154,7 +153,7 @@ namespace jsonifier_internal {
 				}
 			}
 			return;
-		};
+		}
 
 		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
 			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);

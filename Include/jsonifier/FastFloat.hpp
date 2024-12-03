@@ -712,7 +712,7 @@ namespace jsonifier_fast_float {
 	// w * 10 ** q, without rounding the representation up.
 	// the power2 in the exponent will be adjusted by invalid_am_bias.
 	template<typename binary> JSONIFIER_ALWAYS_INLINE constexpr adjusted_mantissa compute_error(int64_t q, uint64_t w) noexcept {
-		int32_t lz = simd_internal::lzcnt(w);
+		int32_t lz = static_cast<int32_t>(simd_internal::lzcnt(w));
 		w <<= lz;
 		value128 product = compute_product_approximation<binary::mantissa_explicit_bits + 3>(q, w);
 		return compute_error_scaled<binary>(q, product.high, lz);
@@ -741,7 +741,7 @@ namespace jsonifier_fast_float {
 		// powers::largest_power_of_five].
 
 		// We want the most significant bit of i to be 1. Shift if needed.
-		int32_t lz = simd_internal::lzcnt(w);
+		int32_t lz = static_cast<int32_t>(simd_internal::lzcnt(w));
 		w <<= lz;
 
 		// The required precision is binary::mantissa_explicit_bits + 3 because
@@ -903,11 +903,11 @@ namespace jsonifier_fast_float {
 		JSONIFIER_ALWAYS_INLINE constexpr void extend_unchecked(limb_span s) noexcept {
 			limb* ptr = data + length;
 			std::copy_n(s.ptr, s.end - s.ptr, ptr);
-			set_len(length + (s.end - s.ptr));
+			set_len(length + static_cast<uint64_t>(s.end - s.ptr));
 		}
 		// try to add items to the vector, returning if items were added
 		JSONIFIER_ALWAYS_INLINE constexpr bool try_extend(limb_span s) noexcept {
-			if (length + (s.end - s.ptr) <= capacity()) {
+			if (length + static_cast<uint64_t>(s.end - s.ptr) <= capacity()) {
 				extend_unchecked(s);
 				return true;
 			} else {
@@ -964,12 +964,12 @@ namespace jsonifier_fast_float {
 
 	JSONIFIER_ALWAYS_INLINE uint64_t uint64_hi64(uint64_t r0, bool& truncated) noexcept {
 		truncated	= false;
-		int32_t shl = simd_internal::lzcnt(r0);
+		int32_t shl = static_cast<int32_t>(simd_internal::lzcnt(r0));
 		return r0 << shl;
 	}
 
 	JSONIFIER_ALWAYS_INLINE uint64_t uint64_hi64(uint64_t r0, uint64_t r1, bool& truncated) noexcept {
-		int32_t shl = simd_internal::lzcnt(r0);
+		int32_t shl = static_cast<int32_t>(simd_internal::lzcnt(r0));
 		if (shl == 0) {
 			truncated = r1 != 0;
 			return r0;
@@ -1081,12 +1081,12 @@ namespace jsonifier_fast_float {
 	template<uint16_t size> JSONIFIER_ALWAYS_INLINE constexpr bool large_add_from(stackvec<size>& x, limb_span y, uint64_t start) noexcept {
 		// the effective x buffer is from `xstart..(x.end - x.ptr)`, so exit early
 		// if we can't get that current range.
-		if ((x.length) < start || (y.end - y.ptr) > (x.length) - start) {
+		if ((x.length) < start || static_cast<uint64_t>(y.end - y.ptr) > (x.length) - start) {
 			JSONIFIER_FASTFLOAT_TRY(x.try_resize((y.end - y.ptr) + start, 0));
 		}
 
 		bool carry = false;
-		for (uint64_t index = 0; index < (y.end - y.ptr); index++) {
+		for (uint64_t index = 0; index < static_cast<uint64_t>(y.end - y.ptr); index++) {
 			limb xi = x.data[index + start];
 			limb yi = y.ptr[index];
 			bool c1 = false;
@@ -1120,7 +1120,7 @@ namespace jsonifier_fast_float {
 		if ((y.end - y.ptr) != 0) {
 			limb y0 = y.ptr[0];
 			JSONIFIER_FASTFLOAT_TRY(small_mul(x, y0));
-			for (uint64_t index = 1; index < (y.end - y.ptr); index++) {
+			for (uint64_t index = 1; index < static_cast<uint64_t>(y.end - y.ptr); index++) {
 				limb yi = y.ptr[index];
 				stackvec<size> zi;
 				if (yi != 0) {
@@ -1247,7 +1247,7 @@ namespace jsonifier_fast_float {
 		// positive, this is larger, otherwise they are equal.
 		// the limbs are stored in little-endian order, so we
 		// must compare the limbs in ever order.
-		JSONIFIER_ALWAYS_INLINE constexpr int compare(const bigint& other) const noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr int32_t compare(const bigint& other) const noexcept {
 			if (vec.length > other.vec.length) {
 				return 1;
 			} else if (vec.length < other.vec.length) {
@@ -1325,24 +1325,24 @@ namespace jsonifier_fast_float {
 		}
 
 		// get the number of leading zeros in the bigint.
-		JSONIFIER_ALWAYS_INLINE constexpr int ctlz() const noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr int32_t ctlz() const noexcept {
 			if (vec.is_empty()) {
 				return 0;
 			} else {
 #ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
-				return simd_internal::lzcnt(vec.rindex(0));
+				return static_cast<int32_t>(simd_internal::lzcnt(vec.rindex(0)));
 #else
 				// no use defining a specialized simd_internal::lzcnt for a 32-bit type.
 				uint64_t r0 = vec.rindex(0);
-				return simd_internal::lzcnt(r0 << 32);
+				return static_cast<int32_t>(simd_internal::lzcnt(r0 << 32));
 #endif
 			}
 		}
 
 		// get the number of bits in the bigint.
-		JSONIFIER_ALWAYS_INLINE constexpr int bit_length() const noexcept {
-			int lz = ctlz();
-			return int(limb_bits * vec.length) - lz;
+		JSONIFIER_ALWAYS_INLINE constexpr int32_t bit_length() const noexcept {
+			int32_t lz = ctlz();
+			return int32_t(limb_bits * vec.length) - lz;
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr bool mul(limb y) noexcept {
@@ -1404,7 +1404,7 @@ namespace jsonifier_fast_float {
 	// this algorithm is not even close to optimized, but it has no practical
 	// effect on performance: in order to have a faster algorithm, we'd need
 	// to slow down performance for faster algorithms, and this is still fast.
-	JSONIFIER_ALWAYS_INLINE constexpr int32_t scientific_exponent(uint64_t mantissa, int64_t exponent) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr int64_t scientific_exponent(uint64_t mantissa, int64_t exponent) noexcept {
 		while (mantissa >= 10000) {
 			mantissa /= 10000;
 			exponent += 4;
@@ -1662,7 +1662,7 @@ namespace jsonifier_fast_float {
 		adjusted_mantissa answer;
 		bool truncated;
 		answer.mantissa	   = bigmant.hi64(truncated);
-		constexpr int bias = binary_format<value_type>::mantissa_explicit_bits - binary_format<value_type>::minimum_exponent;
+		constexpr int32_t bias = binary_format<value_type>::mantissa_explicit_bits - binary_format<value_type>::minimum_exponent;
 		answer.power2	   = bigmant.bit_length() - 64 + bias;
 
 		round<value_type>(answer, [truncated](adjusted_mantissa& a, int32_t shift) {
@@ -1745,7 +1745,7 @@ namespace jsonifier_fast_float {
 		// remove the invalid exponent bias
 		am.power2 -= invalid_am_bias;
 
-		int32_t sci_exp = scientific_exponent(mantissa, exponent);
+		int32_t sci_exp = static_cast<int32_t>(scientific_exponent(mantissa, exponent));
 		uint64_t digits	= 0;
 		bigint bigmant;
 		parse_mantissa<binary_format<value_type>::max_digits>(bigmant, integer, fraction, digits);
@@ -1785,7 +1785,7 @@ namespace jsonifier_fast_float {
 		// small value so that 1 + x should round to 1 would do (after accounting for
 		// excess precision, as in 387 instructions).
 		static volatile float fmin = std::numeric_limits<float>::min();
-		float fmini				   = fmin;// we copy it so that it gets loaded at most once.
+		volatile float fmini	   = fmin;// we copy it so that it gets loaded at most once.
 		//
 		// Explanation:
 		// Only when fegetround() == FE_TONEAREST do we have that

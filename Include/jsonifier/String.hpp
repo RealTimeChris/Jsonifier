@@ -411,7 +411,7 @@ namespace jsonifier {
 			sizeVal = 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE void resize(size_type newSize) {
+		JSONIFIER_INLINE void resize(size_type newSize) {
 			if JSONIFIER_LIKELY (static_cast<int64_t>(newSize) > 0) {
 				if JSONIFIER_LIKELY (newSize > capacityVal) {
 					pointer newPtr = allocator::allocate(newSize + 1);
@@ -446,7 +446,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_ALWAYS_INLINE void reserve(size_type capacityNew) {
+		JSONIFIER_INLINE void reserve(size_type capacityNew) {
 			if JSONIFIER_LIKELY (capacityNew > capacityVal) {
 				pointer newPtr = allocator::allocate(capacityNew + 1);
 				try {

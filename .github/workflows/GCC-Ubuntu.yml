@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v4
   
     - name: Install the latest gcc compiler.
-      working-directory: Tests
+      working-directory: Source
       run:  |
             sudo apt-get install build-essential
             sudo apt-get install g++-14
@@ -45,7 +45,7 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
+      working-directory: ./Build/Source
       run: |
            ./Json-Performance
       continue-on-error: true
