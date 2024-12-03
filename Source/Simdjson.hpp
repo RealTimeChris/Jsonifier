@@ -2504,13 +2504,11 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_status_id"].get(data.in_reply_to_status_id);
-			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["in_reply_to_status_id"].get(data.in_reply_to_status_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_status_id_str"].get(data.in_reply_to_status_id_str);
-			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["in_reply_to_status_id_str"].get(data.in_reply_to_status_id_str); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
@@ -2518,13 +2516,11 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_user_id_str"].get(data.in_reply_to_user_id_str);
-			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["in_reply_to_user_id_str"].get(data.in_reply_to_user_id_str); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 
-		if (error = obj["in_reply_to_screen_name"].get(data.in_reply_to_screen_name);
-			(error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
+		if (error = obj["in_reply_to_screen_name"].get(data.in_reply_to_screen_name); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
 			return error;
 		}
 

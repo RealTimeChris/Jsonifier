@@ -663,7 +663,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
-			if (iter < end) {
+			if JSONIFIER_LIKELY (iter < end) {
 				if (*iter == minus) {
 					++iter;
 					const uint8_t* resultPtr = parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter));
@@ -1115,7 +1115,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
-			if (iter < end) {
+			if JSONIFIER_LIKELY (iter < end) {
 				const uint8_t* resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
 				if JSONIFIER_LIKELY (resultPtr) {
 					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);

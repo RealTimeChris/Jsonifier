@@ -189,7 +189,7 @@ namespace tests {
 				return newBuffer.size();
 			});
 			std::string newerBuffer{};
-			auto writeResult = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
+			auto writeResult = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() mutable {
 				auto newResult = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
 				bnch_swt::doNotOptimizeAway(newResult);
 				return newerBuffer.size();
@@ -213,7 +213,7 @@ namespace tests {
 			results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
 			std::string newerBuffer{};
 
-			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
+			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() mutable {
 				glz::prettify_json(newBuffer, newerBuffer);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 				return newerBuffer.size();
@@ -235,7 +235,7 @@ namespace tests {
 			std::string newerBuffer{};
 
 			results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
-			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() {
+			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() mutable {
 				glz::minify_json(newestBuffer, newerBuffer);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 				return newerBuffer.size();
@@ -253,7 +253,7 @@ namespace tests {
 		static auto run(std::string& newBuffer) {
 			static constexpr jsonifier_internal::string_literal testName{ testNameNew };
 			results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
-			auto readResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "skyblue">([&]() {
+			auto readResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, glazeLibraryName, "skyblue">([&]() mutable {
 				bnch_swt::doNotOptimizeAway(glz::validate_json(newBuffer));
 				return newBuffer.size();
 			});
@@ -304,7 +304,7 @@ namespace tests {
 			simdjson::dom::parser parser{};
 			std::string newerBuffer{};
 
-			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, simdjsonLibraryName, "cornflowerblue">([&]() {
+			auto writeResult = bnch_swt::benchmark_stage<testName>::template runBenchmark<testName, simdjsonLibraryName, "cornflowerblue">([&]() mutable {
 				try {
 					newerBuffer = simdjson::minify(parser.parse(newBuffer));
 					bnch_swt::doNotOptimizeAway(newerBuffer);
@@ -325,57 +325,78 @@ namespace tests {
 
 #if defined(JSONIFIER_MAC)
 	constexpr jsonifier_internal::string_literal table_header = jsonifier_internal::string_literal{ R"(
-| Library | Read (MB/S) | Read Variation (+/-%) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Variation (+/-%) | Write Length (Bytes) | Write Time (ns) |
+| Library | Read (MB/S) | Read Percentage Deviation (+/-%) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Percentage Deviation (+/-%) | Write Length (Bytes) | Write Time (ns) |
 | ------- | ----------- | --------------------- | ------------------- | -------------- | ------------ | ---------------------- | -------------------- | ----------------|  )" };
 
 	constexpr jsonifier_internal::string_literal read_table_header = jsonifier_internal::string_literal{ R"(
-| Library | Read (MB/S) | Read Variation (+/-%) | Read Length (Bytes) | Read Time (ns) |
+| Library | Read (MB/S) | Read Percentage Deviation (+/-%) | Read Length (Bytes) | Read Time (ns) |
 | ------- | ----------- | --------------------- | ------------------- | -------------- |  )" };
 
 	constexpr jsonifier_internal::string_literal write_table_header = jsonifier_internal::string_literal{
 		R"(
-| Library | Write (MB/S) | Write Variation (+/-%) | Write Length (Bytes) | Write Time (ns) |
+| Library | Write (MB/S) | Write Percentage Deviation (+/-%) | Write Length (Bytes) | Write Time (ns) |
 | ------- | ------------ | ---------------------- | -------------------- | --------------- |  )"
 	};
 #else
 	constexpr jsonifier_internal::string_literal table_header = jsonifier_internal::string_literal{
-		"\n| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |  \n\
-| ------- | ----------- | --------------------- | -----------------| ------------------- | -------------- | ------------ | ---------------------- | ------------------| -------------------- | --------------- |  \n"
+		R"(
+| Library | Read (MB/S) | Read Percentage Deviation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) | Write (MB/S) | Write Percentage Deviation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |
+| ------- | ----------- | --------------------- | -----------------| ------------------- | -------------- | ------------ | ---------------------- | ------------------| -------------------- | --------------- |  )"
 	};
 
-	constexpr jsonifier_internal::string_literal read_table_header =
-		jsonifier_internal::string_literal{ "| Library | Read (MB/S) | Read Variation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) |  \n\
-| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  \n" };
+	constexpr jsonifier_internal::string_literal read_table_header = jsonifier_internal::string_literal{ R"(
+| Library | Read (MB/S) | Read Percentage Deviation (+/-%) | Read (Cycles/MB) | Read Length (Bytes) | Read Time (ns) |
+| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  )" };
 
-	constexpr jsonifier_internal::string_literal write_table_header =
-		jsonifier_internal::string_literal{ "| Library | Write (MB/S) | Write Variation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |  \n\
-| ------- | ----------- | --------------------- | ---------------- | ------------------- | -------------- |  \n" };
+	constexpr jsonifier_internal::string_literal write_table_header = jsonifier_internal::string_literal{
+		R"(
+| Library | Write (MB/S) | Write Percentage Deviation (+/-%) | Write (Cycles/MB) | Write Length (Bytes) | Write Time (ns) |
+| ------- | ------------ | ---------------------- | ----------------- | -------------------- | --------------- |  )"
+	};
 #endif
 
-	static std::string section001{ "\n>" + jsonifier::toString(100) + " iterations on a (" + getCPUInfo() + "(.\n\n" };
+	static std::string section001{ R"(
+ > )" + jsonifier::toString(100) +
+		R"( iterations on a ()" + getCPUInfo() + R"().
 
-	constexpr jsonifier_internal::string_literal section002{ jsonifier_internal::string_literal{ "#### Using the following commits:\n----\n| Jsonifier: [" } + JSONIFIER_COMMIT +
-		"](https://github.com/RealTimeChris/Jsonifier/commit/" + JSONIFIER_COMMIT + ")  \n" + "| Glaze: [" + GLAZE_COMMIT + "](https://github.com/stephenberry/glaze/commit/" +
-		GLAZE_COMMIT + ")  \n" + "| Simdjson: [" + SIMDJSON_COMMIT + "](https://github.com/simdjson/simdjson/commit/" + SIMDJSON_COMMIT + ")  \n" };
+)" };
 
-	constexpr jsonifier_internal::string_literal section00{ "# Json-Performance\nPerformance profiling of JSON libraries (Compiled and run on )" +
-		jsonifier_internal::string_literal{ OPERATING_SYSTEM_NAME } + " " + OPERATING_SYSTEM_VERSION + " using the " + COMPILER_ID + " " + COMPILER_VERSION +
+	constexpr jsonifier_internal::string_literal section002{ jsonifier_internal::string_literal{ R"(#### Using the following commits:
+----
+| Jsonifier: [)" } +
+		JSONIFIER_COMMIT + R"(](https://github.com/RealTimeChris/Jsonifier/commit/)" + JSONIFIER_COMMIT + ")  \n" + R"(| Glaze: [)" + GLAZE_COMMIT +
+		R"(](https://github.com/stephenberry/glaze/commit/)" + GLAZE_COMMIT + ")  \n" + R"(| Simdjson: [)" + SIMDJSON_COMMIT + R"(](https://github.com/simdjson/simdjson/commit/)" +
+		SIMDJSON_COMMIT + ")  \n" };
+
+	constexpr jsonifier_internal::string_literal section00{ R"(# Json-Performance
+Performance profiling of JSON libraries (Compiled and run on )" +
+		jsonifier_internal::string_literal{ OPERATING_SYSTEM_NAME } + " " + OPERATING_SYSTEM_VERSION + R"( using the )" + COMPILER_ID + " " + COMPILER_VERSION +
 		" compiler).  \n\nLatest Results: (" };
 
 	std::string generateSection(const std::string& testName, const std::string& currentPath) {
-		return "\n\n### " + testName + " Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/" + currentPath +
-			"/" + bnch_swt::urlEncode(testName) + ".json):\n\n----\n<p align=\"left\"><a href=\"https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/" + currentPath +
-			"/" + bnch_swt::urlEncode(testName) + "_Results.png\" target=\"_blank\"><img src=\"https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/" + currentPath +
-			"/" + bnch_swt::urlEncode(testName) +
-			"_Results.png?raw=true\" \nalt=\"\" width=\"400\"/></p>\n<p align=\"left\"><a href=\"https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/" +
+		return R"(
+
+### )" + testName +
+			R"( Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" + currentPath + R"(/)" +
+			bnch_swt::urlEncode(testName) +
+			R"(.json):
+
+----
+<p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" +
 			currentPath + R"(/)" + bnch_swt::urlEncode(testName) +
-			"_Cumulative_Speedup.png\" target=\"_blank\"><img src=\"https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/" + currentPath + "/" + testName +
-			"_Cumulative_Speedup.png?raw=true\" \nalt=\"\" width=\"400\"/></p>\n\n" +
-			(testName.find("Abc (Out of Order) Test (Prettified)") == std::string::npos ? ""
-																						: "The JSON documents in the previous tests featured keys ranging from \"a\" to \"z\",\
- where each key corresponds to an array of values. Notably, the documents in this test arrange these keys in reverse order, deviating from the typical \"a\" to \"z\" arrangement.\n\n\
+			R"(_Results.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPath + R"(/)" +
+			bnch_swt::urlEncode(testName) + R"(_Results.png?raw=true" 
+alt="" width="400"/></p>
+<p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" +
+			currentPath + R"(/)" + bnch_swt::urlEncode(testName) +
+			R"(_Cumulative_Speedup.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPath + R"(/)" + testName +
+			R"(_Cumulative_Speedup.png?raw=true" 
+alt="" width="400"/></p>
+
+)" + (testName.find("Abc (Out of Order) Test (Prettified)") == std::string::npos ? "" : "The JSON documents in the previous tests featured keys ranging from \"a\" to \"z\",\
+ where each key corresponds to an array of values. Notably, the documents in this test arrange these keys in reverse order, deviating from the typical \"a\" to \"z\" arrangement.\n\n  \
 This test effectively demonstrates the challenges encountered when utilizing simdjson and iterative parsers that lack the ability to efficiently allocate memory locations through\
-hashing. In cases where the keys are not in the expected sequence, performance is significantly compromised, with the severity escalating as the document size increases.\n\n\
+hashing. In cases where the keys are not in the expected sequence, performance is significantly compromised, with the severity escalating as the document size increases.\n\n  \
 In contrast, hash-based solutions offer a viable alternative by circumventing these issues and maintaining optimal performance regardless of the JSON document's scale, or ordering of the keys being parsed.\n");
 	}
 

@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 				static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+				if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && string_literal_comparitor<stringLiteral>::impl(context.iter)) {
 					context.iter += keySizeNew;
 					if constexpr (!minified) {
 						JSONIFIER_SKIP_WS();
@@ -170,8 +170,8 @@ namespace jsonifier_internal {
 										static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 										static constexpr auto keySize		= key.size();
 										static constexpr auto keySizeNew	= keySize + 1;
-										if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
-											string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+										if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && *(context.iter + keySize) == quote &&
+											string_literal_comparitor<stringLiteral>::impl(context.iter)) {
 											context.iter += keySizeNew;
 											JSONIFIER_SKIP_WS();
 											if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -273,8 +273,8 @@ namespace jsonifier_internal {
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
-							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
-								string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && *(context.iter + keySize) == quote &&
+								string_literal_comparitor<stringLiteral>::impl(context.iter)) {
 								context.iter += keySizeNew;
 								JSONIFIER_SKIP_WS();
 								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -384,8 +384,8 @@ namespace jsonifier_internal {
 									static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 									static constexpr auto keySize		= key.size();
 									static constexpr auto keySizeNew	= keySize + 1;
-									if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
-										string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+									if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && *(context.iter + keySize) == quote &&
+										string_literal_comparitor<stringLiteral>::impl(context.iter)) {
 										context.iter += keySizeNew;
 										if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 											++context.iter;
@@ -467,8 +467,8 @@ namespace jsonifier_internal {
 							static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 							static constexpr auto keySize		= key.size();
 							static constexpr auto keySizeNew	= keySize + 1;
-							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) &&
-								string_literal_comparitor<decltype(stringLiteral), stringLiteral>(context.iter)) {
+							if JSONIFIER_LIKELY (((context.iter + keySizeNew) < context.endIter) && *(context.iter + keySize) == quote &&
+								string_literal_comparitor<stringLiteral>::impl(context.iter)) {
 								context.iter += keySizeNew;
 								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 									++context.iter;
