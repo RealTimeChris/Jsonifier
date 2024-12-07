@@ -633,7 +633,7 @@ namespace jsonifier_internal {
 			return string2;
 		}
 
-		JSONIFIER_INLINE static auto impl(iterator_type01 string1, iterator_type02 string2, size_t lengthNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE static auto impl(iterator_type01 string1, iterator_type02 string2, size_t lengthNew) noexcept {
 			uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			{
@@ -855,7 +855,7 @@ namespace jsonifier_internal {
 	}();
 
 	template<const auto options, typename context_type> struct derailleur {
-		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
+		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
 				++context.iter;
 				const auto newPtr = string_parser<options, decltype(context.iter), decltype(stringBuffer.data())>::impl(context.iter, stringBuffer.data(),
