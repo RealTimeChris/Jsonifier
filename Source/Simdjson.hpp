@@ -177,23 +177,23 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["testStrings"].get(data.testStrings); error) {
+		if (error = obj["testVals02"].get(data.testVals02); error) {
 			return error;
 		}
 
-		if (error = obj["testUints"].get(data.testUints); error) {
+		if (error = obj["testVals05"].get(data.testVals05); error) {
 			return error;
 		}
 
-		if (error = obj["testDoubles"].get(data.testDoubles); error) {
+		if (error = obj["testVals01"].get(data.testVals01); error) {
 			return error;
 		}
 
-		if (error = obj["testInts"].get(data.testInts); error) {
+		if (error = obj["testVals03"].get(data.testVals03); error) {
 			return error;
 		}
 
-		if (error = obj["testBools"].get(data.testBools); error) {
+		if (error = obj["testVals04"].get(data.testVals04); error) {
 			return error;
 		}
 
@@ -207,23 +207,23 @@ namespace simdjson {
 			return error;
 		}
 
-		if (error = obj["testBools"].get(data.testBools); error) {
+		if (error = obj["testVals04"].get(data.testVals04); error) {
 			return error;
 		}
 
-		if (error = obj["testInts"].get(data.testInts); error) {
+		if (error = obj["testVals03"].get(data.testVals03); error) {
 			return error;
 		}
 
-		if (error = obj["testDoubles"].get(data.testDoubles); error) {
+		if (error = obj["testVals01"].get(data.testVals01); error) {
 			return error;
 		}
 
-		if (error = obj["testUints"].get(data.testUints); error) {
+		if (error = obj["testVals05"].get(data.testVals05); error) {
 			return error;
 		}
 
-		if (error = obj["testStrings"].get(data.testStrings); error) {
+		if (error = obj["testVals02"].get(data.testVals02); error) {
 			return error;
 		}
 

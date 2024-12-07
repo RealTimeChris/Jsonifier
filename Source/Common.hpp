@@ -37,31 +37,31 @@ static constexpr auto maxIterationCount{ 5 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
-	constexpr jsonifier_internal::string_literal osName{ OPERATING_SYSTEM_NAME };
-	constexpr auto osNameNew = jsonifier_internal::toLower(osName);
-	if constexpr (osNameNew.view().operator std::string_view().contains("linux")) {
-		return jsonifier_internal::string_literal{ "Ubuntu" };
-	} else if constexpr (osNameNew.view().operator std::string_view().contains("windows")) {
-		return jsonifier_internal::string_literal{ "Windows" };
-	} else if constexpr (osNameNew.view().operator std::string_view().contains("darwin")) {
-		return jsonifier_internal::string_literal{ "MacOS" };
+	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
+	constexpr auto osNameNew = bnch_swt::toLower(osName);
+	if constexpr (osNameNew.view().contains("linux")) {
+		return bnch_swt::string_literal{ "Ubuntu" };
+	} else if constexpr (osNameNew.view().contains("windows")) {
+		return bnch_swt::string_literal{ "Windows" };
+	} else if constexpr (osNameNew.view().contains("darwin")) {
+		return bnch_swt::string_literal{ "MacOS" };
 	} else {
-		return jsonifier_internal::string_literal{ "" };
+		return bnch_swt::string_literal{ "" };
 	}
 }
 
 constexpr auto getCurrentCompilerId() {
-	constexpr jsonifier_internal::string_literal compilerId{ COMPILER_ID };
-	constexpr auto osCompilerIdNew = jsonifier_internal::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view().operator std::string_view().contains("gnu") || osCompilerIdNew.view().operator std::string_view().contains("gcc") ||
-		osCompilerIdNew.view().operator std::string_view().contains("g++") || osCompilerIdNew.view().operator std::string_view().contains("apple")) {
-		return jsonifier_internal::string_literal{ "GNUCXX" };
-	} else if constexpr (osCompilerIdNew.view().operator std::string_view().contains("clang")) {
-		return jsonifier_internal::string_literal{ "CLANG" };
-	} else if constexpr (osCompilerIdNew.view().operator std::string_view().contains("msvc")) {
-		return jsonifier_internal::string_literal{ "MSVC" };
+	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
+	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
+	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") || osCompilerIdNew.view().contains("g++") ||
+		osCompilerIdNew.view().contains("apple")) {
+		return bnch_swt::string_literal{ "GNUCXX" };
+	} else if constexpr (osCompilerIdNew.view().contains("clang")) {
+		return bnch_swt::string_literal{ "CLANG" };
+	} else if constexpr (osCompilerIdNew.view().contains("msvc")) {
+		return bnch_swt::string_literal{ "MSVC" };
 	} else {
-		return jsonifier_internal::string_literal{ "" };
+		return bnch_swt::string_literal{ "" };
 	}
 }
 
@@ -69,21 +69,21 @@ constexpr auto getCurrentPathImpl() {
 	return getCurrentOperatingSystem() + "-" + getCurrentCompilerId();
 }
 
-constexpr jsonifier_internal::string_literal basePath{ BASE_PATH };
-constexpr jsonifier_internal::string_literal testPath{ basePath + "/Source" };
-constexpr jsonifier_internal::string_literal readMePath{ BASE_PATH };
-constexpr jsonifier_internal::string_literal jsonPath{ basePath + "/Json" };
-constexpr jsonifier_internal::string_literal jsonOutPath{ jsonPath + "/" + getCurrentPathImpl() };
-constexpr jsonifier_internal::string_literal graphsPath{ basePath + "/Graphs/" + getCurrentPathImpl() + "/" };
-constexpr jsonifier_internal::string_literal jsonifierLibraryName{ "jsonifier" };
-constexpr jsonifier_internal::string_literal jsonifierCommitUrlBase{ "https://github.com/realtimechris/jsonifier/commit/" };
-constexpr jsonifier_internal::string_literal simdjsonLibraryName{ "simdjson" };
-constexpr jsonifier_internal::string_literal simdjsonCommitUrlBase{ "https://github.com/simdjson/simdjson/commit/" };
-constexpr jsonifier_internal::string_literal glazeLibraryName{ "glaze" };
-constexpr jsonifier_internal::string_literal glazeCommitUrlBase{ "https://github.com/stephenberry/glaze/commit/" };
-constexpr jsonifier_internal::string_literal jsonifierCommitUrl{ jsonifierCommitUrlBase + JSONIFIER_COMMIT };
-constexpr jsonifier_internal::string_literal simdjsonCommitUrl{ simdjsonCommitUrlBase + SIMDJSON_COMMIT };
-constexpr jsonifier_internal::string_literal glazeCommitUrl{ glazeCommitUrlBase + GLAZE_COMMIT };
+constexpr bnch_swt::string_literal basePath{ BASE_PATH };
+constexpr bnch_swt::string_literal testPath{ basePath + "/Source" };
+constexpr bnch_swt::string_literal readMePath{ BASE_PATH };
+constexpr bnch_swt::string_literal jsonPath{ basePath + "/Json" };
+constexpr bnch_swt::string_literal jsonOutPath{ jsonPath + "/" + getCurrentPathImpl() };
+constexpr bnch_swt::string_literal graphsPath{ basePath + "/Graphs/" + getCurrentPathImpl() + "/" };
+constexpr bnch_swt::string_literal jsonifierLibraryName{ "jsonifier" };
+constexpr bnch_swt::string_literal jsonifierCommitUrlBase{ "https://github.com/realtimechris/jsonifier/commit/" };
+constexpr bnch_swt::string_literal simdjsonLibraryName{ "simdjson" };
+constexpr bnch_swt::string_literal simdjsonCommitUrlBase{ "https://github.com/simdjson/simdjson/commit/" };
+constexpr bnch_swt::string_literal glazeLibraryName{ "glaze" };
+constexpr bnch_swt::string_literal glazeCommitUrlBase{ "https://github.com/stephenberry/glaze/commit/" };
+constexpr bnch_swt::string_literal jsonifierCommitUrl{ jsonifierCommitUrlBase + JSONIFIER_COMMIT };
+constexpr bnch_swt::string_literal simdjsonCommitUrl{ simdjsonCommitUrlBase + SIMDJSON_COMMIT };
+constexpr bnch_swt::string_literal glazeCommitUrl{ glazeCommitUrlBase + GLAZE_COMMIT };
 
 class test_base {
   public:
@@ -200,19 +200,19 @@ bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFile
 }
 
 struct test_struct {
-	std::vector<std::string> testStrings{};
-	std::vector<uint64_t> testUints{};
-	std::vector<double> testDoubles{};
-	std::vector<int64_t> testInts{};
-	std::vector<bool> testBools{};
+	std::vector<std::string> testVals01{};
+	std::vector<uint64_t> testVals02{};
+	std::vector<double> testVals04{};
+	std::vector<int64_t> testVals03{};
+	std::vector<bool> testVals05{};
 };
 
 struct abc_test_struct {
-	std::vector<bool> testBools{};
-	std::vector<int64_t> testInts{};
-	std::vector<double> testDoubles{};
-	std::vector<uint64_t> testUints{};
-	std::vector<std::string> testStrings{};
+	std::vector<bool> testVals05{};
+	std::vector<int64_t> testVals03{};
+	std::vector<double> testVals04{};
+	std::vector<uint64_t> testVals02{};
+	std::vector<std::string> testVals01{};
 };
 
 template<typename value_type> struct test {
@@ -311,24 +311,24 @@ template<typename value_type> struct test_generator {
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
-					v[x].testStrings.emplace_back(newString);
+					v[x].testVals01.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testUints.emplace_back(generateUint());
+					v[x].testVals02.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testInts.emplace_back(generateInt());
+					v[x].testVals03.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
-					v[x].testBools.emplace_back(newBool);
+					v[x].testVals05.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testDoubles.emplace_back(generateDouble());
+					v[x].testVals04.emplace_back(generateDouble());
 				}
 			}
 		};
@@ -395,14 +395,14 @@ enum class result_type { read = 0, write = 1 };
 
 template<result_type type> constexpr auto enumToString() {
 	if constexpr (type == result_type::read) {
-		return jsonifier_internal::string_literal{ "Read" };
+		return bnch_swt::string_literal{ "Read" };
 	} else {
-		return jsonifier_internal::string_literal{ "Write" };
+		return bnch_swt::string_literal{ "Write" };
 	}
 }
 
 template<result_type type> struct result {
-	std::optional<double> jsonSpeedVariation{};
+	std::optional<double> jsonSpeedPercentageDeviation{};
 	std::optional<size_t> byteLength{};
 	std::optional<double> jsonCycles{};
 	std::optional<double> jsonSpeed{};
@@ -419,7 +419,7 @@ template<result_type type> struct result {
 	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::performance_metrics& results) {
 		byteLength.emplace(byteLengthNew);
 		jsonTime.emplace(results.timeInNs);
-		jsonSpeedVariation.emplace(results.throughputVariation.value());
+		jsonSpeedPercentageDeviation.emplace(results.throughputPercentageDeviation.value());
 		jsonSpeed.emplace(results.throughputMbPerSec.value());
 		if (results.cyclesPerByte.has_value()) {
 			jsonCycles.emplace(results.cyclesPerByte.value() * 1024 * 1024);
@@ -488,7 +488,7 @@ struct results_data {
 		std::string finalString{ "| [" + name + "](" + url + ") | " };
 		if (readResult.jsonTime.has_value() && readResult.byteLength.has_value()) {
 			std::ostringstream finalStream{};
-			finalStream << std::setprecision(6) << readResult.jsonSpeed.value() << " | " << std::setprecision(6) << readResult.jsonSpeedVariation.value() << " | ";
+			finalStream << std::setprecision(6) << readResult.jsonSpeed.value() << " | " << std::setprecision(6) << readResult.jsonSpeedPercentageDeviation.value() << " | ";
 			if (readResult.jsonCycles.has_value()) {
 				finalStream << std::setprecision(6) << readResult.jsonCycles.value() << " | ";
 			}
@@ -497,7 +497,7 @@ struct results_data {
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
 			std::ostringstream finalStream{};
-			finalStream << std::setprecision(6) << writeResult.jsonSpeed.value() << " | " << std::setprecision(6) << writeResult.jsonSpeedVariation.value() << " | ";
+			finalStream << std::setprecision(6) << writeResult.jsonSpeed.value() << " | " << std::setprecision(6) << writeResult.jsonSpeedPercentageDeviation.value() << " | ";
 			if (writeResult.jsonCycles.has_value()) {
 				finalStream << std::setprecision(6) << writeResult.jsonCycles.value() << " | ";
 			}

@@ -246,7 +246,7 @@ template<> struct glz::meta<canada_message> {
 
 template<> struct glz::meta<test_struct> {
 	using value_type			= test_struct;
-	static constexpr auto value = object(&value_type::testStrings, &value_type::testUints, &value_type::testDoubles, &value_type::testInts, &value_type::testBools);
+	static constexpr auto value = object(&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04);
 };
 
 template<> struct glz::meta<test<test_struct>> {

@@ -146,8 +146,8 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<const std::source_location& sourceLocation, error_classes errorClassNew, auto typeNew>
-		JSONIFIER_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew) noexcept {
+		template<error_classes errorClassNew, auto typeNew> JSONIFIER_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew,
+			const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
 		}
 

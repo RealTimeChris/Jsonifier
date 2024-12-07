@@ -163,7 +163,7 @@ namespace jsonifier {
 			if (!std::holds_alternative<object_type>(value)) {
 				return false;
 			}
-			auto& object = std::get<object_type>(value);
+			const auto& object = std::get<object_type>(value);
 			return object.contains(key);
 		}
 

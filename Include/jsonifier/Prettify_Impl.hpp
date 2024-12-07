@@ -110,8 +110,7 @@ namespace jsonifier_internal {
 					case ']': {
 						indent -= options.indentSize;
 						if (indent < 0) {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							prettifierRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+							prettifierRef.getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 								getUnderlyingPtr(iter) - prettifierRef.rootIter, prettifierRef.endIter - prettifierRef.rootIter, prettifierRef.rootIter));
 							return std::numeric_limits<uint64_t>::max();
 						}
@@ -164,8 +163,7 @@ namespace jsonifier_internal {
 					case '}': {
 						indent -= options.indentSize;
 						if (indent < 0) {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							prettifierRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+							prettifierRef.getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 								getUnderlyingPtr(iter) - prettifierRef.rootIter, prettifierRef.endIter - prettifierRef.rootIter, prettifierRef.rootIter));
 							return std::numeric_limits<uint64_t>::max();
 						}
@@ -184,8 +182,7 @@ namespace jsonifier_internal {
 						return index;
 					}
 					default: {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						prettifierRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+						prettifierRef.getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
 							getUnderlyingPtr(iter) - prettifierRef.rootIter, prettifierRef.endIter - prettifierRef.rootIter, prettifierRef.rootIter));
 						return std::numeric_limits<uint64_t>::max();
 					}

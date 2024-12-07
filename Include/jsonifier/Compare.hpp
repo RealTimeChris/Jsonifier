@@ -39,7 +39,8 @@ namespace jsonifier_internal {
 		return 0x0101010101010101ull * repeat;
 	}
 
-	template<char value, typename char_type> struct char_comparison {
+	template<char valueNewer, typename char_type> struct char_comparison {
+		static constexpr char value{ valueNewer };
 		JSONIFIER_ALWAYS_INLINE static const char_type* memchar(const char_type* data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
@@ -93,7 +94,7 @@ namespace jsonifier_internal {
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
-					mask  = simd_internal::opCmpEq(chunk, search_value);
+					mask  = static_cast<uint16_t>(simd_internal::opCmpEq(chunk, search_value));
 					if JSONIFIER_UNLIKELY (mask != 0) {
 						data += simd_internal::postCmpTzcnt(mask);
 						return data;

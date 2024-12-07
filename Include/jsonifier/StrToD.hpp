@@ -57,7 +57,7 @@ namespace jsonifier_internal {
 	JSONIFIER_ALWAYS_INLINE_VARIABLE char zero{ '0' };
 	JSONIFIER_ALWAYS_INLINE_VARIABLE char nine{ '9' };
 
-	template<typename value_type, typename char_t> JSONIFIER_ALWAYS_INLINE bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
+	template<typename value_type, typename char_t> JSONIFIER_INLINE bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
 		using namespace jsonifier_fast_float;
 		span<const char_t> fraction;
 
@@ -81,7 +81,7 @@ namespace jsonifier_internal {
 		}
 
 		span<const char_t> integer{ iter };
-		
+
 		if (uint64_t val; (end - iter) >= 2 && (val = read2_to_u64(iter) - 0x3030, is_made_of_two_digits_no_sub(val))) {
 			mantissa = mantissa * 100 + parse_two_digits_unrolled_no_sub(val);
 			iter += 2;
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 		}
 
 		int64_t digitCount = static_cast<int64_t>(iter - integer.ptr);
-		integer.end = integer.ptr + static_cast<uint64_t>(digitCount);
+		integer.end		   = integer.ptr + static_cast<uint64_t>(digitCount);
 
 		if JSONIFIER_UNLIKELY (digitCount == 0 || (integer.ptr[0] == zero && digitCount > 1)) {
 			return false;

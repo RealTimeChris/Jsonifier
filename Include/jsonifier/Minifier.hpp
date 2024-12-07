@@ -41,10 +41,10 @@ namespace jsonifier_internal {
 	  public:
 		template<typename derived_type_new> friend struct minify_impl;
 
-		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE minifier& operator=(const minifier& other) = delete;
+		JSONIFIER_ALWAYS_INLINE minifier(const minifier& other)			   = delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
+		template<jsonifier::concepts::string_t string_type> JSONIFIER_ALWAYS_INLINE auto minifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
@@ -55,8 +55,7 @@ namespace jsonifier_internal {
 			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
+				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return std::remove_cvref_t<string_type>{};
 			}
 			std::remove_cvref_t<string_type> newString{};
@@ -71,7 +70,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
@@ -82,8 +81,7 @@ namespace jsonifier_internal {
 			section.reset<false>(dataPtr, in.size());
 			const char** iter{ section.begin() };
 			if (!*iter) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
+				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
 			}
 			auto index = minify_impl<derived_type>::impl(iter, stringBuffer, *this);
@@ -103,21 +101,21 @@ namespace jsonifier_internal {
 		const char* rootIter{};
 		const char* endIter{};
 
-		JSONIFIER_INLINE size_t getSize() const {
+		JSONIFIER_ALWAYS_INLINE size_t getSize() const {
 			return endIter - rootIter;
 		}
 
-		JSONIFIER_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		JSONIFIER_ALWAYS_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_INLINE ~minifier() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~minifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

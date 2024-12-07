@@ -30,19 +30,16 @@ jobs:
             pip install seaborn
 
     - name: Configure CMake
-      working-directory: ./
       run: |
            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
-      working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}} -v
+           cmake --build ./Build --config=${{matrix.build_type}} -v
 
     - name: Install the Test
-      working-directory: ./Build
       run: |
-           sudo cmake --install . --config=${{matrix.build_type}}
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
 
     - name: Run the Test
       working-directory: ./Build/Source

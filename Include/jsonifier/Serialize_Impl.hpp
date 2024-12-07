@@ -155,11 +155,11 @@ namespace jsonifier_internal {
 			return;
 		}
 
-		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
+		template<typename... arg_types, size_t... indices> JSONIFIER_ALWAYS_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
 			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE static void executeIndices(arg_types&&... args) {
+		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE static void executeIndices(arg_types&&... args) {
 			executeIndicesImpl(std::make_index_sequence<maxIndex>{}, std::forward<arg_types>(args)...);
 		}
 	};
@@ -170,7 +170,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues01{ "{\n" };
 		static constexpr auto packedValues02{ "{}" };
 
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
 			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			auto* dataPtr = buffer.data();
@@ -369,7 +369,7 @@ namespace jsonifier_internal {
 		}
 
 		template<size_t currentIndex, size_t newSize, typename value_type_new>
-		JSONIFIER_ALWAYS_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			if constexpr (currentIndex < newSize) {
 				auto subTuple = get<currentIndex>(value);
 				serialize<options>::impl(subTuple, buffer, index, indent);
@@ -473,7 +473,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues02{ ",\n" };
 		static constexpr auto packedValues03{ "[]" };
 		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
-		JSONIFIER_ALWAYS_INLINE static void impl(const value_type_new<value_type_internal, size>& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_INLINE static void impl(const value_type_new<value_type_internal, size>& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			constexpr auto newSize = size;
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			if constexpr (newSize > 0) {

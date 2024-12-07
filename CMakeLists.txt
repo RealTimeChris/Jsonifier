@@ -70,11 +70,11 @@ set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 	 "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
      "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
  )
- 
-set(JSONIFIER_CPU_FLAGS
-    "$<IF:$<BOOL:${JSONIFIER_CPU_FLAGS}>,${JSONIFIER_CPU_FLAGS},$<IF:$<CXX_COMPILER_ID:MSVC>,/arch:AVX512,-march=native>>"
-)
- 
+
+ if (NOT JSONIFIER_CPU_INSTRUCTIONS)
+	include("JsonifierDetectArchitecture")
+endif()
+
  target_include_directories(
      "${PROJECT_NAME}" INTERFACE
      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
@@ -94,7 +94,7 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
-	"${JSONIFIER_CPU_FLAGS}"
+	"${AVX_FLAG}"
 )
 
 target_compile_definitions(

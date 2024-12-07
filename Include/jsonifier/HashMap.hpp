@@ -389,6 +389,8 @@ namespace jsonifier_internal {
 		return stats;
 	}
 
+	template<typename value_type> constexpr auto keyLengths = collectLengths<countUniqueLengths(tupleReferencesByLength<value_type>)>(tupleReferencesByLength<value_type>);
+
 	template<size_t size> constexpr auto keyStats(const array<first_bytes, size>& tupleRefs) noexcept {
 		array<key_stats_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -656,7 +658,7 @@ namespace jsonifier_internal {
 
 	template<size_t firstCharCount>
 	constexpr auto generateMappingsForFirstBytes(const array<first_bytes, firstCharCount>& keys, const array<uint8_t, 256>& uniqueIndices) noexcept {
-		constexpr size_t flattenedSize = 256 * 256;
+		constexpr size_t flattenedSize = 256ull * 256ull;
 		array<size_t, flattenedSize> flattenedMappings{};
 		flattenedMappings.fill(flattenedMappings.size() - 1);
 
@@ -695,7 +697,7 @@ namespace jsonifier_internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
+		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer& iter, iterator_newer& end) noexcept {
 			static constexpr auto checkForEnd = [](const auto* iter, const auto* end, const auto distance) {
 				return (iter + distance) < end;
 			};

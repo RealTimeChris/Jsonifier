@@ -69,15 +69,6 @@ target_link_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
-if (WIN32)
-	install(
-		FILES 
-		"$<TARGET_PDB_FILE:Json-Performance>"
-		DESTINATION "$<IF:$<CONFIG:Debug>,bin,bin>"
-		OPTIONAL
-	)
-endif()
-
 target_compile_definitions(
 	"Json-Performance" PUBLIC 
 	"BASE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/../\""
@@ -90,9 +81,18 @@ target_compile_definitions(
 	"COMPILER_VERSION=\"${CMAKE_CXX_COMPILER_VERSION}\""
 )
 
+if (WIN32)
+	install(
+		FILES 
+		"$<TARGET_PDB_FILE:Json-Performance>"
+		DESTINATION "bin"
+		OPTIONAL
+	)
+endif()
+
 install(
 	FILES 
 	"$<TARGET_FILE:Json-Performance>"
-	DESTINATION "$<IF:$<CONFIG:Debug>,bin,bin>"
+	DESTINATION "bin"
 	OPTIONAL
 )

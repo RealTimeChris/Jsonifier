@@ -86,12 +86,17 @@ namespace simd_internal {
 		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(value, 4)), 0);
 	}
 
-	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint64_t opBitMask(const simd_int_t01& value) noexcept {
-		uint16x8_t highBits = vreinterpretq_u16_u8(vshrq_n_u8(value, 7));
-		uint32x4_t paired16 = vreinterpretq_u32_u16(vsraq_n_u16(highBits, highBits, 7));
-		uint64x2_t paired32 = vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
-		uint8x16_t paired64 = vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));
-		return vgetq_lane_u8(paired64, 0) | (( int32_t )vgetq_lane_u8(paired64, 8) << 8);
+	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE uint32_t opBitMask(const simd_int_t01& value) noexcept {
+	#if JSONIFIER_REGULAR_VISUAL_STUDIO
+		const uint8x16_t bit_mask = simdjson_make_uint8x16_t(0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80);
+	#else
+		const uint8x16_t bit_mask = { 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80 };
+	#endif
+		const auto minput = value & bit_mask;
+		uint8x16_t tmp	  = vpaddq_u8(minput, minput);
+		tmp				  = vpaddq_u8(tmp, tmp);
+		tmp				  = vpaddq_u8(tmp, tmp);
+		return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
@@ -133,7 +138,7 @@ namespace simd_internal {
 	}
 
 	template<simd_int_128_type simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_128 opSetLSB(const simd_int_t01& value, bool valueNew) noexcept {
-		uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+		const uint8x16_t mask{ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		return valueNew ? vorrq_u8(value, mask) : vbicq_u8(value, mask);
 	}
 

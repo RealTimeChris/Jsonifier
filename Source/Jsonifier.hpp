@@ -242,7 +242,7 @@ template<> struct jsonifier::core<properties_data> {
 
 template<> struct jsonifier::core<feature> {
 	using value_type				 = feature;
-	static constexpr auto parseValue = createValue<&value_type::properties, &value_type::type, &value_type::geometry>();
+	static constexpr auto parseValue = createValue<&value_type::type, &value_type::properties, &value_type::geometry>();
 };
 
 template<> struct jsonifier::core<canada_message> {
@@ -262,12 +262,12 @@ template<> struct jsonifier::core<test_elements_final> {
 
 template<> struct jsonifier::core<test_struct> {
 	using value_type				 = test_struct;
-	static constexpr auto parseValue = createValue<&value_type::testStrings, &value_type::testUints, &value_type::testDoubles, &value_type::testInts, &value_type::testBools>();
+	static constexpr auto parseValue = createValue<&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04>();
 };
 
 template<> struct jsonifier::core<abc_test_struct> {
 	using value_type				 = abc_test_struct;
-	static constexpr auto parseValue = createValue<&value_type::testBools, &value_type::testInts, &value_type::testDoubles, &value_type::testUints, &value_type::testStrings>();
+	static constexpr auto parseValue = createValue<&value_type::testVals04, &value_type::testVals03, &value_type::testVals01, &value_type::testVals05, &value_type::testVals02>();
 };
 
 template<> struct jsonifier::core<test<test_struct>> {
@@ -278,7 +278,7 @@ template<> struct jsonifier::core<test<test_struct>> {
 };
 
 template<> struct jsonifier::core<partial_test<test_struct>> {
-	using value_type			= partial_test<test_struct>;
+	using value_type				 = partial_test<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::m>();
 };
 
