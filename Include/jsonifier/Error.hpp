@@ -69,11 +69,12 @@ namespace jsonifier_internal {
 
 	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, jsonifier::string_view>> errorMap{
 		{ error_classes::Parsing,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { { 1 << 0ull, "Success" }, { 1 << 1ull, "Missing_Object_Start" }, { 1 << 2ull, "Imbalanced_Object_Braces" },
-				{ 1 << 3ull, "Missing_Array_Start" }, { 1 << 4ull, "Imbalanced_Array_Brackets" }, { 1 << 5ull, "Missing_String_Start" }, { 1 << 6ull, "Missing_Colon" },
-				{ 1 << 7ull, "Missing_Comma_Or_Object_End" }, { 1 << 8ull, "Missing_Comma_Or_Array_End" }, { 1 << 9ull, "Missing_Comma" }, { 1 << 10ull, "Invalid_Number_Value" },
-				{ 1 << 11ull, "Invalid_Null_Value" }, { 1 << 12ull, "Invalid_Bool_Value" }, { 1 << 13ull, "Invalid_String_Characters" }, { 1 << 14ull, "No_Input" },
-				{ 1 << 15ull, "Unfinished_Input" }, { 1 << 16ull, "Unexpected_String_end" } } } },
+			std::unordered_map<uint64_t, jsonifier::string_view>{ { { 1ull << 0ull, "Success" }, { 1ull << 1ull, "Missing_Object_Start" },
+				{ 1ull << 2ull, "Imbalanced_Object_Braces" }, { 1ull << 3ull, "Missing_Array_Start" }, { 1ull << 4ull, "Imbalanced_Array_Brackets" },
+				{ 1ull << 5ull, "Missing_String_Start" }, { 1ull << 6ull, "Missing_Colon" }, { 1ull << 7ull, "Missing_Comma_Or_Object_End" },
+				{ 1ull << 8ull, "Missing_Comma_Or_Array_End" }, { 1ull << 9ull, "Missing_Comma" }, { 1ull << 10ull, "Invalid_Number_Value" },
+				{ 1ull << 11ull, "Invalid_Null_Value" }, { 1ull << 12ull, "Invalid_Bool_Value" }, { 1ull << 13ull, "Invalid_String_Characters" }, { 1ull << 14ull, "No_Input" },
+				{ 1ull << 15ull, "Unfinished_Input" }, { 1ull << 16ull, "Unexpected_String_end" } } } },
 		{ error_classes::Serializing, std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" } } } },
 		{ error_classes::Minifying,
 			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },

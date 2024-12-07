@@ -28,2603 +28,818 @@
 
 #if !defined(ASAN_ENABLED)
 
-namespace simdjson {
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<int64_t>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			int64_t newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			int64_t newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::string>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			std::string newVal;
-			if (error = iter.operator*().get_string(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			std::string newVal;
-
-			if (error = iter.operator*().get_string(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<uint64_t>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			uint64_t newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			uint64_t newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<bool>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			bool newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			bool newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<double>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			double newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			double newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, test_struct& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["testVals02"].get(data.testVals02); error) {
-			return error;
-		}
-
-		if (error = obj["testVals05"].get(data.testVals05); error) {
-			return error;
-		}
-
-		if (error = obj["testVals01"].get(data.testVals01); error) {
-			return error;
-		}
-
-		if (error = obj["testVals03"].get(data.testVals03); error) {
-			return error;
-		}
-
-		if (error = obj["testVals04"].get(data.testVals04); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test_struct& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["testVals04"].get(data.testVals04); error) {
-			return error;
-		}
-
-		if (error = obj["testVals03"].get(data.testVals03); error) {
-			return error;
-		}
-
-		if (error = obj["testVals01"].get(data.testVals01); error) {
-			return error;
-		}
-
-		if (error = obj["testVals05"].get(data.testVals05); error) {
-			return error;
-		}
-
-		if (error = obj["testVals02"].get(data.testVals02); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<test_struct>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			test_struct newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			test_struct newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<abc_test_struct>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			abc_test_struct newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			abc_test_struct newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, test<value_type>& t) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["a"].get(t.a); error) {
-			return error;
-		}
-
-		if (error = obj["b"].get(t.b); error) {
-			return error;
-		}
-
-		if (error = obj["c"].get(t.c); error) {
-			return error;
-		}
-
-		if (error = obj["d"].get(t.d); error) {
-			return error;
-		}
-
-		if (error = obj["e"].get(t.e); error) {
-			return error;
-		}
-
-		if (error = obj["f"].get(t.f); error) {
-			return error;
-		}
-
-		if (error = obj["g"].get(t.g); error) {
-			return error;
-		}
-
-		if (error = obj["h"].get(t.h); error) {
-			return error;
-		}
-
-		if (error = obj["i"].get(t.i); error) {
-			return error;
-		}
-
-		if (error = obj["j"].get(t.j); error) {
-			return error;
-		}
-
-		if (error = obj["k"].get(t.k); error) {
-			return error;
-		}
-
-		if (error = obj["l"].get(t.l); error) {
-			return error;
-		}
-
-		if (error = obj["m"].get(t.m); error) {
-			return error;
-		}
-
-		if (error = obj["n"].get(t.n); error) {
-			return error;
-		}
-
-		if (error = obj["o"].get(t.o); error) {
-			return error;
-		}
-
-		if (error = obj["p"].get(t.p); error) {
-			return error;
-		}
-
-		if (error = obj["q"].get(t.q); error) {
-			return error;
-		}
-
-		if (error = obj["r"].get(t.r); error) {
-			return error;
-		}
-
-		if (error = obj["s"].get(t.s); error) {
-			return error;
-		}
-
-		if (error = obj["t"].get(t.t); error) {
-			return error;
-		}
-
-		if (error = obj["u"].get(t.u); error) {
-			return error;
-		}
-
-		if (error = obj["v"].get(t.v); error) {
-			return error;
-		}
-
-		if (error = obj["w"].get(t.w); error) {
-			return error;
-		}
-
-		if (error = obj["x"].get(t.x); error) {
-			return error;
-		}
-
-		if (error = obj["y"].get(t.y); error) {
-			return error;
-		}
-
-		if (error = obj["z"].get(t.z); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, abc_test<value_type>& t) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["z"].get(t.z); error) {
-			return error;
-		}
-
-		if (error = obj["y"].get(t.y); error) {
-			return error;
-		}
-
-		if (error = obj["x"].get(t.x); error) {
-			return error;
-		}
-
-		if (error = obj["w"].get(t.w); error) {
-			return error;
-		}
-
-		if (error = obj["v"].get(t.v); error) {
-			return error;
-		}
-
-		if (error = obj["u"].get(t.u); error) {
-			return error;
-		}
-
-		if (error = obj["t"].get(t.t); error) {
-			return error;
-		}
-
-		if (error = obj["s"].get(t.s); error) {
-			return error;
-		}
-
-		if (error = obj["r"].get(t.r); error) {
-			return error;
-		}
-
-		if (error = obj["q"].get(t.q); error) {
-			return error;
-		}
-
-		if (error = obj["p"].get(t.p); error) {
-			return error;
-		}
-
-		if (error = obj["o"].get(t.o); error) {
-			return error;
-		}
-
-		if (error = obj["n"].get(t.n); error) {
-			return error;
-		}
-
-		if (error = obj["m"].get(t.m); error) {
-			return error;
-		}
-
-		if (error = obj["l"].get(t.l); error) {
-			return error;
-		}
-
-		if (error = obj["k"].get(t.k); error) {
-			return error;
-		}
-
-		if (error = obj["j"].get(t.j); error) {
-			return error;
-		}
-
-		if (error = obj["i"].get(t.i); error) {
-			return error;
-		}
-
-		if (error = obj["h"].get(t.h); error) {
-			return error;
-		}
-
-		if (error = obj["g"].get(t.g); error) {
-			return error;
-		}
-
-		if (error = obj["f"].get(t.f); error) {
-			return error;
-		}
-
-		if (error = obj["e"].get(t.e); error) {
-			return error;
-		}
-
-		if (error = obj["d"].get(t.d); error) {
-			return error;
-		}
-
-		if (error = obj["c"].get(t.c); error) {
-			return error;
-		}
-
-		if (error = obj["b"].get(t.b); error) {
-			return error;
-		}
-
-		if (error = obj["a"].get(t.a); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value, typename value_type> auto tag_invoke(deserialize_tag, simdjson_value& val, partial_test<value_type>& t) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["m"].get(t.m); error) {
-			return error;
-		}
-
-		if (error = obj["s"].get(t.s); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::nullptr_t>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			if (!iter.operator*().is_null()) {
-				return simdjson::UNEXPECTED_ERROR;
-			}
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			if (!iter.operator*().is_null()) {
-				return simdjson::UNEXPECTED_ERROR;
-			}
-			vector.emplace_back();
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::string>& car) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		for (auto field: obj) {
-			std::string key;
-			auto key_result = field.unescaped_key();
-			if (error = key_result.error(); error) {
-				return error;
-			}
-
-			key = static_cast<std::string>(key_result.value());
-
-			ondemand::value field_value = field.value();
-			std::string newValue;
-			if (error = field_value.get_string(newValue); error) {
-				return error;
-			}
-			car[key] = std::move(newValue);
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, std::vector<int64_t>>& car) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		for (auto field: obj) {
-			std::string key;
-			auto key_result = field.unescaped_key();
-			if (error = key_result.error(); error) {
-				return error;
-			}
-
-			key = static_cast<std::string>(key_result.value());
-
-			ondemand::value field_value = field.value();
-			std::vector<int64_t> newValue;
-			if (error = field_value.get(newValue); error) {
-				return error;
-			}
-			car[key] = std::move(newValue);
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<double>>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			std::vector<double> newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			std::vector<double> newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<std::vector<std::vector<double>>>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			std::vector<std::vector<double>> newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			std::vector<std::vector<double>> newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, geometry_data& geom) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["type"].get_string(geom.type); error) {
-			return error;
-		}
-
-		if (error = obj["coordinates"].get(geom.coordinates); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, properties_data& props) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(props.name); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, feature& feat) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["type"].get_string(feat.type); error) {
-			return error;
-		}
-
-		if (error = obj["properties"].get(feat.properties); error) {
-			return error;
-		}
-
-		if (error = obj["geometry"].get(feat.geometry); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<feature>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			feature newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			feature newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, canada_message& msg) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["type"].get_string(msg.type); error) {
-			return error;
-		}
-
-		if (error = obj["features"].get(msg.features); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, audience_sub_category_names& names) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["337100890"].get_string(names.the337100890); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, event& ev) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["description"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["id"].get(ev.id); error) {
-			return error;
-		}
-
-		if (error = obj["logo"].get(ev.logo); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(ev.name); error) {
-			return error;
-		}
-
-		if (error = obj["subTopicIds"].get(ev.subTopicIds); error) {
-			return error;
-		}
-
-		if (!obj["subjectCode"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["subtitle"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["topicIds"].get(ev.topicIds); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::unordered_map<std::string, event>& car) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		for (auto field: obj) {
-			std::string key;
-			auto key_result = field.unescaped_key();
-			if (error = key_result.error(); error) {
-				return error;
-			}
-
-			key = static_cast<std::string>(key_result.value());
-
-			ondemand::value field_value = field.value();
-			event newValue;
-			if (error = field_value.get(newValue); error) {
-				return error;
-			}
-			car[key] = std::move(newValue);
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, price& pr) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["amount"].get(pr.amount); error) {
-			return error;
-		}
-
-		if (error = obj["audienceSubCategoryId"].get(pr.audienceSubCategoryId); error) {
-			return error;
-		}
-
-		if (error = obj["seatCategoryId"].get(pr.seatCategoryId); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, area& ar) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["areaId"].get(ar.areaId); error) {
-			return error;
-		}
-
-		if (error = obj["blockIds"].get(ar.blockIds); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<area>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			area newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			area newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, seat_category& sc) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["areas"].get(sc.areas); error) {
-			return error;
-		}
-
-		if (error = obj["seatCategoryId"].get(sc.seatCategoryId); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<seat_category>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			seat_category newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			seat_category newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::string>& car) {
-		if (auto error = val.get_string(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<bool>& car) {
-		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value, jsonifier::concepts::optional_t optional_type> auto tag_invoke(deserialize_tag, simdjson_value& val, optional_type& car) {
-		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<int64_t>& car) {
-		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<price>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			price newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			price newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, performance& perf) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["eventId"].get(perf.eventId); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get(perf.id); error) {
-			return error;
-		}
-
-		if (error = obj["logo"].get(perf.logo); error != simdjson::NO_SUCH_FIELD && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		if (!obj["name"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["prices"].get(perf.prices); error) {
-			return error;
-		}
-
-		if (error = obj["seatCategories"].get(perf.seatCategories); error) {
-			return error;
-		}
-
-		if (!obj["seatMapImage"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["start"].get(perf.start); error) {
-			return error;
-		}
-
-		if (error = obj["venueCode"].get_string(perf.venueCode); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<performance>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			performance newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			performance newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, names&) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, venue_names& vnames) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["PLEYEL_PLEYEL"].get_string(vnames.PLEYEL_PLEYEL); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, citm_catalog_message& msg) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["areaNames"].get(msg.areaNames); error) {
-			return error;
-		}
-
-		if (error = obj["audienceSubCategoryNames"].get(msg.audienceSubCategoryNames); error) {
-			return error;
-		}
-
-		if (error = obj["blockNames"].get(msg.blockNames); error) {
-			return error;
-		}
-
-		if (error = obj["events"].get(msg.events); error) {
-			return error;
-		}
-
-		if (error = obj["performances"].get(msg.performances); error) {
-			return error;
-		}
-
-		if (error = obj["seatCategoryNames"].get(msg.seatCategoryNames); error) {
-			return error;
-		}
-
-		if (error = obj["subTopicNames"].get(msg.subTopicNames); error) {
-			return error;
-		}
-
-		if (error = obj["subjectNames"].get(msg.subjectNames); error) {
-			return error;
-		}
-
-		if (error = obj["topicNames"].get(msg.topicNames); error) {
-			return error;
-		}
-
-		if (error = obj["topicSubTopics"].get(msg.topicSubTopics); error) {
-			return error;
-		}
-
-		if (error = obj["venueNames"].get(msg.venueNames); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, icon_emoji_data& emoji) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["name"].get(emoji.name); error) {
-			return error;
-		}
-
-		if (!obj["id"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, permission_overwrite& perm) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["allow"].get_string(perm.allow); error) {
-			return error;
-		}
-
-		if (error = obj["type"].get(perm.type); error) {
-			return error;
-		}
-
-		if (error = obj["deny"].get_string(perm.deny); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get_string(perm.id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<permission_overwrite>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			permission_overwrite newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			permission_overwrite newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, channel_data& channel) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["default_thread_rate_limit_per_user"].get(channel.default_thread_rate_limit_per_user); error) {
-			return error;
-		}
-
-		if (error = obj["default_auto_archive_duration"].get(channel.default_auto_archive_duration); error) {
-			return error;
-		}
-
-		if (error = obj["permission_overwrites"].get(channel.permission_overwrites); error) {
-			return error;
-		}
-
-		if (error = obj["rate_limit_per_user"].get(channel.rate_limit_per_user); error) {
-			return error;
-		}
-
-		if (error = obj["video_quality_mode"].get(channel.video_quality_mode); error) {
-			return error;
-		}
-
-		if (error = obj["total_message_sent"].get(channel.total_message_sent); error) {
-			return error;
-		}
-
-		if (error = obj["last_pin_timestamp"].get_string(channel.last_pin_timestamp); error) {
-			return error;
-		}
-
-		if (error = obj["last_message_id"].get(channel.last_message_id); error) {
-			return error;
-		}
-
-		if (error = obj["application_id"].get_string(channel.application_id); error) {
-			return error;
-		}
-
-		if (error = obj["message_count"].get(channel.message_count); error) {
-			return error;
-		}
-
-		if (error = obj["member_count"].get(channel.member_count); error) {
-			return error;
-		}
-
-		if (error = obj["applied_tags"].get(channel.applied_tags); error) {
-			return error;
-		}
-
-		if (error = obj["permissions"].get_string(channel.permissions); error) {
-			return error;
-		}
-
-		if (error = obj["user_limit"].get(channel.user_limit); error) {
-			return error;
-		}
-
-		if (error = obj["icon_emoji"].get(channel.icon_emoji); error) {
-			return error;
-		}
-
-		if (error = obj["recipients"].get(channel.recipients); error) {
-			return error;
-		}
-
-		if (error = obj["parent_id"].get_string(channel.parent_id); error) {
-			return error;
-		}
-
-		if (error = obj["position"].get(channel.position); error) {
-			return error;
-		}
-
-		if (error = obj["guild_id"].get_string(channel.guild_id); error) {
-			return error;
-		}
-
-		if (error = obj["owner_id"].get_string(channel.owner_id); error) {
-			return error;
-		}
-
-		if (error = obj["managed"].get(channel.managed); error) {
-			return error;
-		}
-
-		if (error = obj["bitrate"].get(channel.bitrate); error) {
-			return error;
-		}
-
-		if (error = obj["version"].get(channel.version); error) {
-			return error;
-		}
-
-		if (!obj["status"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["flags"].get(channel.flags); error) {
-			return error;
-		}
-
-		if (!obj["topic"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["nsfw"].get(channel.nsfw); error) {
-			return error;
-		}
-
-		if (error = obj["type"].get(channel.type); error) {
-			return error;
-		}
-
-		if (error = obj["icon"].get_string(channel.icon); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(channel.name); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get_string(channel.id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<channel_data>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			channel_data newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			channel_data newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_data& user) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["avatar_decoration_data"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["discriminator"].get_string(user.discriminator); error) {
-			return error;
-		}
-
-		if (error = obj["public_flags"].get(user.public_flags); error) {
-			return error;
-		}
-
-		if (error = obj["premium_type"].get(user.premium_type); error) {
-			return error;
-		}
-
-		if (error = obj["accent_color"].get(user.accent_color); error) {
-			return error;
-		}
-
-		if (error = obj["display_name"].get(user.display_name); error) {
-			return error;
-		}
-
-		if (error = obj["mfa_enabled"].get(user.mfa_enabled); error) {
-			return error;
-		}
-
-		if (error = obj["global_name"].get(user.global_name); error) {
-			return error;
-		}
-
-		if (error = obj["user_name"].get_string(user.user_name); error) {
-			return error;
-		}
-
-		if (error = obj["verified"].get(user.verified); error) {
-			return error;
-		}
-
-		if (error = obj["system"].get(user.system); error) {
-			return error;
-		}
-
-		if (!obj["locale"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["banner"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["avatar"].get(user.avatar); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["flags"].get(user.flags); error) {
-			return error;
-		}
-
-		if (error = obj["email"].get_string(user.email); error) {
-			return error;
-		}
-
-		if (error = obj["bot"].get(user.bot); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get_string(user.id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, member_data& member) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["communication_disabled_until"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["premium_since"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["permissions"].get_string(member.permissions); error) {
-			return error;
-		}
-
-		if (error = obj["joined_at"].get_string(member.joined_at); error) {
-			return error;
-		}
-
-		if (error = obj["guild_id"].get_string(member.guild_id); error) {
-			return error;
-		}
-
-		if (error = obj["pending"].get(member.pending); error) {
-			return error;
-		}
-
-		if (!obj["avatar"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["flags"].get(member.flags); error) {
-			return error;
-		}
-
-		if (error = obj["roles"].get(member.roles); error) {
-			return error;
-		}
-
-		if (error = obj["mute"].get(member.mute); error) {
-			return error;
-		}
-
-		if (error = obj["deaf"].get(member.deaf); error) {
-			return error;
-		}
-
-		if (error = obj["user"].get(member.user); error) {
-			return error;
-		}
-
-		if (error = obj["nick"].get(member.nick); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<member_data>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			member_data newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			member_data newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, tags_data& tags) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["premium_subscriber"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["bot_id"].get(tags.bot_id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, role_data& role) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["unicode_emoji"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["mentionable"].get(role.mentionable); error) {
-			return error;
-		}
-
-		if (error = obj["permissions"].get_string(role.permissions); error) {
-			return error;
-		}
-
-		if (error = obj["position"].get(role.position); error) {
-			return error;
-		}
-
-		if (error = obj["managed"].get(role.managed); error) {
-			return error;
-		}
-
-		if (error = obj["version"].get(role.version); error) {
-			return error;
-		}
-
-		if (error = obj["hoist"].get(role.hoist); error) {
-			return error;
-		}
-
-		if (error = obj["flags"].get(role.flags); error) {
-			return error;
-		}
-
-		if (error = obj["color"].get(role.color); error) {
-			return error;
-		}
-
-		if (error = obj["tags"].get(role.tags); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(role.name); error) {
-			return error;
-		}
-
-		if (!obj["icon"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["id"].get_string(role.id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<role_data>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			role_data newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			role_data newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, guild_data& guild) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (!obj["latest_on_boarding_question_id"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["max_stage_video_channel_users"].get(guild.max_stage_video_channel_users); error) {
-			return error;
-		}
-
-		if (error = obj["default_message_notifications"].get(guild.default_message_notifications); error) {
-			return error;
-		}
-
-		if (error = obj["premium_progress_bar_enabled"].get(guild.premium_progress_bar_enabled); error) {
-			return error;
-		}
-
-		if (error = obj["approximate_presence_count"].get(guild.approximate_presence_count); error) {
-			return error;
-		}
-
-		if (error = obj["premium_subscription_count"].get(guild.premium_subscription_count); error) {
-			return error;
-		}
-
-		if (error = obj["public_updates_channel_id"].get_string(guild.public_updates_channel_id); error) {
-			return error;
-		}
-
-		if (error = obj["approximate_member_count"].get(guild.approximate_member_count); error) {
-			return error;
-		}
-
-		if (!obj["safety_alerts_channel_id"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["max_video_channel_users"].get(guild.max_video_channel_users); error) {
-			return error;
-		}
-
-		if (error = obj["explicit_content_filter"].get(guild.explicit_content_filter); error) {
-			return error;
-		}
-
-		if (error = obj["guild_scheduled_events"].get(guild.guild_scheduled_events); error) {
-			return error;
-		}
-
-		if (error = obj["system_channel_flags"].get(guild.system_channel_flags); error) {
-			return error;
-		}
-
-		if (error = obj["verification_level"].get(guild.verification_level); error) {
-			return error;
-		}
-
-		if (!obj["inventory_settings"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["widget_channel_id"].get_string(guild.widget_channel_id); error) {
-			return error;
-		}
-
-		if (error = obj["system_channel_id"].get_string(guild.system_channel_id); error) {
-			return error;
-		}
-
-		if (error = obj["rules_channel_id"].get_string(guild.rules_channel_id); error) {
-			return error;
-		}
-
-		if (error = obj["preferred_locale"].get_string(guild.preferred_locale); error) {
-			return error;
-		}
-
-		if (!obj["discovery_splash"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["vanity_url_code"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["widget_enabled"].get(guild.widget_enabled); error) {
-			return error;
-		}
-
-		if (!obj["afk_channel_id"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["application_id"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["max_presences"].get(guild.max_presences); error) {
-			return error;
-		}
-
-		if (error = obj["premium_tier"].get(guild.premium_tier); error) {
-			return error;
-		}
-
-		if (error = obj["member_count"].get(guild.member_count); error) {
-			return error;
-		}
-
-		if (error = obj["voice_states"].get(guild.voice_states); error) {
-			return error;
-		}
-
-		if (error = obj["unavailable"].get(guild.unavailable); error) {
-			return error;
-		}
-
-		if (error = obj["afk_timeout"].get(guild.afk_timeout); error) {
-			return error;
-		}
-
-		if (error = obj["max_members"].get(guild.max_members); error) {
-			return error;
-		}
-
-		if (error = obj["permissions"].get_string(guild.permissions); error) {
-			return error;
-		}
-
-		if (!obj["description"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["nsfw_level"].get(guild.nsfw_level); error) {
-			return error;
-		}
-
-		if (error = obj["mfa_level"].get(guild.mfa_level); error) {
-			return error;
-		}
-
-		if (error = obj["joined_at"].get_string(guild.joined_at); error) {
-			return error;
-		}
-
-		if (error = obj["discovery"].get_string(guild.discovery); error) {
-			return error;
-		}
-
-		if (error = obj["owner_id"].get_string(guild.owner_id); error) {
-			return error;
-		}
-
-		if (!obj["hub_type"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["stickers"].get(guild.stickers); error) {
-			return error;
-		}
-
-		if (error = obj["features"].get(guild.features); error) {
-			return error;
-		}
-
-		if (error = obj["channels"].get(guild.channels); error) {
-			return error;
-		}
-
-		if (error = obj["members"].get(guild.members); error) {
-			return error;
-		}
-
-		if (error = obj["threads"].get(guild.threads); error) {
-			return error;
-		}
-
-		if (error = obj["region"].get_string(guild.region); error) {
-			return error;
-		}
-
-		if (!obj["banner"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["splash"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["owner"].get(guild.owner); error) {
-			return error;
-		}
-
-		if (error = obj["large"].get(guild.large); error) {
-			return error;
-		}
-
-		if (error = obj["flags"].get(guild.flags); error) {
-			return error;
-		}
-
-		if (error = obj["roles"].get(guild.roles); error) {
-			return error;
-		}
-
-		if (error = obj["lazy"].get(guild.lazy); error) {
-			return error;
-		}
-
-		if (error = obj["nsfw"].get(guild.nsfw); error) {
-			return error;
-		}
-
-		if (error = obj["icon"].get_string(guild.icon); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(guild.name); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get_string(guild.id); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, discord_message& msg) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["op"].get(msg.op); error) {
-			return error;
-		}
-
-		if (error = obj["s"].get(msg.s); error) {
-			return error;
-		}
-
-		if (error = obj["d"].get(msg.d); error) {
-			return error;
-		}
-
-		if (error = obj["t"].get_string(msg.t); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, search_metadata_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["completed_in"].get(data.completed_in); error) {
-			return error;
-		}
-
-		if (error = obj["max_id"].get(data.max_id); error) {
-			return error;
-		}
-
-		if (error = obj["max_id_str"].get_string(data.max_id_str); error) {
-			return error;
-		}
-
-		if (error = obj["next_results"].get_string(data.next_results); error) {
-			return error;
-		}
-
-		if (error = obj["query"].get_string(data.query); error) {
-			return error;
-		}
-
-		if (error = obj["refresh_url"].get_string(data.refresh_url); error) {
-			return error;
-		}
-
-		if (error = obj["count"].get(data.count); error) {
-			return error;
-		}
-
-		if (error = obj["since_id"].get(data.since_id); error) {
-			return error;
-		}
-
-		if (error = obj["since_id_str"].get_string(data.since_id_str); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, hashtag_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["text"].get_string(data.text); error) {
-			return error;
-		}
-
-		if (error = obj["indices"].get(data.indices); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, large_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["w"].get(data.w); error) {
-			return error;
-		}
-
-		if (error = obj["h"].get(data.h); error) {
-			return error;
-		}
-
-		if (error = obj["resize"].get_string(data.resize); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, sizes_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["medium"].get(data.medium); error) {
-			return error;
-		}
-
-		if (error = obj["small"].get(data.small); error) {
-			return error;
-		}
-
-		if (error = obj["thumb"].get(data.thumb); error) {
-			return error;
-		}
-
-		if (error = obj["large"].get(data.large); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, media_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["id"].get(data.id); error) {
-			return error;
-		}
-
-		if (error = obj["id_str"].get_string(data.id_str); error) {
-			return error;
-		}
-
-		if (error = obj["indices"].get(data.indices); error) {
-			return error;
-		}
-
-		if (error = obj["media_url"].get_string(data.media_url); error) {
-			return error;
-		}
-
-		if (error = obj["media_url_https"].get_string(data.media_url_https); error) {
-			return error;
-		}
-
-		if (error = obj["url"].get_string(data.url); error) {
-			return error;
-		}
-
-		if (error = obj["display_url"].get_string(data.display_url); error) {
-			return error;
-		}
-
-		if (error = obj["expanded_url"].get_string(data.expanded_url); error) {
-			return error;
-		}
-
-		if (error = obj["type"].get_string(data.type); error) {
-			return error;
-		}
-
-		if (error = obj["sizes"].get(data.sizes); error) {
-			return error;
-		}
-
-		if (error = obj["source_status_id"].get(data.source_status_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["source_status_id_str"].get_string(data.source_status_id_str); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, url_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["url"].get_string(data.url); error) {
-			return error;
-		}
-
-		if (error = obj["expanded_url"].get_string(data.expanded_url); error) {
-			return error;
-		}
-
-		if (error = obj["display_url"].get_string(data.display_url); error) {
-			return error;
-		}
-
-		if (error = obj["indices"].get(data.indices); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_mention& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["screen_name"].get_string(data.screen_name); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(data.name); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get(data.id); error) {
-			return error;
-		}
-
-		if (error = obj["id_str"].get_string(data.id_str); error) {
-			return error;
-		}
-
-		if (error = obj["indices"].get(data.indices); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<media_data>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			media_data newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			media_data newVal;
-
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<std::vector<media_data>>& car) {
-		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, status_entities& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["hashtags"].get(data.hashtags); error) {
-			return error;
-		}
-
-		if (error = obj["symbols"].get(data.symbols); error) {
-			return error;
-		}
-
-		if (error = obj["urls"].get(data.urls); error) {
-			return error;
-		}
-
-		if (error = obj["user_mentions"].get(data.user_mentions); error) {
-			return error;
-		}
-
-		if (error = obj["media"].get(data.media); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, metadata_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["result_type"].get_string(data.result_type); error) {
-			return error;
-		}
-
-		if (error = obj["iso_language_code"].get_string(data.iso_language_code); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, description_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["urls"].get(data.urls); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::optional<description_data>& car) {
-		if (auto error = val.get(car.emplace()); !val.is_null() && error != simdjson::SUCCESS) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, user_entities& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["description"].get(data.description); error) {
-			return error;
-		}
-
-		if (error = obj["url"].get(data.url); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_user_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["id"].get(data.id); error) {
-			return error;
-		}
-
-		if (error = obj["id_str"].get_string(data.id_str); error) {
-			return error;
-		}
-
-		if (error = obj["name"].get_string(data.name); error) {
-			return error;
-		}
-
-		if (error = obj["screen_name"].get_string(data.screen_name); error) {
-			return error;
-		}
-
-		if (error = obj["location"].get_string(data.location); error) {
-			return error;
-		}
-
-		if (error = obj["description"].get_string(data.description); error) {
-			return error;
-		}
-
-		if (error = obj["url"].get(data.url); error) {
-			return error;
-		}
-
-		if (error = obj["entities"].get(data.entities); error) {
-			return error;
-		}
-
-		if (error = obj["protected"].get(data.protectedVal); error) {
-			return error;
-		}
-
-		if (error = obj["followers_count"].get(data.followers_count); error) {
-			return error;
-		}
-
-		if (error = obj["friends_count"].get(data.friends_count); error) {
-			return error;
-		}
-
-		if (error = obj["listed_count"].get(data.listed_count); error) {
-			return error;
-		}
-
-		if (error = obj["created_at"].get_string(data.created_at); error) {
-			return error;
-		}
-
-		if (error = obj["favourites_count"].get(data.favourites_count); error) {
-			return error;
-		}
-
-		if (error = obj["utc_offset"].get(data.utc_offset); error) {
-			return error;
-		}
-
-		if (error = obj["time_zone"].get(data.time_zone); error) {
-			return error;
-		}
-
-		if (error = obj["geo_enabled"].get(data.geo_enabled); error) {
-			return error;
-		}
-
-		if (error = obj["verified"].get(data.verified); error) {
-			return error;
-		}
-
-		if (error = obj["statuses_count"].get(data.statuses_count); error) {
-			return error;
-		}
-
-		if (error = obj["lang"].get_string(data.lang); error) {
-			return error;
-		}
-
-		if (error = obj["contributors_enabled"].get(data.contributors_enabled); error) {
-			return error;
-		}
-
-		if (error = obj["is_translator"].get(data.is_translator); error) {
-			return error;
-		}
-
-		if (error = obj["is_translation_enabled"].get(data.is_translation_enabled); error) {
-			return error;
-		}
-
-		if (error = obj["profile_background_color"].get_string(data.profile_background_color); error) {
-			return error;
-		}
-
-		if (error = obj["profile_background_image_url"].get_string(data.profile_background_image_url); error) {
-			return error;
-		}
-
-		if (error = obj["profile_background_image_url_https"].get_string(data.profile_background_image_url_https); error) {
-			return error;
-		}
-
-		if (error = obj["profile_background_tile"].get(data.profile_background_tile); error) {
-			return error;
-		}
-
-		if (error = obj["profile_image_url"].get_string(data.profile_image_url); error) {
-			return error;
-		}
-
-		if (error = obj["profile_image_url_https"].get_string(data.profile_image_url_https); error) {
-			return error;
-		}
-
-		if (error = obj["profile_banner_url"].get(data.profile_banner_url); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["profile_link_color"].get_string(data.profile_link_color); error) {
-			return error;
-		}
-
-		if (error = obj["profile_sidebar_border_color"].get_string(data.profile_sidebar_border_color); error) {
-			return error;
-		}
-
-		if (error = obj["profile_sidebar_fill_color"].get_string(data.profile_sidebar_fill_color); error) {
-			return error;
-		}
-
-		if (error = obj["profile_text_color"].get_string(data.profile_text_color); error) {
-			return error;
-		}
-
-		if (error = obj["profile_use_background_image"].get(data.profile_use_background_image); error) {
-			return error;
-		}
-
-		if (error = obj["default_profile"].get(data.default_profile); error) {
-			return error;
-		}
-
-		if (error = obj["default_profile_image"].get(data.default_profile_image); error) {
-			return error;
-		}
-
-		if (error = obj["following"].get(data.following); error) {
-			return error;
-		}
-
-		if (error = obj["follow_request_sent"].get(data.follow_request_sent); error) {
-			return error;
-		}
-
-		if (error = obj["notifications"].get(data.notifications); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
+template<typename value_type>
+concept bool_t = std::same_as<std::remove_cvref_t<value_type>, bool> || std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::reference> ||
+	std::same_as<std::remove_cvref_t<value_type>, std::vector<bool>::const_reference>;
+
+template<typename value_type>
+concept floating_type = std::floating_point<std::remove_cvref_t<value_type>> && !bool_t<value_type>;
+
+template<typename value_type>
+concept unsigned_type = std::unsigned_integral<std::remove_cvref_t<value_type>> && !floating_type<value_type> && !bool_t<value_type>;
+
+template<typename value_type>
+concept signed_type = std::signed_integral<std::remove_cvref_t<value_type>> && !floating_type<value_type> && !bool_t<value_type>;
+
+template<typename value_type>
+concept has_range = requires(std::remove_cvref_t<value_type> value) {
+	typename std::remove_cvref_t<value_type>::value_type;
+	{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
+	{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_iterator>;
+} || requires(std::remove_cvref_t<value_type> value) {
+	typename std::remove_cvref_t<value_type>::value_type;
+	{ value.begin() } -> std::same_as<typename std::remove_cvref_t<value_type>::iterator>;
+	{ value.end() } -> std::same_as<typename std::remove_cvref_t<value_type>::iterator>;
+};
+
+template<typename value_type>
+concept map_subscriptable = requires(std::remove_cvref_t<value_type> value) {
+	{ value[typename std::remove_cvref_t<value_type>::key_type{}] } -> std::same_as<const typename std::remove_cvref_t<value_type>::mapped_type&>;
+} || requires(std::remove_cvref_t<value_type> value) {
+	{ value[typename std::remove_cvref_t<value_type>::key_type{}] } -> std::same_as<typename std::remove_cvref_t<value_type>::mapped_type&>;
+};
+
+template<typename value_type>
+concept map_t = requires(std::remove_cvref_t<value_type> value) {
+	typename std::remove_cvref_t<value_type>::mapped_type;
+	typename std::remove_cvref_t<value_type>::key_type;
+} && has_range<value_type> && map_subscriptable<value_type> && !std::is_integral_v<std::remove_cvref_t<value_type>>;
+
+template<typename value_type>
+concept vector_subscriptable = requires(std::remove_cvref_t<value_type> value) {
+	{ value[typename std::remove_cvref_t<value_type>::size_type{}] } -> std::same_as<typename std::remove_cvref_t<value_type>::const_reference>;
+} || requires(std::remove_cvref_t<value_type> value) {
+	{ value[typename std::remove_cvref_t<value_type>::size_type{}] } -> std::same_as<typename std::remove_cvref_t<value_type>::reference>;
+};
+
+template<typename value_type>
+concept has_substr = requires(std::remove_cvref_t<value_type> value) {
+	{ value.substr(typename std::remove_cvref_t<value_type>::size_type{}, typename std::remove_cvref_t<value_type>::size_type{}) } -> std::same_as<std::remove_cvref_t<value_type>>;
+};
+
+template<typename value_type>
+concept has_resize = requires(std::remove_cvref_t<value_type> value) { value.resize(typename std::remove_cvref_t<value_type>::size_type{}); };
+
+template<typename value_type>
+concept has_data = requires(std::remove_cvref_t<value_type> value) {
+	{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_pointer>;
+} || requires(std::remove_cvref_t<value_type> value) {
+	{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::pointer>;
+};
+
+template<typename value_type>
+concept has_size = requires(std::remove_cvref_t<value_type> value) {
+	{ value.size() } -> std::same_as<typename std::remove_cvref_t<value_type>::size_type>;
+};
+
+template<typename value_type>
+concept string_t =
+	has_substr<value_type> && has_data<value_type> && has_size<value_type> && !std::same_as<std::remove_cvref_t<value_type>, char> && vector_subscriptable<value_type>;
+
+template<typename value_type>
+concept copyable = std::copyable<std::remove_cvref_t<value_type>>;
+
+template<typename value_type>
+concept has_release = requires(std::remove_cvref_t<value_type> value) {
+	{ value.release() } -> std::same_as<typename std::remove_cvref_t<value_type>::pointer>;
+};
+
+template<typename value_type>
+concept has_get = requires(std::remove_cvref_t<value_type> value) {
+	{ value.get() } -> std::same_as<typename std::remove_cvref_t<value_type>::element_type*>;
+};
+
+template<typename value_type>
+concept unique_ptr_t = requires(std::remove_cvref_t<value_type> value) {
+	typename std::remove_cvref_t<value_type>::element_type;
+	typename std::remove_cvref_t<value_type>::deleter_type;
+} && has_release<value_type>;
+
+template<typename value_type>
+concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
+
+template<typename value_type>
+concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !std::is_pointer_v<std::remove_cvref_t<value_type>> && !string_t<value_type>;
+
+JSONIFIER_ALWAYS_INLINE void throwError(auto error, std::source_location location = std::source_location::current()) {
+	std::stringstream stream{};
+	stream << "Error: " << error << std::endl;
+	stream << "Thrown from: " << location.file_name() << ", At Line: " << location.line() << std::endl;
+	std::cout << stream.str();
+}
+
+template<typename value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData);
+
+template<floating_type value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_double().get(data); result) {
+			throwError(result);
+		}
+		return;
+	} else {
+		double newValue{};
+		if (auto result = jsonData.get_double().get(newValue); result) {
+			throwError(result);
+		}
+		data = static_cast<value_type>(newValue);
+		return;
+	}
+}
+
+template<unsigned_type value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_uint64().get(data); result) {
+			throwError(result);
+		}
+		return;
+	} else {
+		uint64_t newValue{};
+		if (auto result = jsonData.get_uint64().get(newValue); result) {
+			throwError(result);
+		}
+		data = static_cast<value_type>(newValue);
+		return;
 	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, status_data& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
-
-		if (error = obj["metadata"].get(data.metadata); error) {
-			return error;
-		}
-
-		if (error = obj["created_at"].get_string(data.created_at); error) {
-			return error;
-		}
-
-		if (error = obj["id"].get(data.id); error) {
-			return error;
-		}
-
-		if (error = obj["id_str"].get_string(data.id_str); error) {
-			return error;
-		}
-
-		if (error = obj["text"].get_string(data.text); error) {
-			return error;
-		}
-
-		if (error = obj["source"].get_string(data.source); error) {
-			return error;
-		}
-
-		if (error = obj["truncated"].get(data.truncated); error) {
-			return error;
-		}
-
-		if (error = obj["in_reply_to_status_id"].get(data.in_reply_to_status_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["in_reply_to_status_id_str"].get(data.in_reply_to_status_id_str); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["in_reply_to_user_id"].get(data.in_reply_to_user_id); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["in_reply_to_user_id_str"].get(data.in_reply_to_user_id_str); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["in_reply_to_screen_name"].get(data.in_reply_to_screen_name); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["user"].get(data.user); error) {
-			return error;
-		}
-
-		if (!obj["geo"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
+}
 
-		if (!obj["coordinates"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
+template<signed_type value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_int64().get(data); result) {
+			throwError(result);
 		}
-
-		if (!obj["place"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (!obj["contributors"].is_null()) {
-			return simdjson::UNEXPECTED_ERROR;
-		}
-
-		if (error = obj["retweet_count"].get(data.retweet_count); error) {
-			return error;
-		}
-
-		if (error = obj["favorite_count"].get(data.favorite_count); error) {
-			return error;
-		}
-
-		if (error = obj["entities"].get(data.entities); error) {
-			return error;
-		}
-
-		if (error = obj["favorited"].get(data.favorited); error) {
-			return error;
-		}
-
-		if (error = obj["retweeted"].get(data.retweeted); error) {
-			return error;
-		}
-
-		if (error = obj["lang"].get_string(data.lang); error) {
-			return error;
-		}
-
-		if (error = obj["retweeted_status"].get(data.retweeted_status); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
-		}
-
-		if (error = obj["possibly_sensitive"].get(data.possibly_sensitive); (error != simdjson::NO_SUCH_FIELD) && (error != simdjson::SUCCESS)) {
-			return error;
+		return;
+	} else {
+		int64_t newValue{};
+		if (auto result = jsonData.get_int64().get(newValue); result) {
+			throwError(result);
 		}
-
-		return simdjson::SUCCESS;
+		data = static_cast<value_type>(newValue);
+		return;
 	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, std::vector<status_data>& vector) {
-		ondemand::array arr;
-		auto error = val.get_array().get(arr);
-		if (error) {
-			return error;
-		}
-		size_t currentIndex{};
-		auto iter = arr.begin();
-		for (; iter != arr.end() && currentIndex < vector.size(); ++currentIndex, ++iter) {
-			status_data newVal;
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector[currentIndex] = std::move(newVal);
-		}
-
-		for (; iter != arr.end(); ++iter) {
-			status_data newVal;
+}
 
-			if (error = iter.operator*().get(newVal); error) {
-				return error;
-			}
-			vector.emplace_back(std::move(newVal));
-		}
-
-		return simdjson::SUCCESS;
+template<> JSONIFIER_INLINE void getValue(std::nullptr_t&, simdjson::ondemand::value value) {
+	auto result = value.is_null();
+	if (auto resultNew = result.error(); resultNew) {
+		throwError(resultNew);
 	}
-
-	template<typename simdjson_value> auto tag_invoke(deserialize_tag, simdjson_value& val, twitter_message& data) {
-		ondemand::object obj;
-		auto error = val.get_object().get(obj);
-		if (error) {
-			return error;
-		}
+}
 
-		if (error = obj["statuses"].get(data.statuses); error) {
-			return error;
-		}
-
-		if (error = obj["search_metadata"].get(data.search_metadata); error) {
-			return error;
-		}
-
-		return simdjson::SUCCESS;
-	}
+template<string_t value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	std::string_view newValue;
+	if (auto result = jsonData.get(newValue); result) {
+		throwError(result);
+	}
+	data = static_cast<value_type>(newValue);
+}
 
+template<bool_t value_type> JSONIFIER_INLINE void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	auto result = jsonData.get(static_cast<bool&>(data));
+	if (result) {
+		throwError(result);
+	}
+	return;
+}
+
+JSONIFIER_ALWAYS_INLINE simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
+	auto newArr = jsonData.get_array();
+	if (auto result = newArr.error()) {
+		throwError(result);
+	}
+	return newArr.value();
+}
+
+JSONIFIER_ALWAYS_INLINE simdjson::ondemand::object getObject(simdjson::ondemand::value jsonData) {
+	auto newObj = jsonData.get_object();
+	if (auto result = newObj.error()) {
+		throwError(result);
+	}
+	return newObj.value();
+}
+
+template<vector_t value_type> JSONIFIER_INLINE void getValue(value_type& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::array newArray{ getArray(jsonData) };
+	const auto size = value.size();
+	auto iter		= newArray.begin();
+	typename value_type::value_type valueNew{};
+	simdjson::simdjson_result<simdjson::ondemand::value> resultNew;
+	for (size_t x = 0; (x < size) && (iter != newArray.end()); ++x, ++iter) {
+		resultNew = iter.value().operator*().value();
+		getValue(valueNew, resultNew.value());
+		value[x] = std::move(valueNew);
+	}
+	for (; iter != newArray.end(); ++iter) {
+		resultNew = iter.value().operator*().value();
+		getValue(valueNew, resultNew.value());
+		value.emplace_back(std::move(valueNew));
+	}
+}
+
+template<typename value_type> JSONIFIER_INLINE void getValue(std::optional<value_type>& vec, simdjson::ondemand::value jsonData) {
+	if (!jsonData.is_null().value()) {
+		getValue(vec.emplace(), jsonData);
+	}
+}
+
+template<map_t value_type> JSONIFIER_INLINE void getValue(value_type& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object object{ getObject(jsonData) };
+	for (auto field: object) {
+		typename std::remove_cvref_t<decltype(value)>::key_type key;
+		auto key_result = field.unescaped_key();
+		if (auto result = key_result.error()) {
+			throwError(result);
+		}
+
+		key = static_cast<typename std::remove_cvref_t<decltype(value)>::key_type>(std::string(key_result.value()));
+
+		simdjson::ondemand::value field_value = field.value();
+		typename std::remove_cvref_t<decltype(value)>::mapped_type newValue;
+		getValue(newValue, field_value);
+		value[key] = std::move(newValue);
+	}
+
+	return;
+}
+
+template<unique_ptr_t value_type> JSONIFIER_INLINE void getValue(value_type& e, simdjson::ondemand::value jsonData) {
+	if (!e) {
+		e = std::make_unique<std::remove_cvref_t<decltype(*e)>>();
+	}
+	return getValue(*e, jsonData);
+}
+
+template<shared_ptr_t value_type> JSONIFIER_INLINE void getValue(value_type& e, simdjson::ondemand::value jsonData) {
+	if (!e) {
+		e = std::make_shared<std::remove_cvref_t<decltype(*e)>>();
+	}
+	return getValue(*e, jsonData);
+}
+
+template<> JSONIFIER_INLINE void getValue(std::string*& value, simdjson::ondemand::value jsonData) {
+	if (!value) {
+		value = new std::string{};
+	}
+	return getValue(*value, jsonData);
+}
+
+template<typename value_type> JSONIFIER_INLINE void getValue(value_type& value, simdjson::ondemand::object jsonData, const std::string_view& key) {
+	simdjson::ondemand::value jsonValue;
+	auto error = jsonData[key].get(jsonValue);
+	if (error == simdjson::SUCCESS) {
+		return getValue(value, jsonValue);
+	} else if (error == simdjson::NO_SUCH_FIELD) {
+		return;
+	} else {
+		throwError(error);
+	}
+}
+
+template<> JSONIFIER_INLINE void getValue(search_metadata_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.completed_in, obj, "completed_in");
+	getValue(value.max_id, obj, "max_id");
+	getValue(value.max_id_str, obj, "max_id_str");
+	getValue(value.next_results, obj, "next_results");
+	getValue(value.query, obj, "query");
+	getValue(value.refresh_url, obj, "refresh_url");
+	getValue(value.count, obj, "count");
+	getValue(value.since_id, obj, "since_id");
+	getValue(value.since_id_str, obj, "since_id_str");
+}
+
+template<> JSONIFIER_INLINE void getValue(hashtag_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.indices, obj, "indices");
+	getValue(value.text, obj, "text");
+}
+
+template<> JSONIFIER_INLINE void getValue(large_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.w, obj, "w");
+	getValue(value.h, obj, "h");
+	getValue(value.resize, obj, "resize");
+}
+
+template<> JSONIFIER_INLINE void getValue(sizes_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.medium, obj, "medium");
+	getValue(value.small, obj, "small");
+	getValue(value.thumb, obj, "thumb");
+	getValue(value.large, obj, "large");
+}
+
+template<> JSONIFIER_INLINE void getValue(media_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.indices, obj, "indices");
+	getValue(value.media_url, obj, "media_url");
+	getValue(value.media_url_https, obj, "media_url_https");
+	getValue(value.url, obj, "url");
+	getValue(value.display_url, obj, "display_url");
+	getValue(value.expanded_url, obj, "expanded_url");
+	getValue(value.type, obj, "type");
+	getValue(value.sizes, obj, "sizes");
+	getValue(value.source_status_id, obj, "source_status_id");
+	getValue(value.source_status_id_str, obj, "source_status_id_str");
+}
+
+template<> JSONIFIER_INLINE void getValue(url_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.url, obj, "url");
+	getValue(value.expanded_url, obj, "expanded_url");
+	getValue(value.display_url, obj, "display_url");
+	getValue(value.indices, obj, "indices");
+}
+
+template<> JSONIFIER_INLINE void getValue(user_mention& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.screen_name, obj, "screen_name");
+	getValue(value.name, obj, "name");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.indices, obj, "indices");
+}
+
+template<> JSONIFIER_INLINE void getValue(status_entities& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.hashtags, obj, "hashtags");
+	getValue(value.symbols, obj, "symbols");
+	getValue(value.urls, obj, "urls");
+	getValue(value.user_mentions, obj, "user_mentions");
+	getValue(value.media, obj, "media");
+}
+
+template<> JSONIFIER_INLINE void getValue(metadata_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.result_type, obj, "result_type");
+	getValue(value.iso_language_code, obj, "iso_language_code");
+}
+
+template<> JSONIFIER_INLINE void getValue(description_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.urls, obj, "urls");
+}
+
+template<> JSONIFIER_INLINE void getValue(user_entities& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.description, obj, "description");
+	getValue(value.url, obj, "url");
+}
+
+template<> JSONIFIER_INLINE void getValue(twitter_user_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.name, obj, "name");
+	getValue(value.screen_name, obj, "screen_name");
+	getValue(value.location, obj, "location");
+	getValue(value.description, obj, "description");
+	getValue(value.url, obj, "url");
+	getValue(value.entities, obj, "entities");
+	getValue(value.protectedVal, obj, "protected");
+	getValue(value.followers_count, obj, "followers_count");
+	getValue(value.friends_count, obj, "friends_count");
+	getValue(value.listed_count, obj, "listed_count");
+	getValue(value.created_at, obj, "created_at");
+	getValue(value.favourites_count, obj, "favourites_count");
+	getValue(value.utc_offset, obj, "utc_offset");
+	getValue(value.time_zone, obj, "time_zone");
+	getValue(value.geo_enabled, obj, "geo_enabled");
+	getValue(value.verified, obj, "verified");
+	getValue(value.statuses_count, obj, "statuses_count");
+	getValue(value.lang, obj, "lang");
+	getValue(value.contributors_enabled, obj, "contributors_enabled");
+	getValue(value.is_translator, obj, "is_translator");
+	getValue(value.is_translation_enabled, obj, "is_translation_enabled");
+	getValue(value.profile_background_color, obj, "profile_background_color");
+	getValue(value.profile_background_image_url, obj, "profile_background_image_url");
+	getValue(value.profile_background_image_url_https, obj, "profile_background_image_url_https");
+	getValue(value.profile_background_tile, obj, "profile_background_tile");
+	getValue(value.profile_image_url, obj, "profile_image_url");
+	getValue(value.profile_image_url_https, obj, "profile_image_url_https");
+	getValue(value.profile_banner_url, obj, "profile_banner_url");
+	getValue(value.profile_link_color, obj, "profile_link_color");
+	getValue(value.profile_sidebar_border_color, obj, "profile_sidebar_border_color");
+	getValue(value.profile_sidebar_fill_color, obj, "profile_sidebar_fill_color");
+	getValue(value.profile_text_color, obj, "profile_text_color");
+	getValue(value.profile_use_background_image, obj, "profile_use_background_image");
+	getValue(value.default_profile, obj, "default_profile");
+	getValue(value.default_profile_image, obj, "default_profile_image");
+	getValue(value.following, obj, "following");
+	getValue(value.follow_request_sent, obj, "follow_request_sent");
+	getValue(value.notifications, obj, "notifications");
+}
+
+template<> JSONIFIER_INLINE void getValue(status_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.metadata, obj, "metadata");
+	getValue(value.created_at, obj, "created_at");
+	getValue(value.id, obj, "id");
+	getValue(value.id_str, obj, "id_str");
+	getValue(value.text, obj, "text");
+	getValue(value.source, obj, "source");
+	getValue(value.truncated, obj, "truncated");
+	getValue(value.in_reply_to_status_id, obj, "in_reply_to_status_id");
+	getValue(value.in_reply_to_status_id_str, obj, "in_reply_to_status_id_str");
+	getValue(value.in_reply_to_user_id, obj, "in_reply_to_user_id");
+	getValue(value.in_reply_to_user_id_str, obj, "in_reply_to_user_id_str");
+	getValue(value.in_reply_to_screen_name, obj, "in_reply_to_screen_name");
+	getValue(value.user, obj, "user");
+	getValue(value.geo, obj, "geo");
+	getValue(value.coordinates, obj, "coordinates");
+	getValue(value.place, obj, "place");
+	getValue(value.contributors, obj, "contributors");
+	getValue(value.retweet_count, obj, "retweet_count");
+	getValue(value.favorite_count, obj, "favorite_count");
+	getValue(value.entities, obj, "entities");
+	getValue(value.favorited, obj, "favorited");
+	getValue(value.retweeted, obj, "retweeted");
+	getValue(value.lang, obj, "lang");
+	getValue(value.retweeted_status, obj, "retweeted_status");
+	getValue(value.possibly_sensitive, obj, "possibly_sensitive");
+}
+
+template<> JSONIFIER_INLINE void getValue(twitter_message& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.statuses, obj, "statuses");
+	getValue(value.search_metadata, obj, "search_metadata");
+}
+
+
+template<> JSONIFIER_INLINE void getValue(audience_sub_category_names& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.the337100890, obj, "337100890");
+}
+
+template<> JSONIFIER_INLINE void getValue(names&, simdjson::ondemand::value) {
+	// No data extraction needed
+}
+
+template<> JSONIFIER_INLINE void getValue(event& e, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(e.description, obj, "description");
+	getValue(e.id, obj, "id");
+	getValue(e.logo, obj, "logo");
+	getValue(e.name, obj, "name");
+	getValue(e.topicIds, obj, "subTopicIds");
+	getValue(e.subjectCode, obj, "subjectCode");
+	getValue(e.subtitle, obj, "subtitle");
+	getValue(e.topicIds, obj, "topicIds");
+}
+
+template<> JSONIFIER_INLINE void getValue(price& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.amount, obj, "amount");
+	getValue(p.audienceSubCategoryId, obj, "audienceSubCategoryId");
+	getValue(p.seatCategoryId, obj, "seatCategoryId");
+}
+
+template<> JSONIFIER_INLINE void getValue(area& a, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(a.areaId, obj, "areaId");
+	getValue(a.blockIds, obj, "blockIds");
+}
+
+template<> JSONIFIER_INLINE void getValue(seat_category& sc, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(sc.areas, obj, "areas");
+	getValue(sc.seatCategoryId, obj, "seatCategoryId");
+}
+
+template<> JSONIFIER_INLINE void getValue(venue_names& vn, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(vn.PLEYEL_PLEYEL, obj, "PLEYEL_PLEYEL");
+}
+
+template<> JSONIFIER_INLINE void getValue(performance& p, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(p.eventId, obj, "eventId");
+	getValue(p.eventId, obj, "id");
+	getValue(p.logo, obj, "logo");
+	getValue(p.name, obj, "name");
+	getValue(p.prices, obj, "prices");
+	getValue(p.seatCategories, obj, "seatCategories");
+	getValue(p.seatMapImage, obj, "seatMapImage");
+	getValue(p.start, obj, "start");
+	getValue(p.venueCode, obj, "venueCode");
+}
+
+template<> JSONIFIER_INLINE void getValue(citm_catalog_message& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.areaNames, obj, "areaNames");
+	getValue(msg.audienceSubCategoryNames, obj, "audienceSubCategoryNames");
+	getValue(msg.blockNames, obj, "blockNames");
+	getValue(msg.events, obj, "events");
+	getValue(msg.performances, obj, "performances");
+	getValue(msg.seatCategoryNames, obj, "seatCategoryNames");
+	getValue(msg.subTopicNames, obj, "subTopicNames");
+	getValue(msg.subjectNames, obj, "subjectNames");
+	getValue(msg.topicNames, obj, "topicNames");
+	getValue(msg.topicSubTopics, obj, "topicSubTopics");
+	getValue(msg.venueNames, obj, "venueNames");
+}
+
+template<> JSONIFIER_INLINE void getValue(geometry_data& geometry, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(geometry.type, obj, "type");
+	getValue(geometry.coordinates, obj, "coordinates");
+}
+
+template<> JSONIFIER_INLINE void getValue(properties_data& properties, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(properties.name, obj, "name");
+}
+
+template<> JSONIFIER_INLINE void getValue(feature& f, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(f.type, obj, "type");
+	getValue(f.properties, obj, "properties");
+	getValue(f.geometry, obj, "geometry");
+}
+
+template<> JSONIFIER_INLINE void getValue(canada_message& message, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(message.type, obj, "type");
+	getValue(message.features, obj, "features");
+}
+
+template<> JSONIFIER_INLINE void getValue(int32_t*& out_value, simdjson::ondemand::value jsonData) {
+	int64_t temp{};
+	if (auto result = jsonData.get(temp); result) {
+		throwError(result);
+	}
+	out_value = new int32_t{ static_cast<int32_t>(temp) };
+}
+
+template<> JSONIFIER_INLINE void getValue(std::unique_ptr<int32_t>& out_value, simdjson::ondemand::value jsonData) {
+	int64_t temp{};
+	if (auto result = jsonData.get(temp); result) {
+		throwError(result);
+	}
+	out_value = std::make_unique<int32_t>(static_cast<int32_t>(temp));
+}
+
+template<> JSONIFIER_INLINE void getValue(icon_emoji_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(permission_overwrite& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.allow, obj, "allow");
+	getValue(msg.type, obj, "type");
+	getValue(msg.deny, obj, "deny");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(channel_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.default_thread_rate_limit_per_user, obj, "default_thread_rate_limit_per_user");
+	getValue(msg.default_auto_archive_duration, obj, "default_auto_archive_duration");
+	getValue(msg.permission_overwrites, obj, "permission_overwrites");
+	getValue(msg.rate_limit_per_user, obj, "rate_limit_per_user");
+	getValue(msg.video_quality_mode, obj, "video_quality_mode");
+	getValue(msg.total_message_sent, obj, "total_message_sent");
+	getValue(msg.last_pin_timestamp, obj, "last_pin_timestamp");
+	getValue(msg.last_message_id, obj, "last_message_id");
+	getValue(msg.application_id, obj, "application_id");
+	getValue(msg.message_count, obj, "message_count");
+	getValue(msg.member_count, obj, "member_count");
+	getValue(msg.applied_tags, obj, "applied_tags");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.user_limit, obj, "user_limit");
+	getValue(msg.icon_emoji, obj, "icon_emoji");
+	getValue(msg.recipients, obj, "recipients");
+	getValue(msg.parent_id, obj, "parent_id");
+	getValue(msg.position, obj, "position");
+	getValue(msg.guild_id, obj, "guild_id");
+	getValue(msg.owner_id, obj, "owner_id");
+	getValue(msg.managed, obj, "managed");
+	getValue(msg.bitrate, obj, "bitrate");
+	getValue(msg.version, obj, "version");
+	getValue(msg.status, obj, "status");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.topic, obj, "topic");
+	getValue(msg.nsfw, obj, "nsfw");
+	getValue(msg.type, obj, "type");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(user_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.avatar_decoration_data, obj, "avatar_decoration_data");
+	getValue(msg.discriminator, obj, "discriminator");
+	getValue(msg.public_flags, obj, "public_flags");
+	getValue(msg.premium_type, obj, "premium_type");
+	getValue(msg.accent_color, obj, "accent_color");
+	getValue(msg.display_name, obj, "display_name");
+	getValue(msg.mfa_enabled, obj, "mfa_enabled");
+	getValue(msg.global_name, obj, "global_name");
+	getValue(msg.user_name, obj, "user_name");
+	getValue(msg.verified, obj, "verified");
+	getValue(msg.system, obj, "system");
+	getValue(msg.locale, obj, "locale");
+	getValue(msg.banner, obj, "banner");
+	getValue(msg.avatar, obj, "avatar");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.email, obj, "email");
+	getValue(msg.bot, obj, "bot");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(member_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.communication_disabled_until, obj, "communication_disabled_until");
+	getValue(msg.premium_since, obj, "premium_since");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.joined_at, obj, "joined_at");
+	getValue(msg.guild_id, obj, "guild_id");
+	getValue(msg.pending, obj, "pending");
+	getValue(msg.avatar, obj, "avatar");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.roles, obj, "roles");
+	getValue(msg.mute, obj, "mute");
+	getValue(msg.deaf, obj, "deaf");
+	getValue(msg.user, obj, "user");
+	getValue(msg.nick, obj, "nick");
+}
+
+template<> JSONIFIER_INLINE void getValue(tags_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.premium_subscriber, obj, "premium_subscriber");
+	getValue(msg.bot_id, obj, "bot_id");
+}
+
+template<> JSONIFIER_INLINE void getValue(role_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.unicode_emoji, obj, "unicode_emoji");
+	getValue(msg.mentionable, obj, "mentionable");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.position, obj, "position");
+	getValue(msg.managed, obj, "managed");
+	getValue(msg.version, obj, "version");
+	getValue(msg.hoist, obj, "hoist");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.color, obj, "color");
+	getValue(msg.tags, obj, "tags");
+	getValue(msg.name, obj, "name");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(guild_data& msg, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(msg.latest_on_boarding_question_id, obj, "latest_on_boarding_question_id");
+	getValue(msg.max_stage_video_channel_users, obj, "max_stage_video_channel_users");
+	getValue(msg.default_message_notifications, obj, "default_message_notifications");
+	getValue(msg.premium_progress_bar_enabled, obj, "premium_progress_bar_enabled");
+	getValue(msg.approximate_presence_count, obj, "approximate_presence_count");
+	getValue(msg.premium_subscription_count, obj, "premium_subscription_count");
+	getValue(msg.public_updates_channel_id, obj, "public_updates_channel_id");
+	getValue(msg.approximate_member_count, obj, "approximate_member_count");
+	getValue(msg.safety_alerts_channel_id, obj, "safety_alerts_channel_id");
+	getValue(msg.max_video_channel_users, obj, "max_video_channel_users");
+	getValue(msg.explicit_content_filter, obj, "explicit_content_filter");
+	getValue(msg.guild_scheduled_events, obj, "guild_scheduled_events");
+	getValue(msg.system_channel_flags, obj, "system_channel_flags");
+	getValue(msg.verification_level, obj, "verification_level");
+	getValue(msg.inventory_settings, obj, "inventory_settings");
+	getValue(msg.widget_channel_id, obj, "widget_channel_id");
+	getValue(msg.system_channel_id, obj, "system_channel_id");
+	getValue(msg.rules_channel_id, obj, "rules_channel_id");
+	getValue(msg.preferred_locale, obj, "preferred_locale");
+	getValue(msg.discovery_splash, obj, "discovery_splash");
+	getValue(msg.vanity_url_code, obj, "vanity_url_code");
+	getValue(msg.widget_enabled, obj, "widget_enabled");
+	getValue(msg.afk_channel_id, obj, "afk_channel_id");
+	getValue(msg.application_id, obj, "application_id");
+	getValue(msg.max_presences, obj, "max_presences");
+	getValue(msg.premium_tier, obj, "premium_tier");
+	getValue(msg.member_count, obj, "member_count");
+	getValue(msg.voice_states, obj, "voice_states");
+	getValue(msg.unavailable, obj, "unavailable");
+	getValue(msg.afk_timeout, obj, "afk_timeout");
+	getValue(msg.max_members, obj, "max_members");
+	getValue(msg.permissions, obj, "permissions");
+	getValue(msg.description, obj, "description");
+	getValue(msg.nsfw_level, obj, "nsfw_level");
+	getValue(msg.mfa_level, obj, "mfa_level");
+	getValue(msg.joined_at, obj, "joined_at");
+	getValue(msg.discovery, obj, "discovery");
+	getValue(msg.owner_id, obj, "owner_id");
+	getValue(msg.hub_type, obj, "hub_type");
+	getValue(msg.stickers, obj, "stickers");
+	getValue(msg.features, obj, "features");
+	getValue(msg.channels, obj, "channels");
+	getValue(msg.members, obj, "members");
+	getValue(msg.threads, obj, "threads");
+	getValue(msg.region, obj, "region");
+	getValue(msg.banner, obj, "banner");
+	getValue(msg.splash, obj, "splash");
+	getValue(msg.owner, obj, "owner");
+	getValue(msg.large, obj, "large");
+	getValue(msg.flags, obj, "flags");
+	getValue(msg.roles, obj, "roles");
+	getValue(msg.lazy, obj, "lazy");
+	getValue(msg.nsfw, obj, "nsfw");
+	getValue(msg.icon, obj, "icon");
+	getValue(msg.name, obj, "name");
+	getValue(msg.id, obj, "id");
+}
+
+template<> JSONIFIER_INLINE void getValue(discord_message& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.t, obj, "t");
+	getValue(returnValue.d, obj, "d");
+	getValue(returnValue.op, obj, "op");
+	getValue(returnValue.s, obj, "s");
+}
+
+template<> JSONIFIER_INLINE void getValue(abc_test_struct& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.testVals04, obj, "testVals04");
+	getValue(returnValue.testVals03, obj, "testVals03");
+	getValue(returnValue.testVals01, obj, "testVals01");
+	getValue(returnValue.testVals05, obj, "testVals05");
+	getValue(returnValue.testVals02, obj, "testVals02");
+}
+
+template<> JSONIFIER_INLINE void getValue(abc_test<abc_test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.z, obj, "z");
+	getValue(returnValue.y, obj, "y");
+	getValue(returnValue.x, obj, "x");
+	getValue(returnValue.w, obj, "w");
+	getValue(returnValue.v, obj, "v");
+	getValue(returnValue.u, obj, "u");
+	getValue(returnValue.t, obj, "t");
+	getValue(returnValue.s, obj, "s");
+	getValue(returnValue.r, obj, "r");
+	getValue(returnValue.q, obj, "q");
+	getValue(returnValue.p, obj, "p");
+	getValue(returnValue.o, obj, "o");
+	getValue(returnValue.n, obj, "n");
+	getValue(returnValue.m, obj, "m");
+	getValue(returnValue.l, obj, "l");
+	getValue(returnValue.k, obj, "k");
+	getValue(returnValue.j, obj, "j");
+	getValue(returnValue.i, obj, "i");
+	getValue(returnValue.h, obj, "h");
+	getValue(returnValue.g, obj, "g");
+	getValue(returnValue.f, obj, "f");
+	getValue(returnValue.e, obj, "e");
+	getValue(returnValue.d, obj, "d");
+	getValue(returnValue.c, obj, "c");
+	getValue(returnValue.b, obj, "b");
+	getValue(returnValue.a, obj, "a");
+}
+
+template<> JSONIFIER_INLINE void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.testVals02, obj, "testVals02");
+	getValue(returnValue.testVals05, obj, "testVals05");
+	getValue(returnValue.testVals01, obj, "testVals01");
+	getValue(returnValue.testVals03, obj, "testVals03");
+	getValue(returnValue.testVals04, obj, "testVals04");
+}
+
+template<> JSONIFIER_INLINE void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.a, obj, "a");
+	getValue(returnValue.b, obj, "b");
+	getValue(returnValue.c, obj, "c");
+	getValue(returnValue.d, obj, "d");
+	getValue(returnValue.e, obj, "e");
+	getValue(returnValue.f, obj, "f");
+	getValue(returnValue.g, obj, "g");
+	getValue(returnValue.h, obj, "h");
+	getValue(returnValue.i, obj, "i");
+	getValue(returnValue.j, obj, "j");
+	getValue(returnValue.k, obj, "k");
+	getValue(returnValue.l, obj, "l");
+	getValue(returnValue.m, obj, "m");
+	getValue(returnValue.n, obj, "n");
+	getValue(returnValue.o, obj, "o");
+	getValue(returnValue.p, obj, "p");
+	getValue(returnValue.q, obj, "q");
+	getValue(returnValue.r, obj, "r");
+	getValue(returnValue.s, obj, "s");
+	getValue(returnValue.t, obj, "t");
+	getValue(returnValue.u, obj, "u");
+	getValue(returnValue.v, obj, "v");
+	getValue(returnValue.w, obj, "w");
+	getValue(returnValue.x, obj, "x");
+	getValue(returnValue.y, obj, "y");
+	getValue(returnValue.z, obj, "z");
+}
+
+template<> JSONIFIER_INLINE void getValue(partial_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.m, obj, "m");
 }
 
 #endif

@@ -48,26 +48,27 @@ namespace jsonifier_internal {
 		const char* iter{};
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE const char* getEndIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE const char* getBeginIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<const char*>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE const char* getEndIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE const char* getBeginIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<const char*>(value.data());
 	}
 
 	template<bool minified, jsonifier::parse_options, typename value_type, typename buffer_type, typename parse_context_type> struct parse_impl;
 
 	template<bool minified, jsonifier::parse_options options> struct parse {
-		template<typename buffer_type, typename value_type, typename parse_context_type> JSONIFIER_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
+		template<typename buffer_type, typename value_type, typename parse_context_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& iter) noexcept {
 			parse_impl<minified, options, std::remove_cvref_t<value_type>, buffer_type, parse_context_type>::impl(value, iter);
 		}
 	};
@@ -81,7 +82,7 @@ namespace jsonifier_internal {
 		parser(const parser& other)			   = delete;
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
+		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
 				.partialRead													= options.partialRead,
 				.knownOrder														= options.knownOrder,
@@ -113,7 +114,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
+		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
 				.partialRead													= options.partialRead,
 				.knownOrder														= options.knownOrder,

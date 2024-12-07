@@ -53,8 +53,8 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") || osCompilerIdNew.view().contains("g++") ||
-		osCompilerIdNew.view().contains("apple")) {
+	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") ||
+		osCompilerIdNew.view().contains("g++") || osCompilerIdNew.view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
 	} else if constexpr (osCompilerIdNew.view().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };

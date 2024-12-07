@@ -35,8 +35,8 @@ struct properties_data {
 };
 
 struct feature {
-	properties_data properties{};
 	std::string type{};
+	properties_data properties{};
 	geometry_data geometry{};
 };
 

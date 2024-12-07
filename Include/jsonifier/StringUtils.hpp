@@ -341,7 +341,7 @@ namespace jsonifier_internal {
 	}() };
 
 	template<jsonifier::parse_options options, typename iterator_type01, typename iterator_type02> struct string_parser {
-		JSONIFIER_INLINE static iterator_type02 shortImpl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE static iterator_type02 shortImpl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
 			using char_t01 =
 				typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 			using char_t02 =
@@ -383,7 +383,7 @@ namespace jsonifier_internal {
 			return string2;
 		}
 
-		JSONIFIER_INLINE static iterator_type02 impl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE static iterator_type02 impl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
 			using char_t01 =
 				typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
 			std::remove_const_t<char_t01> escapeChar;
@@ -633,7 +633,7 @@ namespace jsonifier_internal {
 			return string2;
 		}
 
-		JSONIFIER_INLINE static auto impl(iterator_type01 string1, iterator_type02 string2, size_t lengthNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE static auto impl(iterator_type01 string1, iterator_type02 string2, size_t lengthNew) noexcept {
 			uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			{
@@ -855,7 +855,7 @@ namespace jsonifier_internal {
 	}();
 
 	template<const auto options, typename context_type> struct derailleur {
-		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
+		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
 				++context.iter;
 				const auto newPtr = string_parser<options, decltype(context.iter), decltype(stringBuffer.data())>::impl(context.iter, stringBuffer.data(),

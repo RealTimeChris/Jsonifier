@@ -164,7 +164,6 @@ template<> struct jsonifier::core<twitter_message> {
 	static constexpr auto parseValue = createValue<&value_type::statuses, &value_type::search_metadata>();
 };
 
-
 template<> struct jsonifier::core<icon_emoji_data> {
 	using value_type				 = icon_emoji_data;
 	static constexpr auto parseValue = createValue<&value_type::name, &value_type::id>();
@@ -278,7 +277,7 @@ template<> struct jsonifier::core<test<test_struct>> {
 };
 
 template<> struct jsonifier::core<partial_test<test_struct>> {
-	using value_type				 = partial_test<test_struct>;
+	using value_type			= partial_test<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::m>();
 };
 

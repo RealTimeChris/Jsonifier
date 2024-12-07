@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
 					chunk = simd_internal::gatherValuesU<simd_type>(data);
-					mask  = simd_internal::opCmpEq(chunk, search_value);
+					mask  = static_cast<integer_type>(simd_internal::opCmpEq(chunk, search_value));
 					if JSONIFIER_UNLIKELY (mask != 0) {
 						data += simd_internal::postCmpTzcnt(mask);
 						return data;
