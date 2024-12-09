@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 			section.reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			const char** iter{ section.begin() };
+			string_view_ptr* iter{ section.begin() };
 			if (!iter) {
 				getErrors().emplace_back(
 					error::constructError<error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
@@ -80,8 +80,8 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		mutable const char* rootIter{};
-		mutable const char* endIter{};
+		mutable string_view_ptr rootIter{};
+		mutable string_view_ptr endIter{};
 		uint64_t index{};
 
 		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};

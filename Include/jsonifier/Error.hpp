@@ -134,7 +134,7 @@ namespace jsonifier_internal {
 
 	class error {
 	  public:
-		JSONIFIER_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew,
+		JSONIFIER_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			uint64_t typeNew) noexcept {
 			stringLength = static_cast<uint64_t>(stringLengthNew);
 			errorIndex	 = static_cast<uint64_t>(errorIndexNew);
@@ -147,7 +147,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<error_classes errorClassNew, auto typeNew> JSONIFIER_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, const char* stringViewNew,
+		template<error_classes errorClassNew, auto typeNew> JSONIFIER_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
 		}
@@ -226,7 +226,7 @@ namespace jsonifier_internal {
 		int64_t localIndex{};
 		uint64_t errorType{};
 		uint64_t line{};
-		const char* stringView{};
+		string_view_ptr stringView{};
 		uint8_t padding01[7]{};
 	};
 

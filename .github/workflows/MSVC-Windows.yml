@@ -31,22 +31,23 @@ jobs:
 
     - name: Configure CMake for Jsonifier
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
+            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
 
     - name: Build the Test
       run: |
-           cmake --build ./Build --config=${{matrix.build_type}} -v
+            cmake --build ./Build --config=${{matrix.build_type}} -v
 
     - name: Install the Test
       run: |
-           cmake --install ./Build --config=${{matrix.build_type}}
+            cmake --install ./Build --config=${{matrix.build_type}}
 
     - name: Run the Test
+      working-directory: C:/Program Files (x86)/Jsonifier/bin/
       run: |
-           "C:/Program Files (x86)/Jsonifier/bin/Json-Performance.exe"
+            ./Json-Performance
       continue-on-error: true
   

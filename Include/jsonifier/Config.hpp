@@ -23,7 +23,6 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/JsonifierCPUInstructions.hpp>
 #include <cstdint>
 #include <atomic>
 
@@ -142,24 +141,3 @@
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
 #endif
-
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY)
-	#include <immintrin.h>
-
-#endif
-
-#if defined(__APPLE__) && defined(__arm64__)
-	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC)
-	#include <intrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
-#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
-	#include <xmmintrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
-#else
-	#error "Compiler or architecture not supported for prefetching"
-#endif
-
-JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
-	JSONIFIER_PREFETCH(ptr)
-}

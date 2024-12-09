@@ -213,8 +213,7 @@ namespace jsonifier {
 		template<jsonifier::concepts::pointer_t value_type_newer>
 		JSONIFIER_ALWAYS_INLINE constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			auto rhsLength = jsonifier_internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
-			return rhsLength == lhs.size() &&
-				jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs)>>::compare(lhs.data(), rhs, rhsLength);
+			return rhsLength == lhs.size() && jsonifier_internal::comparison::compare(lhs.data(), rhs, rhsLength);
 		}
 
 		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_ALWAYS_INLINE constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
@@ -229,9 +228,7 @@ namespace jsonifier {
 				}();
 				return lhs.size() == rhs.size() && compareValues;
 			} else {
-				return rhs.size() == lhs.size() &&
-					jsonifier_internal::comparison<std::remove_reference_t<decltype(*lhs.data())>, std::remove_reference_t<decltype(*rhs.data())>>::compare(lhs.data(), rhs.data(),
-						rhs.size());
+				return rhs.size() == lhs.size() && jsonifier_internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
 			}
 		}
 
@@ -310,7 +307,7 @@ namespace jsonifier {
 		return oStream;
 	}
 
-	JSONIFIER_ALWAYS_INLINE constexpr string_view operator""_sv(const char* stringNew, size_t lengthNew) noexcept {
+	JSONIFIER_ALWAYS_INLINE constexpr string_view operator""_sv(string_view_ptr stringNew, size_t lengthNew) noexcept {
 		return string_view(stringNew, lengthNew);
 	}
 

@@ -54,14 +54,8 @@ namespace simd_internal {
 		return vdupq_n_u8(str);
 	}
 
-	template<simd_int_128_type simd_int_type_new, typename char_t> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_t* storageLocation) noexcept {
-		vst1q_u64(storageLocation, vreinterpretq_u64_u8(value));
-	}
-
-	template<simd_int_128_type simd_int_type_new, typename char_t>
-		requires(sizeof(char_t) == 1)
-	JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, char_t* storageLocation) noexcept {
-		vst1q_u8(storageLocation, value);
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_ALWAYS_INLINE void store(const simd_int_type_new& value, void* storageLocation) noexcept {
+		vst1q_u8(static_cast<uint8_t*>(storageLocation), value);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_ALWAYS_INLINE auto opCmpEq(const simd_int_t01& value, const simd_int_t02& other) noexcept {
@@ -105,7 +99,7 @@ namespace simd_internal {
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_ALWAYS_INLINE auto opShuffle(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		auto bitMask{ vdupq_n_u8(0x0F) };
+		const auto bitMask{ vdupq_n_u8(0x0F) };
 		return vqtbl1q_u8(value, vandq_u8(other, bitMask));
 	}
 

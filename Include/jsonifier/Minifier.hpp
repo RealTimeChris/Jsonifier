@@ -53,7 +53,7 @@ namespace jsonifier_internal {
 			rootIter			= dataPtr;
 			endIter				= dataPtr + in.size();
 			section.reset<false>(dataPtr, in.size());
-			const char** iter{ section.begin() };
+			string_view_ptr* iter{ section.begin() };
 			if (!*iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return std::remove_cvref_t<string_type>{};
@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 			rootIter			= dataPtr;
 			endIter				= dataPtr + in.size();
 			section.reset<false>(dataPtr, in.size());
-			const char** iter{ section.begin() };
+			string_view_ptr* iter{ section.begin() };
 			if (!*iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
@@ -98,8 +98,8 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		const char* rootIter{};
-		const char* endIter{};
+		string_view_ptr rootIter{};
+		string_view_ptr endIter{};
 
 		JSONIFIER_ALWAYS_INLINE size_t getSize() const {
 			return endIter - rootIter;

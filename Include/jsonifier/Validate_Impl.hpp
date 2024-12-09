@@ -164,9 +164,9 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::String, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
-			auto endPtr = static_cast<const char*>(*iter);
+			auto endPtr = static_cast<string_view_ptr>(*iter);
 			derailleur<options, iterator>::skipWs(newPtr);
 			if (newPtr == endPtr || *newPtr != '"') {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
@@ -220,14 +220,14 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Number, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
 			if (!*iter || (*newPtr == 0x30u && numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
-			auto endPtr = static_cast<const char*>(*iter);
+			auto endPtr = static_cast<string_view_ptr>(*iter);
 
 			derailleur<options, iterator>::skipWs(newPtr);
 
@@ -292,7 +292,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Bool, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
 			static constexpr char falseStr[]{ "false" };
 			static constexpr char trueStr[]{ "true" };
@@ -315,7 +315,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Null, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
 			derailleur<options, iterator>::skipWs(newPtr);
 			static constexpr char nullStr[]{ "null" };

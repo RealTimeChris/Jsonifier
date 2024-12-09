@@ -352,7 +352,7 @@ template<> JSONIFIER_INLINE void getValue(url_data& value, simdjson::ondemand::v
 	getValue(value.indices, obj, "indices");
 }
 
-template<> JSONIFIER_INLINE void getValue(user_mention& value, simdjson::ondemand::value jsonData) {
+template<> JSONIFIER_INLINE void getValue(user_mention_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(value.screen_name, obj, "screen_name");
 	getValue(value.name, obj, "name");

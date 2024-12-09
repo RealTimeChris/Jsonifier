@@ -24,7 +24,6 @@
 
 int32_t main() {
 	try {
-		std::cout << "CURRENT SIMD TYPE: " << typeid(jsonifier_simd_int_t).name() << std::endl;
 		tests::testFunction();
 
 	} catch (std::runtime_error& e) {

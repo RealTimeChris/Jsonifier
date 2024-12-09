@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 			index			= 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE const char* getRemainder() noexcept {
+		JSONIFIER_ALWAYS_INLINE string_view_ptr getRemainder() noexcept {
 			if JSONIFIER_UNLIKELY (length == index) {
 				return nullptr;
 			}
@@ -196,7 +196,6 @@ namespace jsonifier_internal {
 				newPtr[6] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 6));
 				newPtr[7] = simd_internal::gatherValuesU<jsonifier_simd_int_t>(values + (bytesPerStep * 7));
 			}
-			prefetchStringValues(values + bitsPerStep);
 		}
 
 		template<bool collectAligned, bool minified> JSONIFIER_ALWAYS_INLINE simd_internal::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
@@ -231,7 +230,7 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA)) };
-			jsonifier_simd_int_t potentialEscape = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
+			const jsonifier_simd_int_t potentialEscape = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			jsonifier_simd_int_t maybeEscaped{};
 			opShl(1, potentialEscape, maybeEscaped);
 			jsonifier_simd_int_t escapeAndTerminalCode = simd_internal::opXor(simd_internal::opSub(simd_internal::opOr(maybeEscaped, simdValue), potentialEscape), simdValue);
@@ -240,7 +239,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) noexcept {
-			auto escapedNew = nextIsEscaped;
+			const auto escapedNew = nextIsEscaped;
 			nextIsEscaped	= jsonifier_simd_int_t{};
 			escaped			= escapedNew;
 		}

@@ -28,26 +28,26 @@
 #include <type_traits>
 #include <utility>
 
-#if defined(TUPLET_NO_UNIQUE_ADDRESS) && !TUPLET_NO_UNIQUE_ADDRESS
-	#define TUPLET_NO_UNIQUE_ADDRESS
+#if defined(JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS) && !JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
+	#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 #else
 	#if _MSVC_LANG >= 202002L && (!defined __clang__)
 
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
-		#define TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 
 	#elif _MSC_VER
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
-		#define TUPLET_NO_UNIQUE_ADDRESS
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 
 	#elif __cplusplus > 201703L && (__has_cpp_attribute(no_unique_address))
 
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
-		#define TUPLET_NO_UNIQUE_ADDRESS [[no_unique_address]]
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS [[no_unique_address]]
 
 	#else
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
-		#define TUPLET_NO_UNIQUE_ADDRESS
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 	#endif
 #endif
 
@@ -104,7 +104,7 @@ namespace jsonifier_internal {
 	template<size_t I, typename value_type> struct tuple_elem {
 		using type = std::remove_cvref_t<value_type>;
 
-		TUPLET_NO_UNIQUE_ADDRESS type value;
+		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS type value;
 
 		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) & {
 			return (value);

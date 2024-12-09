@@ -486,6 +486,7 @@ namespace jsonifier_internal {
 		hash_map_construction_data<value_type> returnValues{};
 		if constexpr (tuple_size_v<core_tuple_t<value_type>> <= 6) {
 			constexpr bool typesUnique = areTypesUnique<value_type, 0, tuple_size_v<core_tuple_t<value_type>>>();
+			( void )typesUnique;
 			returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 			if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {
 				returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));

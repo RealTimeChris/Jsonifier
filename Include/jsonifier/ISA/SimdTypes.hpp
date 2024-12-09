@@ -29,6 +29,8 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
+#include <immintrin.h>
+
 using jsonifier_simd_int_128 = __m128i;
 using jsonifier_simd_int_256 = __m256i;
 using jsonifier_simd_int_512 = __m512i;
@@ -72,7 +74,7 @@ static constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 static constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
 using string_view_ptr	= const char*;
-using structural_index	= const char*;
+using structural_index	= string_view_ptr;
 using string_buffer_ptr = char*;
 
 template<typename value_type>
@@ -83,3 +85,19 @@ template<typename value_type>
 concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
 template<typename value_type>
 concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
+
+#if defined(JSONIFIER_MAC) && defined(__arm64__) 
+	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
+#elif defined(JSONIFIER_MSVC)
+	#include <intrin.h>
+	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
+#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	#include <xmmintrin.h>
+	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
+#else
+	#error "Compiler or architecture not supported for prefetching"
+#endif
+
+JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
+	JSONIFIER_PREFETCH(ptr)
+}

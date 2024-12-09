@@ -63,18 +63,17 @@ namespace tests {
 			results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
 			jsonifier::jsonifier_core parser{};
 			test_data_type testData{};
-			if constexpr (partialRead) {
-				parser.parseJson(testData, newBuffer);
-			}
+			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+			std::string newerBuffer{};
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
 			auto readResult = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<testName, jsonifierLibraryName, "teal">([&]() mutable {
 				parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 				bnch_swt::doNotOptimizeAway(testData);
-				return newBuffer.size();
+				return newerBuffer.size();
 			});
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
-			std::string_view newerBuffer{};
 			auto writeResult = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<testName, jsonifierLibraryName, "steelblue">([&]() mutable {
 				newerBuffer = parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData);
 				bnch_swt::doNotOptimizeAway(newerBuffer);
@@ -166,12 +165,16 @@ namespace tests {
 			static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> };
 			results_data r{ glazeLibraryName, testName, glazeCommitUrl, iterations };
 			test_data_type testData{};
-			if constexpr (partialRead) {
-				if (auto error =
-						glz::read<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newBuffer);
-					error) {
-					std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
-				}
+			if (auto error =
+					glz::read<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newBuffer);
+				error) {
+				std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
+			}
+			std::string newerBuffer{};
+			if (auto error =
+					glz::write<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
+				error) {
+				std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
 			}
 			auto readResult = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<testName, glazeLibraryName, "dodgerblue">([&]() mutable {
 				if (auto error = glz::read<glz::opts{ .error_on_unknown_keys = !partialRead,
@@ -184,9 +187,8 @@ namespace tests {
 					std::cout << "Glaze Error: " << glz::format_error(error, newBuffer) << std::endl;
 				}
 				bnch_swt::doNotOptimizeAway(testData);
-				return newBuffer.size();
+				return newerBuffer.size();
 			});
-			std::string newerBuffer{};
 			auto writeResult = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<testName, glazeLibraryName, "steelblue">([&]() mutable {
 				auto newResult = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
 				bnch_swt::doNotOptimizeAway(newResult);
@@ -271,19 +273,22 @@ namespace tests {
 			static constexpr bnch_swt::string_literal testNameRead{ testName + "-Read" };
 			results_data r{ simdjsonLibraryName, testName, simdjsonCommitUrl, iterations };
 			simdjson::ondemand::parser parser{};
+			jsonifier::jsonifier_core parserNew{};
 			test_data_type testData{};
-			auto readSize	= newBuffer.size();
+			getValue(testData, parser.iterate(newBuffer).value());
+			std::string newerBuffer{};
+			parserNew.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+			auto readSize	= newerBuffer.size();
 			auto readResult = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<testName, simdjsonLibraryName, "cadetblue">([&]() {
 				try {
 					getValue(testData, parser.iterate(newBuffer).value());
 					bnch_swt::doNotOptimizeAway(testData);
-					return newBuffer.size();
+					return newerBuffer.size();
 				} catch (std::exception& error) {
 					std::cout << "Simdjson Error: " << error.what() << std::endl;
-					return newBuffer.size();
+					return newerBuffer.size();
 				}
 			});
-			std::string newerBuffer{};
 			auto resultNew = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
 			( void )resultNew;
 			readSize = newerBuffer.size();

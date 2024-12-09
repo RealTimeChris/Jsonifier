@@ -109,8 +109,8 @@ template<> struct glz::meta<url_data> {
 	static constexpr auto value = object(&value_type::indices, &value_type::expanded_url, &value_type::display_url, &value_type::url);
 };
 
-template<> struct glz::meta<user_mention> {
-	using value_type			= user_mention;
+template<> struct glz::meta<user_mention_data> {
+	using value_type			= user_mention_data;
 	static constexpr auto value = object(&value_type::indices, &value_type::screen_name, &value_type::id_str, &value_type::name, &value_type::id);
 };
 

@@ -23,7 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Config.hpp>
+#include <jsonifier/ISA/SimdTypes.hpp>
 #include <jsonifier/Tuple.hpp>
 #include <type_traits>
 #include <functional>

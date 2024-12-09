@@ -65,7 +65,7 @@ namespace jsonifier_internal {
 			rootIter = dataPtr;
 			endIter	 = dataPtr + in.size();
 			section.reset<true>(dataPtr, in.size());
-			const char** iter{ section.begin() };
+			string_view_ptr* iter{ section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				getErrors().emplace_back(
 					error::constructError<error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 			rootIter			= dataPtr;
 			endIter				= dataPtr + in.size();
 			section.reset<true>(dataPtr, in.size());
-			const char** iter{ section.begin() };
+			string_view_ptr* iter{ section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				getErrors().emplace_back(
 					error::constructError<error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
@@ -114,8 +114,8 @@ namespace jsonifier_internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 		jsonifier::vector<json_structural_type> state{};
-		const char* rootIter{};
-		const char* endIter{};
+		string_view_ptr rootIter{};
+		string_view_ptr endIter{};
 
 		JSONIFIER_ALWAYS_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {
 			state.resize(64);

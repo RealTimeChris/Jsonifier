@@ -35,7 +35,7 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> struct parse_context {
 		JSONIFIER_INLINE constexpr parse_context() noexcept = default;
-		JSONIFIER_INLINE constexpr parse_context(const char* iterNew, const char* endNew) noexcept {
+		JSONIFIER_INLINE constexpr parse_context(string_view_ptr iterNew, string_view_ptr endNew) noexcept {
 			rootIter = iterNew;
 			iter	 = iterNew;
 			endIter	 = endNew;
@@ -43,25 +43,25 @@ namespace jsonifier_internal {
 		parser<derived_type>* parserPtr{};
 		int64_t currentObjectDepth{};
 		int64_t currentArrayDepth{};
-		const char* rootIter{};
-		const char* endIter{};
-		const char* iter{};
+		string_view_ptr rootIter{};
+		string_view_ptr endIter{};
+		string_view_ptr iter{};
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type value) noexcept {
-		return reinterpret_cast<const char*>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE string_view_ptr getEndIter(value_type value) noexcept {
+		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type value) noexcept {
-		return reinterpret_cast<const char*>(value);
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE string_view_ptr getBeginIter(value_type value) noexcept {
+		return reinterpret_cast<string_view_ptr>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getEndIter(value_type& value) noexcept {
-		return reinterpret_cast<const char*>(value.data() + value.size());
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE string_view_ptr getEndIter(value_type& value) noexcept {
+		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE const char* getBeginIter(value_type& value) noexcept {
-		return reinterpret_cast<const char*>(value.data());
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_ALWAYS_INLINE string_view_ptr getBeginIter(value_type& value) noexcept {
+		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
 	template<bool minified, jsonifier::parse_options, typename value_type, typename buffer_type, typename parse_context_type> struct parse_impl;
