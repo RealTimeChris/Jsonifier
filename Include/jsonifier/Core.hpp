@@ -97,19 +97,13 @@ namespace jsonifier_internal {
 		return createNewTupleImpl<value_type>(std::make_index_sequence<tupleRefs.size()>{});
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto coreTupleV{ createNewTuple<std::remove_cvref_t<value_type>>() };
-
-	template<typename value_type> using core_tuple_t = decltype(coreTupleV<value_type>);
-
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefsByLength{ collectTupleRefs(coreTupleV<value_type>) };
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
-
 	template<typename value_type> struct core_tuple_type {
-		static constexpr auto coreTupleVNew{ coreTupleV<value_type>};
-
+		static constexpr auto coreTupleV{ createNewTuple<std::remove_cvref_t<value_type>>() };
+		using core_type = decltype(coreTupleV);
 	};
 
-
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefsByLength{ collectTupleRefs(core_tuple_type<value_type>::coreTupleV) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 }// namespace jsonifier_internal

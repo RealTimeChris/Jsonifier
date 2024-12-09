@@ -83,10 +83,7 @@ namespace jsonifier_internal {
 
 		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
-			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
-				.partialRead													= options.partialRead,
-				.knownOrder														= options.knownOrder,
-				.minified														= options.minified };
+			static constexpr jsonifier::parse_options optionsNew{ options };
 			context.rootIter  = getBeginIter(in);
 			context.iter	  = context.rootIter;
 			context.endIter	  = getEndIter(in);
@@ -115,10 +112,7 @@ namespace jsonifier_internal {
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
 		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
-			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
-				.partialRead													= options.partialRead,
-				.knownOrder														= options.knownOrder,
-				.minified														= options.minified };
+			static constexpr jsonifier::parse_options optionsNew{ options };
 			context.rootIter  = getBeginIter(in);
 			context.iter	  = context.rootIter;
 			context.endIter	  = getEndIter(in);

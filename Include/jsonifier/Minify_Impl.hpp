@@ -152,5 +152,4 @@ namespace jsonifier_internal {
 		}
 	};
 
-
 }// namespace jsonifier_internal

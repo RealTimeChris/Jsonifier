@@ -469,7 +469,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t currentIndex, size_t maxIndex> constexpr bool areTypesUnique(std::array<size_t, 7> types = std::array<size_t, 7>{}) {
 		if constexpr (currentIndex < maxIndex) {
-			auto type = get<currentIndex>(coreTupleV<value_type>).type;
+			auto type = get<currentIndex>(core_tuple_type<value_type>::coreTupleV).type;
 			++types[static_cast<size_t>(type)];
 			return areTypesUnique<value_type, currentIndex + 1, maxIndex>(types);
 		} else {
@@ -484,8 +484,8 @@ namespace jsonifier_internal {
 
 	template<typename value_type> constexpr auto collectUniqueTypesHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
-		if constexpr (tuple_size_v<core_tuple_t<value_type>> <= 6) {
-			constexpr bool typesUnique = areTypesUnique<value_type, 0, tuple_size_v<core_tuple_t<value_type>>>();
+		if constexpr (tuple_size_v<typename core_tuple_type<value_type>::core_type> <= 6) {
+			constexpr bool typesUnique = areTypesUnique<value_type, 0, tuple_size_v<typename core_tuple_type<value_type>::core_type>>();
 			( void )typesUnique;
 			returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
 			if (returnValues.uniqueIndex != std::numeric_limits<size_t>::max()) {

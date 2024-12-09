@@ -322,7 +322,6 @@ namespace tests {
 			bnch_swt::file_loader::saveFile(newerBuffer, jsonOutPath + "/" + testName + "-simdjson.json");
 			r.writeResult = result<result_type::write>{ "cornflowerblue", newerBuffer.size(), writeResult };
 
-
 			return r;
 		}
 	};

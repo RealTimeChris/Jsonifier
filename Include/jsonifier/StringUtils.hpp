@@ -795,38 +795,33 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(string_view_ptr context) noexcept {
-		static constexpr auto tempString{ string };
-		static constexpr auto newString{ getStringAsInt<tempString>() };
-		if constexpr (tempString.size() % 2 == 0) {
-			convert_length_to_int_t<tempString.size()> newerString;
-			std::memcpy(&newerString, context, tempString.size());
-			return newString == newerString;
+	template<string_literal string> JSONIFIER_ALWAYS_INLINE bool compareStringAsInt(const char* src) {
+		static constexpr auto stringInt{ getStringAsInt<string>() };
+		if constexpr (string.size() == 4) {
+			uint32_t sourceVal;
+			std::memcpy(&sourceVal, src, string.size());
+			return sourceVal ^ stringInt;
 		} else {
-			convert_length_to_int_t<tempString.size()> newerString{};
-			std::memcpy(&newerString, context, tempString.size());
-			return newString == newerString;
+			uint64_t sourceVal{};
+			std::memcpy(&sourceVal, src, string.size());
+			return sourceVal ^ stringInt;
 		}
 	}
 
 	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_ALWAYS_INLINE bool parseBool(bool_type& value, context_type& context) noexcept {
-		if (*context == 't' && compareStringAsInt<"true">(context)) {
-			value = true;
-			context += 4;
+		const auto notTrue	= compareStringAsInt<"true">(context);
+		const auto notFalse = compareStringAsInt<"false">(context);
+		if JSONIFIER_LIKELY (!(notTrue && notFalse)) {
+			value = !notTrue;
+			context += 4 + notTrue;
 			return true;
 		} else {
-			if JSONIFIER_LIKELY (compareStringAsInt<"false">(context)) {
-				value = false;
-				context += 5;
-				return true;
-			} else {
-				return false;
-			}
+			return false;
 		}
 	}
 
 	template<typename context_type> JSONIFIER_ALWAYS_INLINE bool parseNull(context_type& context) noexcept {
-		if JSONIFIER_LIKELY (compareStringAsInt<"null">(context)) {
+		if JSONIFIER_LIKELY (!compareStringAsInt<"null">(context)) {
 			context += 4;
 			return true;
 		} else {

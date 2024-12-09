@@ -230,10 +230,16 @@ static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDE
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 
-	template<typename value_type01, typename value_type02> static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
-		std::uniform_real_distribution<value_type01> dis{ start, static_cast<value_type01>(end) };
-		return dis(gen);
-	}
+	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
+	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
+	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
+	inline static std::uniform_int_distribution<size_t> disUint{ std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max() };
+	inline static std::uniform_int_distribution<size_t> disCharSet{ 0ull, charset.size() - 1 };
+	inline static std::uniform_int_distribution<size_t> disString{ 32ull, 64ull };
+	inline static std::uniform_int_distribution<size_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
+	inline static std::uniform_int_distribution<size_t> disBool{ 0, 100 };
+	inline static std::random_device randomEngine{};
+	inline static std::mt19937_64 gen{ randomEngine() };
 
 	template<jsonifier::concepts::integer_t value_type01, jsonifier::concepts::integer_t value_type02>
 	static value_type01 randomizeNumberUniform(value_type01 start, value_type02 end) {
@@ -242,12 +248,12 @@ template<typename value_type> struct test_generator {
 	}
 
 	static void insertUnicodeInJSON(std::string& jsonString) {
-		auto newStringView = unicode_emoji::unicodeEmoji[randomizeNumberUniform(0ull, std::size(unicode_emoji::unicodeEmoji) - 1)];
+		auto newStringView = unicode_emoji::unicodeEmoji[disUnicodeEmoji(gen)];
 		jsonString += static_cast<std::string>(newStringView);
 	}
 
 	static std::string generateString() {
-		auto length{ randomizeNumberUniform(32ull, 64ull) };
+		auto length{ disString(gen) };
 		constexpr size_t charsetSize = charset.size();
 		auto unicodeCount			 = length / 4ull;
 		std::vector<size_t> unicodeIndices{};
@@ -274,33 +280,30 @@ template<typename value_type> struct test_generator {
 				insertedUnicode++;
 				++iter;
 			} else {
-				result += charset[randomizeNumberUniform(0ull, charsetSize - 1)];
+				result += charset[disCharSet(gen)];
 			}
 		}
 
 		return result;
-	}
+	}	
 
 	static double generateDouble() {
-		double min = std::numeric_limits<double>::min();
-		double max = std::numeric_limits<double>::max();
-		std::uniform_real_distribution<double> dis(log(min), log(max));
-		double logValue = dis(gen);
+		double logValue = disDouble(gen);
 		bool negative{ generateBool() };
 		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
 
 	static bool generateBool() {
-		return static_cast<bool>(randomizeNumberUniform(0, 100) >= 50);
-	};
+		return static_cast<bool>(disBool(gen) >= 50);
+	}
 
 	static size_t generateUint() {
-		return randomizeNumberUniform(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max());
-	};
+		return disUint(gen);
+	}
 
 	static int64_t generateInt() {
-		return randomizeNumberUniform(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max());
-	};
+		return disInt(gen);
+	}
 
 	test_generator() {
 		auto fill = [&](auto& v) {

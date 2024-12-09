@@ -466,7 +466,6 @@ template<> JSONIFIER_INLINE void getValue(twitter_message& value, simdjson::onde
 	getValue(value.search_metadata, obj, "search_metadata");
 }
 
-
 template<> JSONIFIER_INLINE void getValue(audience_sub_category_names& p, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(p.the337100890, obj, "337100890");
