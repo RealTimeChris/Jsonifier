@@ -47,7 +47,6 @@ namespace jsonifier_internal {
 					   if constexpr (currentIndex < maxIndex) {
 						   constexpr auto subTuple	  = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 						   constexpr auto key		  = subTuple.view();
-						   using member_type		  = typename std::remove_cvref_t<decltype(subTuple)>::member_type;
 						   constexpr auto unQuotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key);
 						   constexpr auto quotedKey	  = unQuotedKey + string_literal{ "\": " };
 						   pairNew += quotedKey.size();
@@ -110,7 +109,7 @@ namespace jsonifier_internal {
 
 	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_ALWAYS_INLINE static constexpr auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_ALWAYS_INLINE static auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			if constexpr (currentIndex < maxIndex) {
 				static constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 				static constexpr auto numMembers{ tuple_size_v<core_tuple_t<value_type>> };
@@ -154,14 +153,10 @@ namespace jsonifier_internal {
 				}
 			}
 			return;
-		};
-
-		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndicesImpl(std::index_sequence<indices...>, arg_types&&... args) {
-			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE static void executeIndices(arg_types&&... args) {
-			executeIndicesImpl(std::make_index_sequence<maxIndex>{}, std::forward<arg_types>(args)...);
+		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndices(std::index_sequence<indices...>, arg_types&&... args) {
+			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
 		}
 	};
 
@@ -196,7 +191,7 @@ namespace jsonifier_internal {
 					++index;
 				}
 
-				index_processor_serialize<numMembers, options>::executeIndices(value, buffer, index, indent);
+				index_processor_serialize<numMembers, options>::executeIndices(std::make_index_sequence<numMembers>{}, value, buffer, index, indent);
 
 				if constexpr (options.prettify) {
 					dataPtr = buffer.data();
@@ -233,7 +228,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues02{ ": " };
 		static constexpr auto packedValues03{ ",\n" };
 		static constexpr auto packedValues04{ "{}" };
-		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() };
 			auto* dataPtr = buffer.data();
@@ -337,7 +332,7 @@ namespace jsonifier_internal {
 	template<jsonifier::serialize_options options, jsonifier::concepts::tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
 	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
 		static constexpr auto packedValues01{ "[]" };
-		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto additionalSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			if (buffer.size() <= index + additionalSize) {
 				buffer.resize((index + additionalSize) * 2);
@@ -396,7 +391,7 @@ namespace jsonifier_internal {
 		static constexpr auto packedValues01{ "[\n" };
 		static constexpr auto packedValues02{ ",\n" };
 		static constexpr auto packedValues03{ "[]" };
-		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			auto* dataPtr = buffer.data();

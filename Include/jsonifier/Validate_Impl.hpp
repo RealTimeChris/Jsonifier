@@ -32,16 +32,14 @@ namespace jsonifier_internal {
 	template<typename derived_type> struct validate_impl<json_structural_type::Object_Start, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
 			if (!*iter || **iter != '{') {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Object_Start>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 			++depth;
 			++iter;
 			if (!*iter) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Object_Start>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -53,15 +51,13 @@ namespace jsonifier_internal {
 
 			while (*iter) {
 				if (!validate_impl<json_structural_type::String, derived_type>::impl(iter, validatorRef)) {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_String_Characters>(
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 
 				if (!*iter || **iter != ':') {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Colon>(
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Colon>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
@@ -77,24 +73,21 @@ namespace jsonifier_internal {
 					if (!*iter || **iter == '}') {
 						++iter;
 						if (*iter && **iter != ',' && **iter != ']' && **iter != '}') {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
 						}
 						--depth;
 						return true;
 					} else {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+						validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 							getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					}
 				}
 			}
 			if (!*iter || (**iter != ',' && **iter != '}')) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -106,8 +99,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> struct validate_impl<json_structural_type::Array_Start, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
 			if (!*iter || **iter != '[') {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Array_Start>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Array_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -115,8 +107,7 @@ namespace jsonifier_internal {
 			++iter;
 
 			if (!*iter) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Array_Start>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Array_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -136,24 +127,21 @@ namespace jsonifier_internal {
 					if (*iter && **iter == ']') {
 						++iter;
 						if (*iter && **iter != ',' && **iter != ']' && **iter != '}') {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
 						}
 						--depth;
 						return true;
 					} else {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+						validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 							getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					}
 				}
 			}
 			if (!*iter || (**iter != ',' && **iter != ']')) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -181,8 +169,7 @@ namespace jsonifier_internal {
 			auto endPtr = static_cast<const char*>(*iter);
 			derailleur<options, iterator>::skipWs(newPtr);
 			if (newPtr == endPtr || *newPtr != '"') {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_String_Characters>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -198,25 +185,21 @@ namespace jsonifier_internal {
 							++newPtr;
 							for (uint64_t i = 0ull; i < 4ull; ++i) {
 								if (!hexDigits[static_cast<uint64_t>(*newPtr)]) {
-									static constexpr auto sourceLocation{ std::source_location::current() };
-									validatorRef.getErrors().emplace_back(
-										error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Escape_Characters>(
-											getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+									validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Escape_Characters>(
+										getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 									return false;
 								}
 								++newPtr;
 							}
 						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Escape_Characters>(
+							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Escape_Characters>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
 						}
 					}
 				} else {
 					if (static_cast<uint8_t>(*newPtr) < 0x20u) {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_String_Characters>(
+						validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 							getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					} else {
@@ -226,8 +209,7 @@ namespace jsonifier_internal {
 			}
 
 			if (*newPtr != '"') {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_String_Characters>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -241,8 +223,7 @@ namespace jsonifier_internal {
 			auto newPtr = static_cast<const char*>(*iter);
 			++iter;
 			if (!*iter || (*newPtr == 0x30u && numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -283,8 +264,7 @@ namespace jsonifier_internal {
 
 			if (consumeChar(0x2Eu)) {
 				if (!*iter || !consumeDigits(1)) {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
@@ -294,16 +274,14 @@ namespace jsonifier_internal {
 				consumeSign();
 				didWeFail = !consumeDigits(1);
 				if (!*iter || didWeFail) {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 			}
 			derailleur<options, iterator>::skipWs(newPtr);
 			if (newPtr != endPtr) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Number_Value>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -325,8 +303,7 @@ namespace jsonifier_internal {
 				if (*iter && std::memcmp(newPtr, falseStr, std::strlen(falseStr)) == 0) {
 					newPtr += std::size(falseStr) - 1;
 				} else {
-					static constexpr auto sourceLocation{ std::source_location::current() };
-					validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Bool_Value>(
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Bool_Value>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
@@ -346,8 +323,7 @@ namespace jsonifier_internal {
 			if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {
 				newPtr += std::size(nullStr) - 1;
 			} else {
-				static constexpr auto sourceLocation{ std::source_location::current() };
-				validatorRef.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Validating, validate_errors::Invalid_Null_Value>(
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Null_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}

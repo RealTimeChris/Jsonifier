@@ -47,8 +47,7 @@ namespace jsonifier_internal {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_String_Length>(
+							minifier.getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::Invalid_String_Length>(
 								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
 							return std::numeric_limits<uint32_t>::max();
 						}
@@ -87,8 +86,7 @@ namespace jsonifier_internal {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
-							static constexpr auto sourceLocation{ std::source_location::current() };
-							minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Invalid_Number_Value>(
+							minifier.getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::Invalid_Number_Value>(
 								static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
 							return std::numeric_limits<uint32_t>::max();
 						}
@@ -138,8 +136,7 @@ namespace jsonifier_internal {
 						return index;
 					}
 					default: {
-						static constexpr auto sourceLocation{ std::source_location::current() };
-						minifier.getErrors().emplace_back(error::constructError<sourceLocation, error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
+						minifier.getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(getUnderlyingPtr(iter) - minifier.rootIter), static_cast<int64_t>(minifier.endIter - minifier.rootIter), minifier.rootIter));
 						return std::numeric_limits<uint32_t>::max();
 					}

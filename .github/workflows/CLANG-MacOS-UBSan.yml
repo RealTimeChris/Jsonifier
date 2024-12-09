@@ -32,24 +32,20 @@ jobs:
             brew install nasm
 
     - name: Configure CMake
-      working-directory: ./
       run: |
            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DUBSAN=TRUE
 
     - name: Build the Test
-      working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}}
+           cmake --build ./Build --config=${{matrix.build_type}} -v
 
-    - name: Install the Test
-      working-directory: ./Build
+    - name: Install the Test\
       run: |
-           sudo cmake --install . --config=${{matrix.build_type}}
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
       run: |
-           ./Json-Performance
+           ./Build/Source/Json-Performance
       continue-on-error: true
 
   Build-Fallback:
@@ -76,23 +72,19 @@ jobs:
             brew install nasm
 
     - name: Configure CMake
-      working-directory: ./
       run: |
            cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DUBSAN=TRUE -DJSONIFIER_CPU_INSRTUCTIONS=0
 
     - name: Build the Test
-      working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}}
+           cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
-      working-directory: ./Build
       run: |
-           sudo cmake --install . --config=${{matrix.build_type}}
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Tests
       run: |
-           ./Json-Performance
+           ./Build/Source/Json-Performance
       continue-on-error: true
       

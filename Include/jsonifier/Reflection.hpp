@@ -30,6 +30,41 @@
 
 namespace jsonifier_internal {
 
+	enum class json_type {
+		object	= 0,
+		array	= 1,
+		string	= 2,
+		number	= 3,
+		boolean = 4,
+		null	= 5,
+		unset	= 6,
+	};
+
+	template<typename value_type>
+	concept has_value_type = requires() { typename value_type::value_type; };
+
+	template<typename value_type> static constexpr auto getJsonType() {
+		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
+			return json_type::object;
+		} else if constexpr (jsonifier::concepts::raw_array_t<value_type> || jsonifier::concepts::tuple_t<value_type> || jsonifier::concepts::vector_t<value_type>) {
+			return json_type::array;
+		} else if constexpr (jsonifier::concepts::string_t<value_type> || jsonifier::concepts::string_view_t<value_type>) {
+			return json_type::string;
+		} else if constexpr (jsonifier::concepts::bool_t<value_type>) {
+			return json_type::boolean;
+		} else if constexpr (jsonifier::concepts::num_t<value_type> || jsonifier::concepts::enum_t<value_type>) {
+			return json_type::number;
+		} else if constexpr (jsonifier::concepts::always_null_t<value_type>) {
+			return json_type::null;
+		} else if constexpr (has_value_type<value_type>) {
+			return getJsonType<typename value_type::value_type>();
+		} else if constexpr (jsonifier::concepts::pointer_t<value_type>) {
+			return getJsonType<std::remove_pointer_t<value_type>>();
+		} else {
+			return json_type::unset;
+		}
+	}
+
 	template<typename member_type, typename class_type> struct member_pointer {
 		member_type class_type::* ptr{};
 
@@ -46,12 +81,13 @@ namespace jsonifier_internal {
 		member_pointer<member_type, class_type> memberPtr{};
 		uint8_t padding[4]{};
 		jsonifier::string_view name{};
+		json_type type{};
 
 		constexpr data_member() noexcept {
 		}
 
-		constexpr data_member(jsonifier::string_view str, member_type class_type::* ptr) noexcept : memberPtr(ptr), name(str) {
-		}
+		constexpr data_member(jsonifier::string_view str, member_type class_type::*ptr) noexcept
+			: memberPtr{ ptr }, name{ str }, type{ getJsonType<std::remove_cvref_t<member_type>>() } {};
 
 		constexpr auto& view() const noexcept {
 			return name;
@@ -138,34 +174,6 @@ namespace jsonifier_internal {
 		return make_static<stringLiteralFromView<newString.size()>(newString)>::value.view();
 	}
 
-	template<size_t count> constexpr auto collectStringLiteralSize(const array<jsonifier::string_view, count>& strings) {
-		size_t currentSize{};
-		for (auto& value: strings) {
-			currentSize += value.size();
-		}
-		return currentSize;
-	}
-
-	template<size_t count, size_t newSize> constexpr auto collectStringLiterals(const array<jsonifier::string_view, count>& strings) {
-		array<char, newSize> returnValues01{};
-		size_t currentOffset{};
-		for (auto& value: strings) {
-			std::copy(value.begin(), value.end(), returnValues01.data() + currentOffset);
-			currentOffset += value.size();
-		}
-		return returnValues01;
-	}
-
-	template<size_t count, size_t newSize> constexpr auto collectStringViews(const array<jsonifier::string_view, count>& strings, const array<char, newSize>& values) {
-		array<jsonifier::string_view, count> returnValues02{};
-		size_t currentOffset{};
-		for (size_t x = 0; x < strings.size(); ++x) {
-			returnValues02[x] = jsonifier::string_view{ values.data() + currentOffset, strings[x].size() };
-			currentOffset += strings[x].size();
-		}
-		return returnValues02;
-	}
-
 	/**
 	 * @brief Get the names of multiple member pointers.
 	 *
@@ -175,11 +183,7 @@ namespace jsonifier_internal {
 	 * @return An array of member pointer names.
 	 */
 	template<auto... args> constexpr auto getNames() noexcept {
-		constexpr auto returnValues = array<jsonifier::string_view, sizeof...(args)>{ getName<args>()... };
-		constexpr auto newSize		= collectStringLiteralSize(returnValues);
-		constexpr auto newValues	= collectStringLiterals<sizeof...(args), newSize>(returnValues);
-		auto& newRef				= make_static<newValues>::value;
-		return collectStringViews(returnValues, newRef);
+		return array<jsonifier::string_view, sizeof...(args)>{ getName<args>()... };
 	}
 
 	/**

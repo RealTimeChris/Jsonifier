@@ -102,19 +102,19 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t I, typename value_type> struct tuple_elem {
-		using type = value_type;
+		using type = std::remove_cvref_t<value_type>;
 
-		TUPLET_NO_UNIQUE_ADDRESS value_type value;
+		TUPLET_NO_UNIQUE_ADDRESS type value;
 
-		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) & {
+		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) & {
 			return (value);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) const& {
+		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) const& {
 			return (value);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) operator[](tag<I>) && {
+		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) && {
 			return (static_cast<tuple_elem&&>(*this).value);
 		}
 	};
@@ -142,7 +142,7 @@ namespace jsonifier_internal {
 
 	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
 
-	template<size_t I, indexable tup> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) get(tup&& tupleVal) {
+	template<size_t I, indexable tup> JSONIFIER_INLINE constexpr decltype(auto) get(tup&& tupleVal) {
 		return static_cast<tup&&>(tupleVal)[tag<I>()];
 	}
 

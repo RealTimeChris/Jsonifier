@@ -67,9 +67,8 @@ namespace jsonifier_internal {
 			endIter	 = in.data() + in.size();
 			const char** iter{ section.begin() };
 			if (!iter) {
-				static constexpr auto sourceLocation{ std::source_location::current() };
 				getErrors().emplace_back(
-					error::constructError<sourceLocation, error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+					error::constructError<error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
 			auto result = impl(iter, index, *this);

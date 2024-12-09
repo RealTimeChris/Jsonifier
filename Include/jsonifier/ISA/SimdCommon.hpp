@@ -228,7 +228,8 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<auto c> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
+	template<auto cNew> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
+		static constexpr auto c{ cNew };
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(c) };
 		valuesNew[0] = simd_internal::opCmpEqBitMask(simdValue, values[0]);

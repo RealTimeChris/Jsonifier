@@ -32,7 +32,6 @@
 #elif defined(_MSC_VER)
 	#pragma warning(disable : 4820)
 	#pragma warning(disable : 4371)
-	#pragma warning(disable : 4324)
 	#define JSONIFIER_MSVC 1
 #elif defined(__GNUC__) && !defined(__clang__)
 	#define JSONIFIER_GNUCXX 1
@@ -45,6 +44,12 @@
 	#else
 		#define JSONIFIER_REGULAR_VISUAL_STUDIO 1
 	#endif
+#endif
+
+#if (defined(__x86_64__) || defined(_M_AMD64)) && !defined(_M_ARM64EC)
+	#define JSONIFIER_IS_X86_64 1
+#else
+	#define JSONIFIER_IS_ARM64 1
 #endif
 
 #define JSONIFIER_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
@@ -77,6 +82,19 @@
 	#define JSONIFIER_ELSE_UNLIKELY(...) __VA_ARGS__ [[unlikely]]
 #endif
 
+#if defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	#define JSONIFIER_ASSUME(x) \
+		do { \
+			if (!(x)) \
+				__builtin_unreachable(); \
+		} while (0)
+#elif defined(JSONIFIER_MSVC)
+	#include <intrin.h>
+	#define JSONIFIER_ASSUME(x) __assume(x)
+#else
+	#define JSONIFIER_ASSUME(x) (( void )0)
+#endif
+
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
 	#define JSONIFIER_HAS_INLINE_VARIABLE 1
 #elif __cplusplus >= 201703L
@@ -95,20 +113,28 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
+		#define JSONIFIER_ALWAYS_NO_INLINE [[msvc::noinline]]
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
+		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
+		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
 		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
+	#define JSONIFIER_ALWAYS_NO_INLINE
 	#define JSONIFIER_ALWAYS_INLINE inline
+	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
 	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif

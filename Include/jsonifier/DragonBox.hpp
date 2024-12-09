@@ -2976,50 +2976,50 @@ namespace jsonifier_jkj {
 
 			// Policy kind detectors.
 			struct is_sign_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::sign_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::sign_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 			struct is_trailing_zero_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::trailing_zero_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::trailing_zero_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 			struct is_decimal_to_binary_rounding_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::decimal_to_binary_rounding_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 			struct is_binary_to_decimal_rounding_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::binary_to_decimal_rounding_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 			struct is_cache_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::cache_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::cache_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};
 			struct is_preferred_integer_types_policy {
-				constexpr bool operator()(...) noexcept {
+				JSONIFIER_ALWAYS_INLINE constexpr bool operator()(...) noexcept {
 					return false;
 				}
-				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> constexpr bool operator()(dummy<Policy>) noexcept {
+				template<typename Policy, typename = typename Policy::preferred_integer_types_policy> JSONIFIER_ALWAYS_INLINE constexpr bool operator()(dummy<Policy>) noexcept {
 					return true;
 				}
 			};

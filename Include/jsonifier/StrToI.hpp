@@ -35,11 +35,12 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE uint64_t powerOfTenUint[]{ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000, 100000000000, 1000000000000,
-		10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000, 10000000000000000000 };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE uint64_t powerOfTenUint[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull,
+		10000000000ull, 100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull,
+		1000000000000000000ull, 10000000000000000000ull };
 
-	JSONIFIER_ALWAYS_INLINE_VARIABLE int64_t powerOfTenInt[]{ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000, 100000000000, 1000000000000,
-		10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000 };
+	JSONIFIER_ALWAYS_INLINE_VARIABLE int64_t powerOfTenInt[]{ 1ll, 10ll, 100ll, 1000ll, 10000ll, 100000ll, 1000000ll, 10000000ll, 100000000ll, 1000000000ll, 10000000000ll,
+		100000000000ll, 1000000000000ll, 10000000000000ll, 100000000000000ll, 1000000000000000ll, 10000000000000000ll, 100000000000000000ll, 1000000000000000000ll };
 
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsPos{ [] {
 		constexpr auto maxValue{ (std::numeric_limits<std::decay_t<value_type>>::max)() };
@@ -57,7 +58,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsNeg{ [] {
+	JSONIFIER_ALWAYS_INLINE_VARIABLE array<uint64_t, 256> rawCompValsNeg{ [] {
 		constexpr auto maxValue{ uint64_t((std::numeric_limits<int64_t>::max)()) + 1 };
 		array<uint64_t, 256> returnValues{};
 		returnValues['0'] = (maxValue - 0) / 10;
@@ -614,7 +615,7 @@ namespace jsonifier_internal {
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
 				if constexpr (negative) {
-					if (static_cast<uint64_t>(value) > static_cast<uint64_t>(rawCompValsNeg<value_type>[numTmp])) {
+					if (static_cast<uint64_t>(value) > static_cast<uint64_t>(rawCompValsNeg[numTmp])) {
 						return nullptr;
 					}
 					value *= -1;
@@ -661,26 +662,30 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
-			if (*iter == minus) {
-				++iter;
-				const uint8_t* resultPtr{ parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter)) };
-				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-					return true;
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
+			if JSONIFIER_LIKELY (iter < end) {
+				if (*iter == minus) {
+					++iter;
+					const uint8_t* resultPtr = parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter));
+					if JSONIFIER_LIKELY (resultPtr) {
+						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						return true;
+					} else {
+						value = 0;
+						return false;
+					}
 				} else {
-					value = 0;
-					return false;
+					const uint8_t* resultPtr = parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter));
+					if JSONIFIER_LIKELY (resultPtr) {
+						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						return true;
+					} else {
+						value = 0;
+						return false;
+					}
 				}
 			} else {
-				const uint8_t* resultPtr{ parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter)) };
-				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-					return true;
-				} else {
-					value = 0;
-					return false;
-				}
+				return false;
 			}
 		}
 	};
@@ -1109,13 +1114,17 @@ namespace jsonifier_internal {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter) noexcept {
-			auto resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
-			if JSONIFIER_LIKELY (resultPtr) {
-				iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
-				return true;
+		JSONIFIER_ALWAYS_INLINE static bool parseInt(value_type& value, const char*& iter, const char* end) noexcept {
+			if JSONIFIER_LIKELY (iter < end) {
+				const uint8_t* resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
+				if JSONIFIER_LIKELY (resultPtr) {
+					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+					return true;
+				} else {
+					value = 0;
+					return false;
+				}
 			} else {
-				value = 0;
 				return false;
 			}
 		}

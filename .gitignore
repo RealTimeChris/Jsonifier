@@ -35,3 +35,9 @@ out/
 CMake/Build/
 Install/
 Build/
+Graphs/
+Tests/Graphs/
+Json/Windows-MSVC/
+Tests/ReadMe.mdWindows-MSVC.md
+Windows-MSVC.md
+Json/Windows-MSVC/
