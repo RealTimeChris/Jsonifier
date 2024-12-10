@@ -572,6 +572,7 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> : derailleur<options, parse_context_type> {
 		using base = derailleur<options, parse_context_type>;
+		inline static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBrace) {
@@ -581,7 +582,6 @@ namespace jsonifier_internal {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 						parse<false, options>::template impl<buffer_type>(key, context);
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -624,7 +624,6 @@ namespace jsonifier_internal {
 					if (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
-						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 						parse<false, options>::template impl<buffer_type>(key, context);
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -779,9 +778,10 @@ namespace jsonifier_internal {
 		template<bool newLines> JSONIFIER_ALWAYS_INLINE static void parseObjects(value_type& value, parse_context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
 			if JSONIFIER_LIKELY (const size_t size = value.size(); size > 0) {
 				auto iterNew = value.begin();
+				auto end	 = value.end();
 
-				for (size_t i = 0; i < size; ++i) {
-					parse<false, options>::template impl<buffer_type>(*(iterNew++), context);
+				for (; iterNew < end; ++iterNew) {
+					parse<false, options>::template impl<buffer_type>(*(iterNew), context);
 
 					if JSONIFIER_LIKELY (context.iter < context.endIter) {
 						if JSONIFIER_LIKELY (*context.iter == comma) {
@@ -793,7 +793,7 @@ namespace jsonifier_internal {
 								++context.iter;
 								JSONIFIER_SKIP_WS()
 								--context.currentArrayDepth;
-								return (value.size() == i + 1) ? noop() : value.resize(i + 1);
+								return (value.size() == (end - iterNew) + 1) ? noop() : value.resize((end - iterNew) + 1);
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
 								context.parserPtr->template reportError<parse_errors::Imbalanced_Array_Brackets>(context);
@@ -851,24 +851,32 @@ namespace jsonifier_internal {
 					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBracket) {
 						if JSONIFIER_LIKELY (const size_t size = value.size(); size > 0) {
 							auto iterNew = value.begin();
+							auto end	 = value.end();
 
-							for (size_t i = 0; i < size; ++i) {
-								parse<true, options>::template impl<buffer_type>(*(iterNew++), context);
+							for (; iterNew < end; ++iterNew) {
+								parse<true, options>::template impl<buffer_type>(*(iterNew), context);
 
-								if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == comma) {
-									++context.iter;
-								}
-								JSONIFIER_ELSE_UNLIKELY(else) {
-									if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == rBracket) {
+								if JSONIFIER_LIKELY (context.iter < context.endIter) {
+									if JSONIFIER_LIKELY (*context.iter == comma) {
 										++context.iter;
-										--context.currentArrayDepth;
-										return (value.size() == i + 1) ? noop() : value.resize(i + 1);
 									}
 									JSONIFIER_ELSE_UNLIKELY(else) {
-										context.parserPtr->template reportError<parse_errors::Imbalanced_Array_Brackets>(context);
-										base::template skipToNextValue<value_type>(context);
-										return;
+										if JSONIFIER_LIKELY (*context.iter == rBracket) {
+											++context.iter;
+											--context.currentArrayDepth;
+											return (value.size() == (end - iterNew) + 1) ? noop() : value.resize((end - iterNew) + 1);
+										}
+										JSONIFIER_ELSE_UNLIKELY(else) {
+											context.parserPtr->template reportError<parse_errors::Imbalanced_Array_Brackets>(context);
+											base::template skipToNextValue<value_type>(context);
+											return;
+										}
 									}
+								}
+								JSONIFIER_ELSE_UNLIKELY(else) {
+									context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
+									base::template skipToNextValue<value_type>(context);
+									return;
 								}
 							}
 						}

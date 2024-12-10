@@ -230,37 +230,37 @@ namespace jsonifier_internal {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l;
 				std::memcpy(&l, str, 8);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 7) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 7);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 6) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 6);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 5) {
 				static constexpr uint32_t valuesNew{ static_cast<uint32_t>(packValues<stringLiteral>()) };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (l == valuesNew) && (str[4] == stringLiteral[4]);
+				return !(l ^ valuesNew) && (str[4] == stringLiteral[4]);
 			} else if constexpr (newCount == 4) {
 				static constexpr uint32_t valuesNew{ static_cast<uint32_t>(packValues<stringLiteral>()) };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 3) {
 				static constexpr uint16_t valuesNew{ static_cast<uint16_t>(packValues<stringLiteral>()) };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (l == valuesNew) && (str[2] == stringLiteral[2]);
+				return !(l ^ valuesNew) && (str[2] == stringLiteral[2]);
 			} else if constexpr (newCount == 2) {
 				static constexpr uint16_t valuesNew{ static_cast<uint16_t>(packValues<stringLiteral>()) };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 1) {
 				return *str == stringLiteral[0];
 			} else {
