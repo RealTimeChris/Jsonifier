@@ -572,6 +572,7 @@ namespace jsonifier_internal {
 	template<jsonifier::parse_options options, jsonifier::concepts::map_t value_type, typename buffer_type, typename parse_context_type>
 	struct parse_impl<false, options, value_type, buffer_type, parse_context_type> : derailleur<options, parse_context_type> {
 		using base = derailleur<options, parse_context_type>;
+		inline static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type& value, parse_context_type& context) noexcept {
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBrace) {
@@ -581,7 +582,6 @@ namespace jsonifier_internal {
 						const auto wsStart = context.iter;
 						JSONIFIER_SKIP_WS();
 						size_t wsSize{ static_cast<size_t>(context.iter - wsStart) };
-						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 						parse<false, options>::template impl<buffer_type>(key, context);
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -624,7 +624,6 @@ namespace jsonifier_internal {
 					if (*context.iter == comma) {
 						++context.iter;
 						JSONIFIER_SKIP_MATCHING_WS();
-						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
 						parse<false, options>::template impl<buffer_type>(key, context);
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
