@@ -176,34 +176,12 @@ namespace jsonifier_internal {
 			using V = std::decay_t<decltype(errorString[0])>;
 
 			const auto start	   = std::begin(errorString) + errorIndex;
-			const auto line		   = size_t(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1);
+			line				   = size_t(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1);
 			const auto rstart	   = std::rbegin(errorString) + errorString.size() - errorIndex - 1;
 			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
-			const auto column	   = size_t(std::distance(rstart, prevNewLine));
-			const auto nextNewLine = std::find((std::min)(start + 1, std::end(errorString)), std::end(errorString), static_cast<V>('\n'));
-
-			const auto offset = (prevNewLine == std::rend(errorString) ? 0 : errorIndex - column + 1);
-			auto contextBegin = std::begin(errorString) + offset;
-			auto contextEnd	  = nextNewLine;
-
-			size_t frontTrunc = 0;
-			size_t rearTrunc  = 0;
-
-			if (std::distance(contextBegin, contextEnd) > 64) {
-				if (column <= 32) {
-					rearTrunc  = 64;
-					contextEnd = contextBegin + rearTrunc;
-				} else {
-					frontTrunc = column - 32;
-					contextBegin += frontTrunc;
-					if (std::distance(contextBegin, contextEnd) > 64) {
-						rearTrunc  = frontTrunc + 64;
-						contextEnd = std::begin(errorString) + offset + rearTrunc;
-					}
-				}
-			}
-
-			context = std::string{ contextBegin, contextEnd };
+			localIndex			   = size_t(std::distance(rstart, prevNewLine)) - 1;
+			auto endIndex{ std::end(errorString) - start >= 64 ? 64 : std::end(errorString) - start };
+			context = std::string{ start, start + endIndex };
 			for (auto& c: context) {
 				if (c == '\t') {
 					c = ' ';
@@ -212,10 +190,10 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE jsonifier::string reportError() const noexcept {
-			jsonifier::string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global errorIndex: " + std::to_string(errorIndex) +
-				", on line: " + std::to_string(line) + ", at local errorIndex: " + std::to_string(localIndex) };
+			jsonifier::string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) +
+				", on line: " + std::to_string(line) + ", at local index: " + std::to_string(localIndex) };
 			if (stringView) {
-				returnValue += "\nHere's some of the string's values:\n" + context;
+				returnValue += "\nHere's some of the string's values: " + context;
 			}
 			returnValue += jsonifier::string{ "\nIn file: " } + location.file_name() + ", at: " + std::to_string(location.line()) + ":" + std::to_string(location.column()) +
 				", in function: " + location.function_name() + "().\n";

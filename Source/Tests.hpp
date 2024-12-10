@@ -61,7 +61,7 @@ namespace tests {
 			results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
 			jsonifier::jsonifier_core parser{};
 			test_data_type testData{};
-			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+			parser.parseJson<jsonifier::parse_options{ .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 			std::string newerBuffer{};
 			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
 			auto readSize	 = newerBuffer.size();
@@ -73,7 +73,7 @@ namespace tests {
 					 }
 				 },
 				 [&]() mutable {
-					 parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+					 parser.parseJson<jsonifier::parse_options{ .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 					 bnch_swt::doNotOptimizeAway(testData);
 					 return newerBuffer.size();
 				 });

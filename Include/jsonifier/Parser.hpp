@@ -103,11 +103,11 @@ namespace jsonifier_internal {
 				return false;
 			}
 			parse<options.minified, optionsNew>::template impl<buffer_type>(object, context);
-			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
-				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
-				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
-				: derivedRef.errors.size() > 0								  ? false
-																			  : true;
+			return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
+				: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
+				: (context.iter < context.endIter)	 ? (reportError<parse_errors::Unfinished_Input>(context), false)
+				: derivedRef.errors.size() > 0		 ? false
+													 : true;
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
@@ -133,11 +133,11 @@ namespace jsonifier_internal {
 				return std::move(object);
 			}
 			parse<options.minified, optionsNew>::template impl<buffer_type>(object, context);
-			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
-				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
-				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
-				: derivedRef.errors.size() > 0								  ? std::remove_cvref_t<value_type>{}
-																			  : object;
+			return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
+				: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
+				: (context.iter < context.endIter)	 ? (reportError<parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
+				: derivedRef.errors.size() > 0		 ? std::remove_cvref_t<value_type>{}
+													 : object;
 		}
 
 		template<auto parseError>
