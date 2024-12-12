@@ -889,6 +889,11 @@ namespace jsonifier_internal {
 			skipString(context);
 		}
 
+		template<typename value_type> JSONIFIER_ALWAYS_INLINE static void skipKeyStarted(context_type& context) noexcept {
+			const auto newLength = static_cast<size_t>(context.endIter - context.iter);
+			skipStringImpl(context.iter, newLength);
+		}
+
 		template<typename value_type> JSONIFIER_INLINE static void skipObject(context_type& context) noexcept {
 			++context.iter;
 			if constexpr (!options.minified) {
@@ -905,10 +910,6 @@ namespace jsonifier_internal {
 			while (true) {
 				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
 					skipString(context);
-				} else {
-					return;
-				}
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
 					++context.iter;
 				} else {
 					return;

@@ -41,6 +41,7 @@ namespace jsonifier_internal {
 			endIter	 = endNew;
 		}
 		parser<derived_type>* parserPtr{};
+		size_t remainingMemberCount{};
 		int64_t currentObjectDepth{};
 		int64_t currentArrayDepth{};
 		string_view_ptr rootIter{};
