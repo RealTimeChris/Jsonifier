@@ -143,6 +143,7 @@ namespace jsonifier_internal {
 	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
 
 	template<size_t I, indexable tup> JSONIFIER_INLINE constexpr decltype(auto) get(tup&& tupleVal) {
+		static_assert(I < std::remove_cvref_t<tup>::N, "Sorry, but that tuple index is out of bounds!");
 		return static_cast<tup&&>(tupleVal)[tag<I>()];
 	}
 

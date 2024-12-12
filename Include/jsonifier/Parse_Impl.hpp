@@ -145,7 +145,7 @@ namespace jsonifier_internal {
 					JSONIFIER_SKIP_WS();
 					base::template skipToNextValue<value_type>(context);
 					JSONIFIER_SKIP_WS();
-					return true;
+					return false;
 				}
 			}
 			return false;
@@ -399,10 +399,22 @@ namespace jsonifier_internal {
 			return returnValues;
 		}() };
 
-		JSONIFIER_INLINE static void initialParse(value_type& value, parse_context_type& context, string_view_ptr& wsStart, size_t& wsSize) noexcept {
+		template<bool haveWeAlreadyPasssed = false> JSONIFIER_INLINE static void initialParse(value_type& value, parse_context_type& context, string_view_ptr& wsStart, size_t& wsSize) noexcept {
 			( void )value, ( void )context, ( void )wsStart, ( void )wsSize;
 			if constexpr (memberCount > 0) {
 				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != rBrace) {
+					if constexpr (haveWeAlreadyPasssed) {
+						if JSONIFIER_LIKELY (*context.iter == comma) {
+							++context.iter;
+							JSONIFIER_SKIP_WS();
+						}
+						JSONIFIER_ELSE_UNLIKELY(else) {
+							context.parserPtr->template reportError<parse_errors::Missing_Comma_Or_Object_End>(context);
+							base::template skipToNextValue<value_type>(context);
+							return;
+						}
+					}
+
 					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
 						++context.iter;
 						if constexpr (options.knownOrder) {
@@ -430,33 +442,24 @@ namespace jsonifier_internal {
 											std::make_index_sequence<memberCount>{}, value, context, wsStart, wsSize);
 									}
 									JSONIFIER_ELSE_UNLIKELY(else) {
-										context.parserPtr->template reportError<parse_errors::Missing_Colon>(context);
-										base::template skipToNextValue<value_type>(context);
 										return index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::executeIndices(
 											std::make_index_sequence<memberCount>{}, value, context, wsStart, wsSize);
+										context.parserPtr->template reportError<parse_errors::Missing_Colon>(context);
+										base::template skipToNextValue<value_type>(context);
 									}
 								} else {
 									antiHashStates[0] = false;
-								}
-							}
+}
+							}								
 						}
 						if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 											 indexNew < memberCount) {
 							if JSONIFIER_LIKELY (index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::processIndexImpl(value, context, indexNew,
 													 std::make_index_sequence<memberCount>{})) {
-								return index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::executeIndices(std::make_index_sequence<memberCount>{},
-									value, context, wsStart, wsSize);
+								return;
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
-								base::template skipKeyStarted<value_type>(context);
-								++context.iter;
-								JSONIFIER_SKIP_WS();
-								JSONIFIER_MATCH_OR_ERROR_NORE(':', parse_errors::Missing_Colon);
-								JSONIFIER_SKIP_WS();
-								base::template skipToNextValue<value_type>(context);
-								JSONIFIER_SKIP_WS();
-								return index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::executeIndices(std::make_index_sequence<memberCount>{},
-									value, context, wsStart, wsSize);
+								return initialParse<true>(value, context, wsStart, wsSize);
 							}
 						} else {
 							base::template skipKeyStarted<value_type>(context);
@@ -466,8 +469,7 @@ namespace jsonifier_internal {
 							JSONIFIER_SKIP_WS();
 							base::template skipToNextValue<value_type>(context);
 							JSONIFIER_SKIP_WS();
-							index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::executeIndices(std::make_index_sequence<memberCount>{}, value,
-								context, wsStart, wsSize);
+							return initialParse<true>(value, context, wsStart, wsSize);
 						}
 					}
 					JSONIFIER_ELSE_UNLIKELY(else) {
@@ -487,16 +489,71 @@ namespace jsonifier_internal {
 					string_view_ptr wsStart = context.iter;
 					JSONIFIER_SKIP_WS();
 					size_t wsSize = static_cast<size_t>(context.iter - wsStart);
-					initialParse(value, context, wsStart, wsSize);
-					if JSONIFIER_LIKELY (*context.iter == rBrace) {
-						++context.iter;
-						JSONIFIER_SKIP_WS();
+					bool first{ true };
+					size_t currentIndex{};
+					while (context.iter != context.endIter) {
+						if (*context.iter == rBrace) {
+							--context.currentObjectDepth;
+							++context.iter;
+							return;
+						} else if (first) [[unlikely]] {
+							first = false;
+						} else [[likely]] {
+							if (*context.iter == comma) {
+								++context.iter;								
+							} else {
+								context.parserPtr->template reportError<parse_errors::Missing_Comma_Or_Object_End>(context);
+								base::template skipToNextValue<value_type>(context);
+								return;
+							}
+						}
+
+						if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
+							++context.iter;
+							if constexpr (options.knownOrder) {
+								if (antiHashStates[currentIndex]) {
+									if (index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::processIndexImpl(value, context, currentIndex,
+											std::make_index_sequence<memberCount>{})) {
+										++currentIndex;
+										JSONIFIER_SKIP_WS();
+										continue;
+									} else {
+										antiHashStates[currentIndex] = false;
+									}
+								}
+							}
+							if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+												 indexNew < memberCount) {
+								if JSONIFIER_LIKELY (index_processor_parse<false, options, parse_context_type, buffer_type, value_type>::processIndexImpl(value, context, indexNew,
+														 std::make_index_sequence<memberCount>{})) {
+									++currentIndex;
+									JSONIFIER_SKIP_WS();
+									continue;
+								}
+								continue;
+							}
+							printIterValues(context, "PRE-KEY-SKIP-01: ");
+							JSONIFIER_SKIP_WS();
+							base::template skipKeyStarted<value_type>(context);
+							++context.iter;
+							printIterValues(context, "POST-KEY-SKIP-01: ");
+							JSONIFIER_SKIP_WS();
+							JSONIFIER_MATCH_OR_ERROR_NORE(':', parse_errors::Missing_Colon);
+							JSONIFIER_SKIP_WS();
+							base::template skipToNextValue<value_type>(context);
+							JSONIFIER_SKIP_WS();
+						}
+						JSONIFIER_ELSE_UNLIKELY(else) {
+							context.parserPtr->template reportError<parse_errors::Missing_String_Start>(context);
+							JSONIFIER_SKIP_KEY_VALUE();
+							continue;
+						}
+
 					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						context.parserPtr->template reportError<parse_errors::Missing_Comma_Or_Object_End>(context);
-						base::template skipToNextValue<value_type>(context);
-					}
+					base::template skipToNextValue<value_type>(context);
+					++context.iter;
 					--context.currentObjectDepth;
+					printIterValues(context, "WERE LEAVING-01: ");
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
 					context.parserPtr->template reportError<parse_errors::Missing_Object_Start>(context);
