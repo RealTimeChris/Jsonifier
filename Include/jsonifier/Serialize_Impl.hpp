@@ -36,18 +36,6 @@ namespace jsonifier_internal {
 	static constexpr uint64_t falseVInt{ 435728179558 };
 	static constexpr uint64_t trueVInt{ 434025983730 };
 
-	template<typename value_type01, typename value_type02> struct is_same_if_has_value_type {
-		static constexpr bool value{ [] {
-			if constexpr (jsonifier::concepts::pointer_t<value_type02>) {
-				return std::is_same_v<decltype(*std::remove_cvref_t<value_type02>{}), std::remove_cvref_t<value_type01>>;
-			} else {
-				return false;
-			}
-		}() };
-	};
-
-	template<typename value_type01, typename value_type02> static constexpr bool is_same_if_has_value_type_v{ is_same_if_has_value_type<value_type01, value_type02>::value };
-
 	template<jsonifier::serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
 		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
 			constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
@@ -56,13 +44,9 @@ namespace jsonifier_internal {
 				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& pairNew) {
 					   if constexpr (currentIndex < maxIndex) {
 						   constexpr auto subTuple	  = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
-						   using member_type		  = typename decltype(subTuple)::member_type;
 						   constexpr auto key		  = subTuple.view();
 						   constexpr auto unQuotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key);
 						   constexpr auto quotedKey	  = unQuotedKey + string_literal{ "\": " };
-						   if constexpr (!jsonifier::concepts::shared_ptr_t<member_type>) {
-							   pairNew += getPaddingSize<options, member_type>();
-						   }
 						   pairNew += quotedKey.size();
 						   if constexpr (currentIndex < maxIndex - 1) {
 							   if constexpr (options.prettify) {
@@ -123,7 +107,7 @@ namespace jsonifier_internal {
 
 	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
 		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_INLINE static auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		JSONIFIER_ALWAYS_INLINE static auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			if constexpr (currentIndex < maxIndex) {
 				static constexpr auto subTuple	 = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 				static constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
@@ -169,7 +153,7 @@ namespace jsonifier_internal {
 			return;
 		}
 
-		template<typename... arg_types, size_t... indices> JSONIFIER_NON_GCC_ALWAYS_INLINE static void executeIndices(std::index_sequence<indices...>, arg_types&&... args) {
+		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndices(std::index_sequence<indices...>, arg_types&&... args) {
 			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
 		}
 	};
@@ -186,7 +170,7 @@ namespace jsonifier_internal {
 			auto* dataPtr = buffer.data();
 			if constexpr (numMembers > 0) {
 				if constexpr (options.prettify) {
-					const auto additionalSize = (paddingSize + numMembers) * (indent + 1);
+					const auto additionalSize = (paddingSize + (numMembers * indent));
 					if (buffer.size() <= index + additionalSize) {
 						buffer.resize((index + additionalSize) * 2);
 						dataPtr = buffer.data();

@@ -61,7 +61,7 @@ namespace tests {
 			results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
 			jsonifier::jsonifier_core parser{};
 			test_data_type testData{};
-			parser.parseJson<jsonifier::parse_options{}>(testData, newBuffer);
+			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 			std::string newerBuffer{};
 			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
 			auto readSize	 = newerBuffer.size();
@@ -69,19 +69,14 @@ namespace tests {
 			auto readResult	 = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<testName, jsonifierLibraryName, "teal">(
 				 [&]() {
 					 if constexpr (!partialRead) {
-						 //testData = test_data_type{};
+						 testData = test_data_type{};
 					 }
 				 },
 				 [&]() mutable {
-					 //parser.parseJson<jsonifier::parse_options{}>(testData, newBuffer);
+					 parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 					 bnch_swt::doNotOptimizeAway(testData);
 					 return newerBuffer.size();
 				 });
-			std::cout << "STATUS COUNT: " << testData.statuses.size() << std::endl;
-			for (auto& value: testData.statuses) {
-				std::cout << "RETWEET COUNT: " << value.retweet_count << std::endl;
-				std::cout << "SCREEN NAME: " << value.user.screen_name << std::endl;
-			}
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
@@ -457,8 +452,8 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			results_data glazeResults{};
 
 #if !defined(ASAN_ENABLED)
-			//simdjsonResults = json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
-			//glazeResults	= json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
+			simdjsonResults = json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
+			glazeResults	= json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
 #endif
 			jsonifierResults = json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
 #if !defined(ASAN_ENABLED)
@@ -576,13 +571,13 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 	};
 
 	void testFunction() {
-		//bounds_tests::boundsTests();
-		//conformance_tests::conformanceTests();
-		//round_trip_tests::roundTripTests();
-		//string_validation_tests::stringTests();
-		//float_validation_tests::floatTests();
-		//uint_validation_tests::uintTests();
-		//int_validation_tests::intTests();
+		bounds_tests::boundsTests();
+		conformance_tests::conformanceTests();
+		round_trip_tests::roundTripTests();
+		string_validation_tests::stringTests();
+		float_validation_tests::floatTests();
+		uint_validation_tests::uintTests();
+		int_validation_tests::intTests();
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};
@@ -619,8 +614,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + static_cast<std::string>(section002) + section001 };
-		test_results testResults{};//json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, maxIterationCount, "Json Test (Prettified)">::run(jsonDataNew)};
-		/*
+		test_results testResults{ json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, maxIterationCount, "Json Test (Prettified)">::run(jsonDataNew) };
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, maxIterationCount, "Json Test (Minified)">::run(jsonMinifiedData);
@@ -657,13 +651,13 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_message, true, maxIterationCount, "CitmCatalog Test (Minified)">::run(citmCatalogMinifiedData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);*/
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, false, maxIterationCount, "Twitter Test (Prettified)">::run(twitterData);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, maxIterationCount, "Twitter Test (Minified)">::run(twitterMinifiedData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults); /*
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::minify, std::string, false, maxIterationCount, "Minify Test">::run(twitterData);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
@@ -672,7 +666,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::validate, std::string, false, maxIterationCount, "Validate Test">::run(twitterData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);*/
+		benchmark_data.emplace_back(testResults);
 		std::string resultsStringJson{};
 		test_results_final resultsData{};
 		for (auto& value: benchmark_data) {
