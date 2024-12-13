@@ -36,6 +36,33 @@ namespace jsonifier_internal {
 	static constexpr uint64_t falseVInt{ 435728179558 };
 	static constexpr uint64_t trueVInt{ 434025983730 };
 
+	template<typename value_type> constexpr size_t getTotalMemberCount(size_t currentCount = 0) {
+		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
+			constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
+			size_t count{ numMembers };
+			constexpr auto newVal			   = [](auto& currentCountNew) constexpr {
+				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& currentCountNew) {
+					   if constexpr (currentIndex < maxIndex) {
+						   constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+						   using member_type = typename std::remove_cvref_t<decltype(get<currentIndex>(jsonifier::concepts::coreV<value_type>))>::member_type;
+						   if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
+							   currentCountNew += getTotalMemberCount<member_type>(currentCountNew);
+						   } else {
+							   currentCountNew += tuple_size_v<typename core_tuple_type<member_type>::core_type>;						   
+						   }
+					   }
+				   };
+
+				   forEach<numMembers, make_static<sizeCollectLambda>::value>(currentCountNew);
+
+				   return;
+			};
+			newVal(count);
+
+			return count;
+		} 
+	}
+
 	template<jsonifier::serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
 		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
 			constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;

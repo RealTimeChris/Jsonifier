@@ -466,6 +466,23 @@ template<> JSONIFIER_INLINE void getValue(twitter_message& value, simdjson::onde
 	getValue(value.search_metadata, obj, "search_metadata");
 }
 
+template<> JSONIFIER_INLINE void getValue(twitter_user_partial_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.screen_name, obj, "screen_name");
+}
+
+template<> JSONIFIER_INLINE void getValue(status_partial_data& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.text, obj, "text");
+	getValue(value.source, obj, "source");
+	getValue(value.user, obj, "user");
+}
+
+template<> JSONIFIER_INLINE void getValue(twitter_partial_message& value, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.statuses, obj, "statuses");
+}
+
 template<> JSONIFIER_INLINE void getValue(audience_sub_category_names& p, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(p.the337100890, obj, "337100890");
@@ -797,6 +814,12 @@ template<> JSONIFIER_INLINE void getValue(abc_test<abc_test_struct>& returnValue
 	getValue(returnValue.a, obj, "a");
 }
 
+template<> JSONIFIER_INLINE void getValue(partial_test_struct& returnValue, simdjson::ondemand::value jsonData) {
+	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.testVals05, obj, "testVals05");
+	getValue(returnValue.testVals01, obj, "testVals01");
+}
+
 template<> JSONIFIER_INLINE void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.testVals02, obj, "testVals02");
@@ -836,7 +859,7 @@ template<> JSONIFIER_INLINE void getValue(test<test_struct>& returnValue, simdjs
 	getValue(returnValue.z, obj, "z");
 }
 
-template<> JSONIFIER_INLINE void getValue(partial_test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {
+template<typename value_type> JSONIFIER_INLINE void getValue(partial_test<value_type>& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(returnValue.m, obj, "m");
 }

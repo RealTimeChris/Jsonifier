@@ -160,6 +160,21 @@ template<> struct glz::meta<twitter_message> {
 	static constexpr auto value = object(&value_type::search_metadata, &value_type::statuses);
 };
 
+template<> struct glz::meta<twitter_user_partial_data> {
+	using value_type				 = twitter_user_partial_data;
+	static constexpr auto value = object(&value_type::screen_name);
+};
+
+template<> struct glz::meta<status_partial_data> {
+	using value_type				 = status_partial_data;
+	static constexpr auto value = object(&value_type::text, &value_type::user, &value_type::retweet_count);
+};
+
+template<> struct glz::meta<twitter_partial_message> {
+	using value_type				 = twitter_partial_message;
+	static constexpr auto value = object(&value_type::statuses);
+};
+
 template<> struct glz::meta<icon_emoji_data> {
 	using value_type			= icon_emoji_data;
 	static constexpr auto value = object(&value_type::name, &value_type::id);
@@ -247,6 +262,11 @@ template<> struct glz::meta<canada_message> {
 template<> struct glz::meta<test_struct> {
 	using value_type			= test_struct;
 	static constexpr auto value = object(&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04);
+};
+
+template<> struct glz::meta<partial_test_struct> {
+	using value_type				 = partial_test_struct;
+	static constexpr auto value = object(&value_type::testVals05, &value_type::testVals01);
 };
 
 template<> struct glz::meta<test<test_struct>> {

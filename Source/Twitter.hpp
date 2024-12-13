@@ -184,3 +184,18 @@ struct twitter_message {
 	std::vector<status_data> statuses{};
 	search_metadata_data search_metadata{};
 };
+
+struct twitter_user_partial_data {
+	std::string screen_name{};
+};
+
+struct status_partial_data {
+	std::string text{};
+	std::string source{};
+	twitter_user_partial_data user{};
+	int64_t retweet_count{};
+};
+
+struct twitter_partial_message {
+	std::vector<status_partial_data> statuses{};
+};

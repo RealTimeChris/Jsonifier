@@ -41,6 +41,7 @@ namespace jsonifier_internal {
 			endIter	 = endNew;
 		}
 		parser<derived_type>* parserPtr{};
+		size_t remainingMemberCount{};
 		int64_t currentObjectDepth{};
 		int64_t currentArrayDepth{};
 		string_view_ptr rootIter{};
@@ -103,6 +104,37 @@ namespace jsonifier_internal {
 				return false;
 			}
 			parse<options.minified, optionsNew>::template impl<buffer_type>(object, context);
+			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
+				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
+				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
+				: derivedRef.errors.size() > 0								  ? false
+																			  : true;
+		}
+
+		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, typename buffer_type>
+		JSONIFIER_ALWAYS_INLINE bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
+			static constexpr jsonifier::parse_options optionsNew{ options };
+			context.rootIter  = getBeginIter(in);
+			context.iter	  = context.rootIter;
+			context.endIter	  = getEndIter(in);
+			context.parserPtr = this;
+			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+			if (stringBuffer.size() < newSize) {
+				stringBuffer.resize(newSize);
+			}
+			if constexpr (options.validateJson) {
+				if (!derivedRef.validateJson(in)) {
+					return false;
+				}
+			}
+			derivedRef.errors.clear();
+			if JSONIFIER_UNLIKELY (!context.iter) {
+				reportError<parse_errors::No_Input>(context);
+				return false;
+			}
+			while (context.iter < context.endIter) {
+				parse<options.minified, optionsNew>::template impl<buffer_type>(object.emplace_back(), context);
+			}
 			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
 				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
 				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)

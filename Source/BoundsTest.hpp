@@ -33,7 +33,7 @@ namespace bounds_tests {
 	bool boundsTests() noexcept {
 		jsonifier::jsonifier_core<> parser{};
 		test_generator<test_struct> tests{};
-		partial_test<test_struct> newTests{};
+		partial_test<partial_test_struct> newTests{};
 		std::string testString{};
 		parser.serializeJson(tests, testString);
 		parser.parseJson(newTests, testString);

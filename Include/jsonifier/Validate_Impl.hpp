@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	static constexpr bool options{ false };
+	static constexpr bool optionsVal{ false };
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Object_Start, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
@@ -167,7 +167,7 @@ namespace jsonifier_internal {
 			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
 			auto endPtr = static_cast<string_view_ptr>(*iter);
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, iterator>::skipWs(newPtr);
 			if (newPtr == endPtr || *newPtr != '"') {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -229,7 +229,7 @@ namespace jsonifier_internal {
 			}
 			auto endPtr = static_cast<string_view_ptr>(*iter);
 
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, iterator>::skipWs(newPtr);
 
 			auto consumeChar = [&](char expected) {
 				if (*newPtr == expected) {
@@ -279,7 +279,7 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, iterator>::skipWs(newPtr);
 			if (newPtr != endPtr) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -296,7 +296,7 @@ namespace jsonifier_internal {
 			++iter;
 			static constexpr char falseStr[]{ "false" };
 			static constexpr char trueStr[]{ "true" };
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, iterator>::skipWs(newPtr);
 			if (*iter && std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
 				newPtr += std::size(trueStr) - 1;
 			} else {
@@ -317,7 +317,7 @@ namespace jsonifier_internal {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
 			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, iterator>::skipWs(newPtr);
 			static constexpr char nullStr[]{ "null" };
 
 			if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {

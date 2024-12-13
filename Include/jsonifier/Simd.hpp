@@ -93,7 +93,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_ALWAYS_INLINE auto begin() noexcept {
-			structuralIndices[tapeIndex] = nullptr;
+			structuralIndices[tapeIndex] = currentParseBuffer.data() + currentParseBuffer.size();
 			return structuralIndices;
 		}
 
@@ -265,5 +265,7 @@ namespace jsonifier_internal {
 				simd_internal::opXor(simd_internal::opClMul(rawStructurals.quotes, prevInString), rawStructurals.quotes));
 		}
 	};
+
+	inline static thread_local jsonifier_internal::simd_string_reader<true> section{};
 
 };

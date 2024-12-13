@@ -207,6 +207,11 @@ struct test_struct {
 	std::vector<bool> testVals05{};
 };
 
+struct partial_test_struct {
+	std::vector<std::string> testVals01{};
+	std::vector<bool> testVals05{};
+};
+
 struct abc_test_struct {
 	std::vector<bool> testVals05{};
 	std::vector<int64_t> testVals03{};
@@ -254,7 +259,6 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		constexpr size_t charsetSize = charset.size();
 		auto unicodeCount			 = length / 4ull;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
@@ -406,7 +410,7 @@ template<result_type type> constexpr auto enumToString() {
 
 template<result_type type> struct result {
 	std::optional<double> jsonSpeedPercentageDeviation{};
-	std::optional<size_t> byteLength{};
+	std::optional<double> byteLength{};
 	std::optional<double> jsonCycles{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};
@@ -419,11 +423,11 @@ template<result_type type> struct result {
 	result& operator=(const result&) noexcept = default;
 	result(const result&) noexcept			  = default;
 
-	result(const std::string& colorNew, size_t byteLengthNew, const bnch_swt::performance_metrics& results) {
-		byteLength.emplace(byteLengthNew);
+	result(const std::string& colorNew, const bnch_swt::performance_metrics& results) {
+		byteLength.emplace(results.bytesProcessed);
 		jsonTime.emplace(results.timeInNs);
-		jsonSpeedPercentageDeviation.emplace(results.throughputPercentageDeviation.value());
-		jsonSpeed.emplace(results.throughputMbPerSec.value());
+		jsonSpeedPercentageDeviation.emplace(results.throughputPercentageDeviation);
+		jsonSpeed.emplace(results.throughputMbPerSec);
 		if (results.cyclesPerByte.has_value()) {
 			jsonCycles.emplace(results.cyclesPerByte.value() * 1024 * 1024);
 		}
