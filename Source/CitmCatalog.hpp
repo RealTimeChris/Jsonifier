@@ -89,3 +89,17 @@ struct citm_catalog_message {
 	std::unordered_map<std::string, std::vector<int64_t>> topicSubTopics{};
 	venue_names venueNames{};
 };
+
+struct partial_price {
+	int64_t seatCategoryId{};
+};
+
+struct partial_performance {
+	std::vector<partial_price> prices{};
+	std::string venueCode{};
+};
+
+struct citm_catalog_partial_message {
+	std::vector<partial_performance> performances{};
+	venue_names venueNames{};
+};

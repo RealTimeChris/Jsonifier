@@ -25,6 +25,7 @@
 
 #include <jsonifier/ISA/SimdTypes.hpp>
 #include <jsonifier/Tuple.hpp>
+#include <source_location>
 #include <type_traits>
 #include <functional>
 #include <optional>
@@ -43,6 +44,18 @@
 #include <array>
 
 namespace jsonifier_internal {
+
+	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+		os << "File: " << location.file_name() << std::endl;
+		os << "Line: " << location.line() << std::endl;
+		return os;
+	}
+
+	JSONIFIER_ALWAYS_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+		std::cout << location;
+	}
+
+	template<typename member_type_new, typename class_type_new> struct json_entity;
 
 	template<typename derived_type> class parser;
 
@@ -120,7 +133,7 @@ namespace jsonifier {
 
 	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
-	template<typename value_type> struct core {};
+	template<typename value_type> struct core;
 
 	template<bool value, typename value_type> struct falseV {
 		static_assert(value, "Sorry, but the static assert failed.");
@@ -133,13 +146,22 @@ namespace jsonifier {
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
-	template<typename value_type> struct scalar_value {
-		value_type val{};
-	};
-
-	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
-
 	namespace concepts {
+
+		template<typename value_type>
+		concept convertible_to_json_entity = requires(std::remove_cvref_t<value_type> value) {
+			{
+				static_cast<jsonifier_internal::json_entity<typename decltype(jsonifier_internal::json_entity{ value })::member_type,
+					typename decltype(jsonifier_internal::json_entity{ value })::class_type>>(
+					value)
+			};
+		};
+
+		template<typename value_type>
+		concept is_json_entity = requires(std::remove_cvref_t<value_type> value) {
+			{ value.type };
+			{ value.memberPtr };
+		};
 
 		template<typename value_type>
 		concept has_range = requires(std::remove_cvref_t<value_type> value) {
@@ -399,9 +421,6 @@ namespace jsonifier {
 		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
 
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
-
-		template<typename value_type>
-		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
 
 		template<typename value_type>
 		concept jsonifier_object_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;
