@@ -29,7 +29,7 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-#include <immintrin.h>
+	#include <immintrin.h>
 
 using jsonifier_simd_int_128 = __m128i;
 using jsonifier_simd_int_256 = __m256i;
@@ -73,6 +73,19 @@ static constexpr size_t bytesPerStep{ bitsPerStep / 8 };
 static constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 static constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
+static constexpr auto falseV{ "false" };
+static constexpr auto trueV{ "true" };
+static constexpr auto nullV{ "null" };
+static constexpr char newline{ '\n' };
+static constexpr char lBracket{ '[' };
+static constexpr char rBracket{ ']' };
+static constexpr char lBrace{ '{' };
+static constexpr char rBrace{ '}' };
+static constexpr char colon{ ':' };
+static constexpr char comma{ ',' };
+static constexpr char quote{ '"' };
+static constexpr char n{ 'n' };
+
 using string_view_ptr	= const char*;
 using structural_index	= string_view_ptr;
 using string_buffer_ptr = char*;
@@ -86,7 +99,7 @@ concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvr
 template<typename value_type>
 concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
 
-#if defined(JSONIFIER_MAC) && defined(__arm64__) 
+#if defined(JSONIFIER_MAC) && defined(__arm64__)
 	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
 #elif defined(JSONIFIER_MSVC)
 	#include <intrin.h>

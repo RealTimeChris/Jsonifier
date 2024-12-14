@@ -33,7 +33,7 @@
 #if defined(NDEBUG)
 static constexpr auto maxIterationCount{ 100 };
 #else
-static constexpr auto maxIterationCount{ 5 };
+static constexpr auto maxIterationCount{ 1 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
@@ -53,8 +53,8 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") ||
-		osCompilerIdNew.view().contains("g++") || osCompilerIdNew.view().contains("apple")) {
+	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") || osCompilerIdNew.view().contains("g++") ||
+		osCompilerIdNew.view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
 	} else if constexpr (osCompilerIdNew.view().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };
@@ -259,7 +259,7 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount			 = length / 4ull;
+		auto unicodeCount = length / 4ull;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -289,7 +289,7 @@ template<typename value_type> struct test_generator {
 		}
 
 		return result;
-	}	
+	}
 
 	static double generateDouble() {
 		double logValue = disDouble(gen);

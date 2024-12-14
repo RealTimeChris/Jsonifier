@@ -241,8 +241,8 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE void collectEmptyEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped) noexcept {
 			const auto escapedNew = nextIsEscaped;
-			nextIsEscaped	= jsonifier_simd_int_t{};
-			escaped			= escapedNew;
+			nextIsEscaped		  = jsonifier_simd_int_t{};
+			escaped				  = escapedNew;
 		}
 
 		JSONIFIER_ALWAYS_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,

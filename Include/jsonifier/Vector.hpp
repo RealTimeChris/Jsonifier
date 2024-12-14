@@ -36,8 +36,8 @@ namespace jsonifier {
 		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier_internal::iterator_type<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator_type<const value_type>;
+		using iterator				 = jsonifier_internal::basic_iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::basic_iterator<const value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -330,7 +330,7 @@ namespace jsonifier {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
-			allocator::construct(&dataVal[sizeVal++], std::move(c));
+			allocator::construct(&dataVal[sizeVal++], jsonifier_internal::move(c));
 
 			return dataVal[sizeVal - 1];
 		}

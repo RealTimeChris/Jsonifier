@@ -1268,16 +1268,16 @@ namespace jsonifier_fast_float {
 			}
 		}
 
-		// shift left each limb n bits, carrying over to the new limb
+		// shift left each limb num bits, carrying over to the new limb
 		// returns true if we were able to shift all the digits.
-		JSONIFIER_ALWAYS_INLINE constexpr bool shl_bits(uint64_t n) noexcept {
-			// Internally, for each item, we shift left by n, and add the previous
+		JSONIFIER_ALWAYS_INLINE constexpr bool shl_bits(uint64_t num) noexcept {
+			// Internally, for each item, we shift left by num, and add the previous
 			// right shifted limb-bits.
 			// For example, we transform (for u8) shifted left 2, to:
 			//      b10100100 b01000010
 			//      b10 b10010001 b00001000
 
-			uint64_t shl = n;
+			uint64_t shl = num;
 			uint64_t shr = limb_bits - shl;
 			limb prev	 = 0;
 			for (uint64_t index = 0; index < vec.length; index++) {
@@ -1293,30 +1293,30 @@ namespace jsonifier_fast_float {
 			return true;
 		}
 
-		// move the limbs left by `n` limbs.
-		JSONIFIER_ALWAYS_INLINE bool shl_limbs(uint64_t n) noexcept {
-			if (n + vec.length > vec.capacity()) {
+		// move the limbs left by `num` limbs.
+		JSONIFIER_ALWAYS_INLINE bool shl_limbs(uint64_t num) noexcept {
+			if (num + vec.length > vec.capacity()) {
 				return false;
 			} else if (!vec.is_empty()) {
 				// move limbs
-				limb* dst		= vec.data + n;
+				limb* dst		= vec.data + num;
 				const limb* src = vec.data;
 				std::copy_backward(src, src + vec.length, dst + vec.length);
 				// fill in empty limbs
 				limb* first = vec.data;
-				limb* last	= first + n;
-				::std::fill(first, last, 0);
-				vec.set_len(n + vec.length);
+				limb* last	= first + num;
+				::std::fill(first, last, static_cast<limb>(0));
+				vec.set_len(num + vec.length);
 				return true;
 			} else {
 				return true;
 			}
 		}
 
-		// move the limbs left by `n` bits.
-		JSONIFIER_ALWAYS_INLINE constexpr bool shl(uint64_t n) noexcept {
-			uint64_t rem = n % limb_bits;
-			uint64_t div = n / limb_bits;
+		// move the limbs left by `num` bits.
+		JSONIFIER_ALWAYS_INLINE constexpr bool shl(uint64_t num) noexcept {
+			uint64_t rem = num % limb_bits;
+			uint64_t div = num / limb_bits;
 			if (rem != 0) {
 				JSONIFIER_FASTFLOAT_TRY(shl_bits(rem));
 			}
@@ -1678,8 +1678,8 @@ namespace jsonifier_fast_float {
 	}
 
 	// the scaling here is quite simple: we have, for the real digits `m * 10^e`,
-	// and for the theoretical digits `n * 2^f`. Since `e` is always negative,
-	// to scale them identically, we do `n * 2^f * 5^-f`, so we now have `m * 2^e`.
+	// and for the theoretical digits `num * 2^f`. Since `e` is always negative,
+	// to scale them identically, we do `num * 2^f * 5^-f`, so we now have `m * 2^e`.
 	// we then need to scale by `2^(f- e)`, and then the two significant digits
 	// are of the same magnitude.
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr adjusted_mantissa negative_digit_comp(bigint& bigmant, adjusted_mantissa am, int32_t exponent) noexcept {

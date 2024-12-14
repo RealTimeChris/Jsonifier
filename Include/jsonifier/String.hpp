@@ -92,8 +92,8 @@ namespace jsonifier {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using difference_type		 = std::ptrdiff_t;
-		using iterator				 = jsonifier_internal::iterator_type<value_type>;
-		using const_iterator		 = jsonifier_internal::iterator_type<const value_type>;
+		using iterator				 = jsonifier_internal::basic_iterator<value_type>;
+		using const_iterator		 = jsonifier_internal::basic_iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
@@ -615,6 +615,6 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	static thread_local jsonifier::string_base<char, 1024 * 1024 * 2> stringBuffer{};
+	static thread_local jsonifier::string_base<char, 1024 * 1024> stringBuffer{};
 
 }

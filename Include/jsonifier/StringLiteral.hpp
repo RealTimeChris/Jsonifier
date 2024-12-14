@@ -269,8 +269,6 @@ namespace jsonifier_internal {
 		};
 	};
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 	template<eq_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
@@ -280,8 +278,6 @@ namespace jsonifier_internal {
 			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
 		}
 	};
-
-#endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
@@ -354,7 +350,7 @@ namespace jsonifier_internal {
 	template<int64_t number, size_t numDigits = countDigits(number)> constexpr string_literal<numDigits + 1, char> toStringLiteral() noexcept {
 		char buffer[numDigits + 1]{};
 		string_buffer_ptr ptr = buffer + numDigits;
-		*ptr	  = '\0';
+		*ptr				  = '\0';
 		int64_t temp{};
 		if constexpr (number < 0) {
 			temp			   = number * -1;

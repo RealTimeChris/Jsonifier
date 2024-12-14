@@ -4,7 +4,7 @@
 	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
-	software and associated documentation files (the "Software"), to deal string1 the Software
+	software and associated documentation files (the "Software"), to deal in the Software
 	without restriction, including without limitation the rights to use, copy, modify, merge,
 	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -23,11 +23,11 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/Allocator.hpp>
 #include <jsonifier/Reflection.hpp>
+#include <jsonifier/Allocator.hpp>
 #include <jsonifier/HashMap.hpp>
-#include <jsonifier/Error.hpp>
 #include <jsonifier/StrToD.hpp>
+#include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
 
 namespace jsonifier {
@@ -223,7 +223,8 @@ namespace jsonifier_internal {
 	}
 
 	// Taken from simdjson: https://github.com/simdjson/simdjson
-	template<typename iterator_type01, typename iterator_type02> JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(iterator_type01& srcPtr, iterator_type02& dstPtr) noexcept {
+	template<typename basic_iterator01, typename basic_iterator02>
+	JSONIFIER_ALWAYS_INLINE bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr) noexcept {
 		static constexpr uint32_t subCodePoint = 0xFffd;
 		uint32_t codePoint					   = hexToU32NoCheck(srcPtr + 2);
 		static constexpr uint8_t bs{ '\\' };
@@ -263,17 +264,14 @@ namespace jsonifier_internal {
 		return ((( x )-factor * n) & ~( x )&factor * msbMask) != 0;
 	}
 
-	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(string_view_ptr string1, string_buffer_ptr string2,
-		const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
+	template<typename simd_type, typename integer_type>
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(
 			simd_internal::opBitMaskRaw(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)))));
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(string_view_ptr string1, string_buffer_ptr string2, simd_type& simdValue) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
-		std::memcpy(&simdValue, string1, sizeof(simd_type));
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(simd_type& simdValue) noexcept {
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
@@ -283,18 +281,15 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(string_view_ptr string1, string_buffer_ptr string2,
-		const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
+	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type findSerialize(const simd_type& simdValue, const simd_type& simdValues01,
+		const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(
 			simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
 				simd_internal::opCmpLtRaw(simdValue, simdValues03)))));
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(string_view_ptr string1, string_buffer_ptr string2, simd_type& simdValue) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
-		std::memcpy(&simdValue, string1, sizeof(simd_type));
+	JSONIFIER_ALWAYS_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
 		static constexpr integer_type less32Bits{ repeatByte<0b01100000, integer_type>() };
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
@@ -305,14 +300,14 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename iterator_type01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(iterator_type01& string1, size_t lengthNew) noexcept {
+	template<typename basic_iterator01> JSONIFIER_ALWAYS_INLINE static void skipStringImpl(basic_iterator01& string1, size_t lengthNew) noexcept {
 		if (static_cast<int64_t>(lengthNew) > 0) {
 			const auto endIter = string1 + lengthNew;
 			while (string1 < endIter) {
 				auto* newIter = char_comparison<'"', std::remove_cvref_t<decltype(*string1)>>::memchar(string1, lengthNew);
 				if (newIter) {
 					string1	  = newIter;
-					lengthNew = endIter - string1;
+					lengthNew = static_cast<size_t>(endIter - string1);
 
 					auto* prev = string1 - 1;
 					while (*prev == '\\') {
@@ -341,12 +336,12 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<jsonifier::parse_options options, typename iterator_type01, typename iterator_type02> struct string_parser {
-		JSONIFIER_ALWAYS_INLINE static iterator_type02 shortImpl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
-			using char_t01 =
-				typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
-			using char_t02 =
-				typename std::conditional_t<std::is_pointer_v<iterator_type02>, std::remove_pointer_t<iterator_type02>, typename std::iterator_traits<iterator_type02>::value_type>;
+	template<jsonifier::parse_options options, typename basic_iterator01, typename basic_iterator02> struct string_parser {
+		JSONIFIER_ALWAYS_INLINE static basic_iterator02 shortImpl(basic_iterator01& string1, basic_iterator02 string2, size_t lengthNew) noexcept {
+			using char_t01 = typename std::conditional_t<std::is_pointer_v<basic_iterator01>, std::remove_pointer_t<basic_iterator01>,
+				typename std::iterator_traits<basic_iterator01>::value_type>;
+			using char_t02 = typename std::conditional_t<std::is_pointer_v<basic_iterator02>, std::remove_pointer_t<basic_iterator02>,
+				typename std::iterator_traits<basic_iterator02>::value_type>;
 			std::remove_const_t<char_t01> escapeChar;
 			while (lengthNew > 0) {
 				*string2 = static_cast<char_t02>(*string1);
@@ -384,9 +379,9 @@ namespace jsonifier_internal {
 			return string2;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static iterator_type02 impl(iterator_type01& string1, iterator_type02 string2, size_t lengthNew) noexcept {
-			using char_t01 =
-				typename std::conditional_t<std::is_pointer_v<iterator_type01>, std::remove_pointer_t<iterator_type01>, typename std::iterator_traits<iterator_type01>::value_type>;
+		JSONIFIER_ALWAYS_INLINE static basic_iterator02 impl(basic_iterator01& string1, basic_iterator02 string2, size_t lengthNew) noexcept {
+			using char_t01 = typename std::conditional_t<std::is_pointer_v<basic_iterator01>, std::remove_pointer_t<basic_iterator01>,
+				typename std::iterator_traits<basic_iterator01>::value_type>;
 			std::remove_const_t<char_t01> escapeChar;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			{
@@ -399,8 +394,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask)) {
 							escapeChar = string1[nextBackslashOrQuote];
 							if (escapeChar == '"') {
@@ -414,13 +410,13 @@ namespace jsonifier_internal {
 										string1 += nextBackslashOrQuote;
 										string2 += nextBackslashOrQuote;
 										if (!handleUnicodeCodePoint(string1, string2)) {
-											return static_cast<iterator_type02>(nullptr);
+											return static_cast<basic_iterator02>(nullptr);
 										}
 										continue;
 									}
 									escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
 									if (escapeChar == 0u) {
-										return static_cast<iterator_type02>(nullptr);
+										return static_cast<basic_iterator02>(nullptr);
 									}
 									string2[nextBackslashOrQuote] = static_cast<char_t01>(escapeChar);
 									lengthNew -= nextBackslashOrQuote + 2ull;
@@ -434,7 +430,7 @@ namespace jsonifier_internal {
 							}
 						}
 					else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(simdValue))) {
-							return static_cast<iterator_type02>(nullptr);
+							return static_cast<basic_iterator02>(nullptr);
 						}
 					else {
 						lengthNew -= bytesProcessed;
@@ -455,8 +451,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -470,13 +467,13 @@ namespace jsonifier_internal {
 									string1 += nextBackslashOrQuote;
 									string2 += nextBackslashOrQuote;
 									if (!handleUnicodeCodePoint(string1, string2)) {
-										return static_cast<iterator_type02>(nullptr);
+										return static_cast<basic_iterator02>(nullptr);
 									}
 									continue;
 								}
 								escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
 								if (escapeChar == 0u) {
-									return static_cast<iterator_type02>(nullptr);
+									return static_cast<basic_iterator02>(nullptr);
 								}
 								string2[nextBackslashOrQuote] = static_cast<char_t01>(escapeChar);
 								lengthNew -= nextBackslashOrQuote + 2ull;
@@ -489,7 +486,7 @@ namespace jsonifier_internal {
 							}
 						}
 					} else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(simdValue)) {
-						return static_cast<iterator_type02>(nullptr);
+						return static_cast<basic_iterator02>(nullptr);
 					} else {
 						lengthNew -= bytesProcessed;
 						string2 += bytesProcessed;
@@ -510,8 +507,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -525,13 +523,13 @@ namespace jsonifier_internal {
 									string1 += nextBackslashOrQuote;
 									string2 += nextBackslashOrQuote;
 									if (!handleUnicodeCodePoint(string1, string2)) {
-										return static_cast<iterator_type02>(nullptr);
+										return static_cast<basic_iterator02>(nullptr);
 									}
 									continue;
 								}
 								escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
 								if (escapeChar == 0u) {
-									return static_cast<iterator_type02>(nullptr);
+									return static_cast<basic_iterator02>(nullptr);
 								}
 								string2[nextBackslashOrQuote] = static_cast<char_t01>(escapeChar);
 								lengthNew -= nextBackslashOrQuote + 2ull;
@@ -544,7 +542,7 @@ namespace jsonifier_internal {
 							}
 						}
 					} else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(simdValue)) {
-						return static_cast<iterator_type02>(nullptr);
+						return static_cast<basic_iterator02>(nullptr);
 					} else {
 						lengthNew -= bytesProcessed;
 						string2 += bytesProcessed;
@@ -561,7 +559,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue);
+					std::memcpy(&simdValue, string1, bytesProcessed);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -575,13 +575,13 @@ namespace jsonifier_internal {
 									string1 += nextBackslashOrQuote;
 									string2 += nextBackslashOrQuote;
 									if (!handleUnicodeCodePoint(string1, string2)) {
-										return static_cast<iterator_type02>(nullptr);
+										return static_cast<basic_iterator02>(nullptr);
 									}
 									continue;
 								}
 								escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
 								if (escapeChar == 0u) {
-									return static_cast<iterator_type02>(nullptr);
+									return static_cast<basic_iterator02>(nullptr);
 								}
 								string2[nextBackslashOrQuote] = static_cast<char_t01>(escapeChar);
 								lengthNew -= nextBackslashOrQuote + 2ull;
@@ -594,7 +594,7 @@ namespace jsonifier_internal {
 							}
 						}
 					} else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(string1)) {
-						return static_cast<iterator_type02>(nullptr);
+						return static_cast<basic_iterator02>(nullptr);
 					} else {
 						lengthNew -= bytesProcessed;
 						string2 += bytesProcessed;
@@ -618,8 +618,8 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	template<jsonifier::serialize_options options, typename iterator_type01, typename iterator_type02> struct string_serializer {
-		JSONIFIER_ALWAYS_INLINE static auto shortImpl(iterator_type01 string1, iterator_type02& string2, size_t lengthNew) noexcept {
+	template<jsonifier::serialize_options options, typename basic_iterator01, typename basic_iterator02> struct string_serializer {
+		JSONIFIER_ALWAYS_INLINE static auto shortImpl(basic_iterator01 string1, basic_iterator02& string2, size_t lengthNew) noexcept {
 			const auto* endIter = string1 + lengthNew;
 			for (; string1 < endIter; ++string1) {
 				auto escapeChar = escapeTable[static_cast<uint8_t>(*string1)];
@@ -634,7 +634,7 @@ namespace jsonifier_internal {
 			return string2;
 		}
 
-		JSONIFIER_ALWAYS_INLINE static auto impl(iterator_type01 string1, iterator_type02 string2, size_t lengthNew) noexcept {
+		JSONIFIER_ALWAYS_INLINE static auto impl(basic_iterator01 string1, basic_iterator02 string2, size_t lengthNew) noexcept {
 			uint16_t escapeChar;
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			{
@@ -648,8 +648,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -684,8 +685,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -721,8 +723,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -753,7 +756,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue);
+					std::memcpy(string2, string1, bytesProcessed);
+					std::memcpy(&simdValue, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -853,97 +858,163 @@ namespace jsonifier_internal {
 
 	template<const auto options, typename parse_context_type> struct derailleur {
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static bool parseString(value_type& value, parse_context_type& context) noexcept {
-			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
-				++context.iter;
-				const auto newPtr = string_parser<options, decltype(context.iter), decltype(stringBuffer.data())>::impl(context.iter, stringBuffer.data(),
-					static_cast<size_t>(context.endIter - context.iter));
-				if JSONIFIER_LIKELY (newPtr) {
-					const auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
-					if constexpr (jsonifier::concepts::has_resize<value_type>) {
-						if JSONIFIER_UNLIKELY (value.size() != newSize) {
-							value.resize(newSize);
+			if constexpr (options.partialRead) {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter == '"') {
+					auto newerPtr	  = (*context.iter) + 1;
+					const auto newPtr = string_parser<options, decltype(newerPtr), decltype(stringBuffer.data())>::impl(newerPtr, stringBuffer.data(),
+						static_cast<size_t>(*context.endIter - *context.iter));
+					if JSONIFIER_LIKELY (newPtr) {
+						const auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
+						if constexpr (jsonifier::concepts::has_resize<value_type>) {
+							if JSONIFIER_UNLIKELY (value.size() != newSize) {
+								value.resize(newSize);
+							}
 						}
+						std::memcpy(value.data(), stringBuffer.data(), newSize);
+						++context.iter;
 					}
-					std::memcpy(value.data(), stringBuffer.data(), newSize);
-					++context.iter;
+					JSONIFIER_ELSE_UNLIKELY(else) {
+						context.parserPtr->template reportError<parse_errors::Invalid_String_Characters>(context);
+						return false;
+					}
+					return true;
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
-					context.parserPtr->template reportError<parse_errors::Invalid_String_Characters>(context);
+					context.parserPtr->template reportError<parse_errors::Missing_String_Start>(context);
 					return false;
 				}
-				return true;
-			}
-			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Missing_String_Start>(context);
-				return false;
+			} else {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
+					++context.iter;
+					const auto newPtr = string_parser<options, decltype(context.iter), decltype(stringBuffer.data())>::impl(context.iter, stringBuffer.data(),
+						static_cast<size_t>(context.endIter - context.iter));
+					if JSONIFIER_LIKELY (newPtr) {
+						const auto newSize = static_cast<size_t>(newPtr - stringBuffer.data());
+						if constexpr (jsonifier::concepts::has_resize<value_type>) {
+							if JSONIFIER_UNLIKELY (value.size() != newSize) {
+								value.resize(newSize);
+							}
+						}
+						std::memcpy(value.data(), stringBuffer.data(), newSize);
+						++context.iter;
+					}
+					JSONIFIER_ELSE_UNLIKELY(else) {
+						context.parserPtr->template reportError<parse_errors::Invalid_String_Characters>(context);
+						return false;
+					}
+					return true;
+				}
+				JSONIFIER_ELSE_UNLIKELY(else) {
+					context.parserPtr->template reportError<parse_errors::Missing_String_Start>(context);
+					return false;
+				}
 			}
 		}
 
 		JSONIFIER_ALWAYS_INLINE static void skipString(parse_context_type& context) noexcept {
-			++context.iter;
-			const auto newLength = static_cast<size_t>(context.endIter - context.iter);
-			skipStringImpl(context.iter, newLength);
+			if constexpr (options.partialRead) {
+				++context.iter;
+			} else {
+				++context.iter;
+				const auto newLength = static_cast<size_t>(context.endIter - context.iter);
+				skipStringImpl(context.iter, newLength);
+			}
 		}
 
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static void skipKey(parse_context_type& context) noexcept {
-			static constexpr auto keyLength{ keyStatsVal<value_type>.minLength - 1 };
-			context.iter += keyLength;
-			skipString(context);
+			if constexpr (options.partialRead) {
+				++context.iter;
+			} else {
+				static constexpr auto keyLength{ keyStatsVal<value_type>.minLength - 1 };
+				context.iter += keyLength;
+				skipString(context);
+			}
 		}
 
 		template<typename value_type> JSONIFIER_ALWAYS_INLINE static void skipKeyStarted(parse_context_type& context) noexcept {
-			const auto newLength = static_cast<size_t>(context.endIter - context.iter);
-			skipStringImpl(context.iter, newLength);
+			if constexpr (options.partialRead) {
+				++context.iter;
+			} else {
+				const auto newLength = static_cast<size_t>(context.endIter - context.iter);
+				skipStringImpl(context.iter, newLength);
+			}
 		}
 
 		template<typename value_type> JSONIFIER_INLINE static void skipObject(parse_context_type& context) noexcept {
-			++context.iter;
-			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS()
-			}
-			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '}') {
-				--context.currentObjectDepth;
+			if constexpr (options.partialRead) {
+				++context.iter;
+				size_t currentDepth{ 1 };
+				while (context.iter != context.endIter && currentDepth > 0) {
+					switch (**context.iter) {
+						[[unlikely]] case '{': {
+							++currentDepth;
+							++context.iter;
+							break;
+						}
+						[[unlikely]] case '}': {
+							--currentDepth;
+							if (currentDepth == 0) {
+								++context.iter;
+								return;
+							}
+							++context.iter;
+							break;
+						}
+						[[likely]] default: {
+							++context.iter;
+							break;
+						}
+					}
+				}
+			} else {
 				++context.iter;
 				if constexpr (!options.minified) {
 					JSONIFIER_SKIP_WS()
 				}
-				return;
-			}
-			while (true) {
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
-					skipString(context);
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '}') {
+					--context.currentObjectDepth;
 					++context.iter;
-				} else {
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
 					return;
 				}
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
+				while (true) {
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
+						skipString(context);
+						++context.iter;
+					} else {
+						return;
+					}
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
+						++context.iter;
+					} else {
+						return;
+					}
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
+					skipToNextValue<value_type>(context);
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ',') {
+						++context.iter;
+					} else {
+						break;
+					}
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
 				}
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ':') {
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '}') {
+					--context.currentObjectDepth;
 					++context.iter;
-				} else {
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
 					return;
 				}
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
-				}
-				skipToNextValue<value_type>(context);
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ',') {
-					++context.iter;
-				} else {
-					break;
-				}
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
-				}
-			}
-			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '}') {
-				--context.currentObjectDepth;
-				++context.iter;
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
-				}
-				return;
 			}
 		}
 
@@ -954,149 +1025,214 @@ namespace jsonifier_internal {
 		}
 
 		template<char valueStart, char valueEnd> JSONIFIER_ALWAYS_INLINE static void skipToEndOfValue(parse_context_type& context) {
-			size_t depth		   = 1;
-			size_t remainingLength = static_cast<size_t>(context.endIter - context.iter);
-
-			const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
-			const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
-
-			while (nextOpenOrClose && depth > 0 && context.iter < context.endIter) {
-				if (nextQuote && (nextQuote < nextOpenOrClose)) {
-					skipString(context);
-					++context.iter;
-					remainingLength = static_cast<size_t>(context.endIter - context.iter);
-					nextQuote		= static_cast<const char*>(std::memchr(context.iter, '"', remainingLength));
-				} else {
-					if (*nextOpenOrClose == valueEnd) {
-						--depth;
-					} else if (*nextOpenOrClose == valueStart) {
-						++depth;
+			if constexpr (options.partialRead) {
+				size_t depth{ 1 };
+				while (depth > 0 && context.iter < context.endIter) {
+					switch (**context.iter) {
+						case '{': {
+							++depth;
+							break;
+						}
+						case '}': {
+							--depth;
+							break;
+						}
+						default: {
+							break;
+						}
 					}
-					context.iter = nextOpenOrClose;
-					if (depth == 0) {
+					++context.iter;
+				}
+			} else {
+				size_t depth		   = 1;
+				size_t remainingLength = static_cast<size_t>(context.endIter - context.iter);
+
+				const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
+				const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
+
+				while (nextOpenOrClose && depth > 0 && context.iter + bytesPerStep < context.endIter) {
+					if (nextQuote && (nextQuote < nextOpenOrClose)) {
+						skipString(context);
 						++context.iter;
-						return;
+						remainingLength = static_cast<size_t>(context.endIter - context.iter);
+						nextQuote		= static_cast<const char*>(std::memchr(context.iter, '"', remainingLength));
+					} else {
+						if (*nextOpenOrClose == valueEnd) {
+							--depth;
+						} else if (*nextOpenOrClose == valueStart) {
+							++depth;
+						}
+						context.iter = nextOpenOrClose;
+						if (depth == 0) {
+							return;
+						}
+						++context.iter;
+						remainingLength = static_cast<size_t>(context.endIter - context.iter);
+						nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 					}
-					remainingLength = static_cast<size_t>(context.endIter - context.iter);
-					++context.iter;
-					nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 				}
 			}
 		}
 
 		template<typename value_type> JSONIFIER_INLINE static void skipArray(parse_context_type& context) noexcept {
-			++context.iter;
-			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS()
-			}
-			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ']') {
-				--context.currentArrayDepth;
+			if constexpr (options.partialRead) {
 				++context.iter;
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
-				}
-				return;
-			}
-			while (true) {
-				skipToNextValue<value_type>(context);
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ',') {
+				size_t currentDepth{ 1 };
+				while (context.iter != context.endIter && currentDepth > 0) {
+					switch (**context.iter) {
+						[[unlikely]] case '[': {
+							++currentDepth;
+							break;
+						}
+						[[unlikely]] case ']': {
+							--currentDepth;
+							break;
+						}
+						[[likely]] default: { break; }
+					}
 					++context.iter;
-				} else {
-					break;
 				}
-				if constexpr (!options.minified) {
-					JSONIFIER_SKIP_WS()
-				}
-			}
-			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ']') {
-				--context.currentArrayDepth;
+			} else {
 				++context.iter;
 				if constexpr (!options.minified) {
 					JSONIFIER_SKIP_WS()
 				}
-				return;
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ']') {
+					--context.currentArrayDepth;
+					++context.iter;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
+					return;
+				}
+				while (true) {
+					skipToNextValue<value_type>(context);
+					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ',') {
+						++context.iter;
+					} else {
+						break;
+					}
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
+				}
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == ']') {
+					--context.currentArrayDepth;
+					++context.iter;
+					if constexpr (!options.minified) {
+						JSONIFIER_SKIP_WS()
+					}
+					return;
+				}
 			}
 		}
 
 		template<typename value_type> JSONIFIER_INLINE static void skipToNextValue(parse_context_type& context) noexcept {
-			if constexpr (!options.minified) {
-				JSONIFIER_SKIP_WS()
-			}
-			if JSONIFIER_LIKELY ((context.iter + 1) < context.endIter) {
-				switch (*context.iter) {
+			if constexpr (options.partialRead) {
+				switch (**context.iter) {
 					case '{': {
-						++context.currentObjectDepth;
 						skipObject<value_type>(context);
 						break;
 					}
 					case '[': {
-						++context.currentArrayDepth;
 						skipArray<value_type>(context);
 						break;
 					}
-					case '"': {
-						skipString(context);
-						if ((context.iter < context.endIter) && *context.iter == '"') {
-							++context.iter;
-						} else {
-							context.currentObjectDepth++;
-							return;
-						}
-						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS()
-						}
-						break;
-					}
-					case 'n': {
-						context.iter += 4;
-						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS()
-						}
-						break;
-					}
-					case 'f': {
-						context.iter += 5;
-						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS()
-						}
-						break;
-					}
-					case 't': {
-						context.iter += 4;
-						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS()
-						}
-						break;
-					}
-					case '0':
-						[[fallthrough]];
-					case '1':
-						[[fallthrough]];
-					case '2':
-						[[fallthrough]];
-					case '3':
-						[[fallthrough]];
-					case '4':
-						[[fallthrough]];
-					case '5':
-						[[fallthrough]];
-					case '6':
-						[[fallthrough]];
-					case '7':
-						[[fallthrough]];
-					case '8':
-						[[fallthrough]];
-					case '9':
-						[[fallthrough]];
-					case '-': {
-						skipNumber(context);
-						if constexpr (!options.minified) {
-							JSONIFIER_SKIP_WS()
-						}
+					case '\0': {
 						break;
 					}
 					default: {
-						break;
+						++context.iter;
+					}
+				}
+			} else {
+				if constexpr (!options.minified) {
+					JSONIFIER_SKIP_WS()
+				}
+				if JSONIFIER_LIKELY ((context.iter + 1) < context.endIter) {
+					switch (*context.iter) {
+						case '{': {
+							++context.currentObjectDepth;
+							skipObject<value_type>(context);
+							break;
+						}
+						case '[': {
+							++context.currentArrayDepth;
+							skipArray<value_type>(context);
+							break;
+						}
+						case ',': {
+							++context.iter;
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							skipToNextValue<value_type>(context);
+							break;
+						}
+						case '"': {
+							skipString(context);
+							if ((context.iter < context.endIter) && *context.iter == '"') {
+								++context.iter;
+							} else {
+								context.currentObjectDepth++;
+								return;
+							}
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							break;
+						}
+						case 'n': {
+							context.iter += 4;
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							break;
+						}
+						case 'f': {
+							context.iter += 5;
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							break;
+						}
+						case 't': {
+							context.iter += 4;
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							break;
+						}
+						case '0':
+							[[fallthrough]];
+						case '1':
+							[[fallthrough]];
+						case '2':
+							[[fallthrough]];
+						case '3':
+							[[fallthrough]];
+						case '4':
+							[[fallthrough]];
+						case '5':
+							[[fallthrough]];
+						case '6':
+							[[fallthrough]];
+						case '7':
+							[[fallthrough]];
+						case '8':
+							[[fallthrough]];
+						case '9':
+							[[fallthrough]];
+						case '-': {
+							skipNumber(context);
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							break;
+						}
+						default: {
+							break;
+						}
 					}
 				}
 			}
