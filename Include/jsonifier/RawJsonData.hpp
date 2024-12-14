@@ -186,24 +186,24 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						typename jsonifier::raw_json_data::object_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::object_type, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
+						jsonifier_internal::parse_impl<false, false, optionsNew, typename jsonifier::raw_json_data::object_type, std::string,
+							jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>>::impl(results, testContext);
 						return results;
 					}
 					case '[': {
 						typename jsonifier::raw_json_data::array_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::array_type, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
+						jsonifier_internal::parse_impl<false, false, optionsNew, typename jsonifier::raw_json_data::array_type, std::string,
+							jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>>::impl(results, testContext);
 						return results;
 					}
 					case '"': {

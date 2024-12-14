@@ -25,6 +25,7 @@
 
 #include <jsonifier/ISA/SimdTypes.hpp>
 #include <jsonifier/Tuple.hpp>
+#include <source_location>
 #include <type_traits>
 #include <functional>
 #include <optional>
@@ -43,6 +44,16 @@
 #include <array>
 
 namespace jsonifier_internal {
+
+	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+		os << "File: " << location.file_name() << std::endl;
+		os << "Line: " << location.line() << std::endl;
+		return os;
+	}
+
+	JSONIFIER_ALWAYS_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+		std::cout << location;
+	}
 
 	template<typename derived_type> class parser;
 
@@ -120,7 +131,7 @@ namespace jsonifier {
 
 	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
-	template<typename value_type> struct core {};
+	template<typename value_type> struct core;
 
 	template<bool value, typename value_type> struct falseV {
 		static_assert(value, "Sorry, but the static assert failed.");
