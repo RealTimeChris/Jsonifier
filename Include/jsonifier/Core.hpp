@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/StringView.hpp>
 
 namespace jsonifier_internal {
 

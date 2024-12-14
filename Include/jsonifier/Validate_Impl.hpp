@@ -30,7 +30,8 @@ namespace jsonifier_internal {
 	static constexpr bool optionsVal{ false };
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Object_Start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
+		template<typename validator_type, typename iterator>
+		JSONIFIER_INLINE static bool impl(iterator&& iter, iterator&& end, uint64_t& depth, validator_type& validatorRef) noexcept {
 			if (!*iter || **iter != '{') {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -49,7 +50,7 @@ namespace jsonifier_internal {
 				return true;
 			}
 
-			while (*iter) {
+			while (*iter < *end) {
 				if (!validate_impl<json_structural_type::String, derived_type>::impl(iter, validatorRef)) {
 					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -63,8 +64,14 @@ namespace jsonifier_internal {
 				}
 
 				++iter;
-				if (!validator<derived_type>::impl(iter, depth, validatorRef)) {
+				if (!validator<derived_type>::impl(iter, end, depth, validatorRef)) {
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
+						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
+				}
+
+				if (*iter >= *end || **iter == 0) {
+					return true;
 				}
 
 				if (*iter && **iter == ',') {
@@ -72,6 +79,9 @@ namespace jsonifier_internal {
 				} else {
 					if (!*iter || **iter == '}') {
 						++iter;
+						if (*iter >= *end || **iter == 0) {
+							return true;
+						}
 						if (*iter && **iter != ',' && **iter != ']' && **iter != '}') {
 							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -97,7 +107,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Array_Start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
+		template<typename validator_type, typename iterator>
+		JSONIFIER_INLINE static bool impl(iterator&& iter, iterator&& end, uint64_t& depth, validator_type& validatorRef) noexcept {
 			if (!*iter || **iter != '[') {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Array_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -118,7 +129,9 @@ namespace jsonifier_internal {
 			}
 
 			while (*iter) {
-				if (!validator<derived_type>::impl(iter, depth, validatorRef)) {
+				if (!validator<derived_type>::impl(iter, end, depth, validatorRef)) {
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
+						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 				if (*iter && **iter == ',') {
@@ -214,7 +227,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 
@@ -249,18 +262,19 @@ namespace jsonifier_internal {
 			};
 
 			auto consumeSign = [&] {
-				if (*newPtr == '-' || *newPtr == 0x2Bu) {
+				if (*newPtr == '-' || *newPtr == '+') {
 					++newPtr;
-					return true;
 				}
-				return false;
+				return true;
 			};
 
 			if (!consumeSign()) {
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
+					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 
-			consumeDigits(1);
+			consumeDigits();
 
 			if (consumeChar(0x2Eu)) {
 				if (!*iter || !consumeDigits(1)) {
@@ -309,7 +323,7 @@ namespace jsonifier_internal {
 				}
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 
@@ -328,7 +342,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 

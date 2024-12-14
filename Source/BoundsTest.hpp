@@ -23,22 +23,30 @@
 #pragma once
 
 #include "Common.hpp"
+#include "Jsonifier.hpp"
 
 #include <jsonifier/Index.hpp>
 #include <filesystem>
 #include <fstream>
+
+struct test_struct_new {
+	test_struct a{};
+};
+
+template<> struct jsonifier::core<test_struct_new> {
+	using value_type				 = test_struct_new;
+	static constexpr auto parseValue = createValue<make_json_entity<&value_type::a>()>();
+};
 
 namespace bounds_tests {
 
 	bool boundsTests() noexcept {
 		jsonifier::jsonifier_core<> parser{};
 		test_generator<test_struct> tests{};
-		partial_test<partial_test_struct> newTests{};
+		test_struct_new newTests{};
 		std::string testString{};
 		parser.serializeJson(tests, testString);
 		parser.parseJson(newTests, testString);
-		newTests.m.resize(1);
-		newTests.s.resize(0);
 		parser.serializeJson(newTests, testString);
 		while (testString.size() > 0) {
 			test<test_struct> newData{};
