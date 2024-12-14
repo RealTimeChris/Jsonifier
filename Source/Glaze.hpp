@@ -77,6 +77,21 @@ template<> struct glz::meta<citm_catalog_message> {
 			&value_type::topicNames, &value_type::performances, &value_type::events, &value_type::venueNames, &value_type::subjectNames, &value_type::blockNames);
 };
 
+template<> struct glz::meta<partial_price> {
+	using value_type			= partial_price;
+	static constexpr auto value = object(&value_type::seatCategoryId);
+};
+
+template<> struct glz::meta<partial_performance> {
+	using value_type			= partial_performance;
+	static constexpr auto value = object(&value_type::prices, &value_type::venueCode);
+};
+
+template<> struct glz::meta<citm_catalog_partial_message> {
+	using value_type			= citm_catalog_partial_message;
+	static constexpr auto value = object(&value_type::performances);
+};
+
 template<> struct glz::meta<search_metadata_data> {
 	using value_type			= search_metadata_data;
 	static constexpr auto value = object(&value_type::since_id_str, &value_type::next_results, &value_type::refresh_url, &value_type::max_id_str, &value_type::completed_in,
@@ -161,17 +176,17 @@ template<> struct glz::meta<twitter_message> {
 };
 
 template<> struct glz::meta<twitter_user_partial_data> {
-	using value_type				 = twitter_user_partial_data;
+	using value_type			= twitter_user_partial_data;
 	static constexpr auto value = object(&value_type::screen_name);
 };
 
 template<> struct glz::meta<status_partial_data> {
-	using value_type				 = status_partial_data;
+	using value_type			= status_partial_data;
 	static constexpr auto value = object(&value_type::text, &value_type::user, &value_type::retweet_count);
 };
 
 template<> struct glz::meta<twitter_partial_message> {
-	using value_type				 = twitter_partial_message;
+	using value_type			= twitter_partial_message;
 	static constexpr auto value = object(&value_type::statuses);
 };
 
@@ -264,33 +279,27 @@ template<> struct glz::meta<test_struct> {
 	static constexpr auto value = object(&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04);
 };
 
-template<> struct glz::meta<partial_test_struct> {
-	using value_type				 = partial_test_struct;
-	static constexpr auto value = object(&value_type::testVals05, &value_type::testVals01);
+template<> struct glz::meta<abc_test_struct> {
+	using value_type			= abc_test_struct;
+	static constexpr auto value = object(&value_type::testVals04, &value_type::testVals03, &value_type::testVals01, &value_type::testVals05, &value_type::testVals02);
 };
 
-template<> struct glz::meta<test<test_struct>> {
-	using value_type			= test<test_struct>;
+template<typename value_type_new> struct glz::meta<test<value_type_new>> {
+	using value_type			= test<value_type_new>;
 	static constexpr auto value = object(&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z);
 };
 
-template<> struct glz::meta<partial_test<test_struct>> {
-	using value_type				   = partial_test<test_struct>;
-	static constexpr auto value		   = object(&value_type::m);
-	static constexpr auto partial_read = true;
-};
-
-template<> struct glz::meta<test_generator<test_struct>> {
-	using value_type			= test_generator<test_struct>;
+template<typename value_type_new> struct glz::meta<test_generator<value_type_new>> {
+	using value_type			= test_generator<value_type_new>;
 	static constexpr auto value = object(&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z);
 };
 
-template<> struct glz::meta<abc_test<test_struct>> {
-	using value_type			= abc_test<test_struct>;
+template<typename value_type_new> struct glz::meta<abc_test<value_type_new>> {
+	using value_type			= abc_test<value_type_new>;
 	static constexpr auto value = object(&value_type::z, &value_type::y, &value_type::x, &value_type::w, &value_type::v, &value_type::u, &value_type::t, &value_type::s,
 		&value_type::r, &value_type::q, &value_type::p, &value_type::o, &value_type::n, &value_type::m, &value_type::l, &value_type::k, &value_type::j, &value_type::i,
 		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a);

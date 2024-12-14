@@ -118,7 +118,7 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new&& value, iterator&& iter, iterator&& end) noexcept {
+	template<typename value_type_new, typename iterator> JSONIFIER_ALWAYS_INLINE bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = std::remove_cvref_t<value_type_new>;
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {

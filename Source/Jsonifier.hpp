@@ -28,7 +28,7 @@
 
 template<> struct jsonifier::core<audience_sub_category_names> {
 	using value_type				 = audience_sub_category_names;
-	static constexpr auto parseValue = createValue("337100890", &value_type::the337100890);
+	static constexpr auto parseValue = createValue<&value_type::the337100890>();
 };
 
 template<> struct jsonifier::core<names> {
@@ -75,6 +75,21 @@ template<> struct jsonifier::core<citm_catalog_message> {
 			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
 };
 
+template<> struct jsonifier::core<partial_price> {
+	using parseValue_type			 = partial_price;
+	static constexpr auto parseValue = createValue<&parseValue_type::seatCategoryId>();
+};
+
+template<> struct jsonifier::core<partial_performance> {
+	using parseValue_type			 = partial_performance;
+	static constexpr auto parseValue = createValue<&parseValue_type::prices, &parseValue_type::venueCode>();
+};
+
+template<> struct jsonifier::core<citm_catalog_partial_message> {
+	using parseValue_type			 = citm_catalog_partial_message;
+	static constexpr auto parseValue = createValue<&parseValue_type::performances>();
+};
+
 template<> struct jsonifier::core<search_metadata_data> {
 	using value_type				 = search_metadata_data;
 	static constexpr auto parseValue = createValue<&value_type::completed_in, &value_type::max_id, &value_type::max_id_str, &value_type::next_results, &value_type::query,
@@ -85,6 +100,7 @@ template<> struct jsonifier::core<hashtag_data> {
 	using value_type				 = hashtag_data;
 	static constexpr auto parseValue = createValue<&value_type::text, &value_type::indices>();
 };
+
 
 template<> struct jsonifier::core<large_data> {
 	using value_type				 = large_data;
@@ -134,20 +150,15 @@ template<> struct jsonifier::core<user_entities> {
 };
 
 template<> struct jsonifier::core<twitter_user_data> {
-	using value_type				 = twitter_user_data;
-	static constexpr auto parseValue = createValue("id", &value_type::id, "id_str", &value_type::id_str, "name", &value_type::name, "screen_name", &value_type::screen_name,
-		"location", &value_type::location, "description", &value_type::description, "url", &value_type::url, "entities", &value_type::entities, "protected",
-		&value_type::protectedVal, "followers_count", &value_type::followers_count, "friends_count", &value_type::friends_count, "listed_count", &value_type::listed_count,
-		"created_at", &value_type::created_at, "favourites_count", &value_type::favourites_count, "utc_offset", &value_type::utc_offset, "time_zone", &value_type::time_zone,
-		"geo_enabled", &value_type::geo_enabled, "verified", &value_type::verified, "statuses_count", &value_type::statuses_count, "lang", &value_type::lang,
-		"contributors_enabled", &value_type::contributors_enabled, "is_translator", &value_type::is_translator, "is_translation_enabled", &value_type::is_translation_enabled,
-		"profile_background_color", &value_type::profile_background_color, "profile_background_image_url", &value_type::profile_background_image_url,
-		"profile_background_image_url_https", &value_type::profile_background_image_url_https, "profile_background_tile", &value_type::profile_background_tile, "profile_image_url",
-		&value_type::profile_image_url, "profile_image_url_https", &value_type::profile_image_url_https, "profile_banner_url", &value_type::profile_banner_url,
-		"profile_link_color", &value_type::profile_link_color, "profile_sidebar_border_color", &value_type::profile_sidebar_border_color, "profile_sidebar_fill_color",
-		&value_type::profile_sidebar_fill_color, "profile_text_color", &value_type::profile_text_color, "profile_use_background_image", &value_type::profile_use_background_image,
-		"default_profile", &value_type::default_profile, "default_profile_image", &value_type::default_profile_image, "following", &value_type::following, "follow_request_sent",
-		&value_type::follow_request_sent, "notifications", &value_type::notifications);
+	using value_type = twitter_user_data;
+	static constexpr auto parseValue = createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location,
+		&value_type::description, &value_type::url, &value_type::entities, &value_type::protectedVal, &value_type::followers_count, &value_type::friends_count,
+		&value_type::listed_count, &value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled,
+		&value_type::verified, &value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
+		&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,
+		&value_type::profile_image_url, &value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color,
+		&value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image,
+		&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
 };
 
 template<> struct jsonifier::core<status_data> {
@@ -198,6 +209,7 @@ template<> struct jsonifier::core<channel_data> {
 		&value_type::bitrate, &value_type::version, &value_type::status, &value_type::flags, &value_type::topic, &value_type::nsfw, &value_type::type, &value_type::icon,
 		&value_type::name, &value_type::id>();
 };
+
 
 template<> struct jsonifier::core<user_data> {
 	using value_type				 = user_data;
@@ -279,26 +291,16 @@ template<> struct jsonifier::core<test_struct> {
 	static constexpr auto parseValue = createValue<&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04>();
 };
 
-template<> struct jsonifier::core<partial_test_struct> {
-	using value_type				 = partial_test_struct;
-	static constexpr auto parseValue = createValue<&value_type::testVals05, &value_type::testVals01>();
-};
-
 template<> struct jsonifier::core<abc_test_struct> {
 	using value_type				 = abc_test_struct;
 	static constexpr auto parseValue = createValue<&value_type::testVals04, &value_type::testVals03, &value_type::testVals01, &value_type::testVals05, &value_type::testVals02>();
 };
 
-template<> struct jsonifier::core<test<test_struct>> {
-	using value_type				 = test<test_struct>;
+template<typename value_type_new> struct jsonifier::core<test<value_type_new>> {
+	using value_type				 = test<value_type_new>;
 	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
-};
-
-template<typename value_type_new> struct jsonifier::core<partial_test<value_type_new>> {
-	using value_type				 = partial_test<value_type_new>;
-	static constexpr auto parseValue = createValue<&value_type::m>();
 };
 
 template<typename value_type_new> struct jsonifier::core<test_generator<value_type_new>> {

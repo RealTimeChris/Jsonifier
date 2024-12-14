@@ -25,6 +25,7 @@
 
 #include <jsonifier/ISA/SimdTypes.hpp>
 #include <jsonifier/Tuple.hpp>
+#include <source_location>
 #include <type_traits>
 #include <functional>
 #include <optional>
@@ -43,6 +44,27 @@
 #include <array>
 
 namespace jsonifier_internal {
+
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& arg) noexcept {
+		return static_cast<value_type&&>(arg);
+	}
+
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& arg) noexcept {
+		static_assert(!std::is_lvalue_reference<value_type>::value, "Forwarding an rvalue as an lvalue is not allowed");
+		return static_cast<value_type&&>(arg);
+	}
+
+	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+		os << "File: " << location.file_name() << std::endl;
+		os << "Line: " << location.line() << std::endl;
+		return os;
+	}
+
+	JSONIFIER_ALWAYS_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+		std::cout << location;
+	}
+
+	template<size_t indexNew, typename member_type_new, typename class_type_new> struct json_entity;
 
 	template<typename derived_type> class parser;
 
@@ -89,28 +111,39 @@ namespace jsonifier_internal {
 	template<const auto& function, typename... arg_types, size_t... indices>
 	JSONIFIER_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		void(args...);
-		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, std::forward<arg_types>(args)...), ...);
+		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, forward<arg_types>(args)...), ...);
 	}
 
 	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(arg_types&&... args) noexcept {
-		forEachImpl<function>(std::make_index_sequence<limit>{}, std::forward<arg_types>(args)...);
+		forEachImpl<function>(std::make_index_sequence<limit>{}, forward<arg_types>(args)...);
 	}
 
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	JSONIFIER_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
-			variant_type&& variantNew = std::forward<variant_type>(variant);
+			variant_type&& variantNew = forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(std::get<currentIndex>(std::forward<variant_type>(variantNew)), std::forward<arg_types>(args)...);
+				function(std::get<currentIndex>(forward<variant_type>(variantNew)), forward<arg_types>(args)...);
 				return;
 			}
-			visit<function, currentIndex + 1>(std::forward<variant_type>(variantNew), std::forward<arg_types>(args)...);
+			visit<function, currentIndex + 1>(forward<variant_type>(variantNew), forward<arg_types>(args)...);
 		}
 	}
 
 }
 
 namespace jsonifier {
+
+	enum class json_type {
+		object	 = 0,
+		array	 = 1,
+		string	 = 2,
+		number	 = 3,
+		boolean	 = 4,
+		null	 = 5,
+		accessor = 6,
+		unset	 = 7,
+	};
 
 	template<typename value_type, uint64_t> class string_base;
 
@@ -120,26 +153,28 @@ namespace jsonifier {
 
 	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
-	template<typename value_type> struct core {};
-
-	template<bool value, typename value_type> struct falseV {
-		static_assert(value, "Sorry, but the static assert failed.");
-		static constexpr bool boolVal{ value };
-	};
+	template<typename value_type> struct core;
 
 	template<typename value_type> struct value {
 		value_type val{};
+		json_type type{};
+
+		constexpr value(value_type valNew, json_type typeNew) : val{ valNew }, type{ typeNew } {}
+
+		constexpr value(value_type valNew) : val{ valNew }, type{} {}
 	};
+
+	template<typename value_type> value(value_type, json_type) -> value<value_type>;
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
-	template<typename value_type> struct scalar_value {
-		value_type val{};
-	};
-
-	template<typename value_type> scalar_value(value_type) -> scalar_value<value_type>;
-
 	namespace concepts {
+
+		template<typename value_type>
+		concept is_json_entity = requires(std::remove_cvref_t<value_type> value) {
+			{ value.type };
+			{ value.memberPtr };
+		};
 
 		template<typename value_type>
 		concept has_range = requires(std::remove_cvref_t<value_type> value) {
@@ -394,14 +429,16 @@ namespace jsonifier {
 		concept has_member_t = requires { typename std::remove_cvref_t<value_type>::member_type; };
 
 		template<typename value_type>
+		concept has_json_type = requires {
+			{ std::remove_cvref_t<value_type>::type } -> std::same_as<jsonifier::json_type>;
+		};
+
+		template<typename value_type>
 		concept is_resizable = has_resize<value_type> && has_reserve<value_type> && !std::is_const_v<std::remove_reference_t<value_type>>;
 
 		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
 
 		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
-
-		template<typename value_type>
-		concept jsonifier_scalar_value_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, scalar_value>;
 
 		template<typename value_type>
 		concept jsonifier_object_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;
