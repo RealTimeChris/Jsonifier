@@ -32,20 +32,22 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
+	template<jsonifier::json_type type, jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type,
+		typename indent_type>
 	struct serialize_impl;
 
 	template<const auto optionsNew> struct serialize {
 		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, indent_type&& indent) noexcept {
-			serialize_impl<optionsNew, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(std::forward<value_type>(value),
-				std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<indent_type>(indent));
+			serialize_impl<getJsonType<value_type>(), optionsNew, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(
+				std::forward<value_type>(value), std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<indent_type>(indent));
 		}
 	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
+		template<jsonifier::json_type type, jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type,
+			typename indent_type>
 		friend struct serialize_impl;
 
 		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;

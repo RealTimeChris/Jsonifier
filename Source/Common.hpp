@@ -53,8 +53,8 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") ||
-		osCompilerIdNew.view().contains("g++") || osCompilerIdNew.view().contains("apple")) {
+	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") || osCompilerIdNew.view().contains("g++") ||
+		osCompilerIdNew.view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
 	} else if constexpr (osCompilerIdNew.view().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };
@@ -200,32 +200,23 @@ bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFile
 }
 
 struct test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<double> testVals04{};
-	std::vector<int64_t> testVals03{};
-	std::vector<bool> testVals05{};
-};
-
-struct partial_test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<bool> testVals05{};
+	std::vector<uint64_t> testVals01{};
+	std::vector<int64_t> testVals02{};
+	std::vector<double> testVals03{};
+	std::vector<bool> testVals04{};
+	std::vector<std::string> testVals05{};
 };
 
 struct abc_test_struct {
-	std::vector<bool> testVals05{};
-	std::vector<int64_t> testVals03{};
-	std::vector<double> testVals04{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<std::string> testVals01{};
+	std::vector<std::string> testVals05{};
+	std::vector<bool> testVals04{};
+	std::vector<double> testVals03{};
+	std::vector<int64_t> testVals02{};
+	std::vector<uint64_t> testVals01{};
 };
 
 template<typename value_type> struct test {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-};
-
-template<typename value_type> struct partial_test {
-	std::vector<value_type> m, s;
 };
 
 inline static std::random_device randomEngine{};
@@ -259,7 +250,7 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount			 = length / 4ull;
+		auto unicodeCount = length / 4ull;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -289,7 +280,7 @@ template<typename value_type> struct test_generator {
 		}
 
 		return result;
-	}	
+	}
 
 	static double generateDouble() {
 		double logValue = disDouble(gen);
@@ -318,24 +309,24 @@ template<typename value_type> struct test_generator {
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
-					v[x].testVals01.emplace_back(newString);
+					v[x].testVals05.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals02.emplace_back(generateUint());
+					v[x].testVals01.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals03.emplace_back(generateInt());
+					v[x].testVals02.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
-					v[x].testVals05.emplace_back(newBool);
+					v[x].testVals04.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals04.emplace_back(generateDouble());
+					v[x].testVals03.emplace_back(generateDouble());
 				}
 			}
 		};

@@ -149,8 +149,8 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			uint64_t typeNew) noexcept {
 			stringLength = static_cast<uint64_t>(stringLengthNew);
-			errorIndex	 = static_cast<uint64_t>(errorIndexNew);
 			location	 = sourceLocation;
+			errorIndex	 = errorIndexNew;
 			stringView	 = stringViewNew;
 			errorClass	 = errorClassNew;
 			errorType	 = typeNew;
@@ -189,11 +189,11 @@ namespace jsonifier_internal {
 
 			const auto start	   = std::begin(errorString) + errorIndex;
 			line				   = size_t(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1);
-			const auto rstart	   = std::rbegin(errorString) + errorString.size() - errorIndex - 1;
+			const auto rstart	   = std::rbegin(errorString) + static_cast<int64_t>(errorString.size()) - errorIndex - 1ll;
 			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
-			localIndex			   = size_t(std::distance(rstart, prevNewLine)) - 1;
+			localIndex			   = std::distance(rstart, prevNewLine) - 1ll;
 			auto endIndex{ std::end(errorString) - start >= 64 ? 64 : std::end(errorString) - start };
-			context = std::string{ start, start + endIndex };
+			context = jsonifier::string{ start, static_cast<size_t>(endIndex) };
 			for (auto& c: context) {
 				if (c == '\t') {
 					c = ' ';
