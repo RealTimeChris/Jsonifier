@@ -33,8 +33,8 @@ namespace jsonifier_internal {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using size_type				 = size_t;
-		using iterator				 = iterator_type<value_type>;
-		using const_iterator		 = iterator_type<const value_type>;
+		using iterator				 = basic_iterator<value_type>;
+		using const_iterator		 = basic_iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -113,12 +113,15 @@ namespace jsonifier_internal {
 		using const_reference		 = const value_type&;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
-		using const_iterator		 = const iterator_type<value_type>;
-		using iterator				 = iterator_type<value_type>;
+		using const_iterator		 = const basic_iterator<value_type>;
+		using iterator				 = basic_iterator<value_type>;
 		using size_type				 = size_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using difference_type		 = std::ptrdiff_t;
+
+		constexpr array(std::initializer_list<value_type>) {
+		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
 			return nullptr;
@@ -130,6 +133,14 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
 			return 0;
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr const_reference operator[](size_type index) const noexcept {
+			return dataVal[index];
+		}
+
+		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) noexcept {
+			return dataVal[index];
 		}
 
 		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
@@ -147,6 +158,11 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
 			return nullptr;
 		}
+
+		constexpr void fill(const value_type&) noexcept {
+		}
+
+		value_type dataVal[0];
 	};
 
 }

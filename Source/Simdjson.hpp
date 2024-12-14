@@ -226,12 +226,17 @@ template<vector_t value_type> JSONIFIER_INLINE void getValue(value_type& value, 
 	for (size_t x = 0; (x < size) && (iter != newArray.end()); ++x, ++iter) {
 		resultNew = iter.value().operator*().value();
 		getValue(valueNew, resultNew.value());
-		value[x] = std::move(valueNew);
+		value[x] = jsonifier_internal::move(valueNew);
 	}
 	for (; iter != newArray.end(); ++iter) {
 		resultNew = iter.value().operator*().value();
 		getValue(valueNew, resultNew.value());
-		value.emplace_back(std::move(valueNew));
+		value.emplace_back(jsonifier_internal::move(valueNew));
+	}
+}
+
+template<> JSONIFIER_INLINE void getValue(jsonifier::skip&, simdjson::ondemand::value jsonData) {
+	if (!jsonData.is_null().value()) {
 	}
 }
 
@@ -255,7 +260,7 @@ template<map_t value_type> JSONIFIER_INLINE void getValue(value_type& value, sim
 		simdjson::ondemand::value field_value = field.value();
 		typename std::remove_cvref_t<decltype(value)>::mapped_type newValue;
 		getValue(newValue, field_value);
-		value[key] = std::move(newValue);
+		value[key] = jsonifier_internal::move(newValue);
 	}
 
 	return;
@@ -466,15 +471,15 @@ template<> JSONIFIER_INLINE void getValue(twitter_message& value, simdjson::onde
 	getValue(value.search_metadata, obj, "search_metadata");
 }
 
-template<> JSONIFIER_INLINE void getValue(twitter_user_partial_data& value, simdjson::ondemand::value jsonData) {
+template<> JSONIFIER_INLINE void getValue(user_data_partial& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
 	getValue(value.screen_name, obj, "screen_name");
 }
 
-template<> JSONIFIER_INLINE void getValue(status_partial_data& value, simdjson::ondemand::value jsonData) {
+template<> JSONIFIER_INLINE void getValue(status_data_partial& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(value.retweet_count, obj, "retweet_count");
 	getValue(value.text, obj, "text");
-	getValue(value.source, obj, "source");
 	getValue(value.user, obj, "user");
 }
 

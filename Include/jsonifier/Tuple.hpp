@@ -71,7 +71,7 @@ namespace jsonifier_internal {
 		using type = B const&;
 	};
 
-	template<typename tup, typename B> using forward_as_t = typename forward_as<tup, B>::type;
+	template<typename tup, typename B> using forward_as_t = typename jsonifier_internal::forward_as<tup, B>::type;
 
 	template<typename value_type> using identity_t = value_type;
 

@@ -424,12 +424,12 @@ namespace jsonifier_jkj {
 
 			namespace bits {
 				// Most compilers should be able to optimize this into the ROR instruction.
-				// n is assumed to be at most of bit_width bits.
-				template<size_t bit_width, typename UInt> JSONIFIER_CONSTEXPR20 UInt rotr(UInt n, uint32_t r) noexcept {
+				// num is assumed to be at most of bit_width bits.
+				template<size_t bit_width, typename UInt> JSONIFIER_CONSTEXPR20 UInt rotr(UInt num, uint32_t r) noexcept {
 					static_assert(bit_width > 0, "jsonifier_jkj::dragonbox: rotation bit-width must be positive");
 					static_assert(bit_width <= value_bits<UInt>::value, "jsonifier_jkj::dragonbox: rotation bit-width is too large");
 					r &= (bit_width - 1);
-					return (n >> r) | (n << ((bit_width - r) & (bit_width - 1)));
+					return (num >> r) | (num << ((bit_width - r) & (bit_width - 1)));
 				}
 			}
 
@@ -469,9 +469,9 @@ namespace jsonifier_jkj {
 						return low_;
 					}
 
-					JSONIFIER_CONSTEXPR20 uint128& operator+=(std::uint_least64_t n) & noexcept {
+					JSONIFIER_CONSTEXPR20 uint128& operator+=(std::uint_least64_t num) & noexcept {
 						const auto generic_impl = [&] {
-							auto const sum = (low_ + n) & UINT64_C(0xffffffffffffffff);
+							auto const sum = (low_ + num) & UINT64_C(0xffffffffffffffff);
 							high_ += (sum < low_ ? 1 : 0);
 							low_ = sum;
 						};
@@ -492,7 +492,7 @@ namespace jsonifier_jkj {
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
 						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
 							unsigned long long carry{};
-							low_  = std::uint_least64_t(__builtin_addcll(low_, n, 0, &carry));
+							low_  = std::uint_least64_t(__builtin_addcll(low_, num, 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
 							return *this;
 						}
@@ -500,7 +500,7 @@ namespace jsonifier_jkj {
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
 						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
 							unsigned long carry{};
-							low_  = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(low_), static_cast<uint64_t>(n), 0, &carry));
+							low_  = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(low_), static_cast<uint64_t>(num), 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(high_), 0, carry, &carry));
 							return *this;
 						}
@@ -508,7 +508,7 @@ namespace jsonifier_jkj {
 #if JSONIFIER_HAS_BUILTIN(__builtin_addc) && !defined(__ibmxl__)
 						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint32_t>::value) {
 							uint32_t carry{};
-							low_  = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(n), 0, &carry));
+							low_  = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(num), 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(high_), 0, carry, &carry));
 							return *this;
 						}
@@ -518,7 +518,7 @@ namespace jsonifier_jkj {
 						// __builtin_ia32_addcarry_u64 is not documented, but it seems it takes unsigned
 						// int64_t arguments.
 						uint64_t result{};
-						const auto carry = __builtin_ia32_addcarry_u64(0, low_, n, &result);
+						const auto carry = __builtin_ia32_addcarry_u64(0, low_, num, &result);
 						low_			 = std::uint_least64_t(result);
 						__builtin_ia32_addcarry_u64(carry, high_, 0, &result);
 						high_ = std::uint_least64_t(result);
@@ -527,13 +527,13 @@ namespace jsonifier_jkj {
 						// https://learn.microsoft.com/en-us/cpp/c-runtime-library/standard-types
 						// and https://learn.microsoft.com/en-us/cpp/cpp/int8-int16-int32-int64.
 						static_assert(std::is_same<uint64_t, std::uint_least64_t>::value, "");
-						const auto carry = _addcarry_u64(0, low_, n, &low_);
+						const auto carry = _addcarry_u64(0, low_, num, &low_);
 						_addcarry_u64(carry, high_, 0, &high_);
 #elif defined(__INTEL_COMPILER) && (defined(_M_X64) || defined(__x86_64))
 						// Cannot find any documentation on how things are defined, but hopefully this
 						// is always true...
 						static_assert(std::is_same<unsigned __int64, std::uint_least64_t>::value, "");
-						const auto carry = _addcarry_u64(0, low_, n, &low_);
+						const auto carry = _addcarry_u64(0, low_, num, &low_);
 						_addcarry_u64(carry, high_, 0, &high_);
 #else
 						generic_impl();
@@ -692,17 +692,17 @@ namespace jsonifier_jkj {
 #endif
 			}
 
-			template<int32_t a, typename UInt> constexpr int32_t count_factors(UInt n) noexcept {
+			template<int32_t a, typename UInt> constexpr int32_t count_factors(UInt num) noexcept {
 				static_assert(a > 1, "");
 #if JSONIFIER_HAS_CONSTEXPR14
 				int32_t c = 0;
-				while (n % a == 0) {
-					n /= a;
+				while (num % a == 0) {
+					num /= a;
 					++c;
 				}
 				return c;
 #else
-				return n % a == 0 ? count_factors<a, UInt>(n / a) + 1 : 0;
+				return num % a == 0 ? count_factors<a, UInt>(num / a) + 1 : 0;
 #endif
 			}
 
@@ -715,17 +715,17 @@ namespace jsonifier_jkj {
 					"jsonifier_jkj::dragonbox: right-shift for signed integers must be arithmetic");
 
 				// For constexpr computation.
-				// Returns -1 when n = 0.
-				template<typename UInt> constexpr int32_t floor_log2(UInt n) noexcept {
+				// Returns -1 when num = 0.
+				template<typename UInt> constexpr int32_t floor_log2(UInt num) noexcept {
 #if JSONIFIER_HAS_CONSTEXPR14
 					int32_t count = -1;
-					while (n != 0) {
+					while (num != 0) {
 						++count;
-						n >>= 1;
+						num >>= 1;
 					}
 					return count;
 #else
-					return n == 0 ? -1 : floor_log2<UInt>(n / 2) + 1;
+					return num == 0 ? -1 : floor_log2<UInt>(num / 2) + 1;
 #endif
 				}
 
@@ -906,9 +906,9 @@ namespace jsonifier_jkj {
 			////////////////////////////////////////////////////////////////////////////////////////
 
 			namespace div {
-				// Replace n by floor(n / 10^N).
-				// Returns true if and only if n is divisible by 10^N.
-				// Precondition: n <= 10^(N+1)
+				// Replace num by floor(num / 10^N).
+				// Returns true if and only if num is divisible by 10^N.
+				// Precondition: num <= 10^(N+1)
 				// !!It takes an in-out parameter!!
 				template<int32_t N, typename UInt> struct divide_by_pow10_info;
 
@@ -937,35 +937,35 @@ namespace jsonifier_jkj {
 					static constexpr int32_t shift_amount			 = 12;
 				};
 
-				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 bool check_divisibility_and_divide_by_pow10(UInt& n) noexcept {
+				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 bool check_divisibility_and_divide_by_pow10(UInt& num) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(static_cast<int32_t>(value_bits<UInt>::value)), "");
-					assert(n <= compute_power<N + 1>(UInt(10)));
+					assert(num <= compute_power<N + 1>(UInt(10)));
 
 					using info				= divide_by_pow10_info<N, UInt>;
 					using intermediate_type = decltype(info::magic_number);
-					const auto prod			= intermediate_type(n * info::magic_number);
+					const auto prod			= intermediate_type(num * info::magic_number);
 
 					constexpr auto mask = intermediate_type((intermediate_type(1) << info::shift_amount) - 1);
 					const bool result	= ((prod & mask) < info::magic_number);
 
-					n = UInt(prod >> info::shift_amount);
+					num = UInt(prod >> info::shift_amount);
 					return result;
 				}
 
-				// Compute floor(n / 10^N) for small n and N.
-				// Precondition: n <= 10^(N+1)
-				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 UInt small_division_by_pow10(UInt n) noexcept {
+				// Compute floor(num / 10^N) for small num and N.
+				// Precondition: num <= 10^(N+1)
+				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 UInt small_division_by_pow10(UInt num) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(static_cast<int32_t>(value_bits<UInt>::value)), "");
-					assert(n <= compute_power<N + 1>(UInt(10)));
+					assert(num <= compute_power<N + 1>(UInt(10)));
 
-					return UInt((n * divide_by_pow10_info<N, UInt>::magic_number) >> divide_by_pow10_info<N, UInt>::shift_amount);
+					return UInt((num * divide_by_pow10_info<N, UInt>::magic_number) >> divide_by_pow10_info<N, UInt>::shift_amount);
 				}
 
-				// Compute floor(n / 10^N) for small N.
-				// Precondition: n <= n_max
-				template<int32_t N, typename UInt, UInt n_max> JSONIFIER_CONSTEXPR20 UInt divide_by_pow10(UInt n) noexcept {
+				// Compute floor(num / 10^N) for small N.
+				// Precondition: num <= n_max
+				template<int32_t N, typename UInt, UInt n_max> JSONIFIER_CONSTEXPR20 UInt divide_by_pow10(UInt num) noexcept {
 					static_assert(N >= 0, "");
 
 					// Specialize for 32-bit division by 10.
@@ -973,31 +973,31 @@ namespace jsonifier_jkj {
 					// minimum needed amount of shift is larger than 32. Hence, this may generate better
 					// code for 32-bit or smaller architectures. Even for 64-bit architectures, it seems
 					// compilers tend to generate mov + mul instead of a single imul for an unknown
-					// reason if we just write n / 10.
+					// reason if we just write num / 10.
 					JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 1 && n_max <= UINT32_C(1073741828)) {
-						return UInt(wuint::umul64(n, UINT32_C(429496730)) >> 32);
+						return UInt(wuint::umul64(num, UINT32_C(429496730)) >> 32);
 					}
 					// Specialize for 64-bit division by 10.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// minimum needed amount of shift is larger than 64.
 					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 1 && n_max <= UINT64_C(4611686018427387908)) {
-						return UInt(wuint::umul128_upper64(n, UINT64_C(1844674407370955162)));
+						return UInt(wuint::umul128_upper64(num, UINT64_C(1844674407370955162)));
 					}
 					// Specialize for 32-bit division by 100.
 					// It seems compilers tend to generate mov + mul instead of a single imul for an
-					// unknown reason if we just write n / 100.
+					// unknown reason if we just write num / 100.
 					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 2) {
-						return UInt(wuint::umul64(n, UINT32_C(1374389535)) >> 37);
+						return UInt(wuint::umul64(num, UINT32_C(1374389535)) >> 37);
 					}
 					// Specialize for 64-bit division by 1000.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// smallest magic number for this computation does not fit into 64-bits.
 					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 3 && n_max <= UINT64_C(15534100272597517998)) {
-						return UInt(wuint::umul128_upper64(n, UINT64_C(4722366482869645214)) >> 8);
+						return UInt(wuint::umul128_upper64(num, UINT64_C(4722366482869645214)) >> 8);
 					}
 					else {
 						constexpr auto divisor = compute_power<N>(UInt(10));
-						return n / divisor;
+						return num / divisor;
 					}
 				}
 			}

@@ -37,7 +37,7 @@ namespace std {
 
 namespace jsonifier {
 
-	enum class json_type : uint8_t {
+	enum class json_token_type : uint8_t {
 		Unset  = 0,
 		Object = '{',
 		Array  = '[',
@@ -68,21 +68,21 @@ namespace jsonifier {
 			jsonData = jsonDataNew;
 		}
 
-		JSONIFIER_INLINE json_type getType() const noexcept {
+		JSONIFIER_INLINE json_token_type getType() const noexcept {
 			if (std::holds_alternative<object_type>(value)) {
-				return json_type::Object;
+				return json_token_type::Object;
 			} else if (std::holds_alternative<array_type>(value)) {
-				return json_type::Array;
+				return json_token_type::Array;
 			} else if (std::holds_alternative<string_type>(value)) {
-				return json_type::String;
+				return json_token_type::String;
 			} else if (std::holds_alternative<double>(value)) {
-				return json_type::Number;
+				return json_token_type::Number;
 			} else if (std::holds_alternative<bool>(value)) {
-				return json_type::Bool;
+				return json_token_type::Bool;
 			} else if (std::holds_alternative<std::nullptr_t>(value)) {
-				return json_type::Null;
+				return json_token_type::Null;
 			} else {
-				return json_type::Unset;
+				return json_token_type::Unset;
 			}
 		}
 
@@ -186,24 +186,24 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						typename jsonifier::raw_json_data::object_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::object_type, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
+						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						return results;
 					}
 					case '[': {
 						typename jsonifier::raw_json_data::array_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::parse_impl<false, optionsNew, typename jsonifier::raw_json_data::array_type, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type>>::impl(results, testContext);
+						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						return results;
 					}
 					case '"': {

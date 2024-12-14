@@ -32,30 +32,52 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct object_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct array_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct string_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct number_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct bool_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct null_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename buffer_type, typename index_type, typename indent_type> struct accessor_val_serializer;
 
-	template<const auto optionsNew> struct serialize {
-		template<typename value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
+	template<jsonifier::serialize_options optionsNew> struct serialize {
+		template<typename value_type, typename buffer_type, typename index_type, typename indent_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type&& buffer, index_type&& index, indent_type&& indent) noexcept {
-			serialize_impl<optionsNew, std::remove_cvref_t<value_type>, std::remove_cvref_t<buffer_type>, index_type, indent_type>::impl(std::forward<value_type>(value),
-				std::forward<buffer_type>(buffer), std::forward<index_type>(index), std::forward<indent_type>(indent));
+			if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
+				object_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else if constexpr (jsonifier::concepts::vector_t<value_type> || jsonifier::concepts::raw_array_t<value_type>) {
+				array_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else if constexpr (jsonifier::concepts::string_t<value_type> || jsonifier::concepts::char_t<value_type>) {
+				string_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else if constexpr (jsonifier::concepts::num_t<value_type> || jsonifier::concepts::enum_t<value_type>) {
+				number_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else if constexpr (jsonifier::concepts::bool_t<value_type>) {
+				bool_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else if constexpr (jsonifier::concepts::always_null_t<value_type>) {
+				null_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			} else {
+				accessor_val_serializer<optionsNew, buffer_type, index_type, indent_type>::impl(jsonifier_internal::forward<value_type>(value),
+					jsonifier_internal::forward<buffer_type>(buffer), jsonifier_internal::forward<index_type>(index), jsonifier_internal::forward<indent_type>(indent));
+			}
 		}
 	};
 
 	template<typename derived_type> class serializer {
 	  public:
-		template<jsonifier::serialize_options optionsNew, typename value_type_new, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-		friend struct serialize_impl;
-
-		JSONIFIER_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_INLINE serializer(const serializer& other)			= delete;
+		JSONIFIER_ALWAYS_INLINE serializer& operator=(const serializer& other) = delete;
+		JSONIFIER_ALWAYS_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options optionsNew = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr jsonifier::serialize_options options{ optionsNew };
-			index  = 0;
 			indent = 0;
+			index  = 0;
 			serialize<options>::impl(std::forward<value_type>(object), stringBuffer, index, indent);
 			buffer.resize(index);
 			std::memcpy(buffer.data(), stringBuffer.data(), index);
@@ -65,8 +87,8 @@ namespace jsonifier_internal {
 		template<jsonifier::serialize_options optionsNew = jsonifier::serialize_options{}, typename value_type>
 		JSONIFIER_ALWAYS_INLINE std::string_view serializeJson(value_type&& object) noexcept {
 			static constexpr jsonifier::serialize_options options{ optionsNew };
-			index  = 0;
 			indent = 0;
+			index  = 0;
 			serialize<options>::impl(std::forward<value_type>(object), stringBuffer, index, indent);
 			return std::string_view{ stringBuffer.data(), index };
 		}
@@ -76,13 +98,13 @@ namespace jsonifier_internal {
 		size_t indent{};
 		size_t index{};
 
-		JSONIFIER_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
+		JSONIFIER_ALWAYS_INLINE serializer() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
+		JSONIFIER_ALWAYS_INLINE derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE ~serializer() noexcept = default;
+		JSONIFIER_ALWAYS_INLINE ~serializer() noexcept = default;
 	};
 
 }

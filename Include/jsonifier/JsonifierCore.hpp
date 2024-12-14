@@ -47,13 +47,13 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
-				errors = std::move(other.errors);
+				errors = jsonifier_internal::move(other.errors);
 			}
 			return *this;
 		}
 
 		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
-			*this = std::move(other);
+			*this = jsonifier_internal::move(other);
 		};
 
 		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {

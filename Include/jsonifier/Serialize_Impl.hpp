@@ -36,33 +36,6 @@ namespace jsonifier_internal {
 	static constexpr uint64_t falseVInt{ 435728179558 };
 	static constexpr uint64_t trueVInt{ 434025983730 };
 
-	template<typename value_type> constexpr size_t getTotalMemberCount(size_t currentCount = 0) {
-		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
-			constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
-			size_t count{ numMembers };
-			constexpr auto newVal			   = [](auto& currentCountNew) constexpr {
-				   constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& currentCountNew) {
-					   if constexpr (currentIndex < maxIndex) {
-						   constexpr auto subTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
-						   using member_type = typename std::remove_cvref_t<decltype(get<currentIndex>(jsonifier::concepts::coreV<value_type>))>::member_type;
-						   if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
-							   currentCountNew += getTotalMemberCount<member_type>(currentCountNew);
-						   } else {
-							   currentCountNew += tuple_size_v<typename core_tuple_type<member_type>::core_type>;						   
-						   }
-					   }
-				   };
-
-				   forEach<numMembers, make_static<sizeCollectLambda>::value>(currentCountNew);
-
-				   return;
-			};
-			newVal(count);
-
-			return count;
-		} 
-	}
-
 	template<jsonifier::serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
 		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
 			constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
@@ -102,7 +75,7 @@ namespace jsonifier_internal {
 			return 4 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
 		} else if constexpr (jsonifier::concepts::tuple_t<value_type>) {
 			constexpr auto accumulatePaddingSizesImpl = []<typename tuple, size_t... indices>(std::index_sequence<indices...>) noexcept {
-				return (jsonifier_internal::getPaddingSize<options, std::tuple_element_t<indices, tuple>>() + ... + 0);
+				return (getPaddingSize<options, std::tuple_element_t<indices, tuple>>() + ... + 0);
 			};
 			constexpr auto accumulatePaddingSizes = []<typename tuple>(auto&& accumulatePaddingSizesImpl) {
 				return accumulatePaddingSizesImpl.template operator()<tuple>(std::make_index_sequence<tuple_size_v<tuple>>{});
@@ -132,66 +105,78 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<size_t maxIndex, jsonifier::serialize_options options> struct index_processor_serialize {
-		template<size_t currentIndex, typename value_type, typename buffer_type, typename index_type, typename indent_type>
-		JSONIFIER_ALWAYS_INLINE static auto processIndexLambda(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if constexpr (currentIndex < maxIndex) {
-				static constexpr auto subTuple	 = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
-				static constexpr auto numMembers = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
-				static constexpr auto key		 = subTuple.view();
-				auto* dataPtr					 = buffer.data();
-				if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-					auto& keys = value.jsonifierExcludedKeys;
-					if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
-						return;
-					}
-				}
-				static constexpr auto memberPtr	  = subTuple.ptr();
-				static constexpr auto unQuotedKey = string_literal{ "\"" } + stringLiteralFromView<key.size()>(key);
-				if constexpr (options.prettify) {
-					static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\": " };
-					static constexpr auto size		   = quotedKey.size();
-					static constexpr auto quotedKeyPtr = quotedKey.data();
-					std::memcpy(dataPtr + index, quotedKeyPtr, size);
-					index += size;
-				} else {
-					static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\":" };
-					static constexpr auto size		   = quotedKey.size();
-					static constexpr auto quotedKeyPtr = quotedKey.data();
-					std::memcpy(dataPtr + index, quotedKeyPtr, size);
-					index += size;
-				}
-
-				serialize<options>::impl(value.*memberPtr, buffer, index, indent);
-				if constexpr (currentIndex < numMembers - 1) {
-					if constexpr (options.prettify) {
-						dataPtr = buffer.data();
-						static constexpr auto packedValues{ ",\n" };
-						std::memcpy(dataPtr + index, packedValues, 2);
-						index += 2;
-						std::memset(dataPtr + index, ' ', indent * options.indentSize);
-						index += indent;
-					} else {
-						buffer[index] = comma;
-						++index;
-					}
+	template<jsonifier::serialize_options options, auto tupleElem, typename value_type, typename buffer_type, typename index_type, typename indent_type>
+	struct serialize_index_processor_impl {
+		JSONIFIER_ALWAYS_INLINE static void impl(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
+			static constexpr auto subTuple = tupleElem;
+			static constexpr auto key	   = subTuple.view();
+			auto* dataPtr				   = buffer.data();
+			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+				auto& keys = value.jsonifierExcludedKeys;
+				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+					return;
 				}
 			}
-			return;
-		}
+			static constexpr auto memberPtr = subTuple.memberPtr;
+			static constexpr auto unQuotedKey{ string_literal{ "\"" } + stringLiteralFromView<key.size()>(key) };
+			if constexpr (options.prettify) {
+				static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\": " };
+				static constexpr auto size		   = quotedKey.size();
+				static constexpr auto quotedKeyPtr = quotedKey.data();
+				std::memcpy(dataPtr + index, quotedKeyPtr, size);
+				index += size;
+			} else {
+				static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\":" };
+				static constexpr auto size		   = quotedKey.size();
+				static constexpr auto quotedKeyPtr = quotedKey.data();
+				std::memcpy(dataPtr + index, quotedKeyPtr, size);
+				index += size;
+			}
 
-		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndices(std::index_sequence<indices...>, arg_types&&... args) {
-			(processIndexLambda<indices>(std::forward<arg_types>(args)...), ...);
+			serialize<options>::impl(value.*memberPtr, buffer, index, indent);
+			if constexpr (!tupleElem.isItLast) {
+				if constexpr (options.prettify) {
+					dataPtr = buffer.data();
+					static constexpr auto packedValues{ ",\n" };
+					std::memcpy(dataPtr + index, packedValues, 2);
+					index += 2;
+					std::memset(dataPtr + index, ' ', indent * options.indentSize);
+					index += indent;
+				} else {
+					buffer[index] = comma;
+					++index;
+				}
+			}
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_object_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		static constexpr char packedValues01[]{ "{\n" };
-		static constexpr char packedValues02[]{ "{}" };
+	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename index_type, typename indent_type, typename... value_holder_types>
+	struct serializer_core {
+		JSONIFIER_INLINE static void processIndices(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
+			(serialize_index_processor_impl<options, value_holder_types::value, value_type, buffer_type, index_type, indent_type>::impl(value, buffer, index, indent), ...);
+		}
+	};
 
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename index_type, typename indent_type, typename index_sequence, auto tuple>
+	struct get_serializer_core;
+
+	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename index_type, typename indent_type, size_t... I, auto tuple>
+	struct get_serializer_core<options, value_type, buffer_type, index_type, indent_type, std::index_sequence<I...>, tuple> {
+		using type = serializer_core<options, value_type, buffer_type, index_type, indent_type, value_holder<I, value_type, jsonifier_internal::get<I>(tuple)>...>;
+	};
+
+	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename index_type, typename indent_type, auto value> using serializer_core_t =
+		typename get_serializer_core<options, value_type, buffer_type, index_type, indent_type, jsonifier_internal::tag_range<jsonifier_internal::tuple_size_v<decltype(value)>>,
+			value>::type;
+
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct object_val_serializer {
+		static constexpr char packedValues01[]{ "{\n" };
+		static constexpr char packedValues02[]{ ": " };
+		static constexpr char packedValues03[]{ ",\n" };
+		static constexpr char packedValues04[]{ "{}" };
+
+		template<jsonifier::concepts::jsonifier_object_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto numMembers{ tuple_size_v<typename core_tuple_type<value_type>::core_type> };
 			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			auto* dataPtr = buffer.data();
@@ -216,7 +201,7 @@ namespace jsonifier_internal {
 					++index;
 				}
 
-				index_processor_serialize<numMembers, options>::executeIndices(std::make_index_sequence<numMembers>{}, value, buffer, index, indent);
+				serializer_core_t<options, value_type, buffer_type, index_type, indent_type, jsonifier::concepts::coreV<value_type>>::processIndices(value, buffer, index, indent);
 
 				if constexpr (options.prettify) {
 					dataPtr = buffer.data();
@@ -233,27 +218,9 @@ namespace jsonifier_internal {
 				index += 2;
 			}
 		}
-	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::jsonifier_scalar_value_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			static constexpr auto size{ tuple_size_v<typename core_tuple_type<value_type>::core_type> };
-			if constexpr (size == 1) {
-				static constexpr auto newPtr = get<0>(core_tuple_type<value_type>::coreTupleV);
-				serialize<options>::impl(getMember<newPtr>(value), buffer, index, indent);
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::map_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		static constexpr char packedValues01[]{ "{\n" };
-		static constexpr char packedValues02[]{ ": " };
-		static constexpr char packedValues03[]{ ",\n" };
-		static constexpr char packedValues04[]{ "{}" };
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<jsonifier::concepts::map_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() };
 			auto* dataPtr = buffer.data();
@@ -328,36 +295,9 @@ namespace jsonifier_internal {
 				index += 2;
 			}
 		}
-	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::variant_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			static constexpr auto lambda = [](auto&& valueNewer, auto&& bufferNew, auto&& indexNew) {
-				serialize<options>::impl(valueNewer, bufferNew, indexNew);
-			};
-			visit<lambda>(value, buffer, index, indent);
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::optional_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if JSONIFIER_LIKELY (value) {
-				serialize<options>::impl(*value, buffer, index, indent);
-			} else {
-				std::memcpy(buffer.data() + index, nullV, 4);
-				index += 4;
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::tuple_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		static constexpr char packedValues01[]{ "[]" };
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<jsonifier::concepts::tuple_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			static constexpr auto additionalSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			if (buffer.size() <= index + additionalSize) {
 				buffer.resize((index + additionalSize) * 2);
@@ -389,8 +329,8 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<size_t currentIndex, size_t newSize, typename value_type_new>
-		JSONIFIER_ALWAYS_INLINE static void serializeObjects(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<size_t currentIndex, size_t newSize, jsonifier::concepts::tuple_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void serializeObjects(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			if constexpr (currentIndex < newSize) {
 				auto subTuple = get<currentIndex>(value);
 				serialize<options>::impl(subTuple, buffer, index, indent);
@@ -410,13 +350,12 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::vector_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct array_val_serializer {
 		static constexpr char packedValues01[]{ "[\n" };
 		static constexpr char packedValues02[]{ ",\n" };
 		static constexpr char packedValues03[]{ "[]" };
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<jsonifier::concepts::vector_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			auto* dataPtr = buffer.data();
@@ -472,31 +411,11 @@ namespace jsonifier_internal {
 				index += 2;
 			}
 		}
-	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::pointer_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if (value) {
-				serialize<options>::impl(*value, buffer, index, indent);
-			} else {
-				std::memcpy(buffer.data() + index, nullV, 4);
-				index += 4;
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::raw_array_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		static constexpr char packedValues01[]{ "[\n" };
-		static constexpr char packedValues02[]{ ",\n" };
-		static constexpr char packedValues03[]{ "[]" };
-		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
-		JSONIFIER_ALWAYS_INLINE static void impl(const value_type_new<value_type_internal, size>& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<template<typename, size_t> typename value_type, typename value_type_internal, size_t size>
+		JSONIFIER_ALWAYS_INLINE static void impl(const value_type<value_type_internal, size>& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			constexpr auto newSize = size;
-			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
+			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type<value_type_internal, size>>::value_type>() };
 			if constexpr (newSize > 0) {
 				if constexpr (options.prettify) {
 					const auto additionalSize = newSize * (paddingSize + indent);
@@ -548,19 +467,11 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::raw_json_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			serialize<options>::impl(value.rawJson(), buffer, index, indent);
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::string_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct string_val_serializer {
 		static constexpr char packedValues01[]{ "\"\"" };
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+
+		template<jsonifier::concepts::string_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			if (newSize > 0) {
@@ -586,11 +497,9 @@ namespace jsonifier_internal {
 				index += 2;
 			}
 		}
-	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::char_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+		template<jsonifier::concepts::char_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			buffer[index] = quote;
 			++index;
 			switch (value) {
@@ -639,61 +548,15 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::shared_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if JSONIFIER_LIKELY (value) {
-				serialize<options>::impl(*value, buffer, index, indent);
-			} else {
-				std::memcpy(buffer.data() + index, nullV, 4);
-				index += 4;
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::unique_ptr_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
-			if JSONIFIER_LIKELY (value) {
-				serialize<options>::impl(*value, buffer, index, indent);
-			} else {
-				std::memcpy(buffer.data() + index, nullV, 4);
-				index += 4;
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::enum_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct number_val_serializer {
+		template<jsonifier::concepts::enum_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			int64_t valueNew{ static_cast<int64_t>(value) };
 			serialize<options>::impl(valueNew, buffer, index, indent);
 		}
-	};
 
-	template<jsonifier::serialize_options options, jsonifier::concepts::always_null_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type,
-		typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&&, buffer_type& buffer, index_type& index, indent_type&) noexcept {
-			std::memcpy(buffer.data() + index, nullV, 4);
-			index += 4;
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::bool_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type&) noexcept {
-			const uint64_t state = falseVInt - (value * trueVInt);
-			std::memcpy(buffer.data() + index, &state, 5);
-			index += 5 - value;
-		}
-	};
-
-	template<jsonifier::serialize_options options, jsonifier::concepts::num_t value_type, jsonifier::concepts::buffer_like buffer_type, typename index_type, typename indent_type>
-	struct serialize_impl<options, value_type, buffer_type, index_type, indent_type> {
-		template<typename value_type_new> JSONIFIER_ALWAYS_INLINE static void impl(value_type_new&& value, buffer_type& buffer, index_type& index, indent_type&) noexcept {
+		template<jsonifier::concepts::num_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type&) noexcept {
 			auto* dataPtr = buffer.data();
 			if constexpr (sizeof(value_type) == 8) {
 				index = static_cast<size_t>(toChars<std::remove_cvref_t<value_type>>(dataPtr + index, value) - dataPtr);
@@ -705,6 +568,84 @@ namespace jsonifier_internal {
 				} else {
 					index = static_cast<size_t>(toChars<float>(dataPtr + index, value) - dataPtr);
 				}
+			}
+		}
+	};
+
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct bool_val_serializer {
+		template<jsonifier::concepts::bool_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			const uint64_t state = falseVInt - (value * trueVInt);
+			std::memcpy(buffer.data() + index, &state, 5);
+			index += 5 - value;
+		}
+	};
+
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct null_val_serializer {
+		template<jsonifier::concepts::always_null_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&&, buffer_type& buffer, index_type& index, indent_type&) noexcept {
+			std::memcpy(buffer.data() + index, nullV, 4);
+			index += 4;
+		}
+	};
+
+	template<jsonifier::serialize_options options, typename buffer_type, typename index_type, typename indent_type> struct accessor_val_serializer {
+		template<jsonifier::concepts::pointer_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			if (value) {
+				serialize<options>::impl(*value, buffer, index, indent);
+			} else {
+				std::memcpy(buffer.data() + index, nullV, 4);
+				index += 4;
+			}
+		}
+
+		template<jsonifier::concepts::raw_json_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			serialize<options>::impl(value.rawJson(), buffer, index, indent);
+		}
+
+		template<jsonifier::concepts::skip_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			std::memcpy(buffer.data() + index, nullV, 4);
+			index += 4;
+		}
+
+		template<jsonifier::concepts::unique_ptr_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			if JSONIFIER_LIKELY (value) {
+				serialize<options>::impl(*value, buffer, index, indent);
+			} else {
+				std::memcpy(buffer.data() + index, nullV, 4);
+				index += 4;
+			}
+		}
+
+		template<jsonifier::concepts::shared_ptr_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			if JSONIFIER_LIKELY (value) {
+				serialize<options>::impl(*value, buffer, index, indent);
+			} else {
+				std::memcpy(buffer.data() + index, nullV, 4);
+				index += 4;
+			}
+		}
+
+		template<jsonifier::concepts::variant_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			static constexpr auto lambda = [](auto&& valueNewer, auto&& contextNew) {
+				serialize<options>::impl(valueNewer, contextNew);
+			};
+			visit<lambda>(value, buffer, index, indent);
+		}
+
+		template<jsonifier::concepts::optional_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			if JSONIFIER_LIKELY (value) {
+				serialize<options>::impl(*value, buffer, index, indent);
+			} else {
+				std::memcpy(buffer.data() + index, nullV, 4);
+				index += 4;
 			}
 		}
 	};
