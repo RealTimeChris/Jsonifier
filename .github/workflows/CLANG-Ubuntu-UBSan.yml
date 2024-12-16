@@ -5,7 +5,7 @@ on:
   push:
     branches:
     - main
-    - dev
+    - new-json-interface
 
 jobs:
   Build:
@@ -49,6 +49,6 @@ jobs:
     - name: Run the Test
       working-directory: ./Build/Source
       run: |
-           ./Json-Performance
+           sudo ./Json-Performance
       continue-on-error: true
       

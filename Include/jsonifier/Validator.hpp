@@ -65,8 +65,7 @@ namespace jsonifier_internal {
 			endIter	 = in.data() + in.size();
 			string_view_ptr* iter{ section.begin() };
 			if (!iter) {
-				getErrors().emplace_back(
-					error::constructError<error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+				getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::No_Input>(*iter - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
 			auto result = impl(iter, index, *this);

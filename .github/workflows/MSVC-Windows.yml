@@ -5,7 +5,7 @@ on:
   push:
     branches:
     - main
-    - dev
+    - new-json-interface
 
 jobs:
   Build:
@@ -48,6 +48,6 @@ jobs:
     - name: Run the Test
       working-directory: C:/Program Files (x86)/Jsonifier/bin/
       run: |
-            ./Json-Performance
+            sudo ./Json-Performance
       continue-on-error: true
   

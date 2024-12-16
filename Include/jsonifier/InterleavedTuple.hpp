@@ -25,96 +25,34 @@
 
 #include <jsonifier/Reflection.hpp>
 
+namespace jsonifier {
+
+	template<auto testPtr, jsonifier_internal::string_literal nameNew> constexpr auto make_json_entity() {
+		constexpr jsonifier_internal::string_literal name{ nameNew };
+		return jsonifier_internal::makeJsonEntityAuto(jsonifier_internal::make_static<name>::value.view(), testPtr);
+	}
+
+	template<auto testPtr> constexpr auto make_json_entity() {
+		return jsonifier_internal::makeJsonEntityAuto(jsonifier_internal::getName<testPtr>(), testPtr);
+	}
+
+}
+
 namespace jsonifier_internal {
 
-	template<uint64_t currentIndex, uint64_t maxIndex, typename tuple_type, typename arg_type01, typename arg_type02, typename... arg_types>
-	constexpr auto generateInterleavedTuple(const tuple_type& newTuple, const arg_type01& arg01, const arg_type02& arg02, const arg_types&... args) noexcept {
-		if constexpr (tuple_size_v<tuple_type> > 0) {
-			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = tupleCat(newTuple, makeTuple(newerPair));
-				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = tupleCat(newTuple, makeTuple(newerPair));
-				return newerTuple;
-			}
-		} else {
-			if constexpr (currentIndex < maxIndex - 2) {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = makeTuple(newerPair);
-				return generateInterleavedTuple<currentIndex + 2, maxIndex>(newerTuple, args...);
-			} else {
-				auto newerPair	= makeDataMemberAuto(arg01, arg02);
-				auto newerTuple = makeTuple(newerPair);
-				return newerTuple;
-			}
-		}
-	}
-
-	template<typename member_type, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(member_type&& member_ptr, value_type&& value) noexcept {
-		using value_type02 = std::remove_cvref_t<member_type>;
-		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return std::forward<value_type>(value).*std::forward<member_type>(member_ptr);
-		} else if constexpr (std::is_pointer_v<value_type02>) {
-			return *std::forward<member_type>(member_ptr);
-		} else {
-			return std::forward<member_type>(member_ptr);
-		}
-	}
-
-	template<auto member_ptr, typename value_type> JSONIFIER_ALWAYS_INLINE constexpr decltype(auto) getMember(value_type&& value) noexcept {
-		using value_type02 = std::remove_cvref_t<decltype(member_ptr)>;
-		if constexpr (std::is_member_object_pointer_v<value_type02>) {
-			return std::forward<value_type>(value).*member_ptr;
-		} else if constexpr (std::is_pointer_v<value_type02>) {
-			return *member_ptr;
-		} else {
-			return member_ptr;
-		}
-	}
-
-	template<typename... arg_types> constexpr auto createValueArgs(arg_types&&... args) noexcept {
-		if constexpr (sizeof...(arg_types) > 0 && sizeof...(arg_types) % 2 == 0) {
-			return generateInterleavedTuple<0, sizeof...(arg_types)>(makeTuple(), std::forward<arg_types>(args)...);
-		} else if constexpr (sizeof...(arg_types) > 1 && (sizeof...(arg_types) % 2) != 0) {
-			static_assert(sizeof...(arg_types) % 2 == 0, "Sorry, but please pass the correct amount of arguments to createValue()");
-		} else if constexpr (sizeof...(arg_types) == 1) {
-			static_assert(std::is_member_pointer_v<arg_types...>, "Sorry but please only pass a memberPtr if there is only one argument to createValue().");
-			return makeTuple(std::forward<arg_types>(args)...);
-		}
-	}
-
-	/*
-	* Function to create a reflected value from member pointers
-	*/
-	template<auto... values>
-		requires(sizeof...(values) > 0)
-	constexpr auto createValueTemplates() noexcept {
-		auto newTuple			   = makeTuple(values...);
-		constexpr auto memberNames = jsonifier_internal::getNames<values...>();
-		return generateInterleavedTuple(newTuple, memberNames);
-	}
+	template<typename value_type>
+	concept convertible_to_json_entity = requires(std::remove_cvref_t<value_type> value) {
+		{ static_cast<json_entity<typename decltype(json_entity{ value })::member_type, typename decltype(json_entity{ value })::class_type>>(value) };
+	};
 }
 
 namespace jsonifier {
-
-	template<auto... values, typename... arg_types> constexpr auto createValue(arg_types&&... args) noexcept {
-		if constexpr (sizeof...(values) > 0 && sizeof...(args) > 0) {
-			auto newerTuple = jsonifier_internal::createValueTemplates<values...>();
-			auto newTuple	= jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...);
-			return value{ tupleCat(newerTuple, newTuple) };
-		} else if constexpr (sizeof...(values) > 0) {
-			return value{ jsonifier_internal::createValueTemplates<values...>() };
-		} else if constexpr (sizeof...(args) > 0) {
-			if constexpr (sizeof...(args) == 1) {
-				return scalar_value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
-			} else {
-				return value{ jsonifier_internal::createValueArgs(std::forward<arg_types>(args)...) };
-			}
-		} else {
-			return value{ concepts::empty{} };
-		}
+	
+	template<auto... values> constexpr auto createValue() noexcept {
+		static_assert((jsonifier_internal::convertible_to_json_entity<decltype(values)> && ...),
+			"Sorry, but all arguments passed to createValue should be convertible to or a json_entity.");
+		constexpr jsonifier_internal::tuple newTuple01{ jsonifier_internal::makeTuple(jsonifier_internal::makeJsonEntityAuto<values>()...) };
+		return jsonifier::value{ newTuple01 };
 	}
 
 }
