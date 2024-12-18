@@ -77,14 +77,19 @@ template<> struct glz::meta<citm_catalog_message> {
 			&value_type::topicNames, &value_type::performances, &value_type::events, &value_type::venueNames, &value_type::subjectNames, &value_type::blockNames);
 };
 
-template<> struct glz::meta<partial_event> {
-	using parseValue_type			 = partial_event;
-	static constexpr auto value = object(&parseValue_type::description, &parseValue_type::id, &parseValue_type::subTopicIds);
+template<> struct glz::meta<partial_price> {
+	using parseValue_type			 = partial_price;
+	static constexpr auto value = object(&parseValue_type::seatCategoryId);
+};
+
+template<> struct glz::meta<partial_performance> {
+	using parseValue_type			 = partial_performance;
+	static constexpr auto value = object(&parseValue_type::prices, &parseValue_type::venueCode);
 };
 
 template<> struct glz::meta<citm_catalog_partial_message> {
 	using parseValue_type			 = citm_catalog_partial_message;
-	static constexpr auto value = object(&parseValue_type::events);
+	static constexpr auto value = object(&parseValue_type::performances, &parseValue_type::venueNames);
 };
 
 template<> struct glz::meta<search_metadata_data> {

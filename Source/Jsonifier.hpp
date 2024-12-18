@@ -28,7 +28,7 @@
 
 template<> struct jsonifier::core<audience_sub_category_names> {
 	using value_type				 = audience_sub_category_names;
-	static constexpr auto parseValue = createValue<&value_type::the337100890>();
+	static constexpr auto parseValue = createValue<make_json_entity<&value_type::the337100890, "337100890">()>();
 };
 
 template<> struct jsonifier::core<names> {
@@ -75,14 +75,19 @@ template<> struct jsonifier::core<citm_catalog_message> {
 			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
 };
 
-template<> struct jsonifier::core<partial_event> {
-	using parseValue_type			 = partial_event;
-	static constexpr auto parseValue = createValue<&parseValue_type::description, &parseValue_type::id, &parseValue_type::subTopicIds>();
+template<> struct jsonifier::core<partial_price> {
+	using parseValue_type			 = partial_price;
+	static constexpr auto parseValue = createValue<&parseValue_type::seatCategoryId>();
+};
+
+template<> struct jsonifier::core<partial_performance> {
+	using parseValue_type			 = partial_performance;
+	static constexpr auto parseValue = createValue<&parseValue_type::prices, &parseValue_type::venueCode>();
 };
 
 template<> struct jsonifier::core<citm_catalog_partial_message> {
 	using parseValue_type			 = citm_catalog_partial_message;
-	static constexpr auto parseValue = createValue<&parseValue_type::events>();
+	static constexpr auto parseValue = createValue<&parseValue_type::performances, &parseValue_type::venueNames>();
 };
 
 template<> struct jsonifier::core<search_metadata_data> {
@@ -146,14 +151,15 @@ template<> struct jsonifier::core<user_entities> {
 
 template<> struct jsonifier::core<twitter_user_data> {
 	using value_type = twitter_user_data;
-	static constexpr auto parseValue = createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location,
-		&value_type::description, &value_type::url, &value_type::entities, &value_type::protectedVal, &value_type::followers_count, &value_type::friends_count,
-		&value_type::listed_count, &value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled,
-		&value_type::verified, &value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
-		&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,
-		&value_type::profile_image_url, &value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color,
-		&value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image,
-		&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
+	static constexpr auto parseValue =
+		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
+			&value_type::entities, make_json_entity<&value_type::protectedVal, "protected">(), &value_type::followers_count, &value_type::friends_count, &value_type::listed_count,
+			&value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified,
+			&value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
+			&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,
+			&value_type::profile_image_url, &value_type::profile_image_url_https, &value_type::profile_banner_url, &value_type::profile_link_color,
+			&value_type::profile_sidebar_border_color, &value_type::profile_sidebar_fill_color, &value_type::profile_text_color, &value_type::profile_use_background_image,
+			&value_type::default_profile, &value_type::default_profile_image, &value_type::following, &value_type::follow_request_sent, &value_type::notifications>();
 };
 
 template<> struct jsonifier::core<status_data> {

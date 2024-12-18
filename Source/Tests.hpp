@@ -65,7 +65,7 @@ namespace tests {
 			std::string newerBuffer{};
 			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
 			bnch_swt::performance_metrics readResult = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<jsonifierLibraryName, "teal">([&]() mutable {
-				//parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+				parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
 				bnch_swt::doNotOptimizeAway(testData);
 				return newerBuffer.size();
 			});
@@ -526,7 +526,7 @@ struct test_struct_new02 {
 
 struct test_struct_new03 {
 	test_struct_new02 firstVal{};
-	std::vector<test_struct_new02> secondVal{ 3 };
+	test_struct_new02 secondVal{ 3 };
 };
 
 struct test_struct_new01_new {
@@ -565,32 +565,25 @@ template<> struct jsonifier::core<test_struct_new03_new> {
 	static constexpr auto parseValue = createValue<&test_struct_new03_new::secondVal>();
 };
 
+struct partial_struct {
+	std::string string{};
+	int32_t integer{};
+};
+
 namespace tests {
 
 	void testFunction() {
-		std::cout << "TOTAL MEMBERS: " << jsonifier_internal::countTotalNonRepeatedMembers<twitter_partial_message>() << std::endl;
-		//bounds_tests::boundsTests();
-		//conformance_tests::conformanceTests();
-		//round_trip_tests::roundTripTests();
-		//string_validation_tests::stringTests();
-		//float_validation_tests::floatTests();
-		//uint_validation_tests::uintTests();
-		//int_validation_tests::intTests();
-
+		jsonifier::jsonifier_core parser{};
+		bounds_tests::boundsTests();
+		conformance_tests::conformanceTests();
+		round_trip_tests::roundTripTests();
+		string_validation_tests::stringTests();
+		float_validation_tests::floatTests();
+		uint_validation_tests::uintTests();
+		int_validation_tests::intTests();
 		std::string newString{};
 		test_generator<test_struct> testJsonData{};
 		std::string jsonDataNew{};
-		jsonifier::jsonifier_core parser{};
-		parser.serializeJson(test_struct_new03{}, newString);
-		test_struct_new03_new dataNew{};
-		std::cout << "NEW STRING: " << newString << std::endl;
-		parser.parseJson<jsonifier::parse_options{ .partialRead = true }>(dataNew, newString);
-		for (auto& value: parser.getErrors()) {
-			std::cout << "CURRENT ERROR: " << value << std::endl;
-		}
-		newString.clear();
-		parser.serializeJson(dataNew, newString);
-		std::cout << "NEW STRING: " << newString << std::endl;
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
 		bnch_swt::file_loader::saveFile(jsonDataNew, jsonOutPath + "/Json Test (Prettified).json");
 		bnch_swt::file_loader::saveFile(jsonDataNew, jsonOutPath + "/Abc (Out of Order) Test (Prettified).json");
@@ -624,8 +617,7 @@ namespace tests {
 		std::vector<test_results> benchmark_data{};
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ static_cast<std::string>(section00) + newTimeString + ")\n" + static_cast<std::string>(section002) + section001 };
-		test_results testResults{};//json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, maxIterationCount, "Json Test (Prettified)">::run(jsonDataNew)	};
-		/*
+		test_results testResults{json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, maxIterationCount, "Json Test (Prettified)">::run(jsonDataNew)	};
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, test<test_struct>, true, maxIterationCount, "Json Test (Minified)">::run(jsonMinifiedData);
@@ -656,11 +648,11 @@ namespace tests {
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_message, true, maxIterationCount, "CitmCatalog Test (Minified)">::run(citmCatalogMinifiedData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);*/
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_partial_message, false, maxIterationCount, "CitmCatalog Partial Test (Prettified)">::run(
 			citmCatalogData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);/*
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, citm_catalog_partial_message, true, maxIterationCount, "CitmCatalog Partial Test (Minified)">::run(
 			citmCatalogMinifiedData);
 		newerString += testResults.markdownResults;
@@ -670,15 +662,14 @@ namespace tests {
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_message, true, maxIterationCount, "Twitter Test (Minified)">::run(twitterMinifiedData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);*/
-		//testResults = json_tests_helper<test_type::parse_and_serialize, twitter_partial_message, false, maxIterationCount, "Twitter Partial Test (Prettified)">::run(twitterData);
-		//newerString += testResults.markdownResults;
-		//benchmark_data.emplace_back(testResults);
-		//testResults =
-		//json_tests_helper<test_type::parse_and_serialize, twitter_partial_message, true, maxIterationCount, "Twitter Partial Test (Minified)">::run(twitterMinifiedData);
-		//newerString += testResults.markdownResults;
-		//		benchmark_data.emplace_back(testResults); 
-		/*
+		benchmark_data.emplace_back(testResults);
+		testResults = json_tests_helper<test_type::parse_and_serialize, twitter_partial_message, false, maxIterationCount, "Twitter Partial Test (Prettified)">::run(twitterData);
+		newerString += testResults.markdownResults;
+		benchmark_data.emplace_back(testResults);
+		testResults =
+			json_tests_helper<test_type::parse_and_serialize, twitter_partial_message, true, maxIterationCount, "Twitter Partial Test (Minified)">::run(twitterMinifiedData);
+		newerString += testResults.markdownResults;
+		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::minify, std::string, false, maxIterationCount, "Minify Test">::run(twitterData);
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
@@ -687,7 +678,7 @@ namespace tests {
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::validate, std::string, false, maxIterationCount, "Validate Test">::run(twitterData);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);*/
+		benchmark_data.emplace_back(testResults);
 		std::string resultsStringJson{};
 		test_results_final resultsData{};
 		for (auto& value: benchmark_data) {

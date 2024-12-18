@@ -1039,14 +1039,6 @@ namespace jsonifier_internal {
 							--depth;
 							break;
 						}
-						case '[': {
-							++depth;
-							break;
-						}
-						case ']': {
-							--depth;
-							break;
-						}
 						default: {
 							break;
 						}
@@ -1091,31 +1083,19 @@ namespace jsonifier_internal {
 				size_t currentDepth{ 1 };
 				while (context.iter != context.endIter && currentDepth > 0) {
 					switch (**context.iter) {
-						[[unlikely]] case '{': {
-							++currentDepth;
-							++context.iter;
-							break;
-						}
-						[[unlikely]] case '}': {
-							--currentDepth;
-							++context.iter;
-							break;
-						}
 						[[unlikely]] case '[': {
 							++currentDepth;
-							++context.iter;
 							break;
 						}
 						[[unlikely]] case ']': {
 							--currentDepth;
-							++context.iter;
 							break;
 						}
 						[[likely]] default: {
-							++context.iter;
 							break;
 						}
 					}
+					++context.iter;
 				}
 			} else {
 				++context.iter;
@@ -1154,23 +1134,14 @@ namespace jsonifier_internal {
 
 		template<typename value_type> JSONIFIER_INLINE static void skipToNextValue(parse_context_type& context) noexcept {
 			if constexpr (options.partialRead) {
-				size_t currentDepth{ 1 };
-				while (*context.iter && context.iter != context.endIter && **context.iter != ',' && currentDepth > 0) {
+				while (context.iter != context.endIter && **context.iter != ',') {
 					switch (**context.iter) {
 						[[unlikely]] case '{': {
 							skipObject<value_type>(context);
 							break;
 						}
-						[[unlikely]] case '}': {
-							--currentDepth;
-							break;
-						}
 						[[unlikely]] case '[': {
 							skipArray<value_type>(context);
-							break;
-						}
-						[[unlikely]] case ']': {
-							--currentDepth;
 							break;
 						}
 						[[likely]] default: {

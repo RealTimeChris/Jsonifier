@@ -90,12 +90,16 @@ struct citm_catalog_message {
 	venue_names venueNames{};
 };
 
-struct partial_event {
-	std::nullptr_t description{};
-	int64_t id{};
-	std::vector<int64_t> subTopicIds{};
+struct partial_price {
+	int64_t seatCategoryId{};
+};
+
+struct partial_performance {
+	std::vector<partial_price> prices{};
+	std::string venueCode{};
 };
 
 struct citm_catalog_partial_message {
-	std::unordered_map<std::string, partial_event> events{};
+	std::vector<partial_performance> performances{};
+	venue_names venueNames{};
 };

@@ -45,11 +45,11 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& arg) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(value_type& arg) noexcept {
 		return static_cast<value_type&&>(arg);
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& arg) noexcept {
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(value_type&& arg) noexcept {
 		static_assert(!std::is_lvalue_reference<value_type>::value, "Forwarding an rvalue as an lvalue is not allowed");
 		return static_cast<value_type&&>(arg);
 	}
@@ -145,9 +145,13 @@ namespace jsonifier {
 		unset	 = 7,
 	};
 
+	template<typename value_type> class string_view_base;
+
 	template<typename value_type, uint64_t> class string_base;
 
 	using string = string_base<char, 0>;
+
+	using string_view = string_view_base<char>;
 
 	class raw_json_data;
 
@@ -169,12 +173,25 @@ namespace jsonifier {
 	template<typename value_type> value(value_type) -> value<value_type>;
 
 	namespace concepts {
+		
+		template<typename value_type>
+		concept is_json_entity = requires {
+			typename std::remove_cvref_t<value_type>::member_type;
+			typename std::remove_cvref_t<value_type>::class_type;
+			std::remove_cvref_t<value_type>::memberPtr;
+			{ std::remove_cvref_t<value_type>::name } -> std::same_as<jsonifier::string_view>;
+			{ std::remove_cvref_t<value_type>::type } -> std::same_as<jsonifier::json_type>;
+			{ std::remove_cvref_t<value_type>::index } -> std::same_as<size_t>;
+		} && !std::is_member_pointer_v<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept is_json_entity = requires(std::remove_cvref_t<value_type> value) {
-			{ value.type };
-			{ value.memberPtr };
-		};
+		concept is_json_entity_temp = requires {
+			typename std::remove_cvref_t<value_type>::member_type;
+			typename std::remove_cvref_t<value_type>::class_type;
+			std::remove_cvref_t<value_type>::memberPtr;
+			{ std::remove_cvref_t<value_type>::name };
+			{ std::remove_cvref_t<value_type>::type };
+		} && !std::is_member_pointer_v<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
 		concept has_range = requires(std::remove_cvref_t<value_type> value) {

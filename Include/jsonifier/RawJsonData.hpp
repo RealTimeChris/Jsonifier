@@ -191,8 +191,8 @@ namespace jsonifier {
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::object_val_parser<optionsNew, false, false, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>>::impl(results, testContext);
+						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						return results;
 					}
 					case '[': {
@@ -202,8 +202,8 @@ namespace jsonifier {
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::array_val_parser<optionsNew, false, false, std::string,
-							jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>>::impl(results, testContext);
+						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						return results;
 					}
 					case '"': {
