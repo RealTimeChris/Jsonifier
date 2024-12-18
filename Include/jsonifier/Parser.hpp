@@ -131,16 +131,11 @@ namespace jsonifier_internal {
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, parse_context_type&& context) noexcept {
 			if constexpr (partialRead && topLevel) {
 				if (!context.getState()) {
-					std::cout << "WERE HERE THIS IS IT: " << (*context.iter) << std::endl;
 					context.iter = context.endIter;
 					return;
 				}
 			}
 			if constexpr (partialRead) {
-				std::cout << "FOR TYPE: " << typeid(value_type).name() << ", ARE WE IN AN ARRAY?: " << context.areWeInAnArray << std::endl;
-				std::cout << "FOR TYPE: " << typeid(value_type).name() << ", REMAINING MEMBERS?: " << context.remainingMemberCount << std::endl;
-				std::cout << "FOR TYPE: " << typeid(value_type).name() << ", CURRENT OBJECT DEPTH?: " << context.currentObjectDepth << std::endl;
-				std::cout << "FOR TYPE: " << typeid(value_type).name() << ", CURRENT ARRAY DEPTH?: " << context.currentArrayDepth << std::endl;
 			}
 			if constexpr (type == jsonifier::json_type::object) {
 				if constexpr (partialRead) {
@@ -210,9 +205,10 @@ namespace jsonifier_internal {
 					return false;
 				}
 				parse<getJsonType<value_type>(), optionsNew, options.minified, options.partialRead, true>::template impl<buffer_type>(object, context);
+				//std::cout<< "WERE HERE THIS IS IT: " << (*context.endIter - *context.iter) << std::endl;
 				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
 					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
-					: (context.iter < context.endIter)	 ? (reportError<parse_errors::Unfinished_Input>(context), false)
+					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
 					: derivedRef.errors.size() > 0		 ? false
 														 : true;
 			} else {

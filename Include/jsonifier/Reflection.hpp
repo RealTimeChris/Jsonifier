@@ -169,36 +169,6 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t indexNew, jsonifier::concepts::jsonifier_object_t member_type_new, typename class_type_new> struct json_entity<indexNew, member_type_new, class_type_new> {
-		using member_type = std::remove_cvref_t<member_type_new>;
-		using class_type  = std::remove_cvref_t<class_type_new>;
-		static constexpr size_t index{ indexNew };
-		member_type class_type::*memberPtr{};
-		jsonifier::string_view name{};
-		jsonifier::json_type type{};
-		bool isItLast{ false };
-		static constexpr auto subValues{ jsonifier::concepts::coreV<member_type_new> };
-
-		constexpr json_entity() noexcept = default;
-
-		template<auto ptrNew> constexpr json_entity() : memberPtr{ ptrNew }, name{ getName<ptrNew>() }, type{} {
-		}
-
-		constexpr json_entity(member_type_new class_type_new::*ptr) noexcept : memberPtr{ ptr }, name{}, type{ getJsonTypePre<member_type_new>() } {
-		}
-
-		constexpr json_entity(member_type class_type::*ptr, jsonifier::string_view str, jsonifier::json_type typeNew) noexcept : memberPtr{ ptr }, name{ str }, type{ typeNew } {
-		}
-
-		constexpr auto& view() const noexcept {
-			return name;
-		}
-
-		constexpr auto& ptr() const noexcept {
-			return memberPtr;
-		}
-	};
-
 	template<size_t index, typename member_type, typename class_type> json_entity(member_type, class_type) -> json_entity<index, member_type, class_type>;
 
 	template<size_t index, typename member_type, typename class_type> json_entity(member_type class_type::*) -> json_entity<index, member_type, class_type>;

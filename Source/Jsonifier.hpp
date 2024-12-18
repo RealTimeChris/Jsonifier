@@ -75,19 +75,14 @@ template<> struct jsonifier::core<citm_catalog_message> {
 			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
 };
 
-template<> struct jsonifier::core<partial_price> {
-	using parseValue_type			 = partial_price;
-	static constexpr auto parseValue = createValue<&parseValue_type::seatCategoryId>();
-};
-
-template<> struct jsonifier::core<partial_performance> {
-	using parseValue_type			 = partial_performance;
-	static constexpr auto parseValue = createValue<&parseValue_type::prices, &parseValue_type::venueCode>();
+template<> struct jsonifier::core<partial_event> {
+	using parseValue_type			 = partial_event;
+	static constexpr auto parseValue = createValue<&parseValue_type::description, &parseValue_type::id, &parseValue_type::subTopicIds>();
 };
 
 template<> struct jsonifier::core<citm_catalog_partial_message> {
 	using parseValue_type			 = citm_catalog_partial_message;
-	static constexpr auto parseValue = createValue<&parseValue_type::performances>();
+	static constexpr auto parseValue = createValue<&parseValue_type::events>();
 };
 
 template<> struct jsonifier::core<search_metadata_data> {

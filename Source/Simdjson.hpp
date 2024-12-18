@@ -556,20 +556,16 @@ template<> JSONIFIER_INLINE void getValue(citm_catalog_message& msg, simdjson::o
 	getValue(msg.venueNames, obj, "venueNames");
 }
 
-template<> JSONIFIER_INLINE void getValue(partial_price& p, simdjson::ondemand::value jsonData) {
+template<> JSONIFIER_INLINE void getValue(partial_event& p, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(p.seatCategoryId, obj, "seatCategoryId");
-}
-
-template<> JSONIFIER_INLINE void getValue(partial_performance& p, simdjson::ondemand::value jsonData) {
-	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(p.prices, obj, "prices");
-	getValue(p.venueCode, obj, "venueCode");
+	getValue(p.description, obj, "description");
+	getValue(p.id, obj, "id");
+	getValue(p.subTopicIds, obj, "subTopicIds");
 }
 
 template<> JSONIFIER_INLINE void getValue(citm_catalog_partial_message& msg, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.performances, obj, "performances");
+	getValue(msg.events, obj, "events");
 }
 
 template<> JSONIFIER_INLINE void getValue(geometry_data& geometry, simdjson::ondemand::value jsonData) {
