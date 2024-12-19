@@ -144,13 +144,14 @@ namespace jsonifier_internal {
 	template<typename member_type_new, typename class_type_new> struct json_entity_temp {
 		using member_type = std::remove_cvref_t<member_type_new>;
 		using class_type  = std::remove_cvref_t<class_type_new>;
-		member_type class_type::*memberPtr{};
+		member_type class_type::* memberPtr{};
 		jsonifier::string_view name{};
 		jsonifier::json_type type{};
 
 		constexpr json_entity_temp() noexcept = default;
 
-		constexpr json_entity_temp(member_type_new class_type_new::*ptr) noexcept : memberPtr{ ptr }, name{}, type{ getJsonTypePre<member_type_new>() } {}
+		constexpr json_entity_temp(member_type_new class_type_new::* ptr) noexcept : memberPtr{ ptr }, name{}, type{ getJsonTypePre<member_type_new>() } {
+		}
 
 		constexpr auto& view() const noexcept {
 			return name;
@@ -165,16 +166,16 @@ namespace jsonifier_internal {
 		using member_type = std::remove_cvref_t<member_type_new>;
 		using class_type  = std::remove_cvref_t<class_type_new>;
 		static constexpr size_t index{ indexNew };
-		member_type class_type::*memberPtr{};
+		member_type class_type::* memberPtr{};
 		jsonifier::string_view name{};
 		jsonifier::json_type type{};
 
 		constexpr json_entity() noexcept = default;
 
-		constexpr json_entity(member_type_new class_type_new::*ptr) noexcept : memberPtr{ ptr }, name{}, type{ getJsonTypePre<member_type_new>() } {
+		constexpr json_entity(member_type_new class_type_new::* ptr) noexcept : memberPtr{ ptr }, name{}, type{ getJsonTypePre<member_type_new>() } {
 		}
 
-		constexpr json_entity(member_type class_type::*ptr, jsonifier::string_view str, jsonifier::json_type typeNew) noexcept : memberPtr{ ptr }, name{ str }, type{ typeNew } {
+		constexpr json_entity(member_type class_type::* ptr, jsonifier::string_view str, jsonifier::json_type typeNew) noexcept : memberPtr{ ptr }, name{ str }, type{ typeNew } {
 		}
 
 		constexpr auto& view() const noexcept {
@@ -193,7 +194,7 @@ namespace jsonifier_internal {
 	concept convertible_to_json_entity = jsonifier::concepts::is_json_entity<value_type> || is_data_member_ptr<value_type>;
 
 	template<size_t maxIndex, size_t index, typename member_type, typename class_type>
-	constexpr auto makeJsonEntityAuto(jsonifier::string_view str, member_type class_type::*ptr) noexcept {
+	constexpr auto makeJsonEntityAuto(jsonifier::string_view str, member_type class_type::* ptr) noexcept {
 		return json_entity<index, member_type, class_type>{ ptr, str, getJsonTypePre<member_type>() };
 	}
 
