@@ -152,7 +152,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
 		if constexpr (currentIndex < jsonifier_internal::tuple_size_v<typename jsonifier_internal::core_tuple_type<value_type>::core_type>) {
-			constexpr auto newSubTuple = get<currentIndex>(core_tuple_type<value_type>::coreTupleV);
+			constexpr auto newSubTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
 			using member_type		   = typename std::remove_cvref_t<decltype(newSubTuple)>::member_type;
 			if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
 				currentCount += countTotalNonRepeatedMembers<member_type>();

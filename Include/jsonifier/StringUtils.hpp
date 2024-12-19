@@ -1134,20 +1134,36 @@ namespace jsonifier_internal {
 
 		template<typename value_type> JSONIFIER_INLINE static void skipToNextValue(parse_context_type& context) noexcept {
 			if constexpr (options.partialRead) {
-				while (context.iter != context.endIter && **context.iter != ',') {
-					switch (**context.iter) {
-						[[unlikely]] case '{': {
-							skipObject<value_type>(context);
-							break;
-						}
-						[[unlikely]] case '[': {
-							skipArray<value_type>(context);
-							break;
-						}
-						[[likely]] default: {
-							++context.iter;
-							break;
-						}
+				switch (**context.iter) {
+					case '{': {
+						skipObject<value_type>(context);
+						break;
+					}
+					case '[': {
+						skipArray<value_type>(context);
+						break;
+					}
+					case '"': {
+						++context.iter;
+						break;
+					}
+					case 'n': {
+						++context.iter;
+						break;
+					}
+					case 'f': {
+						++context.iter;
+						break;
+					}
+					case 't': {
+						++context.iter;
+						break;
+					}
+					case '\0': {
+						break;
+					}
+					default: {
+						++context.iter;
 					}
 				}
 			} else {
