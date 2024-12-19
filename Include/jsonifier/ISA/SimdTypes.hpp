@@ -29,7 +29,7 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-#include <immintrin.h>
+	#include <immintrin.h>
 
 using jsonifier_simd_int_128 = __m128i;
 using jsonifier_simd_int_256 = __m256i;
@@ -86,7 +86,7 @@ concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvr
 template<typename value_type>
 concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
 
-#if defined(JSONIFIER_MAC) && defined(__arm64__) 
+#if defined(JSONIFIER_MAC) && defined(__arm64__)
 	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
 #elif defined(JSONIFIER_MSVC)
 	#include <intrin.h>

@@ -27,7 +27,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new> class iterator_type {
+	template<typename value_type_new> class basic_iterator {
 	  public:
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;
@@ -36,10 +36,10 @@ namespace jsonifier_internal {
 		using pointer			= value_type*;
 		using reference			= value_type&;
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type() noexcept : ptr() {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator() noexcept : ptr() {
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type(pointer ptrNew) noexcept : ptr(ptrNew) {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
 		}
 
 		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr reference operator*() const noexcept {
@@ -50,55 +50,55 @@ namespace jsonifier_internal {
 			return std::pointer_traits<pointer>::pointer_to(**this);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type& operator++() noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator& operator++() noexcept {
 			++ptr;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type operator++(int32_t) noexcept {
-			iterator_type temp = *this;
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator operator++(int32_t) noexcept {
+			basic_iterator temp = *this;
 			++*this;
 			return temp;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type& operator--() noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator& operator--() noexcept {
 			--ptr;
 			return *this;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type operator--(int32_t) noexcept {
-			iterator_type temp = *this;
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator operator--(int32_t) noexcept {
+			basic_iterator temp = *this;
 			--*this;
 			return temp;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type& operator+=(const difference_type offSet) noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator& operator+=(const difference_type offSet) noexcept {
 			ptr += offSet;
 			return *this;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr iterator_type operator+(const difference_type offSet) const noexcept {
-			iterator_type temp = *this;
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr basic_iterator operator+(const difference_type offSet) const noexcept {
+			basic_iterator temp = *this;
 			temp += offSet;
 			return temp;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE friend constexpr iterator_type operator+(const difference_type offSet, iterator_type _Next) noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE friend constexpr basic_iterator operator+(const difference_type offSet, basic_iterator _Next) noexcept {
 			_Next += offSet;
 			return _Next;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator_type& operator-=(const difference_type offSet) noexcept {
+		JSONIFIER_ALWAYS_INLINE constexpr basic_iterator& operator-=(const difference_type offSet) noexcept {
 			return *this += -offSet;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr iterator_type operator-(const difference_type offSet) const noexcept {
-			iterator_type temp = *this;
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr basic_iterator operator-(const difference_type offSet) const noexcept {
+			basic_iterator temp = *this;
 			temp -= offSet;
 			return temp;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr difference_type operator-(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr difference_type operator-(const basic_iterator& other) const noexcept {
 			return static_cast<difference_type>(ptr - other.ptr);
 		}
 
@@ -106,31 +106,31 @@ namespace jsonifier_internal {
 			return *(*this + offSet);
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator==(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator==(const basic_iterator& other) const noexcept {
 			return ptr == other.ptr;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr std::strong_ordering operator<=>(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr std::strong_ordering operator<=>(const basic_iterator& other) const noexcept {
 			return ptr <=> other.ptr;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator!=(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator!=(const basic_iterator& other) const noexcept {
 			return !(*this == other);
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator<(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator<(const basic_iterator& other) const noexcept {
 			return ptr < other.ptr;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator>(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator>(const basic_iterator& other) const noexcept {
 			return other < *this;
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator<=(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator<=(const basic_iterator& other) const noexcept {
 			return !(other < *this);
 		}
 
-		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator>=(const iterator_type& other) const noexcept {
+		[[nodiscard]] JSONIFIER_ALWAYS_INLINE constexpr bool operator>=(const basic_iterator& other) const noexcept {
 			return !(*this < other);
 		}
 

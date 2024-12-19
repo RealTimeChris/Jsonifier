@@ -33,8 +33,8 @@ namespace jsonifier_internal {
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
 		using size_type				 = size_t;
-		using iterator				 = iterator_type<value_type>;
-		using const_iterator		 = iterator_type<const value_type>;
+		using iterator				 = basic_iterator<value_type>;
+		using const_iterator		 = basic_iterator<const value_type>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -113,8 +113,8 @@ namespace jsonifier_internal {
 		using const_reference		 = const value_type&;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
-		using const_iterator		 = const iterator_type<value_type>;
-		using iterator				 = iterator_type<value_type>;
+		using const_iterator		 = const basic_iterator<value_type>;
+		using iterator				 = basic_iterator<value_type>;
 		using size_type				 = size_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;

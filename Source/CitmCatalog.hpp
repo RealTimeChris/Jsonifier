@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-struct audience_sub_category_names {
+ struct audience_sub_category_names {
 	std::string the337100890{};
 };
 
@@ -87,19 +87,5 @@ struct citm_catalog_message {
 	names subjectNames{};
 	std::unordered_map<std::string, std::string> topicNames{};
 	std::unordered_map<std::string, std::vector<int64_t>> topicSubTopics{};
-	venue_names venueNames{};
-};
-
-struct partial_price {
-	int64_t seatCategoryId{};
-};
-
-struct partial_performance {
-	std::vector<partial_price> prices{};
-	std::string venueCode{};
-};
-
-struct citm_catalog_partial_message {
-	std::vector<partial_performance> performances{};
 	venue_names venueNames{};
 };
