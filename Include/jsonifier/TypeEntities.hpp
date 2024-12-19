@@ -163,17 +163,24 @@ namespace jsonifier {
 		value_type val{};
 		json_type type{};
 
-		constexpr value(value_type valNew, json_type typeNew) : val{ valNew }, type{ typeNew } {}
+		constexpr value(value_type valNew, json_type typeNew) : val{ valNew }, type{ typeNew } {
+		}
 
-		constexpr value(value_type valNew) : val{ valNew }, type{} {}
+		constexpr value(value_type valNew) : val{ valNew }, type{} {
+		}
 	};
 
 	template<typename value_type> value(value_type, json_type) -> value<value_type>;
 
 	template<typename value_type> value(value_type) -> value<value_type>;
 
+	struct skip{};
+
 	namespace concepts {
-		
+
+		template<typename value_type>
+		concept skip_t = std::is_same_v<std::remove_cvref_t<value_type>, skip>;
+
 		template<typename value_type>
 		concept is_json_entity = requires {
 			typename std::remove_cvref_t<value_type>::member_type;
@@ -394,12 +401,11 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_get_template = requires(std::remove_cvref_t<value_type> value) {
-			{ std::get<0>(value) } -> std::same_as<decltype(std::get<0>(value))&>;
+			{ std::get<0>(value) } -> std::same_as<decltype(std::get<0>(value))>;
 		};
 
 		template<typename value_type>
-		concept tuple_t = requires(std::remove_cvref_t<value_type> t) { std::tuple_size<std::remove_cvref_t<value_type>>::value; } &&
-			(hasSizeEqualToZero<value_type> || has_get_template<value_type>) && !has_data<value_type>;
+		concept tuple_t = requires() { std::tuple_size<std::remove_cvref_t<value_type>>::value; } && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 

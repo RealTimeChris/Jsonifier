@@ -191,6 +191,7 @@ struct twitter_user_partial_data {
 
 struct status_partial_data {
 	std::string text{};
+	std::string source{};
 	twitter_user_partial_data user{};
 	int64_t retweet_count{};
 };

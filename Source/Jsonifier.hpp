@@ -75,21 +75,6 @@ template<> struct jsonifier::core<citm_catalog_message> {
 			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
 };
 
-template<> struct jsonifier::core<partial_price> {
-	using parseValue_type			 = partial_price;
-	static constexpr auto parseValue = createValue<&parseValue_type::seatCategoryId>();
-};
-
-template<> struct jsonifier::core<partial_performance> {
-	using parseValue_type			 = partial_performance;
-	static constexpr auto parseValue = createValue<&parseValue_type::prices, &parseValue_type::venueCode>();
-};
-
-template<> struct jsonifier::core<citm_catalog_partial_message> {
-	using parseValue_type			 = citm_catalog_partial_message;
-	static constexpr auto parseValue = createValue<&parseValue_type::performances, &parseValue_type::venueNames>();
-};
-
 template<> struct jsonifier::core<search_metadata_data> {
 	using value_type				 = search_metadata_data;
 	static constexpr auto parseValue = createValue<&value_type::completed_in, &value_type::max_id, &value_type::max_id_str, &value_type::next_results, &value_type::query,
@@ -100,7 +85,6 @@ template<> struct jsonifier::core<hashtag_data> {
 	using value_type				 = hashtag_data;
 	static constexpr auto parseValue = createValue<&value_type::text, &value_type::indices>();
 };
-
 
 template<> struct jsonifier::core<large_data> {
 	using value_type				 = large_data;
@@ -211,7 +195,6 @@ template<> struct jsonifier::core<channel_data> {
 		&value_type::name, &value_type::id>();
 };
 
-
 template<> struct jsonifier::core<user_data> {
 	using value_type				 = user_data;
 	static constexpr auto parseValue = createValue<&value_type::avatar_decoration_data, &value_type::discriminator, &value_type::public_flags, &value_type::premium_type,
@@ -292,16 +275,26 @@ template<> struct jsonifier::core<test_struct> {
 	static constexpr auto parseValue = createValue<&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04>();
 };
 
+template<> struct jsonifier::core<partial_test_struct> {
+	using value_type				 = partial_test_struct;
+	static constexpr auto parseValue = createValue<&value_type::testVals05, &value_type::testVals01>();
+};
+
 template<> struct jsonifier::core<abc_test_struct> {
 	using value_type				 = abc_test_struct;
 	static constexpr auto parseValue = createValue<&value_type::testVals04, &value_type::testVals03, &value_type::testVals01, &value_type::testVals05, &value_type::testVals02>();
 };
 
-template<typename value_type_new> struct jsonifier::core<test<value_type_new>> {
-	using value_type				 = test<value_type_new>;
+template<> struct jsonifier::core<test<test_struct>> {
+	using value_type				 = test<test_struct>;
 	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
+};
+
+template<typename value_type_new> struct jsonifier::core<partial_test<value_type_new>> {
+	using value_type				 = partial_test<value_type_new>;
+	static constexpr auto parseValue = createValue<&value_type::m>();
 };
 
 template<typename value_type_new> struct jsonifier::core<test_generator<value_type_new>> {
