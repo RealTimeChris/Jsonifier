@@ -43,23 +43,23 @@ namespace jsonifier_internal {
 	};
 
 	enum class parse_errors : uint32_t {
-		Success					  = 0,
-		Missing_Object_Start	  = 1,
-		Imbalanced_Object_Braces  = 2,
-		Missing_Array_Start		  = 3,
-		Imbalanced_Array_Brackets = 4,
-		Missing_String_Start	  = 5,
-		Missing_Colon			  = 6,
-		Missing_Object_End		  = 7,
-		Missing_Array_End		  = 8,
-		Missing_Comma			  = 9,
-		Invalid_Number_Value	  = 10,
-		Invalid_Null_Value		  = 11,
-		Invalid_Bool_Value		  = 12,
-		Invalid_String_Characters = 13,
-		No_Input				  = 14,
-		Unfinished_Input		  = 15,
-		Unexpected_String_End	  = 16,
+		Success					  = 1 << 0,
+		Missing_Object_Start	  = 1 << 1,
+		Imbalanced_Object_Braces  = 1 << 2,
+		Missing_Array_Start		  = 1 << 3,
+		Imbalanced_Array_Brackets = 1 << 4,
+		Missing_String_Start	  = 1 << 5,
+		Missing_Colon			  = 1 << 6,
+		Missing_Object_End		  = 1 << 7,
+		Missing_Array_End		  = 1 << 8,
+		Missing_Comma			  = 1 << 9,
+		Invalid_Number_Value	  = 1 << 10,
+		Invalid_Null_Value		  = 1 << 11,
+		Invalid_Bool_Value		  = 1 << 12,
+		Invalid_String_Characters = 1 << 13,
+		No_Input				  = 1 << 14,
+		Unfinished_Input		  = 1 << 15,
+		Unexpected_String_End	  = 1 << 16,
 	};
 
 	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, parse_errors error) {
@@ -69,10 +69,19 @@ namespace jsonifier_internal {
 
 	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, jsonifier::string_view>> errorMap{
 		{ error_classes::Parsing,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" },
-				{ 3ull, "Missing_Array_Start" }, { 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Object_End" },
-				{ 8ull, "Missing_Array_End" }, { 9ull, "Missing_Comma" }, { 10ull, "Invalid_Number_Value" }, { 11ull, "Invalid_Null_Value" }, { 12ull, "Invalid_Bool_Value" },
-				{ 13ull, "Invalid_String_Characters" }, { 14ull, "No_Input" }, { 15ull, "Unfinished_Input" }, { 16ull, "Unexpected_String_End" } } },
+			std::unordered_map<uint64_t, jsonifier::string_view>{ { static_cast<uint64_t>(parse_errors::Success), "Success" },
+				{ static_cast<uint64_t>(parse_errors::Missing_Object_Start), "Missing_Object_Start" },
+				{ static_cast<uint64_t>(parse_errors::Imbalanced_Object_Braces), "Imbalanced_Object_Braces" },
+				{ static_cast<uint64_t>(parse_errors::Missing_Array_Start), "Missing_Array_Start" },
+				{ static_cast<uint64_t>(parse_errors::Imbalanced_Array_Brackets), "Imbalanced_Array_Brackets" },
+				{ static_cast<uint64_t>(parse_errors::Missing_String_Start), "Missing_String_Start" }, { static_cast<uint64_t>(parse_errors::Missing_Colon), "Missing_Colon" },
+				{ static_cast<uint64_t>(parse_errors::Missing_Object_End), "Missing_Object_End" }, { static_cast<uint64_t>(parse_errors::Missing_Array_End), "Missing_Array_End" },
+				{ static_cast<uint64_t>(parse_errors::Missing_Comma), "Missing_Comma" }, { static_cast<uint64_t>(parse_errors::Invalid_Number_Value), "Invalid_Number_Value" },
+				{ static_cast<uint64_t>(parse_errors::Invalid_Null_Value), "Invalid_Null_Value" },
+				{ static_cast<uint64_t>(parse_errors::Invalid_Bool_Value), "Invalid_Bool_Value" },
+				{ static_cast<uint64_t>(parse_errors::Invalid_String_Characters), "Invalid_String_Characters" }, { static_cast<uint64_t>(parse_errors::No_Input), "No_Input" },
+				{ static_cast<uint64_t>(parse_errors::Unfinished_Input), "Unfinished_Input" },
+				{ static_cast<uint64_t>(parse_errors::Unexpected_String_End), "Unexpected_String_End" } } },
 		{ error_classes::Serializing, std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" } } } },
 		{ error_classes::Minifying,
 			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },
@@ -149,8 +158,8 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			uint64_t typeNew) noexcept {
 			stringLength = static_cast<uint64_t>(stringLengthNew);
+			errorIndex	 = static_cast<uint64_t>(errorIndexNew);
 			location	 = sourceLocation;
-			errorIndex	 = errorIndexNew;
 			stringView	 = stringViewNew;
 			errorClass	 = errorClassNew;
 			errorType	 = typeNew;
@@ -189,11 +198,11 @@ namespace jsonifier_internal {
 
 			const auto start	   = std::begin(errorString) + errorIndex;
 			line				   = size_t(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1);
-			const auto rstart	   = std::rbegin(errorString) + static_cast<int64_t>(errorString.size()) - errorIndex - 1ll;
+			const auto rstart	   = std::rbegin(errorString) + errorString.size() - errorIndex - 1;
 			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
-			localIndex			   = std::distance(rstart, prevNewLine) - 1ll;
+			localIndex			   = size_t(std::distance(rstart, prevNewLine)) - 1;
 			auto endIndex{ std::end(errorString) - start >= 64 ? 64 : std::end(errorString) - start };
-			context = jsonifier::string{ start, static_cast<size_t>(endIndex) };
+			context = std::string{ start, start + endIndex };
 			for (auto& c: context) {
 				if (c == '\t') {
 					c = ' ';

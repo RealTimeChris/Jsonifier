@@ -354,7 +354,7 @@ namespace jsonifier_internal {
 	template<int64_t number, size_t numDigits = countDigits(number)> constexpr string_literal<numDigits + 1, char> toStringLiteral() noexcept {
 		char buffer[numDigits + 1]{};
 		string_buffer_ptr ptr = buffer + numDigits;
-		*ptr				  = '\0';
+		*ptr	  = '\0';
 		int64_t temp{};
 		if constexpr (number < 0) {
 			temp			   = number * -1;
