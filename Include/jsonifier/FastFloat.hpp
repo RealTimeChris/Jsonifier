@@ -1305,7 +1305,7 @@ namespace jsonifier_fast_float {
 				// fill in empty limbs
 				limb* first = vec.data;
 				limb* last	= first + n;
-				::std::fill(first, last, 0);
+				::std::fill(first, last, static_cast<limb>(0));
 				vec.set_len(n + vec.length);
 				return true;
 			} else {

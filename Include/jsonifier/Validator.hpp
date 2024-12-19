@@ -64,13 +64,14 @@ namespace jsonifier_internal {
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
 			string_view_ptr* iter{ section.begin() };
+			string_view_ptr* end{ section.end() };
 			if (!iter) {
-				getErrors().emplace_back(
-					error::constructError<error_classes::Validating, validate_errors::No_Input>(getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+				getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::No_Input>(*iter - rootIter, endIter - rootIter, rootIter));
 				return false;
 			}
-			auto result = impl(iter, index, *this);
-			if (index > 0 || *iter || derivedRef.errors.size() > 0) {
+			auto result = impl(iter, end, index, *this);
+			if (index > 0ull && ((static_cast<uint64_t>(*iter - rootIter) < in.size()) || derivedRef.errors.size() > 0ull)) {
+				getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::No_Input>(*iter - rootIter, endIter - rootIter, rootIter));
 				result = false;
 			}
 			return result;
@@ -84,12 +85,12 @@ namespace jsonifier_internal {
 
 		JSONIFIER_INLINE validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		template<typename iterator, typename validator_type> JSONIFIER_INLINE static bool impl(iterator& iter, uint64_t& depth, validator_type& validator) noexcept {
+		template<typename iterator, typename validator_type> JSONIFIER_INLINE static bool impl(iterator& iter, iterator& end, uint64_t& depth, validator_type& validator) noexcept {
 			if (*iter && **iter == '{') {
-				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, depth, validator);
+				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, end, depth, validator);
 			} else {
 				if (*iter && **iter == '[') {
-					return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, depth, validator);
+					return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, end, depth, validator);
 				} else {
 					if (*iter && **iter == '"') {
 						return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
