@@ -330,7 +330,7 @@ namespace jsonifier {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
-			allocator::construct(&dataVal[sizeVal++], std::move(c));
+			allocator::construct(&dataVal[sizeVal++], jsonifier_internal::move(c));
 
 			return dataVal[sizeVal - 1];
 		}

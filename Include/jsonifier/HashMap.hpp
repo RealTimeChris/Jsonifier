@@ -464,7 +464,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type, size_t currentIndex, size_t maxIndex> constexpr bool areTypesUnique(std::array<size_t, 7> types = std::array<size_t, 7>{}) {
+	template<typename value_type, size_t currentIndex, size_t maxIndex> constexpr bool areTypesUnique(array<size_t, 7> types = array<size_t, 7>{}) {
 		if constexpr (currentIndex < maxIndex) {
 			auto type = get<currentIndex>(jsonifier::concepts::coreV<value_type>).type;
 			++types[static_cast<size_t>(type)];
@@ -647,7 +647,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			if constexpr (hashData<value_type>.type == hash_map_type::single_element) {
-				return 0;
+				return *(iter + keyStatsVal<value_type>.maxLength) == '"' ? 0 : 1;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::double_element) {
 				if JSONIFIER_LIKELY (checkForEnd(iter, end, hashData<value_type>.uniqueIndex)) {
 					return iter[static_cast<uint8_t>(hashData<value_type>.uniqueIndex)] & 1u;

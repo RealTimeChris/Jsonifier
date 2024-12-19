@@ -45,13 +45,17 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(value_type& arg) noexcept {
-		return static_cast<value_type&&>(arg);
+	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& _Arg) noexcept {
+		return static_cast<value_type&&>(_Arg);
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(value_type&& arg) noexcept {
-		static_assert(!std::is_lvalue_reference<value_type>::value, "Forwarding an rvalue as an lvalue is not allowed");
-		return static_cast<value_type&&>(arg);
+	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& _Arg) noexcept {
+		static_assert(!std::is_lvalue_reference_v<value_type>, "bad forward call");
+		return static_cast<value_type&&>(_Arg);
+	}
+
+	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& _Arg) noexcept {
+		return static_cast<std::remove_reference_t<value_type>&&>(_Arg);
 	}
 
 	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
@@ -123,10 +127,10 @@ namespace jsonifier_internal {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(std::get<currentIndex>(forward<variant_type>(variantNew)), forward<arg_types>(args)...);
+				function(std::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), forward<arg_types>(args)...);
 				return;
 			}
-			visit<function, currentIndex + 1>(forward<variant_type>(variantNew), forward<arg_types>(args)...);
+			visit<function, currentIndex + 1>(jsonifier_internal::forward<variant_type>(variantNew), forward<arg_types>(args)...);
 		}
 	}
 
@@ -247,9 +251,7 @@ namespace jsonifier {
 
 		template<typename value_type>
 		concept has_data = requires(std::remove_cvref_t<value_type> value) {
-			{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::const_pointer>;
-		} || requires(std::remove_cvref_t<value_type> value) {
-			{ value.data() } -> std::same_as<typename std::remove_cvref_t<value_type>::pointer>;
+			{ value.data() } -> std::same_as<decltype(&value[0])>;
 		};
 
 		template<typename value_type>
@@ -549,7 +551,7 @@ namespace jsonifier_internal {
 		}
 
 		JSONIFIER_INLINE stop_watch(stop_watch&& other) noexcept {
-			*this = std::move(other);
+			*this = jsonifier_internal::move(other);
 		}
 
 		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) noexcept {

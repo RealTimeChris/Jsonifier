@@ -120,6 +120,9 @@ namespace jsonifier_internal {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using difference_type		 = std::ptrdiff_t;
 
+		constexpr array(std::initializer_list<value_type> initList) {
+		}
+
 		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
 			return nullptr;
 		}
@@ -146,6 +149,9 @@ namespace jsonifier_internal {
 
 		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
 			return nullptr;
+		}
+
+		constexpr void fill(const value_type& value) noexcept {
 		}
 	};
 

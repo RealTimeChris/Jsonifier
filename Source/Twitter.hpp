@@ -185,17 +185,16 @@ struct twitter_message {
 	search_metadata_data search_metadata{};
 };
 
-struct twitter_user_partial_data {
+struct user_data_partial {
 	std::string screen_name{};
 };
 
-struct status_partial_data {
+struct status_data_partial {
 	std::string text{};
-	std::string source{};
-	twitter_user_partial_data user{};
+	user_data_partial user{};
 	int64_t retweet_count{};
 };
 
 struct twitter_partial_message {
-	std::vector<status_partial_data> statuses{};
+	std::vector<status_data_partial> statuses{};
 };

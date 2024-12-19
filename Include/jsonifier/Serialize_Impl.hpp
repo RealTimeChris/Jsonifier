@@ -181,7 +181,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename... arg_types, size_t... indices> JSONIFIER_INLINE static void executeIndices(std::index_sequence<indices...>, arg_types&&... args) {
-			(processIndexLambda<indices>(forward<arg_types>(args)...), ...);
+			(processIndexLambda<indices>(jsonifier_internal::forward<arg_types>(args)...), ...);
 		}
 	};
 
@@ -619,6 +619,12 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::raw_json_t value_type>
 		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
 			serialize<options>::impl(value.rawJson(), buffer, index, indent);
+		}
+
+		template<jsonifier::concepts::skip_t value_type>
+		JSONIFIER_ALWAYS_INLINE static void impl(value_type&& value, buffer_type& buffer, index_type& index, indent_type& indent) noexcept {
+			std::memcpy(buffer.data() + index, nullV, 4);
+			index += 4;
 		}
 
 		template<jsonifier::concepts::unique_ptr_t value_type>

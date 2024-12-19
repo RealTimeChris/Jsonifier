@@ -33,7 +33,7 @@
 #if defined(NDEBUG)
 static constexpr auto maxIterationCount{ 100 };
 #else
-static constexpr auto maxIterationCount{ 5 };
+static constexpr auto maxIterationCount{ 1 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {

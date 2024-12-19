@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 			static constexpr jsonifier::serialize_options options{ optionsNew };
 			index  = 0;
 			indent = 0;
-			serialize<options>::impl(jsonifier_internal::forward<value_type>(object), stringBuffer, index, indent);
+			serialize<options>::impl(std::forward<value_type>(object), stringBuffer, index, indent);
 			buffer.resize(index);
 			std::memcpy(buffer.data(), stringBuffer.data(), index);
 			return true;

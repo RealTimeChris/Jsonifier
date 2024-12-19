@@ -85,39 +85,25 @@ namespace jsonifier_internal {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct object_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct array_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct string_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct number_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct bool_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct null_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool... values> struct accessor_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct object_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct object_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct object_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct array_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct array_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct array_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct string_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct string_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct string_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct number_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct number_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct number_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct bool_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct bool_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct bool_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct null_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct null_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct null_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified>
-	struct accessor_val_parser<buffer_type, parse_context_type, optionsNew, minified>;
+	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct accessor_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct accessor_val_parser_partial;
 
 
@@ -268,22 +254,57 @@ namespace jsonifier_internal {
 					return false;
 				}
 				parse<getJsonType<value_type>(), optionsNew, options.minified>::template impl<buffer_type>(object, context);
-				return (context.currentObjectDepth != 0 && !optionsNew.partialRead) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
-					: (context.currentArrayDepth != 0 && !optionsNew.partialRead)	? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
-					: (context.iter < context.endIter && !optionsNew.partialRead)	? (reportError<parse_errors::Unfinished_Input>(context), false)
-					: derivedRef.errors.size() > 0									? false
-																					: true;
+				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
+					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
+					: (context.iter < context.endIter)	 ? (reportError<parse_errors::Unfinished_Input>(context), false)
+					: derivedRef.errors.size() > 0		 ? false
+														 : true;
 			}
 		}
 
 		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, typename buffer_type>
 		JSONIFIER_ALWAYS_INLINE bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
+			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
+				.partialRead													= false,
+				.knownOrder														= options.knownOrder,
+				.minified														= options.minified };
+			parse_context<derived_type, const char*> context{};
+			context.rootIter  = getBeginIter(in);
+			context.iter	  = context.rootIter;
+			context.endIter	  = getEndIter(in);
+			context.parserPtr = this;
+			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+			if (stringBuffer.size() < newSize) {
+				stringBuffer.resize(newSize);
+			}
+			if constexpr (options.validateJson) {
+				if (!derivedRef.validateJson(in)) {
+					return false;
+				}
+			}
+			derivedRef.errors.clear();
+			if JSONIFIER_UNLIKELY (!context.iter) {
+				reportError<parse_errors::No_Input>(context);
+				return false;
+			}
+			while (context.iter < context.endIter) {
+				parse<getJsonType<value_type>(), optionsNew, options.minified>::template impl<buffer_type>(object.emplace_back(), context);
+			}
+			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
+				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
+				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
+				: derivedRef.errors.size() > 0								  ? false
+																			  : true;
+		}
+
+		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
+		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr jsonifier::parse_options optionsNew{ options };
 				parse_context_partial<derived_type, const char**> context{};
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
-				section.reset<options.minified>(rootIter, endIter - rootIter);
+				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
 				context.rootIter			 = section.begin();
 				context.iter				 = section.begin();
 				context.endIter				 = section.end();
@@ -295,22 +316,17 @@ namespace jsonifier_internal {
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
-						return false;
+						return std::remove_cvref_t<value_type>{};
 					}
 				}
 				derivedRef.errors.clear();
 				if JSONIFIER_UNLIKELY (!context.iter) {
 					reportError<parse_errors::No_Input>(context);
-					return false;
+					return std::remove_cvref_t<value_type>{};
 				}
-				while (context.iter < context.endIter) {
-					parse<getJsonType<value_type>(), optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object.emplace_back(), context);
-				}
-				return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
-					: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
-					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
-					: derivedRef.errors.size() > 0								  ? false
-																				  : true;
+				value_type object{};
+				parse<getJsonType<value_type>(), optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
+				return derivedRef.errors.size() > 0 ? std::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr jsonifier::parse_options optionsNew{ options };
 				parse_context<derived_type, const char*> context{};
@@ -324,54 +340,22 @@ namespace jsonifier_internal {
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
-						return false;
+						return std::remove_cvref_t<value_type>{};
 					}
 				}
 				derivedRef.errors.clear();
 				if JSONIFIER_UNLIKELY (!context.iter) {
 					reportError<parse_errors::No_Input>(context);
-					return false;
+					return std::remove_cvref_t<value_type>{};
 				}
-				while (context.iter < context.endIter) {
-					parse<getJsonType<value_type>(), optionsNew, options.minified>::template impl<buffer_type>(object.emplace_back(), context);
-				}
-				return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
-					: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
-					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), false)
-					: derivedRef.errors.size() > 0								  ? false
-																				  : true;
+				value_type object{};
+				parse<getJsonType<value_type>(), optionsNew, options.minified>::template impl<buffer_type>(object, context);
+				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
+					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
+					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
+					: derivedRef.errors.size() > 0								  ? std::remove_cvref_t<value_type>{}
+																				  : object;
 			}
-		}
-
-		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_ALWAYS_INLINE value_type parseJson(buffer_type&& in) noexcept {
-			static constexpr jsonifier::parse_options optionsNew{ options };
-			parse_context<derived_type, const char*> context{};
-			context.rootIter  = getBeginIter(in);
-			context.iter	  = context.rootIter;
-			context.endIter	  = getEndIter(in);
-			context.parserPtr = this;
-			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-			if (stringBuffer.size() < newSize) {
-				stringBuffer.resize(newSize);
-			}
-			if constexpr (options.validateJson) {
-				if JSONIFIER_UNLIKELY (!derivedRef.validateJson(in)) {
-					return value_type{};
-				}
-			}
-			derivedRef.errors.clear();
-			std::remove_cvref_t<value_type> object{};
-			if JSONIFIER_UNLIKELY (!context.iter) {
-				reportError<parse_errors::No_Input>(context);
-				return std::move(object);
-			}
-			parse<getJsonType<value_type>(), optionsNew, options.minified, options.partialRead, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
-			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
-				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
-				: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
-				: derivedRef.errors.size() > 0								  ? std::remove_cvref_t<value_type>{}
-																			  : object;
 		}
 
 		template<auto parseError, typename parse_context_type>

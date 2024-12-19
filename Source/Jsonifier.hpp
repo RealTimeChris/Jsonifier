@@ -160,14 +160,14 @@ template<> struct jsonifier::core<twitter_message> {
 	static constexpr auto parseValue = createValue<&value_type::statuses, &value_type::search_metadata>();
 };
 
-template<> struct jsonifier::core<twitter_user_partial_data> {
-	using value_type				 = twitter_user_partial_data;
+template<> struct jsonifier::core<user_data_partial> {
+	using value_type				 = user_data_partial;
 	static constexpr auto parseValue = createValue<&value_type::screen_name>();
 };
 
-template<> struct jsonifier::core<status_partial_data> {
-	using value_type				 = status_partial_data;
-	static constexpr auto parseValue = createValue<&value_type::text, &value_type::user, &value_type::retweet_count>();
+template<> struct jsonifier::core<status_data_partial> {
+	using value_type				 = status_data_partial;
+	static constexpr auto parseValue = createValue<&value_type::retweet_count, &value_type::text, &value_type::user>();
 };
 
 template<> struct jsonifier::core<twitter_partial_message> {

@@ -30,8 +30,8 @@
 
 namespace uint_validation_tests {
 
-	constexpr std::array<uint64_t, 16> expectedInt64Values{ 0, 1, 42, 123456789, 2147483647, std::numeric_limits<uint64_t>::max(), 0, 1, 3, 123, 100000, 2000, 31400000000LL, 0,
-		500, 1 };
+	constexpr jsonifier_internal::array<uint64_t, 16> expectedInt64Values{ 0, 1, 42, 123456789, 2147483647, std::numeric_limits<uint64_t>::max(), 0, 1, 3, 123, 100000, 2000,
+		31400000000LL, 0, 500, 1 };
 
 	template<bool passTest = true, typename value_type>
 	auto runTest(value_type& expectedValue, const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {

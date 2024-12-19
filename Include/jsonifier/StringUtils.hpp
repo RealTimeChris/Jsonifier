@@ -4,7 +4,7 @@
 	Copyright (c) 2024 RealTimeChris
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
-	software and associated documentation files (the "Software"), to deal string1 the Software
+	software and associated documentation files (the "Software"), to deal in the Software
 	without restriction, including without limitation the rights to use, copy, modify, merge,
 	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
 	persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -264,17 +264,14 @@ namespace jsonifier_internal {
 		return ((( x )-factor * n) & ~( x )&factor * msbMask) != 0;
 	}
 
-	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(string_view_ptr string1, string_buffer_ptr string2,
-		const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
+	template<typename simd_type, typename integer_type>
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02) noexcept {
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(
 			simd_internal::opBitMaskRaw(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)))));
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindParse(string_view_ptr string1, string_buffer_ptr string2, simd_type& simdValue) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
-		std::memcpy(&simdValue, string1, sizeof(simd_type));
+	JSONIFIER_ALWAYS_INLINE integer_type findParse(simd_type& simdValue) noexcept {
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
 		static constexpr integer_type quoteBits{ repeatByte<'"', integer_type>() };
@@ -284,18 +281,15 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(string_view_ptr string1, string_buffer_ptr string2,
-		const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
+	template<typename simd_type, typename integer_type> JSONIFIER_ALWAYS_INLINE integer_type findSerialize(const simd_type& simdValue, const simd_type& simdValues01,
+		const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(
 			simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
 				simd_internal::opCmpLtRaw(simdValue, simdValues03)))));
 	}
 
 	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type>
-	JSONIFIER_ALWAYS_INLINE integer_type copyAndFindSerialize(string_view_ptr string1, string_buffer_ptr string2, simd_type& simdValue) noexcept {
-		std::memcpy(string2, string1, sizeof(simd_type));
-		std::memcpy(&simdValue, string1, sizeof(simd_type));
+	JSONIFIER_ALWAYS_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
 		static constexpr integer_type less32Bits{ repeatByte<0b01100000, integer_type>() };
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };
@@ -400,8 +394,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask)) {
 							escapeChar = string1[nextBackslashOrQuote];
 							if (escapeChar == '"') {
@@ -457,7 +452,8 @@ namespace jsonifier_internal {
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
 					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -511,8 +507,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue			 = simd_internal::gatherValuesU<simd_type>(string1);
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue, simdValues00, simdValues01);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -562,7 +559,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextBackslashOrQuote;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextBackslashOrQuote = copyAndFindParse<simd_type, integer_type>(string1, string2, simdValue);
+					std::memcpy(&simdValue, string1, bytesProcessed);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue);
 					if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 						escapeChar = string1[nextBackslashOrQuote];
 						if (escapeChar == '"') {
@@ -649,8 +648,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -685,8 +685,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -722,8 +723,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					simdValue	   = simd_internal::gatherValuesU<simd_type>(string1);
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue, simdValues01, simdValues02, simdValues03);
+					simdValue = simd_internal::gatherValuesU<simd_type>(string1);
+					std::memcpy(string2, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -754,7 +756,9 @@ namespace jsonifier_internal {
 				simd_type simdValue;
 				integer_type nextEscapeable;
 				while (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(bytesProcessed)) {
-					nextEscapeable = copyAndFindSerialize<simd_type, integer_type>(string1, string2, simdValue);
+					std::memcpy(string2, string1, bytesProcessed);
+					std::memcpy(&simdValue, string1, bytesProcessed);
+					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue);
 					if JSONIFIER_LIKELY (nextEscapeable < mask) {
 						escapeChar = escapeTable[static_cast<uint8_t>(string1[nextEscapeable])];
 						if JSONIFIER_LIKELY (escapeChar != 0u) {
@@ -949,16 +953,10 @@ namespace jsonifier_internal {
 						}
 						[[unlikely]] case '}': {
 							--currentDepth;
-							++context.iter;
-							break;
-						}
-						[[unlikely]] case '[': {
-							++currentDepth;
-							++context.iter;
-							break;
-						}
-						[[unlikely]] case ']': {
-							--currentDepth;
+							if (currentDepth == 0) {
+								++context.iter;
+								return;
+							}
 							++context.iter;
 							break;
 						}
@@ -1052,7 +1050,7 @@ namespace jsonifier_internal {
 				const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
 				const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 
-				while (nextOpenOrClose && depth > 0 && context.iter < context.endIter) {
+				while (nextOpenOrClose && depth > 0 && context.iter + bytesPerStep < context.endIter) {
 					if (nextQuote && (nextQuote < nextOpenOrClose)) {
 						skipString(context);
 						++context.iter;
@@ -1066,11 +1064,10 @@ namespace jsonifier_internal {
 						}
 						context.iter = nextOpenOrClose;
 						if (depth == 0) {
-							++context.iter;
 							return;
 						}
-						remainingLength = static_cast<size_t>(context.endIter - context.iter);
 						++context.iter;
+						remainingLength = static_cast<size_t>(context.endIter - context.iter);
 						nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 					}
 				}
@@ -1132,20 +1129,20 @@ namespace jsonifier_internal {
 
 		template<typename value_type> JSONIFIER_INLINE static void skipToNextValue(parse_context_type& context) noexcept {
 			if constexpr (options.partialRead) {
-				while (context.iter != context.endIter && **context.iter != ',') {
-					switch (**context.iter) {
-						[[unlikely]] case '{': {
-							skipObject<value_type>(context);
-							break;
-						}
-						[[unlikely]] case '[': {
-							skipArray<value_type>(context);
-							break;
-						}
-						[[likely]] default: {
-							++context.iter;
-							break;
-						}
+				switch (**context.iter) {
+					case '{': {
+						skipObject<value_type>(context);
+						break;
+					}
+					case '[': {
+						skipArray<value_type>(context);
+						break;
+					}
+					case '\0': {
+						break;
+					}
+					default: {
+						++context.iter;
 					}
 				}
 			} else {
@@ -1162,6 +1159,14 @@ namespace jsonifier_internal {
 						case '[': {
 							++context.currentArrayDepth;
 							skipArray<value_type>(context);
+							break;
+						}
+						case ',': {
+							++context.iter;
+							if constexpr (!options.minified) {
+								JSONIFIER_SKIP_WS()
+							}
+							skipToNextValue<value_type>(context);
 							break;
 						}
 						case '"': {
