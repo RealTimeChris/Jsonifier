@@ -204,7 +204,7 @@ namespace jsonifier_internal {
 
 	template<auto... values, size_t... indices> constexpr auto createValueImpl(std::index_sequence<indices...>) {
 		static_assert((convertible_to_json_entity<decltype(values)> && ...), "All arguments passed to createValue should be constructible from a json_entity.");
-		return jsonifier::value{ makeTuple(makeJsonEntityAuto<sizeof...(values), indices, values>()...) };
+		return makeTuple(makeJsonEntityAuto<sizeof...(values), indices, values>()...);
 	}
 
 }

@@ -1046,29 +1046,30 @@ namespace jsonifier_internal {
 			} else {
 				size_t depth		   = 1;
 				size_t remainingLength = static_cast<size_t>(context.endIter - context.iter);
+				if (context.iter + bytesPerStep < context.endIter) {
+					const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
+					const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 
-				const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
-				const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
-
-				while (nextOpenOrClose && depth > 0 && context.iter + bytesPerStep < context.endIter) {
-					if (nextQuote && (nextQuote < nextOpenOrClose)) {
-						skipString(context);
-						++context.iter;
-						remainingLength = static_cast<size_t>(context.endIter - context.iter);
-						nextQuote		= static_cast<const char*>(std::memchr(context.iter, '"', remainingLength));
-					} else {
-						if (*nextOpenOrClose == valueEnd) {
-							--depth;
-						} else if (*nextOpenOrClose == valueStart) {
-							++depth;
+					while (nextOpenOrClose && depth > 0 && context.iter + bytesPerStep < context.endIter) {
+						if (nextQuote && (nextQuote < nextOpenOrClose)) {
+							skipString(context);
+							++context.iter;
+							remainingLength = static_cast<size_t>(context.endIter - context.iter);
+							nextQuote		= static_cast<const char*>(std::memchr(context.iter, '"', remainingLength));
+						} else {
+							if (*nextOpenOrClose == valueEnd) {
+								--depth;
+							} else if (*nextOpenOrClose == valueStart) {
+								++depth;
+							}
+							context.iter = nextOpenOrClose;
+							if (depth == 0) {
+								return;
+							}
+							++context.iter;
+							remainingLength = static_cast<size_t>(context.endIter - context.iter);
+							nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 						}
-						context.iter = nextOpenOrClose;
-						if (depth == 0) {
-							return;
-						}
-						++context.iter;
-						remainingLength = static_cast<size_t>(context.endIter - context.iter);
-						nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 					}
 				}
 			}

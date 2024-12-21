@@ -168,21 +168,6 @@ namespace jsonifier {
 
 	template<typename value_type> struct core;
 
-	template<typename value_type> struct value {
-		value_type val{};
-		json_type type{};
-
-		constexpr value(value_type valNew, json_type typeNew) : val{ valNew }, type{ typeNew } {
-		}
-
-		constexpr value(value_type valNew) : val{ valNew }, type{} {
-		}
-	};
-
-	template<typename value_type> value(value_type, json_type) -> value<value_type>;
-
-	template<typename value_type> value(value_type) -> value<value_type>;
-
 	struct skip {};
 
 	template<auto... valuesNew> struct value_holder;
@@ -438,18 +423,6 @@ namespace jsonifier {
 		template<typename value_type>
 		concept convertible_to_string_view = std::convertible_to<std::remove_cvref_t<value_type>, std::string_view>;
 
-		struct empty {
-			static constexpr jsonifier_internal::tuple<> val{};
-		};
-
-		template<typename value_type> constexpr auto coreWrapperV = [] {
-			if constexpr (jsonifier_t<value_type>) {
-				return jsonifier::core<value_type>::parseValue;
-			} else {
-				return empty{};
-			}
-		}();
-
 		template<typename value_type>
 		concept has_member_t = requires { typename std::remove_cvref_t<value_type>::member_type; };
 
@@ -461,12 +434,8 @@ namespace jsonifier {
 		template<typename value_type>
 		concept is_resizable = has_resize<value_type> && has_reserve<value_type> && !std::is_const_v<std::remove_reference_t<value_type>>;
 
-		template<typename value_type> constexpr auto coreV = coreWrapperV<decay_keep_volatile_t<value_type>>.val;
-
-		template<typename value_type> using core_wrapper_t = decay_keep_volatile_t<decltype(coreWrapperV<std::decay_t<value_type>>)>;
-
 		template<typename value_type>
-		concept jsonifier_object_t = jsonifier_t<value_type> && jsonifier_internal::is_specialization_v<core_wrapper_t<value_type>, value>;
+		concept jsonifier_object_t = jsonifier_t<value_type>;
 
 		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<std::remove_cvref_t<value_type>> && !std::is_pointer_v<std::remove_cvref_t<value_type>> ) ||
@@ -494,13 +463,6 @@ namespace jsonifier {
 		concept integer_t = std::integral<std::remove_cvref_t<value_type>> && !bool_t<value_type> && !std::floating_point<std::remove_cvref_t<value_type>>;
 	}
 
-}// namespace jsonifier_internal
-
-namespace jsonifier_internal {
-
-	template<typename... value_types> struct tuple_size<jsonifier::value<value_types...>> : std::integral_constant<uint64_t, sizeof...(value_types)> {};
-
-	template<> struct tuple_size<jsonifier::concepts::empty> : std::integral_constant<uint64_t, 0> {};
 }
 
 #if defined(max)

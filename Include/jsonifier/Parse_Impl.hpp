@@ -217,20 +217,22 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename... value_holder_types>
-	struct parser_core;
-
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename value_holder_type,
-		typename... value_holder_types>
-	struct parser_core<options, minified, value_type, context_type, value_holder_type, value_holder_types...> {
-		JSONIFIER_INLINE static void processIndices(const value_type& value,context_type& context) {
-			parse_index_processor_impl<options, value_holder_type::value, value_type, context_type>::impl(value, context);
-			parser_core<options, minified, value_type, context_type, value_holder_types...>::processIndices(value, context);
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, typename... value_holder_types> struct parser_core {
+		JSONIFIER_ALWAYS_INLINE static void processIndices() noexcept {
 		}
 	};
 
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename value_holder_type>
-	struct parser_core<options, minified, value_type, context_type, value_holder_type> {
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, typename value_holder_type,
+		typename... value_holder_types>
+	struct parser_core<options, minified, value_type, context_type, buffer_type, value_holder_type, value_holder_types...> {
+		JSONIFIER_INLINE static void processIndices(const value_type& value,context_type& context) {
+			parse_index_processor_impl<options, value_holder_type::value, value_type, context_type>::impl(value, context);
+			parser_core<options, minified, value_type, context_type, buffer_type, value_holder_types...>::processIndices(value, context);
+		}
+	};
+
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, typename value_holder_type>
+	struct parser_core<options, minified, value_type, context_type, buffer_type, value_holder_type> {
 		JSONIFIER_ALWAYS_INLINE static void processIndices(const value_type& value,context_type& context) {
 			parse_index_processor_impl<options, value_holder_type::value, value_type, context_type>::impl(value, context);
 		}
@@ -240,25 +242,27 @@ namespace jsonifier_internal {
 		static constexpr auto value{ valueNew };
 	};
 
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename index_sequence, auto tuple>
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, typename index_sequence, auto tuple>
 	struct get_parser_core;
 
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, size_t... I, auto tuple>
-	struct get_parser_core<options, minified, value_type, context_type, std::index_sequence<I...>, tuple> {
-		using type = parser_core<options, minified, value_type, context_type, value_holder<I, value_type, jsonifier_internal::get<I>(tuple)>...>;
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, size_t... I, auto tuple>
+	struct get_parser_core<options, minified, value_type, context_type, buffer_type, std::index_sequence<I...>, tuple> {
+		using type = parser_core<options, minified, value_type, context_type, buffer_type, value_holder<I, value_type, jsonifier_internal::get<I>(tuple)>...>;
 	};
 
-	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, auto value> using parser_core_t =
-		typename get_parser_core<options, minified, value_type, context_type, jsonifier_internal::tag_range<jsonifier_internal::tuple_size_v<decltype(value)>>,
+	template<jsonifier::parse_options options, bool minified, typename value_type, typename context_type, typename buffer_type, auto value> using parser_core_t =
+		typename get_parser_core<options, minified, value_type, context_type, buffer_type, jsonifier_internal::tag_range<jsonifier_internal::tuple_size_v<decltype(value)>>,
 			value>::type;
 
 	template<typename parse_context_type, typename buffer_type, typename value_type, jsonifier::parse_options options>
 	struct index_processor_parse<parse_context_type, buffer_type, value_type, options, false> : derailleur<options, parse_context_type> {
 		using base						  = derailleur<options, parse_context_type>;
 		static constexpr auto memberCount = tuple_size_v<typename core_tuple_type<value_type>::core_type>;
-		inline static thread_local array<bool, memberCount> antiHashStates{ [] {
-			array<bool, memberCount> returnValues{};
-			returnValues.fill(true);
+		inline static thread_local array<int64_t, memberCount> antiHashStates{ [] {
+			array<int64_t, memberCount> returnValues{};
+			for (size_t x = 0; x < memberCount; ++x) {
+				returnValues[x] = static_cast<int64_t>(x);
+			}
 			return returnValues;
 		}() };
 
@@ -281,7 +285,7 @@ namespace jsonifier_internal {
 									return;
 								}
 							}
-							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type, jsonifier::concepts::coreV<value_type>,
+							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue,
 								false>
 								jsonMapAntiHash{};
 							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type,
@@ -290,7 +294,7 @@ namespace jsonifier_internal {
 							if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == quote) {
 								++context.iter;
 								if constexpr (options.knownOrder) {
-									if (antiHashStates[index]) {
+									if (antiHashStates[index] != -1) {
 										if (jsonMapAntiHash.arrayOfPtrs[index]->processIndex(value, context)) {
 											return processIndexLambda<true>(value, context, wsStart, wsSize, index + 1);
 										} else {
@@ -301,7 +305,7 @@ namespace jsonifier_internal {
 													return processIndexLambda<true>(value, context, wsStart, wsSize, index + 1);
 												}
 											}
-											antiHashStates[index] = false;
+											antiHashStates[index] = -1;
 										}
 									}
 								}
@@ -367,7 +371,7 @@ namespace jsonifier_internal {
 					JSONIFIER_SKIP_WS();
 					size_t wsSize = static_cast<size_t>(context.iter - wsStart);
 					index_processor_parse<parse_context_type, buffer_type, value_type, options, false>::template processIndexLambda<false>(value, context, wsStart, wsSize);
-					if JSONIFIER_LIKELY (*context.iter == rBrace) {
+					if JSONIFIER_LIKELY (context.iter < context.endIter && *context.iter == rBrace) {
 						++context.iter;
 						JSONIFIER_SKIP_WS();
 					}
@@ -714,7 +718,7 @@ namespace jsonifier_internal {
 									return;
 								}
 							}
-							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type, jsonifier::concepts::coreV<value_type>,
+							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue,
 								true>
 								jsonMapAntiHash{};
 							static constexpr json_parse_map_t<json_entity_parse_final, options, value_type, parse_context_type, buffer_type,
@@ -797,7 +801,7 @@ namespace jsonifier_internal {
 					++context.iter;
 					++context.currentObjectDepth;
 					index_processor_parse<parse_context_type, buffer_type, value_type, options, true>::template processIndexLambda<false>(value, context);
-					if JSONIFIER_LIKELY (*context.iter == rBrace) {
+					if JSONIFIER_LIKELY (context.iter < context.endIter && *context.iter == rBrace) {
 						++context.iter;
 					}
 					JSONIFIER_ELSE_UNLIKELY(else) {

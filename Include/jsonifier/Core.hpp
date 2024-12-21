@@ -84,12 +84,12 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(jsonifier::concepts::coreV<value_type>) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
 
 	template<typename value_type, size_t... indices> constexpr auto createNewTupleImpl(std::index_sequence<indices...>) noexcept {
-		return makeTuple(get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
+		return makeTuple(get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)...);
 	}
 
 	template<typename value_type> constexpr auto createNewTuple() noexcept {

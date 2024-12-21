@@ -112,32 +112,34 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_ALWAYS_NO_INLINE [[msvc::noinline]]
+		#define JSONIFIER_NO_INLINE [[msvc::noinline]]
 		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
-		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
+		#define JSONIFIER_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
+		#define JSONIFIER_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
-	#define JSONIFIER_ALWAYS_NO_INLINE
+	#define JSONIFIER_NO_INLINE
 	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
-	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif
 
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
+#endif
+
+#if defined(JSONIFIER_MSVC)
+static constexpr uint64_t forceInlineLimit{ 4 };
+#elif defined(JSONIFIER_GNUCXX)
+static constexpr uint64_t forceInlineLimit{ 4 };
+#elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
+static constexpr uint64_t forceInlineLimit{ 12 };
+#else
+static constexpr uint64_t forceInlineLimit{ 4 };
 #endif

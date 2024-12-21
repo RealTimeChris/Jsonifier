@@ -466,7 +466,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t currentIndex, size_t maxIndex> constexpr bool areTypesUnique(array<size_t, 7> types = array<size_t, 7>{}) {
 		if constexpr (currentIndex < maxIndex) {
-			auto type = get<currentIndex>(jsonifier::concepts::coreV<value_type>).type;
+			auto type = get<currentIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue).type;
 			++types[static_cast<size_t>(type)];
 			return areTypesUnique<value_type, currentIndex + 1, maxIndex>(types);
 		} else {
