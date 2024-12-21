@@ -152,7 +152,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::serialize_options options, typename value_type, typename buffer_type, typename index_type, typename indent_type, typename... value_holder_types>
 	struct serializer_core {
-		JSONIFIER_INLINE static void processIndices(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
+		JSONIFIER_ALWAYS_INLINE static void processIndices(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
 			(serialize_index_processor_impl<options, value_holder_types::value, value_type, buffer_type, index_type, indent_type>::impl(value, buffer, index, indent), ...);
 		}
 	};
