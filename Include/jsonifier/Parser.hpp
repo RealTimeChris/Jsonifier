@@ -69,6 +69,11 @@ namespace jsonifier_internal {
 		iterator_type iter{};
 	};
 
+	template<typename value_type>
+	concept partial_reading_context_t = requires(std::remove_cvref_t<value_type> value) {
+		{ value.getState() } -> std::same_as<bool>;
+	};
+
 	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_ALWAYS_INLINE string_view_ptr getEndIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
@@ -106,11 +111,11 @@ namespace jsonifier_internal {
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct accessor_val_parser;
 	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct accessor_val_parser_partial;
 
+	template<typename buffer_type, typename parse_context_type, typename value_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct custom_val_parser;
+	template<typename buffer_type, typename parse_context_type, typename value_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct custom_val_parser_partial;
 
 	template<typename value_type> static constexpr auto getJsonType() {
-		if constexpr (jsonifier::concepts::has_json_type<value_type>) {
-			return value_type{}.type;
-		} else if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
+		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
 			return jsonifier::json_type::object;
 		} else if constexpr (jsonifier::concepts::raw_array_t<value_type> || jsonifier::concepts::tuple_t<value_type> || jsonifier::concepts::vector_t<value_type>) {
 			return jsonifier::json_type::array;
@@ -127,12 +132,9 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<typename value_type>
-	concept has_value_type = requires() { typename std::remove_cvref_t<value_type>::value_type; };
-
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
-		if constexpr (currentIndex < jsonifier_internal::tuple_size_v<typename jsonifier_internal::core_tuple_type<value_type>::core_type>) {
-			constexpr auto newSubTuple = get<currentIndex>(jsonifier::concepts::coreV<value_type>);
+		if constexpr (currentIndex < tuple_size_v<core_tuple_type<value_type>>) {
+			constexpr auto newSubTuple = get<currentIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 			using member_type		   = typename std::remove_cvref_t<decltype(newSubTuple)>::member_type;
 			if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
 				currentCount += countTotalNonRepeatedMembers<member_type>();
@@ -166,6 +168,8 @@ namespace jsonifier_internal {
 					bool_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
 				} else if constexpr (type == jsonifier::json_type::null) {
 					null_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
+				} else if constexpr (type == jsonifier::json_type::custom) {
+					custom_val_parser_partial<buffer_type, parse_context_type, value_type, options, insideRepeated>::impl(value, context);
 				} else {
 					accessor_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
 				}
@@ -189,6 +193,8 @@ namespace jsonifier_internal {
 					bool_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
 				} else if constexpr (type == jsonifier::json_type::null) {
 					null_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
+				} else if constexpr (type == jsonifier::json_type::custom) {
+					custom_val_parser<buffer_type, parse_context_type, value_type, options, insideRepeated>::impl(value, context);
 				} else {
 					accessor_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
 				}

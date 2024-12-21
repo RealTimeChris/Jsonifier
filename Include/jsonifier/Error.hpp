@@ -223,6 +223,7 @@ namespace jsonifier_internal {
 
 	  protected:
 		std::source_location location{};
+		string_view_ptr stringView{};
 		jsonifier::string context{};
 		error_classes errorClass{};
 		uint64_t stringLength{};
@@ -230,8 +231,6 @@ namespace jsonifier_internal {
 		int64_t localIndex{};
 		uint64_t errorType{};
 		uint64_t line{};
-		string_view_ptr stringView{};
-		uint8_t padding01[7]{};
 	};
 
 	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {

@@ -23,12 +23,13 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/SimdCommon.hpp>
+#include <jsonifier/ISA/SimdTypes.hpp>
 #include <memory_resource>
+#include <stdlib.h>
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			return (value + (multiple - 1)) & ~(multiple - 1);
 		} else {
@@ -37,7 +38,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_ALWAYS_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			return value & ~(multiple - 1);
 		} else {
@@ -59,7 +60,7 @@ namespace jsonifier_internal {
 #if defined(JSONIFIER_MSVC)
 			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<bytesPerStep>(count * sizeof(value_type)), bytesPerStep));
 #else
-			return static_cast<value_type*>(std::aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
+			return static_cast<value_type*>(aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
 #endif
 		}
 

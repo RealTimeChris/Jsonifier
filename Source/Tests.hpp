@@ -179,14 +179,13 @@ namespace tests {
 				bnch_swt::doNotOptimizeAway(testData);
 				return newerBuffer.size();
 			});
-			newerBuffer.clear();
-			auto writeResult		  = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<glazeLibraryName, "skyblue">([&]() mutable {
-				 auto newResult = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
-				 bnch_swt::doNotOptimizeAway(newResult);
-				 bnch_swt::doNotOptimizeAway(newerBuffer);
-				 return newerBuffer.size();
-			 });
-			readResult.bytesProcessed = newerBuffer.size();
+			auto writeResult						 = bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<glazeLibraryName, "skyblue">([&]() mutable {
+				auto newResult = glz::write<glz::opts{ .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newerBuffer);
+				bnch_swt::doNotOptimizeAway(newResult);
+				bnch_swt::doNotOptimizeAway(newerBuffer);
+				return newerBuffer.size();
+			});
+			readResult.bytesProcessed				 = newerBuffer.size();
 
 			r.readResult  = result<result_type::read>{ "dodgerblue", readResult };
 			r.writeResult = result<result_type::write>{ "skyblue", writeResult };

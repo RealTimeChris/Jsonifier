@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/StringView.hpp>
 
 namespace jsonifier_internal {
 
@@ -41,69 +42,56 @@ namespace jsonifier_internal {
 	concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
 
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
-	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefs) {
+	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
 		if constexpr (currentIndex < maxIndex) {
 			auto potentialKey = get<currentIndex>(tuple);
 			if constexpr (has_view<decltype(potentialKey)>) {
-				tupleRefs[currentIndex].key = potentialKey.view();
+				tupleRefsRaw[currentIndex].key = potentialKey.view();
 			}
-			tupleRefs[currentIndex].oldIndex = currentIndex;
-			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefs);
+			tupleRefsRaw[currentIndex].oldIndex = currentIndex;
+			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefsRaw);
 		}
-		return tupleRefs;
+		return tupleRefsRaw;
 	}
 
 	template<typename tuple_type> constexpr auto collectTupleRefs(const tuple_type& tuple) {
 		constexpr auto tupleSize = tuple_size_v<tuple_type>;
-		array<tuple_reference, tupleSize> tupleRefs{};
-		return collectTupleRefsImpl<tupleSize>(tuple, tupleRefs);
+		array<tuple_reference, tupleSize> tupleRefsRaw{};
+		return collectTupleRefsImpl<tupleSize>(tuple, tupleRefsRaw);
 	}
 
-	template<size_t size> constexpr auto sortTupleRefsByFirstByte(const array<tuple_reference, size>& tupleRefs) {
-		array<tuple_reference, size> returnValues{ tupleRefs };
+	template<size_t size> constexpr auto sortTupleRefsByFirstByte(const array<tuple_reference, size>& tupleRefsRaw) {
+		array<tuple_reference, size> returnValues{ tupleRefsRaw };
 		std::sort(returnValues.begin(), returnValues.end(), [](const tuple_reference& lhs, const tuple_reference& rhs) {
-			return lhs.key[0] < rhs.key[0];
+			return lhs.key[0] > rhs.key[0];
 		});
 		return returnValues;
 	}
 
-	template<size_t size> constexpr auto sortTupleRefsByLength(const array<tuple_reference, size>& tupleRefs) {
-		array<tuple_reference, size> returnValues{ tupleRefs };
+	template<size_t size> constexpr auto sortTupleRefsByLength(const array<tuple_reference, size>& tupleRefsRaw) {
+		array<tuple_reference, size> returnValues{ tupleRefsRaw };
 		std::sort(returnValues.begin(), returnValues.end(), [](const tuple_reference& lhs, const tuple_reference& rhs) {
 			return lhs.key.size() < rhs.key.size();
 		});
 		return returnValues;
 	}
 
-	template<size_t size> constexpr auto consolidateTupleRefs(const array<tuple_reference, size>& tupleRefs) {
+	template<size_t size> constexpr auto consolidateTupleRefs(const array<tuple_reference, size>& tupleRefsRaw) {
 		tuple_references returnValues{};
 		if constexpr (size > 0) {
-			returnValues.rootPtr = &tupleRefs[0];
+			returnValues.rootPtr = &tupleRefsRaw[0];
 			returnValues.count	 = size;
 		}
 		return returnValues;
 	}
 
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(jsonifier::concepts::coreV<value_type>) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferences{ consolidateTupleRefs(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
-
-	template<typename value_type, size_t... indices> constexpr auto createNewTupleImpl(std::index_sequence<indices...>) noexcept {
-		return makeTuple(get<sortedTupleReferencesByLength<value_type>[indices].oldIndex>(jsonifier::concepts::coreV<value_type>)...);
-	}
-
-	template<typename value_type> constexpr auto createNewTuple() noexcept {
-		constexpr auto& tupleRefs = sortedTupleReferencesByLength<value_type>;
-		return createNewTupleImpl<value_type>(std::make_index_sequence<tupleRefs.size()>{});
-	}
-
-	template<typename value_type> struct core_tuple_type {
-		static constexpr auto coreTupleV{ createNewTuple<std::remove_cvref_t<value_type>>() };
-		using core_type = decltype(coreTupleV);
-	};
-
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleRefsByLength{ collectTupleRefs(core_tuple_type<value_type>::coreTupleV) };
-	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefsByLength<value_type>) };
+	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_ALWAYS_INLINE_VARIABLE auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
+	
+	template<typename value_type> using core_tuple_type = decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 
 }// namespace jsonifier_internal

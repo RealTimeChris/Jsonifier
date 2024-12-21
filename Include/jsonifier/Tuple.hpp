@@ -71,7 +71,7 @@ namespace jsonifier_internal {
 		using type = B const&;
 	};
 
-	template<typename tup, typename B> using forward_as_t = typename jsonifier_internal::forward_as<tup, B>::type;
+	template<typename tup, typename B> using forward_as_t = typename forward_as<tup, B>::type;
 
 	template<typename value_type> using identity_t = value_type;
 
@@ -206,9 +206,11 @@ namespace jsonifier_internal {
 }
 
 namespace std {
+
 	template<typename... value_type> struct tuple_size<jsonifier_internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuple<value_type...>> {
 		using type = decltype(jsonifier_internal::tuple<value_type...>::decl_elem(jsonifier_internal::tag<I>()));
 	};
+
 }

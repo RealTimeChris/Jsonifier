@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/TypeEntities.hpp>
+#include <jsonifier/ISA/SimdCommon.hpp>
 
 namespace jsonifier_internal {
 
@@ -107,9 +108,9 @@ namespace jsonifier_internal {
 			{
 				static constexpr size_t nBytes{ sizeof(size_t) };
 				if (lengthNew >= nBytes) {
-					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, size_t>() };
-					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, size_t>() };
-					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, size_t>() };
+					static constexpr auto valueNew{ repeatByte<value, size_t>() };
+					static constexpr auto highBits{ repeatByte<0x80, size_t>() };
+					static constexpr auto lowBits{ repeatByte<0x01, size_t>() };
 					size_t simdValue;
 					while (lengthNew >= nBytes) {
 						std::memcpy(&simdValue, data, sizeof(size_t));
@@ -129,9 +130,9 @@ namespace jsonifier_internal {
 			{
 				static constexpr size_t nBytes{ sizeof(uint32_t) };
 				if (lengthNew >= nBytes) {
-					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint32_t>() };
-					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint32_t>() };
-					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint32_t>() };
+					static constexpr auto valueNew{ repeatByte<value, uint32_t>() };
+					static constexpr auto highBits{ repeatByte<0x80, uint32_t>() };
+					static constexpr auto lowBits{ repeatByte<0x01, uint32_t>() };
 					uint32_t simdValue;
 					std::memcpy(&simdValue, data, sizeof(uint32_t));
 					const auto chunk = simdValue ^ valueNew;
@@ -149,9 +150,9 @@ namespace jsonifier_internal {
 			{
 				static constexpr size_t nBytes{ sizeof(uint16_t) };
 				if (lengthNew >= nBytes) {
-					static constexpr auto valueNew{ jsonifier_internal::repeatByte<value, uint16_t>() };
-					static constexpr auto highBits{ jsonifier_internal::repeatByte<0x80, uint16_t>() };
-					static constexpr auto lowBits{ jsonifier_internal::repeatByte<0x01, uint16_t>() };
+					static constexpr auto valueNew{ repeatByte<value, uint16_t>() };
+					static constexpr auto highBits{ repeatByte<0x80, uint16_t>() };
+					static constexpr auto lowBits{ repeatByte<0x01, uint16_t>() };
 					uint16_t simdValue;
 					std::memcpy(&simdValue, data, sizeof(uint16_t));
 					const auto chunk = simdValue ^ valueNew;

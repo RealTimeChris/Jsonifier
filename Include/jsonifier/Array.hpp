@@ -162,7 +162,7 @@ namespace jsonifier_internal {
 		constexpr void fill(const value_type&) noexcept {
 		}
 
-		value_type dataVal[0];
+		value_type* dataVal{};
 	};
 
 }
