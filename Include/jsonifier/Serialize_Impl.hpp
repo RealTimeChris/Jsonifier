@@ -107,7 +107,7 @@ namespace jsonifier_internal {
 
 	template<jsonifier::serialize_options options, auto tupleElem, typename value_type, typename buffer_type, typename index_type, typename indent_type>
 	struct serialize_index_processor_impl {
-		JSONIFIER_ALWAYS_INLINE static void impl(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
+		JSONIFIER_INLINE static void impl(const value_type& value, buffer_type& buffer, index_type& index, indent_type& indent) {
 			static constexpr auto subTuple = tupleElem;
 			static constexpr auto key	   = subTuple.view();
 			auto* dataPtr				   = buffer.data();
