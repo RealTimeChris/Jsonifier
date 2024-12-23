@@ -39,11 +39,11 @@ static constexpr auto maxIterationCount{ 1 };
 constexpr auto getCurrentOperatingSystem() {
 	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
 	constexpr auto osNameNew = bnch_swt::toLower(osName);
-	if constexpr (osNameNew.view().contains("linux")) {
+	if constexpr (osNameNew.view<std::string_view>().contains("linux")) {
 		return bnch_swt::string_literal{ "Ubuntu" };
-	} else if constexpr (osNameNew.view().contains("windows")) {
+	} else if constexpr (osNameNew.view<std::string_view>().contains("windows")) {
 		return bnch_swt::string_literal{ "Windows" };
-	} else if constexpr (osNameNew.view().contains("darwin")) {
+	} else if constexpr (osNameNew.view<std::string_view>().contains("darwin")) {
 		return bnch_swt::string_literal{ "MacOS" };
 	} else {
 		return bnch_swt::string_literal{ "" };
@@ -53,12 +53,12 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view().contains("gnu") || osCompilerIdNew.view().contains("gcc") || osCompilerIdNew.view().contains("g++") ||
-		osCompilerIdNew.view().contains("apple")) {
+	if constexpr (osCompilerIdNew.view<std::string_view>().contains("gnu") || osCompilerIdNew.view<std::string_view>().contains("gcc") ||
+		osCompilerIdNew.view<std::string_view>().contains("g++") || osCompilerIdNew.view<std::string_view>().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
-	} else if constexpr (osCompilerIdNew.view().contains("clang")) {
+	} else if constexpr (osCompilerIdNew.view<std::string_view>().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };
-	} else if constexpr (osCompilerIdNew.view().contains("msvc")) {
+	} else if constexpr (osCompilerIdNew.view<std::string_view>().contains("msvc")) {
 		return bnch_swt::string_literal{ "MSVC" };
 	} else {
 		return bnch_swt::string_literal{ "" };
@@ -69,6 +69,7 @@ constexpr auto getCurrentPathImpl() {
 	return getCurrentOperatingSystem() + "-" + getCurrentCompilerId();
 }
 
+constexpr bnch_swt::string_literal currentPath{ getCurrentPathImpl() };
 constexpr bnch_swt::string_literal basePath{ BASE_PATH };
 constexpr bnch_swt::string_literal testPath{ basePath + "/Source" };
 constexpr bnch_swt::string_literal readMePath{ BASE_PATH };
@@ -97,7 +98,7 @@ class test_base {
 };
 
 std::string getCPUInfo() {
-	char brand[49] = { 0 };
+	char brand[49]{};
 	int32_t regs[12]{};
 	size_t length{};
 #if defined(__x86_64__) || defined(_M_AMD64)
@@ -311,10 +312,10 @@ template<typename value_type> struct test_generator {
 
 	test_generator() {
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberUniform(15ull, 25ull);
+			auto arraySize01 = randomizeNumberUniform(5ull, 15ull);
 			v.resize(arraySize01);
 			for (size_t x = 0; x < arraySize01; ++x) {
-				auto arraySize02 = randomizeNumberUniform(15ull, 35ull);
+				auto arraySize02 = randomizeNumberUniform(5ull, 15ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
@@ -499,7 +500,7 @@ struct results_data {
 			if (readResult.jsonCycles.has_value()) {
 				finalStream << std::setprecision(6) << readResult.jsonCycles.value() << " | ";
 			}
-			finalStream << readResult.byteLength.value() << " | " << std::setprecision(6) << readResult.jsonTime.value() << " | ";
+			finalStream << static_cast<uint64_t>(readResult.byteLength.value()) << " | " << std::setprecision(6) << readResult.jsonTime.value() << " | ";
 			finalString += finalStream.str();
 		}
 		if (writeResult.jsonTime.has_value() && writeResult.byteLength.has_value()) {
@@ -508,7 +509,7 @@ struct results_data {
 			if (writeResult.jsonCycles.has_value()) {
 				finalStream << std::setprecision(6) << writeResult.jsonCycles.value() << " | ";
 			}
-			finalStream << writeResult.byteLength.value() << " | " << std::setprecision(6) << writeResult.jsonTime.value() << " | ";
+			finalStream << static_cast<uint64_t>(writeResult.byteLength.value()) << " | " << std::setprecision(6) << writeResult.jsonTime.value() << " | ";
 			finalString += finalStream.str();
 		}
 		return finalString;

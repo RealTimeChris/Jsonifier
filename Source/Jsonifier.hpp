@@ -28,48 +28,57 @@
 
 template<> struct jsonifier::core<audience_sub_category_names> {
 	using value_type				 = audience_sub_category_names;
-	static constexpr auto parseValue = createValue<makeJsonEntity<&value_type::the337100890, "337100890">()>();
+	static constexpr bool forceInlineAll{ true };
+	static constexpr auto parseValue = createValue<createJsonEntity<&value_type::the337100890, "337100890">()>();
 };
 
 template<> struct jsonifier::core<names> {
 	using value_type				 = names;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue();
 };
 
 template<> struct jsonifier::core<event> {
 	using value_type				 = event;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::description, &value_type::id, &value_type::logo, &value_type::name, &value_type::subTopicIds,
 		&value_type::subjectCode, &value_type::subtitle, &value_type::topicIds>();
 };
 
 template<> struct jsonifier::core<price> {
 	using value_type				 = price;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::amount, &value_type::audienceSubCategoryId, &value_type::seatCategoryId>();
 };
 
 template<> struct jsonifier::core<area> {
 	using value_type				 = area;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::areaId, &value_type::blockIds>();
 };
 
 template<> struct jsonifier::core<seat_category> {
 	using value_type				 = seat_category;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::areas, &value_type::seatCategoryId>();
 };
 
 template<> struct jsonifier::core<performance> {
 	using value_type				 = performance;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::eventId, &value_type::id, &value_type::logo, &value_type::name, &value_type::prices, &value_type::seatCategories,
 		&value_type::seatMapImage, &value_type::start, &value_type::venueCode>();
 };
 
 template<> struct jsonifier::core<venue_names> {
 	using value_type				 = venue_names;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue = createValue<&value_type::PLEYEL_PLEYEL>();
 };
 
 template<> struct jsonifier::core<citm_catalog_message> {
 	using value_type = citm_catalog_message;
+	static constexpr bool forceInlineAll{ true };
 	static constexpr auto parseValue =
 		createValue<&value_type::areaNames, &value_type::audienceSubCategoryNames, &value_type::blockNames, &value_type::events, &value_type::performances,
 			&value_type::seatCategoryNames, &value_type::subTopicNames, &value_type::subjectNames, &value_type::topicNames, &value_type::topicSubTopics, &value_type::venueNames>();
@@ -137,7 +146,7 @@ template<> struct jsonifier::core<twitter_user_data> {
 	using value_type = twitter_user_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
-			&value_type::entities, makeJsonEntity<&value_type::protectedVal, "protected">(), &value_type::followers_count, &value_type::friends_count, &value_type::listed_count,
+			&value_type::entities, createJsonEntity<&value_type::protectedVal, "protected">(), &value_type::followers_count, &value_type::friends_count, &value_type::listed_count,
 			&value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified,
 			&value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
 			&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,

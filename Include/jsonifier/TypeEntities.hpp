@@ -45,26 +45,26 @@
 
 namespace jsonifier_internal {
 
-	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
+	template<class value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
 		return static_cast<value_type&&>(value);
 	}
 
-	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& value) noexcept {
+	template<class value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& value) noexcept {
 		static_assert(!std::is_lvalue_reference_v<value_type>, "bad jsonifier_internal::forward call");
 		return static_cast<value_type&&>(value);
 	}
 
-	template<class value_type> JSONIFIER_ALWAYS_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+	template<class value_type> JSONIFIER_FORCE_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
 	}
 
-	JSONIFIER_ALWAYS_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+	JSONIFIER_FORCE_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
 		os << "File: " << location.file_name() << std::endl;
 		os << "Line: " << location.line() << std::endl;
 		return os;
 	}
 
-	JSONIFIER_ALWAYS_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+	JSONIFIER_FORCE_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
 		std::cout << location;
 	}
 
@@ -141,7 +141,7 @@ namespace jsonifier_internal {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = jsonifier_internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(std::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), jsonifier_internal::forward<arg_types>(args)...);
+				function(jsonifier_internal::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), jsonifier_internal::forward<arg_types>(args)...);
 				return;
 			}
 			visit<function, currentIndex + 1>(jsonifier_internal::forward<variant_type>(variantNew), jsonifier_internal::forward<arg_types>(args)...);
@@ -427,6 +427,11 @@ namespace jsonifier {
 		template<typename value_type>
 		concept has_json_type = requires {
 			{ std::remove_cvref_t<value_type>::type } -> std::same_as<jsonifier::json_type>;
+		};
+
+		template<typename value_type>
+		concept has_force_inline_all = requires {
+			{ std::remove_cvref_t<value_type>::forceInlineAll };
 		};
 
 		template<typename value_type>

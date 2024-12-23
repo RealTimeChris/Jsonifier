@@ -205,6 +205,7 @@ namespace jsonifier_internal {
 			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups },
 			  uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, seed{ newData.hasher.seed } {};
 		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
+		char padding01[bytesPerStep - (2049 % 8)]{};
 		JSONIFIER_ALIGN array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
@@ -331,7 +332,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	template<typename value_type> constexpr auto keyStatsVal = keyStatsImpl(tupleReferencesByFirstByte<value_type>);
+	template<typename value_type> constexpr auto keyStatsVal = keyStatsImpl(tupleReferences<value_type>);
 
 	template<typename value_type> constexpr auto collectSimdFullLengthHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
@@ -623,7 +624,7 @@ namespace jsonifier_internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_ALWAYS_INLINE static size_t findIndex(iterator_newer iter, iterator_newer end) noexcept {
+		JSONIFIER_FORCE_INLINE static size_t findIndex(iterator_newer iter, iterator_newer end) noexcept {
 			static constexpr auto checkForEnd = [](const auto& iter, const auto& end, const auto distance) {
 				return (iter + distance) < end;
 			};

@@ -185,7 +185,7 @@ namespace tests {
 				bnch_swt::doNotOptimizeAway(newerBuffer);
 				return newerBuffer.size();
 			});
-			readResult.bytesProcessed				 = newerBuffer.size();
+			readResult.bytesProcessed				 = static_cast<double>(newerBuffer.size());
 
 			r.readResult  = result<result_type::read>{ "dodgerblue", readResult };
 			r.writeResult = result<result_type::write>{ "skyblue", writeResult };
@@ -415,7 +415,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			jsonResults.results.emplace_back(simdjsonResults);
 #endif
 			jsonResults.results.emplace_back(jsonifierResults);
-			jsonResults.markdownResults += generateSection(testName, getCurrentPathImpl());
+			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += table_header + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 			for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
@@ -446,7 +446,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			jsonResults.results.emplace_back(glazeResults);
 #endif
 			jsonResults.results.emplace_back(jsonifierResults);
-			jsonResults.markdownResults += generateSection(testName, getCurrentPathImpl());
+			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += write_table_header + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 			for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
@@ -479,7 +479,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			jsonResults.results.emplace_back(glazeResults);
 #endif
 			jsonResults.results.emplace_back(jsonifierResults);
-			jsonResults.markdownResults += generateSection(testName, getCurrentPathImpl());
+			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += write_table_header + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 			for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
@@ -509,7 +509,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 #if !defined(ASAN_ENABLED)
 			jsonResults.results.emplace_back(glazeResults);
 #endif
-			jsonResults.markdownResults += generateSection(testName, getCurrentPathImpl());
+			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += read_table_header + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
 			for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
@@ -655,7 +655,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(resultsData, resultsStringJson);
 		std::cout << "Json Data: " << resultsStringJson << std::endl;
 		bnch_swt::file_loader::saveFile(resultsStringJson, jsonOutPath + "/Results.json");
-		bnch_swt::file_loader::saveFile(static_cast<std::string>(newerString), readMePath + "/" + getCurrentPathImpl() + ".md");
+		bnch_swt::file_loader::saveFile(static_cast<std::string>(newerString), readMePath + "/" + currentPath + ".md");
 		std::cout << "Md Data: " << newerString << std::endl;
 		executePythonScript(std::string{ basePath } + "/GenerateGraphs.py", jsonOutPath + "/Results.json", graphsPath);
 #if !defined(NDEBUG)

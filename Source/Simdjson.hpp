@@ -121,7 +121,7 @@ concept shared_ptr_t = has_get<value_type> && copyable<value_type>;
 template<typename value_type>
 concept vector_t = !map_t<value_type> && vector_subscriptable<value_type> && !std::is_pointer_v<std::remove_cvref_t<value_type>> && !string_t<value_type>;
 
-JSONIFIER_ALWAYS_INLINE void throwError(auto error, std::source_location location = std::source_location::current()) {
+JSONIFIER_FORCE_INLINE void throwError(auto error, std::source_location location = std::source_location::current()) {
 	std::stringstream stream{};
 	stream << "Error: " << error << std::endl;
 	stream << "Thrown from: " << location.file_name() << ", At Line: " << location.line() << std::endl;
@@ -201,7 +201,7 @@ template<bool_t value_type> JSONIFIER_INLINE void getValue(value_type& data, sim
 	return;
 }
 
-JSONIFIER_ALWAYS_INLINE simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
+JSONIFIER_FORCE_INLINE simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
 	auto newArr = jsonData.get_array();
 	if (auto result = newArr.error()) {
 		throwError(result);
@@ -209,7 +209,7 @@ JSONIFIER_ALWAYS_INLINE simdjson::ondemand::array getArray(simdjson::ondemand::v
 	return newArr.value();
 }
 
-JSONIFIER_ALWAYS_INLINE simdjson::ondemand::object getObject(simdjson::ondemand::value jsonData) {
+JSONIFIER_FORCE_INLINE simdjson::ondemand::object getObject(simdjson::ondemand::value jsonData) {
 	auto newObj = jsonData.get_object();
 	if (auto result = newObj.error()) {
 		throwError(result);

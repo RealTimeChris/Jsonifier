@@ -105,40 +105,35 @@
 #endif
 
 #if JSONIFIER_HAS_INLINE_VARIABLE
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
+	#define JSONIFIER_FORCE_INLINE_VARIABLE inline constexpr
 #else
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
+	#define JSONIFIER_FORCE_INLINE_VARIABLE static constexpr
 #endif
 
-#if defined(NDEBUG)
-	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_NO_INLINE [[msvc::noinline]]
-		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_MACOS_ALWAYS_INLINE inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_INLINE inline
-	#elif defined(JSONIFIER_CLANG)
-		#if defined(JSONIFIER_MAC)
-			#define JSONIFIER_CLANG_MACOS_ALWAYS_INLINE inline __attribute__((always_inline))
-		#else
-			#define JSONIFIER_CLANG_MACOS_ALWAYS_INLINE inline
-		#endif
-		#define JSONIFIER_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_INLINE inline
-	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_CLANG_MACOS_ALWAYS_INLINE inline
-		#define JSONIFIER_INLINE inline
+#if defined(JSONIFIER_MSVC)
+	#define JSONIFIER_NO_INLINE [[msvc::noinline]]
+	#define JSONIFIER_FORCE_INLINE [[msvc::forceinline]] inline
+	#define JSONIFIER_NON_GCC_FORCE_INLINE [[msvc::forceinline]] inline
+	#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
+	#define JSONIFIER_CLANG_FORCE_INLINE inline
+	#define JSONIFIER_INLINE inline
+#elif defined(JSONIFIER_CLANG)
+	#if defined(JSONIFIER_MAC)
+		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline __attribute__((always_inline))
+	#else
+		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
 	#endif
-#else
-	#define JSONIFIER_NO_INLINE
-	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_CLANG_MACOS_ALWAYS_INLINE inline
-	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
+	#define JSONIFIER_NON_GCC_FORCE_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_NO_INLINE __attribute__((noinline))
+	#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_CLANG_FORCE_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_INLINE inline
+#elif defined(JSONIFIER_GNUCXX)
+	#define JSONIFIER_NO_INLINE __attribute__((noinline))
+	#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
+	#define JSONIFIER_NON_GCC_FORCE_INLINE inline
+	#define JSONIFIER_CLANG_FORCE_INLINE inline
+	#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
 	#define JSONIFIER_INLINE inline
 #endif
 
@@ -147,11 +142,11 @@
 #endif
 
 #if defined(JSONIFIER_MSVC)
-static constexpr uint64_t forceInlineLimitSerialize{ 0 };
+static constexpr uint64_t forceInlineLimit{ 4 };
 #elif defined(JSONIFIER_GNUCXX)
-static constexpr uint64_t forceInlineLimitSerialize{ 0 };
+static constexpr uint64_t forceInlineLimit{ 4 };
 #elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
-static constexpr uint64_t forceInlineLimitSerialize{ 12 };
+static constexpr uint64_t forceInlineLimit{ 12 };
 #else
-static constexpr uint64_t forceInlineLimitSerialize{ 4 };
+static constexpr uint64_t forceInlineLimit{ 8 };
 #endif

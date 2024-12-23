@@ -62,7 +62,7 @@ namespace simd_internal {
 
 	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
 
-	JSONIFIER_ALWAYS_INLINE static uint64_t prefixXor(uint64_t prevInString) noexcept {
+	JSONIFIER_FORCE_INLINE static uint64_t prefixXor(uint64_t prevInString) noexcept {
 		prevInString ^= prevInString << 1;
 		prevInString ^= prevInString << 2;
 		prevInString ^= prevInString << 4;
@@ -72,7 +72,7 @@ namespace simd_internal {
 		return prevInString;
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opClMul(const simd_int_t01& value, int64_t& prevInString) noexcept {
+	template<typename simd_int_t01> JSONIFIER_FORCE_INLINE jsonifier_simd_int_t opClMul(const simd_int_t01& value, int64_t& prevInString) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep];
 		store(value, values);
 		values[0]	 = prefixXor(values[0]) ^ prevInString;
@@ -98,7 +98,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values);
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opSub(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_FORCE_INLINE jsonifier_simd_int_t opSub(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + sixtyFourBitsPerStep);
@@ -146,7 +146,7 @@ namespace simd_internal {
 		result = simd_internal::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep); \
 	}
 
-	template<typename simd_int_t01> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
+	template<typename simd_int_t01> JSONIFIER_FORCE_INLINE jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
 		jsonifier_simd_int_t result;
@@ -197,7 +197,7 @@ namespace simd_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_FORCE_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto opArrayPtr{ opArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArrayPtr) };
@@ -213,7 +213,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_FORCE_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(whiteSpaceArrayPtr) };
@@ -228,7 +228,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<auto cNew> JSONIFIER_ALWAYS_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
+	template<auto cNew> JSONIFIER_FORCE_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
 		static constexpr auto c{ cNew };
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(c) };
@@ -243,7 +243,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<bool minified> JSONIFIER_ALWAYS_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
+	template<bool minified> JSONIFIER_FORCE_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		if constexpr (!minified) {
 			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values),
 				.whitespace						   = collectWhitespaceIndices(values),
