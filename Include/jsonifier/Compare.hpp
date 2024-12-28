@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
 				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 2>::type::integer_type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
 				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
@@ -68,7 +68,7 @@ namespace jsonifier_internal {
 			if (static_cast<int64_t>(lengthNew) >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
 				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 1>::type::integer_type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
 				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
@@ -89,7 +89,7 @@ namespace jsonifier_internal {
 			if (static_cast<int64_t>(lengthNew) >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
 				using integer_type				   = typename get_type_at_index<simd_internal::avx_list, 0>::type::integer_type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
 				const simd_type search_value	   = simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(value));
 				integer_type mask;
 				simd_type chunk;
@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			{
-				static constexpr size_t nBytes{ sizeof(size_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint64_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					static constexpr auto valueNew{ repeatByte<value, size_t>() };
 					static constexpr auto highBits{ repeatByte<0x80, size_t>() };
@@ -128,7 +128,7 @@ namespace jsonifier_internal {
 				}
 			}
 			{
-				static constexpr size_t nBytes{ sizeof(uint32_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint32_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					static constexpr auto valueNew{ repeatByte<value, uint32_t>() };
 					static constexpr auto highBits{ repeatByte<0x80, uint32_t>() };
@@ -148,7 +148,7 @@ namespace jsonifier_internal {
 				}
 			}
 			{
-				static constexpr size_t nBytes{ sizeof(uint16_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint16_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					static constexpr auto valueNew{ repeatByte<value, uint16_t>() };
 					static constexpr auto highBits{ repeatByte<0x80, uint16_t>() };
@@ -181,7 +181,7 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 2>::type::bytesProcessed;
 				static constexpr size_t mask	   = get_type_at_index<simd_internal::avx_list, 2>::type::mask;
 				simd_type value01, value02;
 				while (static_cast<int64_t>(lengthNew) >= vectorSize) {
@@ -199,7 +199,7 @@ namespace jsonifier_internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 			if (static_cast<int64_t>(lengthNew) >= 32) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 1>::type::type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 1>::type::bytesProcessed;
 				static constexpr size_t mask	   = get_type_at_index<simd_internal::avx_list, 1>::type::mask;
 				simd_type value01, value02;
 				while (static_cast<int64_t>(lengthNew) >= vectorSize) {
@@ -218,7 +218,7 @@ namespace jsonifier_internal {
 	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if (static_cast<int64_t>(lengthNew) >= 16) {
 				using simd_type					   = typename get_type_at_index<simd_internal::avx_list, 0>::type::type;
-				static constexpr size_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
+				static constexpr int64_t vectorSize = get_type_at_index<simd_internal::avx_list, 0>::type::bytesProcessed;
 				static constexpr size_t mask	   = get_type_at_index<simd_internal::avx_list, 0>::type::mask;
 				simd_type value01, value02;
 				while (static_cast<int64_t>(lengthNew) >= vectorSize) {
@@ -234,7 +234,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			{
-				static constexpr size_t nBytes{ sizeof(size_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint64_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					size_t v[2];
 					while (static_cast<int64_t>(lengthNew) >= nBytes) {
@@ -250,7 +250,7 @@ namespace jsonifier_internal {
 				}
 			}
 			{
-				static constexpr size_t nBytes{ sizeof(uint32_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint32_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					uint32_t v[2];
 					std::memcpy(v, lhs, nBytes);
@@ -264,7 +264,7 @@ namespace jsonifier_internal {
 				}
 			}
 			{
-				static constexpr size_t nBytes{ sizeof(uint16_t) };
+				static constexpr int64_t nBytes{ static_cast<int64_t>(sizeof(uint16_t)) };
 				if (static_cast<int64_t>(lengthNew) >= static_cast<int64_t>(nBytes)) {
 					uint16_t v[2];
 					std::memcpy(v, lhs, nBytes);

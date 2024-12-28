@@ -43,18 +43,13 @@
 #include <atomic>
 #include <array>
 
+#define DEFINE_ENTITY_HAS_VALUE_CONCEPT(entity, value) \
+	template<typename T> \
+	concept entity##_has_##value = requires(T t) { t.value; };
+
 namespace jsonifier_internal {
 
-	template<class value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
-		return static_cast<value_type&&>(value);
-	}
-
-	template<class value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& value) noexcept {
-		static_assert(!std::is_lvalue_reference_v<value_type>, "bad jsonifier_internal::forward call");
-		return static_cast<value_type&&>(value);
-	}
-
-	template<class value_type> JSONIFIER_FORCE_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+	template<typename value_type> JSONIFIER_FORCE_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
 	}
 
@@ -86,8 +81,6 @@ namespace jsonifier_internal {
 		using type		   = simd_type;
 		using integer_type = integer_type_new;
 	};
-
-	template<typename... types> struct type_list;
 
 	template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
 		using current_type			   = value_type;

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/HashMap.hpp>
+#include <jsonifier/JsonEntity.hpp>
 #include <jsonifier/String.hpp>
 
 namespace std {
@@ -97,7 +98,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE raw_json_data(raw_json_data&& other) noexcept {
-			*this = std::move(other);
+			*this = jsonifier_internal::move(other);
 		}
 
 		JSONIFIER_INLINE raw_json_data& operator=(const raw_json_data& other) noexcept {
@@ -268,26 +269,28 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						object_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::object_val_parser<object_type, std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, 32, 0,
-							optionsNew, false>::impl(results, testContext);
-						value.emplace<object_type>(std::move(results));
+						jsonifier_internal::object_val_parser<object_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
+							optionsNew, jsonifier_internal::getParseValue<std::remove_cvref_t<object_type>>(), 0, jsonifier_internal::maxFieldDepth<object_type>(),
+							false>::impl(results, testContext);
+						value.emplace<object_type>(jsonifier_internal::move(results));
 						return;
 					}
 					case '[': {
 						array_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::array_val_parser<object_type, std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, 32, 0,
-							optionsNew, false>::impl(results, testContext);
-						value.emplace<array_type>(std::move(results));
+						jsonifier_internal::array_val_parser<array_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
+							optionsNew, jsonifier_internal::getParseValue<std::remove_cvref_t<object_type>>(), 0, jsonifier_internal::maxFieldDepth<array_type>(),
+							false>::impl(results, testContext);
+						value.emplace<array_type>(jsonifier_internal::move(results));
 						return;
 					}
 					case '"': {

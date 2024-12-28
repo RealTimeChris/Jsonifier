@@ -142,9 +142,10 @@ namespace jsonifier_internal {
 
 		template<jsonifier::prettify_options options, jsonifier::concepts::string_t string_type, typename iterator>
 		JSONIFIER_FORCE_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
-			static constexpr auto buffer	  = createIndentationBuffer<options.indentChar, options.indentSize>();
-			static constexpr auto* bufferPtr  = buffer.data();
-			static constexpr auto indentViews = createIndentationViews<options.indentSize>();
+			static constexpr auto buffer			= createIndentationBuffer<options.indentChar, options.indentSize>();
+			static constexpr auto* bufferPtr		= buffer.data();
+			static constexpr auto indentViewsBuffer = createIndentationViews<options.indentSize>();
+			static constexpr auto* indentViews		= indentViewsBuffer.data();
 			string_view_ptr newPtr{};
 			uint64_t newSize{};
 			int64_t indent{};

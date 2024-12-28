@@ -39,11 +39,11 @@ static constexpr auto maxIterationCount{ 1 };
 constexpr auto getCurrentOperatingSystem() {
 	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
 	constexpr auto osNameNew = bnch_swt::toLower(osName);
-	if constexpr (osNameNew.view<std::string_view>().contains("linux")) {
+	if constexpr (osNameNew.template view<std::string_view>().contains("linux")) {
 		return bnch_swt::string_literal{ "Ubuntu" };
-	} else if constexpr (osNameNew.view<std::string_view>().contains("windows")) {
+	} else if constexpr (osNameNew.template view<std::string_view>().contains("windows")) {
 		return bnch_swt::string_literal{ "Windows" };
-	} else if constexpr (osNameNew.view<std::string_view>().contains("darwin")) {
+	} else if constexpr (osNameNew.template view<std::string_view>().contains("darwin")) {
 		return bnch_swt::string_literal{ "MacOS" };
 	} else {
 		return bnch_swt::string_literal{ "" };
@@ -53,12 +53,12 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.view<std::string_view>().contains("gnu") || osCompilerIdNew.view<std::string_view>().contains("gcc") ||
-		osCompilerIdNew.view<std::string_view>().contains("g++") || osCompilerIdNew.view<std::string_view>().contains("apple")) {
+	if constexpr (osCompilerIdNew.template view<std::string_view>().contains("gnu") || osCompilerIdNew.template view<std::string_view>().contains("gcc") ||
+		osCompilerIdNew.template view<std::string_view>().contains("g++") || osCompilerIdNew.template view<std::string_view>().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
-	} else if constexpr (osCompilerIdNew.view<std::string_view>().contains("clang")) {
+	} else if constexpr (osCompilerIdNew.template view<std::string_view>().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };
-	} else if constexpr (osCompilerIdNew.view<std::string_view>().contains("msvc")) {
+	} else if constexpr (osCompilerIdNew.template view<std::string_view>().contains("msvc")) {
 		return bnch_swt::string_literal{ "MSVC" };
 	} else {
 		return bnch_swt::string_literal{ "" };
