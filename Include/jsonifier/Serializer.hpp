@@ -32,91 +32,36 @@ namespace jsonifier_internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct object_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct object_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct array_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct string_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct number_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct bool_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct null_val_serializer;
+	template<jsonifier::serialize_options optionsNew, typename context_type> struct accessor_val_serializer;
 
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct array_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct string_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct number_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct bool_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct null_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct accessor_val_serializer;
-
-	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, auto jsonEntity, size_t depth> struct custom_val_serializer;
-
-	template<jsonifier::serialize_options options, auto jsonEntity, size_t depth> struct serialize {
+	template<jsonifier::serialize_options optionsNew> struct serialize {
 		template<typename value_type, typename context_type> JSONIFIER_FORCE_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
-			if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
-				object_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
-				array_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
-				string_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
-				number_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
-				bool_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
-				null_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
-				custom_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
+			if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
+				object_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
+			} else if constexpr (jsonifier::concepts::vector_t<value_type> || jsonifier::concepts::raw_array_t<value_type>) {
+				array_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
+			} else if constexpr (jsonifier::concepts::string_t<value_type> || jsonifier::concepts::char_t<value_type>) {
+				string_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
+			} else if constexpr (jsonifier::concepts::num_t<value_type> || jsonifier::concepts::enum_t<value_type>) {
+				number_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
+			} else if constexpr (jsonifier::concepts::bool_t<value_type>) {
+				bool_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
+			} else if constexpr (jsonifier::concepts::always_null_t<value_type>) {
+				null_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
 			} else {
-				accessor_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			}
-		}
-	};
-
-	template<jsonifier::serialize_options options, auto jsonEntity, size_t depth>
-		requires(depth <= forceInlineLimitDepth)
-	struct serialize<options, jsonEntity, depth> {
-		template<typename value_type, typename context_type> JSONIFIER_FORCE_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
-			if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
-				object_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth + 1>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
-				array_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
-				string_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
-				number_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
-				bool_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
-				null_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
-				custom_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
-			} else {
-				accessor_val_serializer<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, depth>::impl(jsonifier_internal::forward<value_type>(value),
-					jsonifier_internal::forward<context_type>(context));
+				accessor_val_serializer<optionsNew, context_type>::impl(jsonifier_internal::forward<value_type>(value), jsonifier_internal::forward<context_type>(context));
 			}
 		}
 	};
 
 	template<typename buffer_type> struct serialize_context {
-		JSONIFIER_FORCE_INLINE serialize_context() noexcept = default;
-
-		JSONIFIER_FORCE_INLINE serialize_context(char* ptrNew, buffer_type& bufferNew) noexcept : buffer{ bufferNew }, bufferPtr{ ptrNew } {};
-
 		buffer_type& buffer{};
-		char* bufferPtr{};
 		size_t indent{};
 		size_t index{};
 	};
@@ -124,18 +69,13 @@ namespace jsonifier_internal {
 	template<typename derived_type> class serializer {
 	  public:
 		JSONIFIER_FORCE_INLINE serializer& operator=(const serializer& other) = delete;
-		JSONIFIER_FORCE_INLINE serializer(const serializer& other)			  = delete;
+		JSONIFIER_FORCE_INLINE serializer(const serializer& other)			   = delete;
 
 		template<jsonifier::serialize_options optionsNew = jsonifier::serialize_options{}, typename value_type, jsonifier::concepts::buffer_like buffer_type>
 		JSONIFIER_FORCE_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr jsonifier::serialize_options options{ optionsNew };
-			serialize_context<decltype(stringBuffer)> context{ stringBuffer.data(), stringBuffer };
-			if constexpr (is_core_type<value_type>) {
-				serialize<options, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, 0>::impl(object, context);
-			} else {
-				serialize<options, getParseValue<std::remove_cvref_t<value_type>>(), 0>::impl(object, context);
-			}
-			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
+			serialize_context<decltype(stringBuffer)> context{ stringBuffer, 0, 0 };
+			serialize<options>::impl(std::forward<value_type>(object), context);
 			buffer.resize(context.index);
 			std::memcpy(buffer.data(), stringBuffer.data(), context.index);
 			return true;
@@ -144,13 +84,9 @@ namespace jsonifier_internal {
 		template<jsonifier::serialize_options optionsNew = jsonifier::serialize_options{}, typename value_type>
 		JSONIFIER_FORCE_INLINE std::string_view serializeJson(value_type&& object) noexcept {
 			static constexpr jsonifier::serialize_options options{ optionsNew };
-			serialize_context<decltype(stringBuffer)> context{ stringBuffer.data(), stringBuffer };
-			if constexpr (is_core_type<value_type>) {
-				serialize<options, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, 0>::impl(object, context);
-			} else {
-				serialize<options, getParseValue<std::remove_cvref_t<value_type>>(), 0>::impl(object, context);
-			}
-			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
+			serialize_context<decltype(stringBuffer)> context{ stringBuffer, 0, 0 };
+			serialize<options>::impl(std::forward<value_type>(object), context);
+			serialize<options>::impl(jsonifier_internal::forward<value_type>(object));
 			return std::string_view{ stringBuffer.data(), context.index };
 		}
 
