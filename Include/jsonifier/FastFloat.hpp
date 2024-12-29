@@ -209,7 +209,7 @@
 
 namespace jsonifier_fast_float {
 
-	#define JSONIFIER_IS_DIGIT(x) ((static_cast<uint8_t>(x - '0')) < 10)
+#define JSONIFIER_IS_DIGIT(x) ((static_cast<uint8_t>(x - '0')) < 10)
 
 #ifndef FLT_EVAL_METHOD
 	#error "FLT_EVAL_METHOD should be defined, please include cfloat."

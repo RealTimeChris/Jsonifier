@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class prettifier {
 	  public:
 		JSONIFIER_FORCE_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_FORCE_INLINE prettifier(const prettifier& other)			   = delete;
+		JSONIFIER_FORCE_INLINE prettifier(const prettifier& other)			  = delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
 		JSONIFIER_FORCE_INLINE auto prettifyJson(string_type&& in) noexcept {
@@ -138,7 +138,7 @@ namespace jsonifier_internal {
 				returnValues[x] = x * indentSize;
 			}
 			return returnValues;
-		}		
+		}
 
 		template<jsonifier::prettify_options options, jsonifier::concepts::string_t string_type, typename iterator>
 		JSONIFIER_FORCE_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {

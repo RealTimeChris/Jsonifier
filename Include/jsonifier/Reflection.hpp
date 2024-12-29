@@ -108,5 +108,5 @@ namespace jsonifier_internal {
 #endif
 		return newString;
 	}
-	
+
 }

@@ -148,15 +148,15 @@
 #endif
 
 #if defined(JSONIFIER_MSVC)
-static constexpr uint64_t forceInlineLimitDepth{ 2 };
-static constexpr uint64_t forceInlineLimitWidth{ 0 };
+static constexpr uint64_t forceInlineLimitDepth{ 4 };
+static constexpr uint64_t forceInlineLimitWidth{ 8 };
 #elif defined(JSONIFIER_GNUCXX)
-static constexpr uint64_t forceInlineLimitDepth{ 2 };
-static constexpr uint64_t forceInlineLimitWidth{ 0 };
+static constexpr uint64_t forceInlineLimitDepth{ 4 };
+static constexpr uint64_t forceInlineLimitWidth{ 8 };
 #elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
-static constexpr uint64_t forceInlineLimitDepth{ 2 };
-static constexpr uint64_t forceInlineLimitWidth{ 0 };
+static constexpr uint64_t forceInlineLimitDepth{ 4 };
+static constexpr uint64_t forceInlineLimitWidth{ 12 };
 #else
-static constexpr uint64_t forceInlineLimitDepth{ 2 };
-static constexpr uint64_t forceInlineLimitWidth{ 0 };
+static constexpr uint64_t forceInlineLimitDepth{ 4 };
+static constexpr uint64_t forceInlineLimitWidth{ 8 };
 #endif

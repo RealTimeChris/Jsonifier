@@ -1805,8 +1805,8 @@ namespace jsonifier_jkj {
 					static constexpr auto tag				= tag_t::to_nearest;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_FORCE_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_odd_t>(), arg_types{}...)) delegate(
-						SignedSignificandBits, Func f, arg_types... args) noexcept {
+					JSONIFIER_FORCE_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(std::declval<nearest_to_odd_t>(), arg_types{}...)) delegate(SignedSignificandBits,
+						Func f, arg_types... args) noexcept {
 						return f(nearest_to_odd_t{}, args...);
 					}
 
@@ -1992,8 +1992,8 @@ namespace jsonifier_jkj {
 					using decimal_to_binary_rounding_policy = toward_zero_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
-					JSONIFIER_FORCE_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(
-						SignedSignificandBits, Func f, arg_types... args) noexcept {
+					JSONIFIER_FORCE_INLINE JSONIFIER_SAFEBUFFERS static constexpr decltype(Func{}(detail::left_closed_directed_t{}, arg_types{}...)) delegate(SignedSignificandBits,
+						Func f, arg_types... args) noexcept {
 						return f(detail::left_closed_directed_t{}, args...);
 					}
 				} toward_zero{};

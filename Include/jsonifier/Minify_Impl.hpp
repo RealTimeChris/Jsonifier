@@ -26,8 +26,4 @@
 #include <jsonifier/Minifier.hpp>
 #include <jsonifier/Simd.hpp>
 
-namespace jsonifier_internal {
-
-	
-
-}// namespace jsonifier_internal
+namespace jsonifier_internal {}// namespace jsonifier_internal

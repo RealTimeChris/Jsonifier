@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class minifier {
 	  public:
 		JSONIFIER_FORCE_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_FORCE_INLINE minifier(const minifier& other)			   = delete;
+		JSONIFIER_FORCE_INLINE minifier(const minifier& other)			  = delete;
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_FORCE_INLINE auto minifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
@@ -101,8 +101,7 @@ namespace jsonifier_internal {
 			return endIter - rootIter;
 		}
 
-		template<jsonifier::concepts::string_t string_type, typename iterator>
-		JSONIFIER_FORCE_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
+		template<jsonifier::concepts::string_t string_type, typename iterator> JSONIFIER_FORCE_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
 			auto previousPtr = *iter;
 			int64_t currentDistance{};
 			uint64_t index{};

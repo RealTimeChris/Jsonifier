@@ -25,8 +25,4 @@
 
 #include <jsonifier/Prettifier.hpp>
 
-namespace jsonifier_internal {
-
-	
-
-}// namespace jsonifier_internal
+namespace jsonifier_internal {}// namespace jsonifier_internal

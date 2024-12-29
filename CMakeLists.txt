@@ -70,6 +70,8 @@ set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
 if (NOT JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
 endif()
+
+target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
  
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
@@ -82,27 +84,23 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
-	"$<$<CXX_COMPILER_ID:CLANG>:-std=c++23>"
-	"$<$<CXX_COMPILER_ID:GNU>:-std=c++23>"
 	"${AVX_FLAG}"
 )
  
- target_link_options(
-     "${PROJECT_NAME}" INTERFACE
-	 "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-     "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
-     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-     "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
-	 "$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
-	 "$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
-	 "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
-	 "$<$<CXX_COMPILER_ID:CLANG>:-flto>"
-	 "$<$<CXX_COMPILER_ID:CLANG>:-Wl>"
-	 "$<$<CXX_COMPILER_ID:CLANG>:-O2>"
-	 "$<$<CXX_COMPILER_ID:GNU>:-flto>"
-	 "$<$<CXX_COMPILER_ID:GNU>:-Wl>"
-	 "$<$<CXX_COMPILER_ID:GNU>:-O2>"
- )
+target_link_options(
+    "${PROJECT_NAME}" INTERFACE
+    "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
+    "$<$<AND:$<CXX_COMPILER_ID:CLANG>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-flto>"
+    "$<$<CXX_COMPILER_ID:GNU>:-flto>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-O2>"
+    "$<$<CXX_COMPILER_ID:GNU>:-Wl,-O2>"
+)
 
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
