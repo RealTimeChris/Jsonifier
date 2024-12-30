@@ -29,9 +29,20 @@
 
 namespace jsonifier_internal {
 
+	template<typename value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
+		return static_cast<value_type&&>(value);
+	}
+
+	template<typename value_type> JSONIFIER_FORCE_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& value) noexcept {
+		static_assert(!std::is_lvalue_reference_v<value_type>, "bad jsonifier_internal::forward call");
+		return static_cast<value_type&&>(value);
+	}
+
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_FORCE_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
-			return (value + (multiple - 1)) & ~(multiple - 1);
+			constexpr auto mulSub1{ multiple - 1 };
+			constexpr auto notMulSub1{ ~mulSub1 };
+			return (value + (mulSub1)) & notMulSub1;
 		} else {
 			auto remainder = value % multiple;
 			return remainder == 0 ? value : value + (multiple - remainder);
@@ -40,7 +51,8 @@ namespace jsonifier_internal {
 
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_FORCE_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
-			return value & ~(multiple - 1);
+			constexpr auto notMulSub1{ ~(multiple - 1) };
+			return value & notMulSub1;
 		} else {
 			return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 		}
@@ -75,7 +87,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename... arg_types> JSONIFIER_FORCE_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
-			new (ptr) value_type(std::forward<arg_types>(args)...);
+			new (ptr) value_type(jsonifier_internal::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_FORCE_INLINE static size_type maxSize() noexcept {

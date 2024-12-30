@@ -209,7 +209,7 @@
 
 namespace jsonifier_fast_float {
 
-	#define JSONIFIER_IS_DIGIT(x) ((static_cast<uint8_t>(x - '0')) < 10)
+#define JSONIFIER_IS_DIGIT(x) ((static_cast<uint8_t>(x - '0')) < 10)
 
 #ifndef FLT_EVAL_METHOD
 	#error "FLT_EVAL_METHOD should be defined, please include cfloat."
@@ -498,7 +498,7 @@ namespace jsonifier_fast_float {
       * infinite in binary64 so we never need to worry about powers
       * of 5 greater than 308.
       */
-	template<class unused = void> struct powers_template {
+	template<typename unused = void> struct powers_template {
 		inline static constexpr int32_t smallest_power_of_five = binary_format<double>::smallest_power_of_ten;
 		inline static constexpr int32_t largest_power_of_five  = binary_format<double>::largest_power_of_ten;
 		inline static constexpr int32_t number_of_entries	   = 2 * (largest_power_of_five - smallest_power_of_five + 1);

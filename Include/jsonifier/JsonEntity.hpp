@@ -72,20 +72,17 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept has_force_inline = requires() { std::remove_cvref_t<value_type>::forceInline; };
 
-	template<typename value_type> constexpr bool getForceInlineAll() noexcept {
-		if constexpr (has_force_inline<value_type>) {
-			return value_type::forceInline;
-		} else {
-			return false;
-		}
-	}
+	template<auto jsonEntity> struct json_entity_value {
+		using type = std::remove_cvref_t<decltype(jsonEntity)>::member_type;
+	};
+
+	template<auto jsonEntity> using json_entity_value_t = typename json_entity_value<jsonEntity>::type;
 
 	template<string_literal nameNew, auto memberPtrNew> struct json_entity_temp {
 		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = remove_member_pointer_t<decltype(memberPtrNew)>;
 		static constexpr jsonifier::json_type type{ getJsonType<member_type>() };
-		static constexpr bool forceInlineAll{ getForceInlineAll<class_type>() };
-		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
+		static constexpr member_type class_type::*memberPtr{ memberPtrNew };
 		static constexpr string_literal name{ nameNew };
 	};
 
@@ -207,38 +204,11 @@ namespace jsonifier_internal {
 		std::remove_cvref_t<value_type>::memberPtr;
 	} && !std::is_member_pointer_v<std::remove_cvref_t<value_type>>;
 
-	template<typename value_type> constexpr bool getForceInline() noexcept {
-		if constexpr (has_force_inline<value_type>) {
-			return value_type::forceInline;
-		} else {
-			return false;
-		}
-	}
-
 	template<size_t maxIndex, size_t index, auto value> constexpr auto createJsonEntityNewAuto() noexcept {
 		if constexpr (is_json_entity_pre<decltype(value)>) {
 			return value;
 		} else {
 			return json_entity_pre<value>{};
-		}
-	}
-
-	template<typename current_type, typename containing_type> static constexpr bool isRecursive() {
-		if constexpr (std::is_same_v<current_type, containing_type>) {
-			return true;
-		} else if constexpr (jsonifier::concepts::jsonifier_object_t<current_type>) {
-			constexpr auto tuple = jsonifier::core<current_type>::parseValue;
-			return []<size_t... Indices>(std::index_sequence<Indices...>) {
-				return (isRecursive<typename std::remove_cvref_t<decltype(get<Indices>(tuple))>::member_type, containing_type>() || ...);
-			}(std::make_index_sequence<std::tuple_size_v<std::remove_cvref_t<decltype(tuple)>>>{});
-		} else if constexpr (jsonifier::concepts::shared_ptr_t<current_type> || jsonifier::concepts::unique_ptr_t<current_type> || jsonifier::concepts::pointer_t<current_type>) {
-			using pointee_type = std::remove_cvref_t<decltype(*std::declval<current_type>())>;
-			return isRecursive<pointee_type, containing_type>();
-		} else if constexpr (jsonifier::concepts::map_t<current_type>) {
-			using pointee_type = typename std::remove_cvref_t<current_type>::mapped_type;
-			return isRecursive<pointee_type, containing_type>();
-		} else {
-			return false;
 		}
 	}
 
@@ -257,15 +227,13 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto memberPtrNew, jsonifier::json_type typeNew, jsonifier_internal::string_literal nameNew, size_t indexNew, bool forceInlineNew> struct json_entity {
+	template<auto memberPtrNew, jsonifier::json_type typeNew, jsonifier_internal::string_literal nameNew, size_t indexNew> struct json_entity {
 		using member_type = jsonifier_internal::remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = jsonifier_internal::remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		static constexpr jsonifier::json_type type{ setJsonType<typeNew, member_type>() };
 		static constexpr jsonifier_internal::string_literal name{ nameNew };
-		static constexpr bool isRecursive{ jsonifier_internal::template isRecursive<member_type, class_type>() };
 		static constexpr auto memberPtr{ memberPtrNew };
 		static constexpr size_t index{ indexNew };
-		static constexpr bool forceInline{ forceInlineNew ? forceInlineNew : ((index) < forceInlineLimitWidth) };
 		static constexpr bool isItLast{ indexNew == jsonifier_internal::tuple_size_v<raw_core_type<class_type>> - 1 };
 
 		JSONIFIER_FORCE_INLINE decltype(auto) operator[](tag<index>) const {

@@ -39,14 +39,14 @@ namespace jsonifier_internal {
 	};
 
 	template<typename value_type>
-	concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
+	concept has_name = requires(std::remove_cvref_t<value_type> value) { value.name; };
 
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
 		if constexpr (currentIndex < maxIndex) {
 			auto potentialKey = jsonifier_internal::get<currentIndex>(tuple);
-			if constexpr (has_view<decltype(potentialKey)>) {
-				tupleRefsRaw[currentIndex].key = potentialKey.view();
+			if constexpr (has_name<decltype(potentialKey)>) {
+				tupleRefsRaw[currentIndex].key = potentialKey.name.template view<jsonifier::string_view>();
 			}
 			tupleRefsRaw[currentIndex].oldIndex = currentIndex;
 			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefsRaw);

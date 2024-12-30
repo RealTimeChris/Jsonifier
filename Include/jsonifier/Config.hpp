@@ -112,8 +112,8 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_NO_INLINE [[msvc::noinline]]
 		#define JSONIFIER_FORCE_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_NON_GCC_FORCE_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
 		#define JSONIFIER_CLANG_FORCE_INLINE inline
 		#define JSONIFIER_INLINE inline
@@ -123,23 +123,24 @@
 		#else
 			#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
 		#endif
+		#define JSONIFIER_NON_GCC_FORCE_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_CLANG_FORCE_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_INLINE inline
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_NO_INLINE __attribute__((noinline))
 		#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_GCC_FORCE_INLINE inline
 		#define JSONIFIER_CLANG_FORCE_INLINE inline
 		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
 		#define JSONIFIER_INLINE inline
 	#endif
 #else
-	#define JSONIFIER_NO_INLINE
-	#define JSONIFIER_FORCE_INLINE inline
-	#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
-	#define JSONIFIER_CLANG_FORCE_INLINE inline
-	#define JSONIFIER_INLINE inline
+	#define JSONIFIER_FORCE_INLINE
+	#define JSONIFIER_NON_GCC_FORCE_INLINE
+	#define JSONIFIER_CLANG_FORCE_INLINE
+	#define JSONIFIER_CLANG_MACOS_FORCE_INLINE
+	#define JSONIFIER_INLINE
 #endif
 
 #if !defined JSONIFIER_ALIGN
@@ -147,11 +148,15 @@
 #endif
 
 #if defined(JSONIFIER_MSVC)
-static constexpr uint64_t forceInlineLimitSerialize{};
+static constexpr uint64_t forceInlineLimitParse{ 2 };
+static constexpr uint64_t forceInlineLimitSerialize{ 2 };
 #elif defined(JSONIFIER_GNUCXX)
-static constexpr uint64_t forceInlineLimitSerialize{};
+static constexpr uint64_t forceInlineLimitParse{ 2 };
+static constexpr uint64_t forceInlineLimitSerialize{ 4 };
 #elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
-static constexpr uint64_t forceInlineLimitSerialize{ 12 };
+static constexpr uint64_t forceInlineLimitParse{ 20 };
+static constexpr uint64_t forceInlineLimitSerialize{ 20 };
 #else
-static constexpr uint64_t forceInlineLimitSerialize{ 8 };
+static constexpr uint64_t forceInlineLimitParse{ 8 };
+static constexpr uint64_t forceInlineLimitSerialize{ 12 };
 #endif
