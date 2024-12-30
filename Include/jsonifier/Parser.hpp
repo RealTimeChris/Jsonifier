@@ -93,69 +93,77 @@ namespace jsonifier_internal {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct object_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct object_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct array_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct array_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct string_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct string_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct number_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct number_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct bool_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct bool_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct null_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct null_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct accessor_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct accessor_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct custom_val_parser;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated> struct custom_val_parser;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct object_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct object_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct array_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct array_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct string_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct string_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct number_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct number_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct bool_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct bool_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct null_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct null_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct accessor_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct accessor_val_parser_partial;
 
-	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, auto jsonEntity, bool minifiedOrInsideRepeated> struct custom_val_parser_partial;
+	template<typename value_type, typename context_type, jsonifier::parse_options optionsNew, typename json_entity_type, bool minifiedOrInsideRepeated>
+	struct custom_val_parser_partial;
 
-	template<jsonifier::parse_options options, auto jsonEntity, bool minifiedOrInsideRepeated> struct parse {
+	template<jsonifier::parse_options options, typename json_entity_type, bool minifiedOrInsideRepeated> struct parse {
 		template<typename value_type, typename context_type> static void impl(value_type&& value, context_type&& context) noexcept {
 			if constexpr (options.partialRead) {
-				if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
+				if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
 					if constexpr (jsonifier::concepts::map_t<value_type> || minifiedOrInsideRepeated) {
-						object_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, true>::impl(value,
+						object_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, true>::impl(value,
 							jsonifier_internal::forward<context_type>(context));
 					} else {
-						object_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, false>::impl(value,
+						object_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, false>::impl(value,
 							jsonifier_internal::forward<context_type>(context));
 					}
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
-					array_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, true>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
+					array_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, true>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
-					string_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
+					string_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
-					number_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
+					number_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
-					bool_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
+					bool_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
-					null_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
+					null_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
-					custom_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
+					custom_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
 				} else {
-					accessor_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+					accessor_val_parser_partial<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
 				}
 				if constexpr (!minifiedOrInsideRepeated) {
@@ -166,29 +174,29 @@ namespace jsonifier_internal {
 					return;
 				}
 			} else {
-				if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
-					object_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
+					object_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
-					array_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::array) {
+					array_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
-					string_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::string) {
+					string_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
-					number_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::number) {
+					number_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
-					bool_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::boolean) {
+					bool_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
-					null_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::null) {
+					null_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
-				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<decltype(jsonEntity)>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
-					custom_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+				} else if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::custom) {
+					custom_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
 				} else {
-					accessor_val_parser<std::remove_cvref_t<value_type>, context_type, options, jsonEntity, minifiedOrInsideRepeated>::impl(value,
+					accessor_val_parser<std::remove_cvref_t<value_type>, context_type, options, json_entity_type, minifiedOrInsideRepeated>::impl(value,
 						jsonifier_internal::forward<context_type>(context));
 				}
 			}
@@ -244,9 +252,9 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (is_core_type<value_type>) {
-					parse<optionsNew, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)>, options.minified>::impl(object, context);
 				} else {
-					parse<optionsNew, getParseValue<std::remove_cvref_t<value_type>>(), options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(getParseValue<std::remove_cvref_t<value_type>>())>, options.minified>::impl(object, context);
 				}
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
@@ -271,9 +279,9 @@ namespace jsonifier_internal {
 					return false;
 				}
 				if constexpr (is_core_type<value_type>) {
-					parse<optionsNew, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)>, options.minified>::impl(object, context);
 				} else {
-					parse<optionsNew, getParseValue<std::remove_cvref_t<value_type>>(), options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(getParseValue<std::remove_cvref_t<value_type>>())>, options.minified>::impl(object, context);
 				}
 				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
 					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
@@ -310,9 +318,10 @@ namespace jsonifier_internal {
 			}
 			while (context.iter < context.endIter) {
 				if constexpr (is_core_type<value_type>) {
-					parse<optionsNew, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, options.minified>::impl(object.emplace_back(), context);
+					parse<optionsNew, std::remove_cvref_t<decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)>, options.minified>::impl(object.emplace_back(),
+						context);
 				} else {
-					parse<optionsNew, getParseValue<std::remove_cvref_t<value_type>>(), options.minified>::impl(object.emplace_back(), context);
+					parse<optionsNew, std::remove_cvref_t<decltype(getParseValue<std::remove_cvref_t<value_type>>())>, options.minified>::impl(object.emplace_back(), context);
 				}
 			}
 			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
@@ -351,9 +360,9 @@ namespace jsonifier_internal {
 				}
 				value_type object{};
 				if constexpr (is_core_type<value_type>) {
-					parse<optionsNew, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)>, options.minified>::impl(object, context);
 				} else {
-					parse<optionsNew, getParseValue<std::remove_cvref_t<value_type>>(), options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(getParseValue<std::remove_cvref_t<value_type>>())>, options.minified>::impl(object, context);
 				}
 				return derivedRef.errors.size() > 0 ? std::remove_cvref_t<value_type>{} : object;
 			} else {
@@ -379,9 +388,9 @@ namespace jsonifier_internal {
 				}
 				value_type object{};
 				if constexpr (is_core_type<value_type>) {
-					parse<optionsNew, jsonifier::core<std::remove_cvref_t<value_type>>::parseValue, options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue)>, options.minified>::impl(object, context);
 				} else {
-					parse<optionsNew, getParseValue<std::remove_cvref_t<value_type>>(), options.minified>::impl(object, context);
+					parse<optionsNew, std::remove_cvref_t<decltype(getParseValue<std::remove_cvref_t<value_type>>())>, options.minified>::impl(object, context);
 				}
 				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
 					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})

@@ -72,17 +72,17 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept has_force_inline = requires() { std::remove_cvref_t<value_type>::forceInline; };
 
-	template<auto jsonEntity> struct json_entity_value {
-		using type = std::remove_cvref_t<decltype(jsonEntity)>::member_type;
+	template<typename json_entity_type> struct json_entity_value {
+		using type = std::remove_cvref_t<json_entity_type>::member_type;
 	};
 
-	template<auto jsonEntity> using json_entity_value_t = typename json_entity_value<jsonEntity>::type;
+	template<typename json_entity_type> using json_entity_value_t = typename json_entity_value<json_entity_type>::type;
 
 	template<string_literal nameNew, auto memberPtrNew> struct json_entity_temp {
 		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = remove_member_pointer_t<decltype(memberPtrNew)>;
 		static constexpr jsonifier::json_type type{ getJsonType<member_type>() };
-		static constexpr member_type class_type::*memberPtr{ memberPtrNew };
+		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
 		static constexpr string_literal name{ nameNew };
 	};
 
