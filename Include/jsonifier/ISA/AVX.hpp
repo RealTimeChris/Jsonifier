@@ -76,8 +76,7 @@ namespace simd_internal {
 		return _mm_cmpgt_epi8(_mm_add_epi8(other, offset), _mm_add_epi8(value, offset));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint32_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(value, other)));
 	}
 
@@ -167,8 +166,7 @@ namespace simd_internal {
 		return _mm256_cmpgt_epi8(_mm256_add_epi8(other, offset), _mm256_add_epi8(value, offset));
 	}
 
-	template<simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
-	JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint32_t>(_mm256_movemask_epi8(_mm256_cmpeq_epi8(value, other)));
 	}
 
@@ -256,8 +254,7 @@ namespace simd_internal {
 		return _mm512_maskz_set1_epi8(_mm512_cmpeq_epi8_mask(value, other), 0xFF);
 	}
 
-	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
-	JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint64_t>(_mm512_cmpeq_epi8_mask(value, other));
 	}
 

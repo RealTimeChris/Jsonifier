@@ -859,7 +859,7 @@ namespace jsonifier_fast_float {
 		// we never need more than 150 limb
 		uint16_t length{};
 
-		JSONIFIER_INLINE stackvec()	  = default;
+		JSONIFIER_INLINE stackvec()			  = default;
 		stackvec(const stackvec&)			  = delete;
 		stackvec& operator=(const stackvec&)  = delete;
 		stackvec(stackvec&&)				  = delete;

@@ -87,8 +87,7 @@ namespace simd_internal {
 		return vgetq_lane_u16(vreinterpretq_u16_u8(tmp), 0);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return opBitMask(vceqq_u8(value, other));
 	}
 

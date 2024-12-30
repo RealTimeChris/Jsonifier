@@ -33,9 +33,11 @@ namespace jsonifier_internal {
 		return static_cast<value_type&&>(value);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>&& value) noexcept {
-		static_assert(!std::is_lvalue_reference_v<value_type>, "bad jsonifier_internal::forward call");
-		return static_cast<value_type&&>(value);
+	template<typename value_type>
+	concept r_value_reference = std::is_rvalue_reference_v<value_type>;
+
+	template<r_value_reference value_type> JSONIFIER_INLINE constexpr value_type forward(value_type value) noexcept {
+		return value;
 	}
 
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {

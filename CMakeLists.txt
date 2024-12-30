@@ -31,8 +31,8 @@ collect_version("jsonifier")
 set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 project(
   "${PROJECT_NAME}"
@@ -82,7 +82,6 @@ target_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
 	"${AVX_FLAG}"
 )

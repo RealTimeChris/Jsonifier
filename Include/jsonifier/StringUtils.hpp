@@ -277,15 +277,14 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
-	template<typename simd_type, typename integer_type> JSONIFIER_INLINE integer_type findSerialize(const simd_type& simdValue, const simd_type& simdValues01,
-		const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
+	template<typename simd_type, typename integer_type>
+	JSONIFIER_INLINE integer_type findSerialize(const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
 		return simd_internal::postCmpTzcnt(static_cast<integer_type>(simd_internal::opBitMaskRaw(
 			simd_internal::opOr(simd_internal::opOr(simd_internal::opCmpEqRaw(simdValues01, simdValue), simd_internal::opCmpEqRaw(simdValues02, simdValue)),
 				simd_internal::opCmpLtRaw(simdValue, simdValues03)))));
 	}
 
-	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type>
-	JSONIFIER_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
+	template<jsonifier::concepts::unsigned_t simd_type, jsonifier::concepts::unsigned_t integer_type> JSONIFIER_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
 		static constexpr integer_type mask{ repeatByte<0b01111111, integer_type>() };
 		static constexpr integer_type less32Bits{ repeatByte<0b01100000, integer_type>() };
 		static constexpr integer_type hiBits{ repeatByte<0b10000000, integer_type>() };

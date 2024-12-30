@@ -159,8 +159,8 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<error_classes errorClassNew, auto typeNew> static error constructError(int64_t errorIndexNew, int64_t stringLengthNew,
-			string_view_ptr stringViewNew, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+		template<error_classes errorClassNew, auto typeNew> static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
+			const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
 		}
 

@@ -38,7 +38,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class minifier {
 	  public:
 		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_INLINE minifier(const minifier& other)			  = delete;
+		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
 		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {

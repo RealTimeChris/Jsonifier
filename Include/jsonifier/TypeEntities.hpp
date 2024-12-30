@@ -107,8 +107,7 @@ namespace jsonifier_internal {
 		using type = std::conditional_t<std::is_unsigned_v<std::remove_cvref_t<value_type>>, uint8_t, int8_t>;
 	};
 
-	template<const auto& function, typename... arg_types, size_t... indices>
-	constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
+	template<const auto& function, typename... arg_types, size_t... indices> constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		void(args...);
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
 			...);
@@ -374,7 +373,7 @@ namespace jsonifier {
 		concept raw_json_t = std::same_as<std::remove_cvref_t<value_type>, jsonifier::raw_json_data>;
 
 		template<typename value_type01, typename value_type02>
-		concept same_character_size = requires() {
+		concept same_character_size = requires {
 			sizeof(typename std::remove_cvref_t<value_type01>::value_type) == sizeof(typename std::remove_cvref_t<value_type02>::value_type);
 		} && string_t<value_type01> && string_t<value_type02>;
 
@@ -386,7 +385,7 @@ namespace jsonifier {
 		};
 
 		template<typename value_type>
-		concept tuple_t = requires() { std::tuple_size<std::remove_cvref_t<value_type>>::value; } && !has_data<value_type>;
+		concept tuple_t = requires { std::tuple_size<std::remove_cvref_t<value_type>>::value; } && !has_data<value_type>;
 
 		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
 

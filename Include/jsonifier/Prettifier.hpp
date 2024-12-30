@@ -48,7 +48,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class prettifier {
 	  public:
 		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_INLINE prettifier(const prettifier& other)			  = delete;
+		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
 		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {

@@ -81,14 +81,10 @@ namespace jsonifier_internal {
 
 	template<size_t I> using tag = std::integral_constant<size_t, I>;
 
-	template<size_t I> constexpr tag<I> tag_v{};
-
-	template<size_t N> using tag_range = std::make_index_sequence<N>;
-
 	template<typename tup> using base_list_t = typename std::decay_t<tup>::base_list;
 
 	template<typename tuple>
-	concept base_list_tuple = requires() { typename std::decay_t<tuple>::base_list; };
+	concept base_list_tuple = requires { typename std::decay_t<tuple>::base_list; };
 
 	template<typename value_type>
 	concept stateless = std::is_empty_v<std::decay_t<value_type>>;
@@ -96,26 +92,28 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept indexable = stateless<value_type> || requires(value_type t) { t[tag<0>()]; };
 
-	template<typename... Bases> struct type_map : Bases... {
-		using base_list = type_list<Bases...>;
-		using Bases::operator[]...;
+	template<class... bases> struct type_map : bases... {
+		using base_list = type_list<bases...>;
+		using bases::operator[]...;
+		using bases::decl_elem...;
 	};
 
 	template<size_t I, typename value_type> struct tuple_elem {
-		using type = std::remove_cvref_t<value_type>;
+		static value_type decl_elem(tag<I>);
+		using type = value_type;
 
-		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS type value;
+		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS value_type value{};
 
 		constexpr decltype(auto) operator[](tag<I>) & {
-			return (value);
+			return value;
 		}
 
 		constexpr decltype(auto) operator[](tag<I>) const& {
-			return (value);
+			return value;
 		}
 
 		constexpr decltype(auto) operator[](tag<I>) && {
-			return (static_cast<tuple_elem&&>(*this).value);
+			return static_cast<tuple_elem&&>(*this).value;
 		}
 	};
 
@@ -125,19 +123,20 @@ namespace jsonifier_internal {
 		using type = type_map<tuple_elem<I, value_type>...>;
 	};
 
-	template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
+	template<typename... value_type> using tuple_base_t = typename get_tuple_base<std::make_index_sequence<sizeof...(value_type)>, value_type...>::type;
 
 	template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
 		static constexpr size_t N = sizeof...(value_type);
 		using super				  = tuple_base_t<value_type...>;
 		using super::operator[];
-		using base_list = typename super::base_list;
+		using super::decl_elem;
 	};
 
 	template<> struct tuple<> : tuple_base_t<> {
-		static constexpr size_t N = 0;
+		constexpr static size_t N = 0;
 		using super				  = tuple_base_t<>;
 		using base_list			  = type_list<>;
+		using element_list		  = type_list<>;
 	};
 
 	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
@@ -162,8 +161,8 @@ namespace jsonifier_internal {
 		return (base_list_t<type_t<inner>>{} + ...);
 	}
 
-	template<typename value_type, typename... outer, typename... inner> constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
-		-> tuple<type_t<inner>...> {
+	template<typename value_type, typename... outer, typename... inner>
+	constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>) -> tuple<type_t<inner>...> {
 		return { { { static_cast<forward_as_t<type_t<outer>&&, inner>>(tupleVal.identity_t<outer>::value).value }... } };
 	}
 
@@ -194,13 +193,15 @@ namespace jsonifier_internal {
 
 	template<size_t I, typename... value_type> struct tuple_element;
 
+	template<size_t I, typename... value_type> struct tuple_element<I, tuple<value_type...>> {
+		using type = decltype(tuple<std::remove_cvref_t<value_type>...>::decl_elem(tag<I>()));
+	};
+
+	template<size_t I, typename tuple_type> using tuple_element_t = typename tuple_element<I, tuple_type>::type;
+
 	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
-
-	template<size_t I, typename... value_type> struct tuple_element<I, tuple<value_type...>> {
-		using type = decltype(tuple<value_type...>::decl_elem(tag<I>()));
-	};
 
 	template<typename... value_type> static constexpr auto tuple_size_v = tuple_size<std::remove_cvref_t<value_type>...>::value;
 }

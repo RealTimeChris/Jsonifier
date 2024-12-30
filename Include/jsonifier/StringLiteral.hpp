@@ -94,7 +94,7 @@ namespace jsonifier_internal {
 			return values[index];
 		}
 
-		constexpr size_type size() const noexcept {
+		static constexpr size_type size() noexcept {
 			return length;
 		}
 

@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// Note: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
 #pragma once

@@ -78,8 +78,7 @@ namespace simd_internal {
 		return mm128CmpEqEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
-	JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint16_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(value, other)));
 	}
 

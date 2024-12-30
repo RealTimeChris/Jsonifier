@@ -29,7 +29,7 @@
 template<> struct jsonifier::core<audience_sub_category_names> {
 	using value_type				 = audience_sub_category_names;
 	static constexpr bool forceInlineAll{ true };
-	static constexpr auto parseValue = createValue<createJsonEntity<&value_type::the337100890, "337100890">()>();
+	static constexpr auto parseValue = createValue<makeJsonEntity<&value_type::the337100890, "337100890">()>();
 };
 
 template<> struct jsonifier::core<names> {
@@ -146,7 +146,7 @@ template<> struct jsonifier::core<twitter_user_data> {
 	using value_type = twitter_user_data;
 	static constexpr auto parseValue =
 		createValue<&value_type::id, &value_type::id_str, &value_type::name, &value_type::screen_name, &value_type::location, &value_type::description, &value_type::url,
-			&value_type::entities, createJsonEntity<&value_type::protectedVal, "protected">(), &value_type::followers_count, &value_type::friends_count, &value_type::listed_count,
+			&value_type::entities, makeJsonEntity<&value_type::protectedVal, "protected">(), &value_type::followers_count, &value_type::friends_count, &value_type::listed_count,
 			&value_type::created_at, &value_type::favourites_count, &value_type::utc_offset, &value_type::time_zone, &value_type::geo_enabled, &value_type::verified,
 			&value_type::statuses_count, &value_type::lang, &value_type::contributors_enabled, &value_type::is_translator, &value_type::is_translation_enabled,
 			&value_type::profile_background_color, &value_type::profile_background_image_url, &value_type::profile_background_image_url_https, &value_type::profile_background_tile,
