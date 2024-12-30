@@ -112,35 +112,31 @@
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_FORCE_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_NON_GCC_FORCE_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
-		#define JSONIFIER_CLANG_FORCE_INLINE inline
-		#define JSONIFIER_INLINE inline
+		#define JSONIFIER_CLANG_MACOS_INLINE inline
+		#define JSONIFIER_CLANG_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
 		#if defined(JSONIFIER_MAC)
-			#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline __attribute__((always_inline))
+			#define JSONIFIER_CLANG_MACOS_INLINE inline __attribute__((always_inline))
 		#else
-			#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
+			#define JSONIFIER_CLANG_MACOS_INLINE inline
 		#endif
 		#define JSONIFIER_NON_GCC_FORCE_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_FORCE_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_INLINE inline
+		#define JSONIFIER_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_CLANG_INLINE inline __attribute__((always_inline))
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_FORCE_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NON_GCC_FORCE_INLINE inline
-		#define JSONIFIER_CLANG_FORCE_INLINE inline
-		#define JSONIFIER_CLANG_MACOS_FORCE_INLINE inline
-		#define JSONIFIER_INLINE inline
+		#define JSONIFIER_CLANG_INLINE inline
+		#define JSONIFIER_CLANG_MACOS_INLINE inline
 	#endif
 #else
 	#define JSONIFIER_FORCE_INLINE
 	#define JSONIFIER_NON_GCC_FORCE_INLINE
-	#define JSONIFIER_CLANG_FORCE_INLINE
-	#define JSONIFIER_CLANG_MACOS_FORCE_INLINE
-	#define JSONIFIER_INLINE
+	#define JSONIFIER_CLANG_INLINE
+	#define JSONIFIER_CLANG_MACOS_INLINE
 #endif
 
 #if !defined JSONIFIER_ALIGN

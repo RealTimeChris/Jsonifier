@@ -62,7 +62,7 @@ namespace jsonifier_internal {
 		Unexpected_String_End	  = 16,
 	};
 
-	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, parse_errors error) {
+	std::ostream& operator<<(std::ostream& os, parse_errors error) {
 		os << simd_internal::tzcnt(static_cast<uint64_t>(error));
 		return os;
 	}
@@ -119,11 +119,11 @@ namespace jsonifier_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_INLINE bool isNumberType(uint8_t c) noexcept {
+	bool isNumberType(uint8_t c) noexcept {
 		return numberTable[c];
 	}
 
-	JSONIFIER_INLINE std::string convertChar(char value) {
+	std::string convertChar(char value) {
 		switch (value) {
 			[[unlikely]] case '\b': { return R"(\b)"; }
 			[[unlikely]] case '\t': { return R"(\t)"; }
@@ -146,7 +146,7 @@ namespace jsonifier_internal {
 
 	class error {
 	  public:
-		JSONIFIER_INLINE error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
+		error(std::source_location sourceLocation, error_classes errorClassNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			uint64_t typeNew) noexcept {
 			stringLength = static_cast<uint64_t>(stringLengthNew);
 			location	 = sourceLocation;
@@ -159,28 +159,28 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<error_classes errorClassNew, auto typeNew> JSONIFIER_INLINE static error constructError(int64_t errorIndexNew, int64_t stringLengthNew,
+		template<error_classes errorClassNew, auto typeNew> static error constructError(int64_t errorIndexNew, int64_t stringLengthNew,
 			string_view_ptr stringViewNew, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
 		}
 
-		JSONIFIER_INLINE operator uint64_t() const noexcept {
+		operator uint64_t() const noexcept {
 			return errorType;
 		}
 
-		JSONIFIER_INLINE operator parse_errors() const noexcept {
+		operator parse_errors() const noexcept {
 			return static_cast<parse_errors>(errorType);
 		}
 
-		JSONIFIER_INLINE operator bool() const noexcept {
+		operator bool() const noexcept {
 			return errorType != 0;
 		}
 
-		JSONIFIER_INLINE bool operator==(const error& rhs) const noexcept {
+		bool operator==(const error& rhs) const noexcept {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
 		}
 
-		JSONIFIER_INLINE void formatError(const jsonifier::string_view& errorString) noexcept {
+		void formatError(const jsonifier::string_view& errorString) noexcept {
 			if (static_cast<size_t>(errorIndex) >= errorString.size() || errorString.size() == 0ull) {
 				return;
 			}
@@ -201,7 +201,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE jsonifier::string collectValues(jsonifier::string outputValues, const jsonifier::string& inputValues, size_t currentIndex = 0) const {
+		jsonifier::string collectValues(jsonifier::string outputValues, const jsonifier::string& inputValues, size_t currentIndex = 0) const {
 			if (inputValues.size() > currentIndex && currentIndex <= 6) {
 				outputValues += jsonifier::string{ "'" } + convertChar(inputValues[currentIndex]) + jsonifier::string{ "' " };
 				return collectValues(outputValues, inputValues, currentIndex + 1);
@@ -210,7 +210,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE jsonifier::string reportError() const noexcept {
+		jsonifier::string reportError() const noexcept {
 			jsonifier::string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) +
 				", on line: " + std::to_string(line) + ", at local index: " + std::to_string(localIndex) };
 			if (stringView) {
@@ -233,7 +233,7 @@ namespace jsonifier_internal {
 		uint64_t line{};
 	};
 
-	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
+	std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
 		os << errorNew.reportError();
 		return os;
 	}

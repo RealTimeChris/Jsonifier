@@ -236,7 +236,7 @@ namespace jsonifier_internal {
 		static constexpr size_t index{ indexNew };
 		static constexpr bool isItLast{ indexNew == jsonifier_internal::tuple_size_v<raw_core_type<class_type>> - 1 };
 
-		JSONIFIER_FORCE_INLINE decltype(auto) operator[](tag<index>) const {
+		JSONIFIER_INLINE decltype(auto) operator[](tag<index>) const {
 			return *this;
 		}
 	};

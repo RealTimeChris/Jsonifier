@@ -111,6 +111,6 @@ concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<v
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 
-JSONIFIER_FORCE_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
+JSONIFIER_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
 	JSONIFIER_PREFETCH(ptr)
 }

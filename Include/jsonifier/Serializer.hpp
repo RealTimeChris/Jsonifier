@@ -49,7 +49,7 @@ namespace jsonifier_internal {
 	template<typename value_type, typename context_type, jsonifier::serialize_options optionsNew, typename json_entity_type> struct custom_val_serializer;
 
 	template<jsonifier::serialize_options options, typename json_entity_type> struct serialize {
-		template<typename value_type, typename context_type> JSONIFIER_FORCE_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
+		template<typename value_type, typename context_type> JSONIFIER_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
 			if constexpr (json_entity_type::index < forceInlineLimitSerialize ||
 				( !jsonifier::concepts::jsonifier_object_t<json_entity_value_t<json_entity_type>> && !jsonifier::concepts::vector_t<json_entity_value_t<json_entity_type>> &&
 					!jsonifier::concepts::map_t<json_entity_value_t<json_entity_type>> )) {
@@ -59,7 +59,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename value_type, typename context_type> JSONIFIER_INLINE static void implRegular(value_type&& value, context_type&& context) noexcept {
+		template<typename value_type, typename context_type> static void implRegular(value_type&& value, context_type&& context) noexcept {
 			if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
 				object_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(jsonifier_internal::forward<value_type>(value),
 					jsonifier_internal::forward<context_type>(context));
@@ -87,7 +87,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename value_type, typename context_type> JSONIFIER_FORCE_INLINE static void implForceInline(value_type&& value, context_type&& context) noexcept {
+		template<typename value_type, typename context_type> JSONIFIER_INLINE static void implForceInline(value_type&& value, context_type&& context) noexcept {
 			if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
 				object_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::implForceInline(jsonifier_internal::forward<value_type>(value),
 					jsonifier_internal::forward<context_type>(context));
@@ -117,9 +117,9 @@ namespace jsonifier_internal {
 	};
 
 	template<typename buffer_type> struct serialize_context {
-		JSONIFIER_FORCE_INLINE serialize_context() noexcept = default;
+		JSONIFIER_INLINE serialize_context() noexcept = default;
 
-		JSONIFIER_FORCE_INLINE serialize_context(char* ptrNew, buffer_type& bufferNew) noexcept : buffer{ bufferNew }, bufferPtr{ ptrNew } {};
+		JSONIFIER_INLINE serialize_context(char* ptrNew, buffer_type& bufferNew) noexcept : buffer{ bufferNew }, bufferPtr{ ptrNew } {};
 
 		buffer_type& buffer{};
 		char* bufferPtr{};

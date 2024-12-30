@@ -45,13 +45,13 @@ namespace jsonifier {
 		using size_type				 = size_t;
 		using allocator				 = jsonifier_internal::alloc_wrapper<value_type>;
 
-		JSONIFIER_INLINE vector() noexcept {
+		vector() noexcept {
 			if constexpr (sizeValNewer > 0) {
 				reserve(sizeValNewer);
 			}
 		}
 
-		template<typename value_type_newer> JSONIFIER_INLINE vector(size_type sizeNew, value_type_newer&& values) : capacityVal{}, sizeVal{}, dataVal{} {
+		template<typename value_type_newer> vector(size_type sizeNew, value_type_newer&& values) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = sizeNew;
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -60,25 +60,25 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(vector&& other) noexcept {
+		vector& operator=(vector&& other) noexcept {
 			if (this != &other && dataVal != other.dataVal) {
 				vector{ other }.swap(*this);
 			}
 			return *this;
 		}
 
-		JSONIFIER_INLINE vector(vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
+		vector(vector&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			swap(other);
 		}
 
-		JSONIFIER_INLINE vector& operator=(const vector& other) noexcept {
+		vector& operator=(const vector& other) noexcept {
 			if (this != &other) {
 				vector{ other }.swap(*this);
 			}
 			return *this;
 		}
 
-		JSONIFIER_INLINE vector(const vector& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		vector(const vector& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -87,12 +87,12 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(std::vector<value_type>&& other) noexcept {
+		vector& operator=(std::vector<value_type>&& other) noexcept {
 			vector{ other }.swap(*this);
 			return *this;
 		}
 
-		JSONIFIER_INLINE explicit vector(std::vector<value_type>&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
+		explicit vector(std::vector<value_type>&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -101,12 +101,12 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(const std::vector<value_type>& other) noexcept {
+		vector& operator=(const std::vector<value_type>& other) noexcept {
 			vector{ other }.swap(*this);
 			return *this;
 		}
 
-		JSONIFIER_INLINE explicit vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		explicit vector(const std::vector<value_type>& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -115,7 +115,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector(iterator first, iterator last) noexcept {
+		vector(iterator first, iterator last) noexcept {
 			difference_type insertCount = std::distance(first, last);
 			if (!first) {
 				return;
@@ -140,12 +140,12 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE vector& operator=(std::initializer_list<value_type> other) noexcept {
+		vector& operator=(std::initializer_list<value_type> other) noexcept {
 			vector{ other }.swap(*this);
 			return *this;
 		}
 
-		JSONIFIER_INLINE explicit vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
+		explicit vector(std::initializer_list<value_type> other) : capacityVal{}, sizeVal{}, dataVal{} {
 			auto sizeValNew = other.size();
 			if (sizeValNew > 0 && sizeValNew < maxSize()) {
 				reserve(sizeValNew);
@@ -154,16 +154,16 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE vector& operator=(const value_type& other) noexcept {
+		vector& operator=(const value_type& other) noexcept {
 			emplace_back(other);
 			return *this;
 		}
 
-		JSONIFIER_INLINE vector(const value_type& other) : capacityVal{}, sizeVal{}, dataVal{} {
+		vector(const value_type& other) : capacityVal{}, sizeVal{}, dataVal{} {
 			*this = other;
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE void assign(size_type count, arg_types&&... newValue) noexcept {
+		template<typename... arg_types> void assign(size_type count, arg_types&&... newValue) noexcept {
 			size_type newSize = sizeVal + count;
 
 			if (newSize > capacityVal) {
@@ -175,7 +175,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void insert(iterator where, iterator first, iterator last) noexcept {
+		void insert(iterator where, iterator first, iterator last) noexcept {
 			size_type insertCount = std::distance(first, last);
 
 			if (insertCount == 0) {
@@ -198,7 +198,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		template<typename value_type_newer> JSONIFIER_INLINE void insert(iterator where, value_type_newer&& value) {
+		template<typename value_type_newer> void insert(iterator where, value_type_newer&& value) {
 			size_type insertCount = 1;
 
 			if (insertCount == 0) {
@@ -219,97 +219,97 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE iterator begin() noexcept {
+		iterator begin() noexcept {
 			return iterator{ dataVal };
 		}
 
-		JSONIFIER_INLINE iterator end() noexcept {
+		iterator end() noexcept {
 			return iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_INLINE reverse_iterator rbegin() noexcept {
+		reverse_iterator rbegin() noexcept {
 			return reverse_iterator{ end() };
 		}
 
-		JSONIFIER_INLINE reverse_iterator rend() noexcept {
+		reverse_iterator rend() noexcept {
 			return reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_INLINE const_iterator begin() const noexcept {
+		const_iterator begin() const noexcept {
 			return const_iterator{ dataVal };
 		}
 
-		JSONIFIER_INLINE const_iterator end() const noexcept {
+		const_iterator end() const noexcept {
 			return const_iterator{ dataVal + sizeVal };
 		}
 
-		JSONIFIER_INLINE const_reverse_iterator rbegin() const noexcept {
+		const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator{ end() };
 		}
 
-		JSONIFIER_INLINE const_reverse_iterator rend() const noexcept {
+		const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator{ begin() };
 		}
 
-		JSONIFIER_INLINE reference front() noexcept {
+		reference front() noexcept {
 			return dataVal[0];
 		}
 
-		JSONIFIER_INLINE reference back() noexcept {
+		reference back() noexcept {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_INLINE const_reference front() const {
+		const_reference front() const {
 			return dataVal[0];
 		}
 
-		JSONIFIER_INLINE const_reference back() const {
+		const_reference back() const {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_INLINE reference at(size_type index) {
+		reference at(size_type index) {
 			if (index >= sizeVal) {
 				throw std::out_of_range{ "Sorry, but that index is beyond the end of this vector's bounds." };
 			}
 			return dataVal[index];
 		}
 
-		JSONIFIER_INLINE const_reference at(size_type index) const {
+		const_reference at(size_type index) const {
 			if (index >= sizeVal) {
 				throw std::out_of_range{ "Sorry, but that index is beyond the end of this vector's bounds." };
 			}
 			return dataVal[index];
 		}
 
-		JSONIFIER_INLINE const_reference operator[](size_type index) const {
+		const_reference operator[](size_type index) const {
 			return dataVal[index];
 		}
 
-		JSONIFIER_INLINE reference operator[](size_type index) noexcept {
+		reference operator[](size_type index) noexcept {
 			return dataVal[index];
 		}
 
-		JSONIFIER_INLINE size_type capacity() const {
+		size_type capacity() const {
 			return capacityVal;
 		}
 
-		JSONIFIER_INLINE size_type size() const {
+		size_type size() const {
 			return sizeVal;
 		}
 
-		JSONIFIER_INLINE pointer data() const {
+		pointer data() const {
 			return dataVal;
 		}
 
-		JSONIFIER_INLINE bool empty() const {
+		bool empty() const {
 			return sizeVal == 0;
 		}
 
-		JSONIFIER_INLINE pointer data() noexcept {
+		pointer data() noexcept {
 			return dataVal;
 		}
 
-		JSONIFIER_INLINE operator std::vector<value_type>() const {
+		operator std::vector<value_type>() const {
 			std::vector<value_type> returnValue{};
 			for (auto& value: *this) {
 				returnValue.emplace_back(value);
@@ -317,7 +317,7 @@ namespace jsonifier {
 			return returnValue;
 		}
 
-		template<typename... value_types> JSONIFIER_INLINE reference emplace_back(value_types&&... c) noexcept {
+		template<typename... value_types> reference emplace_back(value_types&&... c) noexcept {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
@@ -326,7 +326,7 @@ namespace jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_INLINE reference emplace_back(value_type&& c) noexcept {
+		reference emplace_back(value_type&& c) noexcept {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
@@ -335,7 +335,7 @@ namespace jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_INLINE reference emplace_back(const value_type& c) noexcept {
+		reference emplace_back(const value_type& c) noexcept {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
@@ -344,7 +344,7 @@ namespace jsonifier {
 			return dataVal[sizeVal - 1];
 		}
 
-		JSONIFIER_INLINE void erase(size_type count) noexcept {
+		void erase(size_type count) noexcept {
 			if (count >= sizeVal) {
 				return;
 			}
@@ -357,7 +357,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE iterator erase(iterator iter) {
+		iterator erase(iterator iter) {
 			if (iter < begin() || iter > end()) {
 				return end();
 			}
@@ -373,7 +373,7 @@ namespace jsonifier {
 			return iterator{ dataVal + eraseIndex };
 		}
 
-		JSONIFIER_INLINE void shrink_to_fit() noexcept {
+		void shrink_to_fit() noexcept {
 			if (sizeVal == capacityVal) {
 				return;
 			}
@@ -389,7 +389,7 @@ namespace jsonifier {
 			return (jsonifier_internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
-		JSONIFIER_INLINE void resize(size_type newSize) {
+		void resize(size_type newSize) {
 			if JSONIFIER_LIKELY (newSize > capacityVal) {
 				pointer newPtr = allocator::allocate(newSize);
 				try {
@@ -418,7 +418,7 @@ namespace jsonifier {
 			sizeVal = newSize;
 		}
 
-		JSONIFIER_INLINE void reserve(size_type capacityNew) {
+		void reserve(size_type capacityNew) {
 			if JSONIFIER_LIKELY (capacityNew > capacityVal) {
 				pointer newPtr = allocator::allocate(capacityNew);
 				try {
@@ -437,18 +437,18 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE void clear() noexcept {
+		void clear() noexcept {
 			std::destroy(dataVal, dataVal + sizeVal);
 			sizeVal = 0;
 		}
 
-		JSONIFIER_INLINE void swap(vector& other) noexcept {
+		void swap(vector& other) noexcept {
 			std::swap(capacityVal, other.capacityVal);
 			std::swap(sizeVal, other.sizeVal);
 			std::swap(dataVal, other.dataVal);
 		}
 
-		JSONIFIER_INLINE bool operator==(const vector<value_type>& rhs) const {
+		bool operator==(const vector<value_type>& rhs) const {
 			if (rhs.size() != size()) {
 				return false;
 			}
@@ -464,7 +464,7 @@ namespace jsonifier {
 			}
 		}
 
-		JSONIFIER_INLINE ~vector() noexcept {
+		~vector() noexcept {
 			reset();
 		};
 
@@ -473,7 +473,7 @@ namespace jsonifier {
 		size_type sizeVal{};
 		pointer dataVal{};
 
-		JSONIFIER_INLINE void reset() noexcept {
+		void reset() noexcept {
 			if (dataVal && capacityVal) {
 				if (sizeVal) {
 					std::destroy(dataVal, dataVal + sizeVal);

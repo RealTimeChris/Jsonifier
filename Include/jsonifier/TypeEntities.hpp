@@ -49,17 +49,17 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_FORCE_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
 	}
 
-	JSONIFIER_FORCE_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
 		os << "File: " << location.file_name() << std::endl;
 		os << "Line: " << location.line() << std::endl;
 		return os;
 	}
 
-	JSONIFIER_FORCE_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+	JSONIFIER_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
 		std::cout << location;
 	}
 
@@ -108,29 +108,29 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices>
-	JSONIFIER_INLINE constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
+	constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		void(args...);
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
 			...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(arg_types&&... args) noexcept {
+	template<size_t limit, const auto& function, typename... arg_types> constexpr void forEach(arg_types&&... args) noexcept {
 		forEachImpl<function>(std::make_index_sequence<limit>{}, jsonifier_internal::forward<arg_types>(args)...);
 	}
 
 	template<typename function_type, typename... arg_types, size_t... indices>
-	JSONIFIER_INLINE constexpr void forEachImpl(function_type&& function, std::index_sequence<indices...>, arg_types&&... args) noexcept {
+	constexpr void forEachImpl(function_type&& function, std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		void(args...);
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
 			...);
 	}
 
-	template<size_t limit, typename function_type, typename... arg_types> JSONIFIER_INLINE constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
+	template<size_t limit, typename function_type, typename... arg_types> constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
 		forEachImpl(jsonifier_internal::forward<function_type>(function), std::make_index_sequence<limit>{}, jsonifier_internal::forward<arg_types>(args)...);
 	}
 
 	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
-	JSONIFIER_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+	constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = jsonifier_internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
@@ -477,7 +477,7 @@ namespace jsonifier_internal {
 		std::cout << std::endl;
 	}
 
-	JSONIFIER_INLINE std::string printBits(bool value) noexcept {
+	std::string printBits(bool value) noexcept {
 		std::stringstream theStream{};
 		theStream << std::boolalpha << value << std::endl;
 		return theStream.str();
@@ -487,15 +487,15 @@ namespace jsonifier_internal {
 	  public:
 		using hr_clock = std::chrono::high_resolution_clock;
 
-		JSONIFIER_INLINE stop_watch(uint64_t newTime) noexcept {
+		stop_watch(uint64_t newTime) noexcept {
 			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
 		}
 
-		JSONIFIER_INLINE stop_watch(value_type newTime) noexcept {
+		stop_watch(value_type newTime) noexcept {
 			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
 		}
 
-		JSONIFIER_INLINE stop_watch& operator=(stop_watch&& other) noexcept {
+		stop_watch& operator=(stop_watch&& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
@@ -503,11 +503,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		JSONIFIER_INLINE stop_watch(stop_watch&& other) noexcept {
+		stop_watch(stop_watch&& other) noexcept {
 			*this = move(other);
 		}
 
-		JSONIFIER_INLINE stop_watch& operator=(const stop_watch& other) noexcept {
+		stop_watch& operator=(const stop_watch& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
 				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
 				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
@@ -515,11 +515,11 @@ namespace jsonifier_internal {
 			return *this;
 		}
 
-		JSONIFIER_INLINE stop_watch(const stop_watch& other) noexcept {
+		stop_watch(const stop_watch& other) noexcept {
 			*this = other;
 		}
 
-		JSONIFIER_INLINE bool hasTimeElapsed() noexcept {
+		bool hasTimeElapsed() noexcept {
 			if JSONIFIER_LIKELY (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
 				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
 				return true;
@@ -528,7 +528,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE void reset(value_type newTimeValue = value_type{}) noexcept {
+		void reset(value_type newTimeValue = value_type{}) noexcept {
 			if JSONIFIER_LIKELY (newTimeValue != value_type{}) {
 				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
 				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
@@ -537,11 +537,11 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE value_type getTotalWaitTime() const noexcept {
+		value_type getTotalWaitTime() const noexcept {
 			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
 		}
 
-		JSONIFIER_INLINE value_type totalTimeElapsed() noexcept {
+		value_type totalTimeElapsed() noexcept {
 			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
 		}
 

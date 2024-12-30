@@ -57,7 +57,7 @@ namespace jsonifier_internal {
 	JSONIFIER_FORCE_INLINE_VARIABLE char zero{ '0' };
 	JSONIFIER_FORCE_INLINE_VARIABLE char nine{ '9' };
 
-	template<typename value_type, typename char_t> JSONIFIER_INLINE bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
+	template<typename value_type, typename char_t> bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
 		using namespace jsonifier_fast_float;
 		span<const char_t> fraction;
 

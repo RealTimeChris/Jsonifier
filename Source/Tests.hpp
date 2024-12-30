@@ -259,7 +259,7 @@ namespace tests {
 
 	template<typename test_data_type, bool minified, size_t iterations, bnch_swt::string_literal testNameNew>
 	struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, testNameNew> {
-		JSONIFIER_INLINE static auto run(std::string& newestBuffer) {
+		static auto run(std::string& newestBuffer) {
 			std::string newBuffer{ newestBuffer };
 			newBuffer.reserve(newBuffer.size() + 256);
 			static constexpr bnch_swt::string_literal testName{ testNameNew };
