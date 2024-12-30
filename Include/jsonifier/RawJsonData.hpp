@@ -275,7 +275,7 @@ namespace jsonifier {
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::object_val_parser<object_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
-							optionsNew, jsonifier_internal::getParseValue<std::remove_cvref_t<object_type>>(), false>::impl(results, testContext);
+							optionsNew, std::remove_cvref_t<decltype(jsonifier_internal::getParseValue<std::remove_cvref_t<object_type>>())>, false>::impl(results, testContext);
 						value.emplace<object_type>(jsonifier_internal::move(results));
 						return;
 					}
@@ -287,7 +287,7 @@ namespace jsonifier {
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::array_val_parser<array_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
-							optionsNew, jsonifier_internal::getParseValue<std::remove_cvref_t<array_type>>(), false>::impl(results, testContext);
+							optionsNew, std::remove_cvref_t<decltype(jsonifier_internal::getParseValue<std::remove_cvref_t<object_type>>())>, false>::impl(results, testContext);
 						value.emplace<array_type>(jsonifier_internal::move(results));
 						return;
 					}

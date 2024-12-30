@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - main
-    - dev
+    - ub-san
 
 jobs:
   Build:
