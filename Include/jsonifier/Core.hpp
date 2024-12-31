@@ -46,7 +46,7 @@ namespace jsonifier_internal {
 		if constexpr (currentIndex < maxIndex) {
 			auto potentialKey = jsonifier_internal::get<currentIndex>(tuple);
 			if constexpr (has_name<decltype(potentialKey)>) {
-				tupleRefsRaw[currentIndex].key = potentialKey.name.template view<jsonifier::string_view>();
+				tupleRefsRaw[currentIndex].key = potentialKey.name.operator jsonifier::string_view();
 			}
 			tupleRefsRaw[currentIndex].oldIndex = currentIndex;
 			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefsRaw);

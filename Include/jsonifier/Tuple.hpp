@@ -170,14 +170,14 @@ namespace jsonifier_internal {
 		if constexpr (sizeof...(value_type) == 0) {
 			return tuple<>{};
 		} else {
-#if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
+#if !defined(JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE)
 	#if defined(__clang__)
-		#define TUPLET_CAT_BY_FORWARDING_TUPLE 0
+		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 0
 	#else
-		#define TUPLET_CAT_BY_FORWARDING_TUPLE 1
+		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 1
 	#endif
 #endif
-#if TUPLET_CAT_BY_FORWARDING_TUPLE
+#if JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE
 			using big_tuple = tuple<value_type&&...>;
 #else
 			using big_tuple = tuple<std::decay_t<value_type>...>;

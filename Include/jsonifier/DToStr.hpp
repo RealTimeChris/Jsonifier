@@ -60,11 +60,9 @@ namespace jsonifier_internal {
 		buf[0] = char(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
-		buf[0]	= charTable[bb * 2 + lz];
-		buf[1]	= charTable[(bb * 2 + lz) + 1];
+		std::memcpy(buf, charTable + bb * 2 + lz, 2);
 		buf -= lz;
-		buf[2] = charTable[2 * cc];
-		buf[3] = charTable[(2 * cc) + 1];
+		std::memcpy(buf + 2, charTable + 2 * cc, 2);
 
 		if (ffgghhii) {
 			const uint32_t dd	= (ddee * 5243) >> 19;
@@ -73,21 +71,15 @@ namespace jsonifier_internal {
 			const uint32_t hhii = ffgghhii - ffgg * 10000;
 			const uint32_t ff	= (ffgg * 5243) >> 19;
 			const uint32_t gg	= ffgg - ff * 100;
-			buf[4]				= charTable[2 * dd];
-			buf[5]				= charTable[(2 * dd) + 1];
-			buf[6]				= charTable[2 * ee];
-			buf[7]				= charTable[(2 * ee) + 1];
-			buf[8]				= charTable[2 * ff];
-			buf[9]				= charTable[(2 * ff) + 1];
-			buf[10]				= charTable[2 * gg];
-			buf[11]				= charTable[(2 * gg) + 1];
+			std::memcpy(buf + 4, charTable + 2 * dd, 2);
+			std::memcpy(buf + 6, charTable + 2 * ee, 2);
+			std::memcpy(buf + 8, charTable + 2 * ff, 2);
+			std::memcpy(buf + 10, charTable + 2 * gg, 2);
 			if (hhii) {
-				const uint32_t hh  = (hhii * 5243) >> 19;
-				const uint32_t ii  = hhii - hh * 100;
-				buf[12]			   = charTable[2 * hh];
-				buf[13]			   = charTable[(2 * hh) + 1];
-				buf[14]			   = charTable[2 * ii];
-				buf[15]			   = charTable[(2 * ii) + 1];
+				const uint32_t hh = (hhii * 5243) >> 19;
+				const uint32_t ii = hhii - hh * 100;
+				std::memcpy(buf + 12, charTable + 2 * hh, 2);
+				std::memcpy(buf + 14, charTable + 2 * ii, 2);
 				const uint32_t tz1 = decTrailingZeroTable[hh];
 				const uint32_t tz2 = decTrailingZeroTable[ii];
 				const uint32_t tz  = ii ? tz2 : (tz1 + 2);
@@ -102,12 +94,10 @@ namespace jsonifier_internal {
 			}
 		} else {
 			if (ddee) {
-				const uint32_t dd  = (ddee * 5243) >> 19;
-				const uint32_t ee  = ddee - dd * 100;
-				buf[4]			   = charTable[2 * dd];
-				buf[5]			   = charTable[(2 * dd) + 1];
-				buf[6]			   = charTable[2 * ee];
-				buf[7]			   = charTable[(2 * ee) + 1];
+				const uint32_t dd = (ddee * 5243) >> 19;
+				const uint32_t ee = ddee - dd * 100;
+				std::memcpy(buf + 4, charTable + 2 * dd, 2);
+				std::memcpy(buf + 6, charTable + 2 * ee, 2);
 				const uint32_t tz1 = decTrailingZeroTable[dd];
 				const uint32_t tz2 = decTrailingZeroTable[ee];
 				const uint32_t tz  = ee ? tz2 : (tz1 + 2);
@@ -130,8 +120,7 @@ namespace jsonifier_internal {
 		}
 
 		if (value < 100) {
-			buf[0] = charTable[value * 2];
-			buf[1] = charTable[(value * 2) + 1];
+			std::memcpy(buf, charTable + value * 2, 2);
 			return buf + 2;
 		}
 
@@ -143,16 +132,14 @@ namespace jsonifier_internal {
 			const uint32_t q = value / 100;
 			const uint32_t r = value % 100;
 			value			 = q;
-			p[-2]			 = charTable[r * 2];
-			p[-1]			 = charTable[(r * 2) + 1];
+			std::memcpy(p - 2, charTable + r * 2, 2);
 			p -= 2;
 		}
 
 		if (value < 10) {
 			*--p = static_cast<char>(value + '0');
 		} else {
-			p[-2] = charTable[(value * 2)];
-			p[-1] = charTable[(value * 2) + 1];
+			std::memcpy(p - 2, charTable + value * 2, 2);
 		}
 
 		return end;
@@ -236,8 +223,7 @@ namespace jsonifier_internal {
 					}
 					expDec		= std::abs(expDec);
 					uint32_t lz = expDec < 10;
-					buf[0]		= charTable[expDec * 2 + lz];
-					buf[1]		= charTable[(expDec * 2 + lz) + 1];
+					std::memcpy(buf, charTable + expDec * 2 + lz, 2);
 					return buf + 2 - lz;
 				}
 			} else {
@@ -282,15 +268,13 @@ namespace jsonifier_internal {
 					expDec = std::abs(expDec);
 					if (expDec < 100) {
 						uint32_t lz = expDec < 10;
-						buf[0]		= charTable[expDec * 2 + lz];
-						buf[1]		= charTable[(expDec * 2 + lz) + 1];
+						std::memcpy(buf, charTable + expDec * 2 + lz, 2);
 						return buf + 2 - lz;
 					} else {
 						const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
 						const uint32_t lo = uint32_t(expDec) - hi * 100;
 						buf[0]			  = uint8_t(hi) + '0';
-						buf[1]			  = charTable[lo * 2];
-						buf[2]			  = charTable[(lo * 2) + 1];
+						std::memcpy(buf + 1, charTable + lo * 2, 2);
 						return buf + 3;
 					}
 				}

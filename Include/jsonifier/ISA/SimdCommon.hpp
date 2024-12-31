@@ -160,7 +160,7 @@ namespace simd_internal {
 	};
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> escapeableArray00{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
+		constexpr const char values[]{ 0x00u, 0x00u, quote, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, backslash, 0x00u, 0x00u, 0x00u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -178,7 +178,7 @@ namespace simd_internal {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> whitespaceArray{ [] {
-		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
+		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', newline, 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -187,7 +187,7 @@ namespace simd_internal {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> opArray{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
+		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, colon, lBrace, comma, rBrace, 0x00u, 0x00u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -195,7 +195,7 @@ namespace simd_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto opArrayPtr{ opArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArrayPtr) };
@@ -211,7 +211,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
+	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(whiteSpaceArrayPtr) };
@@ -226,7 +226,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<auto cNew> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
+	template<auto cNew> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
 		static constexpr auto c{ cNew };
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(c) };
@@ -241,14 +241,14 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
+	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
 		if constexpr (!minified) {
-			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values),
+			return simd_int_t_holder{ .backslashes = collectValues<backslash>(values),
 				.whitespace						   = collectWhitespaceIndices(values),
-				.quotes							   = collectValues<'"'>(values),
+				.quotes							   = collectValues<quote>(values),
 				.op								   = collectStructuralIndices(values) };
 		} else {
-			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values), .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
+			return simd_int_t_holder{ .backslashes = collectValues<backslash>(values), .quotes = collectValues<quote>(values), .op = collectStructuralIndices(values) };
 		}
 	}
 
@@ -258,10 +258,10 @@ namespace jsonifier_internal {
 
 	constexpr jsonifier_internal::array<bool, 256> whitespaceTable{ [] {
 		jsonifier_internal::array<bool, 256> returnValues{};
-		returnValues['\t'] = true;
-		returnValues[' ']  = true;
-		returnValues['\n'] = true;
-		returnValues['\r'] = true;
+		returnValues['\t']	  = true;
+		returnValues[' ']	  = true;
+		returnValues[newline] = true;
+		returnValues['\r']	  = true;
 		return returnValues;
 	}() };
 

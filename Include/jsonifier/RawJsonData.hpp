@@ -267,7 +267,7 @@ namespace jsonifier {
 			static constexpr jsonifier::parse_options optionsNew{};
 			if (jsonDataNew.size() > 0) {
 				switch (jsonDataNew[0]) {
-					case '{': {
+					case lBrace: {
 						object_type results{};
 						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
 						testContext.parserPtr = &parser;
@@ -279,7 +279,7 @@ namespace jsonifier {
 						value.emplace<object_type>(jsonifier_internal::move(results));
 						return;
 					}
-					case '[': {
+					case lBracket: {
 						array_type results{};
 						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
 						testContext.parserPtr = &parser;
@@ -291,7 +291,7 @@ namespace jsonifier {
 						value.emplace<array_type>(jsonifier_internal::move(results));
 						return;
 					}
-					case '"': {
+					case quote: {
 						if (jsonDataNew.size() > 1) {
 							value.emplace<string_type>(string_type{ jsonDataNew.data() + 1, jsonDataNew.size() - 2 });
 							return;

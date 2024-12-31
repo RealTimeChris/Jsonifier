@@ -89,16 +89,16 @@ namespace jsonifier_internal {
 
 	enum class json_structural_type : int8_t {
 		Unset		 = 0,
-		String		 = '"',
-		Comma		 = ',',
+		String		 = quote,
+		Comma		 = comma,
 		Number		 = '-',
-		Colon		 = ':',
-		Array_Start	 = '[',
-		Array_End	 = ']',
+		Colon		 = colon,
+		Array_Start	 = lBracket,
+		Array_End	 = rBracket,
 		Null		 = 'n',
 		Bool		 = 't',
-		Object_Start = '{',
-		Object_End	 = '}',
+		Object_Start = lBrace,
+		Object_End	 = rBrace,
 		Error		 = -1,
 		Type_Count	 = 12
 	};
@@ -127,11 +127,11 @@ namespace jsonifier_internal {
 		switch (value) {
 			[[unlikely]] case '\b': { return R"(\b)"; }
 			[[unlikely]] case '\t': { return R"(\t)"; }
-			[[unlikely]] case '\n': { return R"(\n)"; }
+			[[unlikely]] case newline: { return R"(\n)"; }
 			[[unlikely]] case '\f': { return R"(\f)"; }
 			[[unlikely]] case '\r': { return R"(\r)"; }
-			[[unlikely]] case '"': { return R"(\")"; }
-			[[unlikely]] case '\\': { return R"(\\)"; }
+			[[unlikely]] case quote: { return R"(\")"; }
+			[[unlikely]] case backslash: { return R"(\\)"; }
 			[[unlikely]] case '\0': { return R"(\0)"; }
 			[[likely]] default: { return std::string{ value }; };
 		}
@@ -188,9 +188,9 @@ namespace jsonifier_internal {
 			using V = std::decay_t<decltype(errorString[0])>;
 
 			const auto start	   = std::begin(errorString) + errorIndex;
-			line				   = size_t(std::count(std::begin(errorString), start, static_cast<V>('\n')) + 1);
+			line				   = size_t(std::count(std::begin(errorString), start, static_cast<V>(newline)) + 1);
 			const auto rstart	   = std::rbegin(errorString) + static_cast<int64_t>(errorString.size()) - errorIndex - 1ll;
-			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
+			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>(newline));
 			localIndex			   = std::distance(rstart, prevNewLine) - 1ll;
 			auto endIndex{ std::end(errorString) - start >= 64 ? 64 : std::end(errorString) - start };
 			context = jsonifier::string{ start, static_cast<size_t>(endIndex) };

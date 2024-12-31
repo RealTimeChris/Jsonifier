@@ -39,11 +39,11 @@ static constexpr auto maxIterationCount{ 1 };
 constexpr auto getCurrentOperatingSystem() {
 	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
 	constexpr auto osNameNew = bnch_swt::toLower(osName);
-	if constexpr (osNameNew.template view<std::string_view>().contains("linux")) {
+	if constexpr (osNameNew.operator std::string_view().contains("linux")) {
 		return bnch_swt::string_literal{ "Ubuntu" };
-	} else if constexpr (osNameNew.template view<std::string_view>().contains("windows")) {
+	} else if constexpr (osNameNew.operator std::string_view().contains("windows")) {
 		return bnch_swt::string_literal{ "Windows" };
-	} else if constexpr (osNameNew.template view<std::string_view>().contains("darwin")) {
+	} else if constexpr (osNameNew.operator std::string_view().contains("darwin")) {
 		return bnch_swt::string_literal{ "MacOS" };
 	} else {
 		return bnch_swt::string_literal{ "" };
@@ -53,12 +53,12 @@ constexpr auto getCurrentOperatingSystem() {
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
 	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
-	if constexpr (osCompilerIdNew.template view<std::string_view>().contains("gnu") || osCompilerIdNew.template view<std::string_view>().contains("gcc") ||
-		osCompilerIdNew.template view<std::string_view>().contains("g++") || osCompilerIdNew.template view<std::string_view>().contains("apple")) {
+	if constexpr (osCompilerIdNew.operator std::string_view().contains("gnu") || osCompilerIdNew.operator std::string_view().contains("gcc") ||
+		osCompilerIdNew.operator std::string_view().contains("g++") || osCompilerIdNew.operator std::string_view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
-	} else if constexpr (osCompilerIdNew.template view<std::string_view>().contains("clang")) {
+	} else if constexpr (osCompilerIdNew.operator std::string_view().contains("clang")) {
 		return bnch_swt::string_literal{ "CLANG" };
-	} else if constexpr (osCompilerIdNew.template view<std::string_view>().contains("msvc")) {
+	} else if constexpr (osCompilerIdNew.operator std::string_view().contains("msvc")) {
 		return bnch_swt::string_literal{ "MSVC" };
 	} else {
 		return bnch_swt::string_literal{ "" };
@@ -174,7 +174,7 @@ void executePythonScript(const std::string& scriptPath, const std::string& argum
 
 bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFileContents, const std::string& testType) noexcept {
 	try {
-		for (const auto& entry: std::filesystem::directory_iterator(std::string{ testPath } + testType)) {
+		for (const auto& entry: std::filesystem::directory_iterator(std::string{ testPath.operator std::string() } + testType)) {
 			if (entry.is_regular_file()) {
 				const std::string fileName = entry.path().filename().string();
 
@@ -260,7 +260,7 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount = length / 4ull;
+		auto unicodeCount = length / 32ull;
 		std::vector<size_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {

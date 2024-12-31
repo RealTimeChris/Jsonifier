@@ -108,7 +108,7 @@ namespace jsonifier_internal {
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices> constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
-		void(args...);
+		(( void )(args, ...));
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
 			...);
 	}
@@ -119,7 +119,7 @@ namespace jsonifier_internal {
 
 	template<typename function_type, typename... arg_types, size_t... indices>
 	constexpr void forEachImpl(function_type&& function, std::index_sequence<indices...>, arg_types&&... args) noexcept {
-		void(args...);
+		(( void )(args, ...));
 		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
 			...);
 	}
@@ -128,12 +128,11 @@ namespace jsonifier_internal {
 		forEachImpl(jsonifier_internal::forward<function_type>(function), std::make_index_sequence<limit>{}, jsonifier_internal::forward<arg_types>(args)...);
 	}
 
-	template<const auto& function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
-	constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+	template<auto function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types> constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = jsonifier_internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(jsonifier_internal::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), jsonifier_internal::forward<arg_types>(args)...);
+				function(std::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), jsonifier_internal::forward<arg_types>(args)...);
 				return;
 			}
 			visit<function, currentIndex + 1>(jsonifier_internal::forward<variant_type>(variantNew), jsonifier_internal::forward<arg_types>(args)...);
@@ -408,28 +407,6 @@ namespace jsonifier {
 		concept jsonifier_object_t = requires { jsonifier::core<std::remove_cvref_t<value_type>>::parseValue; };
 
 		template<typename value_type>
-		concept has_view = requires(std::remove_cvref_t<value_type> value) { value.view(); };
-
-		template<typename value_type>
-		concept convertible_to_string_view = std::convertible_to<std::remove_cvref_t<value_type>, std::string_view>;
-
-		template<typename value_type>
-		concept has_member_t = requires { typename std::remove_cvref_t<value_type>::member_type; };
-
-		template<typename value_type>
-		concept has_json_type = requires {
-			{ std::remove_cvref_t<value_type>::type } -> std::same_as<jsonifier::json_type>;
-		};
-
-		template<typename value_type>
-		concept has_force_inline_all = requires {
-			{ std::remove_cvref_t<value_type>::forceInlineAll };
-		};
-
-		template<typename value_type>
-		concept is_resizable = has_resize<value_type> && has_reserve<value_type> && !std::is_const_v<std::remove_reference_t<value_type>>;
-
-		template<typename value_type>
 		concept raw_array_t = ( std::is_array_v<std::remove_cvref_t<value_type>> && !std::is_pointer_v<std::remove_cvref_t<value_type>> ) ||
 			(vector_subscriptable<value_type> && !vector_t<value_type> && !has_substr<value_type> && !tuple_t<value_type>);
 
@@ -446,8 +423,28 @@ namespace jsonifier {
 		concept integer_t = std::integral<std::remove_cvref_t<value_type>> && !bool_t<value_type> && !std::floating_point<std::remove_cvref_t<value_type>>;
 
 		template<typename value_type>
-		concept force_inline_type = optional_t<value_type> || bool_t<value_type> || shared_ptr_t<value_type> || pointer_t<value_type> || unique_ptr_t<value_type> ||
-			num_t<value_type> || enum_t<value_type> || string_t<value_type>;
+		concept json_object_t = jsonifier_object_t<value_type> || map_t<value_type>;
+
+		template<typename value_type>
+		concept json_array_t = raw_array_t<value_type> || vector_t<value_type> || tuple_t<value_type>;
+
+		template<typename value_type>
+		concept json_bool_t = bool_t<value_type>;
+
+		template<typename value_type>
+		concept json_string_t = string_t<value_type> || string_view_t<value_type>;
+
+		template<typename value_type>
+		concept json_number_t = num_t<value_type>;
+
+		template<typename value_type>
+		concept json_null_t = always_null_t<value_type>;
+
+		template<typename value_type>
+		concept json_accessor_t = optional_t<value_type> || variant_t<value_type> || shared_ptr_t<value_type> || unique_ptr_t<value_type> || pointer_t<value_type>;
+
+		template<typename value_type>
+		concept force_inlineable_type = json_number_t<value_type> || json_bool_t<value_type> || json_string_t<value_type> || json_accessor_t<value_type> || json_null_t<value_type>;
 	}
 
 }

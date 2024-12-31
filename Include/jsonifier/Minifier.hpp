@@ -109,7 +109,7 @@ namespace jsonifier_internal {
 
 			while (*iter) {
 				switch (static_cast<uint8_t>(*previousPtr)) {
-					case '"': {
+					case quote: {
 						currentDistance = *iter - previousPtr;
 						while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
 						}
@@ -124,8 +124,8 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case ',': {
-						out[index] = ',';
+					case comma: {
+						out[index] = comma;
 						++index;
 						break;
 					}
@@ -163,18 +163,18 @@ namespace jsonifier_internal {
 						}
 						break;
 					}
-					case ':': {
-						out[index] = ':';
+					case colon: {
+						out[index] = colon;
 						++index;
 						break;
 					}
-					case '[': {
-						out[index] = '[';
+					case lBracket: {
+						out[index] = lBracket;
 						++index;
 						break;
 					}
-					case ']': {
-						out[index] = ']';
+					case rBracket: {
+						out[index] = rBracket;
 						++index;
 						break;
 					}
@@ -193,13 +193,13 @@ namespace jsonifier_internal {
 						index += 4;
 						break;
 					}
-					case '{': {
-						out[index] = '{';
+					case lBrace: {
+						out[index] = lBrace;
 						++index;
 						break;
 					}
-					case '}': {
-						out[index] = '}';
+					case rBrace: {
+						out[index] = rBrace;
 						++index;
 						break;
 					}

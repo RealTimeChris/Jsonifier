@@ -98,12 +98,7 @@ namespace jsonifier_internal {
 			return length;
 		}
 
-		operator std::string() const noexcept {
-			JSONIFIER_ALIGN std::string returnValues{ values, length };
-			return returnValues;
-		}
-
-		template<typename string_type> constexpr string_type view() const noexcept {
+		template<typename string_type> constexpr operator string_type() const noexcept {
 			JSONIFIER_ALIGN string_type returnValues{ values, length };
 			return returnValues;
 		}
@@ -324,7 +319,7 @@ namespace jsonifier_internal {
 	};
 
 	template<size_t size> std::ostream& operator<<(std::ostream& os, const string_literal<size>& input) noexcept {
-		os << input.template view<jsonifier::string_view>();
+		os << input.operator jsonifier::string_view();
 		return os;
 	}
 
