@@ -49,17 +49,17 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+	template<typename value_type> constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
 	}
 
-	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
+	std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
 		os << "File: " << location.file_name() << std::endl;
 		os << "Line: " << location.line() << std::endl;
 		return os;
 	}
 
-	JSONIFIER_INLINE void printLocation(const std::source_location& location = std::source_location::current()) {
+	void printLocation(const std::source_location& location = std::source_location::current()) {
 		std::cout << location;
 	}
 

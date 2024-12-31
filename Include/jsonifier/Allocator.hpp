@@ -29,18 +29,18 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
+	template<typename value_type> constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
 		return static_cast<value_type&&>(value);
 	}
 
 	template<typename value_type>
 	concept r_value_reference = std::is_rvalue_reference_v<value_type>;
 
-	template<r_value_reference value_type> JSONIFIER_INLINE constexpr value_type forward(value_type value) noexcept {
+	template<r_value_reference value_type> constexpr value_type forward(value_type value) noexcept {
 		return value;
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			constexpr auto mulSub1{ multiple - 1 };
 			constexpr auto notMulSub1{ ~mulSub1 };
@@ -51,7 +51,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
 			constexpr auto notMulSub1{ ~(multiple - 1) };
 			return value & notMulSub1;
@@ -67,7 +67,7 @@ namespace jsonifier_internal {
 		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_INLINE pointer allocate(size_type count) noexcept {
+		pointer allocate(size_type count) noexcept {
 			if JSONIFIER_UNLIKELY (count == 0) {
 				return nullptr;
 			}
@@ -78,7 +78,7 @@ namespace jsonifier_internal {
 #endif
 		}
 
-		JSONIFIER_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
+		void deallocate(pointer ptr, size_t = 0) noexcept {
 			if JSONIFIER_LIKELY (ptr) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
@@ -88,15 +88,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
+		template<typename... arg_types> void construct(pointer ptr, arg_types&&... args) noexcept {
 			new (ptr) value_type(jsonifier_internal::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_INLINE static size_type maxSize() noexcept {
+		static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
-		JSONIFIER_INLINE void destroy(pointer ptr) noexcept {
+		void destroy(pointer ptr) noexcept {
 			ptr->~value_type();
 		}
 	};

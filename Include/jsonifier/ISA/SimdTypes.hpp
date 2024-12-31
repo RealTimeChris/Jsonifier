@@ -99,18 +99,12 @@ concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvr
 template<typename value_type>
 concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
 
+void jsonifierPrefetchImpl(const void* ptr) noexcept {
 #if defined(JSONIFIER_MAC) && defined(__arm64__)
-	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC)
-	#include <intrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
-#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
-	#include <xmmintrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
+	__builtin_prefetch(ptr, 0, 0);
+#elif defined(JSONIFIER_MSVC)|| defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
 #else
 	#error "Compiler or architecture not supported for prefetching"
 #endif
-
-JSONIFIER_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
-	JSONIFIER_PREFETCH(ptr)
 }

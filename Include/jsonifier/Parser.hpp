@@ -32,7 +32,7 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_INLINE void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
+	void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
 		//std::cout<< "File: " << title.file_name() << ", Line: " << title.line() << std::endl;
 		//std::cout<< "Values: " << jsonifier::string_view{ iter, 32 } << std::endl;
 	}
@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class parser;
 
 	template<typename derived_type, typename iterator_t, typename buffer_type_new> struct parse_context {
-		JSONIFIER_INLINE constexpr parse_context() noexcept = default;
+		constexpr parse_context() noexcept = default;
 		using buffer_type									= buffer_type_new;
 
 		parser<derived_type>* parserPtr{};
@@ -52,10 +52,10 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type, typename iterator_type, typename buffer_type_new> struct parse_context_partial {
-		JSONIFIER_INLINE constexpr parse_context_partial() noexcept = default;
+		constexpr parse_context_partial() noexcept = default;
 		using buffer_type											= buffer_type_new;
 
-		JSONIFIER_INLINE bool getState() {
+		bool getState() {
 			return remainingMemberCount > 0 && (currentArrayDepth > 0 || currentObjectDepth > 0);
 		}
 
@@ -73,19 +73,19 @@ namespace jsonifier_internal {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> string_view_ptr getEndIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> string_view_ptr getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> string_view_ptr getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> string_view_ptr getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
@@ -130,7 +130,7 @@ namespace jsonifier_internal {
 	struct custom_val_parser_partial;
 
 	template<jsonifier::parse_options options, typename json_entity_type, bool minifiedOrInsideRepeated> struct parse {
-		template<typename value_type, typename context_type> JSONIFIER_CLANG_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
+		template<typename value_type, typename context_type> static void impl(value_type&& value, context_type&& context) noexcept {
 			if constexpr (options.partialRead) {
 				if constexpr (getJsonTypeFromEntity<std::remove_cvref_t<json_entity_type>, std::remove_cvref_t<value_type>>() == jsonifier::json_type::object) {
 					if constexpr (jsonifier::concepts::map_t<value_type> || minifiedOrInsideRepeated) {
@@ -376,7 +376,7 @@ namespace jsonifier_internal {
 		}
 
 		template<auto parseError, typename context_type>
-		JSONIFIER_INLINE void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			derivedRef.errors.emplace_back(error::constructError<error_classes::Parsing, parseError>(getUnderlyingPtr(context.iter) - getUnderlyingPtr(context.rootIter),
 				getUnderlyingPtr(context.endIter) - getUnderlyingPtr(context.rootIter), getUnderlyingPtr(context.rootIter), sourceLocation));
 		}
@@ -384,12 +384,12 @@ namespace jsonifier_internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 
-		JSONIFIER_INLINE parser() noexcept : derivedRef{ initializeSelfRef() } {};
+		parser() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
+		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE ~parser() noexcept = default;
+		~parser() noexcept = default;
 	};
 };

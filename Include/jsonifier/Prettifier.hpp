@@ -47,11 +47,11 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class prettifier {
 	  public:
-		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
-		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
+		prettifier& operator=(const prettifier& other) = delete;
+		prettifier(const prettifier& other)			= delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
-		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
+		auto prettifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -113,13 +113,13 @@ namespace jsonifier_internal {
 		string_view_ptr rootIter{};
 		string_view_ptr endIter{};
 
-		JSONIFIER_INLINE prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		prettifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
+		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
@@ -141,7 +141,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options, jsonifier::concepts::string_t string_type, typename iterator>
-		JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
+		uint64_t impl(iterator& iter, string_type&& out) noexcept {
 			static constexpr auto buffer			= createIndentationBuffer<options.indentChar, options.indentSize>();
 			static constexpr auto* bufferPtr		= buffer.data();
 			static constexpr auto indentViewsBuffer = createIndentationViews<options.indentSize>();
@@ -301,7 +301,7 @@ namespace jsonifier_internal {
 			return index;
 		}
 
-		JSONIFIER_INLINE ~prettifier() noexcept = default;
+		~prettifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

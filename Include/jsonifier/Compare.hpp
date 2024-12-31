@@ -42,7 +42,7 @@ namespace jsonifier_internal {
 
 	template<char valueNewer, typename char_type> struct char_comparison {
 		static constexpr char value{ valueNewer };
-		JSONIFIER_INLINE static const char_type* memchar(const char_type* data, size_t lengthNew) noexcept {
+		static const char_type* memchar(const char_type* data, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				using simd_type						= typename get_type_at_index<simd_internal::avx_list, 2>::type::type;
@@ -177,7 +177,7 @@ namespace jsonifier_internal {
 	};
 
 	struct comparison {
-		template<typename char_type01, typename char_type02> JSONIFIER_INLINE static bool compare(const char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
+		template<typename char_type01, typename char_type02> static bool compare(const char_type01* lhs, char_type02* rhs, size_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (static_cast<int64_t>(lengthNew) >= 64) {
 				using simd_type						= typename get_type_at_index<simd_internal::avx_list, 2>::type::type;

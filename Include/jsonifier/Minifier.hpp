@@ -37,10 +37,10 @@ namespace jsonifier_internal {
 
 	template<typename derived_type> class minifier {
 	  public:
-		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
-		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
+		minifier& operator=(const minifier& other) = delete;
+		minifier(const minifier& other)			= delete;
 
-		template<jsonifier::concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
+		template<jsonifier::concepts::string_t string_type> auto minifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
@@ -66,7 +66,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
 				stringBuffer.resize(in.size());
 			}
@@ -97,11 +97,11 @@ namespace jsonifier_internal {
 		string_view_ptr rootIter{};
 		string_view_ptr endIter{};
 
-		JSONIFIER_INLINE size_t getSize() const {
+		size_t getSize() const {
 			return endIter - rootIter;
 		}
 
-		template<jsonifier::concepts::string_t string_type, typename iterator> JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
+		template<jsonifier::concepts::string_t string_type, typename iterator> uint64_t impl(iterator& iter, string_type&& out) noexcept {
 			auto previousPtr = *iter;
 			int64_t currentDistance{};
 			uint64_t index{};
@@ -222,17 +222,17 @@ namespace jsonifier_internal {
 			return index;
 		}
 
-		JSONIFIER_INLINE minifier() noexcept : derivedRef{ initializeSelfRef() } {};
+		minifier() noexcept : derivedRef{ initializeSelfRef() } {};
 
-		JSONIFIER_INLINE derived_type& initializeSelfRef() noexcept {
+		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
-		JSONIFIER_INLINE ~minifier() noexcept = default;
+		~minifier() noexcept = default;
 	};
 
 }// namespace jsonifier_internal

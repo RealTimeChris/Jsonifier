@@ -623,7 +623,7 @@ namespace jsonifier_internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_INLINE static size_t findIndex(iterator_newer iter, iterator_newer end) noexcept {
+		static size_t findIndex(iterator_newer iter, iterator_newer end) noexcept {
 			static constexpr auto checkForEnd = [](const auto& iter, const auto& end, const auto distance) {
 				return (iter + distance) < end;
 			};
