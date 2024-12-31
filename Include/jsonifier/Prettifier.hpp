@@ -48,10 +48,10 @@ namespace jsonifier_internal {
 	template<typename derived_type> class prettifier {
 	  public:
 		prettifier& operator=(const prettifier& other) = delete;
-		prettifier(const prettifier& other)			= delete;
+		prettifier(const prettifier& other)			   = delete;
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
-		auto prettifyJson(string_type&& in) noexcept {
+		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -79,7 +79,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
-		bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
+		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
@@ -141,7 +141,7 @@ namespace jsonifier_internal {
 		}
 
 		template<jsonifier::prettify_options options, jsonifier::concepts::string_t string_type, typename iterator>
-		uint64_t impl(iterator& iter, string_type&& out) noexcept {
+		JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
 			static constexpr auto buffer			= createIndentationBuffer<options.indentChar, options.indentSize>();
 			static constexpr auto* bufferPtr		= buffer.data();
 			static constexpr auto indentViewsBuffer = createIndentationViews<options.indentSize>();

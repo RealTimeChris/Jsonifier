@@ -43,87 +43,104 @@ namespace jsonifier_internal {
 		0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u, 0x39u, 0x32u, 0x39u, 0x33u,
 		0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
-	string_buffer_ptr toCharsU64Len8(string_buffer_ptr buf, uint32_t value) noexcept {
+	JSONIFIER_INLINE string_buffer_ptr toCharsU64Len8(string_buffer_ptr buf, uint32_t value) noexcept {
 		const uint32_t aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
 		const uint32_t ccdd = value - aabb * 10000;
 		const uint32_t aa	= (aabb * 5243) >> 19;
 		const uint32_t cc	= (ccdd * 5243) >> 19;
 		const uint32_t bb	= aabb - aa * 100;
 		const uint32_t dd	= ccdd - cc * 100;
-		std::memcpy(buf, charTable + aa * 2, 2);
-		std::memcpy(buf + 2, charTable + bb * 2, 2);
-		std::memcpy(buf + 4, charTable + cc * 2, 2);
-		std::memcpy(buf + 6, charTable + dd * 2, 2);
+		buf[0]				= charTable[aa * 2];
+		buf[1]				= charTable[(aa * 2) + 1];
+		buf[2]				= charTable[bb * 2];
+		buf[3]				= charTable[(bb * 2) + 1];
+		buf[4]				= charTable[cc * 2];
+		buf[5]				= charTable[(cc * 2) + 1];
+		buf[6]				= charTable[dd * 2];
+		buf[7]				= charTable[(dd * 2) + 1];
 		return buf + 8;
 	}
 
-	string_buffer_ptr toCharsU64Len4(string_buffer_ptr buf, uint32_t value) noexcept {
+	JSONIFIER_INLINE string_buffer_ptr toCharsU64Len4(string_buffer_ptr buf, uint32_t value) noexcept {
 		const uint32_t aa = (value * 5243) >> 19;
 		const uint32_t bb = value - aa * 100;
-		std::memcpy(buf, charTable + aa * 2, 2);
-		std::memcpy(buf + 2, charTable + bb * 2, 2);
+		buf[0]			  = charTable[aa * 2];
+		buf[1]			  = charTable[(aa * 2) + 1];
+		buf[2]			  = charTable[bb * 2];
+		buf[3]			  = charTable[(bb * 2) + 1];
 		return buf + 4;
 	}
 
-	string_buffer_ptr toCharsU64Len18(string_buffer_ptr buf, uint32_t value) noexcept {
-		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, lz;
-
+	JSONIFIER_INLINE string_buffer_ptr toCharsU64Len18(string_buffer_ptr buf, uint32_t value) noexcept {
 		if (value < 100) {
-			lz = value < 10;
-			std::memcpy(buf, charTable + value * 2 + lz, 2);
+			const uint32_t lz = value < 10;
+			buf[0]			  = charTable[value * 2 + lz];
+			buf[1]			  = charTable[(value * 2 + lz) + 1];
 			buf -= lz;
 			return buf + 2;
 		} else {
 			if (value < 10000) {
-				aa = (value * 5243) >> 19;
-				bb = value - aa * 100;
-				lz = aa < 10;
-				std::memcpy(buf, charTable + aa * 2 + lz, 2);
+				const uint32_t aa = (value * 5243) >> 19;
+				const uint32_t bb = value - aa * 100;
+				const uint32_t lz = aa < 10;
+				buf[0]			  = charTable[aa * 2 + lz];
+				buf[1]			  = charTable[(aa * 2 + lz) + 1];
 				buf -= lz;
-				std::memcpy(buf + 2, charTable + bb * 2, 2);
+				buf[2] = charTable[bb * 2];
+				buf[3] = charTable[(bb * 2) + 1];
 				return buf + 4;
 			} else {
 				if (value < 1000000) {
-					aa	 = static_cast<uint32_t>((static_cast<uint64_t>(value) * 429497) >> 32);
-					bbcc = value - aa * 10000;
-					bb	 = (bbcc * 5243) >> 19;
-					cc	 = bbcc - bb * 100;
-					lz	 = aa < 10;
-					std::memcpy(buf, charTable + aa * 2 + lz, 2);
+					const uint32_t aa	= static_cast<uint32_t>((static_cast<uint64_t>(value) * 429497) >> 32);
+					const uint32_t bbcc = value - aa * 10000;
+					const uint32_t bb	= (bbcc * 5243) >> 19;
+					const uint32_t cc	= bbcc - bb * 100;
+					const uint32_t lz	= aa < 10;
+					buf[0]				= charTable[aa * 2 + lz];
+					buf[1]				= charTable[(aa * 2 + lz) + 1];
 					buf -= lz;
-					std::memcpy(buf + 2, charTable + bb * 2, 2);
-					std::memcpy(buf + 4, charTable + cc * 2, 2);
+					buf[2] = charTable[bb * 2];
+					buf[3] = charTable[(bb * 2) + 1];
+					buf[4] = charTable[cc * 2];
+					buf[5] = charTable[(cc * 2) + 1];
 					return buf + 6;
 				} else {
-					aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
-					ccdd = value - aabb * 10000;
-					aa	 = (aabb * 5243) >> 19;
-					cc	 = (ccdd * 5243) >> 19;
-					bb	 = aabb - aa * 100;
-					dd	 = ccdd - cc * 100;
-					lz	 = aa < 10;
-					std::memcpy(buf, charTable + aa * 2 + lz, 2);
+					const uint32_t aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
+					const uint32_t ccdd = value - aabb * 10000;
+					const uint32_t aa	= (aabb * 5243) >> 19;
+					const uint32_t cc	= (ccdd * 5243) >> 19;
+					const uint32_t bb	= aabb - aa * 100;
+					const uint32_t dd	= ccdd - cc * 100;
+					const uint32_t lz	= aa < 10;
+					buf[0]				= charTable[aa * 2 + lz];
+					buf[1]				= charTable[(aa * 2 + lz) + 1];
 					buf -= lz;
-					std::memcpy(buf + 2, charTable + bb * 2, 2);
-					std::memcpy(buf + 4, charTable + cc * 2, 2);
-					std::memcpy(buf + 6, charTable + dd * 2, 2);
+					buf[2] = charTable[bb * 2];
+					buf[3] = charTable[(bb * 2) + 1];
+					buf[4] = charTable[cc * 2];
+					buf[5] = charTable[(cc * 2) + 1];
+					buf[6] = charTable[dd * 2];
+					buf[7] = charTable[(dd * 2) + 1];
 					return buf + 8;
 				}
 			}
 		}
 	}
 
-	string_buffer_ptr toCharsU64Len58(string_buffer_ptr buf, uint32_t value) noexcept {
+	JSONIFIER_INLINE string_buffer_ptr toCharsU64Len58(string_buffer_ptr buf, uint32_t value) noexcept {
 		if (value < 1000000) {
 			const uint32_t aa	= static_cast<uint32_t>((static_cast<uint64_t>(value) * 429497) >> 32);
 			const uint32_t bbcc = value - aa * 10000;
 			const uint32_t bb	= (bbcc * 5243) >> 19;
 			const uint32_t cc	= bbcc - bb * 100;
 			const uint32_t lz	= aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
+			buf[0]				= charTable[aa * 2 + lz];
+			buf[1]				= charTable[(aa * 2 + lz) + 1];
 			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
+			buf[2] = charTable[bb * 2];
+			buf[3] = charTable[(bb * 2) + 1];
+			buf[4] = charTable[cc * 2];
+			buf[5] = charTable[(cc * 2) + 1];
 			return buf + 6;
 		} else {
 			const uint32_t aabb = static_cast<uint32_t>((static_cast<uint64_t>(value) * 109951163) >> 40);
@@ -133,16 +150,20 @@ namespace jsonifier_internal {
 			const uint32_t bb	= aabb - aa * 100;
 			const uint32_t dd	= ccdd - cc * 100;
 			const uint32_t lz	= aa < 10;
-			std::memcpy(buf, charTable + aa * 2 + lz, 2);
+			buf[0]				= charTable[aa * 2 + lz];
+			buf[1]				= charTable[(aa * 2 + lz) + 1];
 			buf -= lz;
-			std::memcpy(buf + 2, charTable + bb * 2, 2);
-			std::memcpy(buf + 4, charTable + cc * 2, 2);
-			std::memcpy(buf + 6, charTable + dd * 2, 2);
+			buf[2] = charTable[bb * 2];
+			buf[3] = charTable[(bb * 2) + 1];
+			buf[4] = charTable[cc * 2];
+			buf[5] = charTable[(cc * 2) + 1];
+			buf[6] = charTable[dd * 2];
+			buf[7] = charTable[(dd * 2) + 1];
 			return buf + 8;
 		}
 	}
 
-	template<jsonifier::concepts::uns64_t value_type> static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
+	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
 		if (value == 0) {
 			*buf = '0';
 			return buf + 1;
@@ -150,17 +171,18 @@ namespace jsonifier_internal {
 			buf = toCharsU64Len18(buf, static_cast<uint32_t>(value));
 			return buf;
 		} else {
-			if (value < 100000000ull * 100000000ull) {
-				const uint64_t hgh = value / 100000000;
-				auto low		   = static_cast<uint32_t>(value - hgh * 100000000);
+			static constexpr auto valueComp{ 100000000ull * 100000000ull };
+			if (value < valueComp) {
+				const uint32_t hgh = static_cast<uint32_t>(value) / 100000000;
+				const uint32_t low = static_cast<uint32_t>(value - hgh * 100000000);
 				buf				   = toCharsU64Len18(buf, static_cast<uint32_t>(hgh));
 				buf				   = toCharsU64Len8(buf, low);
 				return buf;
 			} else {
 				const uint64_t tmp = value / 100000000;
-				auto low		   = static_cast<uint32_t>(value - tmp * 100000000);
-				auto hgh		   = static_cast<uint32_t>(tmp / 10000);
-				auto mid		   = static_cast<uint32_t>(tmp - hgh * 10000);
+				const uint32_t hgh = static_cast<uint32_t>(tmp / 10000);
+				const uint32_t mid = static_cast<uint32_t>(tmp - hgh * 10000);
+				const uint32_t low = static_cast<uint32_t>(value - tmp * 100000000);
 				buf				   = toCharsU64Len58(buf, hgh);
 				buf				   = toCharsU64Len4(buf, mid);
 				buf				   = toCharsU64Len8(buf, low);
@@ -169,7 +191,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::sig64_t value_type> static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
+	template<jsonifier::concepts::sig64_t value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
 		*buf = '-';
 		return toChars<uint64_t>(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63)) - (value >> 63));
 	}

@@ -34,95 +34,104 @@
 
 namespace jsonifier_internal {
 
-	JSONIFIER_FORCE_INLINE_VARIABLE uint64_t digitCountTable[]{ 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184,
+	JSONIFIER_INLINE_VARIABLE uint64_t digitCountTable[]{ 4294967296, 8589934582, 8589934582, 8589934582, 12884901788, 12884901788, 12884901788, 17179868184, 17179868184,
 		17179868184, 21474826480, 21474826480, 21474826480, 21474826480, 25769703776, 25769703776, 25769703776, 30063771072, 30063771072, 30063771072, 34349738368, 34349738368,
 		34349738368, 34349738368, 38554705664, 38554705664, 38554705664, 41949672960, 41949672960, 41949672960, 42949672960, 42949672960 };
 
 	// https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
-	uint64_t fastDigitCount(const uint32_t x) noexcept {
+	JSONIFIER_INLINE uint64_t fastDigitCount(const uint32_t x) noexcept {
 		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
-	JSONIFIER_FORCE_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-		0, 0, 0, 0, 0, 0 };
+	JSONIFIER_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+		0, 0, 0, 0 };
 
-	string_buffer_ptr writeU64Len15To17Trim(string_buffer_ptr buf, uint64_t sig) noexcept {
-		uint32_t tz1, tz2, tz;
-
-		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
-		uint32_t ffgghhii  = static_cast<uint32_t>(sig - static_cast<uint64_t>(abbccddee) * 100000000);
-		uint32_t abbcc	   = abbccddee / 10000;
-		uint32_t ddee	   = abbccddee - abbcc * 10000;
-		uint32_t abb	   = static_cast<uint32_t>((static_cast<uint64_t>(abbcc) * 167773) >> 24);
-		uint32_t a		   = (abb * 41) >> 12;
-		uint32_t bb		   = abb - a * 100;
-		uint32_t cc		   = abbcc - abb * 100;
+	JSONIFIER_INLINE string_buffer_ptr writeU64Len15To17Trim(string_buffer_ptr buf, uint64_t sig) noexcept {
+		const uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
+		const uint32_t ffgghhii	 = static_cast<uint32_t>(sig - static_cast<uint64_t>(abbccddee) * 100000000);
+		const uint32_t abbcc	 = abbccddee / 10000;
+		const uint32_t ddee		 = abbccddee - abbcc * 10000;
+		const uint32_t abb		 = static_cast<uint32_t>((static_cast<uint64_t>(abbcc) * 167773) >> 24);
+		const uint32_t a		 = (abb * 41) >> 12;
+		const uint32_t bb		 = abb - a * 100;
+		const uint32_t cc		 = abbcc - abb * 100;
 
 		buf[0] = char(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
-		std::memcpy(buf, charTable + (bb * 2 + lz), 2);
+		buf[0]	= charTable[bb * 2 + lz];
+		buf[1]	= charTable[(bb * 2 + lz) + 1];
 		buf -= lz;
-		std::memcpy(buf + 2, charTable + 2 * cc, 2);
+		buf[2] = charTable[2 * cc];
+		buf[3] = charTable[(2 * cc) + 1];
 
 		if (ffgghhii) {
-			uint32_t dd	  = (ddee * 5243) >> 19;
-			uint32_t ee	  = ddee - dd * 100;
-			uint32_t ffgg = static_cast<uint32_t>((static_cast<uint64_t>(ffgghhii) * 109951163) >> 40);
-			uint32_t hhii = ffgghhii - ffgg * 10000;
-			uint32_t ff	  = (ffgg * 5243) >> 19;
-			uint32_t gg	  = ffgg - ff * 100;
-			std::memcpy(buf + 4, charTable + 2 * dd, 2);
-			std::memcpy(buf + 6, charTable + 2 * ee, 2);
-			std::memcpy(buf + 8, charTable + 2 * ff, 2);
-			std::memcpy(buf + 10, charTable + 2 * gg, 2);
+			const uint32_t dd	= (ddee * 5243) >> 19;
+			const uint32_t ee	= ddee - dd * 100;
+			const uint32_t ffgg = static_cast<uint32_t>((static_cast<uint64_t>(ffgghhii) * 109951163) >> 40);
+			const uint32_t hhii = ffgghhii - ffgg * 10000;
+			const uint32_t ff	= (ffgg * 5243) >> 19;
+			const uint32_t gg	= ffgg - ff * 100;
+			buf[4]				= charTable[2 * dd];
+			buf[5]				= charTable[(2 * dd) + 1];
+			buf[6]				= charTable[2 * ee];
+			buf[7]				= charTable[(2 * ee) + 1];
+			buf[8]				= charTable[2 * ff];
+			buf[9]				= charTable[(2 * ff) + 1];
+			buf[10]				= charTable[2 * gg];
+			buf[11]				= charTable[(2 * gg) + 1];
 			if (hhii) {
-				uint32_t hh = (hhii * 5243) >> 19;
-				uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12, charTable + 2 * hh, 2);
-				std::memcpy(buf + 14, charTable + 2 * ii, 2);
-				tz1 = decTrailingZeroTable[hh];
-				tz2 = decTrailingZeroTable[ii];
-				tz	= ii ? tz2 : (tz1 + 2);
+				const uint32_t hh  = (hhii * 5243) >> 19;
+				const uint32_t ii  = hhii - hh * 100;
+				buf[12]			   = charTable[2 * hh];
+				buf[13]			   = charTable[(2 * hh) + 1];
+				buf[14]			   = charTable[2 * ii];
+				buf[15]			   = charTable[(2 * ii) + 1];
+				const uint32_t tz1 = decTrailingZeroTable[hh];
+				const uint32_t tz2 = decTrailingZeroTable[ii];
+				const uint32_t tz  = ii ? tz2 : (tz1 + 2);
 				buf += 16 - tz;
 				return buf;
 			} else {
-				tz1 = decTrailingZeroTable[ff];
-				tz2 = decTrailingZeroTable[gg];
-				tz	= gg ? tz2 : (tz1 + 2);
+				const uint32_t tz1 = decTrailingZeroTable[ff];
+				const uint32_t tz2 = decTrailingZeroTable[gg];
+				const uint32_t tz  = gg ? tz2 : (tz1 + 2);
 				buf += 12 - tz;
 				return buf;
 			}
 		} else {
 			if (ddee) {
-				uint32_t dd = (ddee * 5243) >> 19;
-				uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4, charTable + 2 * dd, 2);
-				std::memcpy(buf + 6, charTable + 2 * ee, 2);
-				tz1 = decTrailingZeroTable[dd];
-				tz2 = decTrailingZeroTable[ee];
-				tz	= ee ? tz2 : (tz1 + 2);
+				const uint32_t dd  = (ddee * 5243) >> 19;
+				const uint32_t ee  = ddee - dd * 100;
+				buf[4]			   = charTable[2 * dd];
+				buf[5]			   = charTable[(2 * dd) + 1];
+				buf[6]			   = charTable[2 * ee];
+				buf[7]			   = charTable[(2 * ee) + 1];
+				const uint32_t tz1 = decTrailingZeroTable[dd];
+				const uint32_t tz2 = decTrailingZeroTable[ee];
+				const uint32_t tz  = ee ? tz2 : (tz1 + 2);
 				buf += 8 - tz;
 				return buf;
 			} else {
-				tz1 = decTrailingZeroTable[bb];
-				tz2 = decTrailingZeroTable[cc];
-				tz	= cc ? tz2 : (tz1 + tz2);
+				const uint32_t tz1 = decTrailingZeroTable[bb];
+				const uint32_t tz2 = decTrailingZeroTable[cc];
+				const uint32_t tz  = cc ? tz2 : (tz1 + tz2);
 				buf += 4 - tz;
 				return buf;
 			}
 		}
 	}
 
-	string_buffer_ptr writeU32Len1To9(string_buffer_ptr buf, uint32_t value) noexcept {
+	JSONIFIER_INLINE string_buffer_ptr writeU32Len1To9(string_buffer_ptr buf, uint32_t value) noexcept {
 		if (value < 10) {
 			*buf = static_cast<char>(value + '0');
 			return buf + 1;
 		}
 
 		if (value < 100) {
-			std::memcpy(buf, charTable + (value * 2), 2);
+			buf[0] = charTable[value * 2];
+			buf[1] = charTable[(value * 2) + 1];
 			return buf + 2;
 		}
 
@@ -134,14 +143,16 @@ namespace jsonifier_internal {
 			const uint32_t q = value / 100;
 			const uint32_t r = value % 100;
 			value			 = q;
-			std::memcpy(p - 2, charTable + (r * 2), 2);
+			p[-2]			 = charTable[r * 2];
+			p[-1]			 = charTable[(r * 2) + 1];
 			p -= 2;
 		}
 
 		if (value < 10) {
 			*--p = static_cast<char>(value + '0');
 		} else {
-			std::memcpy(p - 2, charTable + (value * 2), 2);
+			p[-2] = charTable[(value * 2)];
+			p[-1] = charTable[(value * 2) + 1];
 		}
 
 		return end;
@@ -151,7 +162,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<typename value_type> static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);
@@ -225,7 +236,8 @@ namespace jsonifier_internal {
 					}
 					expDec		= std::abs(expDec);
 					uint32_t lz = expDec < 10;
-					std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
+					buf[0]		= charTable[expDec * 2 + lz];
+					buf[1]		= charTable[(expDec * 2 + lz) + 1];
 					return buf + 2 - lz;
 				}
 			} else {
@@ -270,13 +282,15 @@ namespace jsonifier_internal {
 					expDec = std::abs(expDec);
 					if (expDec < 100) {
 						uint32_t lz = expDec < 10;
-						std::memcpy(buf, charTable + (expDec * 2 + lz), 2);
+						buf[0]		= charTable[expDec * 2 + lz];
+						buf[1]		= charTable[(expDec * 2 + lz) + 1];
 						return buf + 2 - lz;
 					} else {
 						const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
 						const uint32_t lo = uint32_t(expDec) - hi * 100;
 						buf[0]			  = uint8_t(hi) + '0';
-						std::memcpy(&buf[1], charTable + (lo * 2), 2);
+						buf[1]			  = charTable[lo * 2];
+						buf[2]			  = charTable[(lo * 2) + 1];
 						return buf + 3;
 					}
 				}

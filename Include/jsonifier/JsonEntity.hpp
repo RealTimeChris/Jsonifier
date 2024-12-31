@@ -115,7 +115,7 @@ namespace jsonifier_internal {
 	template<auto memberPtrNew, string_literal nameNew, jsonifier::json_type typeNew, size_t indexNew, size_t maxIndex> struct json_entity {
 		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
-		static constexpr member_type class_type::*memberPtr{ memberPtrNew };
+		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
 		static constexpr bool isItLast{ indexNew == maxIndex - 1 };
 		static constexpr jsonifier::json_type type{ typeNew };
 		static constexpr string_literal name{ nameNew };

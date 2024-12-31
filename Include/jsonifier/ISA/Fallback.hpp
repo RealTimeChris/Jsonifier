@@ -60,57 +60,57 @@ namespace simd_internal {
 		mm128StoreUSi128(static_cast<uint64_t*>(storageLocation), value);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opCmpEq(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEq(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint16_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(value, other)));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opCmpLt(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpLt(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		jsonifier_simd_int_128 offset = mm128Set1Epi8(static_cast<char>(0x80));
 		return static_cast<uint32_t>(mm128MovemaskEpi8(mm128CmpGtEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset))));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opCmpEqRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128CmpEqEpi8(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		jsonifier_simd_int_128 offset = mm128Set1Epi8(static_cast<char>(0x80));
 		return mm128CmpEqEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint16_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(value, other)));
 	}
 
-	template<simd_int_128_type simd_int_t01> auto opBitMaskRaw(const simd_int_t01& value) noexcept {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE auto opBitMaskRaw(const simd_int_t01& value) noexcept {
 		return mm128MovemaskEpi8(value);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opShuffle(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opShuffle(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128ShuffleEpi8(value, other, std::make_index_sequence<16>{});
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opXor(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opXor(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128XorSi128(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128AndSi128(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opOr(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opOr(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128OrSi128(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> auto opAndNot(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opAndNot(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128AndNotSi128(other, value);
 	}
 
-	template<simd_int_128_type simd_int_t01> auto opTest(const simd_int_t01& value) noexcept {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE auto opTest(const simd_int_t01& value) noexcept {
 		return !mm128TestzSi128(value, value);
 	}
 
-	template<simd_int_128_type simd_int_t01> auto opNot(const simd_int_t01& value) noexcept {
+	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE auto opNot(const simd_int_t01& value) noexcept {
 		return mm128XorSi128(value, mm128Set1Epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 

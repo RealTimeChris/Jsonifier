@@ -859,7 +859,7 @@ namespace jsonifier_fast_float {
 		// we never need more than 150 limb
 		uint16_t length{};
 
-		stackvec()			  = default;
+		stackvec()							  = default;
 		stackvec(const stackvec&)			  = delete;
 		stackvec& operator=(const stackvec&)  = delete;
 		stackvec(stackvec&&)				  = delete;
@@ -1743,8 +1743,8 @@ namespace jsonifier_fast_float {
 	// `b` as a big-integer type, scaled to the same binary exponent as
 	// the actual digits. we then compare the big integer representations
 	// of both, and use that to direct rounding.
-	template<typename value_type, typename char_t> constexpr adjusted_mantissa digit_comp(span<const char_t>& integer, span<const char_t>& fraction,
-		uint64_t mantissa, int64_t exponent, adjusted_mantissa am) noexcept {
+	template<typename value_type, typename char_t>
+	constexpr adjusted_mantissa digit_comp(span<const char_t>& integer, span<const char_t>& fraction, uint64_t mantissa, int64_t exponent, adjusted_mantissa am) noexcept {
 		// remove the invalid exponent bias
 		am.power2 -= invalid_am_bias;
 

@@ -102,7 +102,7 @@ concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<v
 void jsonifierPrefetchImpl(const void* ptr) noexcept {
 #if defined(JSONIFIER_MAC) && defined(__arm64__)
 	__builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC)|| defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+#elif defined(JSONIFIER_MSVC) || defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
 	_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
 #else
 	#error "Compiler or architecture not supported for prefetching"

@@ -36,101 +36,101 @@ namespace jsonifier_internal {
 		using pointer			= value_type*;
 		using reference			= value_type&;
 
-		constexpr basic_iterator() noexcept : ptr() {
+		JSONIFIER_INLINE constexpr basic_iterator() noexcept : ptr() {
 		}
 
-		constexpr basic_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
+		JSONIFIER_INLINE constexpr basic_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
 		}
 
-		constexpr reference operator*() const noexcept {
+		JSONIFIER_INLINE constexpr reference operator*() const noexcept {
 			return *ptr;
 		}
 
-		constexpr pointer operator->() const noexcept {
+		JSONIFIER_INLINE constexpr pointer operator->() const noexcept {
 			return std::pointer_traits<pointer>::pointer_to(**this);
 		}
 
-		constexpr basic_iterator& operator++() noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator& operator++() noexcept {
 			++ptr;
 			return *this;
 		}
 
-		constexpr basic_iterator operator++(int32_t) const noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator operator++(int32_t) const noexcept {
 			basic_iterator temp = *this;
 			++*this;
 			return temp;
 		}
 
-		constexpr basic_iterator& operator--() noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator& operator--() noexcept {
 			--ptr;
 			return *this;
 		}
 
-		constexpr basic_iterator operator--(int32_t) const noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator operator--(int32_t) const noexcept {
 			basic_iterator temp = *this;
 			--*this;
 			return temp;
 		}
 
-		constexpr basic_iterator& operator+=(const difference_type offSet) noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator& operator+=(const difference_type offSet) noexcept {
 			ptr += offSet;
 			return *this;
 		}
 
-		constexpr basic_iterator operator+(const difference_type offSet) const noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator operator+(const difference_type offSet) const noexcept {
 			basic_iterator temp = *this;
 			temp += offSet;
 			return temp;
 		}
 
-		friend constexpr basic_iterator operator+(const difference_type offSet, basic_iterator _Next) noexcept {
+		JSONIFIER_INLINE friend constexpr basic_iterator operator+(const difference_type offSet, basic_iterator _Next) noexcept {
 			_Next += offSet;
 			return _Next;
 		}
 
-		constexpr basic_iterator& operator-=(const difference_type offSet) noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator& operator-=(const difference_type offSet) noexcept {
 			return *this += -offSet;
 		}
 
-		constexpr basic_iterator operator-(const difference_type offSet) const noexcept {
+		JSONIFIER_INLINE constexpr basic_iterator operator-(const difference_type offSet) const noexcept {
 			basic_iterator temp = *this;
 			temp -= offSet;
 			return temp;
 		}
 
-		constexpr difference_type operator-(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr difference_type operator-(const basic_iterator& other) const noexcept {
 			return static_cast<difference_type>(ptr - other.ptr);
 		}
 
-		constexpr reference operator[](const difference_type offSet) const noexcept {
+		JSONIFIER_INLINE constexpr reference operator[](const difference_type offSet) const noexcept {
 			return *(*this + offSet);
 		}
 
-		constexpr bool operator==(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator==(const basic_iterator& other) const noexcept {
 			return ptr == other.ptr;
 		}
 
-		constexpr std::strong_ordering operator<=>(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr std::strong_ordering operator<=>(const basic_iterator& other) const noexcept {
 			return ptr <=> other.ptr;
 		}
 
-		constexpr bool operator!=(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator!=(const basic_iterator& other) const noexcept {
 			return !(*this == other);
 		}
 
-		constexpr bool operator<(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator<(const basic_iterator& other) const noexcept {
 			return ptr < other.ptr;
 		}
 
-		constexpr bool operator>(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator>(const basic_iterator& other) const noexcept {
 			return other < *this;
 		}
 
-		constexpr bool operator<=(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator<=(const basic_iterator& other) const noexcept {
 			return !(other < *this);
 		}
 
-		constexpr bool operator>=(const basic_iterator& other) const noexcept {
+		JSONIFIER_INLINE constexpr bool operator>=(const basic_iterator& other) const noexcept {
 			return !(*this < other);
 		}
 

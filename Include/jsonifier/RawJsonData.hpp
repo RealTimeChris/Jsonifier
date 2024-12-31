@@ -67,12 +67,12 @@ namespace jsonifier {
 			return strToDouble(rawJson);
 		}
 
-		friend bool operator!=(const json_number& lhs, const json_number& rhs) {
-			return lhs.rawJson != rhs.rawJson;
+		bool operator!=(const json_number& rhs) const {
+			return rawJson != rhs.rawJson;
 		}
 
-		friend bool operator==(const json_number& lhs, const json_number& rhs) {
-			return lhs.rawJson == rhs.rawJson;
+		bool operator==(const json_number& rhs) const {
+			return rawJson == rhs.rawJson;
 		}
 
 		string rawJson{};
@@ -168,42 +168,6 @@ namespace jsonifier {
 			}
 		}
 
-		const bool_type& getBool() const noexcept {
-			return std::get<bool_type>(value);
-		}
-
-		bool_type& getBool() noexcept {
-			return std::get<bool_type>(value);
-		}
-
-		double getDouble() const noexcept {
-			return static_cast<double>(static_cast<const number_type&>(std::get<number_type>(value)));
-		}
-
-		int64_t getInt() const noexcept {
-			return static_cast<int64_t>(static_cast<const number_type&>(std::get<number_type>(value)));
-		}
-
-		uint64_t getUint() const noexcept {
-			return static_cast<uint64_t>(static_cast<const number_type&>(std::get<number_type>(value)));
-		}
-
-		const number_type& getNumber() const noexcept {
-			return std::get<number_type>(value);
-		}
-
-		number_type& getNumber() noexcept {
-			return std::get<number_type>(value);
-		}
-
-		const string_type& getString() const noexcept {
-			return std::get<string_type>(value);
-		}
-
-		string_type& getString() noexcept {
-			return std::get<string_type>(value);
-		}
-
 		const object_type& getObject() const noexcept {
 			return std::get<object_type>(value);
 		}
@@ -218,6 +182,42 @@ namespace jsonifier {
 
 		array_type& getArray() noexcept {
 			return std::get<array_type>(value);
+		}
+
+		const string_type& getString() const noexcept {
+			return std::get<string_type>(value);
+		}
+
+		string_type& getString() noexcept {
+			return std::get<string_type>(value);
+		}
+
+		const number_type& getNumber() const noexcept {
+			return std::get<number_type>(value);
+		}
+
+		number_type& getNumber() noexcept {
+			return std::get<number_type>(value);
+		}
+
+		double getDouble() const noexcept {
+			return static_cast<double>(std::get<number_type>(value));
+		}
+
+		int64_t getInt() const noexcept {
+			return static_cast<int64_t>(std::get<number_type>(value));
+		}
+
+		uint64_t getUint() const noexcept {
+			return static_cast<uint64_t>(std::get<number_type>(value));
+		}
+
+		const bool_type& getBool() const noexcept {
+			return std::get<bool_type>(value);
+		}
+
+		bool_type& getBool() noexcept {
+			return std::get<bool_type>(value);
 		}
 
 		template<std::integral index_type> const raw_json_data& operator[](index_type&& index) const noexcept {

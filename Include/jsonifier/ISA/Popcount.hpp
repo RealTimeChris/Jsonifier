@@ -37,7 +37,7 @@ namespace simd_internal {
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> value_type popcnt(value_type value) noexcept {
+	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type popcnt(value_type value) noexcept {
 		value_type count{};
 
 		while (value > 0) {

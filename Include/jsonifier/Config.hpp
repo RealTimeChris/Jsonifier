@@ -105,22 +105,22 @@
 #endif
 
 #if JSONIFIER_HAS_INLINE_VARIABLE
-	#define JSONIFIER_FORCE_INLINE_VARIABLE inline constexpr
+	#define JSONIFIER_INLINE_VARIABLE inline constexpr
 #else
-	#define JSONIFIER_FORCE_INLINE_VARIABLE static constexpr
+	#define JSONIFIER_INLINE_VARIABLE static constexpr
 #endif
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
 		#define JSONIFIER_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_NON_GCC_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_MACOS_INLINE 
-		#define JSONIFIER_CLANG_INLINE 
+		#define JSONIFIER_CLANG_MACOS_INLINE
+		#define JSONIFIER_CLANG_INLINE
 	#elif defined(JSONIFIER_CLANG)
 		#if defined(JSONIFIER_MAC)
 			#define JSONIFIER_CLANG_MACOS_INLINE inline __attribute__((always_inline))
 		#else
-			#define JSONIFIER_CLANG_MACOS_INLINE 
+			#define JSONIFIER_CLANG_MACOS_INLINE
 		#endif
 		#define JSONIFIER_NON_GCC_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NO_INLINE __attribute__((noinline))
@@ -128,9 +128,9 @@
 		#define JSONIFIER_CLANG_INLINE inline __attribute__((always_inline))
 	#elif defined(JSONIFIER_GNUCXX)
 		#define JSONIFIER_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_INLINE 
-		#define JSONIFIER_CLANG_INLINE 
-		#define JSONIFIER_CLANG_MACOS_INLINE 
+		#define JSONIFIER_NON_GCC_INLINE
+		#define JSONIFIER_CLANG_INLINE
+		#define JSONIFIER_CLANG_MACOS_INLINE
 	#endif
 #else
 	#define JSONIFIER_INLINE

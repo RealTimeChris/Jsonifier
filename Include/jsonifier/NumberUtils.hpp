@@ -36,8 +36,7 @@ namespace jsonifier {
 
 	template<bool> class jsonifier_core;
 
-	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01>
-	jsonifier::string_base<value_type_new> toString(const value_type01& value) noexcept {
+	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01> jsonifier::string_base<value_type_new> toString(const value_type01& value) noexcept {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
 		if constexpr (sizeof(std::remove_cvref_t<value_type01>) == 8) {
@@ -118,7 +117,7 @@ namespace jsonifier {
 
 namespace jsonifier_internal {
 
-	template<typename value_type_new, typename iterator> bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
+	template<typename value_type_new, typename iterator> JSONIFIER_INLINE bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = std::remove_cvref_t<value_type_new>;
 
 		if constexpr (jsonifier::concepts::integer_t<value_type>) {

@@ -40,7 +40,7 @@ namespace jsonifier_internal {
 	template<typename derived_type> class parser;
 
 	template<typename derived_type, typename iterator_t, typename buffer_type_new> struct parse_context {
-		constexpr parse_context() noexcept = default;
+		JSONIFIER_INLINE constexpr parse_context() noexcept = default;
 		using buffer_type									= buffer_type_new;
 
 		parser<derived_type>* parserPtr{};
@@ -52,10 +52,10 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type, typename iterator_type, typename buffer_type_new> struct parse_context_partial {
-		constexpr parse_context_partial() noexcept = default;
+		JSONIFIER_INLINE constexpr parse_context_partial() noexcept = default;
 		using buffer_type											= buffer_type_new;
 
-		bool getState() {
+		JSONIFIER_INLINE bool getState() {
 			return remainingMemberCount > 0 && (currentArrayDepth > 0 || currentObjectDepth > 0);
 		}
 
@@ -73,19 +73,19 @@ namespace jsonifier_internal {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> string_view_ptr getEndIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> string_view_ptr getBeginIter(value_type value) noexcept {
+	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> string_view_ptr getEndIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> string_view_ptr getBeginIter(value_type& value) noexcept {
+	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
