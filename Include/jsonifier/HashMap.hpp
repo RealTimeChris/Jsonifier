@@ -447,6 +447,7 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
+	// Sampled from Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -464,6 +465,7 @@ namespace jsonifier_internal {
 		}
 	}
 
+	// Sampled from Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
