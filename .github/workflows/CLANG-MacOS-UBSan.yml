@@ -32,7 +32,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DUBSAN=TRUE
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE" -DUBSAN=TRUE
 
     - name: Build the Test
       run: |
@@ -44,7 +44,7 @@ jobs:
 
     - name: Run the Test
       run: |
-           ./Build/Source/Json-Performance
+           ./Build/Benchmarks/Json-Performance
       continue-on-error: true
 
   Build-Fallback:
@@ -72,7 +72,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DUBSAN=TRUE -DJSONIFIER_CPU_INSRTUCTIONS=0
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE" -DUBSAN=TRUE -DJSONIFIER_CPU_INSRTUCTIONS=0
 
     - name: Build the Test
       run: |
@@ -84,6 +84,6 @@ jobs:
 
     - name: Run the Test
       run: |
-           ./Build/Source/Json-Performance
+           ./Build/Benchmarks/Json-Performance
       continue-on-error: true
       

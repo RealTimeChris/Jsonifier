@@ -153,6 +153,10 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if("${JSONIFIER_TEST}" STREQUAL "TRUE")
-	add_subdirectory("./Source")
+if("${JSONIFIER_BENCHMARKS}" STREQUAL "TRUE")
+	add_subdirectory("./Benchmarks")
+endif()
+
+if("${JSONIFIER_TESTS}" STREQUAL "TRUE")
+	add_subdirectory("./Tests")
 endif()
