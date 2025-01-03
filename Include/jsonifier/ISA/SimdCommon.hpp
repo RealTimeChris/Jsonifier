@@ -157,9 +157,9 @@ namespace jsonifier::simd {
 	};
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<char, size> escapeableArray00{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
-		internal::array<char, size> returnValues{};
+	constexpr internal::array<uint8_t, size> escapeableArray00{ [] {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
@@ -167,9 +167,9 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<char, size> escapeableArray01{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
-		internal::array<char, size> returnValues{};
+	constexpr internal::array<uint8_t, size> escapeableArray01{ [] {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
@@ -177,9 +177,9 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<char, size> whitespaceArray{ [] {
-		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
-		internal::array<char, size> returnValues{};
+	constexpr internal::array<uint8_t, size> whitespaceArray{ [] {
+		constexpr const uint8_t values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
+		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
@@ -187,9 +187,9 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<char, size> opArray{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
-		internal::array<char, size> returnValues{};
+	constexpr internal::array<uint8_t, size> opArray{ [] {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
@@ -200,7 +200,7 @@ namespace jsonifier::simd {
 		JSONIFIER_ALIGN(bytesPerStep) jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto opArrayPtr{ opArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArrayPtr) };
-		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20)) };
+		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(static_cast<uint8_t>(0x20)) };
 		valuesNew[0] = opCmpEqBitMask(opShuffle(simdValues, values[0]), opOr(simdValue, values[0]));
 		valuesNew[1] = opCmpEqBitMask(opShuffle(simdValues, values[1]), opOr(simdValue, values[1]));
 		valuesNew[2] = opCmpEqBitMask(opShuffle(simdValues, values[2]), opOr(simdValue, values[2]));

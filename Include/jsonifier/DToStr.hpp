@@ -57,7 +57,7 @@ namespace jsonifier::internal {
 		const uint32_t bb		 = abb - a * 100;
 		const uint32_t cc		 = abbcc - abb * 100;
 
-		buf[0] = uint8_t(a + '0');
+		buf[0] = char(a + '0');
 		buf += a > 0;
 		const bool lz = bb < 10 && a == 0;
 		std::memcpy(buf, char_table + (bb * 2 + lz), 2);
@@ -117,6 +117,13 @@ namespace jsonifier::internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
+	JSONIFIER_INLINE int64_t abs(int64_t value) noexcept {
+		uint64_t temp = value >> 63;
+		value ^= temp;
+		value += temp & 1;
+		return value;
+	}
+
 	template<std::floating_point value_type> JSONIFIER_INLINE char* toChars(char* buf, value_type val) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
@@ -137,15 +144,16 @@ namespace jsonifier::internal {
 		const auto floatBits				   = jsonifier_jkj::dragonbox::make_float_bits<value_type, Conversion, FormatTraits>(val);
 		const auto expBits					   = floatBits.extract_exponent_bits();
 		const auto s						   = floatBits.remove_exponent_bits();
+		static constexpr auto bitMask{ (uint32_t(1) << expBitsCount) - 1 };
 
-		if (expBits == (uint32_t(1) << expBitsCount) - 1) [[unlikely]] {
+		if (expBits == bitMask) [[unlikely]] {
 			std::memcpy(buf, "null", 4);
 			return buf + 4;
 		}
 
 		*buf				= '-';
-		constexpr auto zero = value_type(0.0);
-		buf += (val < zero);
+		static constexpr auto zeroNew = value_type(0.0);
+		buf += (val < zeroNew);
 
 		const auto v = jsonifier_jkj::dragonbox::to_decimal_ex(s, expBits, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
 
@@ -181,7 +189,8 @@ namespace jsonifier::internal {
 			buf	   = end + 1;
 			buf[0] = '-';
 			buf += expDec < 0;
-			expDec = std::abs(expDec);
+
+			expDec = abs(expDec);
 			if (expDec < 100) {
 				uint32_t lz = expDec < 10;
 				std::memcpy(buf, char_table + (expDec * 2 + lz), 2);

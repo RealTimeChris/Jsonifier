@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// Note: Some of the code in this header was sampled from Glaze library: https://github.com/StephenBerry/Glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
@@ -457,6 +456,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
+	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename value_type> constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -474,6 +474,7 @@ namespace jsonifier::internal {
 		}
 	}
 
+	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename value_type> constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;

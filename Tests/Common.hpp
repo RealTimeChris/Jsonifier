@@ -70,24 +70,24 @@ bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFile
 }
 
 struct test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<double> testVals04{};
-	std::vector<int64_t> testVals03{};
-	std::vector<bool> testVals05{};
+	std::vector<std::string> testString{};
+	std::vector<uint64_t> testUint{};
+	std::vector<double> testDouble{};
+	std::vector<int64_t> testInt{};
+	std::vector<bool> testBool{};
 };
 
 struct partial_test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<bool> testVals05{};
+	std::vector<std::string> testString{};
+	std::vector<bool> testBool{};
 };
 
 struct abc_test_struct {
-	std::vector<bool> testVals05{};
-	std::vector<int64_t> testVals03{};
-	std::vector<double> testVals04{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<std::string> testVals01{};
+	std::vector<bool> testBool{};
+	std::vector<int64_t> testInt{};
+	std::vector<double> testDouble{};
+	std::vector<uint64_t> testUint{};
+	std::vector<std::string> testString{};
 };
 
 template<typename value_type> struct test {
@@ -192,24 +192,24 @@ template<typename value_type> struct test_generator {
 				auto arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
-					v[x].testVals01.emplace_back(newString);
+					v[x].testString.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals02.emplace_back(generateUint());
+					v[x].testUint.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals03.emplace_back(generateInt());
+					v[x].testInt.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
-					v[x].testVals05.emplace_back(newBool);
+					v[x].testBool.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals04.emplace_back(generateDouble());
+					v[x].testDouble.emplace_back(generateDouble());
 				}
 			}
 		};

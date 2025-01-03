@@ -21,6 +21,7 @@
 */
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
+/// Most of the code in this header was developed in collaboration with Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 #pragma once
 
 #include <jsonifier/Allocator.hpp>

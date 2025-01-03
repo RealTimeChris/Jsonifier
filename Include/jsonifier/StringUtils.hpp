@@ -34,8 +34,8 @@ namespace jsonifier {
 	struct serialize_options {
 		uint64_t indentSize{ 3 };
 		char indentChar{ ' ' };
-		bool prettify{};
 		uint64_t indent{};
+		bool prettify{};
 	};
 
 	struct parse_options {
@@ -351,34 +351,32 @@ namespace jsonifier::internal {
 				nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue, simdValues00, simdValues01);
 				if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 					escapeChar = string1[nextBackslashOrQuote];
-					if (escapeChar == '"') {
+					if (escapeChar == '\\') {
+						escapeChar = string1[nextBackslashOrQuote + 1];
+						if (escapeChar == 0x75u) {
+							lengthNew -= nextBackslashOrQuote;
+							string1 += nextBackslashOrQuote;
+							string2 += nextBackslashOrQuote;
+							if (!handleUnicodeCodePoint(string1, string2)) {
+								return static_cast<basic_iterator02>(nullptr);
+							}
+							continue;
+						}
+						escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
+						if (escapeChar == 0u) {
+							return static_cast<basic_iterator02>(nullptr);
+						}
+						string2[nextBackslashOrQuote] = escapeChar;
+						lengthNew -= nextBackslashOrQuote + 2ull;
+						string2 += nextBackslashOrQuote + 1ull;
+						string1 += nextBackslashOrQuote + 2ull;
+					} else if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
 					} else {
-						if (escapeChar == '\\') {
-							escapeChar = string1[nextBackslashOrQuote + 1];
-							if (escapeChar == 0x75u) {
-								lengthNew -= nextBackslashOrQuote;
-								string1 += nextBackslashOrQuote;
-								string2 += nextBackslashOrQuote;
-								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<basic_iterator02>(nullptr);
-								}
-								continue;
-							}
-							escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
-							if (escapeChar == 0u) {
-								return static_cast<basic_iterator02>(nullptr);
-							}
-							string2[nextBackslashOrQuote] = escapeChar;
-							lengthNew -= nextBackslashOrQuote + 2ull;
-							string2 += nextBackslashOrQuote + 1ull;
-							string1 += nextBackslashOrQuote + 2ull;
-						} else {
-							lengthNew -= bytesProcessed;
-							string2 += bytesProcessed;
-							string1 += bytesProcessed;
-						}
+						lengthNew -= bytesProcessed;
+						string2 += bytesProcessed;
+						string1 += bytesProcessed;
 					}
 				} else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(simdValue)) {
 					return static_cast<basic_iterator02>(nullptr);
@@ -411,34 +409,32 @@ namespace jsonifier::internal {
 				nextBackslashOrQuote = findParse<simd_type, integer_type>(simdValue);
 				if JSONIFIER_LIKELY (nextBackslashOrQuote < mask) {
 					escapeChar = string1[nextBackslashOrQuote];
-					if (escapeChar == '"') {
+					if (escapeChar == '\\') {
+						escapeChar = string1[nextBackslashOrQuote + 1];
+						if (escapeChar == 0x75u) {
+							lengthNew -= nextBackslashOrQuote;
+							string1 += nextBackslashOrQuote;
+							string2 += nextBackslashOrQuote;
+							if (!handleUnicodeCodePoint(string1, string2)) {
+								return static_cast<basic_iterator02>(nullptr);
+							}
+							continue;
+						}
+						escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
+						if (escapeChar == 0u) {
+							return static_cast<basic_iterator02>(nullptr);
+						}
+						string2[nextBackslashOrQuote] = escapeChar;
+						lengthNew -= nextBackslashOrQuote + 2ull;
+						string2 += nextBackslashOrQuote + 1ull;
+						string1 += nextBackslashOrQuote + 2ull;
+					} else if (escapeChar == '"') {
 						string1 += nextBackslashOrQuote;
 						return string2 + nextBackslashOrQuote;
 					} else {
-						if (escapeChar == '\\') {
-							escapeChar = string1[nextBackslashOrQuote + 1];
-							if (escapeChar == 0x75u) {
-								lengthNew -= nextBackslashOrQuote;
-								string1 += nextBackslashOrQuote;
-								string2 += nextBackslashOrQuote;
-								if (!handleUnicodeCodePoint(string1, string2)) {
-									return static_cast<basic_iterator02>(nullptr);
-								}
-								continue;
-							}
-							escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
-							if (escapeChar == 0u) {
-								return static_cast<basic_iterator02>(nullptr);
-							}
-							string2[nextBackslashOrQuote] = escapeChar;
-							lengthNew -= nextBackslashOrQuote + 2ull;
-							string2 += nextBackslashOrQuote + 1ull;
-							string1 += nextBackslashOrQuote + 2ull;
-						} else {
-							lengthNew -= bytesProcessed;
-							string2 += bytesProcessed;
-							string1 += bytesProcessed;
-						}
+						lengthNew -= bytesProcessed;
+						string2 += bytesProcessed;
+						string1 += bytesProcessed;
 					}
 				} else if JSONIFIER_UNLIKELY (hasByteLessThanValue<31>(string1)) {
 					return static_cast<basic_iterator02>(nullptr);
@@ -494,15 +490,13 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE static basic_iterator02 impl(basic_iterator01& string1, basic_iterator02 string2, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			return string_parser_impl<3, options, basic_iterator01, basic_iterator02>::impl(string1, string2, lengthNew);
-#endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 			return string_parser_impl<2, options, basic_iterator01, basic_iterator02>::impl(string1, string2, lengthNew);
-#endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			return string_parser_impl<1, options, basic_iterator01, basic_iterator02>::impl(string1, string2, lengthNew);
-#endif
+#else
 			return string_parser_impl<0, options, basic_iterator01, basic_iterator02>::impl(string1, string2, lengthNew);
+#endif
 		}
 	};
 

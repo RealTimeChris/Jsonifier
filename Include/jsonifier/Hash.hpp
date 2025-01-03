@@ -160,6 +160,10 @@ namespace jsonifier::internal {
 		}
 	};
 
+	template<typename value_type> JSONIFIER_INLINE consteval value_type constEval(value_type value) {
+		return value;
+	}
+
 	template<uint64_t seedNew> struct rt_key_hasher {
 		static constexpr auto seed{ seedNew };
 		/**
@@ -170,7 +174,7 @@ namespace jsonifier::internal {
 		 * @return The hashed value.
 		 */
 		JSONIFIER_INLINE uint64_t hashKeyRt(string_view_ptr value, uint64_t length) const noexcept {
-			uint64_t seed64{ seed };
+			uint64_t seed64{ constEval(seed) };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);
 				seed64 ^= returnValue64;

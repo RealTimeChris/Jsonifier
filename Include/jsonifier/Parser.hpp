@@ -110,7 +110,7 @@ namespace jsonifier::internal {
 
 	template<parse_options options, bool minifiedOrInsideRepeated> struct parse {
 		template<typename value_type_new, typename context_type>
-		JSONIFIER_NON_GCC_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
+		JSONIFIER_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
 			using value_type = remove_cvref_t<value_type_new>;
 			if constexpr (options.partialRead) {
 				if constexpr (concepts::map_t<value_type> || concepts::jsonifier_object_t<value_type>) {

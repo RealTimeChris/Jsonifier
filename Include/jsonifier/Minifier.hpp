@@ -27,8 +27,8 @@
 
 namespace jsonifier::internal {
 
-	constexpr std::array<json_structural_type, 256> jsonTypes = [] {
-		std::array<json_structural_type, 256> returnValues{};
+	constexpr array<json_structural_type, 256> jsonTypes = [] {
+		array<json_structural_type, 256> returnValues{};
 		using enum json_structural_type;
 		returnValues['"'] = string;
 		returnValues[','] = comma;
@@ -218,6 +218,9 @@ namespace jsonifier::internal {
 					case json_structural_type::unset: {
 						return index;
 					}
+					case json_structural_type::type_count:
+					case json_structural_type::error:
+						[[fallthrough]];
 					default: {
 						this->getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::Incorrect_Structural_Index>(
 							static_cast<int64_t>(getUnderlyingPtr(iter) - this->rootIter), static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));

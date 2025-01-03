@@ -248,17 +248,17 @@ template<> struct glz::meta<test_elements_final> {
 
 template<> struct glz::meta<test_struct> {
 	using value_type				 = test_struct;
-	static constexpr auto value = object(&value_type::testVals01, &value_type::testVals02, &value_type::testVals03, &value_type::testVals04, &value_type::testVals05);
+	static constexpr auto value = object(&value_type::testString, &value_type::testUint, &value_type::testInt, &value_type::testDouble, &value_type::testBool);
 };
 
 template<> struct glz::meta<partial_test_struct> {
 	using value_type				 = partial_test_struct;
-	static constexpr auto value = object(&value_type::testVals05, &value_type::testVals01);
+	static constexpr auto value = object(&value_type::testBool, &value_type::testString);
 };
 
 template<> struct glz::meta<abc_test_struct> {
 	using value_type				 = abc_test_struct;
-	static constexpr auto value = object(&value_type::testVals05, &value_type::testVals04, &value_type::testVals03, &value_type::testVals02, &value_type::testVals01);
+	static constexpr auto value = object(&value_type::testBool, &value_type::testDouble, &value_type::testInt, &value_type::testUint, &value_type::testString);
 };
 
 template<> struct glz::meta<test<test_struct>> {

@@ -712,11 +712,11 @@ template<> void getValue(discord_message& value, simdjson::ondemand::value jsonD
 
 template<> void getValue(abc_test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(returnValue.testVals05, obj, "testVals05");
-	getValue(returnValue.testVals04, obj, "testVals04");
-	getValue(returnValue.testVals03, obj, "testVals03");
-	getValue(returnValue.testVals02, obj, "testVals02");
-	getValue(returnValue.testVals01, obj, "testVals01");
+	getValue(returnValue.testBool, obj, "testBool");
+	getValue(returnValue.testDouble, obj, "testDouble");
+	getValue(returnValue.testInt, obj, "testInt");
+	getValue(returnValue.testUint, obj, "testUint");
+	getValue(returnValue.testString, obj, "testString");
 }
 
 template<> void getValue(abc_test<abc_test_struct>& returnValue, simdjson::ondemand::value jsonData) {
@@ -751,17 +751,17 @@ template<> void getValue(abc_test<abc_test_struct>& returnValue, simdjson::ondem
 
 template<> void getValue(partial_test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(returnValue.testVals05, obj, "testVals05");
-	getValue(returnValue.testVals01, obj, "testVals01");
+	getValue(returnValue.testBool, obj, "testBool");
+	getValue(returnValue.testString, obj, "testString");
 }
 
 template<> void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(returnValue.testVals01, obj, "testVals01");
-	getValue(returnValue.testVals02, obj, "testVals02");
-	getValue(returnValue.testVals03, obj, "testVals03");
-	getValue(returnValue.testVals04, obj, "testVals04");
-	getValue(returnValue.testVals05, obj, "testVals05");
+	getValue(returnValue.testString, obj, "testString");
+	getValue(returnValue.testUint, obj, "testUint");
+	getValue(returnValue.testInt, obj, "testInt");
+	getValue(returnValue.testDouble, obj, "testDouble");
+	getValue(returnValue.testBool, obj, "testBool");
 }
 
 template<> void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {

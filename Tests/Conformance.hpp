@@ -26,6 +26,19 @@
 #include <filesystem>
 #include <fstream>
 
+struct pass03 {
+	std::unordered_map<std::string, std::string> json_test_pattern_pass3{};
+};
+
+namespace jsonifier {
+	template<> struct core<pass03> {
+		using value_type = pass03;
+		static constexpr auto parseValue = createValue<makeJsonEntity<&value_type::json_test_pattern_pass3, "JSON Test Pattern pass3">()>();
+	};
+}
+
+using pass02 = std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::string>>>>>>>>>>>>>>>>>>>;
+
 namespace conformance_tests {
 
 	template<typename test_type>
@@ -54,6 +67,8 @@ namespace conformance_tests {
 		std::unordered_map<std::string, test_base> jsonTests{};
 		processFilesInFolder(jsonTests, "/ConformanceTests");
 		std::cout << "Conformance Tests: " << std::endl;
+		runTest<pass02>("pass2.json", jsonTests["pass2.json"].fileContents, parser, false);
+		runTest<pass03>("pass3.json", jsonTests["pass3.json"].fileContents, parser, false);
 		runTest<std::unordered_map<std::string, std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
 		runTest<std::unordered_map<std::string, std::string>>("fail03.json", jsonTests["fail03.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail04.json", jsonTests["fail04.json"].fileContents, parser);

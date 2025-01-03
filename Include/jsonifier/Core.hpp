@@ -72,7 +72,7 @@ namespace jsonifier::internal {
 	template<size_t size> constexpr auto sortTupleRefsByLength(const array<tuple_reference, size>& tupleRefsRaw) {
 		array<tuple_reference, size> returnValues{ tupleRefsRaw };
 		std::sort(returnValues.begin(), returnValues.end(), [](const tuple_reference& lhs, const tuple_reference& rhs) {
-			return lhs.key.size() < rhs.key.size();
+			return lhs.key.size() > rhs.key.size();
 		});
 		return returnValues;
 	}

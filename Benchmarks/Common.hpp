@@ -157,24 +157,24 @@ void executePythonScript(const std::string& scriptPath, const std::string& argum
 }
 
 struct test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<int64_t> testVals03{};
-	std::vector<double> testVals04{};
-	std::vector<bool> testVals05{};
+	std::string testString{};
+	uint64_t testUint{};
+	int64_t testInt{};
+	double testDouble{};
+	bool testBool{};
 };
 
 struct partial_test_struct {
-	std::vector<std::string> testVals01{};
-	std::vector<bool> testVals05{};
+	std::string testString{};
+	bool testBool{};
 };
 
 struct abc_test_struct {
-	std::vector<bool> testVals05{};
-	std::vector<double> testVals04{};
-	std::vector<int64_t> testVals03{};
-	std::vector<uint64_t> testVals02{};
-	std::vector<std::string> testVals01{};
+	bool testBool{};
+	double testDouble{};
+	int64_t testInt{};
+	uint64_t testUint{};
+	std::string testString{};
 };
 
 template<typename value_type> struct test {
@@ -187,15 +187,29 @@ template<typename value_type> struct partial_test {
 
 inline static std::random_device randomEngine{};
 inline static std::mt19937_64 gen{ randomEngine() };
-static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
+
+static constexpr std::string_view charSetRaw01{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~" };
+static constexpr std::string_view charSetRaw02{ "\"\\\b\f\n\r\t" };
+
+static constexpr std::array<char, 256> charset{ [] {
+	std::array<char, 256> returnValues{};
+	size_t x = 0;
+	for (; x < 256 - charSetRaw02.size(); ++x) {
+		returnValues[x] = charSetRaw01[x % charSetRaw01.size()];
+	}
+	for (size_t y = 0; y < charSetRaw02.size(); ++y, ++x) {
+		returnValues[x] = charSetRaw02[y];
+	}
+
+	return returnValues;
+}() };
 
 struct test_generator {
-
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disCharSet{ 0ull, charset.size() - 1 };
-	inline static std::uniform_int_distribution<uint64_t> disString{ 1ull, 32ull };
+	inline static std::uniform_int_distribution<uint64_t> disString{ 16ull, 64ull };
 	inline static std::uniform_int_distribution<uint64_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
 	inline static std::uniform_int_distribution<uint64_t> disBool{ 0, 100 };
 	inline static std::random_device randomEngine{};
@@ -214,7 +228,7 @@ struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount = length / 6ull;
+		auto unicodeCount = length / 16ull;
 		std::vector<uint64_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -267,28 +281,28 @@ struct test_generator {
 	static test<test_struct> generateTest() {
 		test<test_struct> returnValues{};
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberUniform(1ull, 3ull);
+			const auto arraySize01 = randomizeNumberUniform(1ull, 15ull);
 			v.resize(arraySize01);
 			for (uint64_t x = 0; x < arraySize01; ++x) {
-				auto arraySize03 = randomizeNumberUniform(0ull, 15ull);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals01.emplace_back(generateString());
+				auto arraySize02 = randomizeNumberUniform(8ull, 24ull);
+				for (uint64_t y = 0; y < arraySize02; ++y) {
+					v[x].testString = generateString();
 				}
-				arraySize03 = randomizeNumberUniform(0ull, 15ull);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals02.emplace_back(generateUint());
+				arraySize02 = randomizeNumberUniform(8ull, 24ull);
+				for (uint64_t y = 0; y < arraySize02; ++y) {
+					v[x].testUint = generateUint();
 				}
-				arraySize03 = randomizeNumberUniform(0ull, 15ull);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals03.emplace_back(generateInt());
+				arraySize02 = randomizeNumberUniform(8ull, 24ull);
+				for (uint64_t y = 0; y < arraySize02; ++y) {
+					v[x].testInt = generateInt();
 				}
-				arraySize03 = randomizeNumberUniform(0ull, 15ull);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals04.emplace_back(generateDouble());
+				arraySize02 = randomizeNumberUniform(8ull, 24ull);
+				for (uint64_t y = 0; y < arraySize02; ++y) {
+					v[x].testDouble = generateDouble();
 				}
-				arraySize03 = randomizeNumberUniform(0ull, 15ull);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					v[x].testVals05.emplace_back(generateBool());
+				arraySize02 = randomizeNumberUniform(8ull, 24ull);
+				for (uint64_t y = 0; y < arraySize02; ++y) {
+					v[x].testBool = generateBool();
 				}
 			}
 		};
