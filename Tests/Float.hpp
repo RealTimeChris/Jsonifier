@@ -1,0 +1,85 @@
+/*
+	MIT License
+
+	Copyright (c) 2024 RealTimeChris
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	software and associated documentation files (the "Software"), to deal in the Software
+	without restriction, including without limitation the rights to use, copy, modify, merge,
+	publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+	persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or
+	substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+	INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+/// https://github.com/RealTimeChris/jsonifier
+#pragma once
+
+#include "Common.hpp"
+
+#include <jsonifier/Index.hpp>
+#include <filesystem>
+#include <fstream>
+
+namespace float_validation_tests {
+
+	constexpr jsonifier::internal::array<std::string_view, 64> stringArray{ "0.0", "-0.0", "1.0", "-1.0", "1.5", "-1.5", "3.1416", "1E10", "1e10", "1E+10", "1E-10", "-1E10",
+		"-1e10", "-1E+10", "-1E-10", "1.234E+10", "1.234E-10", "1.79769e+308", "2.22507e-308", "-1.79769e+308", "-2.22507e-308", "4.9406564584124654e-324",
+		"2.2250738585072009e-308", "2.2250738585072014e-308", "1.7976931348623157e+308", "1e-10000", "18446744073709551616", "-9223372036854775809", "0.9868011474609375", "123e34",
+		"45913141877270640000.0", "2.2250738585072011e-308", "1e-214748363", "1e-214748364", "0.017976931348623157e+310", "2.2250738585072012e-308",
+		"2.22507385850720113605740979670913197593481954635164564e-308", "2.22507385850720113605740979670913197593481954635164565e-308",
+		"0.999999999999999944488848768742172978818416595458984375", "0.999999999999999944488848768742172978818416595458984374",
+		"0.999999999999999944488848768742172978818416595458984376", "1.00000000000000011102230246251565404236316680908203125",
+		"1.00000000000000011102230246251565404236316680908203124", "1.00000000000000011102230246251565404236316680908203126", "72057594037927928.0", "72057594037927936.0",
+		"72057594037927932.0", "7205759403792793199999e-5", "7205759403792793200001e-5", "9223372036854774784.0", "9223372036854775808.0", "9223372036854775296.0",
+		"922337203685477529599999e-5", "922337203685477529600001e-5", "10141204801825834086073718800384", "10141204801825835211973625643008", "10141204801825834649023672221696",
+		"1014120480182583464902367222169599999e-5", "1014120480182583464902367222169600001e-5", "5708990770823838890407843763683279797179383808",
+		"5708990770823839524233143877797980545530986496", "5708990770823839207320493820740630171355185152", "5708990770823839207320493820740630171355185151999e-3",
+		"5708990770823839207320493820740630171355185152001e-3" };
+
+	constexpr jsonifier::internal::array<double, 64> doubleArray{ 0.0, -0.0, 1.0, -1.0, 1.5, -1.5, 3.1416, 1E10, 1e10, 1E+10, 1E-10, -1E10, -1e10, -1E+10, -1E-10, 1.234E+10,
+		1.234E-10, 1.79769e+308, 2.22507e-308, -1.79769e+308, -2.22507e-308, 4.9406564584124654e-324, 2.2250738585072009e-308, 2.2250738585072014e-308, 1.7976931348623157e+308,
+		0.0, 18446744073709551616.0, -9223372036854775809.0, 0.9868011474609375, 123e34, 45913141877270640000.0, 2.2250738585072011e-308, 0.0, 0.0, 1.7976931348623157e+308,
+		2.2250738585072014e-308, 2.2250738585072009e-308, 2.2250738585072014e-308, 1.0, 0.99999999999999989, 1.0, 1.0, 1.0, 1.00000000000000022, 72057594037927928.0,
+		72057594037927936.0, 72057594037927936.0, 72057594037927928.0, 72057594037927936.0, 9223372036854774784.0, 9223372036854775808.0, 9223372036854775808.0,
+		9223372036854774784.0, 9223372036854775808.0, 10141204801825834086073718800384.0, 10141204801825835211973625643008.0, 10141204801825835211973625643008.0,
+		10141204801825834086073718800384.0, 10141204801825835211973625643008.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0,
+		5708990770823839524233143877797980545530986496.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0 };
+
+	auto runTest(const std::string_view& testName, const std::string_view& dataToParse, double valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
+		std::cout << testName << " Input: " << dataToParse << std::endl;
+		double data{};
+		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
+			if (static_cast<uint64_t>(data) == static_cast<uint64_t>(valueToCompare)) {
+				std::cout << testName << " Succeeded - Output: " << data << std::endl;
+				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
+			} else {
+				std::cout << testName << " Failed - Output: " << static_cast<uint64_t>(data) << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << static_cast<uint64_t>(valueToCompare) << std::endl;
+			}
+		} else {
+			std::cout << testName << " Failed." << std::endl;
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+		}
+		return true;
+	}
+
+	bool floatTests() noexcept {
+		jsonifier::jsonifier_core parser{};
+		std::cout << "Float Tests: " << std::endl;
+		for (size_t x = 0; x < std::size(stringArray); ++x) {
+			runTest("Float Test #" + std::to_string(x), stringArray[x], doubleArray[x], parser);
+		}
+		return true;
+	}
+
+}

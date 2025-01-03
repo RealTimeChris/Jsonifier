@@ -512,7 +512,7 @@ EXTRACT_PRIVATE        = NO
 
 EXTRACT_PRIV_VIRTUAL   = YES
 
-# If the EXTRACT_PACKAGE tag is set to YES, all members with package or internal
+# If the EXTRACT_PACKAGE tag is set to YES, all members with package or jsonifier::internal
 # scope will be included in the documentation.
 # The default value is: NO.
 
@@ -587,8 +587,8 @@ HIDE_FRIEND_COMPOUNDS  = YES
 HIDE_IN_BODY_DOCS      = NO
 
 # The INTERNAL_DOCS tag determines if documentation that is typed after a
-# \internal command is included. If the tag is set to NO then the documentation
-# will be excluded. Set it to YES to include the internal documentation.
+# \jsonifier::internal command is included. If the tag is set to NO then the documentation
+# will be excluded. Set it to YES to include the jsonifier::internal documentation.
 # The default value is: NO.
 
 INTERNAL_DOCS          = YES
@@ -2693,7 +2693,7 @@ DOT_MULTI_TARGETS      = NO
 # If the GENERATE_LEGEND tag is set to YES doxygen will generate a legend page
 # explaining the meaning of the various boxes and arrows in the dot generated
 # graphs.
-# Note: This tag requires that UML_LOOK isn't set, i.e. the doxygen internal
+# Note: This tag requires that UML_LOOK isn't set, i.e. the doxygen jsonifier::internal
 # graphical representation for inheritance and collaboration diagrams is used.
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.

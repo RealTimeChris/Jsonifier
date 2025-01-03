@@ -34,12 +34,12 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE"
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE"
 
     - name: Build the Test
       working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}} -v
+           sudo cmake --build . --config=${{matrix.build_type}}
 
     - name: Install the Test
       working-directory: ./Build
@@ -47,9 +47,10 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Source
+      working-directory: ./Build/Benchmarks
       run: |
-           ./Json-Performance
+           sudo chmod +x /usr/local/bin/Json-Performance
+           sudo ./Json-Performance
       continue-on-error: true
    
   Build-Fallback:
@@ -58,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug]
+        build_type: [Release]
 
     steps:
     - uses: actions/checkout@v4
@@ -77,11 +78,11 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DJSONIFIER_CPU_INSTRUCTIONS=0
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE" -DJSONIFIER_CPU_INSTRUCTIONS=0
 
     - name: Build the Test
       run: |
-           cmake --build ./Build --config=${{matrix.build_type}} -v
+           cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
       run: |
@@ -89,6 +90,6 @@ jobs:
 
     - name: Run the Test
       run: |
-           ./Build/Source/Json-Performance
+           ./Build/Benchmarks/Json-Performance
       continue-on-error: true
       

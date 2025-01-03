@@ -25,11 +25,11 @@ jobs:
           xcodebuild -version
 
     - name: Configure CMake
-      run: cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_TEST="TRUE"
+      run: cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DJSONIFIER_BENCHMARKS="TRUE"
 
     - name: Build the Test
       run: |
-           cmake --build ./Build --config=${{matrix.build_type}} -v
+           cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
       run: |
@@ -38,6 +38,6 @@ jobs:
     - name: Run the Test
       run: |
             sudo chmod +x /usr/local/bin/Json-Performance
-            /usr/local/bin/Json-Performance
+            sudo /usr/local/bin/Json-Performance
       continue-on-error: true
       

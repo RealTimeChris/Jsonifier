@@ -27,15 +27,14 @@
 	#define NOMINMAX
 #endif
 
-#include <jsonifier/Parse_Impl.hpp>
-#include <jsonifier/Serialize_Impl.hpp>
-#include <jsonifier/JsonifierCore.hpp>
-#include <jsonifier/Prettify_Impl.hpp>
-#include <jsonifier/RawJsonData.hpp>
-#include <jsonifier/Minify_Impl.hpp>
-#include <jsonifier/Serializer.hpp>
-#include <jsonifier/HashMap.hpp>
-#include <jsonifier/Parser.hpp>
-#include <jsonifier/String.hpp>
-#include <jsonifier/InterleavedTuple.hpp>
-#include <jsonifier/Simd.hpp>
+#include <jsonifier/Parsing/Parse_Impl.hpp>
+#include <jsonifier/Serializing/Serialize_Impl.hpp>
+#include <jsonifier/Core/JsonifierCore.hpp>
+#include <jsonifier/Utilities/RawJsonData.hpp>
+#include <jsonifier/Serializing/Prettifier.hpp>
+#include <jsonifier/Serializing/Serializer.hpp>
+#include <jsonifier/Serializing/Minifier.hpp>
+#include <jsonifier/Utilities/HashMap.hpp>
+#include <jsonifier/Parsing/Parser.hpp>
+#include <jsonifier/Utilities/String.hpp>
+#include <jsonifier/Utilities/Simd.hpp>

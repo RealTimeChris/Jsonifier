@@ -31,8 +31,8 @@ collect_version("jsonifier")
 set(PROJECT_NAME "Jsonifier")
 set(PRODUCT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 project(
   "${PROJECT_NAME}"
@@ -61,40 +61,44 @@ set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
      CXX_EXTENSIONS OFF
  )
  
- target_link_options(
-     "${PROJECT_NAME}" INTERFACE
-	 "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-     "$<$<CXX_COMPILER_ID:CLANG>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-faddress-sanitizer>>"
-     "$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
-     "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
-	 "$<$<CXX_COMPILER_ID:MSVC>:/DEBUG>"
-     "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
- )
-
- if (NOT JSONIFIER_CPU_INSTRUCTIONS)
-	include("JsonifierDetectArchitecture")
-endif()
-
  target_include_directories(
      "${PROJECT_NAME}" INTERFACE
      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include/>"
     "$<INSTALL_INTERFACE:include/>"
  )
 
+if (NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
+	include("JsonifierDetectArchitecture")
+endif()
+
+target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
+ 
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/permissive->"
-	"$<$<CXX_COMPILER_ID:CLANG>:-std=c++23>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/permissive>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
-	"$<$<CXX_COMPILER_ID:GNU>:-std=c++23>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zi>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
 	"${AVX_FLAG}"
+)
+ 
+target_link_options(
+    "${PROJECT_NAME}" INTERFACE
+    "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
+    "$<$<AND:$<CXX_COMPILER_ID:CLANG>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-flto>"
+    "$<$<CXX_COMPILER_ID:GNU>:-flto>"
+    "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-O2>"
+    "$<$<CXX_COMPILER_ID:GNU>:-Wl,-O2>"
 )
 
 target_compile_definitions(
@@ -149,6 +153,10 @@ install(
 	DESTINATION "share/jsonifier"
 )
 
-if("${JSONIFIER_TEST}" STREQUAL "TRUE")
-	add_subdirectory("./Source")
+if("${JSONIFIER_BENCHMARKS}" STREQUAL "TRUE")
+	add_subdirectory("./Benchmarks")
+endif()
+
+if("${JSONIFIER_TESTS}" STREQUAL "TRUE")
+	add_subdirectory("./Tests")
 endif()
