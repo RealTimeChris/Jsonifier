@@ -205,8 +205,8 @@ namespace jsonifier_internal {
 			return simd_internal::collectIndices<minified>(newPtr);
 		}
 
-		template<bool collectAligned, bool minified> void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped,
-			simd_internal::simd_int_t_holder& rawStructurals) noexcept {
+		template<bool collectAligned, bool minified> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped,
+			jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			rawStructurals = getRawIndices<collectAligned, minified>(values);
 			collectStructurals<minified>(escaped, nextIsEscaped, rawStructurals);
 			simd_internal::store(rawStructurals.op, newBits);
@@ -232,7 +232,8 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd_internal::simd_int_t_holder& rawStructurals) noexcept {
 			const jsonifier_simd_int_t simdValue{ simd_internal::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA)) };
 			const jsonifier_simd_int_t potentialEscape = simd_internal::opAndNot(rawStructurals.backslashes, nextIsEscaped);
-			jsonifier_simd_int_t maybeEscaped{ simd_internal::opShl<1>(potentialEscape) };
+			jsonifier_simd_int_t maybeEscaped{};
+			opShl(1, potentialEscape, maybeEscaped);
 			jsonifier_simd_int_t escapeAndTerminalCode = simd_internal::opXor(simd_internal::opSub(simd_internal::opOr(maybeEscaped, simdValue), potentialEscape), simdValue);
 			escaped									   = simd_internal::opXor(escapeAndTerminalCode, simd_internal::opOr(rawStructurals.backslashes, nextIsEscaped));
 			nextIsEscaped = simd_internal::opSetLSB(nextIsEscaped, simd_internal::opGetMSB(simd_internal::opAnd(escapeAndTerminalCode, rawStructurals.backslashes)));

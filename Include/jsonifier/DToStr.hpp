@@ -19,6 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// Note: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
 #pragma once
@@ -38,65 +39,67 @@ namespace jsonifier_internal {
 		0, 0, 0, 0 };
 
 	JSONIFIER_INLINE string_buffer_ptr writeU64Len15To17Trim(string_buffer_ptr buf, uint64_t sig) noexcept {
-		const uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
-		const uint32_t ffgghhii	 = static_cast<uint32_t>(sig - static_cast<uint64_t>(abbccddee) * 100000000);
-		const uint32_t abbcc	 = abbccddee / 10000;
-		const uint32_t ddee		 = abbccddee - abbcc * 10000;
-		const uint32_t abb		 = static_cast<uint32_t>((static_cast<uint64_t>(abbcc) * 167773) >> 24);
-		const uint32_t a		 = (abb * 41) >> 12;
-		const uint32_t bb		 = abb - a * 100;
-		const uint32_t cc		 = abbcc - abb * 100;
+		uint32_t tz1, tz2, tz;
+
+		uint32_t abbccddee = static_cast<uint32_t>(sig / 100000000);
+		uint32_t ffgghhii  = static_cast<uint32_t>(sig - static_cast<uint64_t>(abbccddee) * 100000000);
+		uint32_t abbcc	   = abbccddee / 10000;
+		uint32_t ddee	   = abbccddee - abbcc * 10000;
+		uint32_t abb	   = static_cast<uint32_t>((static_cast<uint64_t>(abbcc) * 167773) >> 24);
+		uint32_t a		   = (abb * 41) >> 12;
+		uint32_t bb		   = abb - a * 100;
+		uint32_t cc		   = abbcc - abb * 100;
 
 		buf[0] = char(a + '0');
 		buf += a > 0;
 		bool lz = bb < 10 && a == 0;
-		std::memcpy(buf, charTable + bb * 2 + lz, 2);
+		std::memcpy(buf, charTable2 + (bb * 2 + lz), 2);
 		buf -= lz;
-		std::memcpy(buf + 2, charTable + 2 * cc, 2);
+		std::memcpy(buf + 2, charTable2 + 2 * cc, 2);
 
 		if (ffgghhii) {
-			const uint32_t dd	= (ddee * 5243) >> 19;
-			const uint32_t ee	= ddee - dd * 100;
-			const uint32_t ffgg = static_cast<uint32_t>((static_cast<uint64_t>(ffgghhii) * 109951163) >> 40);
-			const uint32_t hhii = ffgghhii - ffgg * 10000;
-			const uint32_t ff	= (ffgg * 5243) >> 19;
-			const uint32_t gg	= ffgg - ff * 100;
-			std::memcpy(buf + 4, charTable + 2 * dd, 2);
-			std::memcpy(buf + 6, charTable + 2 * ee, 2);
-			std::memcpy(buf + 8, charTable + 2 * ff, 2);
-			std::memcpy(buf + 10, charTable + 2 * gg, 2);
+			uint32_t dd	  = (ddee * 5243) >> 19;
+			uint32_t ee	  = ddee - dd * 100;
+			uint32_t ffgg = static_cast<uint32_t>((static_cast<uint64_t>(ffgghhii) * 109951163) >> 40);
+			uint32_t hhii = ffgghhii - ffgg * 10000;
+			uint32_t ff	  = (ffgg * 5243) >> 19;
+			uint32_t gg	  = ffgg - ff * 100;
+			std::memcpy(buf + 4, charTable2 + 2 * dd, 2);
+			std::memcpy(buf + 6, charTable2 + 2 * ee, 2);
+			std::memcpy(buf + 8, charTable2 + 2 * ff, 2);
+			std::memcpy(buf + 10, charTable2 + 2 * gg, 2);
 			if (hhii) {
-				const uint32_t hh = (hhii * 5243) >> 19;
-				const uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12, charTable + 2 * hh, 2);
-				std::memcpy(buf + 14, charTable + 2 * ii, 2);
-				const uint32_t tz1 = decTrailingZeroTable[hh];
-				const uint32_t tz2 = decTrailingZeroTable[ii];
-				const uint32_t tz  = ii ? tz2 : (tz1 + 2);
+				uint32_t hh = (hhii * 5243) >> 19;
+				uint32_t ii = hhii - hh * 100;
+				std::memcpy(buf + 12, charTable2 + 2 * hh, 2);
+				std::memcpy(buf + 14, charTable2 + 2 * ii, 2);
+				tz1 = decTrailingZeroTable[hh];
+				tz2 = decTrailingZeroTable[ii];
+				tz	= ii ? tz2 : (tz1 + 2);
 				buf += 16 - tz;
 				return buf;
 			} else {
-				const uint32_t tz1 = decTrailingZeroTable[ff];
-				const uint32_t tz2 = decTrailingZeroTable[gg];
-				const uint32_t tz  = gg ? tz2 : (tz1 + 2);
+				tz1 = decTrailingZeroTable[ff];
+				tz2 = decTrailingZeroTable[gg];
+				tz	= gg ? tz2 : (tz1 + 2);
 				buf += 12 - tz;
 				return buf;
 			}
 		} else {
 			if (ddee) {
-				const uint32_t dd = (ddee * 5243) >> 19;
-				const uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4, charTable + 2 * dd, 2);
-				std::memcpy(buf + 6, charTable + 2 * ee, 2);
-				const uint32_t tz1 = decTrailingZeroTable[dd];
-				const uint32_t tz2 = decTrailingZeroTable[ee];
-				const uint32_t tz  = ee ? tz2 : (tz1 + 2);
+				uint32_t dd = (ddee * 5243) >> 19;
+				uint32_t ee = ddee - dd * 100;
+				std::memcpy(buf + 4, charTable2 + 2 * dd, 2);
+				std::memcpy(buf + 6, charTable2 + 2 * ee, 2);
+				tz1 = decTrailingZeroTable[dd];
+				tz2 = decTrailingZeroTable[ee];
+				tz	= ee ? tz2 : (tz1 + 2);
 				buf += 8 - tz;
 				return buf;
 			} else {
-				const uint32_t tz1 = decTrailingZeroTable[bb];
-				const uint32_t tz2 = decTrailingZeroTable[cc];
-				const uint32_t tz  = cc ? tz2 : (tz1 + tz2);
+				tz1 = decTrailingZeroTable[bb];
+				tz2 = decTrailingZeroTable[cc];
+				tz	= cc ? tz2 : (tz1 + tz2);
 				buf += 4 - tz;
 				return buf;
 			}
@@ -110,7 +113,7 @@ namespace jsonifier_internal {
 		}
 
 		if (value < 100) {
-			std::memcpy(buf, charTable + value * 2, 2);
+			std::memcpy(buf, charTable2 + (value * 2), 2);
 			return buf + 2;
 		}
 
@@ -122,20 +125,20 @@ namespace jsonifier_internal {
 			const uint32_t q = value / 100;
 			const uint32_t r = value % 100;
 			value			 = q;
-			std::memcpy(p - 2, charTable + r * 2, 2);
+			std::memcpy(p - 2, charTable2 + (r * 2), 2);
 			p -= 2;
 		}
 
 		if (value < 10) {
 			*--p = static_cast<char>(value + '0');
 		} else {
-			std::memcpy(p - 2, charTable + value * 2, 2);
+			std::memcpy(p - 2, charTable2 + (value * 2), 2);
 		}
 
 		return end;
 	}
 
-	consteval uint32_t numbits(uint32_t x) noexcept {
+	JSONIFIER_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
@@ -213,7 +216,7 @@ namespace jsonifier_internal {
 					}
 					expDec		= std::abs(expDec);
 					uint32_t lz = expDec < 10;
-					std::memcpy(buf, charTable + expDec * 2 + lz, 2);
+					std::memcpy(buf, charTable2 + (expDec * 2 + lz), 2);
 					return buf + 2 - lz;
 				}
 			} else {
@@ -258,13 +261,13 @@ namespace jsonifier_internal {
 					expDec = std::abs(expDec);
 					if (expDec < 100) {
 						uint32_t lz = expDec < 10;
-						std::memcpy(buf, charTable + expDec * 2 + lz, 2);
+						std::memcpy(buf, charTable2 + (expDec * 2 + lz), 2);
 						return buf + 2 - lz;
 					} else {
 						const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
 						const uint32_t lo = uint32_t(expDec) - hi * 100;
 						buf[0]			  = uint8_t(hi) + '0';
-						std::memcpy(buf + 1, charTable + lo * 2, 2);
+						std::memcpy(&buf[1], charTable2 + (lo * 2), 2);
 						return buf + 3;
 					}
 				}

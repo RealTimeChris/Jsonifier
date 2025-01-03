@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/HashMap.hpp>
-#include <jsonifier/JsonEntity.hpp>
 #include <jsonifier/String.hpp>
 
 namespace std {
@@ -38,41 +37,34 @@ namespace std {
 
 namespace jsonifier {
 
+	class raw_json_data;
+}
+
+namespace jsonifier {
+
 	struct json_number {
 		json_number() noexcept = default;
 
 		json_number(const string& stringNew) noexcept : rawJson{ stringNew } {};
 
-		uint64_t getUint() const {
+		uint64_t getUint() {
 			return strToUint64(rawJson);
 		}
 
-		int64_t getInt() const {
+		int64_t getInt() {
 			return strToInt64(rawJson);
 		}
 
-		double getDouble() const {
+		double getDouble() {
 			return strToDouble(rawJson);
 		}
 
-		operator uint64_t() const {
-			return strToUint64(rawJson);
+		friend bool operator!=(const json_number& lhs, const json_number& rhs) {
+			return lhs.rawJson != rhs.rawJson;
 		}
 
-		operator int64_t() const {
-			return strToInt64(rawJson);
-		}
-
-		operator double() const {
-			return strToDouble(rawJson);
-		}
-
-		bool operator!=(const json_number& rhs) const {
-			return rawJson != rhs.rawJson;
-		}
-
-		bool operator==(const json_number& rhs) const {
-			return rawJson == rhs.rawJson;
+		friend bool operator==(const json_number& lhs, const json_number& rhs) {
+			return lhs.rawJson == rhs.rawJson;
 		}
 
 		string rawJson{};
@@ -81,171 +73,94 @@ namespace jsonifier {
 	class raw_json_data {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
-		using array_type  = vector<raw_json_data>;
 		using string_type = string;
+		using array_type  = vector<raw_json_data>;
 		using number_type = json_number;
 		using bool_type	  = bool;
-		using null_type	  = std::nullptr_t;
-		using value_type  = std::variant<std::monostate, object_type, array_type, string_type, number_type, bool_type, null_type>;
+		using value_type  = std::variant<std::unique_ptr<object_type>, std::unique_ptr<array_type>, std::unique_ptr<string_type>, std::unique_ptr<number_type>,
+			 std::unique_ptr<bool_type>, std::nullptr_t>;
 
 		raw_json_data() noexcept {
-		}
-
-		raw_json_data& operator=(raw_json_data&& other) noexcept {
-			jsonData.swap(other.jsonData);
-			value.swap(other.value);
-			return *this;
-		}
-
-		raw_json_data(raw_json_data&& other) noexcept {
-			*this = jsonifier_internal::move(other);
-		}
-
-		raw_json_data& operator=(const raw_json_data& other) noexcept {
-			jsonData = other.jsonData;
-			switch (other.getType()) {
-				case json_type::object: {
-					value.emplace<object_type>(other.getObject());
-					break;
-				}
-				case json_type::array: {
-					value.emplace<array_type>(other.getArray());
-					break;
-				}
-				case json_type::string: {
-					value.emplace<string_type>(other.getString());
-					break;
-				}
-				case json_type::number: {
-					value.emplace<number_type>(other.getNumber());
-					break;
-				}
-				case json_type::boolean: {
-					value.emplace<bool_type>(other.getBool());
-					break;
-				}
-				case json_type::null: {
-					value.emplace<null_type>();
-					break;
-				}
-				case json_type::accessor: {
-					break;
-				}
-				case json_type::custom: {
-					break;
-				}
-				case json_type::unset: {
-					break;
-				}
-			}
-			return *this;
-		}
-
-		raw_json_data(const raw_json_data& other) {
-			*this = other;
+			value = std::nullptr_t{};
 		}
 
 		template<typename parser_type> raw_json_data(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
-			constructValueFromRawJsonData(parser, jsonDataNew);
+			value	 = constructValueFromRawJsonData(parser, jsonDataNew);
 			jsonData = jsonDataNew;
 		}
 
 		json_type getType() const noexcept {
-			if (std::holds_alternative<object_type>(value)) {
+			if (std::holds_alternative<std::unique_ptr<object_type>>(value)) {
 				return json_type::object;
-			} else if (std::holds_alternative<array_type>(value)) {
+			} else if (std::holds_alternative<std::unique_ptr<array_type>>(value)) {
 				return json_type::array;
-			} else if (std::holds_alternative<string_type>(value)) {
+			} else if (std::holds_alternative<std::unique_ptr<string_type>>(value)) {
 				return json_type::string;
-			} else if (std::holds_alternative<number_type>(value)) {
+			} else if (std::holds_alternative<std::unique_ptr<number_type>>(value)) {
 				return json_type::number;
-			} else if (std::holds_alternative<bool_type>(value)) {
+			} else if (std::holds_alternative<std::unique_ptr<bool_type>>(value)) {
 				return json_type::boolean;
-			} else if (std::holds_alternative<null_type>(value)) {
+			} else if (std::holds_alternative<std::nullptr_t>(value)) {
 				return json_type::null;
 			} else {
 				return json_type::unset;
 			}
 		}
 
-		const object_type& getObject() const noexcept {
-			return std::get<object_type>(value);
+		[[nodiscard]] bool& getBool() noexcept {
+			return *std::get<std::unique_ptr<bool>>(value);
 		}
 
-		object_type& getObject() noexcept {
-			return std::get<object_type>(value);
+		[[nodiscard]] double getDouble() noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getDouble();
 		}
 
-		const array_type& getArray() const noexcept {
-			return std::get<array_type>(value);
+		[[nodiscard]] int64_t getInt() noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getInt();
 		}
 
-		array_type& getArray() noexcept {
-			return std::get<array_type>(value);
+		[[nodiscard]] uint64_t getUint() noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getUint();
 		}
 
-		const string_type& getString() const noexcept {
-			return std::get<string_type>(value);
+		[[nodiscard]] string& getString() noexcept {
+			return *std::get<std::unique_ptr<string>>(value);
 		}
 
-		string_type& getString() noexcept {
-			return std::get<string_type>(value);
+		[[nodiscard]] object_type& getObject() noexcept {
+			return *std::get<std::unique_ptr<object_type>>(value);
 		}
 
-		const number_type& getNumber() const noexcept {
-			return std::get<number_type>(value);
-		}
-
-		number_type& getNumber() noexcept {
-			return std::get<number_type>(value);
-		}
-
-		double getDouble() const noexcept {
-			return static_cast<double>(std::get<number_type>(value));
-		}
-
-		int64_t getInt() const noexcept {
-			return static_cast<int64_t>(std::get<number_type>(value));
-		}
-
-		uint64_t getUint() const noexcept {
-			return static_cast<uint64_t>(std::get<number_type>(value));
-		}
-
-		const bool_type& getBool() const noexcept {
-			return std::get<bool_type>(value);
-		}
-
-		bool_type& getBool() noexcept {
-			return std::get<bool_type>(value);
-		}
-
-		template<std::integral index_type> const raw_json_data& operator[](index_type&& index) const noexcept {
-			return (std::get<array_type>(value))[index];
+		[[nodiscard]] array_type& getArray() noexcept {
+			return *std::get<std::unique_ptr<array_type>>(value);
 		}
 
 		template<std::integral index_type> raw_json_data& operator[](index_type&& index) noexcept {
-			return (std::get<array_type>(value))[index];
+			return (*std::get<std::unique_ptr<array_type>>(value))[index];
 		}
 
-		template<std::convertible_to<const std::string_view> key_type> const raw_json_data& operator[](key_type&& key) const noexcept {
-			const object_type& object = static_cast<const object_type&>(std::get<object_type>(value));
-			return object.at(key);
+		template<std::integral index_type> const raw_json_data& operator[](index_type&& index) const noexcept {
+			return (*std::get<std::unique_ptr<array_type>>(value))[index];
 		}
 
 		template<std::convertible_to<std::string_view> key_type> raw_json_data& operator[](key_type&& key) noexcept {
-			if (std::holds_alternative<null_type>(value)) {
-				value.emplace<object_type>();
+			if (std::holds_alternative<std::nullptr_t>(value)) {
+				value = std::make_unique<object_type>();
 			}
-			object_type& object = std::get<object_type>(value);
+			auto& object = *std::get<std::unique_ptr<object_type>>(value);
 			return object[key];
 		}
 
-		template<std::convertible_to<std::string_view> key_type> bool contains(key_type&& key) const noexcept {
-			if (!std::holds_alternative<object_type>(value)) {
+		template<std::convertible_to<const std::string_view> key_type> const raw_json_data& operator[](key_type&& key) const noexcept {
+			const auto& object = *std::get<std::unique_ptr<object_type>>(value);
+			return object.at(key);
+		}
+
+		template<std::convertible_to<std::string_view> key_type> [[nodiscard]] bool contains(key_type&& key) const noexcept {
+			if (!std::holds_alternative<std::unique_ptr<object_type>>(value)) {
 				return false;
 			}
-			const object_type& object = std::get<object_type>(value);
+			const auto& object = *std::get<std::unique_ptr<object_type>>(value);
 			return object.contains(key);
 		}
 
@@ -257,60 +172,50 @@ namespace jsonifier {
 			return jsonData == other.jsonData && value == other.value;
 		}
 
-		~raw_json_data() {};
-
 	  protected:
 		value_type value{};
 		string jsonData{};
 
-		template<typename parser_type> void constructValueFromRawJsonData(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
+		template<typename parser_type> auto constructValueFromRawJsonData(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
 			static constexpr jsonifier::parse_options optionsNew{};
 			if (jsonDataNew.size() > 0) {
 				switch (jsonDataNew[0]) {
-					case lBrace: {
-						object_type results{};
+					case '{': {
+						std::unique_ptr<typename jsonifier::raw_json_data::object_type> results{ std::make_unique<typename jsonifier::raw_json_data::object_type>() };
 						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
-							false>::impl(results, testContext);
-						value.emplace<object_type>(jsonifier_internal::move(results));
-						return;
+							false>::impl(*results, testContext);
+						return results;
 					}
-					case lBracket: {
-						array_type results{};
+					case '[': {
+						std::unique_ptr<typename jsonifier::raw_json_data::array_type> results{ std::make_unique<typename jsonifier::raw_json_data::array_type>() };
 						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
 						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
-							false>::impl(results, testContext);
-						value.emplace<array_type>(jsonifier_internal::move(results));
-						return;
+							false>::impl(*results, testContext);
+						return results;
 					}
-					case quote: {
+					case '"': {
 						if (jsonDataNew.size() > 1) {
-							value.emplace<string_type>(string_type{ jsonDataNew.data() + 1, jsonDataNew.size() - 2 });
-							return;
+							return std::make_unique<string_type>(jsonDataNew.data() + 1, jsonDataNew.size() - 2);
 						} else {
-							value.emplace<null_type>();
-							return;
+							return std::nullptr_t{};
 						}
 					}
-					case 't': {
-						value.emplace<bool_type>(true);
-						return;
-					}
+					case 't':
+						return std::make_unique<bool_type>(true);
 					case 'f': {
-						value.emplace<bool_type>(false);
-						return;
+						return std::make_unique<bool_type>(false);
 					}
 					case 'n': {
-						value.emplace<null_type>();
-						return;
+						return std::nullptr_t{};
 					}
 					case '0':
 						[[fallthrough]];
@@ -333,22 +238,19 @@ namespace jsonifier {
 					case '9':
 						[[fallthrough]];
 					case '-': {
-						value.emplace<number_type>(number_type{ jsonDataNew });
-						return;
+						return std::make_unique<number_type>(jsonDataNew);
 					}
 					default: {
-						value.emplace<null_type>();
-						return;
+						return std::nullptr_t{};
 					}
 				}
 			} else {
-				value.emplace<null_type>();
-				return;
+				return std::nullptr_t{};
 			}
 		}
 	};
 
-	std::ostream& operator<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
+	std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
 		os << jsonValue.rawJson();
 		return os;
 	}

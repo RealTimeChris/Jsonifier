@@ -36,7 +36,8 @@ namespace jsonifier {
 
 	template<bool> class jsonifier_core;
 
-	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01> jsonifier::string_base<value_type_new> toString(const value_type01& value) noexcept {
+	template<typename value_type_new = char, jsonifier::concepts::num_t value_type01>
+	JSONIFIER_INLINE jsonifier::string_base<value_type_new> toString(const value_type01& value) noexcept {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
 		if constexpr (sizeof(std::remove_cvref_t<value_type01>) == 8) {
@@ -60,7 +61,7 @@ namespace jsonifier {
 		return returnstring;
 	}
 
-	template<uint64_t base = 10> double strToDouble(const jsonifier::string& string) noexcept {
+	template<uint64_t base = 10> JSONIFIER_INLINE double strToDouble(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
@@ -70,7 +71,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> double strToDouble<16>(const jsonifier::string& string) noexcept {
+	template<> JSONIFIER_INLINE double strToDouble<16>(const jsonifier::string& string) noexcept {
 		double newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtod(string.data(), nullptr);
@@ -78,7 +79,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> int64_t strToInt64(const jsonifier::string& string) noexcept {
+	template<uint64_t base = 10> JSONIFIER_INLINE int64_t strToInt64(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
@@ -88,7 +89,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
+	template<> JSONIFIER_INLINE int64_t strToInt64<16>(const jsonifier::string& string) noexcept {
 		int64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtoll(string.data(), nullptr, 16);
@@ -96,7 +97,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> uint64_t strToUint64(const jsonifier::string& string) noexcept {
+	template<uint64_t base = 10> JSONIFIER_INLINE uint64_t strToUint64(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
@@ -106,7 +107,7 @@ namespace jsonifier {
 		return newValue;
 	}
 
-	template<> uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
+	template<> JSONIFIER_INLINE uint64_t strToUint64<16>(const jsonifier::string& string) noexcept {
 		uint64_t newValue{};
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			newValue = std::strtoull(string.data(), nullptr, 16);

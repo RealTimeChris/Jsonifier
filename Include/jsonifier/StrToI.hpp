@@ -19,6 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// Note: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
 #pragma once
@@ -76,7 +77,7 @@ namespace jsonifier_internal {
 	template<typename value_type> struct integer_parser;
 
 	template<jsonifier::concepts::signed_t value_type> struct integer_parser<value_type> {
-		JSONIFIER_INLINE constexpr integer_parser() noexcept = default;
+		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
@@ -219,7 +220,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
+		static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_UNLIKELY (*iter == decimal) {
 				++iter;
 				return parseFraction(value, iter);
@@ -690,7 +691,7 @@ namespace jsonifier_internal {
 	};
 
 	template<jsonifier::concepts::unsigned_t value_type> struct integer_parser<value_type> {
-		JSONIFIER_INLINE constexpr integer_parser() noexcept = default;
+		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
 			value_type aHigh = ab >> 32;
@@ -833,7 +834,7 @@ namespace jsonifier_internal {
 			}
 		}
 
-		JSONIFIER_INLINE static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
+		static const uint8_t* finishParse(value_type& value, const uint8_t* iter) noexcept {
 			if JSONIFIER_UNLIKELY (*iter == decimal) {
 				++iter;
 				return parseFraction(value, iter);

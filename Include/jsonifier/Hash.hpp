@@ -171,9 +171,6 @@ namespace jsonifier_internal {
 		 */
 		JSONIFIER_INLINE uint64_t hashKeyRt(string_view_ptr value, uint64_t length) const noexcept {
 			uint64_t seed64{ seed };
-			uint64_t returnValue64{};
-			uint32_t returnValue32{};
-			uint16_t returnValue16{};
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);
 				seed64 ^= returnValue64;
@@ -200,5 +197,10 @@ namespace jsonifier_internal {
 			}
 			return seed64;
 		}
+
+	  protected:
+		mutable uint64_t returnValue64{};
+		mutable uint32_t returnValue32{};
+		mutable uint16_t returnValue16{};
 	};
 }

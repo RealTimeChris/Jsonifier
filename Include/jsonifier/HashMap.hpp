@@ -19,6 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// Note: Some of the code in this header was sampled from Glaze library: https://github.com/StephenBerry/Glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
@@ -447,7 +448,6 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	// Sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -465,7 +465,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	// Sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -635,7 +634,7 @@ namespace jsonifier_internal {
 			}
 #endif
 			if constexpr (hashData<value_type>.type == hash_map_type::single_element) {
-				return *(iter + keyStatsVal<value_type>.maxLength) == quote ? 0ull : 1ull;
+				return *(iter + keyStatsVal<value_type>.maxLength) == '"' ? 0ull : 1ull;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::double_element) {
 				if JSONIFIER_LIKELY (checkForEnd(iter, end, hashData<value_type>.uniqueIndex)) {
 					return iter[static_cast<uint8_t>(hashData<value_type>.uniqueIndex)] & 1u;
@@ -665,7 +664,7 @@ namespace jsonifier_internal {
 				return hashData<value_type>.storageSize;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::unique_byte_and_length) {
 				static constexpr size_t storageMask = hashData<value_type>.storageSize - 1;
-				const auto newPtr					= char_comparison<quote, std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr					= char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					const size_t length = static_cast<size_t>(newPtr - iter);
 					if JSONIFIER_LIKELY (checkForEnd(iter, end, hashData<value_type>.uniqueIndex)) {
@@ -677,7 +676,7 @@ namespace jsonifier_internal {
 			} else if constexpr (hashData<value_type>.type == hash_map_type::unique_per_length) {
 				static constexpr auto mappings =
 					generateMappingsForLengths<keyStatsVal<value_type>.maxLength>(tupleReferencesByLength<value_type>, hashData<value_type>.uniqueIndices);
-				const auto newPtr = char_comparison<quote, std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					const size_t length			= static_cast<size_t>(newPtr - iter);
 					const size_t localUniqueIdx = hashData<value_type>.uniqueIndices[length];
@@ -691,7 +690,7 @@ namespace jsonifier_internal {
 				static constexpr rt_key_hasher<hashData<value_type>.seed> hasher{};
 				static constexpr auto sizeMask{ hashData<value_type>.numGroups - 1u };
 				static constexpr auto ctrlBytesPtr{ hashData<value_type>.controlBytes.data() };
-				const auto newPtr = char_comparison<quote, std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					size_t length = static_cast<size_t>(newPtr - iter);
 					length		  = (hashData<value_type>.uniqueIndex > length) ? length : hashData<value_type>.uniqueIndex;

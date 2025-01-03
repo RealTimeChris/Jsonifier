@@ -152,27 +152,27 @@ namespace jsonifier {
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type rfind(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().rfind(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().rfind(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type find(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().find(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type findFirstOf(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().find_first_of(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_first_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type findLastOf(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().find_last_of(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type findFirstNotOf(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().find_first_not_of(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_first_not_of(std::forward<arg_types>(args)...);
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE constexpr size_type findLastNotOf(arg_types&&... args) const noexcept {
-			return this->operator std::basic_string_view<value_type>().find_last_not_of(jsonifier_internal::forward<arg_types>(args)...);
+			return this->operator std::basic_string_view<value_type>().find_last_not_of(std::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE constexpr void swap(string_view_base& other) noexcept {

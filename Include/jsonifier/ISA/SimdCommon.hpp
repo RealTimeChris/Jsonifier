@@ -126,29 +126,31 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-	template<size_t amount, typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opShl(const simd_int_t01& value) noexcept {
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
-		simd_internal::store(value, values);
-		static constexpr uint64_t shiftAmount{ 64 - amount };
-		values[sixtyFourBitsPerStep]	 = values[0] << amount;
-		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount);
-		if constexpr (sixtyFourBitsPerStep > 2) {
-			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount);
-			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount);
-		}
-		if constexpr (sixtyFourBitsPerStep > 4) {
-			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount);
-			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount);
-			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
-			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
-		}
-		return simd_internal::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
+#define opShl(amount, value, result) \
+	{ \
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2]; \
+		simd_internal::store(value, values); \
+		static constexpr uint64_t shiftAmount{ 64 - amount }; \
+		values[sixtyFourBitsPerStep]	 = values[0] << amount; \
+		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount); \
+		if constexpr (sixtyFourBitsPerStep > 2) { \
+			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount); \
+			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount); \
+		} \
+		if constexpr (sixtyFourBitsPerStep > 4) { \
+			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount); \
+			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount); \
+			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount); \
+			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount); \
+		} \
+		result = simd_internal::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep); \
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
-		jsonifier_simd_int_t result{ opShl<1>(value) };
+		jsonifier_simd_int_t result;
+		opShl(1, value, result);
 		return opSetLSB(result, oldOverflow);
 	}
 
@@ -160,7 +162,7 @@ namespace simd_internal {
 	};
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> escapeableArray00{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, quote, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, backslash, 0x00u, 0x00u, 0x00u };
+		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -178,7 +180,7 @@ namespace simd_internal {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> whitespaceArray{ [] {
-		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', newline, 0x70u, 0x64u, '\r', 0x64u, 0x64u };
+		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -187,7 +189,7 @@ namespace simd_internal {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier_internal::array<char, size> opArray{ [] {
-		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, colon, lBrace, comma, rBrace, 0x00u, 0x00u };
+		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
 		jsonifier_internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
@@ -195,7 +197,7 @@ namespace simd_internal {
 		return returnValues;
 	}() };
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
+	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto opArrayPtr{ opArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArrayPtr) };
@@ -211,7 +213,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
+	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(whiteSpaceArrayPtr) };
@@ -226,7 +228,7 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<auto cNew> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
+	template<auto cNew> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
 		static constexpr auto c{ cNew };
 		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(c) };
@@ -241,14 +243,14 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t (&values)[stridesPerStep]) noexcept {
+	template<bool minified> JSONIFIER_INLINE simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		if constexpr (!minified) {
-			return simd_int_t_holder{ .backslashes = collectValues<backslash>(values),
+			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values),
 				.whitespace						   = collectWhitespaceIndices(values),
-				.quotes							   = collectValues<quote>(values),
+				.quotes							   = collectValues<'"'>(values),
 				.op								   = collectStructuralIndices(values) };
 		} else {
-			return simd_int_t_holder{ .backslashes = collectValues<backslash>(values), .quotes = collectValues<quote>(values), .op = collectStructuralIndices(values) };
+			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values), .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
 		}
 	}
 
@@ -258,10 +260,10 @@ namespace jsonifier_internal {
 
 	constexpr jsonifier_internal::array<bool, 256> whitespaceTable{ [] {
 		jsonifier_internal::array<bool, 256> returnValues{};
-		returnValues['\t']	  = true;
-		returnValues[' ']	  = true;
-		returnValues[newline] = true;
-		returnValues['\r']	  = true;
+		returnValues['\t'] = true;
+		returnValues[' ']  = true;
+		returnValues['\n'] = true;
+		returnValues['\r'] = true;
 		return returnValues;
 	}() };
 

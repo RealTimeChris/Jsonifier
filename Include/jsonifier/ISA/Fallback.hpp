@@ -32,31 +32,31 @@ namespace simd_internal {
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
 	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<typename value_type> value_type postCmpTzcnt(value_type value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE value_type postCmpTzcnt(value_type value) noexcept {
 		return tzcnt(value);
 	}
 
-	template<simd_int_128_type simd_int_type_new> simd_int_type_new gatherValues(const void* str) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE simd_int_type_new gatherValues(const void* str) noexcept {
 		return mm128LoadUSi128(static_cast<const __m128x*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new> simd_int_type_new gatherValuesU(const void* str) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE simd_int_type_new gatherValuesU(const void* str) noexcept {
 		return mm128LoadUSi128(static_cast<const __m128x*>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
 		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
-	simd_int_type_new gatherValue(char_t str) noexcept {
+	JSONIFIER_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi64x(static_cast<int64_t>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
 		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
-	simd_int_type_new gatherValue(char_t str) noexcept {
+	JSONIFIER_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi8(static_cast<char>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new> void store(const simd_int_type_new& value, void* storageLocation) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE void store(const simd_int_type_new& value, void* storageLocation) noexcept {
 		mm128StoreUSi128(static_cast<uint64_t*>(storageLocation), value);
 	}
 
@@ -114,12 +114,12 @@ namespace simd_internal {
 		return mm128XorSi128(value, mm128Set1Epi64x(0xFFFFFFFFFFFFFFFFll));
 	}
 
-	template<simd_int_128_type simd_type> jsonifier_simd_int_128 opSetLSB(const simd_type& value, bool valueNew) noexcept {
+	template<simd_int_128_type simd_type> JSONIFIER_INLINE jsonifier_simd_int_128 opSetLSB(const simd_type& value, bool valueNew) noexcept {
 		jsonifier_simd_int_128 mask{ mm128SetEpi64x(0, 0x01u) };
 		return valueNew ? mm128OrSi128(value, mask) : mm128AndNotSi128(mask, value);
 	}
 
-	template<simd_int_128_type simd_type> bool opGetMSB(const simd_type& value) noexcept {
+	template<simd_int_128_type simd_type> JSONIFIER_INLINE bool opGetMSB(const simd_type& value) noexcept {
 		jsonifier_simd_int_128 result = mm128AndSi128(value, mm128SetEpi64x(0x8000000000000000ll, 0x00ll));
 		return !mm128TestzSi128(result, result);
 	}

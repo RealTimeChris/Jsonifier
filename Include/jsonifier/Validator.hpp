@@ -86,13 +86,13 @@ namespace jsonifier_internal {
 		validator() noexcept : derivedRef{ initializeSelfRef() } {};
 
 		template<typename iterator, typename validator_type> static bool impl(iterator& iter, iterator& end, uint64_t& depth, validator_type& validator) noexcept {
-			if (*iter && **iter == lBrace) {
+			if (*iter && **iter == '{') {
 				return validate_impl<json_structural_type::Object_Start, derived_type>::impl(iter, end, depth, validator);
 			} else {
-				if (*iter && **iter == lBracket) {
+				if (*iter && **iter == '[') {
 					return validate_impl<json_structural_type::Array_Start, derived_type>::impl(iter, end, depth, validator);
 				} else {
-					if (*iter && **iter == quote) {
+					if (*iter && **iter == '"') {
 						return validate_impl<json_structural_type::String, derived_type>::impl(iter, validator);
 					} else {
 						if (*iter && numberTable[static_cast<uint8_t>(**iter)]) {

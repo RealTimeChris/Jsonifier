@@ -29,10 +29,11 @@
 namespace tests {
 
 	enum class test_type {
-		parse_and_serialize = 0,
-		minify				= 1,
-		prettify			= 2,
-		validate			= 3,
+		parse_and_serialize				  = 0,
+		minify							  = 1,
+		prettify						  = 2,
+		validate						  = 3,
+		parse_and_serialize_raw_json_data = 3,
 	};
 
 	enum class json_library {
@@ -42,6 +43,65 @@ namespace tests {
 	};
 
 	template<json_library lib, test_type type, typename test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal testName> struct json_test_helper;
+
+	template<typename test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal testNameNew>
+	struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize_raw_json_data, test_data_type, minified, iterations, testNameNew> {
+		static auto run(std::string& newBuffer) {
+			static constexpr bnch_swt::string_literal testName{ testNameNew };
+			static constexpr bnch_swt::string_literal testNameRead{ testName + "-Read-Raw-Json-Data" };
+			static constexpr bnch_swt::string_literal testNameWrite{ testName + "-Write-Raw-Json-Data" };
+			static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> || std::is_same_v<test_data_type, twitter_partial_message> };
+			static constexpr bool knownOrder{ !std::is_same_v<test_data_type, abc_test<abc_test_struct>> && !std::is_same_v<test_data_type, twitter_partial_message> };
+			results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl, iterations };
+			jsonifier::jsonifier_core parser{};
+			jsonifier::raw_json_data testData{};
+			parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			std::string newerBuffer{};
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+			std::string newestBuffer{ newBuffer };
+			if (auto error =
+					glz::read<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newestBuffer);
+				error) {
+				std::cout << "Glaze Error: " << glz::format_error(error, newestBuffer) << std::endl;
+			}
+			newestBuffer.clear();
+			if (auto error =
+					glz::write<glz::opts{ .error_on_unknown_keys = !partialRead, .skip_null_members = false, .prettify = !minified, .minified = minified }>(testData, newestBuffer);
+				error) {
+				std::cout << "Glaze Error: " << glz::format_error(error, newestBuffer) << std::endl;
+			}
+			for (size_t x = 0; x < newestBuffer.size() && x < newerBuffer.size(); ++x) {
+				if (newestBuffer[x] != newerBuffer[x]) {
+					std::cout << "DIFFERENT AT INDEX: " << x;
+					std::cout << "JSONIFIER VALUES: " << jsonifier::string_view{ newerBuffer.data() + x, 128 } << std::endl;
+					std::cout << "GLAZE VALUES: " << jsonifier::string_view{ newestBuffer.data() + x, 128 } << std::endl;
+					break;
+				}
+			}
+			bnch_swt::performance_metrics readResult = bnch_swt::benchmark_stage<testNameRead, iterations>::template runBenchmark<jsonifierLibraryName, "teal">([&]() mutable {
+				parser.parseJson<jsonifier::parse_options{ .partialRead = partialRead, .knownOrder = knownOrder, .minified = minified }>(testData, newBuffer);
+				bnch_swt::doNotOptimizeAway(testData);
+				return newerBuffer.size();
+			});
+			for (auto& value: parser.getErrors()) {
+				std::cout << "Jsonifier Error: " << value << std::endl;
+			}
+			parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+			bnch_swt::performance_metrics writeResult =
+				bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<jsonifierLibraryName, "steelblue">([&]() mutable {
+					parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testData, newerBuffer);
+					bnch_swt::doNotOptimizeAway(newerBuffer);
+					return newerBuffer.size();
+				});
+			r.readResult  = result<result_type::read>{ "teal", readResult };
+			r.writeResult = result<result_type::write>{ "steelblue", writeResult };
+			bnch_swt::file_loader::saveFile(static_cast<std::string>(newerBuffer), jsonOutPath.operator std::string() + "/" + testName.operator std::string() + "-jsonifier.json");
+			return r;
+		}
+	};
 
 	template<typename test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal testNameNew>
 	struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize, test_data_type, minified, iterations, testNameNew> {
